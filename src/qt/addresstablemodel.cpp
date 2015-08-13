@@ -115,7 +115,7 @@ public:
         case CT_NEW:
             if(inModel)
             {
-                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_NEW, but entry is already in model";
+                qWarning() << "AddressTablePriv::updateEntry : Warning: Got CT_NEW, but entry is already in model";
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
@@ -125,7 +125,7 @@ public:
         case CT_UPDATED:
             if(!inModel)
             {
-                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_UPDATED, but entry is not in model";
+                qWarning() << "AddressTablePriv::updateEntry : Warning: Got CT_UPDATED, but entry is not in model";
                 break;
             }
             lower->type = newEntryType;
@@ -135,7 +135,7 @@ public:
         case CT_DELETED:
             if(!inModel)
             {
-                qDebug() << "AddressTablePriv::updateEntry : Warning: Got CT_DELETED, but entry is not in model";
+                qWarning() << "AddressTablePriv::updateEntry : Warning: Got CT_DELETED, but entry is not in model";
                 break;
             }
             parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);

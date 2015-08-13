@@ -1,25 +1,27 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="lv_LV" version="2.0">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="lv_LV">
 <context>
     <name>AboutDialog</name>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="14"/>
+        <location filename="../forms/ui_aboutdialog.h" line="129"/>
         <source>About Dash Core</source>
         <translation>Par Dash Core</translation>
     </message>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="53"/>
+        <location filename="../forms/ui_aboutdialog.h" line="130"/>
         <source>&lt;b&gt;Dash Core&lt;/b&gt; version</source>
         <translation>Dash Core versija</translation>
     </message>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="94"/>
+        <location filename="../forms/ui_aboutdialog.h" line="131"/>
         <source>Copyright &amp;copy; 2009-2014 The Bitcoin Core developers.
 Copyright &amp;copy; 2014-YYYY The Dash Core developers.</source>
         <translation>Autortiesības&amp;Kopija 2009-2014 Bitcoin Core izstrādātāji.
 Autortiesības&amp;Kopija 2014-YYYY Dash Core izstrādātāji. </translation>
     </message>
     <message>
-        <location filename="../forms/aboutdialog.ui" line="111"/>
+        <location filename="../forms/ui_aboutdialog.h" line="133"/>
         <source>
 This is experimental software.
 
@@ -34,34 +36,32 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
 Šis produkts ietver programmatūru, ko izstrādājis OpenSSL Project izmantošanai OpenSSL Toolkit (http://www.openssl.org/) un šifrēšanas programmatūru no Eric Young (eay@cryptsoft.com) un UPnP programmatūru no Thomas Bernard.</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="30"/>
-        <location filename="../utilitydialog.cpp" line="31"/>
         <source>Copyright</source>
-        <translation>Autortiesības</translation>
+        <translation type="vanished">Autortiesības</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="30"/>
         <source>The Bitcoin Core developers</source>
-        <translation>Bitcoin Core izstrādātāji</translation>
+        <translation type="vanished">Bitcoin Core izstrādātāji</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="31"/>
         <source>The Dash Core developers</source>
-        <translation>Dash Core izstrādātāji</translation>
+        <translation type="vanished">Dash Core izstrādātāji</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="43"/>
-        <location filename="../utilitydialog.cpp" line="45"/>
         <source>(%1-bit)</source>
-        <translation>(%1-biti)</translation>
+        <translation type="vanished">(%1-biti)</translation>
     </message>
 </context>
 <context>
     <name>AddressBookPage</name>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="30"/>
         <source>Double-click to edit address or label</source>
-        <translation>Adresi vai nosaukumu rediģē ar dubultklikšķi</translation>
+        <translation type="vanished">Adresi vai nosaukumu rediģē ar dubultklikšķi</translation>
+    </message>
+    <message>
+        <location filename="../forms/addressbookpage.ui" line="30"/>
+        <source>Right-click to edit address or label</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/addressbookpage.ui" line="57"/>
@@ -74,37 +74,37 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
         <translation>&amp;Jauns</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="71"/>
+        <location filename="../forms/addressbookpage.ui" line="74"/>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopēt iezīmēto adresi uz starpliktuvi</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="74"/>
+        <location filename="../forms/addressbookpage.ui" line="77"/>
         <source>&amp;Copy</source>
         <translation>&amp;Kopēt</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="85"/>
+        <location filename="../forms/addressbookpage.ui" line="91"/>
         <source>Delete the currently selected address from the list</source>
         <translation>Izdzēst iezīmētās adreses no saraksta</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="88"/>
+        <location filename="../forms/addressbookpage.ui" line="94"/>
         <source>&amp;Delete</source>
         <translation>&amp;Dzēst</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="112"/>
+        <location filename="../forms/addressbookpage.ui" line="121"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="115"/>
+        <location filename="../forms/addressbookpage.ui" line="124"/>
         <source>&amp;Export</source>
         <translation>&amp;Eksportēt</translation>
     </message>
     <message>
-        <location filename="../forms/addressbookpage.ui" line="132"/>
+        <location filename="../forms/addressbookpage.ui" line="144"/>
         <source>C&amp;lose</source>
         <translation>&amp;Aizvērt</translation>
     </message>
@@ -175,8 +175,12 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
     </message>
     <message>
         <location filename="../addressbookpage.cpp" line="286"/>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>There was an error trying to save the address list to %1.</source>
-        <translation>Notikusi kļūme mēģinot saglabāt maciņa datus uz %1.</translation>
+        <translation type="vanished">Notikusi kļūme mēģinot saglabāt maciņa datus uz %1.</translation>
     </message>
 </context>
 <context>
@@ -205,146 +209,150 @@ Izplatīta saskaņā ar MIT/X11 programmatūras licenci, skatīt pievienoto datn
         <translation>Paroles dialogs</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="47"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="56"/>
         <source>Enter passphrase</source>
         <translation>Ierakstiet paroli</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="61"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="70"/>
         <source>New passphrase</source>
         <translation>Jauna parole</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="75"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="84"/>
         <source>Repeat new passphrase</source>
         <translation>Jaunā parole vēlreiz</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="108"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="117"/>
         <source>Serves to disable the trivial sendmoney when OS account compromised. Provides no real security.</source>
         <translation>Kalpo lai atslēgtu sīku sūtījumnaudu, kad OS konts apdraudēts.
 Nesniedz reālu drošību</translation>
     </message>
     <message>
-        <location filename="../forms/askpassphrasedialog.ui" line="111"/>
+        <location filename="../forms/askpassphrasedialog.ui" line="120"/>
         <source>For anonymization only</source>
         <translation>Vienīgi anonimizēšanai</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="41"/>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;10 or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Ierakstiet maciņa jauno paroli.&lt;br/&gt;Lūdzu izmantojiet &lt;b&gt;10 vai vairāk nejauši izvēlētas zīmes&lt;/b&gt;, vai &lt;b&gt;astoņus un vairāk vārdus&lt;/b&gt;.</translation>
+        <translation type="vanished">Ierakstiet maciņa jauno paroli.&lt;br/&gt;Lūdzu izmantojiet &lt;b&gt;10 vai vairāk nejauši izvēlētas zīmes&lt;/b&gt;, vai &lt;b&gt;astoņus un vairāk vārdus&lt;/b&gt;.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="42"/>
+        <location filename="../askpassphrasedialog.cpp" line="43"/>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../askpassphrasedialog.cpp" line="46"/>
         <source>Encrypt wallet</source>
         <translation>Šifrēt maciņu</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="48"/>
+        <location filename="../askpassphrasedialog.cpp" line="52"/>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
         <translation>Lai veikto šo darbību, maciņš jāatslēdz ar paroli.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="53"/>
+        <location filename="../askpassphrasedialog.cpp" line="57"/>
         <source>Unlock wallet</source>
         <translation>Atslēgt maciņu</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="56"/>
+        <location filename="../askpassphrasedialog.cpp" line="60"/>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
         <translation>Šai darbībai maciņš jāatšifrē ar maciņa paroli.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="61"/>
+        <location filename="../askpassphrasedialog.cpp" line="65"/>
         <source>Decrypt wallet</source>
         <translation>Atšifrēt maciņu</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="64"/>
+        <location filename="../askpassphrasedialog.cpp" line="68"/>
         <source>Change passphrase</source>
         <translation>Mainīt paroli</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="65"/>
+        <location filename="../askpassphrasedialog.cpp" line="69"/>
         <source>Enter the old and new passphrase to the wallet.</source>
         <translation>Ierakstiet maciņa veco un jauno paroli.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="112"/>
+        <location filename="../askpassphrasedialog.cpp" line="115"/>
         <source>Confirm wallet encryption</source>
         <translation>Apstiprināt maciņa šifrēšanu</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="113"/>
+        <location filename="../askpassphrasedialog.cpp" line="116"/>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DASH&lt;/b&gt;!</source>
         <translation>Uzmanību: Ja nošifrēsiet maciņu un pazaudēsiet paroli, Jūs &lt;b&gt;ZAUDĒSIET VISUS JŪSU DASHUS&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="113"/>
+        <location filename="../askpassphrasedialog.cpp" line="116"/>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Vai tu tiešām vēlies šifrēt savu maciņu?</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="122"/>
-        <location filename="../askpassphrasedialog.cpp" line="181"/>
+        <location filename="../askpassphrasedialog.cpp" line="125"/>
+        <location filename="../askpassphrasedialog.cpp" line="184"/>
         <source>Wallet encrypted</source>
         <translation>Maciņš nošifrēts</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="124"/>
+        <location filename="../askpassphrasedialog.cpp" line="127"/>
         <source>Dash will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your dashs from being stolen by malware infecting your computer.</source>
         <translation>Dash aizvērsies, lai pabeigtu šifrēšanu. Atcerieties, ka maciņa šifrēšana nevar pilnībā novērst Darkcoinu zādzību, ko veic datorā ieviesušās kaitīgas programmas.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="128"/>
+        <location filename="../askpassphrasedialog.cpp" line="131"/>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>SVARĪGI: Visi iepriekšējie Jūsu maciņa dublējuma faili ir jāaizvieto ar jaunizveidoto, šifrēto maciņa failu. Drošības apsvērumu dēļ iepriekšējie dublējumi no nešifrētā maciņa failiem kļūst nelietojami, tiklīdz sākat lietot jauno, šifrēto maciņu.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="137"/>
-        <location filename="../askpassphrasedialog.cpp" line="144"/>
-        <location filename="../askpassphrasedialog.cpp" line="187"/>
-        <location filename="../askpassphrasedialog.cpp" line="193"/>
+        <location filename="../askpassphrasedialog.cpp" line="140"/>
+        <location filename="../askpassphrasedialog.cpp" line="147"/>
+        <location filename="../askpassphrasedialog.cpp" line="190"/>
+        <location filename="../askpassphrasedialog.cpp" line="196"/>
         <source>Wallet encryption failed</source>
         <translation>Maciņa šifrēšana neizdevās</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="138"/>
+        <location filename="../askpassphrasedialog.cpp" line="141"/>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
         <translation>Maciņa šifrēšana neizdevās programmas kļūdas dēļ. Jūsu maciņš netika šifrēts.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="145"/>
-        <location filename="../askpassphrasedialog.cpp" line="194"/>
+        <location filename="../askpassphrasedialog.cpp" line="148"/>
+        <location filename="../askpassphrasedialog.cpp" line="197"/>
         <source>The supplied passphrases do not match.</source>
         <translation>Ievadītās paroles nav vienādas.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="157"/>
+        <location filename="../askpassphrasedialog.cpp" line="160"/>
         <source>Wallet unlock failed</source>
         <translation>Maciņu atšifrēt neizdevās</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="158"/>
-        <location filename="../askpassphrasedialog.cpp" line="169"/>
-        <location filename="../askpassphrasedialog.cpp" line="188"/>
+        <location filename="../askpassphrasedialog.cpp" line="161"/>
+        <location filename="../askpassphrasedialog.cpp" line="172"/>
+        <location filename="../askpassphrasedialog.cpp" line="191"/>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
         <translation>Maciņa atšifrēšanai ievadītā parole nav pareiza.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="168"/>
+        <location filename="../askpassphrasedialog.cpp" line="171"/>
         <source>Wallet decryption failed</source>
         <translation>Maciņu neizdevās atšifrēt</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="182"/>
+        <location filename="../askpassphrasedialog.cpp" line="185"/>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Maciņa parole tika veiksmīgi nomainīta.</translation>
     </message>
     <message>
-        <location filename="../askpassphrasedialog.cpp" line="230"/>
-        <location filename="../askpassphrasedialog.cpp" line="254"/>
+        <location filename="../askpassphrasedialog.cpp" line="233"/>
+        <location filename="../askpassphrasedialog.cpp" line="257"/>
         <source>Warning: The Caps Lock key is on!</source>
         <translation>Brīdinājums: Caps Lock ir ieslēgts!</translation>
     </message>
@@ -352,408 +360,443 @@ Nesniedz reālu drošību</translation>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="76"/>
+        <location filename="../bitcoingui.cpp" line="107"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="85"/>
+        <location filename="../bitcoingui.cpp" line="116"/>
         <source>Wallet</source>
         <translation>Maciņš</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="87"/>
+        <location filename="../bitcoingui.cpp" line="118"/>
         <source>Node</source>
         <translation>Node</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="101"/>
-        <location filename="../bitcoingui.cpp" line="498"/>
         <source>[testnet]</source>
-        <translation>[testnet]</translation>
+        <translation type="vanished">[testnet]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="227"/>
+        <location filename="../bitcoingui.cpp" line="249"/>
         <source>&amp;Overview</source>
         <translation>&amp;Pārskats</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="228"/>
+        <location filename="../bitcoingui.cpp" line="250"/>
         <source>Show general overview of wallet</source>
         <translation>Rādīt vispārēju maciņa pārskatu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="234"/>
+        <location filename="../bitcoingui.cpp" line="260"/>
         <source>&amp;Send</source>
         <translation>&amp;Sūtīt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="235"/>
+        <location filename="../bitcoingui.cpp" line="261"/>
         <source>Send coins to a Dash address</source>
         <translation>Nosūtīt monētas uz Dash adresi</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="241"/>
+        <location filename="../bitcoingui.cpp" line="271"/>
         <source>&amp;Receive</source>
         <translation>Saņe&amp;mt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="242"/>
+        <location filename="../bitcoingui.cpp" line="272"/>
         <source>Request payments (generates QR codes and dash: URIs)</source>
         <translation>Pieprasīt maksājumus (izveido QR kodu un dash: URIs)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="248"/>
+        <location filename="../bitcoingui.cpp" line="282"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Transakcijas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
+        <location filename="../bitcoingui.cpp" line="283"/>
         <source>Browse transaction history</source>
         <translation>Skatīt transakciju vēsturi</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="266"/>
+        <location filename="../bitcoingui.cpp" line="306"/>
         <source>E&amp;xit</source>
         <translation>&amp;Iziet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="267"/>
+        <location filename="../bitcoingui.cpp" line="307"/>
         <source>Quit application</source>
         <translation>Aizvērt programmu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="271"/>
-        <location filename="../bitcoingui.cpp" line="273"/>
+        <location filename="../bitcoingui.cpp" line="310"/>
         <source>&amp;About Dash Core</source>
         <translation>Par Dash Core</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="274"/>
         <source>Show information about Dash</source>
-        <translation>Parādīt informāciju par Dash</translation>
+        <translation type="vanished">Parādīt informāciju par Dash</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="277"/>
-        <location filename="../bitcoingui.cpp" line="279"/>
+        <location filename="../bitcoingui.cpp" line="311"/>
+        <source>Show information about Dash Core</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="314"/>
+        <location filename="../bitcoingui.cpp" line="316"/>
         <source>About &amp;Qt</source>
         <translation>Par &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="281"/>
+        <location filename="../bitcoingui.cpp" line="318"/>
         <source>Show information about Qt</source>
         <translation>Parādīt informāciju par Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="283"/>
+        <location filename="../bitcoingui.cpp" line="320"/>
         <source>&amp;Options...</source>
         <translation>&amp;Iespējas...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="284"/>
+        <location filename="../bitcoingui.cpp" line="321"/>
         <source>Modify configuration options for Dash</source>
         <translation>Mainīt Dash konfigurācijas uzstādījumus</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="287"/>
-        <location filename="../bitcoingui.cpp" line="289"/>
+        <location filename="../bitcoingui.cpp" line="323"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Rādīt / Paslēpt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="290"/>
+        <location filename="../bitcoingui.cpp" line="324"/>
         <source>Show or hide the main Window</source>
         <translation>Parādīt vai paslēpt galveno Logu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="292"/>
+        <location filename="../bitcoingui.cpp" line="326"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>Šifrēt &amp;maciņu...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="293"/>
+        <location filename="../bitcoingui.cpp" line="327"/>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Šifrēt privātās atslēgas kuras pieder tavam maciņam</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="295"/>
+        <location filename="../bitcoingui.cpp" line="329"/>
         <source>&amp;Backup Wallet...</source>
         <translation>&amp;Maciņa Rezerves Kopija...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="296"/>
+        <location filename="../bitcoingui.cpp" line="330"/>
         <source>Backup wallet to another location</source>
         <translation>Izveidot maciņa rezerves kopiju citur</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="297"/>
+        <location filename="../bitcoingui.cpp" line="331"/>
         <source>&amp;Change Passphrase...</source>
         <translation>Mainīt &amp;Paroli...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="298"/>
+        <location filename="../bitcoingui.cpp" line="332"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Mainīt maciņa šifrēšanas paroli</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="299"/>
+        <location filename="../bitcoingui.cpp" line="333"/>
         <source>&amp;Unlock Wallet...</source>
         <translation>Atslēgt maciņu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="300"/>
+        <location filename="../bitcoingui.cpp" line="334"/>
         <source>Unlock wallet</source>
         <translation>Atslēgt maciņu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="301"/>
+        <location filename="../bitcoingui.cpp" line="335"/>
         <source>&amp;Lock Wallet</source>
         <translation>Aizslēgt maciņu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="302"/>
+        <location filename="../bitcoingui.cpp" line="336"/>
         <source>Sign &amp;message...</source>
         <translation>Parakstīt &amp;ziņojumu...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="303"/>
+        <location filename="../bitcoingui.cpp" line="337"/>
         <source>Sign messages with your Dash addresses to prove you own them</source>
         <translation>Parakstīt ziņojumus ar savām Dash adresēm lai pierādītu, ka tās pieder Jums</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="304"/>
+        <location filename="../bitcoingui.cpp" line="338"/>
         <source>&amp;Verify message...</source>
         <translation>&amp;Pārbaudīt ziņojumu...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="305"/>
+        <location filename="../bitcoingui.cpp" line="339"/>
         <source>Verify messages to ensure they were signed with specified Dash addresses</source>
         <translation>Pārbaudīt ziņojumus lai pārliecinātos, ka tie tika parakstīti ar norādītajām Dash adresēm</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="307"/>
+        <location filename="../bitcoingui.cpp" line="341"/>
         <source>&amp;Information</source>
         <translation>&amp;Informācija</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="308"/>
+        <location filename="../bitcoingui.cpp" line="342"/>
         <source>Show diagnostic information</source>
         <translation>Rādīt diagnostikas informāciju</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="309"/>
+        <location filename="../bitcoingui.cpp" line="343"/>
         <source>&amp;Debug console</source>
         <translation>Atkļūdošanas logs</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="310"/>
+        <location filename="../bitcoingui.cpp" line="344"/>
         <source>Open debugging console</source>
         <translation>Atvērt atkļūdošanas un diagnostikas konsoli</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="311"/>
+        <location filename="../bitcoingui.cpp" line="345"/>
         <source>&amp;Network Monitor</source>
         <translation>Tīkla novērošana</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="312"/>
+        <location filename="../bitcoingui.cpp" line="346"/>
         <source>Show network monitor</source>
         <translation>Rādīt tīklā novērošanu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="313"/>
+        <location filename="../bitcoingui.cpp" line="347"/>
         <source>Open &amp;Configuration File</source>
         <translation>Atvērt&amp;Konfigurēt failu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="314"/>
+        <location filename="../bitcoingui.cpp" line="348"/>
         <source>Open configuration file</source>
         <translation>Atvērt konfigurācijas failu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="316"/>
+        <location filename="../bitcoingui.cpp" line="350"/>
         <source>&amp;Sending addresses...</source>
         <translation>&amp;Sūtīšanas adreses...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="317"/>
+        <location filename="../bitcoingui.cpp" line="351"/>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Rādīt lietoto sūtīšanas adrešu sarakstu un formas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="318"/>
+        <location filename="../bitcoingui.cpp" line="352"/>
         <source>&amp;Receiving addresses...</source>
         <translation>Saņemšanas &amp;adreses...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="319"/>
+        <location filename="../bitcoingui.cpp" line="353"/>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Rādīt lietoto saņemšanas adrešu sarakstu un formas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="321"/>
+        <location filename="../bitcoingui.cpp" line="355"/>
         <source>Open &amp;URI...</source>
         <translation>Atvērt &amp;URI...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="322"/>
+        <location filename="../bitcoingui.cpp" line="356"/>
         <source>Open a dash: URI or payment request</source>
         <translation>Atvērt dash URI vai maksājuma pieprasījumu</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="324"/>
+        <location filename="../bitcoingui.cpp" line="358"/>
         <source>&amp;Command-line options</source>
         <translation>&amp;Komandrindas iespējas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="325"/>
-        <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
-        <translation>Rādīt Dash Core palīdzības logu, lai iegūtu sarakstu ar iespējamiem Dash komandjoslas iestatījumiem.</translation>
+        <location filename="../bitcoingui.cpp" line="360"/>
+        <source>Show the Bitcoin Core help message to get a list with possible Dash command-line options</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="361"/>
+        <location filename="../bitcoingui.cpp" line="550"/>
+        <source>Dash Core client</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="727"/>
+        <source>Processed %n blocks of transaction history.</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message>
+        <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
+        <translation type="vanished">Rādīt Dash Core palīdzības logu, lai iegūtu sarakstu ar iespējamiem Dash komandjoslas iestatījumiem.</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="396"/>
         <source>&amp;File</source>
         <translation>&amp;Fails</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="375"/>
+        <location filename="../bitcoingui.cpp" line="410"/>
         <source>&amp;Settings</source>
         <translation>&amp;Uzstādījumi</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="388"/>
+        <location filename="../bitcoingui.cpp" line="423"/>
         <source>&amp;Tools</source>
         <translation>Rīki</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="395"/>
+        <location filename="../bitcoingui.cpp" line="430"/>
         <source>&amp;Help</source>
         <translation>&amp;Palīdzība</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="406"/>
+        <location filename="../bitcoingui.cpp" line="441"/>
         <source>Tabs toolbar</source>
         <translation>Ciļņu rīkjosla</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="493"/>
-        <location filename="../bitcoingui.cpp" line="498"/>
         <source>Dash client</source>
-        <translation>Dash klients</translation>
+        <translation type="vanished">Dash klients</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="643"/>
+        <location filename="../bitcoingui.cpp" line="692"/>
         <source>%n active connection(s) to Dash network</source>
-        <translation><numerusform>0 aktīvi savienojumi ar Dash tīklu</numerusform><numerusform>1 aktīvs savienojums ar Dash tīklu</numerusform><numerusform>%n aktīvi savienojumi ar Dash tīklu</numerusform></translation>
+        <translation>
+            <numerusform>0 aktīvi savienojumi ar Dash tīklu</numerusform>
+            <numerusform>1 aktīvs savienojums ar Dash tīklu</numerusform>
+            <numerusform>%n aktīvi savienojumi ar Dash tīklu</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="655"/>
+        <location filename="../bitcoingui.cpp" line="707"/>
         <source>Synchronizing with network...</source>
         <translation>Sinhronizācija ar tīklu...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="658"/>
+        <location filename="../bitcoingui.cpp" line="710"/>
         <source>Importing blocks from disk...</source>
         <translation>Importē blokus no diska...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="661"/>
+        <location filename="../bitcoingui.cpp" line="713"/>
         <source>Reindexing blocks on disk...</source>
         <translation>Bloku reindeksēšana no diska...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="665"/>
+        <location filename="../bitcoingui.cpp" line="717"/>
         <source>No block source available...</source>
         <translation>Nav pieejams neviens bloku avots...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="675"/>
         <source>Processed %1 blocks of transaction history.</source>
-        <translation>Apstrādāti %1 bloki no transakciju vēstures.</translation>
+        <translation type="vanished">Apstrādāti %1 bloki no transakciju vēstures.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="680"/>
+        <location filename="../bitcoingui.cpp" line="732"/>
         <source>Up to date</source>
         <translation>Sinhronizēts</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="701"/>
+        <location filename="../bitcoingui.cpp" line="753"/>
         <source>%n hour(s)</source>
-        <translation><numerusform>0 stundas</numerusform><numerusform>1 stunda</numerusform><numerusform>%n stundas</numerusform></translation>
+        <translation>
+            <numerusform>0 stundas</numerusform>
+            <numerusform>1 stunda</numerusform>
+            <numerusform>%n stundas</numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="705"/>
+        <location filename="../bitcoingui.cpp" line="757"/>
         <source>%n day(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="709"/>
-        <location filename="../bitcoingui.cpp" line="715"/>
+        <location filename="../bitcoingui.cpp" line="761"/>
+        <location filename="../bitcoingui.cpp" line="767"/>
         <source>%n week(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="715"/>
+        <location filename="../bitcoingui.cpp" line="767"/>
         <source>%1 and %2</source>
         <translation>%1 un %2</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="715"/>
+        <location filename="../bitcoingui.cpp" line="767"/>
         <source>%n year(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="719"/>
+        <location filename="../bitcoingui.cpp" line="771"/>
         <source>%1 behind</source>
         <translation>%1 aizmugurē</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="724"/>
+        <location filename="../bitcoingui.cpp" line="776"/>
         <source>Catching up...</source>
         <translation>Sinhronizējos...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="740"/>
+        <location filename="../bitcoingui.cpp" line="792"/>
         <source>Last received block was generated %1 ago.</source>
         <translation>Pēdējais bloks radīts %1 atpakaļ</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="742"/>
+        <location filename="../bitcoingui.cpp" line="794"/>
         <source>Transactions after this will not yet be visible.</source>
         <translation>Transakcijas pēc šī vēl nebūs redzamas</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="755"/>
+        <location filename="../bitcoingui.cpp" line="807"/>
         <source>Dash</source>
         <translation>Dash</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="769"/>
+        <location filename="../bitcoingui.cpp" line="821"/>
         <source>Error</source>
         <translation>Kļūda</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="772"/>
+        <location filename="../bitcoingui.cpp" line="824"/>
         <source>Warning</source>
         <translation>Brīdinājums</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="775"/>
+        <location filename="../bitcoingui.cpp" line="827"/>
         <source>Information</source>
         <translation>Informācija</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="854"/>
+        <location filename="../bitcoingui.cpp" line="901"/>
         <source>Sent transaction</source>
         <translation>Transakcija nosūtīta</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="854"/>
+        <location filename="../bitcoingui.cpp" line="901"/>
         <source>Incoming transaction</source>
         <translation>Ienākoša transakcija</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="855"/>
+        <location filename="../bitcoingui.cpp" line="902"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -766,22 +809,22 @@ Adrese: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="926"/>
+        <location filename="../bitcoingui.cpp" line="972"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;atslēgts&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="936"/>
+        <location filename="../bitcoingui.cpp" line="982"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt; for anonimization only</source>
         <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;atvērts&lt;/b&gt; tikai priekš anonimizācijai</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="946"/>
+        <location filename="../bitcoingui.cpp" line="992"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Maciņš ir &lt;b&gt;šifrēts&lt;/b&gt; un pašlaik &lt;b&gt;slēgts&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="449"/>
+        <location filename="../dash.cpp" line="478"/>
         <source>A fatal error occurred. Dash can no longer continue safely and will quit.</source>
         <translation>Radās fatāla kļūda. Dash Core nevar vairs droši turpināt un tiks izslēgta.</translation>
     </message>
@@ -789,7 +832,7 @@ Adrese: %4
 <context>
     <name>ClientModel</name>
     <message>
-        <location filename="../clientmodel.cpp" line="164"/>
+        <location filename="../clientmodel.cpp" line="171"/>
         <source>Network Alert</source>
         <translation>Tīkla brīdinājums</translation>
     </message>
@@ -797,9 +840,8 @@ Adrese: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="14"/>
         <source>Coin Control Address Selection</source>
-        <translation>Bitcoin Kontroles Adrešu Atlase</translation>
+        <translation type="vanished">Bitcoin Kontroles Adrešu Atlase</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="48"/>
@@ -827,9 +869,18 @@ Adrese: %4
         <translation>Maksa:</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="228"/>
         <source>Low Output:</source>
-        <translation>Zema Izeja:</translation>
+        <translation type="vanished">Zema Izeja:</translation>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="14"/>
+        <source>Coin Selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="228"/>
+        <source>Dust:</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="276"/>
@@ -847,7 +898,7 @@ Adrese: %4
         <translation>iezīmēt visus</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="377"/>
+        <location filename="../forms/coincontroldialog.ui" line="380"/>
         <source>Tree mode</source>
         <translation>Tree veids</translation>
     </message>
@@ -857,253 +908,265 @@ Adrese: %4
         <translation>Saraksta režīms</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="400"/>
+        <location filename="../forms/coincontroldialog.ui" line="403"/>
         <source>(1 locked)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="446"/>
+        <location filename="../forms/coincontroldialog.ui" line="449"/>
         <source>Amount</source>
         <translation>Daudzums</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="451"/>
+        <location filename="../forms/coincontroldialog.ui" line="454"/>
+        <source>Received with label</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/coincontroldialog.ui" line="459"/>
+        <source>Received with address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Label</source>
-        <translation>Nosaukums</translation>
+        <translation type="vanished">Nosaukums</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="456"/>
         <source>Address</source>
-        <translation>Adrese</translation>
+        <translation type="vanished">Adrese</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="461"/>
+        <location filename="../forms/coincontroldialog.ui" line="464"/>
         <source>Darksend Rounds</source>
         <translation>Darksend Cikli</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="466"/>
+        <location filename="../forms/coincontroldialog.ui" line="469"/>
         <source>Date</source>
         <translation>Datums</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="471"/>
+        <location filename="../forms/coincontroldialog.ui" line="474"/>
         <source>Confirmations</source>
         <translation>Apstiprinājumi</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="474"/>
+        <location filename="../forms/coincontroldialog.ui" line="477"/>
         <source>Confirmed</source>
         <translation>Apstiprināts</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="479"/>
+        <location filename="../forms/coincontroldialog.ui" line="482"/>
         <source>Priority</source>
         <translation>Prioritāte</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="43"/>
+        <location filename="../coincontroldialog.cpp" line="49"/>
         <source>Copy address</source>
         <translation>Kopēt adresi</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="44"/>
+        <location filename="../coincontroldialog.cpp" line="50"/>
         <source>Copy label</source>
         <translation>Kopēt nosaukumu</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="45"/>
-        <location filename="../coincontroldialog.cpp" line="71"/>
+        <location filename="../coincontroldialog.cpp" line="51"/>
+        <location filename="../coincontroldialog.cpp" line="77"/>
         <source>Copy amount</source>
         <translation>Kopēt daudzumu</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="46"/>
+        <location filename="../coincontroldialog.cpp" line="52"/>
         <source>Copy transaction ID</source>
         <translation>Kopēt transakcijas ID</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="47"/>
+        <location filename="../coincontroldialog.cpp" line="53"/>
         <source>Lock unspent</source>
         <translation>Aizslēgt neiztērēto</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="48"/>
+        <location filename="../coincontroldialog.cpp" line="54"/>
         <source>Unlock unspent</source>
         <translation>Atslēgt neiztērēto</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="70"/>
+        <location filename="../coincontroldialog.cpp" line="76"/>
         <source>Copy quantity</source>
         <translation>Kopēt daudzumu</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="72"/>
+        <location filename="../coincontroldialog.cpp" line="78"/>
         <source>Copy fee</source>
         <translation>Kopēt maksu</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="73"/>
+        <location filename="../coincontroldialog.cpp" line="79"/>
         <source>Copy after fee</source>
         <translation>Kopēt pēc maksas</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="74"/>
+        <location filename="../coincontroldialog.cpp" line="80"/>
         <source>Copy bytes</source>
         <translation>Kopēt baitus</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="75"/>
+        <location filename="../coincontroldialog.cpp" line="81"/>
         <source>Copy priority</source>
         <translation>Kopēt prioritāti</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="76"/>
-        <source>Copy low output</source>
-        <translation>Kopēt zemo izeju</translation>
+        <location filename="../coincontroldialog.cpp" line="82"/>
+        <source>Copy dust</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="77"/>
+        <source>Copy low output</source>
+        <translation type="vanished">Kopēt zemo izeju</translation>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="83"/>
         <source>Copy change</source>
         <translation>Kopēt atlikumu</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="410"/>
+        <location filename="../coincontroldialog.cpp" line="435"/>
         <source>highest</source>
         <translation>augstākais</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="411"/>
+        <location filename="../coincontroldialog.cpp" line="436"/>
         <source>higher</source>
         <translation>augstāks</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="412"/>
+        <location filename="../coincontroldialog.cpp" line="437"/>
         <source>high</source>
         <translation>augsts</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="413"/>
+        <location filename="../coincontroldialog.cpp" line="438"/>
         <source>medium-high</source>
         <translation>vidēji-augsts</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="759"/>
+        <location filename="../coincontroldialog.cpp" line="654"/>
+        <source>Can vary +/- %1 duff(s) per input.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../coincontroldialog.cpp" line="780"/>
         <source>n/a</source>
         <translation>(nav pieejams)</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="164"/>
-        <location filename="../coincontroldialog.cpp" line="414"/>
+        <location filename="../coincontroldialog.cpp" line="439"/>
         <source>medium</source>
         <translation>vidējs</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="418"/>
+        <location filename="../coincontroldialog.cpp" line="440"/>
         <source>low-medium</source>
         <translation>zemi-vidējs</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="419"/>
+        <location filename="../coincontroldialog.cpp" line="441"/>
         <source>low</source>
         <translation>zems</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="420"/>
+        <location filename="../coincontroldialog.cpp" line="442"/>
         <source>lower</source>
         <translation>zemāks</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="421"/>
+        <location filename="../coincontroldialog.cpp" line="443"/>
         <source>lowest</source>
         <translation>zemākais</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="432"/>
+        <location filename="../coincontroldialog.cpp" line="453"/>
         <source>(%1 locked)</source>
         <translation>(%1 aizslēgts)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="464"/>
+        <location filename="../coincontroldialog.cpp" line="481"/>
         <source>none</source>
         <translation>neviens</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="615"/>
         <source>Dust</source>
-        <translation>Putekļi</translation>
+        <translation type="vanished">Putekļi</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="615"/>
+        <location filename="../coincontroldialog.cpp" line="622"/>
         <source>yes</source>
         <translation>jā</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="244"/>
-        <location filename="../coincontroldialog.cpp" line="615"/>
+        <location filename="../coincontroldialog.cpp" line="622"/>
         <source>no</source>
         <translation>nē</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="625"/>
+        <location filename="../coincontroldialog.cpp" line="638"/>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
         <translation>Šis logs kļūst sarkans, ja transakcijas izmērs ir lielāks par 100 baitiem.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="626"/>
-        <location filename="../coincontroldialog.cpp" line="631"/>
+        <location filename="../coincontroldialog.cpp" line="639"/>
+        <location filename="../coincontroldialog.cpp" line="644"/>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>Tas nozīmē nodokli vismaz %1 uz kB tiks pieprasīts.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="627"/>
+        <location filename="../coincontroldialog.cpp" line="640"/>
         <source>Can vary +/- 1 byte per input.</source>
         <translation>Var atšķirties par +/- 1 baitu uz ievadīto apjomu</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="629"/>
+        <location filename="../coincontroldialog.cpp" line="642"/>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
         <translation>Transakcijas ar augstāku prioritāti tiks iekļautas blokā ātrāk.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="630"/>
+        <location filename="../coincontroldialog.cpp" line="643"/>
         <source>This label turns red, if the priority is smaller than &quot;medium&quot;.</source>
         <translation>Šis logs kļūst sarkans, ja prioritāte ir mazāka par &quot;vidēja&quot;</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="633"/>
+        <location filename="../coincontroldialog.cpp" line="646"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.</source>
         <translation>Šis logs kļūst sarkans, ja saņēmējs saņem apjomu mazāku par %1.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="634"/>
-        <location filename="../coincontroldialog.cpp" line="638"/>
         <source>This means a fee of at least %1 is required.</source>
-        <translation>Vismaz %1 nodoklis pieprasīts.</translation>
+        <translation type="vanished">Vismaz %1 nodoklis pieprasīts.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="635"/>
         <source>Amounts below 0.546 times the minimum relay fee are shown as dust.</source>
-        <translation>Apjomi, kas 0.546 reizes mazāki par minimumu tiek rādīti kā putekļi.</translation>
+        <translation type="vanished">Apjomi, kas 0.546 reizes mazāki par minimumu tiek rādīti kā putekļi.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="637"/>
         <source>This label turns red, if the change is smaller than %1.</source>
-        <translation>Šis logs kļūst sarkans, ja maiņa mazāka par %1.</translation>
+        <translation type="vanished">Šis logs kļūst sarkans, ja maiņa mazāka par %1.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="680"/>
-        <location filename="../coincontroldialog.cpp" line="741"/>
+        <location filename="../coincontroldialog.cpp" line="701"/>
+        <location filename="../coincontroldialog.cpp" line="762"/>
         <source>(no label)</source>
         <translation>(bez nosaukuma)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="734"/>
+        <location filename="../coincontroldialog.cpp" line="755"/>
         <source>change from %1 (%2)</source>
         <translation>atlikums no %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="735"/>
+        <location filename="../coincontroldialog.cpp" line="756"/>
         <source>(change)</source>
         <translation>(atlikums)</translation>
     </message>
@@ -1292,57 +1355,72 @@ Adrese: %4
 <context>
     <name>HelpMessageDialog</name>
     <message>
-        <location filename="../forms/helpmessagedialog.ui" line="19"/>
         <source>Dash Core - Command-line options</source>
-        <translation>Dash Core - Komand-līnijas uzstādījumi</translation>
+        <translation type="vanished">Dash Core - Komand-līnijas uzstādījumi</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="69"/>
+        <location filename="../utilitydialog.cpp" line="32"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="69"/>
+        <location filename="../utilitydialog.cpp" line="32"/>
         <source>version</source>
         <translation>versija</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="71"/>
+        <location filename="../utilitydialog.cpp" line="37"/>
+        <location filename="../utilitydialog.cpp" line="39"/>
+        <source>(%1-bit)</source>
+        <translation type="unfinished">(%1-biti)</translation>
+    </message>
+    <message>
+        <location filename="../utilitydialog.cpp" line="44"/>
+        <source>About Dash Core</source>
+        <translation type="unfinished">Par Dash Core</translation>
+    </message>
+    <message>
+        <location filename="../utilitydialog.cpp" line="62"/>
+        <source>Command-line options</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../utilitydialog.cpp" line="63"/>
         <source>Usage:</source>
         <translation>Lietojums:</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="72"/>
+        <location filename="../utilitydialog.cpp" line="64"/>
         <source>command-line options</source>
         <translation>komandrindas izvēles</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="76"/>
+        <location filename="../utilitydialog.cpp" line="68"/>
         <source>UI options</source>
         <translation>Lietotāja interfeisa izvēlnes</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="77"/>
+        <location filename="../utilitydialog.cpp" line="69"/>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>Izvēlieties datu glabātuvi pie startēšanas (pamata: 0)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="78"/>
+        <location filename="../utilitydialog.cpp" line="70"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
         <translation>Uzstādiet valodu, piemēram &quot;de_DE&quot; (pēc noklusēšanas: sistēmas lokāle)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="79"/>
+        <location filename="../utilitydialog.cpp" line="71"/>
         <source>Start minimized</source>
         <translation>Sākt minimizētu</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="80"/>
+        <location filename="../utilitydialog.cpp" line="72"/>
         <source>Set SSL root certificates for payment request (default: -system-)</source>
         <translation>Uzstādiet SLL root sertifikātus maksājumu pieprasīšanai (pamata- sistēma-)</translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="81"/>
+        <location filename="../utilitydialog.cpp" line="73"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Uzsākot, parādīt programmas informācijas logu (pēc noklusēšanas: 1)</translation>
     </message>
@@ -1382,29 +1460,53 @@ Maiciņš arī glabāsies šajā direkotrijā.</translation>
         <translation>Izmantot pielāgotu datu mapi:</translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="185"/>
         <source>Dash</source>
-        <translation>Dash</translation>
+        <translation type="vanished">Dash</translation>
+    </message>
+    <message>
+        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
+        <translation type="vanished">Kļūda: Nevar izveidot norādīto datu glabātuvi &quot;%1&quot; </translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="185"/>
+        <source>Dash Core</source>
+        <translation type="unfinished">Dash Core</translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="186"/>
-        <source>Error: Specified data directory &quot;%1&quot; can not be created.</source>
-        <translation>Kļūda: Nevar izveidot norādīto datu glabātuvi &quot;%1&quot; </translation>
+        <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../intro.cpp" line="210"/>
         <source>Error</source>
         <translation>Kļūda</translation>
     </message>
-    <message>
+    <message numerus="yes">
         <location filename="../intro.cpp" line="219"/>
-        <source>GB of free space available</source>
-        <translation>GB ar brīvo vietu pieejams</translation>
+        <source>%n GB of free space available</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../intro.cpp" line="222"/>
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../intro.cpp" line="222"/>
+        <source>GB of free space available</source>
+        <translation type="vanished">GB ar brīvo vietu pieejams</translation>
+    </message>
+    <message>
         <source>(of %1GB needed)</source>
-        <translation>(no %1GB nepieciešams)</translation>
+        <translation type="vanished">(no %1GB nepieciešams)</translation>
     </message>
 </context>
 <context>
@@ -1425,7 +1527,7 @@ Maiciņš arī glabāsies šajā direkotrijā.</translation>
         <translation>URI:</translation>
     </message>
     <message>
-        <location filename="../forms/openuridialog.ui" line="40"/>
+        <location filename="../forms/openuridialog.ui" line="39"/>
         <source>Select payment request file</source>
         <translation>Izvēlies maksājuma pieprasījuma datni</translation>
     </message>
@@ -1504,232 +1606,249 @@ Maiciņš arī glabāsies šajā direkotrijā.</translation>
         <translation>&amp;Maciņš</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="212"/>
-        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
-        <translation>Izvēles transakcijas nodoklis uz kB, kas nodrošina ātru transakciju. Vairums transakciju izmērs ir 1kB.</translation>
-    </message>
-    <message>
-        <location filename="../forms/optionsdialog.ui" line="227"/>
-        <source>Pay transaction &amp;fee</source>
-        <translation>&amp;Maksāt par transakciju</translation>
-    </message>
-    <message>
         <location filename="../forms/optionsdialog.ui" line="271"/>
+        <source>Accept connections from outside</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="274"/>
+        <source>Allow incoming connections</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="281"/>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="284"/>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1 kB.</source>
+        <translation type="vanished">Izvēles transakcijas nodoklis uz kB, kas nodrošina ātru transakciju. Vairums transakciju izmērs ir 1kB.</translation>
+    </message>
+    <message>
+        <source>Pay transaction &amp;fee</source>
+        <translation type="vanished">&amp;Maksāt par transakciju</translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="212"/>
         <source>Expert</source>
         <translation>Eksperts</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="277"/>
+        <location filename="../forms/optionsdialog.ui" line="218"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Vai rādīt Bitcoin kontroles funkcijas vai nē.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="280"/>
+        <location filename="../forms/optionsdialog.ui" line="221"/>
         <source>Enable coin &amp;control features</source>
         <translation>Ieslēgt bitcoin &amp;kontroles funkcijas</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="287"/>
+        <location filename="../forms/optionsdialog.ui" line="228"/>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
         <translation>Ja atspējo izmaksas no neapstiprinātas maiņas, izmaiņas no transakcijas iespējamas tikai vismaz pēc transakcijas viena apstiprinājuma.
 Tas iespaido arī jūsu bilances aprēķinu.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="290"/>
+        <location filename="../forms/optionsdialog.ui" line="231"/>
         <source>&amp;Spend unconfirmed change</source>
         <translation>&amp;Tērēt neapstiprinātu atlikumu</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="301"/>
+        <location filename="../forms/optionsdialog.ui" line="255"/>
         <source>&amp;Network</source>
         <translation>&amp;Tīkls</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="307"/>
+        <location filename="../forms/optionsdialog.ui" line="261"/>
         <source>Automatically open the Dash client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Automātiski atvērt Darcoin klienta vārtus rūterī. Iespējams tikai tad, ja rūteris atbalsta UPnP un tas ir iespējots.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="310"/>
+        <location filename="../forms/optionsdialog.ui" line="264"/>
         <source>Map port using &amp;UPnP</source>
         <translation>Kartēt portu, izmantojot &amp;UPnP</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="317"/>
         <source>Connect to the Dash network through a SOCKS proxy.</source>
-        <translation>Pieslēgties Dash tīklam caur SOCKS proxy.</translation>
+        <translation type="vanished">Pieslēgties Dash tīklam caur SOCKS proxy.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="320"/>
         <source>&amp;Connect through SOCKS proxy (default proxy):</source>
-        <translation>&amp;Savienoties caur SOCKS starpniekserveri (noklusējuma starpniekserveris)</translation>
+        <translation type="vanished">&amp;Savienoties caur SOCKS starpniekserveri (noklusējuma starpniekserveris)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="329"/>
+        <location filename="../forms/optionsdialog.ui" line="293"/>
         <source>Proxy &amp;IP:</source>
         <translation>Starpniekservera &amp;IP:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="354"/>
+        <location filename="../forms/optionsdialog.ui" line="318"/>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
         <translation>Starpniekservera IP adrese (piem. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="361"/>
+        <location filename="../forms/optionsdialog.ui" line="325"/>
         <source>&amp;Port:</source>
         <translation>&amp;Ports:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="386"/>
+        <location filename="../forms/optionsdialog.ui" line="350"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Starpniekservera ports (piem. 9050)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="393"/>
         <source>SOCKS &amp;Version:</source>
-        <translation>SOCKS &amp;Versija:</translation>
+        <translation type="vanished">SOCKS &amp;Versija:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="406"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
-        <translation>Starpniekservera SOCKS versija (piem. 5)</translation>
+        <translation type="vanished">Starpniekservera SOCKS versija (piem. 5)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="442"/>
+        <location filename="../forms/optionsdialog.ui" line="386"/>
         <source>&amp;Window</source>
         <translation>&amp;Logs</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="448"/>
+        <location filename="../forms/optionsdialog.ui" line="392"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Pēc loga minimizācijas rādīt tikai ikonu sistēmas teknē.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="451"/>
+        <location filename="../forms/optionsdialog.ui" line="395"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>&amp;Minimizēt uz sistēmas tekni, nevis rīkjoslu</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="458"/>
+        <location filename="../forms/optionsdialog.ui" line="402"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Quit in the menu.</source>
         <translation>Minimizēt  aplikāciju, kad Windows aizvērts. Kad šī opcija iespējota, aplikāciju var atslēgt tikai uzspiežot Iziet galvenajā izvēlnē.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="461"/>
+        <location filename="../forms/optionsdialog.ui" line="405"/>
         <source>M&amp;inimize on close</source>
         <translation>Minimizēt aizverot</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="482"/>
+        <location filename="../forms/optionsdialog.ui" line="426"/>
         <source>&amp;Display</source>
         <translation>&amp;Izskats</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="490"/>
+        <location filename="../forms/optionsdialog.ui" line="434"/>
         <source>User Interface &amp;language:</source>
         <translation>Lietotāja interfeiss un valoda:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="503"/>
+        <location filename="../forms/optionsdialog.ui" line="447"/>
         <source>The user interface language can be set here. This setting will take effect after restarting Dash.</source>
         <translation>Šeit var iestatīt lietotāja valodu. Iestatījums aktivizēsies pēc Dash restartēšanas.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="524"/>
+        <location filename="../forms/optionsdialog.ui" line="468"/>
         <source>Language missing or translation incomplete? Help contributing translations here:
 https://www.transifex.com/projects/p/dash/</source>
         <translation>Trūkst tulkojums vai tulkojums nav pabeigts? Palīdzi tulkot šeit:
 https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="550"/>
+        <location filename="../forms/optionsdialog.ui" line="487"/>
+        <source>User Interface Theme:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="508"/>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Vienības, kurās attēlot daudzumus:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="563"/>
+        <location filename="../forms/optionsdialog.ui" line="521"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation>Izvēlēties dalījuma vienību pēc noklusēšanas, ko izmantot interfeisā un nosūtot bitkoinus.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="572"/>
         <source>Whether to show Dash addresses in the transaction list or not.</source>
-        <translation>Ne/Rādīt Dash adreses transakciju sarakstā.</translation>
+        <translation type="vanished">Ne/Rādīt Dash adreses transakciju sarakstā.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="575"/>
         <source>&amp;Display addresses in transaction list</source>
-        <translation>&amp;Attēlot adreses transakciju sarakstā</translation>
+        <translation type="vanished">&amp;Attēlot adreses transakciju sarakstā</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="584"/>
-        <location filename="../forms/optionsdialog.ui" line="597"/>
+        <location filename="../forms/optionsdialog.ui" line="532"/>
+        <location filename="../forms/optionsdialog.ui" line="545"/>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="587"/>
+        <location filename="../forms/optionsdialog.ui" line="535"/>
         <source>Third party transaction URLs</source>
         <translation>Trešo personu transakciju URLs</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="628"/>
+        <location filename="../forms/optionsdialog.ui" line="576"/>
         <source>Active command-line options that override above options:</source>
         <translation>Aktīvās komandrindas opcijas, kuras pārspēko šos iestatījumus:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="671"/>
+        <location filename="../forms/optionsdialog.ui" line="619"/>
         <source>Reset all client options to default.</source>
         <translation>Atiestatīt visus klienta iestatījumus uz noklusējumu.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="674"/>
+        <location filename="../forms/optionsdialog.ui" line="622"/>
         <source>&amp;Reset Options</source>
         <translation>&amp;Atiestatīt Iestatījumus.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="735"/>
+        <location filename="../forms/optionsdialog.ui" line="683"/>
         <source>&amp;OK</source>
         <translation>&amp;Labi</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="742"/>
+        <location filename="../forms/optionsdialog.ui" line="696"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Atcelt</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="73"/>
+        <location filename="../optionsdialog.cpp" line="84"/>
         <source>default</source>
         <translation>pēc noklusēšanas</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="134"/>
+        <location filename="../optionsdialog.cpp" line="144"/>
         <source>none</source>
         <translation>neviena</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="222"/>
+        <location filename="../optionsdialog.cpp" line="228"/>
         <source>Confirm options reset</source>
         <translation>Apstiprināt iestatījumu atiestatīšanu</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="223"/>
-        <location filename="../optionsdialog.cpp" line="253"/>
+        <location filename="../optionsdialog.cpp" line="229"/>
+        <location filename="../optionsdialog.cpp" line="259"/>
         <source>Client restart required to activate changes.</source>
         <translation>Nepieciešama klienta restartēšana, lai apstiprinātu izmaiņas.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="223"/>
+        <location filename="../optionsdialog.cpp" line="229"/>
         <source>Client will be shutdown, do you want to proceed?</source>
         <translation>Klients tiks izslēgts, vai vēlaties turpināt?</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="257"/>
+        <location filename="../optionsdialog.cpp" line="263"/>
         <source>This change would require a client restart.</source>
         <translation>Pēc šīm izmaiņām nepieciešams restartēt klientu.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="291"/>
+        <location filename="../optionsdialog.cpp" line="288"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Norādītā starpniekservera adrese nav derīga.</translation>
     </message>
@@ -1742,313 +1861,363 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Forma</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="63"/>
         <source>Wallet</source>
-        <translation>Maciņš</translation>
+        <translation type="vanished">Maciņš</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="70"/>
-        <location filename="../forms/overviewpage.ui" line="953"/>
-        <location filename="../forms/overviewpage.ui" line="1021"/>
+        <location filename="../forms/overviewpage.ui" line="73"/>
+        <location filename="../forms/overviewpage.ui" line="1088"/>
+        <location filename="../forms/overviewpage.ui" line="1165"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="114"/>
+        <location filename="../forms/overviewpage.ui" line="322"/>
         <source>Available:</source>
         <translation>Pieejams:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="130"/>
+        <location filename="../forms/overviewpage.ui" line="338"/>
         <source>Your current spendable balance</source>
         <translation>Tava pašreizējā tērējamā bilance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="146"/>
+        <location filename="../forms/overviewpage.ui" line="379"/>
         <source>Pending:</source>
         <translation>Neizšķirts:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="162"/>
+        <location filename="../forms/overviewpage.ui" line="143"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
         <translation>Kopējā apstiprināmo transakciju vērtība, vēl nav ieskaitīta tērējamajā bilancē</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="178"/>
+        <location filename="../forms/overviewpage.ui" line="255"/>
         <source>Immature:</source>
         <translation>Nenobriedušu:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="191"/>
+        <location filename="../forms/overviewpage.ui" line="226"/>
         <source>Mined balance that has not yet matured</source>
         <translation>&quot;Maininga&quot; bilance, kas vēl nav apstiprināta</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="207"/>
+        <location filename="../forms/overviewpage.ui" line="63"/>
+        <source>Balances</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="118"/>
+        <source>Unconfirmed transactions to watch-only addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="168"/>
+        <source>Mined balance in watch-only addresses that has not yet matured</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="210"/>
         <source>Total:</source>
         <translation>Kopsumma:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="223"/>
+        <location filename="../forms/overviewpage.ui" line="271"/>
         <source>Your current total balance</source>
         <translation>Jūsu kopējā tekošā bilance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="302"/>
+        <location filename="../forms/overviewpage.ui" line="296"/>
+        <source>Current total balance in watch-only addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="312"/>
+        <source>Watch-only:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="363"/>
+        <source>Your current balance in watch-only addresses</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="386"/>
+        <source>Spendable:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="437"/>
         <source>Status:</source>
         <translation>Statuss:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="309"/>
+        <location filename="../forms/overviewpage.ui" line="444"/>
         <source>Enabled/Disabled</source>
         <translation>Iespējot/Atspējot</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="316"/>
+        <location filename="../forms/overviewpage.ui" line="451"/>
         <source>Completion:</source>
         <translation>Paveiktais:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="336"/>
+        <location filename="../forms/overviewpage.ui" line="471"/>
         <source>Darksend Balance:</source>
         <translation>Darksend Bilance:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="349"/>
+        <location filename="../forms/overviewpage.ui" line="484"/>
         <source>0 DASH</source>
         <translation>0 DASH</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="356"/>
+        <location filename="../forms/overviewpage.ui" line="491"/>
         <source>Amount and Rounds:</source>
         <translation>Apjoms un Cikli:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="363"/>
+        <location filename="../forms/overviewpage.ui" line="498"/>
         <source>0 DASH / 0 Rounds</source>
         <translation>0 DASH / 0 Cikli</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="370"/>
+        <location filename="../forms/overviewpage.ui" line="505"/>
         <source>Submitted Denom:</source>
         <translation>Iesniegtais Denom:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="377"/>
+        <location filename="../forms/overviewpage.ui" line="512"/>
         <source>The denominations you submitted to the Masternode. To mix, other users must submit the exact same denominations.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="380"/>
+        <location filename="../forms/overviewpage.ui" line="515"/>
         <source>n/a</source>
         <translation>(nav pieejams)</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="946"/>
-        <location filename="../overviewpage.cpp" line="453"/>
-        <location filename="../overviewpage.cpp" line="467"/>
-        <location filename="../overviewpage.cpp" line="481"/>
+        <location filename="../forms/overviewpage.ui" line="1081"/>
+        <location filename="../overviewpage.cpp" line="495"/>
+        <location filename="../overviewpage.cpp" line="509"/>
+        <location filename="../overviewpage.cpp" line="523"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="839"/>
+        <location filename="../forms/overviewpage.ui" line="1155"/>
+        <source>Recent transactions</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/overviewpage.ui" line="974"/>
         <source>Start/Stop Mixing</source>
         <translation>Sākt/Apturēt Miksēšanu</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="871"/>
+        <location filename="../forms/overviewpage.ui" line="1006"/>
         <source>(Last Message)</source>
         <translation>(Pēdējā Ziņa)</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="896"/>
+        <location filename="../forms/overviewpage.ui" line="1031"/>
         <source>Try to manually submit a Darksend request.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="899"/>
+        <location filename="../forms/overviewpage.ui" line="1034"/>
         <source>Try Mix</source>
         <translation>Mēģināt Miksēšanu</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="918"/>
+        <location filename="../forms/overviewpage.ui" line="1053"/>
         <source>Reset the current status of Darksend (can interrupt Darksend if it&apos;s in the process of Mixing, which can cost you money!)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="924"/>
+        <location filename="../forms/overviewpage.ui" line="1059"/>
         <source>Reset</source>
         <translation>Restartēt</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="1014"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
-        <translation>&lt;b&gt;Pēdējās transakcijas&lt;/b&gt;</translation>
+        <translation type="vanished">&lt;b&gt;Pēdējās transakcijas&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="126"/>
-        <location filename="../overviewpage.cpp" line="127"/>
-        <location filename="../overviewpage.cpp" line="128"/>
+        <location filename="../overviewpage.cpp" line="139"/>
+        <location filename="../overviewpage.cpp" line="140"/>
+        <location filename="../overviewpage.cpp" line="141"/>
         <source>out of sync</source>
         <translation>nav sinhronizēts</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="143"/>
-        <location filename="../overviewpage.cpp" line="350"/>
+        <location filename="../overviewpage.cpp" line="156"/>
+        <location filename="../overviewpage.cpp" line="392"/>
         <source>Disabled</source>
         <translation>Atspējot</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="146"/>
-        <location filename="../overviewpage.cpp" line="352"/>
-        <location filename="../overviewpage.cpp" line="495"/>
+        <location filename="../overviewpage.cpp" line="159"/>
+        <location filename="../overviewpage.cpp" line="394"/>
+        <location filename="../overviewpage.cpp" line="537"/>
         <source>Start Darksend Mixing</source>
         <translation>Sākt Darksend Miksēšanu</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="148"/>
-        <location filename="../overviewpage.cpp" line="497"/>
+        <location filename="../overviewpage.cpp" line="161"/>
+        <location filename="../overviewpage.cpp" line="539"/>
         <source>Stop Darksend Mixing</source>
         <translation>Apturēt Darksend Miksēšanu</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="270"/>
+        <location filename="../overviewpage.cpp" line="312"/>
         <source>No inputs detected</source>
         <translation>Ievades nav fiksētas</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="278"/>
+        <location filename="../overviewpage.cpp" line="320"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to recalculate.</source>
         <translation>Atrastas neapstiprinātas denominētas izvades, gaida līdz apstiprinājumam lai pārrēķinātu.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="335"/>
+        <location filename="../overviewpage.cpp" line="377"/>
         <source>Rounds</source>
         <translation>Cikli</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="366"/>
+        <location filename="../overviewpage.cpp" line="408"/>
         <source>Enabled</source>
         <translation>Iespējots</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="424"/>
+        <location filename="../overviewpage.cpp" line="436"/>
+        <location filename="../overviewpage.cpp" line="437"/>
+        <location filename="../overviewpage.cpp" line="438"/>
+        <source>Submitted to masternode, waiting for more entries</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="442"/>
+        <location filename="../overviewpage.cpp" line="443"/>
+        <location filename="../overviewpage.cpp" line="444"/>
+        <source>Found enough users, signing ( waiting</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="456"/>
+        <location filename="../overviewpage.cpp" line="457"/>
+        <location filename="../overviewpage.cpp" line="458"/>
+        <source>Submitted to masternode, waiting in queue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../overviewpage.cpp" line="466"/>
         <source>Last Darksend message:
 </source>
         <translation>Pēdējā Darksend ziņa:
 </translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="377"/>
-        <location filename="../overviewpage.cpp" line="406"/>
+        <location filename="../overviewpage.cpp" line="419"/>
+        <location filename="../overviewpage.cpp" line="448"/>
         <source>Darksend is idle.</source>
         <translation>Darksend nav aktīvs.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="381"/>
+        <location filename="../overviewpage.cpp" line="423"/>
         <source>Mixing in progress...</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="387"/>
+        <location filename="../overviewpage.cpp" line="429"/>
         <source>Darksend request complete: Your transaction was accepted into the pool!</source>
         <translation>Darksend pieprasījums pabeigts. Jūsu transakcija ir apstiprināta!</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="393"/>
+        <location filename="../overviewpage.cpp" line="435"/>
         <source>Submitted following entries to masternode:</source>
         <translation>Iesniegti sekojoši ieraksti iekš masternode:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="394"/>
-        <location filename="../overviewpage.cpp" line="395"/>
-        <location filename="../overviewpage.cpp" line="396"/>
         <source>Submitted to masternode, Waiting for more entries</source>
-        <translation>Iesniegts uz masternode. Gaida vairāk ierakstus.</translation>
+        <translation type="vanished">Iesniegts uz masternode. Gaida vairāk ierakstus.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="399"/>
+        <location filename="../overviewpage.cpp" line="441"/>
         <source>Found enough users, signing ...</source>
         <translation>Atrasts pietiekošs lietotāju skaits, pierakstās ...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="400"/>
         <source>Found enough users, signing ( waiting. )</source>
-        <translation>Atrasts pietiekošs lietotāju skaits, pierakstās (gaida.)</translation>
+        <translation type="vanished">Atrasts pietiekošs lietotāju skaits, pierakstās (gaida.)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="401"/>
         <source>Found enough users, signing ( waiting.. )</source>
-        <translation>Atrasts pietiekošs lietotāju skaits, pierakstās (gaida...)</translation>
+        <translation type="vanished">Atrasts pietiekošs lietotāju skaits, pierakstās (gaida...)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="402"/>
         <source>Found enough users, signing ( waiting... )</source>
-        <translation>Atrasts pietiekošs lietotāju skaits, pierakstās (gaida...)</translation>
+        <translation type="vanished">Atrasts pietiekošs lietotāju skaits, pierakstās (gaida...)</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="404"/>
+        <location filename="../overviewpage.cpp" line="446"/>
         <source>Transmitting final transaction.</source>
         <translation>Veic pēdējo transakciju.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="408"/>
+        <location filename="../overviewpage.cpp" line="450"/>
         <source>Finalizing transaction.</source>
         <translation>Pabeidz transakciju.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="410"/>
+        <location filename="../overviewpage.cpp" line="452"/>
         <source>Darksend request incomplete:</source>
         <translation>Darksend pieprasījums nav pabeigts:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="410"/>
+        <location filename="../overviewpage.cpp" line="452"/>
         <source>Will retry...</source>
         <translation>Mēģina atkārtoti...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="412"/>
+        <location filename="../overviewpage.cpp" line="454"/>
         <source>Darksend request complete:</source>
         <translation>Darksend pieprasījums pabeigts:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="414"/>
         <source>Submitted to masternode, waiting in queue .</source>
-        <translation>Iesniegts masternodei, gaida rindā.</translation>
+        <translation type="vanished">Iesniegts masternodei, gaida rindā.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="415"/>
         <source>Submitted to masternode, waiting in queue ..</source>
-        <translation>Iesniegts masternodei, gaida rindā..</translation>
+        <translation type="vanished">Iesniegts masternodei, gaida rindā..</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="416"/>
         <source>Submitted to masternode, waiting in queue ...</source>
-        <translation>Iesniegts masternodei, gaida rindā...</translation>
+        <translation type="vanished">Iesniegts masternodei, gaida rindā...</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="418"/>
+        <location filename="../overviewpage.cpp" line="460"/>
         <source>Unknown state:</source>
         <translation>Nezināms status:</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="432"/>
+        <location filename="../overviewpage.cpp" line="474"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="454"/>
+        <location filename="../overviewpage.cpp" line="496"/>
         <source>Darksend was successfully reset.</source>
         <translation>Darksend veiksmīgi restartēts.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="468"/>
+        <location filename="../overviewpage.cpp" line="510"/>
         <source>Darksend requires at least %1 to use.</source>
         <translation>Darksend pieprasa vismaz %1 lai lietotu.</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="482"/>
+        <location filename="../overviewpage.cpp" line="524"/>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation>Maciņš ir slēgts un lietotājs nepiekrita to atvērt. Atspējo Darksend.</translation>
     </message>
@@ -2056,136 +2225,248 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>PaymentServer</name>
     <message>
-        <location filename="../paymentserver.cpp" line="293"/>
-        <location filename="../paymentserver.cpp" line="505"/>
-        <location filename="../paymentserver.cpp" line="518"/>
-        <location filename="../paymentserver.cpp" line="613"/>
-        <location filename="../paymentserver.cpp" line="631"/>
-        <location filename="../paymentserver.cpp" line="647"/>
+        <location filename="../paymentserver.cpp" line="318"/>
+        <location filename="../paymentserver.cpp" line="544"/>
+        <location filename="../paymentserver.cpp" line="578"/>
+        <location filename="../paymentserver.cpp" line="687"/>
+        <location filename="../paymentserver.cpp" line="701"/>
+        <location filename="../paymentserver.cpp" line="719"/>
         <source>Payment request error</source>
         <translation>Maksājumu pieprasījuma kļūda</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="294"/>
+        <location filename="../paymentserver.cpp" line="319"/>
         <source>Cannot start dash: click-to-pay handler</source>
         <translation>Nevar palaist dash: nospied-lai-maksātu apstrādātāju</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="352"/>
         <source>Net manager warning</source>
-        <translation>Tīkla pārvaldnieka brīdinājums</translation>
+        <translation type="vanished">Tīkla pārvaldnieka brīdinājums</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="353"/>
         <source>Your active proxy doesn&apos;t support SOCKS5, which is required for payment requests via proxy.</source>
-        <translation>Jūsu aktīvais proxy neatbalsta SOCK5, kas ir nepieciešams maksājumu pieprasījumiem.</translation>
+        <translation type="vanished">Jūsu aktīvais proxy neatbalsta SOCK5, kas ir nepieciešams maksājumu pieprasījumiem.</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="404"/>
-        <location filename="../paymentserver.cpp" line="417"/>
+        <location filename="../paymentserver.cpp" line="423"/>
+        <location filename="../paymentserver.cpp" line="437"/>
+        <location filename="../paymentserver.cpp" line="444"/>
         <source>URI handling</source>
         <translation>URI apstrāde</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="405"/>
+        <location filename="../paymentserver.cpp" line="424"/>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="418"/>
-        <source>URI can not be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../paymentserver.cpp" line="432"/>
+        <location filename="../paymentserver.cpp" line="458"/>
         <source>Payment request file handling</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="433"/>
-        <source>Payment request file can not be read or processed! This can be caused by an invalid payment request file.</source>
-        <translation type="unfinished"/>
+        <location filename="../paymentserver.cpp" line="437"/>
+        <source>Invalid payment address %1</source>
+        <translation type="unfinished">Nederīga maksājuma adrese %1</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="506"/>
+        <location filename="../paymentserver.cpp" line="445"/>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="459"/>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="528"/>
+        <location filename="../paymentserver.cpp" line="537"/>
+        <location filename="../paymentserver.cpp" line="569"/>
+        <source>Payment request rejected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="528"/>
+        <source>Payment request network doesn&apos;t match client network.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="537"/>
+        <source>Payment request has expired.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="544"/>
+        <source>Payment request is not initialized.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="570"/>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="514"/>
+        <location filename="../paymentserver.cpp" line="578"/>
         <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="565"/>
+        <location filename="../paymentserver.cpp" line="628"/>
         <source>Refund from %1</source>
         <translation>Atmaksa no %1</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="608"/>
+        <location filename="../paymentserver.cpp" line="671"/>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="677"/>
+        <source>Payment request DoS protection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../paymentserver.cpp" line="682"/>
         <source>Error communicating with %1: %2</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="632"/>
-        <source>Payment request can not be parsed or processed!</source>
-        <translation type="unfinished"/>
+        <location filename="../paymentserver.cpp" line="702"/>
+        <source>Payment request cannot be parsed!</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="643"/>
+        <location filename="../paymentserver.cpp" line="715"/>
         <source>Bad response from server %1</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="665"/>
+        <location filename="../paymentserver.cpp" line="737"/>
         <source>Network request error</source>
         <translation>Tīkla pieprasījuma kļūda</translation>
     </message>
     <message>
-        <location filename="../paymentserver.cpp" line="676"/>
+        <location filename="../paymentserver.cpp" line="748"/>
         <source>Payment acknowledged</source>
         <translation>Maksājums atzīts</translation>
     </message>
 </context>
 <context>
+    <name>PeerTableModel</name>
+    <message>
+        <location filename="../peertablemodel.cpp" line="118"/>
+        <source>Address/Hostname</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../peertablemodel.cpp" line="118"/>
+        <source>User Agent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../peertablemodel.cpp" line="118"/>
+        <source>Ping Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QObject</name>
     <message>
-        <location filename="../dash.cpp" line="525"/>
-        <location filename="../dash.cpp" line="532"/>
-        <location filename="../dash.cpp" line="539"/>
-        <location filename="../dash.cpp" line="552"/>
+        <location filename="../dash.cpp" line="596"/>
         <source>Dash</source>
         <translation>Dash</translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="526"/>
+        <location filename="../dash.cpp" line="558"/>
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="533"/>
+        <location filename="../dash.cpp" line="557"/>
+        <location filename="../dash.cpp" line="564"/>
+        <location filename="../dash.cpp" line="577"/>
+        <source>Dash Core</source>
+        <translation type="unfinished">Dash Core</translation>
+    </message>
+    <message>
+        <location filename="../dash.cpp" line="565"/>
         <source>Error: Cannot parse configuration file: %1. Only use key=value syntax.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="540"/>
+        <location filename="../dash.cpp" line="597"/>
         <source>Error reading masternode configuration file: %1</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="552"/>
+        <location filename="../dash.cpp" line="577"/>
         <source>Error: Invalid combination of -regtest and -testnet.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../dash.cpp" line="612"/>
+        <location filename="../dash.cpp" line="643"/>
         <source>Dash Core didn&apos;t yet exit safely...</source>
         <translation>Dash Core netika aizvērts droši...</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="101"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Ievadiet Dash adresi (piem. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="vanished">Ievadiet Dash adresi (piem. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+    </message>
+    <message>
+        <location filename="../bitcoinunits.cpp" line="256"/>
+        <source>Amount</source>
+        <translation type="unfinished">Daudzums</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="110"/>
+        <source>Enter a Dash address (e.g. %1)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="858"/>
+        <source>%1 d</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="860"/>
+        <source>%1 h</source>
+        <translation type="unfinished">%1 st</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="862"/>
+        <source>%1 m</source>
+        <translation type="unfinished">%1 m</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="864"/>
+        <source>%1 s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="881"/>
+        <source>NETWORK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="884"/>
+        <source>UNKNOWN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="892"/>
+        <source>None</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="897"/>
+        <source>N/A</source>
+        <translation type="unfinished">N/A</translation>
+    </message>
+    <message>
+        <location filename="../guiutil.cpp" line="897"/>
+        <source>%1 ms</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2224,185 +2505,318 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Informācija</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="33"/>
+        <location filename="../forms/rpcconsole.ui" line="249"/>
         <source>Masternode Count</source>
         <translation>Masternode Skaits</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="46"/>
+        <location filename="../forms/rpcconsole.ui" line="39"/>
         <source>General</source>
         <translation>Vispārējs</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="53"/>
+        <location filename="../forms/rpcconsole.ui" line="203"/>
         <source>Name</source>
         <translation>Vārds</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="60"/>
+        <location filename="../forms/rpcconsole.ui" line="46"/>
         <source>Client name</source>
         <translation>Klienta vārds</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="70"/>
-        <location filename="../forms/rpcconsole.ui" line="139"/>
-        <location filename="../forms/rpcconsole.ui" line="192"/>
-        <location filename="../forms/rpcconsole.ui" line="215"/>
-        <location filename="../forms/rpcconsole.ui" line="231"/>
-        <location filename="../forms/rpcconsole.ui" line="247"/>
-        <location filename="../forms/rpcconsole.ui" line="276"/>
-        <location filename="../forms/rpcconsole.ui" line="292"/>
-        <location filename="../forms/rpcconsole.ui" line="315"/>
-        <location filename="../forms/rpcconsole.ui" line="341"/>
+        <location filename="../forms/rpcconsole.ui" line="56"/>
+        <location filename="../forms/rpcconsole.ui" line="79"/>
+        <location filename="../forms/rpcconsole.ui" line="105"/>
+        <location filename="../forms/rpcconsole.ui" line="131"/>
+        <location filename="../forms/rpcconsole.ui" line="154"/>
+        <location filename="../forms/rpcconsole.ui" line="177"/>
+        <location filename="../forms/rpcconsole.ui" line="213"/>
+        <location filename="../forms/rpcconsole.ui" line="236"/>
+        <location filename="../forms/rpcconsole.ui" line="256"/>
+        <location filename="../forms/rpcconsole.ui" line="286"/>
+        <location filename="../forms/rpcconsole.ui" line="309"/>
+        <location filename="../forms/rpcconsole.ui" line="774"/>
+        <location filename="../forms/rpcconsole.ui" line="797"/>
+        <location filename="../forms/rpcconsole.ui" line="820"/>
+        <location filename="../forms/rpcconsole.ui" line="843"/>
+        <location filename="../forms/rpcconsole.ui" line="866"/>
+        <location filename="../forms/rpcconsole.ui" line="889"/>
+        <location filename="../forms/rpcconsole.ui" line="912"/>
+        <location filename="../forms/rpcconsole.ui" line="935"/>
+        <location filename="../forms/rpcconsole.ui" line="958"/>
+        <location filename="../forms/rpcconsole.ui" line="981"/>
+        <location filename="../forms/rpcconsole.ui" line="1004"/>
+        <location filename="../forms/rpcconsole.ui" line="1027"/>
+        <location filename="../forms/rpcconsole.ui" line="1050"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="83"/>
+        <location filename="../forms/rpcconsole.ui" line="226"/>
         <source>Number of connections</source>
         <translation>Savienojumu skaits</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="90"/>
+        <location filename="../forms/rpcconsole.ui" line="348"/>
         <source>Open the Dash debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="93"/>
+        <location filename="../forms/rpcconsole.ui" line="351"/>
         <source>&amp;Open</source>
         <translation>&amp;Atvērt</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="116"/>
+        <location filename="../forms/rpcconsole.ui" line="167"/>
         <source>Startup time</source>
         <translation>Sākuma laiks</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="129"/>
+        <location filename="../forms/rpcconsole.ui" line="196"/>
         <source>Network</source>
         <translation>Tīkls</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="152"/>
+        <location filename="../forms/rpcconsole.ui" line="299"/>
         <source>Last block time</source>
         <translation>Pēdējā bloka laiks</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="165"/>
+        <location filename="../forms/rpcconsole.ui" line="341"/>
         <source>Debug log file</source>
         <translation>Atkļūdošanas žurnāla datne</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="172"/>
+        <location filename="../forms/rpcconsole.ui" line="92"/>
         <source>Using OpenSSL version</source>
         <translation>Izmantotā OpenSSL versija</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="182"/>
+        <location filename="../forms/rpcconsole.ui" line="144"/>
         <source>Build date</source>
         <translation>Kompilācijas datums</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="205"/>
+        <location filename="../forms/rpcconsole.ui" line="276"/>
         <source>Current number of blocks</source>
         <translation>Pašreizējais bloku skaits</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="305"/>
+        <location filename="../forms/rpcconsole.ui" line="69"/>
         <source>Client version</source>
         <translation>Klienta versija</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="334"/>
+        <location filename="../forms/rpcconsole.ui" line="118"/>
+        <source>Using BerkeleyDB version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="269"/>
         <source>Block chain</source>
         <translation>Bloku virkne</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="349"/>
+        <location filename="../forms/rpcconsole.ui" line="375"/>
         <source>&amp;Console</source>
         <translation>&amp;Konsole</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="398"/>
+        <location filename="../forms/rpcconsole.ui" line="424"/>
         <source>Clear console</source>
         <translation>Notīrīt konsoli</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="421"/>
+        <location filename="../forms/rpcconsole.ui" line="447"/>
         <source>&amp;Network Traffic</source>
         <translation>&amp;Tīkla Satiksme</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="473"/>
+        <location filename="../forms/rpcconsole.ui" line="499"/>
         <source>&amp;Clear</source>
         <translation>&amp;Notīrīt</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="486"/>
+        <location filename="../forms/rpcconsole.ui" line="515"/>
         <source>Totals</source>
         <translation>Kopsummas</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="550"/>
-        <location filename="../rpcconsole.cpp" line="367"/>
+        <location filename="../forms/rpcconsole.ui" line="579"/>
+        <source>Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="659"/>
+        <source>Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="700"/>
+        <source>&amp;Peers</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="739"/>
+        <location filename="../rpcconsole.cpp" line="237"/>
+        <location filename="../rpcconsole.cpp" line="594"/>
+        <source>Select a peer to view detailed information.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="764"/>
+        <source>Direction</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="787"/>
+        <source>Version</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="810"/>
+        <source>User Agent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="833"/>
+        <source>Services</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="856"/>
+        <source>Starting Height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="879"/>
+        <source>Sync Height</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="902"/>
+        <source>Ban Score</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="925"/>
+        <source>Connection Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="948"/>
+        <source>Last Send</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="971"/>
+        <source>Last Receive</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="994"/>
+        <source>Bytes Sent</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="1017"/>
+        <source>Bytes Received</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/rpcconsole.ui" line="1040"/>
+        <source>Ping Time</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="402"/>
         <source>In:</source>
         <translation>Ie.:</translation>
     </message>
     <message>
-        <location filename="../forms/rpcconsole.ui" line="630"/>
-        <location filename="../rpcconsole.cpp" line="368"/>
+        <location filename="../rpcconsole.cpp" line="403"/>
         <source>Out:</source>
         <translation>Iz.:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="333"/>
+        <location filename="../rpcconsole.cpp" line="368"/>
         <source>Welcome to the Dash RPC console.</source>
         <translation>Laipni lūgti Dash RPC konsolē.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="334"/>
+        <location filename="../rpcconsole.cpp" line="369"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Izmantojiet bultiņas uz augšu un leju, lai pārvietotos pa vēsturi, un &lt;b&gt;Ctrl-L&lt;/b&gt; ekrāna notīrīšanai.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="335"/>
+        <location filename="../rpcconsole.cpp" line="370"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Ierakstiet &lt;b&gt;help&lt;/b&gt; lai iegūtu pieejamo komandu sarakstu.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="474"/>
+        <location filename="../rpcconsole.cpp" line="509"/>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="476"/>
+        <location filename="../rpcconsole.cpp" line="511"/>
         <source>%1 KB</source>
         <translation>%1 KB</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="478"/>
+        <location filename="../rpcconsole.cpp" line="513"/>
         <source>%1 MB</source>
         <translation>%1 MB</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="480"/>
+        <location filename="../rpcconsole.cpp" line="515"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="487"/>
+        <location filename="../rpcconsole.cpp" line="632"/>
+        <source>via %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="635"/>
+        <location filename="../rpcconsole.cpp" line="636"/>
+        <source>never</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="643"/>
+        <source>Inbound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="643"/>
+        <source>Outbound</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="656"/>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../rpcconsole.cpp" line="658"/>
+        <location filename="../rpcconsole.cpp" line="659"/>
+        <source>Fetching...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>%1 m</source>
-        <translation>%1 m</translation>
+        <translation type="vanished">%1 m</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="492"/>
         <source>%1 h</source>
-        <translation>%1 st</translation>
+        <translation type="vanished">%1 st</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="494"/>
         <source>%1 h %2 m</source>
-        <translation>%1 st %2 m</translation>
+        <translation type="vanished">%1 st %2 m</translation>
     </message>
 </context>
 <context>
@@ -2410,7 +2824,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="34"/>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="37"/>
@@ -2420,8 +2834,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="51"/>
         <location filename="../forms/receivecoinsdialog.ui" line="74"/>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
-        <translation type="unfinished"/>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="54"/>
@@ -2432,12 +2846,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../forms/receivecoinsdialog.ui" line="67"/>
         <location filename="../forms/receivecoinsdialog.ui" line="88"/>
         <source>An optional label to associate with the new receiving address.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="81"/>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="91"/>
@@ -2448,7 +2862,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <location filename="../forms/receivecoinsdialog.ui" line="104"/>
         <location filename="../forms/receivecoinsdialog.ui" line="126"/>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/receivecoinsdialog.ui" line="107"/>
@@ -2471,7 +2885,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Notīrīt</translation>
     </message>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="239"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="236"/>
         <source>Requested payments history</source>
         <translation>Pieprasīto maksājumu vēsture</translation>
     </message>
@@ -2486,12 +2900,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Rādīt</translation>
     </message>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="278"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="281"/>
         <source>Remove the selected entries from the list</source>
         <translation>Noņemt atlasītos ierakstus no saraksta.</translation>
     </message>
     <message>
-        <location filename="../forms/receivecoinsdialog.ui" line="281"/>
+        <location filename="../forms/receivecoinsdialog.ui" line="284"/>
         <source>Remove</source>
         <translation>Noņemt</translation>
     </message>
@@ -2524,12 +2938,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Kopēt &amp;URI</translation>
     </message>
     <message>
-        <location filename="../forms/receiverequestdialog.ui" line="82"/>
+        <location filename="../forms/receiverequestdialog.ui" line="85"/>
         <source>Copy &amp;Address</source>
         <translation>Kopēt &amp;Adresi</translation>
     </message>
     <message>
-        <location filename="../forms/receiverequestdialog.ui" line="89"/>
+        <location filename="../forms/receiverequestdialog.ui" line="95"/>
         <source>&amp;Save Image...</source>
         <translation>&amp;Saglabāt Attēlu...</translation>
     </message>
@@ -2582,37 +2996,37 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="24"/>
+        <location filename="../recentrequeststablemodel.cpp" line="28"/>
         <source>Date</source>
         <translation>Datums</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="24"/>
+        <location filename="../recentrequeststablemodel.cpp" line="28"/>
         <source>Label</source>
         <translation>Nosaukums</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="24"/>
+        <location filename="../recentrequeststablemodel.cpp" line="28"/>
         <source>Message</source>
         <translation>Ziņojums</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="24"/>
+        <location filename="../recentrequeststablemodel.cpp" line="127"/>
         <source>Amount</source>
         <translation>Daudzums</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="62"/>
+        <location filename="../recentrequeststablemodel.cpp" line="68"/>
         <source>(no label)</source>
         <translation>(bez nosaukuma)</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="71"/>
+        <location filename="../recentrequeststablemodel.cpp" line="77"/>
         <source>(no message)</source>
         <translation>(nav ziņojuma)</translation>
     </message>
     <message>
-        <location filename="../recentrequeststablemodel.cpp" line="79"/>
+        <location filename="../recentrequeststablemodel.cpp" line="85"/>
         <source>(no amount)</source>
         <translation>(nav summas)</translation>
     </message>
@@ -2621,9 +3035,8 @@ https://www.transifex.com/projects/p/dash/</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="429"/>
-        <location filename="../sendcoinsdialog.cpp" line="521"/>
-        <location filename="../sendcoinsdialog.cpp" line="531"/>
+        <location filename="../sendcoinsdialog.cpp" line="590"/>
+        <location filename="../sendcoinsdialog.cpp" line="602"/>
         <source>Send Coins</source>
         <translation>Sūtīt bitkoinus</translation>
     </message>
@@ -2638,283 +3051,395 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ieejas...</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="117"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="120"/>
         <source>automatically selected</source>
         <translation>automātiski atlasīts</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="136"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="139"/>
         <source>Insufficient funds!</source>
         <translation>Nepietiekami līdzekļi!</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="225"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="228"/>
         <source>Quantity:</source>
         <translation>Daudzums:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="260"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="263"/>
         <source>Bytes:</source>
         <translation>Baiti:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="308"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="311"/>
         <source>Amount:</source>
         <translation>Daudzums:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="340"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="343"/>
         <source>Priority:</source>
         <translation>Prioritāte:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="353"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="356"/>
         <source>medium</source>
         <translation>vidējs</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="388"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="391"/>
         <source>Fee:</source>
         <translation>Maksa:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="420"/>
         <source>Low Output:</source>
-        <translation>Zema Izeja:</translation>
+        <translation type="vanished">Zema Izeja:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="433"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="423"/>
+        <source>Dust:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="436"/>
         <source>no</source>
         <translation>nē</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="468"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="471"/>
         <source>After Fee:</source>
         <translation>Pēc Maksas:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="500"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="503"/>
         <source>Change:</source>
         <translation>Atlikums:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="544"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="547"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="550"/>
         <source>Custom change address</source>
         <translation>Pielāgota atlikuma adrese</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="668"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="756"/>
+        <source>Transaction Fee:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="770"/>
+        <source>Choose...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="777"/>
+        <source>collapse fee-settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="780"/>
+        <source>Minimize</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="858"/>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee, while &quot;at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="861"/>
+        <source>per kilobyte</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="874"/>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then &quot;per kilobyte&quot; only pays 250 duffs in fee, while &quot;total at least&quot; pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="877"/>
+        <source>total at least</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="907"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="920"/>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="923"/>
+        <source>(read the tooltip)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="952"/>
+        <source>Recommended:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="982"/>
+        <source>Custom:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1034"/>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1063"/>
+        <source>Confirmation time:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1123"/>
+        <source>normal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1143"/>
+        <source>fast</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1181"/>
+        <source>Send as zero-fee transaction if possible</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1188"/>
+        <source>(confirmation may take longer)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsdialog.ui" line="1255"/>
         <source>Confirm the send action</source>
         <translation>Apstiprināt nosūtīšanu</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="671"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1258"/>
         <source>S&amp;end</source>
         <translation>&amp;Sūtīt</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="691"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1281"/>
         <source>Clear all fields of the form.</source>
         <translation>Notīrīt visus laukus formā.</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="694"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1284"/>
         <source>Clear &amp;All</source>
         <translation>&amp;Notīrīt visu</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="711"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1298"/>
         <source>Send to multiple recipients at once</source>
         <translation>Sūtīt vairākiem saņēmējiem uzreiz</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="714"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1301"/>
         <source>Add &amp;Recipient</source>
         <translation>&amp;Pievienot Saņēmēju</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="752"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1339"/>
         <source>Darksend</source>
         <translation>Darksend</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="771"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1358"/>
         <source>InstantX</source>
         <translation>Tūlītēja Transakcija</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="778"/>
+        <location filename="../forms/sendcoinsdialog.ui" line="1365"/>
         <source>Balance:</source>
         <translation>Bilance:</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="53"/>
+        <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy quantity</source>
         <translation>Kopēt daudzumu</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="54"/>
+        <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy amount</source>
         <translation>Kopēt daudzumu</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="55"/>
+        <location filename="../sendcoinsdialog.cpp" line="61"/>
         <source>Copy fee</source>
         <translation>Kopēt maksu</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="56"/>
+        <location filename="../sendcoinsdialog.cpp" line="62"/>
         <source>Copy after fee</source>
         <translation>Kopēt pēc maksas</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="57"/>
+        <location filename="../sendcoinsdialog.cpp" line="63"/>
         <source>Copy bytes</source>
         <translation>Kopēt baitus</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="58"/>
+        <location filename="../sendcoinsdialog.cpp" line="64"/>
         <source>Copy priority</source>
         <translation>Kopēt prioritāti</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy low output</source>
-        <translation>Kopēt zemās izejas</translation>
+        <translation type="vanished">Kopēt zemās izejas</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="60"/>
+        <location filename="../sendcoinsdialog.cpp" line="65"/>
+        <source>Copy dust</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="66"/>
         <source>Copy change</source>
         <translation>Kopēt atlikumu</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="145"/>
-        <location filename="../sendcoinsdialog.cpp" line="151"/>
-        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <location filename="../sendcoinsdialog.cpp" line="221"/>
+        <location filename="../sendcoinsdialog.cpp" line="227"/>
+        <location filename="../sendcoinsdialog.cpp" line="236"/>
         <source>using</source>
         <translation>lieto</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="145"/>
-        <location filename="../sendcoinsdialog.cpp" line="151"/>
+        <location filename="../sendcoinsdialog.cpp" line="221"/>
+        <location filename="../sendcoinsdialog.cpp" line="227"/>
         <source>anonymous funds</source>
         <translation>anonīmā bilance</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="155"/>
+        <location filename="../sendcoinsdialog.cpp" line="231"/>
         <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="160"/>
+        <location filename="../sendcoinsdialog.cpp" line="236"/>
         <source>any available funds (not recommended)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="166"/>
+        <location filename="../sendcoinsdialog.cpp" line="242"/>
         <source>and InstantX</source>
         <translation>un Tūlītēja Transakcija</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="190"/>
-        <location filename="../sendcoinsdialog.cpp" line="195"/>
-        <location filename="../sendcoinsdialog.cpp" line="200"/>
-        <location filename="../sendcoinsdialog.cpp" line="204"/>
+        <location filename="../sendcoinsdialog.cpp" line="266"/>
+        <location filename="../sendcoinsdialog.cpp" line="271"/>
+        <location filename="../sendcoinsdialog.cpp" line="276"/>
+        <location filename="../sendcoinsdialog.cpp" line="280"/>
         <source>%1 to %2</source>
         <translation>%1 līdz %2</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="253"/>
+        <location filename="../sendcoinsdialog.cpp" line="329"/>
         <source>Are you sure you want to send?</source>
         <translation>Vai tiešām vēlaties sūtīt?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="262"/>
+        <location filename="../sendcoinsdialog.cpp" line="338"/>
         <source>are added as transaction fee</source>
         <translation>tiek pievienots kā transakcijas nodoklis</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="276"/>
+        <location filename="../sendcoinsdialog.cpp" line="355"/>
         <source>Total Amount %1 (= %2)</source>
         <translation>Kopējā Summa %1 (= %2)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="278"/>
+        <location filename="../sendcoinsdialog.cpp" line="357"/>
         <source>or</source>
         <translation>vai</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="280"/>
+        <location filename="../sendcoinsdialog.cpp" line="359"/>
         <source>Confirm send coins</source>
         <translation>Apstiprināt bitkoinu sūtīšanu</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="435"/>
         <source>Payment request expired</source>
-        <translation>Maksājuma pieprasījums ir novecojis</translation>
+        <translation type="vanished">Maksājuma pieprasījums ir novecojis</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="443"/>
         <source>Invalid payment address %1</source>
-        <translation>Nederīga maksājuma adrese %1</translation>
+        <translation type="vanished">Nederīga maksājuma adrese %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="498"/>
+        <location filename="../sendcoinsdialog.cpp" line="567"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Saņēmēja adrese ir nepareiza, lūdzu pārbaudi.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="501"/>
+        <location filename="../sendcoinsdialog.cpp" line="570"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Nosūtāmajai summai jābūt lielākai par 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="504"/>
+        <location filename="../sendcoinsdialog.cpp" line="573"/>
         <source>The amount exceeds your balance.</source>
         <translation>Daudzums pārsniedz pieejamo.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="507"/>
+        <location filename="../sendcoinsdialog.cpp" line="576"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Kopsumma pārsniedz pieejamo, ja pieskaitīta %1 transakcijas maksa.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="510"/>
+        <location filename="../sendcoinsdialog.cpp" line="579"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Atrastas divas vienādas adreses, vienā nosūtīšanas reizē uz katru adresi var sūtīt tikai vienreiz.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="513"/>
+        <location filename="../sendcoinsdialog.cpp" line="582"/>
         <source>Transaction creation failed!</source>
         <translation>Transakcijas izveidošana neizdevās!</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="517"/>
+        <location filename="../sendcoinsdialog.cpp" line="586"/>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="522"/>
+        <location filename="../sendcoinsdialog.cpp" line="591"/>
         <source>Error: The wallet was unlocked only to anonymize coins.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="635"/>
+        <location filename="../sendcoinsdialog.cpp" line="594"/>
+        <source>A fee higher than %1 is considered an insanely high fee.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="681"/>
+        <source>Pay only the minimum fee of %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="703"/>
+        <source>Estimated to begin confirmation within %1 block(s).</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../sendcoinsdialog.cpp" line="810"/>
         <source>Warning: Invalid Dash address</source>
         <translation>Uzmanību: Nederīga Dash adrese</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="644"/>
+        <location filename="../sendcoinsdialog.cpp" line="819"/>
         <source>Warning: Unknown change address</source>
         <translation>Brīdinājums: Nezināma atlikuma adrese</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="655"/>
+        <location filename="../sendcoinsdialog.cpp" line="830"/>
         <source>(no label)</source>
         <translation>(bez nosaukuma)</translation>
     </message>
@@ -2932,9 +3457,13 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Saņēmējs:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsentry.ui" line="54"/>
         <source>The address to send the payment to (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Adrese uz kuru sūtīt (piem. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="vanished">Adrese uz kuru sūtīt (piem. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+    </message>
+    <message>
+        <location filename="../forms/sendcoinsentry.ui" line="54"/>
+        <source>The Dash address to send the payment to</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="61"/>
@@ -2971,7 +3500,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="124"/>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="131"/>
@@ -2988,7 +3517,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="157"/>
         <source>A message that was attached to the dash: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Dash network.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsentry.ui" line="583"/>
@@ -3021,12 +3550,12 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="129"/>
+        <location filename="../utilitydialog.cpp" line="116"/>
         <source>Dash Core is shutting down...</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../utilitydialog.cpp" line="130"/>
+        <location filename="../utilitydialog.cpp" line="117"/>
         <source>Do not shut down the computer until this window disappears.</source>
         <translation>Neizslēdziet datoru kamēr šis logs nepazūd.</translation>
     </message>
@@ -3039,105 +3568,105 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Paraksti - Parakstīt / Pabaudīt Ziņojumu</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="24"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="27"/>
         <source>&amp;Sign Message</source>
         <translation>Parakstīt &amp;Ziņojumu</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="30"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="33"/>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="48"/>
-        <source>The address to sign the message with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="51"/>
+        <source>The Dash address to sign the message with</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="55"/>
-        <location filename="../forms/signverifymessagedialog.ui" line="265"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="58"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="268"/>
         <source>Choose previously used address</source>
         <translation>Izvēlies iepriekš izmantoto adresi</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="65"/>
-        <location filename="../forms/signverifymessagedialog.ui" line="275"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="68"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="278"/>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="75"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="78"/>
         <source>Paste address from clipboard</source>
         <translation>ielīmēt adresi no starpliktuves</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="85"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="88"/>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="97"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="100"/>
         <source>Enter the message you want to sign here</source>
         <translation>Šeit ievadi ziņojumu kuru vēlies parakstīt</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="104"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="107"/>
         <source>Signature</source>
         <translation>Paraksts</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="131"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="134"/>
         <source>Copy the current signature to the system clipboard</source>
         <translation>Kopēt parakstu uz sistēmas starpliktuvi</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="152"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="155"/>
         <source>Sign the message to prove you own this Dash address</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="155"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="158"/>
         <source>Sign &amp;Message</source>
         <translation>Parakstīt &amp;Ziņojumu</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="169"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="172"/>
         <source>Reset all sign message fields</source>
         <translation>Atiestatīt visus laukus</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="172"/>
-        <location filename="../forms/signverifymessagedialog.ui" line="315"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="175"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="318"/>
         <source>Clear &amp;All</source>
         <translation>&amp;Notīrīt visu</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="231"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="234"/>
         <source>&amp;Verify Message</source>
         <translation>&amp;Pārbaudīt Ziņojumu</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="237"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="240"/>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="258"/>
-        <source>The address the message was signed with (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="295"/>
-        <source>Verify the message to ensure it was signed with the specified Dash address</source>
-        <translation type="unfinished"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="261"/>
+        <source>The Dash address the message was signed with</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../forms/signverifymessagedialog.ui" line="298"/>
+        <source>Verify the message to ensure it was signed with the specified Dash address</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/signverifymessagedialog.ui" line="301"/>
         <source>Verify &amp;Message</source>
         <translation>&amp;Pārbaudīt Ziņojumu</translation>
     </message>
     <message>
-        <location filename="../forms/signverifymessagedialog.ui" line="312"/>
+        <location filename="../forms/signverifymessagedialog.ui" line="315"/>
         <source>Reset all verify message fields</source>
         <translation>Atiestatīt visus laukus</translation>
     </message>
@@ -3147,73 +3676,72 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nospied &quot;Parakstīt Ziņojumu&quot; lai ģenerētu parakstu</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="31"/>
         <source>Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</source>
-        <translation>Ievadiet Dash adresi (piem. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
+        <translation type="vanished">Ievadiet Dash adresi (piem. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="114"/>
-        <location filename="../signverifymessagedialog.cpp" line="194"/>
+        <location filename="../signverifymessagedialog.cpp" line="113"/>
+        <location filename="../signverifymessagedialog.cpp" line="193"/>
         <source>The entered address is invalid.</source>
         <translation>Ievadītā adrese ir nederīga.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="114"/>
-        <location filename="../signverifymessagedialog.cpp" line="122"/>
-        <location filename="../signverifymessagedialog.cpp" line="194"/>
-        <location filename="../signverifymessagedialog.cpp" line="202"/>
+        <location filename="../signverifymessagedialog.cpp" line="113"/>
+        <location filename="../signverifymessagedialog.cpp" line="121"/>
+        <location filename="../signverifymessagedialog.cpp" line="193"/>
+        <location filename="../signverifymessagedialog.cpp" line="201"/>
         <source>Please check the address and try again.</source>
         <translation>Lūdzu pārbaudi adresi un mēģini vēlreiz.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="122"/>
-        <location filename="../signverifymessagedialog.cpp" line="202"/>
+        <location filename="../signverifymessagedialog.cpp" line="121"/>
+        <location filename="../signverifymessagedialog.cpp" line="201"/>
         <source>The entered address does not refer to a key.</source>
         <translation>Ievadītā adrese neattiecas uz atslēgu.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="130"/>
+        <location filename="../signverifymessagedialog.cpp" line="129"/>
         <source>Wallet unlock was cancelled.</source>
         <translation>Maciņa atslēgšana tika atcelta.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="138"/>
+        <location filename="../signverifymessagedialog.cpp" line="137"/>
         <source>Private key for the entered address is not available.</source>
         <translation>Privātā atslēga priekš ievadītās adreses nav pieejama.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="150"/>
+        <location filename="../signverifymessagedialog.cpp" line="149"/>
         <source>Message signing failed.</source>
         <translation>Neizdevās parakstīt ziņojumu.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="155"/>
+        <location filename="../signverifymessagedialog.cpp" line="154"/>
         <source>Message signed.</source>
         <translation>Ziņojums parakstīts.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="213"/>
+        <location filename="../signverifymessagedialog.cpp" line="212"/>
         <source>The signature could not be decoded.</source>
         <translation>Paraksts nevarēja tikt dekodēts.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="213"/>
-        <location filename="../signverifymessagedialog.cpp" line="226"/>
+        <location filename="../signverifymessagedialog.cpp" line="212"/>
+        <location filename="../signverifymessagedialog.cpp" line="225"/>
         <source>Please check the signature and try again.</source>
         <translation>Lūdzu pārbaudi parakstu un mēģini vēlreiz.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="226"/>
+        <location filename="../signverifymessagedialog.cpp" line="225"/>
         <source>The signature did not match the message digest.</source>
         <translation>Paraksts neatbilda ziņojuma apkopojumam.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="233"/>
+        <location filename="../signverifymessagedialog.cpp" line="232"/>
         <source>Message verification failed.</source>
         <translation>Ziņojumu neizdevās pārbaudīt.</translation>
     </message>
     <message>
-        <location filename="../signverifymessagedialog.cpp" line="238"/>
+        <location filename="../signverifymessagedialog.cpp" line="237"/>
         <source>Message verified.</source>
         <translation>Ziņojums pārbaudīts.</translation>
     </message>
@@ -3221,27 +3749,27 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>SplashScreen</name>
     <message>
-        <location filename="../splashscreen.cpp" line="33"/>
+        <location filename="../splashscreen.cpp" line="36"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="34"/>
+        <location filename="../splashscreen.cpp" line="37"/>
         <source>Version %1</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="35"/>
+        <location filename="../splashscreen.cpp" line="38"/>
         <source>The Bitcoin Core developers</source>
         <translation>Bitcoin Core izstrādātāji</translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="36"/>
+        <location filename="../splashscreen.cpp" line="39"/>
         <source>The Dash Core developers</source>
         <translation>Dash Core izstrādātāji</translation>
     </message>
     <message>
-        <location filename="../splashscreen.cpp" line="37"/>
+        <location filename="../networkstyle.cpp" line="19"/>
         <source>[testnet]</source>
         <translation>[testnets]</translation>
     </message>
@@ -3257,228 +3785,257 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>TransactionDesc</name>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="28"/>
+        <location filename="../transactiondesc.cpp" line="33"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="30"/>
+        <location filename="../transactiondesc.cpp" line="35"/>
         <source>Open until %1</source>
         <translation>Atvērts līdz %1</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="41"/>
-        <location filename="../transactiondesc.cpp" line="52"/>
-        <location filename="../transactiondesc.cpp" line="62"/>
-        <location filename="../transactiondesc.cpp" line="74"/>
+        <location filename="../transactiondesc.cpp" line="46"/>
+        <location filename="../transactiondesc.cpp" line="57"/>
+        <location filename="../transactiondesc.cpp" line="67"/>
+        <location filename="../transactiondesc.cpp" line="79"/>
         <source>conflicted</source>
         <translation>pretrunā</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="43"/>
+        <location filename="../transactiondesc.cpp" line="48"/>
         <source>%1/offline (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="45"/>
+        <location filename="../transactiondesc.cpp" line="50"/>
         <source>%1/confirmed (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="47"/>
+        <location filename="../transactiondesc.cpp" line="52"/>
         <source>%1 confirmations (verified via instantx)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="76"/>
+        <location filename="../transactiondesc.cpp" line="81"/>
         <source>%1/offline</source>
         <translation>%1/bezsaistē</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="78"/>
+        <location filename="../transactiondesc.cpp" line="83"/>
         <source>%1/unconfirmed</source>
         <translation>%1/neapstiprinātas</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="68"/>
-        <location filename="../transactiondesc.cpp" line="80"/>
+        <location filename="../transactiondesc.cpp" line="73"/>
+        <location filename="../transactiondesc.cpp" line="85"/>
         <source>%1 confirmations</source>
         <translation>%1 apstiprinājumu</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="54"/>
+        <location filename="../transactiondesc.cpp" line="59"/>
         <source>%1/offline (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="56"/>
+        <location filename="../transactiondesc.cpp" line="61"/>
         <source>%1/confirmed (InstantX verification in progress - %2 of %3 signatures )</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="58"/>
+        <location filename="../transactiondesc.cpp" line="63"/>
         <source>%1 confirmations (InstantX verification in progress - %2 of %3 signatures)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="64"/>
+        <location filename="../transactiondesc.cpp" line="69"/>
         <source>%1/offline (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="66"/>
+        <location filename="../transactiondesc.cpp" line="71"/>
         <source>%1/confirmed (InstantX verification failed)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="98"/>
+        <location filename="../transactiondesc.cpp" line="103"/>
         <source>Status</source>
         <translation>Status</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="103"/>
+        <location filename="../transactiondesc.cpp" line="108"/>
         <source>, has not been successfully broadcast yet</source>
         <translation>, vēl nav veiksmīgi izziņots</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="105"/>
+        <location filename="../transactiondesc.cpp" line="110"/>
         <source>, broadcast through %n node(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="109"/>
+        <location filename="../transactiondesc.cpp" line="114"/>
         <source>Date</source>
         <translation>Datums</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="116"/>
+        <location filename="../transactiondesc.cpp" line="121"/>
         <source>Source</source>
         <translation>Avots</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="116"/>
+        <location filename="../transactiondesc.cpp" line="121"/>
         <source>Generated</source>
         <translation>Ģenerēts</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="121"/>
-        <location filename="../transactiondesc.cpp" line="138"/>
+        <location filename="../transactiondesc.cpp" line="126"/>
+        <location filename="../transactiondesc.cpp" line="139"/>
+        <location filename="../transactiondesc.cpp" line="211"/>
         <source>From</source>
         <translation>No</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="138"/>
+        <location filename="../transactiondesc.cpp" line="139"/>
         <source>unknown</source>
         <translation>nav zināms</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="139"/>
-        <location filename="../transactiondesc.cpp" line="161"/>
-        <location filename="../transactiondesc.cpp" line="219"/>
+        <location filename="../transactiondesc.cpp" line="140"/>
+        <location filename="../transactiondesc.cpp" line="160"/>
+        <location filename="../transactiondesc.cpp" line="229"/>
         <source>To</source>
         <translation>Uz</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="142"/>
-        <location filename="../transactiondesc.cpp" line="144"/>
         <source>own address</source>
         <translation>paša adrese</translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="142"/>
+        <location filename="../transactiondesc.cpp" line="211"/>
+        <source>watch-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="144"/>
         <source>label</source>
         <translation>etiķete</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="179"/>
-        <location filename="../transactiondesc.cpp" line="191"/>
-        <location filename="../transactiondesc.cpp" line="236"/>
-        <location filename="../transactiondesc.cpp" line="253"/>
-        <location filename="../transactiondesc.cpp" line="306"/>
+        <location filename="../transactiondesc.cpp" line="178"/>
+        <location filename="../transactiondesc.cpp" line="190"/>
+        <location filename="../transactiondesc.cpp" line="243"/>
+        <location filename="../transactiondesc.cpp" line="269"/>
+        <location filename="../transactiondesc.cpp" line="322"/>
         <source>Credit</source>
         <translation>Kredīts</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiondesc.cpp" line="181"/>
+        <location filename="../transactiondesc.cpp" line="180"/>
         <source>matures in %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="183"/>
+        <location filename="../transactiondesc.cpp" line="182"/>
         <source>not accepted</source>
         <translation>nav pieņemts</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="227"/>
-        <location filename="../transactiondesc.cpp" line="235"/>
-        <location filename="../transactiondesc.cpp" line="250"/>
-        <location filename="../transactiondesc.cpp" line="303"/>
+        <location filename="../transactiondesc.cpp" line="241"/>
+        <location filename="../transactiondesc.cpp" line="266"/>
+        <location filename="../transactiondesc.cpp" line="319"/>
         <source>Debit</source>
         <translation>Debets</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="241"/>
+        <location filename="../transactiondesc.cpp" line="251"/>
+        <source>Total debit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="252"/>
+        <source>Total credit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiondesc.cpp" line="257"/>
         <source>Transaction fee</source>
         <translation>Transakcijas maksa</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="257"/>
+        <location filename="../transactiondesc.cpp" line="273"/>
         <source>Net amount</source>
         <translation>Neto summa</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="263"/>
-        <location filename="../transactiondesc.cpp" line="272"/>
+        <location filename="../transactiondesc.cpp" line="279"/>
+        <location filename="../transactiondesc.cpp" line="288"/>
         <source>Message</source>
         <translation>Ziņojums</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="265"/>
+        <location filename="../transactiondesc.cpp" line="281"/>
         <source>Comment</source>
         <translation>Komentārs</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="267"/>
+        <location filename="../transactiondesc.cpp" line="283"/>
         <source>Transaction ID</source>
         <translation>Transakcijas ID</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="285"/>
+        <location filename="../transactiondesc.cpp" line="301"/>
         <source>Merchant</source>
         <translation>Tirgotājs</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="292"/>
+        <location filename="../transactiondesc.cpp" line="308"/>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="300"/>
+        <location filename="../transactiondesc.cpp" line="316"/>
         <source>Debug information</source>
         <translation>Atkļūdošanas informācija</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="308"/>
+        <location filename="../transactiondesc.cpp" line="324"/>
         <source>Transaction</source>
         <translation>Transakcija</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="311"/>
+        <location filename="../transactiondesc.cpp" line="327"/>
         <source>Inputs</source>
         <translation>Ieejas</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="332"/>
+        <location filename="../transactiondesc.cpp" line="348"/>
         <source>Amount</source>
         <translation>Daudzums</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="333"/>
+        <location filename="../transactiondesc.cpp" line="349"/>
+        <location filename="../transactiondesc.cpp" line="350"/>
         <source>true</source>
         <translation>patiess</translation>
     </message>
     <message>
-        <location filename="../transactiondesc.cpp" line="333"/>
+        <location filename="../transactiondesc.cpp" line="349"/>
+        <location filename="../transactiondesc.cpp" line="350"/>
         <source>false</source>
         <translation>nepatiess</translation>
     </message>
@@ -3499,157 +4056,170 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>TransactionTableModel</name>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="233"/>
+        <location filename="../transactiontablemodel.cpp" line="229"/>
         <source>Date</source>
         <translation>Datums</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="233"/>
+        <location filename="../transactiontablemodel.cpp" line="229"/>
         <source>Type</source>
         <translation>Tips</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="233"/>
+        <location filename="../transactiontablemodel.cpp" line="229"/>
         <source>Address</source>
         <translation>Adrese</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="233"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation type="vanished">Daudzums</translation>
     </message>
     <message numerus="yes">
-        <location filename="../transactiontablemodel.cpp" line="285"/>
+        <location filename="../transactiontablemodel.cpp" line="287"/>
         <source>Open for %n more block(s)</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="288"/>
+        <location filename="../transactiontablemodel.cpp" line="290"/>
         <source>Open until %1</source>
         <translation>Atvērts līdz %1</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="291"/>
+        <location filename="../transactiontablemodel.cpp" line="293"/>
         <source>Offline</source>
         <translation>Bezsaitē</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="294"/>
+        <location filename="../transactiontablemodel.cpp" line="296"/>
         <source>Unconfirmed</source>
         <translation>Neapstiprināts</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="297"/>
+        <location filename="../transactiontablemodel.cpp" line="299"/>
         <source>Confirming (%1 of %2 recommended confirmations)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="300"/>
+        <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Apstiprināts (%1 apstiprinājumu)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="303"/>
+        <location filename="../transactiontablemodel.cpp" line="305"/>
         <source>Conflicted</source>
         <translation>Pretrunā</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="306"/>
+        <location filename="../transactiontablemodel.cpp" line="308"/>
         <source>Immature (%1 confirmations, will be available after %2)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="309"/>
+        <location filename="../transactiontablemodel.cpp" line="311"/>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>Neviens cits mezgls šo bloku nav saņēmis un droši vien netiks akceptēts!</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="312"/>
+        <location filename="../transactiontablemodel.cpp" line="314"/>
         <source>Generated but not accepted</source>
         <translation>Ģenerēts, taču nav akceptēts</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="354"/>
+        <location filename="../transactiontablemodel.cpp" line="353"/>
         <source>Received with</source>
         <translation>Saņemts ar</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="356"/>
+        <location filename="../transactiontablemodel.cpp" line="355"/>
         <source>Received from</source>
         <translation>Saņemts no</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="358"/>
+        <location filename="../transactiontablemodel.cpp" line="357"/>
         <source>Received via Darksend</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="361"/>
+        <location filename="../transactiontablemodel.cpp" line="360"/>
         <source>Sent to</source>
         <translation>Nosūtīts</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="363"/>
+        <location filename="../transactiontablemodel.cpp" line="362"/>
         <source>Payment to yourself</source>
         <translation>Maksājums sev</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="365"/>
+        <location filename="../transactiontablemodel.cpp" line="364"/>
         <source>Mined</source>
         <translation>Atrasts</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="368"/>
+        <location filename="../transactiontablemodel.cpp" line="367"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="370"/>
+        <location filename="../transactiontablemodel.cpp" line="369"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="372"/>
+        <location filename="../transactiontablemodel.cpp" line="371"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="374"/>
+        <location filename="../transactiontablemodel.cpp" line="373"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="376"/>
+        <location filename="../transactiontablemodel.cpp" line="375"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="418"/>
+        <location filename="../transactiontablemodel.cpp" line="405"/>
+        <source>watch-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="422"/>
         <source>(n/a)</source>
         <translation>(nav pieejams)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="610"/>
+        <location filename="../transactiontablemodel.cpp" line="632"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transakcijas statuss. Turiet peli virs šī lauka, lai redzētu apstiprinājumu skaitu.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="612"/>
+        <location filename="../transactiontablemodel.cpp" line="634"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Transakcijas saņemšanas datums un laiks.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="614"/>
+        <location filename="../transactiontablemodel.cpp" line="636"/>
         <source>Type of transaction.</source>
         <translation>Transakcijas tips.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="616"/>
+        <location filename="../transactiontablemodel.cpp" line="638"/>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactiontablemodel.cpp" line="640"/>
         <source>Destination address of transaction.</source>
         <translation>Transakcijas mērķa adrese.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="618"/>
+        <location filename="../transactiontablemodel.cpp" line="642"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Bilancei pievienotais vai atņemtais daudzums.</translation>
     </message>
@@ -3657,205 +4227,217 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>TransactionView</name>
     <message>
-        <location filename="../transactionview.cpp" line="60"/>
-        <location filename="../transactionview.cpp" line="76"/>
+        <location filename="../transactionview.cpp" line="67"/>
+        <location filename="../transactionview.cpp" line="83"/>
         <source>All</source>
         <translation>Visi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="61"/>
+        <location filename="../transactionview.cpp" line="68"/>
         <source>Today</source>
         <translation>Šodien</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="62"/>
+        <location filename="../transactionview.cpp" line="69"/>
         <source>This week</source>
         <translation>Šonedēļ</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="63"/>
+        <location filename="../transactionview.cpp" line="70"/>
         <source>This month</source>
         <translation>Šomēnes</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="64"/>
+        <location filename="../transactionview.cpp" line="71"/>
         <source>Last month</source>
         <translation>Pēdējais mēnesis</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="65"/>
+        <location filename="../transactionview.cpp" line="72"/>
         <source>This year</source>
         <translation>Šogad</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="66"/>
+        <location filename="../transactionview.cpp" line="73"/>
         <source>Range...</source>
         <translation>Diapazons...</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="77"/>
+        <location filename="../transactionview.cpp" line="84"/>
         <source>Received with</source>
         <translation>Saņemts ar</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="79"/>
+        <location filename="../transactionview.cpp" line="86"/>
         <source>Sent to</source>
         <translation>Nosūtīts</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="81"/>
+        <location filename="../transactionview.cpp" line="88"/>
         <source>Darksent</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="82"/>
+        <location filename="../transactionview.cpp" line="89"/>
         <source>Darksend Make Collateral Inputs</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="83"/>
+        <location filename="../transactionview.cpp" line="90"/>
         <source>Darksend Create Denominations</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="84"/>
+        <location filename="../transactionview.cpp" line="91"/>
         <source>Darksend Denominate</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="85"/>
+        <location filename="../transactionview.cpp" line="92"/>
         <source>Darksend Collateral Payment</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="86"/>
+        <location filename="../transactionview.cpp" line="93"/>
         <source>To yourself</source>
         <translation>Sev</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="87"/>
+        <location filename="../transactionview.cpp" line="94"/>
         <source>Mined</source>
         <translation>Atrasts</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="88"/>
+        <location filename="../transactionview.cpp" line="95"/>
         <source>Other</source>
         <translation>Cits</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="94"/>
+        <location filename="../transactionview.cpp" line="101"/>
         <source>Enter address or label to search</source>
         <translation>Ierakstiet meklējamo nosaukumu vai adresi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="100"/>
+        <location filename="../transactionview.cpp" line="107"/>
         <source>Min amount</source>
         <translation>Minimālais daudzums</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="134"/>
+        <location filename="../transactionview.cpp" line="143"/>
         <source>Copy address</source>
         <translation>Kopēt adresi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="135"/>
+        <location filename="../transactionview.cpp" line="144"/>
         <source>Copy label</source>
         <translation>Kopēt nosaukumu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="136"/>
+        <location filename="../transactionview.cpp" line="145"/>
         <source>Copy amount</source>
         <translation>Kopēt daudzumu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="137"/>
+        <location filename="../transactionview.cpp" line="146"/>
         <source>Copy transaction ID</source>
         <translation>Kopēt transakcijas ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="138"/>
+        <location filename="../transactionview.cpp" line="147"/>
         <source>Edit label</source>
         <translation>Mainīt nosaukumu</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="139"/>
+        <location filename="../transactionview.cpp" line="148"/>
         <source>Show transaction details</source>
         <translation>Rādīt transakcijas detaļas</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="302"/>
+        <location filename="../transactionview.cpp" line="327"/>
         <source>Export Transaction History</source>
         <translation>Eksportēt Transakciju Vēsturi</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="303"/>
+        <location filename="../transactionview.cpp" line="328"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Fails ar komatu kā atdalītāju (*.csv)</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="312"/>
+        <location filename="../transactionview.cpp" line="337"/>
         <source>Confirmed</source>
         <translation>Apstiprināts</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="313"/>
+        <location filename="../transactionview.cpp" line="339"/>
+        <source>Watch-only</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../transactionview.cpp" line="340"/>
         <source>Date</source>
         <translation>Datums</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="314"/>
+        <location filename="../transactionview.cpp" line="341"/>
         <source>Type</source>
         <translation>Tips</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="315"/>
+        <location filename="../transactionview.cpp" line="342"/>
         <source>Label</source>
         <translation>Nosaukums</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="316"/>
+        <location filename="../transactionview.cpp" line="343"/>
         <source>Address</source>
         <translation>Adrese</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="317"/>
         <source>Amount</source>
-        <translation>Daudzums</translation>
+        <translation type="vanished">Daudzums</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="318"/>
+        <location filename="../transactionview.cpp" line="345"/>
         <source>ID</source>
         <translation>ID</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="321"/>
+        <location filename="../transactionview.cpp" line="348"/>
         <source>Exporting Failed</source>
         <translation>Eksportēšana Neizdevās</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="321"/>
+        <location filename="../transactionview.cpp" line="348"/>
         <source>There was an error trying to save the transaction history to %1.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="325"/>
+        <location filename="../transactionview.cpp" line="352"/>
         <source>Exporting Successful</source>
         <translation>Eksportēšana Veiksmīga</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="325"/>
+        <location filename="../transactionview.cpp" line="352"/>
         <source>The transaction history was successfully saved to %1.</source>
         <translation>Transakciju vēsture tika veiksmīgi saglabāta uz %1.</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="434"/>
+        <location filename="../transactionview.cpp" line="461"/>
         <source>Range:</source>
         <translation>Diapazons:</translation>
     </message>
     <message>
-        <location filename="../transactionview.cpp" line="442"/>
+        <location filename="../transactionview.cpp" line="469"/>
         <source>to</source>
         <translation>uz</translation>
+    </message>
+</context>
+<context>
+    <name>UnitDisplayStatusBarControl</name>
+    <message>
+        <location filename="../bitcoingui.cpp" line="1100"/>
+        <source>Unit to show amounts in. Click to select another unit.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -3869,15 +4451,19 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>WalletModel</name>
     <message>
-        <location filename="../walletmodel.cpp" line="271"/>
-        <location filename="../walletmodel.cpp" line="285"/>
+        <location filename="../walletmodel.cpp" line="289"/>
+        <location filename="../walletmodel.cpp" line="303"/>
         <source>Send Coins</source>
         <translation>Sūtīt Bitkoinus</translation>
     </message>
     <message numerus="yes">
-        <location filename="../walletmodel.cpp" line="271"/>
+        <location filename="../walletmodel.cpp" line="289"/>
         <source>InstantX doesn&apos;t support sending values that high yet. Transactions are currently limited to %n DASH.</source>
-        <translation type="unfinished"><numerusform></numerusform><numerusform></numerusform><numerusform></numerusform></translation>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -3893,32 +4479,32 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Datus no tekošā ieliktņa eksportēt uz failu</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="231"/>
+        <location filename="../walletview.cpp" line="232"/>
         <source>Backup Wallet</source>
         <translation>Izveidot maciņa rezerves kopiju</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="232"/>
+        <location filename="../walletview.cpp" line="233"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Maciņa dati (*.dat)</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="238"/>
+        <location filename="../walletview.cpp" line="239"/>
         <source>Backup Failed</source>
         <translation>Rezerves kopēšana neizdevās</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="238"/>
+        <location filename="../walletview.cpp" line="239"/>
         <source>There was an error trying to save the wallet data to %1.</source>
         <translation>Notikusi kļūme mēģinot saglabāt maciņa datus uz %1.</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="242"/>
+        <location filename="../walletview.cpp" line="243"/>
         <source>Backup Successful</source>
         <translation>Dublēšana Veiksmīga</translation>
     </message>
     <message>
-        <location filename="../walletview.cpp" line="242"/>
+        <location filename="../walletview.cpp" line="243"/>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Maciņa dati tika veiksmīgi saglabāti uz %1.</translation>
     </message>
@@ -3938,97 +4524,97 @@ If the file does not exist, create it with owner-readable-only file permissions.
 It is also recommended to set alertnotify so you are notified of problems;
 for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
 </source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="29"/>
         <source>Acceptable ciphers (default: TLSv1.2+HIGH:TLSv1+HIGH:!SSLv2:!aNULL:!eNULL:!3DES:@STRENGTH)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="32"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="34"/>
         <source>An error occurred while setting up the RPC port %u for listening on IPv6, falling back to IPv4: %s</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="37"/>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="40"/>
         <source>Cannot obtain a lock on data directory %s. Dash Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="43"/>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:15)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="46"/>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="49"/>
         <source>Disable all Masternode and Darksend related functionality (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="51"/>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: true)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="54"/>
         <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="57"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly. This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="61"/>
         <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="64"/>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="66"/>
         <source>Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="70"/>
         <source>Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="73"/>
         <source>Error: Wallet unlocked for anonymization only, unable to create transaction.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="75"/>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="78"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="81"/>
@@ -4038,42 +4624,42 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="84"/>
         <source>Fees smaller than this are considered zero fee (for transaction creation) (default:</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="87"/>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: 100)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="90"/>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="93"/>
         <source>How thorough the block verification of -checkblocks is (0-4, default: 3)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="95"/>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="98"/>
         <source>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="101"/>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="103"/>
         <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="105"/>
@@ -4083,102 +4669,102 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     <message>
         <location filename="../dashstrings.cpp" line="108"/>
         <source>Output debugging information (default: 0, supplying &lt;category&gt; is optional)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="110"/>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: 0, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="114"/>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="117"/>
         <source>Set external address:port to get to this masternode (example: address:port)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="119"/>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="121"/>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="124"/>
         <source>Set the processor limit for when generation is on (-1 = unlimited, default: -1)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="127"/>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: 1)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="130"/>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="133"/>
         <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="136"/>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="138"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="141"/>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="143"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: -proxy)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="146"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="149"/>
         <source>Warning: Please check that your computer&apos;s date and time are correct! If your clock is wrong Dash will not work properly.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="152"/>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="155"/>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="158"/>
         <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="161"/>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="165"/>
@@ -4192,7 +4778,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="170"/>
         <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="173"/>
@@ -4217,7 +4803,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="177"/>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="178"/>
@@ -4237,12 +4823,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="181"/>
         <source>Already have that input.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="182"/>
         <source>Always query for peer addresses via DNS lookup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="183"/>
@@ -4257,7 +4843,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="185"/>
         <source>Can&apos;t denominate: no compatible inputs left.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="186"/>
@@ -4282,17 +4868,17 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="190"/>
         <source>Clear list of wallet transactions (diagnostic tool; implies -rescan)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="191"/>
         <source>Collateral is not valid.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="192"/>
         <source>Collateral not valid.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="193"/>
@@ -4307,12 +4893,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="195"/>
         <source>Connect to JSON-RPC on &lt;port&gt; (default: 9998 or testnet: 19998)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="196"/>
         <source>Connect to KeePassHttp on port &lt;port&gt; (default: 19455)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="197"/>
@@ -4327,27 +4913,27 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="199"/>
         <source>Corrupted block database detected</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="200"/>
         <source>Dash Core Daemon</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="201"/>
         <source>Dash Core RPC client version</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="202"/>
         <source>Darksend is disabled.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="203"/>
         <source>Darksend options:</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="204"/>
@@ -4357,22 +4943,22 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="205"/>
         <source>Disable safemode, override a real safe mode event (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="206"/>
         <source>Discover own IP address (default: 1 when listening and no -externalip)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="207"/>
         <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="208"/>
         <source>Do you want to rebuild the block database now?</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="209"/>
@@ -4382,32 +4968,32 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="210"/>
         <source>Downgrading and trying again.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="211"/>
         <source>Enable the client to act as a masternode (0-1, default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="212"/>
         <source>Entries are full.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="213"/>
         <source>Error connecting to masternode.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="214"/>
         <source>Error initializing block database</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="215"/>
         <source>Error initializing wallet database environment %s!</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="216"/>
@@ -4427,22 +5013,22 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="219"/>
         <source>Error loading wallet.dat: Wallet requires newer version of Dash</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="220"/>
         <source>Error opening block database</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="221"/>
         <source>Error reading from database, shutting down.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="222"/>
         <source>Error recovering public key.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="223"/>
@@ -4462,7 +5048,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="226"/>
         <source>Error: You already have pending entries in the Darksend pool</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="227"/>
@@ -4472,57 +5058,57 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="228"/>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="229"/>
         <source>Failed to read block info</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="230"/>
         <source>Failed to read block</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="231"/>
         <source>Failed to sync block index</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="232"/>
         <source>Failed to write block index</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="233"/>
         <source>Failed to write block info</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="234"/>
         <source>Failed to write block</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="235"/>
         <source>Failed to write file info</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="236"/>
         <source>Failed to write to coin database</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="237"/>
         <source>Failed to write transaction index</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="238"/>
         <source>Failed to write undo data</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="239"/>
@@ -4532,7 +5118,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="240"/>
         <source>Fees smaller than this are considered zero fee (for relaying) (default:</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="241"/>
@@ -4542,7 +5128,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="242"/>
         <source>Generate coins (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="243"/>
@@ -4552,7 +5138,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="244"/>
         <source>How many blocks to check at startup (default: 288, 0 = all)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="245"/>
@@ -4562,7 +5148,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="246"/>
         <source>Ignore masternodes less than version (example: 70050; default : 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="247"/>
@@ -4577,17 +5163,17 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="249"/>
         <source>Incompatible mode.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="250"/>
         <source>Incompatible version.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="251"/>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="252"/>
@@ -4597,17 +5183,17 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="253"/>
         <source>Initialization sanity check failed. Dash Core is shutting down.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="254"/>
         <source>Input is not valid.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="255"/>
         <source>InstantX options:</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="256"/>
@@ -4617,12 +5203,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="257"/>
         <source>Insufficient funds.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="258"/>
         <source>Invalid -onion address: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="259"/>
@@ -4632,12 +5218,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="260"/>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="261"/>
         <source>Invalid amount for -mintxfee=&lt;amount&gt;: &apos;%s&apos;</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="262"/>
@@ -4652,57 +5238,57 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="264"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="265"/>
         <source>Invalid private key.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="266"/>
         <source>Invalid script detected.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="267"/>
         <source>KeePassHttp id for the established association</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="268"/>
         <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="269"/>
         <source>Keep N dash anonymized (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="270"/>
         <source>Keep at most &lt;n&gt; unconnectable blocks in memory (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="271"/>
         <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="272"/>
         <source>Last Darksend was too recent.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="273"/>
         <source>Last successful darksend action was too recent.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="274"/>
         <source>Limit size of signature cache to &lt;n&gt; entries (default: 50000)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="275"/>
@@ -4712,7 +5298,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="276"/>
         <source>Listen for connections on &lt;port&gt; (default: 9999 or testnet: 19999)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="277"/>
@@ -4726,13 +5312,13 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="279"/>
-        <source>Loading masternode list...</source>
-        <translation type="unfinished"/>
+        <source>Loading masternode cache...</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="280"/>
         <source>Loading wallet... (%3.2f %%)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="281"/>
@@ -4742,12 +5328,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="282"/>
         <source>Log transaction priority and fee per kB when mining blocks (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="283"/>
         <source>Maintain a full transaction index (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="284"/>
@@ -4757,82 +5343,82 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="285"/>
         <source>Masternode options:</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="286"/>
         <source>Masternode queue is full.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="287"/>
         <source>Masternode:</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="288"/>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="289"/>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: 1000)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="290"/>
         <source>Missing input transaction information.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="291"/>
         <source>No compatible masternode found.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="292"/>
         <source>No funds detected in need of denominating.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="293"/>
         <source>No masternodes detected.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="294"/>
         <source>No matching denominations found for mixing.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="295"/>
         <source>Non-standard public key detected.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="296"/>
         <source>Not compatible with existing transactions.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="297"/>
         <source>Not enough file descriptors available.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="298"/>
         <source>Not in the masternode list.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="299"/>
         <source>Only accept block chain matching built-in checkpoints (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="300"/>
         <source>Only connect to nodes in network &lt;net&gt; (IPv4, IPv6 or Tor)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="301"/>
@@ -4847,22 +5433,22 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="303"/>
         <source>Prepend debug output with timestamp (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="304"/>
         <source>Print block on startup, if found in block index</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="305"/>
         <source>Print block tree on startup (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="306"/>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="307"/>
@@ -4877,17 +5463,17 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="309"/>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="310"/>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="311"/>
         <source>Rebuild block chain index from current blk000??.dat files</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="312"/>
@@ -4902,7 +5488,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="314"/>
         <source>Run a thread to flush wallet periodically (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="315"/>
@@ -4912,17 +5498,17 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="316"/>
         <source>SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="317"/>
         <source>Select SOCKS version for -proxy (4 or 5, default: 5)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="318"/>
         <source>Send command to Dash Core</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="319"/>
@@ -4947,17 +5533,17 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="323"/>
         <source>Session not complete!</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="324"/>
         <source>Session timed out (30 seconds), please resubmit.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="325"/>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="326"/>
@@ -4967,32 +5553,32 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="327"/>
         <source>Set maximum block size in bytes (default: %d)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="328"/>
         <source>Set minimum block size in bytes (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="329"/>
         <source>Set the masternode private key</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="330"/>
         <source>Set the number of threads to service RPC calls (default: 4)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="331"/>
         <source>Sets the DB_PRIVATE flag in the wallet db environment (default: 1)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="332"/>
         <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="333"/>
@@ -5002,7 +5588,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="334"/>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="335"/>
@@ -5012,7 +5598,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="336"/>
         <source>Signing timed out, please resubmit.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="337"/>
@@ -5022,12 +5608,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="338"/>
         <source>Specify configuration file (default: dash.conf)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="339"/>
         <source>Specify connection timeout in milliseconds (default: 5000)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="340"/>
@@ -5037,7 +5623,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="341"/>
         <source>Specify masternode configuration file (default: masternode.conf)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="342"/>
@@ -5077,12 +5663,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="349"/>
         <source>This is intended for regression testing tools and app development.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="350"/>
         <source>This is not a masternode.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="351"/>
@@ -5107,12 +5693,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="355"/>
         <source>Transaction created successfully.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="356"/>
         <source>Transaction fees are too high.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="357"/>
@@ -5127,17 +5713,17 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="359"/>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="360"/>
         <source>Unable to sign masternode payment winner, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="361"/>
         <source>Unable to sign spork message, wrong key?</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="362"/>
@@ -5157,7 +5743,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="365"/>
         <source>Usage (deprecated, use dash-cli):</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="366"/>
@@ -5167,12 +5753,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="367"/>
         <source>Use KeePass 2 integration using KeePassHttp plugin (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="368"/>
         <source>Use N separate masternodes to anonymize funds  (2-8, default: 2)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="369"/>
@@ -5182,12 +5768,12 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="370"/>
         <source>Use UPnP to map the listening port (default: 0)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="371"/>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="372"/>
@@ -5202,7 +5788,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="374"/>
         <source>Value more than Darksend pool maximum allows.</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="375"/>
@@ -5222,7 +5808,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="378"/>
         <source>Wallet %s resides outside data directory %s</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="379"/>
@@ -5247,7 +5833,7 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
     <message>
         <location filename="../dashstrings.cpp" line="383"/>
         <source>Warning: Deprecated argument -debugnet ignored, use -debug=net</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="384"/>
@@ -5255,18 +5841,14 @@ Ja fails neeksistē, izveidojiet to ar atļauju lasīšanai tikai īpašniekam.<
         <translation>Brīdinājums: Šī versija ir novecojusi, nepieciešams atjauninājums!</translation>
     </message>
     <message>
-        <source>Wrong state.</source>
-        <translation type="unfinished"/>
-    </message>
-    <message>
         <location filename="../dashstrings.cpp" line="385"/>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="386"/>
         <source>Zapping all transactions from wallet...</source>
-        <translation type="unfinished"/>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../dashstrings.cpp" line="387"/>

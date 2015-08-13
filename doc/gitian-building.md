@@ -1,24 +1,21 @@
 Gitian building
 ================
 
-*Setup instructions for a gitian build of Bitcoin using a Debian VM or physical system.*
+*Setup instructions for a gitian build of Dash using a Debian VM or physical system.*
 
-Gitian is the deterministic build process that is used to build the Bitcoin
-Core executables [1]. It provides a way to be reasonably sure that the
-executables are really built from source on github. It also makes sure that
+Gitian is the deterministic build process that is used to build the Dash
+Core executables. It provides a way to be reasonably sure that the
+executables are really built from source on GitHub. It also makes sure that
 the same, tested dependencies are used and statically built into the executable.
 
 Multiple developers build the source code by following a specific descriptor
 ("recipe"), cryptographically sign the result, and upload the resulting signature.
 These results are compared and only if they match, the build is accepted and uploaded
-to bitcoin.org.
+to dashpay.io.
 
 More independent gitian builders are needed, which is why I wrote this
 guide. It is preferred to follow these steps yourself instead of using someone else's
 VM image to avoid 'contaminating' the build.
-
-[1] For all platforms except for MacOSX, at this point. Work for deterministic
-builds for Mac is under way here: https://github.com/theuni/osx-cross-depends .
 
 Table of Contents
 ------------------
@@ -29,24 +26,27 @@ Table of Contents
 - [Installing gitian](#installing-gitian)
 - [Setting up gitian images](#setting-up-gitian-images)
 - [Getting and building the inputs](#getting-and-building-the-inputs)
-- [Building Bitcoin](#building-bitcoin)
+- [Building Dash](#building-dash)
 - [Building an alternative repository](#building-an-alternative-repository)
 - [Signing externally](#signing-externally)
 - [Uploading signatures](#uploading-signatures)
 
+Preparing the Gitian builder host
+---------------------------------
+
+The first step is to prepare the host environment that will be used to perform the Gitian builds.
+This guide explains how to set up the environment, and how to start the builds.
+
+Debian Linux was chosen as the host distribution because it has a lightweight install (in contrast to Ubuntu) and is readily available.
+Any kind of virtualization can be used, for example:
+- [VirtualBox](https://www.virtualbox.org/), covered by this guide
+- [KVM](http://www.linux-kvm.org/page/Main_Page)
+- [LXC](https://linuxcontainers.org/), see also [Gitian host docker container](https://github.com/gdm85/tenku/tree/master/docker/gitian-bitcoin-host/README.md).
+
+You can also install on actual hardware instead of using virtualization.
+
 Create a new VirtualBox VM
 ---------------------------
-
-The first step is to create a new Virtual Machine, which will be explained in
-this section.  This VM will be used to do the Gitian builds. In this guide it
-will be explained how to set up the environment, and how to get the builds
-started.
-
-Debian Linux was chosen as the host distribution because it has a lightweight install (in
-contrast to Ubuntu) and is readily available. We here show the steps for
-VirtualBox [1], but any kind of virtualization can be used. You can also install
-on actual hardware instead of using a VM, in this case you can skip this section.
-
 In the VirtualBox GUI click "Create" and choose the following parameters in the wizard:
 
 ![](gitian-building/create_vm_page1.png)
@@ -74,11 +74,11 @@ In the VirtualBox GUI click "Create" and choose the following parameters in the 
 - Disk size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side 
 - Push the `Create` button
 
-Get the [Debian 7.4 net installer](http://cdimage.debian.org/debian-cd/7.4.0/amd64/iso-cd/debian-7.4.0-amd64-netinst.iso).
+Get the [Debian 7.8 net installer](http://cdimage.debian.org/cdimage/archive/7.8.0/amd64/iso-cd/debian-7.8.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
 This DVD image can be validated using a SHA256 hashing tool, for example on
 Unixy OSes by entering the following in a terminal:
 
-    echo "b712a141bc60269db217d3b3e456179bd6b181645f90e4aac9c42ed63de492e9  /home/orion/Downloads/debian-7.4.0-amd64-netinst.iso" | sha256sum -c
+    echo "b712a141bc60269db217d3b3e456179bd6b181645f90e4aac9c42ed63de492e9  debian-7.4.0-amd64-netinst.iso" | sha256sum -c
     # (must return OK)
 
 After creating the VM, we need to configure it. 
@@ -106,8 +106,6 @@ Then start the VM. On the first launch you will be asked for a CD or DVD image. 
 
 ![](gitian-building/select_startup_disk.png)
 
-[1] https://www.virtualbox.org/
-
 Installing Debian
 ------------------
 
@@ -133,7 +131,7 @@ and proceed, just press `Enter`. To select a different button, press `Tab`.
 
 ![](gitian-building/debian_install_5_configure_the_network.png)
 
-- Choose a root password and enter it twice (and remember it for later) 
+- Choose a root password and enter it twice (remember it for later) 
 
 ![](gitian-building/debian_install_6a_set_up_root_password.png)
 
@@ -142,7 +140,7 @@ and proceed, just press `Enter`. To select a different button, press `Tab`.
 ![](gitian-building/debian_install_7_set_up_user_fullname.png)
 ![](gitian-building/debian_install_8_set_up_username.png)
 
-- Choose a user password and enter it twice (and remember it for later) 
+- Choose a user password and enter it twice (remember it for later) 
 
 ![](gitian-building/debian_install_9_user_password.png)
 
@@ -235,7 +233,7 @@ adduser debian sudo
 When you get a colorful screen with a question about the 'LXC directory', just
 go with the default (`/var/lib/lxc`).
 
-Then set up LXC and the rest with the following is a complex jumble of settings and workarounds:
+Then set up LXC and the rest with the following, which is a complex jumble of settings and workarounds:
 
 ```bash
 # the version of lxc-start in Debian 7.4 needs to run as root, so make sure
@@ -279,11 +277,14 @@ cd ..
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
-Clone the git repositories for bitcoin and gitian,
+Clone the git repositories for dash and gitian and then checkout the dash version that you want to build.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
-git clone https://github.com/bitcoin/bitcoin
+git clone https://github.com/dashpay/dash.git
+cd dash
+git checkout v${VERSION}
+cd ..
 ```
 
 **Note**: if you've installed Gitian before May 16, 2015, please update to the latest version, see https://github.com/devrandom/gitian-builder/issues/86
@@ -293,7 +294,7 @@ Setting up gitian images
 -------------------------
 
 Gitian needs virtual images of the operating system to build in.
-Currently this is Ubuntu Precise for both x86 architectures.
+Currently this is Ubuntu Precise for x86_64.
 These images will be copied and used every time that a build is started to
 make sure that the build is deterministic.
 Creating the images will take a while, but only has to be done once.
@@ -302,7 +303,6 @@ Execute the following as user `debian`:
 
 ```bash
 cd gitian-builder
-bin/make-base-vm --lxc --arch i386 --suite precise
 bin/make-base-vm --lxc --arch amd64 --suite precise
 ```
 
@@ -310,23 +310,30 @@ There will be a lot of warnings printed during build of the images. These can be
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
+**Note**: Repeat this step when you have upgraded to a newer version of Gitian.
+
+**Note**: if you get the error message *"bin/make-base-vm: mkfs.ext4: not found"* during this process you have to make the following change in file *"gitian-builder/bin/make-base-vm"* at line 117:
+```bash
+# mkfs.ext4 -F $OUT-lxc
+/sbin/mkfs.ext4 -F $OUT-lxc # (some Gitian environents do NOT find mkfs.ext4. Some do...)
+```
+
 Getting and building the inputs
 --------------------------------
 
-In [doc/release-process.md](release-process.md) in the bitcoin repository under 'Fetch and build inputs'.
-you will find a list of `wget` commands that can be executed to get the dependencies.
+Follow the instructions in [doc/release-process.md](release-process.md) in the dash repository
+under 'Fetch and build inputs' to install sources which require manual intervention. Also follow
+the next step: 'Seed the Gitian sources cache', which will fetch all necessary source files allowing
+for gitian to work offline.
 
-I needed to add `--no-check-certificate` to the OpenSSL wget line to make it work.
-Likely this is because the ca-certificates in Debian 7.4 is fairly old. This does not create a 
-security issue as the gitian descriptors check integrity of the input archives and refuse to work
-if any one is corrupted.
+Building Dash
+----------------
 
-After downloading the archives, execute the `gbuild` commends to build the dependencies.
-This can take a long time, but only has to be done when the dependencies change, for example
-to upgrade the used version.
+To build Dash (for Linux, OSX and Windows) just follow the steps under 'perform
+gitian builds' in [doc/release-process.md](release-process.md) in the dash repository.
 
-**Note**: Do not forget to copy the result from `build/out` to `inputs` after every gbuild command! This will save
-you a lot of time.
+This may take a long time as it also builds the dependencies needed for each descriptor.
+These dependencies will be cached after a successful build to avoid rebuilding them when possible.
 
 At any time you can check the package installation and build progress with
 
@@ -335,22 +342,17 @@ tail -f var/install.log
 tail -f var/build.log
 ```
 
-Building Bitcoin
-----------------
-
-To build Bitcoin (for Linux and/or Windows) just follow the steps under 'perform
-gitian builds' in [doc/release-process.md](release-process.md) in the bitcoin repository.
-
 Output from `gbuild` will look something like
 
-    Initialized empty Git repository in /home/debian/gitian-builder/inputs/bitcoin/.git/
+```bash
+    Initialized empty Git repository in /home/debian/gitian-builder/inputs/dash/.git/
     remote: Reusing existing pack: 35606, done.
     remote: Total 35606 (delta 0), reused 0 (delta 0)
     Receiving objects: 100% (35606/35606), 26.52 MiB | 4.28 MiB/s, done.
     Resolving deltas: 100% (25724/25724), done.
-    From https://github.com/bitcoin/bitcoin
+    From https://github.com/dashpay/dash
     ... (new tags, new branch etc)
-    --- Building for precise i386 ---
+    --- Building for precise x86_64 ---
     Stopping target if it is up
     Making a new image copy
     stdin: is not a tty
@@ -364,50 +366,48 @@ Output from `gbuild` will look something like
     Creating build script (var/build-script)
     lxc-start: Connection refused - inotify event with no name (mask 32768)
     Running build script (log in var/build.log)
-
-As when building the dependencies, the progress of package installation and building
-can be inspected in `var/install.log` and `var/build.log`.
+```
 
 Building an alternative repository
 -----------------------------------
 
-If you want to do a test build of a pull on github it can be useful to point
+If you want to do a test build of a pull on GitHub it can be useful to point
 the gitian builder at an alternative repository, using the same descriptors
 and inputs.
 
 For example:
 ```bash
-URL=https://github.com/laanwj/bitcoin.git
-COMMIT=2014_03_windows_unicode_path
-./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
-./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+URL=https://github.com/crowning-/dash.git
+COMMIT=b616fb8ef0d49a919b72b0388b091aaec5849b96
+./bin/gbuild --commit dash=${COMMIT} --url dash=${URL} ../dash/contrib/gitian-descriptors/gitian-linux.yml
+./bin/gbuild --commit dash=${COMMIT} --url dash=${URL} ../dash/contrib/gitian-descriptors/gitian-win.yml
+./bin/gbuild --commit dash=${COMMIT} --url dash=${URL} ../dash/contrib/gitian-descriptors/gitian-osx.yml
 ```
 
 Signing externally
 -------------------
 
-If you want to do the PGP signing on another device that's possible too; just define `SIGNER` as mentioned
-and follow the steps in the build process as normally.
+If you want to do the PGP signing on another device that's also possible; just define `SIGNER` as mentioned
+and follow the steps in the build process as normal.
 
-    gpg: skipped "laanwj": secret key not available
+    gpg: skipped "crowning-": secret key not available
 
 When you execute `gsign` you will get an error from GPG, which can be ignored. Copy the resulting `.assert` files
 in `gitian.sigs` to your signing machine and do
 
 ```bash
-    gpg --detach-sign ${VERSION}/${SIGNER}/bitcoin-build.assert
-    gpg --detach-sign ${VERSION}-win/${SIGNER}/bitcoin-build.assert
+    gpg --detach-sign ${VERSION}-linux/${SIGNER}/dash-build.assert
+    gpg --detach-sign ${VERSION}-win/${SIGNER}/dash-build.assert
+    gpg --detach-sign ${VERSION}-osx/${SIGNER}/dash-build.assert
 ```
 
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
 gitian build.
 
-Uploading signatures
+Uploading signatures (not yet implemented)
 ---------------------
 
-After building and signing you can push your signatures (both the `.assert` and
-`.assert.sig` files) to the
-[bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or
-if not possible create a pull request. You can also mail the files to me
-(laanwj@gmail.com) and I'll commit them.
-
+In the future it will be possible to push your signatures (both the `.assert` and `.assert.sig` files) to the
+[dash/gitian.sigs](https://github.com/dashpay/gitian.sigs/) repository, or if that's not possible to create a pull
+request.
+There will be an official announcement when this repository is online.

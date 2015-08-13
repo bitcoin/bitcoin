@@ -6,7 +6,9 @@
 #include "transactionrecord.h"
 
 #include "base58.h"
+#include "timedata.h"
 #include "wallet.h"
+#include "darksend.h"
 #include "instantx.h"
 
 #include <stdint.h>
@@ -33,9 +35,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.GetTxTime();
-    int64_t nCredit = wtx.GetCredit(true);
-    int64_t nDebit = wtx.GetDebit();
-    int64_t nNet = nCredit - nDebit;
+    CAmount nCredit = wtx.GetCredit(ISMINE_ALL);
+    CAmount nDebit = wtx.GetDebit(ISMINE_ALL);
+    CAmount nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash();
     std::map<std::string, std::string> mapValue = wtx.mapValue;
 
@@ -46,12 +48,14 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         //
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
-            if(wallet->IsMine(txout))
+            isminetype mine = wallet->IsMine(txout);
+            if(mine)
             {
                 TransactionRecord sub(hash, nTime);
                 CTxDestination address;
                 sub.idx = parts.size(); // sequence number
                 sub.credit = txout.nValue;
+                sub.involvesWatchAddress = mine == ISMINE_WATCH_ONLY;
                 if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
                 {
                     // Received by Dash Address
@@ -76,36 +80,41 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     }
     else
     {
-        bool fAllFromMe = true;
         bool fAllFromMeDenom = true;
         int nFromMe = 0;
+        bool involvesWatchAddress = false;
+        isminetype fAllFromMe = ISMINE_SPENDABLE;
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
         {
-            fAllFromMe = fAllFromMe && wallet->IsMine(txin);
             if(wallet->IsMine(txin)) {
                 fAllFromMeDenom = fAllFromMeDenom && wallet->IsDenominated(txin);
                 nFromMe++;
             }
+            isminetype mine = wallet->IsMine(txin);
+            if(mine == ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(fAllFromMe > mine) fAllFromMe = mine;
         }
 
-        bool fAllToMe = true;
+        isminetype fAllToMe = ISMINE_SPENDABLE;
         bool fAllToMeDenom = true;
         int nToMe = 0;
         BOOST_FOREACH(const CTxOut& txout, wtx.vout) {
-            fAllToMe = fAllToMe && wallet->IsMine(txout);
             if(wallet->IsMine(txout)) {
                 fAllToMeDenom = fAllToMeDenom && wallet->IsDenominatedAmount(txout.nValue);
                 nToMe++;
             }
+            isminetype mine = wallet->IsMine(txout);
+            if(mine == ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(fAllToMe > mine) fAllToMe = mine;
         }
 
         if(fAllFromMeDenom && fAllToMeDenom && nFromMe * nToMe) {
-            TransactionRecord sub(hash, nTime);
-            sub.type = TransactionRecord::DarksendDenominate;
-            parts.append(TransactionRecord(hash, nTime, sub.type, "", -nDebit, nCredit));
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::DarksendDenominate, "", -nDebit, nCredit));
+            parts.last().involvesWatchAddress = false;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe && fAllToMe)
         {
+            // Payment to self
             // TODO: this section still not accurate but covers most cases,
             // might need some additional work however
 
@@ -142,24 +151,26 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 }
             }
 
-            int64_t nChange = wtx.GetChange();
+            CAmount nChange = wtx.GetChange();
 
             sub.debit = -(nDebit - nChange);
             sub.credit = nCredit - nChange;
             parts.append(sub);
+            parts.last().involvesWatchAddress = involvesWatchAddress;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe)
         {
             //
             // Debit
             //
-            int64_t nTxFee = nDebit - wtx.GetValueOut();
+            CAmount nTxFee = nDebit - wtx.GetValueOut();
 
             for (unsigned int nOut = 0; nOut < wtx.vout.size(); nOut++)
             {
                 const CTxOut& txout = wtx.vout[nOut];
                 TransactionRecord sub(hash, nTime);
                 sub.idx = parts.size();
+                sub.involvesWatchAddress = involvesWatchAddress;
 
                 if(wallet->IsMine(txout))
                 {
@@ -187,7 +198,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.type = TransactionRecord::Darksent;
                 }
 
-                int64_t nValue = txout.nValue;
+                CAmount nValue = txout.nValue;
                 /* Add fee to first output */
                 if (nTxFee > 0)
                 {
@@ -204,8 +215,8 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             //
             // Mixed debit transaction, can't break down payees
             //
-
             parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
+            parts.last().involvesWatchAddress = involvesWatchAddress;
         }
     }
 
@@ -219,7 +230,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
 
     // Find the block the tx is in
     CBlockIndex* pindex = NULL;
-    std::map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(wtx.hashBlock);
+    BlockMap::iterator mi = mapBlockIndex.find(wtx.hashBlock);
     if (mi != mapBlockIndex.end())
         pindex = (*mi).second;
 

@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1000</width>
+    <width>954</width>
     <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Coin Control Address Selection</string>
+   <string>Coin Selection</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -225,7 +225,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Low Output:</string>
+          <string>Dust:</string>
          </property>
         </widget>
        </item>
@@ -363,6 +363,9 @@
           <property name="text">
            <string>(un)select all</string>
           </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -376,9 +379,6 @@
           <property name="text">
            <string>Tree mode</string>
           </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
          </widget>
         </item>
         <item>
@@ -391,6 +391,9 @@
           </property>
           <property name="text">
            <string>List mode</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -428,7 +431,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>12</number>
+      <number>13</number>
      </property>
      <attribute name="headerShowSortIndicator" stdset="0">
       <bool>true</bool>
@@ -448,17 +451,17 @@
      </column>
      <column>
       <property name="text">
-       <string>Label</string>
+       <string>Received with label</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Address</string>
+       <string>Received with address</string>
       </property>
      </column>
      <column>
       <property name="text">
-       <string>Darksend Rounds</string>
+       <string>DS Rounds</string>
       </property>
      </column>
      <column>

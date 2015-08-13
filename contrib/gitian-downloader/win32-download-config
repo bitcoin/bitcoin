@@ -3,7 +3,7 @@ name: bitcoin
 urls:
 - http://bitcoin.org/bitcoin-latest-win32-gitian.zip
 rss:
-- url: http://sourceforge.net/api/file/index/project-id/244765/mtime/desc/limit/100/rss
+- url: 
   xpath: //item/link/text()
   pattern: bitcoin-\d+.\d+.\d+-win32-gitian.zip
 signers:
@@ -37,3 +37,6 @@ signers:
   E944AE667CF960B1004BC32FCA662BE18B877A60:
     name: "Andreas Schildbach"
     key: aschildbach
+  C060A6635913D98A3587D7DB1C2491FFEB0EF770:
+    name: "Cory Fields"
+    key: "cfields"

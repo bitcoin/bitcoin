@@ -2,8 +2,10 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef TRANSACTIONTABLEMODEL_H
-#define TRANSACTIONTABLEMODEL_H
+#ifndef BITCOIN_QT_TRANSACTIONTABLEMODEL_H
+#define BITCOIN_QT_TRANSACTIONTABLEMODEL_H
+
+#include "bitcoinunits.h"
 
 #include <QAbstractTableModel>
 #include <QStringList>
@@ -26,10 +28,11 @@ public:
 
     enum ColumnIndex {
         Status = 0,
-        Date = 1,
-        Type = 2,
-        ToAddress = 3,
-        Amount = 4
+        Watchonly = 1,
+        Date = 2,
+        Type = 3,
+        ToAddress = 4,
+        Amount = 5
     };
 
     /** Roles to get specific information from a transaction row.
@@ -40,6 +43,10 @@ public:
         TypeRole = Qt::UserRole,
         /** Date and time this transaction was created */
         DateRole,
+        /** Watch-only boolean */
+        WatchonlyRole,
+        /** Watch-only icon */
+        WatchonlyDecorationRole,
         /** Long description (HTML format) */
         LongDescriptionRole,
         /** Address of transaction */
@@ -83,9 +90,10 @@ private:
     QString formatTxDate(const TransactionRecord *wtx) const;
     QString formatTxType(const TransactionRecord *wtx) const;
     QString formatTxToAddress(const TransactionRecord *wtx, bool tooltip) const;
-    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true) const;
+    QString formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed=true, BitcoinUnits::SeparatorStyle separators=BitcoinUnits::separatorStandard) const;
     QString formatTooltip(const TransactionRecord *rec) const;
     QVariant txStatusDecoration(const TransactionRecord *wtx) const;
+    QVariant txWatchonlyDecoration(const TransactionRecord *wtx) const;
     QVariant txAddressDecoration(const TransactionRecord *wtx) const;
 
 public slots:
@@ -93,10 +101,12 @@ public slots:
     void updateTransaction(const QString &hash, int status, bool showTransaction);
     void updateConfirmations();
     void updateDisplayUnit();
+    /** Updates the column title to "Amount (DisplayUnit)" and emits headerDataChanged() signal for table headers to react. */
+    void updateAmountColumnTitle();
     /* Needed to update fProcessingQueuedTransactions through a QueuedConnection */
     void setProcessingQueuedTransactions(bool value) { fProcessingQueuedTransactions = value; }
 
     friend class TransactionTablePriv;
 };
 
-#endif // TRANSACTIONTABLEMODEL_H
+#endif // BITCOIN_QT_TRANSACTIONTABLEMODEL_H

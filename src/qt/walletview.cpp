@@ -48,17 +48,17 @@ WalletView::WalletView(QWidget *parent):
     exportButton->setIcon(QIcon(":/icons/export"));
 #endif
     hbox_buttons->addStretch();
-    
+
     // Sum of selected transactions
     QLabel *transactionSumLabel = new QLabel(); // Label
-    transactionSumLabel->setText("Selected amount: ");
+    transactionSumLabel->setText(tr("Selected amount:"));
     hbox_buttons->addWidget(transactionSumLabel);
-    
+
     transactionSum = new QLabel(); // Amount
     transactionSum->setMinimumSize(200, 8);
     transactionSum->setTextInteractionFlags(Qt::TextSelectableByMouse);
     hbox_buttons->addWidget(transactionSum);
-    
+
     hbox_buttons->addWidget(exportButton);
     vbox->addLayout(hbox_buttons);
     transactionsPage->setLayout(vbox);
@@ -79,7 +79,7 @@ WalletView::WalletView(QWidget *parent):
 
     // Update wallet with sum of selected transactions
     connect(transactionView, SIGNAL(trxAmount(QString)), this, SLOT(trxAmount(QString)));
-      
+
     // Clicking on "Export" allows to export the transaction list
     connect(exportButton, SIGNAL(clicked()), transactionView, SLOT(exportClicked()));
 
@@ -107,7 +107,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
         connect(this, SIGNAL(encryptionStatusChanged(int)), gui, SLOT(setEncryptionStatus(int)));
 
         // Pass through transaction notifications
-        connect(this, SIGNAL(incomingTransaction(QString,int,qint64,QString,QString)), gui, SLOT(incomingTransaction(QString,int,qint64,QString,QString)));
+        connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString)));
     }
 }
 
@@ -116,6 +116,7 @@ void WalletView::setClientModel(ClientModel *clientModel)
     this->clientModel = clientModel;
 
     overviewPage->setClientModel(clientModel);
+    sendCoinsPage->setClientModel(clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *walletModel)

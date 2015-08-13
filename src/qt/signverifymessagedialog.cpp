@@ -28,7 +28,6 @@ SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
 
 #if QT_VERSION >= 0x040700
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
-    ui->addressIn_VM->setPlaceholderText(tr("Enter a Dash address (e.g. XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg)"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->addressIn_SM, this);

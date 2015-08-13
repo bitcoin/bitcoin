@@ -32,7 +32,7 @@
   <string>Dash-Qt</string>
 
   <key>CFBundleIdentifier</key>
-  <string>org.dashfoundation.Dash-Qt</string>
+  <string>io.dashpay.Dash-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -40,7 +40,7 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>io.dash.DarkcoinPayment</string>
+      <string>io.dash.DashPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
         <string>dash</string>
@@ -91,6 +91,9 @@
   <key>NSHighResolutionCapable</key>
     <string>True</string>
 
+  <key>LSAppNapIsDisabled</key>
+    <string>True</string>
+  
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>

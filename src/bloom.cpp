@@ -1,14 +1,19 @@
-// Copyright (c) 2012 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2012-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "bloom.h"
 
-#include "core.h"
-#include "script.h"
+#include "primitives/transaction.h"
+#include "hash.h"
+#include "script/script.h"
+#include "script/standard.h"
+#include "streams.h"
 
 #include <math.h>
 #include <stdlib.h>
+
+#include <boost/foreach.hpp>
 
 #define LN2SQUARED 0.4804530139182014246671025263266649717305529515945455
 #define LN2 0.6931471805599453094172321214581765680755001343602552
@@ -16,13 +21,17 @@
 using namespace std;
 
 CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn) :
-// The ideal size for a bloom filter with a given number of elements and false positive rate is:
-// - nElements * log(fp rate) / ln(2)^2
-// We ignore filter parameters which will create a bloom filter larger than the protocol limits
+/**
+ * The ideal size for a bloom filter with a given number of elements and false positive rate is:
+ * - nElements * log(fp rate) / ln(2)^2
+ * We ignore filter parameters which will create a bloom filter larger than the protocol limits
+ */
 vData(min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
-// The ideal number of hash functions is filter size * ln(2) / number of elements
-// Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
-// See http://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
+/**
+ * The ideal number of hash functions is filter size * ln(2) / number of elements
+ * Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
+ * See https://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
+ */
 isFull(false),
 isEmpty(false),
 nHashFuncs(min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
@@ -94,12 +103,19 @@ bool CBloomFilter::contains(const uint256& hash) const
     return contains(data);
 }
 
+void CBloomFilter::clear()
+{
+    vData.assign(vData.size(),0);
+    isFull = false;
+    isEmpty = true;
+}
+
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
 }
 
-bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& hash)
+bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
 {
     bool fFound = false;
     // Match if the filter contains the hash of tx
@@ -108,6 +124,7 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx, const uint256& ha
         return true;
     if (isEmpty)
         return false;
+    const uint256& hash = tx.GetHash();
     if (contains(hash))
         fFound = true;
 

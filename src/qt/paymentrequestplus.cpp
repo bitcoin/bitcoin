@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2014 The Bitcoin developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 //
@@ -13,10 +13,12 @@
 
 #include <openssl/x509.h>
 #include <openssl/x509_vfy.h>
+
 #include <QDateTime>
 #include <QDebug>
 #include <QSslCertificate>
 
+using namespace std;
 
 class SSLVerifyError : public std::runtime_error
 {
@@ -28,18 +30,18 @@ bool PaymentRequestPlus::parse(const QByteArray& data)
 {
     bool parseOK = paymentRequest.ParseFromArray(data.data(), data.size());
     if (!parseOK) {
-        qDebug() << "PaymentRequestPlus::parse : Error parsing payment request";
+        qWarning() << "PaymentRequestPlus::parse : Error parsing payment request";
         return false;
     }
     if (paymentRequest.payment_details_version() > 1) {
-        qDebug() << "PaymentRequestPlus::parse : Received up-version payment details, version=" << paymentRequest.payment_details_version();
+        qWarning() << "PaymentRequestPlus::parse : Received up-version payment details, version=" << paymentRequest.payment_details_version();
         return false;
     }
 
     parseOK = details.ParseFromString(paymentRequest.serialized_payment_details());
     if (!parseOK)
     {
-        qDebug() << "PaymentRequestPlus::parse : Error parsing payment details";
+        qWarning() << "PaymentRequestPlus::parse : Error parsing payment details";
         paymentRequest.Clear();
         return false;
     }
@@ -79,17 +81,17 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         digestAlgorithm = EVP_sha1();
     }
     else if (paymentRequest.pki_type() == "none") {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: pki_type == none";
+        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: pki_type == none";
         return false;
     }
     else {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: unknown pki_type " << QString::fromStdString(paymentRequest.pki_type());
+        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: unknown pki_type " << QString::fromStdString(paymentRequest.pki_type());
         return false;
     }
 
     payments::X509Certificates certChain;
     if (!certChain.ParseFromString(paymentRequest.pki_data())) {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: error parsing pki_data";
+        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: error parsing pki_data";
         return false;
     }
 
@@ -99,12 +101,12 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
         QByteArray certData(certChain.certificate(i).data(), certChain.certificate(i).size());
         QSslCertificate qCert(certData, QSsl::Der);
         if (currentTime < qCert.effectiveDate() || currentTime > qCert.expiryDate()) {
-            qDebug() << "PaymentRequestPlus::getMerchant : Payment request: certificate expired or not yet active: " << qCert;
+            qWarning() << "PaymentRequestPlus::getMerchant : Payment request: certificate expired or not yet active: " << qCert;
             return false;
         }
 #if QT_VERSION >= 0x050000
         if (qCert.isBlacklisted()) {
-            qDebug() << "PaymentRequestPlus::getMerchant : Payment request: certificate blacklisted: " << qCert;
+            qWarning() << "PaymentRequestPlus::getMerchant : Payment request: certificate blacklisted: " << qCert;
             return false;
         }
 #endif
@@ -114,7 +116,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
             certs.push_back(cert);
     }
     if (certs.empty()) {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: empty certificate chain";
+        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: empty certificate chain";
         return false;
     }
 
@@ -130,7 +132,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     // load the signing cert into it and verify.
     X509_STORE_CTX *store_ctx = X509_STORE_CTX_new();
     if (!store_ctx) {
-        qDebug() << "PaymentRequestPlus::getMerchant : Payment request: error creating X509_STORE_CTX";
+        qWarning() << "PaymentRequestPlus::getMerchant : Payment request: error creating X509_STORE_CTX";
         return false;
     }
 
@@ -182,7 +184,7 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     catch (SSLVerifyError& err)
     {
         fResult = false;
-        qDebug() << "PaymentRequestPlus::getMerchant : SSL error: " << err.what();
+        qWarning() << "PaymentRequestPlus::getMerchant : SSL error: " << err.what();
     }
 
     if (website)
@@ -194,9 +196,9 @@ bool PaymentRequestPlus::getMerchant(X509_STORE* certStore, QString& merchant) c
     return fResult;
 }
 
-QList<std::pair<CScript,qint64> > PaymentRequestPlus::getPayTo() const
+QList<std::pair<CScript,CAmount> > PaymentRequestPlus::getPayTo() const
 {
-    QList<std::pair<CScript,qint64> > result;
+    QList<std::pair<CScript,CAmount> > result;
     for (int i = 0; i < details.outputs_size(); i++)
     {
         const unsigned char* scriptStr = (const unsigned char*)details.outputs(i).script().data();

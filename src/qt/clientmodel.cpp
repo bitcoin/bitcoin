@@ -6,14 +6,18 @@
 #include "clientmodel.h"
 
 #include "guiconstants.h"
+#include "peertablemodel.h"
 
 #include "alert.h"
 #include "chainparams.h"
 #include "checkpoints.h"
+#include "clientversion.h"
 #include "main.h"
 #include "net.h"
 #include "ui_interface.h"
 #include "masternodeman.h"
+#include "masternode-sync.h"
+#include "util.h"
 
 #include <stdint.h>
 
@@ -24,11 +28,15 @@
 static const int64_t nClientStartupTime = GetTime();
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
-    QObject(parent), optionsModel(optionsModel),
-    cachedNumBlocks(0), cachedMasternodeCountString(""),
+    QObject(parent),
+    optionsModel(optionsModel),
+    peerTableModel(0),
+    cachedNumBlocks(0),
+    cachedMasternodeCountString(""),
     cachedReindexing(0), cachedImporting(0),
     numBlocksAtStartup(-1), pollTimer(0)
 {
+    peerTableModel = new PeerTableModel(this);
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
     pollTimer->start(MODEL_UPDATE_DELAY);
@@ -62,7 +70,9 @@ int ClientModel::getNumConnections(unsigned int flags) const
 
 QString ClientModel::getMasternodeCountString() const
 {
-    return QString::number((int)mnodeman.CountEnabled()) + " / " + QString::number((int)mnodeman.size());
+    return tr("Total: %1 (DS compatible: %2 / Enabled: %3)").arg(QString::number((int)mnodeman.size()))
+            .arg(QString::number((int)mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION)))
+            .arg(QString::number((int)mnodeman.CountEnabled()));
 }
 
 int ClientModel::getNumBlocks() const
@@ -93,7 +103,7 @@ QDateTime ClientModel::getLastBlockDate() const
     if (chainActive.Tip())
         return QDateTime::fromTime_t(chainActive.Tip()->GetBlockTime());
     else
-        return QDateTime::fromTime_t(Params().GenesisBlock().nTime); // Genesis block's time of current network
+        return QDateTime::fromTime_t(Params().GenesisBlock().GetBlockTime()); // Genesis block's time of current network
 }
 
 double ClientModel::getVerificationProgress() const
@@ -114,13 +124,19 @@ void ClientModel::updateTimer()
     // Periodically check and update with a timer.
     int newNumBlocks = getNumBlocks();
 
+    static int prevAttempt = -1;
+    static int prevAssets = -1;
+
     // check for changed number of blocks we have, number of blocks peers claim to have, reindexing state and importing state
     if (cachedNumBlocks != newNumBlocks ||
-        cachedReindexing != fReindex || cachedImporting != fImporting)
+        cachedReindexing != fReindex || cachedImporting != fImporting ||
+            masternodeSync.RequestedMasternodeAttempt != prevAttempt || masternodeSync.RequestedMasternodeAssets != prevAssets)
     {
         cachedNumBlocks = newNumBlocks;
         cachedReindexing = fReindex;
         cachedImporting = fImporting;
+        prevAttempt = masternodeSync.RequestedMasternodeAttempt;
+        prevAssets = masternodeSync.RequestedMasternodeAssets;
 
         emit numBlocksChanged(newNumBlocks);
     }
@@ -168,14 +184,6 @@ void ClientModel::updateAlert(const QString &hash, int status)
     emit alertsChanged(getStatusBarWarnings());
 }
 
-QString ClientModel::getNetworkName() const
-{
-    QString netname(QString::fromStdString(Params().DataDir()));
-    if(netname.isEmpty())
-        netname = "main";
-    return netname;
-}
-
 bool ClientModel::inInitialBlockDownload() const
 {
     return IsInitialBlockDownload();
@@ -201,6 +209,11 @@ QString ClientModel::getStatusBarWarnings() const
 OptionsModel *ClientModel::getOptionsModel()
 {
     return optionsModel;
+}
+
+PeerTableModel *ClientModel::getPeerTableModel()
+{
+    return peerTableModel;
 }
 
 QString ClientModel::formatFullVersion() const
@@ -229,10 +242,12 @@ QString ClientModel::formatClientStartupTime() const
 }
 
 // Handlers for core signals
-static void NotifyBlocksChanged(ClientModel *clientmodel)
+static void ShowProgress(ClientModel *clientmodel, const std::string &title, int nProgress)
 {
-    // This notification is too frequent. Don't trigger a signal.
-    // Don't remove it, though, as it might be useful later.
+    // emits signal "showProgress"
+    QMetaObject::invokeMethod(clientmodel, "showProgress", Qt::QueuedConnection,
+                              Q_ARG(QString, QString::fromStdString(title)),
+                              Q_ARG(int, nProgress));
 }
 
 static void NotifyNumConnectionsChanged(ClientModel *clientmodel, int newNumConnections)
@@ -253,7 +268,7 @@ static void NotifyAlertChanged(ClientModel *clientmodel, const uint256 &hash, Ch
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
-    uiInterface.NotifyBlocksChanged.connect(boost::bind(NotifyBlocksChanged, this));
+    uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
 }
@@ -261,7 +276,7 @@ void ClientModel::subscribeToCoreSignals()
 void ClientModel::unsubscribeFromCoreSignals()
 {
     // Disconnect signals from client
-    uiInterface.NotifyBlocksChanged.disconnect(boost::bind(NotifyBlocksChanged, this));
+    uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
     uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
 }

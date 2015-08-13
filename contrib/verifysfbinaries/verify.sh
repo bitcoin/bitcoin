@@ -1,6 +1,6 @@
 #!/bin/bash
 
-###   This script attempts to download the signature file SHA256SUMS.asc from SourceForge
+###   This script attempts to download the signature file SHA256SUMS.asc from bitcoin.org
 ###   It first checks if the signature passes, and then downloads the files specified in
 ###   the file, and checks if the hashes of these files match those that are specified
 ###   in the signature file.
@@ -18,11 +18,11 @@ WORKINGDIR="/tmp/bitcoin"
 TMPFILE="hashes.tmp"
 
 #this URL is used if a version number is not specified as an argument to the script
-SIGNATUREFILE="http://downloads.sourceforge.net/project/bitcoin/Bitcoin/bitcoin-0.9.0rc1/SHA256SUMS.asc"
+SIGNATUREFILE="https://bitcoin.org/bin/0.9.2.1/SHA256SUMS.asc"
 
 SIGNATUREFILENAME="SHA256SUMS.asc"
 RCSUBDIR="test/"
-BASEDIR="http://downloads.sourceforge.net/project/bitcoin/Bitcoin/"
+BASEDIR="https://bitcoin.org/bin/"
 VERSIONPREFIX="bitcoin-"
 RCVERSIONSTRING="rc"
 
@@ -62,7 +62,7 @@ WGETOUT=$(wget -N "$BASEDIR$SIGNATUREFILENAME" 2>&1)
 #and then see if wget completed successfully
 if [ $? -ne 0 ]; then
    echo "Error: couldn't fetch signature file. Have you specified the version number in the following format?"
-   echo "[bitcoin-]<version>-[rc[0-9]] (example: bitcoin-0.7.1-rc1)"
+   echo "[bitcoin-]<version>-[rc[0-9]] (example: bitcoin-0.9.2-rc1)"
    echo "wget output:"
    echo "$WGETOUT"|sed 's/^/\t/g'
    exit 2

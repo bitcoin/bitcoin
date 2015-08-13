@@ -20,6 +20,7 @@
 
 #include <QAbstractItemDelegate>
 #include <QPainter>
+#include <QSettings>
 #include <QTimer>
 
 #define DECORATION_SIZE 48
@@ -64,7 +65,15 @@ public:
         }
 
         painter->setPen(foreground);
-        painter->drawText(addressRect, Qt::AlignLeft|Qt::AlignVCenter, address);
+        QRect boundingRect;
+        painter->drawText(addressRect, Qt::AlignLeft|Qt::AlignVCenter, address, &boundingRect);
+
+        if (index.data(TransactionTableModel::WatchonlyRole).toBool())
+        {
+            QIcon iconWatchonly = qvariant_cast<QIcon>(index.data(TransactionTableModel::WatchonlyDecorationRole));
+            QRect watchonlyRect(boundingRect.right() + 5, mainRect.top()+ypad+halfheight, 16, halfheight);
+            iconWatchonly.paint(painter, watchonlyRect);
+        }
 
         if(amount < 0)
         {
@@ -79,7 +88,7 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true);
+        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
@@ -110,6 +119,9 @@ OverviewPage::OverviewPage(QWidget *parent) :
     currentBalance(-1),
     currentUnconfirmedBalance(-1),
     currentImmatureBalance(-1),
+    currentWatchOnlyBalance(-1),
+    currentWatchUnconfBalance(-1),
+    currentWatchImmatureBalance(-1),
     txdelegate(new TxViewDelegate()),
     filter(0)
 {
@@ -129,27 +141,24 @@ OverviewPage::OverviewPage(QWidget *parent) :
     ui->labelDarksendSyncStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
-    showingDarkSendMessage = 0;
-    darksendActionCheck = 0;
-    lastNewBlock = 0;
-
     if(fLiteMode){
         ui->frameDarksend->setVisible(false);
-    } else if(!fMasterNode) {
-        timer = new QTimer(this);
-        connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
-        timer->start(333);
-    }
-
-    if(fMasterNode){
-        ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
-        ui->darksendAuto->setText("(" + tr("Disabled") + ")");
-        ui->darksendReset->setText("(" + tr("Disabled") + ")");
-        ui->frameDarksend->setEnabled(false);
-    }else if(!fEnableDarksend){
-        ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
     } else {
-        ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
+        if(fMasterNode){
+            ui->toggleDarksend->setText("(" + tr("Disabled") + ")");
+            ui->darksendAuto->setText("(" + tr("Disabled") + ")");
+            ui->darksendReset->setText("(" + tr("Disabled") + ")");
+            ui->frameDarksend->setEnabled(false);
+        } else {
+            if(!fEnableDarksend){
+                ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
+            } else {
+                ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
+            }
+            timer = new QTimer(this);
+            connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
+            timer->start(1000);
+        }
     }
 
     // start with displaying the "out of sync" warnings
@@ -168,28 +177,63 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(qint64 balance, qint64 unconfirmedBalance, qint64 immatureBalance, qint64 anonymizedBalance)
+void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
 {
-    int unit = walletModel->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
     currentUnconfirmedBalance = unconfirmedBalance;
     currentImmatureBalance = immatureBalance;
     currentAnonymizedBalance = anonymizedBalance;
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance));
-    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance));
-    ui->labelAnonymized->setText(BitcoinUnits::formatWithUnit(unit, anonymizedBalance));
-    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance));
+    currentWatchOnlyBalance = watchOnlyBalance;
+    currentWatchUnconfBalance = watchUnconfBalance;
+    currentWatchImmatureBalance = watchImmatureBalance;
+    ui->labelBalance->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, balance, false, BitcoinUnits::separatorAlways));
+    ui->labelUnconfirmed->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelImmature->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, immatureBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelAnonymized->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, anonymizedBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelTotal->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, balance + unconfirmedBalance + immatureBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchAvailable->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchOnlyBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchPending->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchImmature->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelWatchTotal->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
     bool showImmature = immatureBalance != 0;
-    ui->labelImmature->setVisible(showImmature);
-    ui->labelImmatureText->setVisible(showImmature);
+    bool showWatchOnlyImmature = watchImmatureBalance != 0;
+
+    // for symmetry reasons also show immature label when the watch-only one is shown
+    ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
+    ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
+    ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
+
+    updateDarksendProgress();
+
+    static int cachedTxLocks = 0;
 
     if(cachedTxLocks != nCompleteTXLocks){
         cachedTxLocks = nCompleteTXLocks;
         ui->listTransactions->update();
+    }
+}
+
+// show/hide watch-only labels
+void OverviewPage::updateWatchOnlyLabels(bool showWatchOnly)
+{
+    ui->labelSpendable->setVisible(showWatchOnly);      // show spendable label (only when watch-only is active)
+    ui->labelWatchonly->setVisible(showWatchOnly);      // show watch-only label
+    ui->lineWatchBalance->setVisible(showWatchOnly);    // show watch-only balance separator line
+    ui->labelWatchAvailable->setVisible(showWatchOnly); // show watch-only available balance
+    ui->labelWatchPending->setVisible(showWatchOnly);   // show watch-only pending balance
+    ui->labelWatchTotal->setVisible(showWatchOnly);     // show watch-only total balance
+
+    if (!showWatchOnly){
+        ui->labelWatchImmature->hide();
+    }
+    else{
+        ui->labelBalance->setIndent(20);
+        ui->labelUnconfirmed->setIndent(20);
+        ui->labelImmature->setIndent(20);
+        ui->labelTotal->setIndent(20);
     }
 }
 
@@ -222,14 +266,17 @@ void OverviewPage::setWalletModel(WalletModel *model)
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance());
-        connect(model, SIGNAL(balanceChanged(qint64, qint64, qint64, qint64)), this, SLOT(setBalance(qint64, qint64, qint64, qint64)));
+        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(), model->getAnonymizedBalance(),
+                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
+        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
         connect(ui->darksendAuto, SIGNAL(clicked()), this, SLOT(darksendAuto()));
         connect(ui->darksendReset, SIGNAL(clicked()), this, SLOT(darksendReset()));
         connect(ui->toggleDarksend, SIGNAL(clicked()), this, SLOT(toggleDarksend()));
+        updateWatchOnlyLabels(model->haveWatchOnly());
+        connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 
     // update the display unit, to not use the default ("DASH")
@@ -240,11 +287,13 @@ void OverviewPage::updateDisplayUnit()
 {
     if(walletModel && walletModel->getOptionsModel())
     {
+        nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
         if(currentBalance != -1)
-            setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance, currentAnonymizedBalance);
+            setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance, currentAnonymizedBalance,
+                       currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
 
         // Update txdelegate->unit with the current unit
-        txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
+        txdelegate->unit = nDisplayUnit;
 
         ui->listTransactions->update();
     }
@@ -265,92 +314,130 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updateDarksendProgress()
 {
-    if(IsInitialBlockDownload()) return;
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
-    int64_t nBalance = pwalletMain->GetBalance();
-    if(nBalance == 0)
+    if(!pwalletMain) return;
+
+    QString strAmountAndRounds;
+    QString strAnonymizeDarkcoinAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nAnonymizeDarkcoinAmount * COIN, false, BitcoinUnits::separatorAlways);
+
+    if(currentBalance == 0)
     {
         ui->darksendProgress->setValue(0);
-        QString s(tr("No inputs detected"));
-        ui->darksendProgress->setToolTip(s);
+        ui->darksendProgress->setToolTip(tr("No inputs detected"));
+
+        // when balance is zero just show info from settings
+        strAnonymizeDarkcoinAmount = strAnonymizeDarkcoinAmount.remove(strAnonymizeDarkcoinAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
+        strAmountAndRounds = strAnonymizeDarkcoinAmount + " / " + tr("%n Rounds", "", nDarksendRounds);
+
+        ui->labelAmountRounds->setToolTip(tr("No inputs detected"));
+        ui->labelAmountRounds->setText(strAmountAndRounds);
         return;
     }
 
-    //get denominated unconfirmed inputs
-    if(pwalletMain->GetDenominatedBalance(true, true) > 0)
+    CAmount nDenominatedConfirmedBalance;
+    CAmount nDenominatedUnconfirmedBalance;
+    CAmount nAnonymizableBalance;
+    CAmount nNormalizedAnonymizedBalance;
+    double nAverageAnonymizedRounds;
+
     {
-        QString s(tr("Found unconfirmed denominated outputs, will wait till they confirm to recalculate."));
-        ui->darksendProgress->setToolTip(s);
-        return;
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain) return;
+
+        nDenominatedConfirmedBalance = pwalletMain->GetDenominatedBalance();
+        nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
+        nAnonymizableBalance = pwalletMain->GetAnonymizableBalance();
+        nNormalizedAnonymizedBalance = pwalletMain->GetNormalizedAnonymizedBalance();
+        nAverageAnonymizedRounds = pwalletMain->GetAverageAnonymizedRounds();
     }
 
-    //Get the anon threshold
-    int64_t nMaxToAnonymize = nAnonymizeDarkcoinAmount*COIN;
+    CAmount nMaxToAnonymize = nAnonymizableBalance + currentAnonymizedBalance + nDenominatedUnconfirmedBalance;
 
-    // If it's more than the wallet amount, limit to that.
-    if(nMaxToAnonymize > nBalance) nMaxToAnonymize = nBalance;
+    // If it's more than the anon threshold, limit to that.
+    if(nMaxToAnonymize > nAnonymizeDarkcoinAmount*COIN) nMaxToAnonymize = nAnonymizeDarkcoinAmount*COIN;
 
     if(nMaxToAnonymize == 0) return;
 
-    // calculate parts of the progress, each of them shouldn't be higher than 1:
-    // mixing progress of denominated balance
-    int64_t denominatedBalance = pwalletMain->GetDenominatedBalance();
+    if(nMaxToAnonymize >= nAnonymizeDarkcoinAmount * COIN) {
+        ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to anonymize %1")
+                                          .arg(strAnonymizeDarkcoinAmount));
+        strAnonymizeDarkcoinAmount = strAnonymizeDarkcoinAmount.remove(strAnonymizeDarkcoinAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
+        strAmountAndRounds = strAnonymizeDarkcoinAmount + " / " + tr("%n Rounds", "", nDarksendRounds);
+    } else {
+        QString strMaxToAnonymize = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nMaxToAnonymize, false, BitcoinUnits::separatorAlways);
+        ui->labelAmountRounds->setToolTip(tr("Not enough compatible inputs to anonymize <span style='color:red;'>%1</span>,<br>"
+                                             "will anonymize <span style='color:red;'>%2</span> instead")
+                                          .arg(strAnonymizeDarkcoinAmount)
+                                          .arg(strMaxToAnonymize));
+        strMaxToAnonymize = strMaxToAnonymize.remove(strMaxToAnonymize.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
+        strAmountAndRounds = "<span style='color:red;'>" +
+                QString(BitcoinUnits::factor(nDisplayUnit) == 1 ? "" : "~") + strMaxToAnonymize +
+                " / " + tr("%n Rounds", "", nDarksendRounds) + "</span>";
+    }
+    ui->labelAmountRounds->setText(strAmountAndRounds);
+
+    // calculate parts of the progress, each of them shouldn't be higher than 1
+    // progress of denominating
     float denomPart = 0;
-    if(denominatedBalance > 0)
-    {
-        denomPart = (float)pwalletMain->GetNormalizedAnonymizedBalance() / denominatedBalance;
-        denomPart = denomPart > 1 ? 1 : denomPart;
-        if(denomPart == 1 && nMaxToAnonymize > denominatedBalance) nMaxToAnonymize = denominatedBalance;
-    }
+    // mixing progress of denominated balance
+    float anonNormPart = 0;
+    // completeness of full amount anonimization
+    float anonFullPart = 0;
 
-    // % of fully anonymized balance
-    float anonPart = 0;
-    if(nMaxToAnonymize > 0)
-    {
-        anonPart = (float)pwalletMain->GetAnonymizedBalance() / nMaxToAnonymize;
-        // if anonPart is > 1 then we are done, make denomPart equal 1 too
-        anonPart = anonPart > 1 ? (denomPart = 1, 1) : anonPart;
-    }
+    CAmount denominatedBalance = nDenominatedConfirmedBalance + nDenominatedUnconfirmedBalance;
+    denomPart = (float)denominatedBalance / nMaxToAnonymize;
+    denomPart = denomPart > 1 ? 1 : denomPart;
+    denomPart *= 100;
 
-    // apply some weights to them (sum should be <=100) and calculate the whole progress
-    int progress = 80 * denomPart + 20 * anonPart;
+    anonNormPart = (float)nNormalizedAnonymizedBalance / nMaxToAnonymize;
+    anonNormPart = anonNormPart > 1 ? 1 : anonNormPart;
+    anonNormPart *= 100;
+
+    anonFullPart = (float)currentAnonymizedBalance / nMaxToAnonymize;
+    anonFullPart = anonFullPart > 1 ? 1 : anonFullPart;
+    anonFullPart *= 100;
+
+    // apply some weights to them ...
+    float denomWeight = 1;
+    float anonNormWeight = nDarksendRounds;
+    float anonFullWeight = 2;
+    float fullWeight = denomWeight + anonNormWeight + anonFullWeight;
+    // ... and calculate the whole progress
+    float denomPartCalc = ceilf((denomPart * denomWeight / fullWeight) * 100) / 100;
+    float anonNormPartCalc = ceilf((anonNormPart * anonNormWeight / fullWeight) * 100) / 100;
+    float anonFullPartCalc = ceilf((anonFullPart * anonFullWeight / fullWeight) * 100) / 100;
+    float progress = denomPartCalc + anonNormPartCalc + anonFullPartCalc;
     if(progress >= 100) progress = 100;
 
     ui->darksendProgress->setValue(progress);
 
-    std::ostringstream convert;
-    convert << "Progress: " << progress << "%, inputs have an average of " << pwalletMain->GetAverageAnonymizedRounds() << " of " << nDarksendRounds << " rounds";
-    QString s(convert.str().c_str());
-    ui->darksendProgress->setToolTip(s);
+    QString strToolPip = ("<b>" + tr("Overall progress") + ": %1%</b><br/>" +
+                          tr("Denominated") + ": %2%<br/>" +
+                          tr("Mixed") + ": %3%<br/>" +
+                          tr("Anonymized") + ": %4%<br/>" +
+                          tr("Denominated inputs have %5 of %n rounds on average", "", nDarksendRounds))
+            .arg(progress).arg(denomPart).arg(anonNormPart).arg(anonFullPart)
+            .arg(nAverageAnonymizedRounds);
+    ui->darksendProgress->setToolTip(strToolPip);
 }
 
 
 void OverviewPage::darkSendStatus()
 {
+    static int64_t nLastDSProgressBlockTime = 0;
+
     int nBestHeight = chainActive.Tip()->nHeight;
 
-    if(nBestHeight != darkSendPool.cachedNumBlocks)
-    {
-        //we we're processing lots of blocks, we'll just leave
-        if(GetTime() - lastNewBlock < 10) return;
-        lastNewBlock = GetTime();
-
-        updateDarksendProgress();
-
-        QString strSettings(" " + tr("Rounds"));
-        strSettings.prepend(QString::number(nDarksendRounds)).prepend(" / ");
-        strSettings.prepend(BitcoinUnits::formatWithUnit(
-            walletModel->getOptionsModel()->getDisplayUnit(),
-            nAnonymizeDarkcoinAmount * COIN)
-        );
-
-        ui->labelAmountRounds->setText(strSettings);
-    }
+    // we we're processing more then 1 block per second, we'll just leave
+    if(((nBestHeight - darkSendPool.cachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
+    nLastDSProgressBlockTime = GetTimeMillis();
 
     if(!fEnableDarksend) {
         if(nBestHeight != darkSendPool.cachedNumBlocks)
         {
             darkSendPool.cachedNumBlocks = nBestHeight;
+            updateDarksendProgress();
 
             ui->darksendEnabled->setText(tr("Disabled"));
             ui->darksendStatus->setText("");
@@ -365,71 +452,17 @@ void OverviewPage::darkSendStatus()
     {
         // Balance and number of transactions might have changed
         darkSendPool.cachedNumBlocks = nBestHeight;
-
-        /* *******************************************************/
+        updateDarksendProgress();
 
         ui->darksendEnabled->setText(tr("Enabled"));
     }
 
-    int state = darkSendPool.GetState();
-    int entries = darkSendPool.GetEntriesCount();
-    int accepted = darkSendPool.GetLastEntryAccepted();
+    QString strStatus = QString(darkSendPool.GetStatus().c_str());
 
-    /* ** @TODO this string creation really needs some clean ups ---vertoe ** */
-    std::ostringstream convert;
-
-    if(state == POOL_STATUS_IDLE) {
-        convert << tr("Darksend is idle.").toStdString();
-    } else if(state == POOL_STATUS_ACCEPTING_ENTRIES) {
-        if(entries == 0) {
-            if(darkSendPool.strAutoDenomResult.size() == 0){
-                convert << tr("Mixing in progress...").toStdString();
-            } else {
-                convert << darkSendPool.strAutoDenomResult;
-            }
-            showingDarkSendMessage = 0;
-        } else if (accepted == 1) {
-            convert << tr("Darksend request complete: Your transaction was accepted into the pool!").toStdString();
-            if(showingDarkSendMessage % 10 > 8) {
-                darkSendPool.lastEntryAccepted = 0;
-                showingDarkSendMessage = 0;
-            }
-        } else {
-            if(showingDarkSendMessage % 70 <= 40) convert << tr("Submitted following entries to masternode:").toStdString() << " " << entries << "/" << darkSendPool.GetMaxPoolTransactions();
-            else if(showingDarkSendMessage % 70 <= 50) convert << tr("Submitted to masternode, waiting for more entries").toStdString() << " (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) .";
-            else if(showingDarkSendMessage % 70 <= 60) convert << tr("Submitted to masternode, waiting for more entries").toStdString() << " (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) ..";
-            else if(showingDarkSendMessage % 70 <= 70) convert << tr("Submitted to masternode, waiting for more entries").toStdString() << " (" << entries << "/" << darkSendPool.GetMaxPoolTransactions() << " ) ...";
-        }
-    } else if(state == POOL_STATUS_SIGNING) {
-        if(showingDarkSendMessage % 70 <= 10) convert << tr("Found enough users, signing ...").toStdString();
-        else if(showingDarkSendMessage % 70 <= 20) convert << tr("Found enough users, signing ( waiting").toStdString() << ". )";
-        else if(showingDarkSendMessage % 70 <= 30) convert << tr("Found enough users, signing ( waiting").toStdString() << ".. )";
-        else if(showingDarkSendMessage % 70 <= 40) convert << tr("Found enough users, signing ( waiting").toStdString() << "... )";
-    } else if(state == POOL_STATUS_TRANSMISSION) {
-        convert << tr("Transmitting final transaction.").toStdString();
-    } else if (state == POOL_STATUS_IDLE) {
-        convert << tr("Darksend is idle.").toStdString();
-    } else if (state == POOL_STATUS_FINALIZE_TRANSACTION) {
-        convert << tr("Finalizing transaction.").toStdString();
-    } else if(state == POOL_STATUS_ERROR) {
-        convert << tr("Darksend request incomplete:").toStdString() << " " << darkSendPool.lastMessage << ". " << tr("Will retry...").toStdString();
-    } else if(state == POOL_STATUS_SUCCESS) {
-        convert << tr("Darksend request complete:").toStdString() << " " << darkSendPool.lastMessage;
-    } else if(state == POOL_STATUS_QUEUE) {
-        if(showingDarkSendMessage % 70 <= 50) convert << tr("Submitted to masternode, waiting in queue").toStdString() << " .";
-        else if(showingDarkSendMessage % 70 <= 60) convert << tr("Submitted to masternode, waiting in queue").toStdString() << " ..";
-        else if(showingDarkSendMessage % 70 <= 70) convert << tr("Submitted to masternode, waiting in queue").toStdString() << " ...";
-    } else {
-        convert << tr("Unknown state:").toStdString() << " id = " << state;
-    }
-
-    if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) darkSendPool.Check();
-
-    QString s(convert.str().c_str());
-    s = tr("Last Darksend message:\n") + s;
+    QString s = tr("Last Darksend message:\n") + strStatus;
 
     if(s != ui->darksendStatus->text())
-        LogPrintf("Last Darksend message: %s\n", convert.str().c_str());
+        LogPrintf("Last Darksend message: %s\n", strStatus.toStdString());
 
     ui->darksendStatus->setText(s);
 
@@ -442,10 +475,6 @@ void OverviewPage::darkSendStatus()
         ui->labelSubmittedDenom->setText(s2);
     }
 
-    showingDarkSendMessage++;
-    darksendActionCheck++;
-
-    // Get DarkSend Denomination Status
 }
 
 void OverviewPage::darksendAuto(){
@@ -461,14 +490,20 @@ void OverviewPage::darksendReset(){
 }
 
 void OverviewPage::toggleDarksend(){
+    QSettings settings;
+    // Popup some information on first mixing
+    QString hasMixed = settings.value("hasMixed").toString();
+    if(hasMixed.isEmpty()){
+        QMessageBox::information(this, tr("Darksend"),
+                tr("If you don't want to see internal Darksend fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab."),
+                QMessageBox::Ok, QMessageBox::Ok);
+        settings.setValue("hasMixed", "hasMixed");
+    }
     if(!fEnableDarksend){
-        int64_t balance = pwalletMain->GetBalance();
+        int64_t balance = currentBalance;
         float minAmount = 1.49 * COIN;
         if(balance < minAmount){
-            QString strMinAmount(
-                BitcoinUnits::formatWithUnit(
-                    walletModel->getOptionsModel()->getDisplayUnit(),
-                    minAmount));
+            QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, minAmount));
             QMessageBox::warning(this, tr("Darksend"),
                 tr("Darksend requires at least %1 to use.").arg(strMinAmount),
                 QMessageBox::Ok, QMessageBox::Ok);
@@ -482,7 +517,7 @@ void OverviewPage::toggleDarksend(){
             if(!ctx.isValid())
             {
                 //unlock was cancelled
-                darkSendPool.cachedNumBlocks = 0;
+                darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
                 QMessageBox::warning(this, tr("Darksend"),
                     tr("Wallet is locked and user declined to unlock. Disabling Darksend."),
                     QMessageBox::Ok, QMessageBox::Ok);
@@ -493,11 +528,12 @@ void OverviewPage::toggleDarksend(){
 
     }
 
-    darkSendPool.cachedNumBlocks = 0;
     fEnableDarksend = !fEnableDarksend;
+    darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
 
     if(!fEnableDarksend){
         ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
+        darkSendPool.UnlockCoins();
     } else {
         ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
 
@@ -509,6 +545,5 @@ void OverviewPage::toggleDarksend(){
             dlg.exec();
         }
 
-        darkSendPool.DoAutomaticDenominating();
     }
 }

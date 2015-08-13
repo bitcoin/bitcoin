@@ -1,14 +1,14 @@
-.TH BITCOIND "1" "January 2011" "bitcoind 3.19"
+.TH DASHD "1" "January 2011" "dashd 3.19"
 .SH NAME
-bitcoind \- peer-to-peer network based digital currency
+Dash \- peer-to-peer network based digital currency
 .SH SYNOPSIS
-bitcoin [options] <command> [params]
+dashd [options] <command> [params]
 .TP
-bitcoin [options] help <command> \- Get help for a command
+dashd [options] help <command> \- Get help for a command
 .SH DESCRIPTION
-This  manual page documents the bitcoind program. Bitcoin is a peer-to-peer digital currency. Peer-to-peer (P2P) means that there is no central authority to issue new money or keep track of transactions. Instead, these tasks are managed collectively by the nodes of the network. Advantages:
+This  manual page documents the dashd program. Dash is a peer-to-peer digital currency. Peer-to-peer (P2P) means that there is no central authority to issue new money or keep track of transactions. Instead, these tasks are managed collectively by the nodes of the network. Advantages:
 
-Bitcoins can be sent easily through the Internet, without having to trust middlemen. Transactions are designed to be irreversible. Be safe from instability caused by fractional reserve banking and central banks. The limited inflation of the Bitcoin system’s money supply is distributed evenly (by CPU power) throughout the network, not monopolized by banks.
+Dash can be sent easily through the Internet, without having to trust middlemen. Transactions are designed to be irreversible. Be safe from instability caused by fractional reserve banking and central banks. The limited inflation of the Dash system’s money supply is distributed evenly (by CPU power) throughout the network, not monopolized by banks.
 
 .SH OPTIONS
 .TP
@@ -28,7 +28,7 @@ Start minimized
 Specify data directory
 .TP
 \fB\-proxy=\fR<ip:port>
-Connect through socks4 proxy
+Connect through SOCKS5 proxy
 .TP
 \fB\-addnode=\fR<ip>
 Add a node to connect to
@@ -84,14 +84,14 @@ This help message
 \fBbackupwallet 'destination'\fR
 Safely copies *wallet.dat* to 'destination', which can be a directory or a path with filename.
 .TP
-\fBgetaccount 'bitcoinaddress'\fR
+\fBgetaccount 'dashaddress'\fR
 Returns the account associated with the given address.
 .TP
-\fBsetaccount 'bitcoinaddress' ['account']\fR
+\fBsetaccount 'dashaddress' ['account']\fR
 Sets the ['account'] associated with the given address. ['account'] may be omitted to remove an address from ['account'].
 .TP
 \fBgetaccountaddress 'account'\fR
-Returns a new bitcoin address for 'account'.
+Returns a new dash address for 'account'.
 .TP
 \fBgetaddressesbyaccount 'account'\fR
 Returns the list of addresses associated with the given 'account'.
@@ -112,7 +112,7 @@ Returns the number of connections to other nodes.
 Returns the proof-of-work difficulty as a multiple of the minimum difficulty.
 .TP
 \fBgetgenerate\fR
-Returns boolean true if server is trying to generate bitcoins, false otherwise.
+Returns boolean true if server is trying to generate DASH, false otherwise.
 .TP
 \fBsetgenerate 'generate' ['genproclimit']\fR
 Generation is limited to ['genproclimit'] processors, \-1 is unlimited.
@@ -124,13 +124,13 @@ Returns a recent hashes per second performance measurement while generating.
 Returns an object containing server information.
 .TP
 \fBgetnewaddress 'account'\fR
-Returns a new bitcoin address for receiving payments. If 'account' is specified (recommended), it is added to the address book so payments received with the address will be credited to 'account'.
+Returns a new dash address for receiving payments. If 'account' is specified (recommended), it is added to the address book so payments received with the address will be credited to 'account'.
 .TP
 \fBgetreceivedbyaccount 'account' ['minconf=1']\fR
 Returns the total amount received by addresses associated with 'account' in transactions with at least ['minconf'] confirmations.
 .TP
-\fBgetreceivedbyaddress 'bitcoinaddress' ['minconf=1']\fR
-Returns the total amount received by 'bitcoinaddress' in transactions with at least ['minconf'] confirmations.
+\fBgetreceivedbyaddress 'dashaddress' ['minconf=1']\fR
+Returns the total amount received by 'dashaddress' in transactions with at least ['minconf'] confirmations.
 .TP
 \fBgettransaction 'txid'\fR
 Returns information about a specific transaction, given hexadecimal transaction ID.
@@ -148,7 +148,7 @@ List commands, or get help for a command.
 .TP
 \fBlistaccounts ['minconf=1']\fR
 List accounts and their current balances.
-     *note: requires bitcoin 0.3.20 or later.
+     *note: requires dash 0.3.20 or later.
 .TP
 \fBlistreceivedbyaccount ['minconf=1'] ['includeempty=false']\fR
 ['minconf'] is the minimum number of confirmations before payments are included. ['includeempty'] whether to include addresses that haven't received any payments. Returns an array of objects containing:
@@ -177,26 +177,26 @@ Returns a list of the last ['count'] transactions for 'account' \- for all accou
     "message"       : message associated with transaction (only for send).
     "to"            : message-to associated with transaction (only for send).
 
-    *note: requires bitcoin 0.3.20 or later.
+    *note: requires dash 0.3.20 or later.
 .TP
 \fBmove <'fromaccount'> <'toaccount'> <'amount'> ['minconf=1'] ['comment']\fR
 Moves funds between accounts.
 .TP
-\fBsendfrom* <'account'> <'bitcoinaddress'> <'amount'> ['minconf=1'] ['comment'] ['comment-to']\fR
-Sends amount from account's balance to 'bitcoinaddress'. This method will fail if there is less than amount bitcoins with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
+\fBsendfrom* <'account'> <'dashaddress'> <'amount'> ['minconf=1'] ['comment'] ['comment-to']\fR
+Sends amount from account's balance to 'dashaddress'. This method will fail if there is less than amount DASH with ['minconf'] confirmations in the account's balance (unless account is the empty-string-named default account; it behaves like the *sendtoaddress* method). Returns transaction ID on success.
 .TP
-\fBsendtoaddress 'bitcoinaddress' 'amount' ['comment'] ['comment-to']\fR
-Sends amount from the server's available balance to 'bitcoinaddress'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
+\fBsendtoaddress 'dashaddress' 'amount' ['comment'] ['comment-to']\fR
+Sends amount from the server's available balance to 'dashaddress'. amount is a real and is rounded to the nearest 0.01. Returns transaction id on success.
 .TP
 \fBstop\fR
-Stops the bitcoin server.
+Stops the dash server.
 .TP
-\fBvalidateaddress 'bitcoinaddress'\fR
-Checks that 'bitcoinaddress' looks like a proper bitcoin address. Returns an object containing:
+\fBvalidateaddress 'dashaddress'\fR
+Checks that 'dashaddress' looks like a proper Dash address. Returns an object containing:
 
     "isvalid" : true or false.
     "ismine"  : true if the address is in the server's wallet.
-    "address" : bitcoinaddress.
+    "address" : dashaddress.
 
     *note: ismine and address are only returned if the address is valid.
 

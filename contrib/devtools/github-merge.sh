@@ -49,11 +49,11 @@ fi
 # Initialize source branches.
 git checkout -q "$BRANCH"
 if git fetch -q "$HOST":"$REPO" "+refs/pull/$PULL/*:refs/heads/pull/$PULL/*"; then
-  if ! git log -1q "refs/heads/pull/$PULL/head" >/dev/null 2>&1; then
+  if ! git log -q -1 "refs/heads/pull/$PULL/head" >/dev/null 2>&1; then
     echo "ERROR: Cannot find head of pull request #$PULL on $HOST:$REPO." >&2
     exit 3
   fi
-  if ! git log -1q "refs/heads/pull/$PULL/merge" >/dev/null 2>&1; then
+  if ! git log -q -1 "refs/heads/pull/$PULL/merge" >/dev/null 2>&1; then
     echo "ERROR: Cannot find merge of pull request #$PULL on $HOST:$REPO." >&2
     exit 3
   fi
@@ -136,6 +136,9 @@ else
   echo "Dropping you on a shell so you can try building/testing the merged source." >&2
   echo "Run 'git diff HEAD~' to show the changes being merged." >&2
   echo "Type 'exit' when done." >&2
+  if [[ -f /etc/debian_version ]]; then # Show pull number in prompt on Debian default prompt
+      export debian_chroot="$PULL"
+  fi
   bash -i
   read -p "Press 'm' to accept the merge. " -n 1 -r >&2
   echo
