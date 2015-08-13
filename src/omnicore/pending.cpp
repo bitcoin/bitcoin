@@ -43,7 +43,7 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
     txobj.push_back(Pair("sendingaddress", sendingAddress));
     if (!refAddress.empty()) txobj.push_back(Pair("referenceaddress", refAddress));
     txobj.push_back(Pair("confirmations", 0));
-    txobj.push_back(Pair("type", c_strMasterProtocolTXType(type)));
+    txobj.push_back(Pair("type", strTransactionType(type)));
     switch (type) {
         case MSC_TYPE_SIMPLE_SEND:
             txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
@@ -62,10 +62,12 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
         case MSC_TYPE_TRADE_OFFER:
             amountStr = FormatDivisibleMP(amount); // both amount for sale (either TMSC or MSC) and BTC desired are always divisible
             amountDStr = FormatDivisibleMP(amountDesired);
-            txobj.push_back(Pair("amountoffered", amountStr));
-            txobj.push_back(Pair("propertyidoffered", (uint64_t)propertyId));
-            txobj.push_back(Pair("btcamountdesired", amountDStr));
-            txobj.push_back(Pair("action", action));
+            txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
+            txobj.push_back(Pair("amount", amountStr));
+            if (action == 1) txobj.push_back(Pair("action", "new"));
+            if (action == 2) txobj.push_back(Pair("action", "update"));
+            if (action == 3) txobj.push_back(Pair("action", "cancel"));
+            txobj.push_back(Pair("bitcoindesired", amountDStr));
         break;
         case MSC_TYPE_METADEX_TRADE:
         case MSC_TYPE_METADEX_CANCEL_PRICE:
@@ -73,12 +75,12 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
             divisibleDesired = isPropertyDivisible(propertyIdDesired);
             if (divisible) { amountStr = FormatDivisibleMP(amount); } else { amountStr = FormatIndivisibleMP(amount); }
             if (divisibleDesired) { amountDStr = FormatDivisibleMP(amountDesired); } else { amountDStr = FormatIndivisibleMP(amountDesired); }
-            txobj.push_back(Pair("amountoffered", amountStr));
-            txobj.push_back(Pair("propertyidoffered", (uint64_t)propertyId));
-            txobj.push_back(Pair("propertyidofferedisdivisible", divisible));
-            txobj.push_back(Pair("amountdesired", amountDStr));
+            txobj.push_back(Pair("propertyidforsale", (uint64_t)propertyId));
+            txobj.push_back(Pair("propertyidforsaleisdivisible", divisible));
+            txobj.push_back(Pair("amountforsale", amountStr));
             txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
             txobj.push_back(Pair("propertyiddesiredisdivisible", divisibleDesired));
+            txobj.push_back(Pair("amountdesired", amountDStr));
             if ((propertyId == OMNI_PROPERTY_MSC) || (propertyId == OMNI_PROPERTY_TMSC)) {
                 tempUnitPrice = rational_t(amount, amountDesired);
                 if (!divisibleDesired) tempUnitPrice = tempUnitPrice/COIN;
@@ -89,14 +91,14 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
             txobj.push_back(Pair("unitprice", xToString(tempUnitPrice)));
         break;
         case MSC_TYPE_METADEX_CANCEL_PAIR:
-            txobj.push_back(Pair("propertyidoffered", (uint64_t)propertyId));
+            txobj.push_back(Pair("propertyidforsale", (uint64_t)propertyId));
             txobj.push_back(Pair("propertyiddesired", (uint64_t)propertyIdDesired));
         break;
         case MSC_TYPE_METADEX_CANCEL_ECOSYSTEM:
             if (isMainEcosystemProperty(propertyId) && isMainEcosystemProperty(propertyIdDesired)) {
-                txobj.push_back(Pair("ecosystem", "Main"));
+                txobj.push_back(Pair("ecosystem", "main"));
             } else {
-                txobj.push_back(Pair("ecosystem", "Test"));
+                txobj.push_back(Pair("ecosystem", "test"));
             }
         break;
     }
@@ -105,7 +107,10 @@ void PendingAdd(const uint256& txid, const std::string& sendingAddress, const st
                                         type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);
 
     // bypass tally update for pending cancel as there is no balance change
-    if (type != MSC_TYPE_METADEX_CANCEL_PRICE && type != MSC_TYPE_METADEX_CANCEL_PAIR && type != MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+    if (!(type == MSC_TYPE_METADEX_CANCEL_PRICE) &&
+        !(type == MSC_TYPE_METADEX_CANCEL_PAIR) &&
+        !(type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) &&
+        !(type == MSC_TYPE_TRADE_OFFER && action == 3)) {
         if (!update_tally_map(sendingAddress, propertyId, -amount, PENDING)) {
             PrintToLog("ERROR - Update tally for pending failed! %s(%s,%s,%s,%d,%u,%ld,%u,%ld,%d,%s)\n", __FUNCTION__, txid.GetHex(),
                 sendingAddress, refAddress, type, propertyId, amount, propertyIdDesired, amountDesired, action, txDesc);

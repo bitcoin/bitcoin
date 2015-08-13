@@ -888,13 +888,22 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
     return how_many_erased;
 }
 
-const char* mastercore::c_strPropertyType(uint16_t propertyType)
+std::string mastercore::strPropertyType(uint16_t propertyType)
 {
     switch (propertyType) {
         case MSC_PROPERTY_TYPE_DIVISIBLE: return "divisible";
-        case MSC_PROPERTY_TYPE_INDIVISIBLE: return"indivisible";
+        case MSC_PROPERTY_TYPE_INDIVISIBLE: return "indivisible";
     }
 
-    return "*** property type error ***";
+    return "unknown";
 }
 
+std::string mastercore::strEcosystem(uint8_t ecosystem)
+{
+    switch (ecosystem) {
+        case OMNI_PROPERTY_MSC: return "main";
+        case OMNI_PROPERTY_TMSC: return "test";
+    }
+
+    return "unknown";
+}

@@ -219,6 +219,15 @@ std::string FormatMP(uint32_t property, int64_t n, bool fSign)
     }
 }
 
+std::string FormatByType(int64_t amount, uint16_t propertyType)
+{
+    if (propertyType & MSC_PROPERTY_TYPE_INDIVISIBLE) {
+        return FormatIndivisibleMP(amount);
+    } else {
+        return FormatDivisibleMP(amount);
+    }
+}
+
 OfferMap mastercore::my_offers;
 AcceptMap mastercore::my_accepts;
 

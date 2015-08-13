@@ -126,10 +126,11 @@ enum FILETYPES {
 #define OMNI_PROPERTY_TMSC  2
 
 // forward declarations
-std::string FormatDivisibleMP(int64_t n, bool fSign = false);
-std::string FormatDivisibleShortMP(int64_t);
-std::string FormatMP(uint32_t, int64_t n, bool fSign = false);
-std::string FormatShortMP(uint32_t, int64_t);
+std::string FormatDivisibleMP(int64_t amount, bool fSign = false);
+std::string FormatDivisibleShortMP(int64_t amount);
+std::string FormatMP(uint32_t propertyId, int64_t amount, bool fSign = false);
+std::string FormatShortMP(uint32_t propertyId, int64_t amount);
+std::string FormatByType(int64_t amount, uint16_t propertyType);
 bool feeCheck(const std::string& address, size_t nDataSize);
 
 /** Returns the Exodus address. */
@@ -299,7 +300,7 @@ CMPTally* getTally(const std::string& address);
 
 int64_t getTotalTokens(uint32_t propertyId, int64_t* n_owners_total = NULL);
 
-std::string c_strMasterProtocolTXType(uint16_t txType);
+std::string strTransactionType(uint16_t txType);
 
 /** Returns the encoding class, used to embed a payload. */
 int GetEncodingClass(const CTransaction& tx, int nBlock);

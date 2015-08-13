@@ -120,7 +120,7 @@ Value omni_senddexsell(const Array& params, bool fHelp)
     int64_t amountForSale = 0; // depending on action
     int64_t amountDesired = 0; // depending on action
     uint8_t paymentWindow = 0; // depending on action
-    int64_t minAcceptFee = ParseDExFee(params[5]);
+    int64_t minAcceptFee = 0;  // depending on action
     uint8_t action = ParseDExAction(params[6]);
 
     // perform conversions
@@ -128,6 +128,7 @@ Value omni_senddexsell(const Array& params, bool fHelp)
         amountForSale = ParseAmount(params[2], true); // TMSC/MSC is divisible
         amountDesired = ParseAmount(params[3], true); // BTC is divisible
         paymentWindow = ParseDExPaymentWindow(params[4]);
+        minAcceptFee = ParseDExFee(params[5]);
     }
 
     // perform checks
