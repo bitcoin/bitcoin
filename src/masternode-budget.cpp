@@ -1867,7 +1867,7 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral)
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return true;
 
-    if(nBlockStart < pindexPrev->nHeight) {strError = "Older than current blockHeight"; return false;}
+    if(nBlockStart < pindexPrev->nHeight-100) {strError = "Older than current blockHeight"; return false;}
     if(GetBlockEnd() < pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()/2) {strError = "BlockEnd is older than blockHeight - cycle/2"; return false;}
 
     return true;
