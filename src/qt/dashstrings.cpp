@@ -48,7 +48,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Delete all wallet transactions and only recover those parts of the "
 "blockchain through -rescan on startup"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Disable all Dash specific functionality (Masernodes, Darksend, InstantX, "
+"Disable all Dash specific functionality (Masternodes, Darksend, InstantX, "
 "Budgeting) (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Distributed under the MIT software license, see the accompanying file "

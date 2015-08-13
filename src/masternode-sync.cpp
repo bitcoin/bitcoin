@@ -81,7 +81,7 @@ void CMasternodeSync::Reset()
 void CMasternodeSync::AddedMasternodeList(uint256 hash)
 {
     if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
-        if(mapSeenSyncMNB[hash] < MASTERNODE_SYNC_TRESHOLD) {
+        if(mapSeenSyncMNB[hash] < MASTERNODE_SYNC_THRESHOLD) {
             lastMasternodeList = GetTime();
             mapSeenSyncMNB[hash]++;
         }
@@ -94,7 +94,7 @@ void CMasternodeSync::AddedMasternodeList(uint256 hash)
 void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
 {
     if(masternodePayments.mapMasternodePayeeVotes.count(hash)) {
-        if(mapSeenSyncMNW[hash] < MASTERNODE_SYNC_TRESHOLD) {
+        if(mapSeenSyncMNW[hash] < MASTERNODE_SYNC_THRESHOLD) {
             lastMasternodeWinner = GetTime();
             mapSeenSyncMNW[hash]++;
         }
@@ -108,7 +108,7 @@ void CMasternodeSync::AddedBudgetItem(uint256 hash)
 {
     if(budget.mapSeenMasternodeBudgetProposals.count(hash) || budget.mapSeenMasternodeBudgetVotes.count(hash) ||
             budget.mapSeenFinalizedBudgets.count(hash) || budget.mapSeenFinalizedBudgetVotes.count(hash)) {
-        if(mapSeenSyncBudget[hash] < MASTERNODE_SYNC_TRESHOLD) {
+        if(mapSeenSyncBudget[hash] < MASTERNODE_SYNC_THRESHOLD) {
             lastBudgetItem = GetTime();
             mapSeenSyncBudget[hash]++;
         }
@@ -276,7 +276,7 @@ void CMasternodeSync::Process()
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
                 if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", lastMasternodeList, GetTime() - MASTERNODE_SYNC_TIMEOUT);
-                if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= MASTERNODE_SYNC_TRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+                if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
                 }
@@ -290,7 +290,7 @@ void CMasternodeSync::Process()
             }
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
-                if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= MASTERNODE_SYNC_TRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+                if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
                 }
@@ -314,7 +314,7 @@ void CMasternodeSync::Process()
 
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 //we'll start rejecting votes if we accidentally get set as synced too soon
-                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= MASTERNODE_SYNC_TRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
                     //LogPrintf("CMasternodeSync::Process - HasNextFinalizedBudget %d nCountFailures %d IsBudgetPropEmpty %d\n", budget.HasNextFinalizedBudget(), nCountFailures, IsBudgetPropEmpty());
                     //if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || IsBudgetPropEmpty()) {
                         GetNextAsset();
