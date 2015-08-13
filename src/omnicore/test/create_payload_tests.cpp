@@ -372,14 +372,13 @@ BOOST_AUTO_TEST_CASE(payload_change_property_manager)
 
 BOOST_AUTO_TEST_CASE(payload_feature_activation)
 {
-/*
     // Omni Core feature activation [type 65534, version 65535]
     std::vector<unsigned char> vch = CreatePayload_ActivateFeature(
         static_cast<uint16_t>(1),        // feature identifier: 1 (OP_RETURN)
-        static_cast<uint32_t>(370000));  // activation block
+        static_cast<uint32_t>(370000),   // activation block
+        static_cast<uint32_t>(999));     // min client version
 
-    BOOST_CHECK_EQUAL(HexStr(vch), "fffffffe00010005a550");
-*/
+    BOOST_CHECK_EQUAL(HexStr(vch), "fffffffe00010005a550000003e7");
 }
 
 /*
