@@ -776,6 +776,106 @@ void SocketSendData(CNode *pnode)
 
 static list<CNode*> vNodesDisconnected;
 
+static bool ReverseCompareNodeMinPingTime(CNode *a, CNode *b)
+{
+    return a->nMinPingUsecTime > b->nMinPingUsecTime;
+}
+
+static bool ReverseCompareNodeTimeConnected(CNode *a, CNode *b)
+{
+    return a->nTimeConnected > b->nTimeConnected;
+}
+
+class CompareNetGroupKeyed
+{
+    std::vector<unsigned char> vchSecretKey;
+public:
+    CompareNetGroupKeyed()
+    {
+        vchSecretKey.resize(32, 0);
+        GetRandBytes(vchSecretKey.data(), vchSecretKey.size());
+    }
+
+    bool operator()(CNode *a, CNode *b)
+    {
+        std::vector<unsigned char> vchGroupA, vchGroupB;
+        CSHA256 hashA, hashB;
+        std::vector<unsigned char> vchA(32), vchB(32);
+
+        vchGroupA = a->addr.GetGroup();
+        vchGroupB = b->addr.GetGroup();
+
+        hashA.Write(begin_ptr(vchGroupA), vchGroupA.size());
+        hashB.Write(begin_ptr(vchGroupB), vchGroupB.size());
+
+        hashA.Write(begin_ptr(vchSecretKey), vchSecretKey.size());
+        hashB.Write(begin_ptr(vchSecretKey), vchSecretKey.size());
+
+        hashA.Finalize(begin_ptr(vchA));
+        hashB.Finalize(begin_ptr(vchB));
+
+        return vchA < vchB;
+    }
+};
+
+static bool AttemptToEvictConnection() {
+    std::vector<CNode*> vEvictionCandidates;
+    {
+        LOCK(cs_vNodes);
+
+        BOOST_FOREACH(CNode *node, vNodes) {
+            if (node->fWhitelisted)
+                continue;
+            if (!node->fInbound)
+                continue;
+            if (node->fDisconnect)
+                continue;
+            if (node->addr.IsLocal())
+                continue;
+            vEvictionCandidates.push_back(node);
+        }
+    }
+
+    // Protect connections with certain characteristics
+    static CompareNetGroupKeyed comparerNetGroupKeyed;
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), comparerNetGroupKeyed);
+    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(4, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeMinPingTime);
+    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(8, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
+    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(64, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+
+    if (vEvictionCandidates.empty())
+        return false;
+
+    // Identify CNetAddr with the most connections
+    CNetAddr naMostConnections;
+    unsigned int nMostConnections = 0;
+    std::map<CNetAddr, std::vector<CNode*> > mapAddrCounts;
+    BOOST_FOREACH(CNode *node, vEvictionCandidates) {
+        mapAddrCounts[node->addr].push_back(node);
+
+        if (mapAddrCounts[node->addr].size() > nMostConnections) {
+            nMostConnections = mapAddrCounts[node->addr].size();
+            naMostConnections = node->addr;
+        }
+    }
+
+    // Reduce to the CNetAddr with the most connections
+    vEvictionCandidates = mapAddrCounts[naMostConnections];
+
+    if (vEvictionCandidates.size() <= 1)
+        return false;
+
+    // Disconnect the most recent connection from the CNetAddr with the most connections
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
+    vEvictionCandidates[0]->fDisconnect = true;
+
+    return true;
+}
+
 static void AcceptConnection(const ListenSocket& hListenSocket) {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
@@ -820,16 +920,12 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
 
     if (nInbound >= nMaxInbound)
     {
-        LogPrint("net", "connection from %s dropped (full)\n", addr.ToString());
-        CloseSocket(hSocket);
-        return;
-    }
-
-    if (!whitelisted && (nInbound >= (nMaxInbound - nWhiteConnections)))
-    {
-        LogPrint("net", "connection from %s dropped (non-whitelisted)\n", addr.ToString());
-        CloseSocket(hSocket);
-        return;
+        if (!AttemptToEvictConnection()) {
+            // No connection to evict, disconnect the new connection
+            LogPrint("net", "failed to find an eviction candidate - connection dropped (full)\n");
+            CloseSocket(hSocket);
+            return;
+        }
     }
 
     CNode* pnode = new CNode(hSocket, addr, "", true);
