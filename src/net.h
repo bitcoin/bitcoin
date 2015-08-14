@@ -143,19 +143,8 @@ extern uint64_t nLocalServices;
 extern uint64_t nLocalHostNonce;
 extern CAddrMan addrman;
 
-// The allocation of connections against the maximum allowed (nMaxConnections)
-// is prioritized as follows:
-// 1st: Outbound connections (MAX_OUTBOUND_CONNECTIONS)
-// 2nd: Inbound connections from whitelisted peers (nWhiteConnections)
-// 3rd: Inbound connections from non-whitelisted peers
-// Thus, the number of connection slots for the general public to use is:
-// nMaxConnections - (MAX_OUTBOUND_CONNECTIONS + nWhiteConnections)
-// Any additional inbound connections beyond limits will be immediately closed
-
 /** Maximum number of connections to simultaneously allow (aka connection slots) */
 extern int nMaxConnections;
-/** Number of connection slots to reserve for inbound from whitelisted peers */
-extern int nWhiteConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
