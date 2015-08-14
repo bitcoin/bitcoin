@@ -769,14 +769,18 @@ void BitcoinGUI::setNumBlocks(int count)
                 ":/movies/spinner-%1").arg(spinnerFrame, 3, 10, QChar('0')))
                 .pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
             spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
+            progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
             prevAttempt = masternodeSync.RequestedMasternodeAttempt + 1;
             prevAssets = masternodeSync.RequestedMasternodeAssets;
             if(prevAttempt <= MASTERNODE_SYNC_THRESHOLD) progress = prevAttempt + (prevAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
             progressBar->setValue(progress);
+#ifdef ENABLE_WALLET
+            if(walletFrame)
+                walletFrame->showOutOfSyncWarning(false);
+#endif // ENABLE_WALLET
         }
         switch (masternodeSync.RequestedMasternodeAssets) {
             case MASTERNODE_SYNC_SPORKS:
-                progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
                 progressBarLabel->setText(tr("Synchronizing sporks..."));
                 break;
             case MASTERNODE_SYNC_LIST:
@@ -789,10 +793,6 @@ void BitcoinGUI::setNumBlocks(int count)
                 progressBarLabel->setText(tr("Synchronizing budgets..."));
                 break;
             case MASTERNODE_SYNC_FINISHED:
-#ifdef ENABLE_WALLET
-                if(walletFrame)
-                    walletFrame->showOutOfSyncWarning(false);
-#endif // ENABLE_WALLET
                 progressBarLabel->setVisible(false);
                 progressBar->setVisible(false);
                 labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));

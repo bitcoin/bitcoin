@@ -135,6 +135,7 @@ public:
     int nLastScanningErrorBlockHeight;
     CMasternodePing lastPing;
 
+    int64_t nLastDsee;// temporary, do not save. Remove after migration to v12
     int64_t nLastDseep;// temporary, do not save. Remove after migration to v12
 
     CMasternode();
