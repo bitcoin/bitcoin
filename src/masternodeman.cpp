@@ -799,6 +799,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         // make sure signature isn't in the future (past is OK)
         if (sigTime > GetAdjustedTime() + 60 * 60) {
             LogPrintf("dsee - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
+            Misbehaving(pfrom->GetId(), 1);
             return;
         }
 
@@ -812,16 +813,16 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if(protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
             LogPrintf("dsee - ignoring outdated Masternode %s protocol version %d < %d\n", vin.ToString().c_str(), protocolVersion, masternodePayments.GetMinMasternodePaymentsProto());
+            Misbehaving(pfrom->GetId(), 1);
             return;
         }
 
-        int nDos = 0;
         CScript pubkeyScript;
         pubkeyScript = GetScriptForDestination(pubkey.GetID());
 
         if(pubkeyScript.size() != 25) {
             LogPrintf("dsee - pubkey the wrong size\n");
-            nDos = 100;
+            Misbehaving(pfrom->GetId(), 100);
             return;
         }
 
@@ -830,12 +831,13 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if(pubkeyScript2.size() != 25) {
             LogPrintf("dsee - pubkey2 the wrong size\n");
-            nDos = 100;
+            Misbehaving(pfrom->GetId(), 100);
             return;
         }
 
         if(!vin.scriptSig.empty()) {
             LogPrintf("dsee - Ignore Not Empty ScriptSig %s\n",vin.ToString());
+            Misbehaving(pfrom->GetId(), 100);
             return;
         }
 
@@ -998,11 +1000,13 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if (sigTime > GetAdjustedTime() + 60 * 60) {
             LogPrintf("dseep - Signature rejected, too far into the future %s\n", vin.ToString().c_str());
+            Misbehaving(pfrom->GetId(), 1);
             return;
         }
 
         if (sigTime <= GetAdjustedTime() - 60 * 60) {
             LogPrintf("dseep - Signature rejected, too far into the past %s - %d %d \n", vin.ToString().c_str(), sigTime, GetAdjustedTime());
+            Misbehaving(pfrom->GetId(), 1);
             return;
         }
 
