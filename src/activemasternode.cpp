@@ -200,6 +200,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
             return false;
         }
 
+        LogPrint("masternode", "dseep - relaying from active mn, %s \n", vin.ToString().c_str());
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes)
             pnode->PushMessage("dseep", vin, vchMasterNodeSignature, masterNodeSignatureTime, false);
