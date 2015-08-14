@@ -768,7 +768,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(vin == CTxIn()) pfrom->PushMessage("ssc", MASTERNODE_SYNC_LIST, (int)vInv.size());
         if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
 
-        LogPrintf("dseg - Sent %d Masternode entries to %s\n", i, pfrom->addr.ToString());
+        if(vin == CTxIn()) LogPrintf("dseg - Sent %d Masternode entries to %s\n", i, pfrom->addr.ToString());
     }
     /*
      * IT'S SAFE TO REMOVE THIS IN FURTHER VERSIONS
