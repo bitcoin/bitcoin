@@ -24,6 +24,9 @@ struct AlertData
 /** Determines whether the sender is an authorized source for Omni Core alerts. */
 bool CheckAlertAuthorization(const std::string& sender);
 
+/** Deletes previously broadcast alerts from the sender. */
+void DeleteAlerts(const std::string& sender);
+
 /** Adds a new alert to the alerts vector. */
 void AddAlert(const std::string& sender, uint16_t alertType, uint32_t alertExpiry, const std::string& alertMessage);
 

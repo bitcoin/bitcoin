@@ -1933,8 +1933,11 @@ int CMPTransaction::logicMath_Alert()
         return (PKT_ERROR -51);
     }
 
-    // add the alert
-    AddAlert(sender, alert_type, alert_expiry, alert_text);
+    if (alert_type == 65535) { // set alert type to FFFF to clear previously sent alerts
+        DeleteAlerts(sender);
+    } else {
+        AddAlert(sender, alert_type, alert_expiry, alert_text);
+    }
 
     // we have a new alert, fire a notify event if needed
     CAlert::Notify(alert_text, true);

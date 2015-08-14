@@ -24,6 +24,26 @@ namespace mastercore
 std::vector<AlertData> currentOmniAlerts;
 
 /**
+ * Deletes previously broadcast alerts from sender from the alerts vector
+ *
+ * Note cannot be used to delete alerts from other addresses, nor to delete system generated feature alerts
+ */
+void DeleteAlerts(const std::string& sender)
+{
+    for (std::vector<AlertData>::iterator it = currentOmniAlerts.begin(); it != currentOmniAlerts.end(); ) {
+        AlertData alert = *it;
+        if (sender == alert.alert_sender) {
+            PrintToLog("Removing deleted alert (from:%s type:%d expiry:%d message:%s)\n", alert.alert_sender,
+                alert.alert_type, alert.alert_expiry, alert.alert_message);
+            it = currentOmniAlerts.erase(it);
+            uiInterface.OmniStateChanged();
+        } else {
+            it++;
+        }
+    }
+}
+
+/**
  * Adds a new alert to the alerts vector
  *
  */
