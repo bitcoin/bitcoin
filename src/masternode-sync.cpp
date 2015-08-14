@@ -331,6 +331,13 @@ void CMasternodeSync::Process()
                     return;
                 }
 
+                // timeout
+                if(lastBudgetItem == 0 && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3) {
+                    GetNextAsset();
+                    activeMasternode.ManageStatus();
+                    return;
+                }
+
                 if(pnode->HasFulfilledRequest("busync")) continue;
                 pnode->FulfilledRequest("busync");
 
