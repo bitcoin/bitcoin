@@ -335,7 +335,6 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-whitebind=<addr>", _("Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6"));
     strUsage += HelpMessageOpt("-whitelist=<netmask>", _("Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.") +
         " " + _("Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway"));
-    strUsage += HelpMessageOpt("-whiteconnections=<n>", strprintf(_("Reserve this many inbound connections for whitelisted peers (default: %d)"), 0));
 
 #ifdef ENABLE_WALLET
     strUsage += HelpMessageGroup(_("Wallet options:"));
@@ -754,25 +753,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     int nBind = std::max((int)mapArgs.count("-bind") + (int)mapArgs.count("-whitebind"), 1);
     int nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
-    int nUserWhiteConnections = GetArg("-whiteconnections", 0);
-    nWhiteConnections = std::max(nUserWhiteConnections, 0);
-
-    if ((mapArgs.count("-whitelist")) || (mapArgs.count("-whitebind"))) {
-        if (!(mapArgs.count("-maxconnections"))) {
-            // User is using whitelist feature,
-            // but did not specify -maxconnections parameter.
-            // Silently increase the default to compensate,
-            // so that the whitelist connection reservation feature
-            // does not inadvertently reduce the default
-            // inbound connection capacity of the network.
-            nMaxConnections += nWhiteConnections;
-        }
-    } else {
-        // User not using whitelist feature.
-        // Silently disable connection reservation,
-        // for the same reason as above.
-        nWhiteConnections = 0;
-    }
 
     // Trim requested connection counts, to fit into system limitations
     nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
@@ -783,13 +763,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     if (nMaxConnections < nUserMaxConnections)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
-
-    // Connection capacity is prioritized in this order:
-    // outbound connections (hardcoded to 8),
-    // then whitelisted connections,
-    // then non-whitelisted connections get whatever's left (if any).
-    if ((nWhiteConnections > 0) && (nWhiteConnections >= (nMaxConnections - 8)))
-        InitWarning(strprintf(_("All non-whitelisted incoming connections will be dropped, because -whiteconnections is %d and -maxconnections is only %d."), nWhiteConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
 
@@ -968,8 +941,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("Using data directory %s\n", strDataDir);
     LogPrintf("Using config file %s\n", GetConfigFile().string());
     LogPrintf("Using at most %i connections (%i file descriptors available)\n", nMaxConnections, nFD);
-    if (nWhiteConnections > 0)
-        LogPrintf("Reserving %i of these connections for whitelisted inbound peers\n", nWhiteConnections);
     std::ostringstream strErrors;
 
     LogPrintf("Using %u threads for script verification\n", nScriptCheckThreads);
