@@ -1934,7 +1934,7 @@ int CMPTransaction::logicMath_Alert()
     }
 
     // add the alert
-    AddAlert(alert_type, alert_expiry, alert_text);
+    AddAlert(sender, alert_type, alert_expiry, alert_text);
 
     // we have a new alert, fire a notify event if needed
     CAlert::Notify(alert_text, true);

@@ -27,21 +27,22 @@ std::vector<AlertData> currentOmniAlerts;
  * Adds a new alert to the alerts vector
  *
  */
-void AddAlert(uint16_t alertType, uint32_t alertExpiry, const std::string& alertMessage)
+void AddAlert(const std::string& sender, uint16_t alertType, uint32_t alertExpiry, const std::string& alertMessage)
 {
     AlertData newAlert;
+    newAlert.alert_sender = sender;
     newAlert.alert_type = alertType;
     newAlert.alert_expiry = alertExpiry;
     newAlert.alert_message = alertMessage;
 
     // very basic sanity checks to catch malformed packets
     if (alertType < 1 || alertType > 3) {
-        PrintToLog("New alert REJECTED (alert type not recognized): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
+        PrintToLog("New alert REJECTED (alert type not recognized): %s, %d, %d, %s\n", sender, alertType, alertExpiry, alertMessage);
         return;
     }
 
     currentOmniAlerts.push_back(newAlert);
-    PrintToLog("New alert added: %d, %d, %s\n", alertType, alertExpiry, alertMessage);
+    PrintToLog("New alert added: %s, %d, %d, %s\n", sender, alertType, alertExpiry, alertMessage);
 }
 
 /**
@@ -125,7 +126,8 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
         switch (alert.alert_type) {
             case 1: // alert expiring by block number
                 if (curBlock >= alert.alert_expiry) {
-                    PrintToLog("Expiring alert (type:%d expiry:%d message:%s)\n", alert.alert_type, alert.alert_expiry, alert.alert_message);
+                    PrintToLog("Expiring alert (from %s: type:%d expiry:%d message:%s)\n", alert.alert_sender,
+                        alert.alert_type, alert.alert_expiry, alert.alert_message);
                     it = currentOmniAlerts.erase(it);
                     uiInterface.OmniStateChanged();
                 } else {
@@ -134,7 +136,8 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
             break;
             case 2: // alert expiring by block time
                 if (curTime > alert.alert_expiry) {
-                    PrintToLog("Expiring alert (type:%d expiry:%d message:%s)\n", alert.alert_type, alert.alert_expiry, alert.alert_message);
+                    PrintToLog("Expiring alert (from %s: type:%d expiry:%d message:%s)\n", alert.alert_sender,
+                        alert.alert_type, alert.alert_expiry, alert.alert_message);
                     it = currentOmniAlerts.erase(it);
                     uiInterface.OmniStateChanged();
                 } else {
@@ -143,7 +146,8 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
             break;
             case 3: // alert expiring by client version
                 if (OMNICORE_VERSION > alert.alert_expiry) {
-                    PrintToLog("Expiring alert (type:%d expiry:%d message:%s)\n", alert.alert_type, alert.alert_expiry, alert.alert_message);
+                    PrintToLog("Expiring alert (form: %s type:%d expiry:%d message:%s)\n", alert.alert_sender,
+                        alert.alert_type, alert.alert_expiry, alert.alert_message);
                     it = currentOmniAlerts.erase(it);
                     uiInterface.OmniStateChanged();
                 } else {
@@ -151,7 +155,8 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                 }
             break;
             default: // unrecognized alert type
-                    PrintToLog("Removing invalid alert (type:%d expiry:%d message:%s)\n", alert.alert_type, alert.alert_expiry, alert.alert_message);
+                    PrintToLog("Removing invalid alert (from:%s type:%d expiry:%d message:%s)\n", alert.alert_sender,
+                        alert.alert_type, alert.alert_expiry, alert.alert_message);
                     it = currentOmniAlerts.erase(it);
                     uiInterface.OmniStateChanged();
             break;

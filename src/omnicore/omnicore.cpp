@@ -2981,7 +2981,7 @@ void CMPTxList::LoadAlerts(int blockHeight)
             continue;
         }
 
-        AddAlert(mp_obj.getAlertType(), mp_obj.getAlertExpiry(), mp_obj.getAlertMessage());
+        AddAlert(mp_obj.getSender(), mp_obj.getAlertType(), mp_obj.getAlertExpiry(), mp_obj.getAlertMessage());
     }
 
     delete it;

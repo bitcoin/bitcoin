@@ -11,6 +11,8 @@ namespace mastercore
  */
 struct AlertData
 {
+    //! Alert sender
+    std::string alert_sender;
     //! Alert type
     uint16_t alert_type;
     //! Alert expiry
@@ -23,7 +25,7 @@ struct AlertData
 bool CheckAlertAuthorization(const std::string& sender);
 
 /** Adds a new alert to the alerts vector. */
-void AddAlert(uint16_t alertType, uint32_t alertExpiry, const std::string& alertMessage);
+void AddAlert(const std::string& sender, uint16_t alertType, uint32_t alertExpiry, const std::string& alertMessage);
 
 /** Alert string including meta data. */
 std::vector<AlertData> GetOmniCoreAlerts();

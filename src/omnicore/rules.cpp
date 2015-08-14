@@ -347,21 +347,21 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             PrintToLog("Feature activation of ID %d succeeded. "
                        "Class C transaction encoding is going to be enabled at block %d.\n",
                        featureId, params.NULLDATA_BLOCK);
-            AddAlert(ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Class C') will go live at block %d", featureId, activationBlock));
+            AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Class C') will go live at block %d", featureId, activationBlock));
             return true;
         case FEATURE_METADEX:
             MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
             PrintToLog("Feature activation of ID %d succeeded. "
                        "The distributed token exchange is going to be enabled at block %d.\n",
                        featureId, params.MSC_METADEX_BLOCK);
-            AddAlert(ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('MetaDEx') will go live at block %d", featureId, activationBlock));
+            AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('MetaDEx') will go live at block %d", featureId, activationBlock));
             return true;
         case FEATURE_BETTING:
             MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
             PrintToLog("Feature activation of ID %d succeeded. "
                        "Bet transactions are going to be enabled at block %d.\n",
                        featureId, params.MSC_BET_BLOCK);
-            AddAlert(ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Betting') will go live at block %d", featureId, activationBlock));
+            AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Betting') will go live at block %d", featureId, activationBlock));
             return true;
         case FEATURE_GRANTEFFECTS:
             MutableConsensusParams().GRANTEFFECTS_FEATURE_BLOCK = activationBlock;
@@ -369,7 +369,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
                        "The potential side effect of crowdsale participations, when "
                        "granting tokens, is going to be disabled at block %d.\n",
                        featureId, params.GRANTEFFECTS_FEATURE_BLOCK);
-            AddAlert(ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Disable Grant Effects') will go live at block %d", featureId, activationBlock));
+            AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Disable Grant Effects') will go live at block %d", featureId, activationBlock));
             return true;
         case FEATURE_DEXMATH:
             MutableConsensusParams().DEXMATH_FEATURE_BLOCK = activationBlock;
