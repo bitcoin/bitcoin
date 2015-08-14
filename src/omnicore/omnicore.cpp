@@ -2953,14 +2953,22 @@ void CMPTxList::LoadAlerts(int blockHeight)
     Slice skey, svalue;
     Iterator* it = NewIterator();
 
+    std::vector<std::pair<int64_t, uint256> > loadOrder;
+
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
         std::string itData = it->value().ToString();
         std::vector<std::string> vstr;
         boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
         if (4 != vstr.size()) continue; // unexpected number of tokens
         if (atoi(vstr[2]) != OMNICORE_MESSAGE_TYPE_ALERT || atoi(vstr[0]) != 1) continue; // not a valid alert
-        uint256 txid = 0;
-        txid.SetHex(it->key().ToString());
+        uint256 txid(it->key().ToString());;
+        loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
+    }
+
+    std::sort (loadOrder.begin(), loadOrder.end());
+
+    for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
+        uint256 txid = (*it).second;
         uint256 blockHash = 0;
         CTransaction wtx;
         CMPTransaction mp_obj;
@@ -2981,14 +2989,18 @@ void CMPTxList::LoadAlerts(int blockHeight)
             continue;
         }
 
-        AddAlert(mp_obj.getSender(), mp_obj.getAlertType(), mp_obj.getAlertExpiry(), mp_obj.getAlertMessage());
+        if (mp_obj.getAlertType() == 65535) { // set alert type to FFFF to clear previously sent alerts
+            DeleteAlerts(mp_obj.getSender());
+        } else {
+            AddAlert(mp_obj.getSender(), mp_obj.getAlertType(), mp_obj.getAlertExpiry(), mp_obj.getAlertMessage());
+        }
     }
 
     delete it;
     int64_t blockTime = 0;
     {
         LOCK(cs_main);
-        CBlockIndex* pBlockIndex = chainActive[blockHeight];
+        CBlockIndex* pBlockIndex = chainActive[blockHeight-1];
         if (pBlockIndex != NULL) {
             blockTime = pBlockIndex->GetBlockTime();
         }
