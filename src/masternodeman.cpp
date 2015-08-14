@@ -860,9 +860,9 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             //   e.g. We don't want the entry relayed/time updated when we're syncing the list
             // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
             //   after that they just need to match
-            if(count == -1 && pmn->pubkey == pubkey && (GetAdjustedTime() - pmn->sigTime > MASTERNODE_MIN_MNB_SECONDS)){
+            if(count == -1 && pmn->pubkey == pubkey && (GetAdjustedTime() - pmn->nLastDsee > MASTERNODE_MIN_MNB_SECONDS)){
                 if(pmn->protocolVersion > GETHEADERS_VERSION && sigTime - pmn->lastPing.sigTime < MASTERNODE_MIN_MNB_SECONDS) return;
-                if(pmn->sigTime < sigTime){ //take the newest entry
+                if(pmn->nLastDsee < sigTime){ //take the newest entry
                     LogPrintf("dsee - Got updated entry for %s\n", addr.ToString().c_str());
                     if(pmn->protocolVersion < GETHEADERS_VERSION) {
                         pmn->pubkey2 = pubkey2;
@@ -873,6 +873,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
                         //fake ping
                         pmn->lastPing = CMasternodePing(vin);
                     }
+                    pmn->nLastDsee = sigTime;
                     pmn->Check();
                     if(pmn->IsEnabled()) {
                         TRY_LOCK(cs_vNodes, lockNodes);
