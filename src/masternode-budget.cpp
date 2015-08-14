@@ -1305,6 +1305,16 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
         return false;
     }
 
+    if(nBlockEnd < nBlockStart) {
+        strError = "Invalid nBlockEnd";
+        return false;
+    }
+
+    if(nAmount < 1*COIN) {
+        strError = "Invalid nAmount";
+        return false;
+    }
+
     if(address == CScript()) {
         strError = "Invalid Payment Address";
         return false;
