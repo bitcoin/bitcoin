@@ -1006,13 +1006,20 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
+        std::map<COutPoint, int64_t>::iterator i = mWeAskedForMasternodeListEntry.find(vin.prevout);
+        if (i != mWeAskedForMasternodeListEntry.end())
+        {
+            int64_t t = (*i).second;
+            if (GetTime() < t) return; // we've asked recently
+        }
+
         // see if we have this Masternode
         CMasternode* pmn = this->Find(vin);
         if(pmn != NULL && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
         {
             // LogPrintf("dseep - Found corresponding mn for vin: %s\n", vin.ToString().c_str());
             // take this only if it's newer
-            if(sigTime - pmn->lastPing.sigTime > MASTERNODE_MIN_MNP_SECONDS)
+            if(sigTime - pmn->nLastDseep > MASTERNODE_MIN_MNP_SECONDS)
             {
                 std::string strMessage = pmn->addr.ToString() + boost::lexical_cast<std::string>(sigTime) + boost::lexical_cast<std::string>(stop);
 
@@ -1026,10 +1033,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
                 // fake ping for v11 masternodes, ignore for v12
                 if(pmn->protocolVersion < GETHEADERS_VERSION) pmn->lastPing = CMasternodePing(vin);
+                pmn->nLastDseep = sigTime;
                 pmn->Check();
                 if(pmn->IsEnabled()) {
                     TRY_LOCK(cs_vNodes, lockNodes);
                     if(!lockNodes) return;
+                    LogPrint("masternode", "dseep - relaying %s \n", vin.ToString().c_str());
                     BOOST_FOREACH(CNode* pnode, vNodes)
                         if(pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto())
                             pnode->PushMessage("dseep", vin, vchSig, sigTime, stop);
@@ -1038,7 +1047,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             return;
         }
 
-        LogPrint("masternode", "dseep - Couldn't find Masternode entry %s\n", vin.ToString().c_str());
+        LogPrint("masternode", "dseep - Couldn't find Masternode entry %s %s\n", vin.ToString(), pfrom->addr.ToString());
 
         AskForMN(pfrom, vin);
     }
