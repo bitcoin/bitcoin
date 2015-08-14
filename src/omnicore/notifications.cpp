@@ -35,20 +35,8 @@ void AddAlert(uint16_t alertType, uint32_t alertExpiry, const std::string& alert
     newAlert.alert_message = alertMessage;
 
     // very basic sanity checks to catch malformed packets
-    if (alertType > 3) {
+    if (alertType < 1 || alertType > 3) {
         PrintToLog("New alert REJECTED (alert type not recognized): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
-        return;
-    }
-    if (alertType == 1 && alertExpiry > 999999) {
-        PrintToLog("New alert REJECTED (block value too large): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
-        return;
-    }
-    if (alertType == 2 && (alertExpiry < 1439256200 || alertExpiry > 1639256200)) {
-        PrintToLog("New alert REJECTED (block time values invalid): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
-        return;
-    }
-    if (alertType == 3 && (alertExpiry < 100 || alertExpiry > 900000)) {
-        PrintToLog("New alert REJECTED (client version invalid): %d, %d, %s\n", alertType, alertExpiry, alertMessage);
         return;
     }
 
