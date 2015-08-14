@@ -2677,11 +2677,11 @@ int mastercore_init()
         PrintToLog("Exodus balance at start: %s\n", FormatDivisibleMP(exodus_balance));
     }
 
-    // load all alerts from levelDB (and immediately expire old ones)
-    p_txlistdb->LoadAlerts(nWaterlineBlock);
-
     // load feature activation messages from txlistdb and process them accordingly
     p_txlistdb->LoadActivations();
+
+    // load all alerts from levelDB (and immediately expire old ones)
+    p_txlistdb->LoadAlerts(nWaterlineBlock);
 
     // initial scan
     msc_initial_scan(nWaterlineBlock);
