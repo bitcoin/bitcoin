@@ -348,6 +348,9 @@ bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secr
 
 bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex) {
     // Find possible candidates
+    TRY_LOCK(pwalletMain->cs_wallet, fWallet);
+    if(!fWallet) return false;
+
     vector<COutput> possibleCoins = SelectCoinsMasternode();
     COutput *selectedOutput;
 
