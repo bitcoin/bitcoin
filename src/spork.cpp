@@ -103,7 +103,7 @@ bool IsSporkActive(int nSporkID)
 // grab the value of the spork on the network, or the default
 int64_t GetSporkValue(int nSporkID)
 {
-    int64_t r = 0;
+    int64_t r = -1;
 
     if(mapSporksActive.count(nSporkID)){
         r = mapSporksActive[nSporkID].nValue;
@@ -119,7 +119,7 @@ int64_t GetSporkValue(int nSporkID)
         if(nSporkID == SPORK_12_RECONSIDER_BLOCKS) r = SPORK_12_RECONSIDER_BLOCKS_DEFAULT;
         if(nSporkID == SPORK_13_ENABLE_SUPERBLOCKS) r = SPORK_13_ENABLE_SUPERBLOCKS_DEFAULT;
 
-        if(r == 0) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
+        if(r == -1) LogPrintf("GetSpork::Unknown Spork %d\n", nSporkID);
     }
 
     return r;
