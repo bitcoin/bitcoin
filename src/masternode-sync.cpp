@@ -157,6 +157,19 @@ void CMasternodeSync::GetNextAsset()
     nAssetSyncStarted = GetTime();
 }
 
+std::string CMasternodeSync::GetSyncStatus()
+{
+    switch (masternodeSync.RequestedMasternodeAssets) {
+        case MASTERNODE_SYNC_INITIAL: return _("Synchronization doesn't yet started");
+        case MASTERNODE_SYNC_SPORKS: return _("Synchronizing sporks...");
+        case MASTERNODE_SYNC_LIST: return _("Synchronizing masternodes...");
+        case MASTERNODE_SYNC_MNW: return _("Synchronizing masternode winners...");
+        case MASTERNODE_SYNC_BUDGET: return _("Synchronizing budgets...");
+        case MASTERNODE_SYNC_FAILED: return _("Synchronization failed");
+        case MASTERNODE_SYNC_FINISHED: return _("Synchronization finished");
+    }
+    return "";
+}
 
 void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
