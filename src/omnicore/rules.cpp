@@ -353,59 +353,44 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             return false;
     }
 
-    // check if client version is high enough
-    if (OMNICORE_VERSION < minClientVersion) {
-        PrintToLog("Feature activation of ID %d refused due to unsupported client (current: %d, needed: %d)\n", featureId, OMNICORE_VERSION, minClientVersion);
-        PrintToLog("WARNING!!! AS OF BLOCK %d THIS CLIENT WILL BE OUT OF CONSENSUS AND WILL AUTOMATICALLY SHUTDOWN.\n", activationBlock);
-        return false;
-    }
-
     // check feature is recognized and activation is successful
+    std::string featureName;
+    bool supported = OMNICORE_VERSION >= minClientVersion;
     switch (featureId) {
         case FEATURE_CLASS_C:
             MutableConsensusParams().NULLDATA_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "Class C transaction encoding is going to be enabled at block %d.\n",
-                       featureId, params.NULLDATA_BLOCK);
-            AddPendingActivation(featureId, activationBlock, minClientVersion, "Class C");
-            AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Class C') will go live at block %d", featureId, activationBlock));
-            return true;
+            featureName = "Class C transaction encoding";
+        break;
         case FEATURE_METADEX:
             MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "The distributed token exchange is going to be enabled at block %d.\n",
-                       featureId, params.MSC_METADEX_BLOCK);
-            AddPendingActivation(featureId, activationBlock, minClientVersion, "MetaDEx");
-            AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('MetaDEx') will go live at block %d", featureId, activationBlock));
-            return true;
+            featureName = "Distributed Meta Token Exchange";
+        break;
         case FEATURE_BETTING:
             MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "Bet transactions are going to be enabled at block %d.\n",
-                       featureId, params.MSC_BET_BLOCK);
-            AddPendingActivation(featureId, activationBlock, minClientVersion, "Betting");
-            AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Betting') will go live at block %d", featureId, activationBlock));
-            return true;
+            featureName = "Bet transactions";
+        break;
         case FEATURE_GRANTEFFECTS:
             MutableConsensusParams().GRANTEFFECTS_FEATURE_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "The potential side effect of crowdsale participations, when "
-                       "granting tokens, is going to be disabled at block %d.\n",
-                       featureId, params.GRANTEFFECTS_FEATURE_BLOCK);
-            AddPendingActivation(featureId, activationBlock, minClientVersion, "Disable Grant Effects");
-            AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Disable Grant Effects') will go live at block %d", featureId, activationBlock));
-            return true;
+            featureName = "Remove grant side effects";
+        break;
         case FEATURE_DEXMATH:
             MutableConsensusParams().DEXMATH_FEATURE_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "Offering more tokens than available on the traditional DEx "
-                       "is no longer allowed and going to be disabled at block %d.\n",
-                       featureId, params.DEXMATH_FEATURE_BLOCK);
-            return true;
+            featureName = "DEx integer math update";
+        break;
+        default:
+            featureName = "Unknown feature";
+            supported = false;
+        break;
     }
-
-    PrintToLog("Feature activation of id %d refused due to unknown feature ID\n", featureId);
-    return false;
+    PrintToLog("Feature activation of ID %d processed. %s will be enabled at block %d.\n", featureId, featureName, activationBlock);
+    AddPendingActivation(featureId, activationBlock, minClientVersion, featureName);
+    AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('%s') will go live at block %d", featureId, featureName, activationBlock));
+    if (!supported) {
+        PrintToLog("WARNING!!! AS OF BLOCK %d THIS CLIENT WILL BE OUT OF CONSENSUS AND WILL AUTOMATICALLY SHUTDOWN.\n", activationBlock);
+        AddAlert("omnicore", ALERT_FEATURE_UNSUPPORTED, activationBlock,
+                 strprintf("Your client must be updated and will shutdown at block %d "
+                           "(unsupported feature %d ('%s') activated)\n", activationBlock, featureId, featureName));
+    }
 }
 
 /**
