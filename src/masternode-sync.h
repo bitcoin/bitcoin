@@ -15,7 +15,7 @@
 #define MASTERNODE_SYNC_FAILED            998
 #define MASTERNODE_SYNC_FINISHED          999
 
-#define MASTERNODE_SYNC_TIMEOUT           7
+#define MASTERNODE_SYNC_TIMEOUT           5
 #define MASTERNODE_SYNC_THRESHOLD         4
 
 class CMasternodeSync;
@@ -52,6 +52,9 @@ public:
     // Count peers we've requested the list from
     int RequestedMasternodeAssets;
     int RequestedMasternodeAttempt;
+
+    // Time when current masternode asset sync started
+    int64_t nAssetSyncStarted;
 
     CMasternodeSync();
 
