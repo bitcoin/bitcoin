@@ -26,6 +26,11 @@
 namespace mastercore
 {
 /**
+ * Pending activations
+ */
+std::vector<PendingActivation> PendingActivations;
+
+/**
  * Returns a mapping of transaction types, and the blocks at which they are enabled.
  */
 std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
@@ -313,6 +318,21 @@ bool IsAllowedOutputType(int whichType, int nBlock)
 }
 
 /**
+ * Adds a pending activation to the PendingActivations vector.
+ *
+ */
+void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minClientVersion, const std::string& featureName)
+{
+    PendingActivation pa;
+    pa.featureId = featureId;
+    pa.activationBlock = activationBlock;
+    pa.minClientVersion = minClientVersion;
+    pa.featureName = featureName;
+
+    PendingActivations.push_back(pa);
+}
+
+/**
  * Activates a feature at a specific block height, authorization has already been validated.
  *
  * Note: Feature activations are consensus breaking.  It is not permitted to activate a feature within
@@ -347,6 +367,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             PrintToLog("Feature activation of ID %d succeeded. "
                        "Class C transaction encoding is going to be enabled at block %d.\n",
                        featureId, params.NULLDATA_BLOCK);
+            AddPendingActivation(featureId, activationBlock, minClientVersion, "Class C");
             AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Class C') will go live at block %d", featureId, activationBlock));
             return true;
         case FEATURE_METADEX:
@@ -354,6 +375,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             PrintToLog("Feature activation of ID %d succeeded. "
                        "The distributed token exchange is going to be enabled at block %d.\n",
                        featureId, params.MSC_METADEX_BLOCK);
+            AddPendingActivation(featureId, activationBlock, minClientVersion, "MetaDEx");
             AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('MetaDEx') will go live at block %d", featureId, activationBlock));
             return true;
         case FEATURE_BETTING:
@@ -361,6 +383,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             PrintToLog("Feature activation of ID %d succeeded. "
                        "Bet transactions are going to be enabled at block %d.\n",
                        featureId, params.MSC_BET_BLOCK);
+            AddPendingActivation(featureId, activationBlock, minClientVersion, "Betting");
             AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Betting') will go live at block %d", featureId, activationBlock));
             return true;
         case FEATURE_GRANTEFFECTS:
@@ -369,6 +392,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
                        "The potential side effect of crowdsale participations, when "
                        "granting tokens, is going to be disabled at block %d.\n",
                        featureId, params.GRANTEFFECTS_FEATURE_BLOCK);
+            AddPendingActivation(featureId, activationBlock, minClientVersion, "Disable Grant Effects");
             AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('Disable Grant Effects') will go live at block %d", featureId, activationBlock));
             return true;
         case FEATURE_DEXMATH:

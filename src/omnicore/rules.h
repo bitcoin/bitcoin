@@ -31,6 +31,16 @@ const uint16_t FEATURE_GRANTEFFECTS = 4;
 //! Feature identifier to disable DEx "over-offers" and to switch to plain integer math
 const uint16_t FEATURE_DEXMATH = 5;
 
+/** A structure to represent a pending activation
+ */
+struct PendingActivation
+{
+    uint16_t featureId;
+    int activationBlock;
+    uint32_t minClientVersion;
+    std::string featureName;
+};
+
 /** A structure to represent transaction restrictions.
  */
 struct TransactionRestriction
@@ -173,7 +183,6 @@ CConsensusParams& MutableConsensusParams();
 bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClientVersion, int transactionBlock);
 /** Checks, whether a feature is activated at the given block. */
 bool IsFeatureActivated(uint16_t featureId, int transactionBlock);
-
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
 /** Checks, if the script type qualifies as output. */
