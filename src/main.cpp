@@ -2587,6 +2587,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 {
     // These are checks that are independent of context.
 
+    if (block.fChecked)
+        return true;
+
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
     if (!CheckBlockHeader(block, state, fCheckPOW))
@@ -2641,6 +2644,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     if (nSigOps > MAX_BLOCK_SIGOPS)
         return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
                          REJECT_INVALID, "bad-blk-sigops", true);
+
+    if (fCheckPOW && fCheckMerkleRoot)
+        block.fChecked = true;
 
     return true;
 }
