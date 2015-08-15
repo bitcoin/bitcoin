@@ -5,6 +5,12 @@
 #include <string>
 #include <vector>
 
+//! Alert types
+#define ALERT_FEATURE_UNSUPPORTED     0 // not allowed via alert broadcast
+#define ALERT_BLOCK_EXPIRY            1
+#define ALERT_BLOCKTIME_EXPIRY        2
+#define ALERT_CLIENT_VERSION_EXPIRY   3
+
 namespace mastercore
 {
 /** A structure for alert messages.

@@ -14,12 +14,6 @@ const int MONEYMAN_REGTEST_BLOCK = 101;
 //! Block to enable the Exodus fundraiser address on testnet
 const int MONEYMAN_TESTNET_BLOCK = 270775;
 
-//! Alert types
-const uint8_t ALERT_FEATURE_UNSUPPORTED = 0; // not allowed via alert broadcast
-const uint8_t ALERT_BLOCK_EXPIRY = 1;
-const uint8_t ALERT_BLOCKTIME_EXPIRY = 2;
-const uint8_t ALERT_CLIENT_VERSION_EXPIRY = 3;
-
 //! Feature identifier to enable Class C transaction parsing and processing
 const uint16_t FEATURE_CLASS_C = 1;
 //! Feature identifier to enable the distributed token exchange

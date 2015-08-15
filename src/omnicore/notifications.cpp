@@ -55,8 +55,8 @@ void AddAlert(const std::string& sender, uint16_t alertType, uint32_t alertExpir
     newAlert.alert_expiry = alertExpiry;
     newAlert.alert_message = alertMessage;
 
-    // very basic sanity checks to catch malformed packets
-    if (alertType < 1 || alertType > 3) {
+    // very basic sanity checks for broadcast alerts to catch malformed packets
+    if (sender != "omnicore" && (alertType < ALERT_BLOCK_EXPIRY || alertType > ALERT_CLIENT_VERSION_EXPIRY)) {
         PrintToLog("New alert REJECTED (alert type not recognized): %s, %d, %d, %s\n", sender, alertType, alertExpiry, alertMessage);
         return;
     }
@@ -144,7 +144,18 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
     for (std::vector<AlertData>::iterator it = currentOmniAlerts.begin(); it != currentOmniAlerts.end(); ) {
         AlertData alert = *it;
         switch (alert.alert_type) {
-            case 1: // alert expiring by block number
+            case ALERT_FEATURE_UNSUPPORTED:
+                if (curBlock >= alert.alert_expiry) {
+                    std::string msgText = strprintf("Shutting down due to alert: %s", alert.alert_message);
+                    PrintToLog(msgText);
+                    PrintToConsole(msgText);
+                    if (!GetBoolArg("-overrideforcedshutdown", false)) {
+                        AbortNode(msgText, msgText);
+                    }
+                    it = currentOmniAlerts.erase(it);
+                }
+            break;
+            case ALERT_BLOCK_EXPIRY:
                 if (curBlock >= alert.alert_expiry) {
                     PrintToLog("Expiring alert (from %s: type:%d expiry:%d message:%s)\n", alert.alert_sender,
                         alert.alert_type, alert.alert_expiry, alert.alert_message);
@@ -163,7 +174,7 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                     it++;
                 }
             break;
-            case 2: // alert expiring by block time
+            case ALERT_BLOCKTIME_EXPIRY:
                 if (curTime > alert.alert_expiry) {
                     PrintToLog("Expiring alert (from %s: type:%d expiry:%d message:%s)\n", alert.alert_sender,
                         alert.alert_type, alert.alert_expiry, alert.alert_message);
@@ -173,7 +184,7 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                     it++;
                 }
             break;
-            case 3: // alert expiring by client version
+            case ALERT_CLIENT_VERSION_EXPIRY:
                 if (OMNICORE_VERSION > alert.alert_expiry) {
                     PrintToLog("Expiring alert (form: %s type:%d expiry:%d message:%s)\n", alert.alert_sender,
                         alert.alert_type, alert.alert_expiry, alert.alert_message);

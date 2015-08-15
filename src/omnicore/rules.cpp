@@ -391,6 +391,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
                  strprintf("Your client must be updated and will shutdown at block %d "
                            "(unsupported feature %d ('%s') activated)\n", activationBlock, featureId, featureName));
     }
+    return true;
 }
 
 /**
