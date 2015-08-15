@@ -166,7 +166,7 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                     size_t replacePosition = alert.alert_message.find("') will go live at block ");
                     if (replacePosition != std::string::npos) {
                         std::string newAlertMessage = alert.alert_message.substr(0, replacePosition) + "') is now live.";
-                        AddAlert("omnicore", 1, curBlock + 1024, newAlertMessage);
+                        AddAlert("omnicore", 1, alert.alert_expiry + 1024, newAlertMessage);
                     }
 
                     uiInterface.OmniStateChanged();
