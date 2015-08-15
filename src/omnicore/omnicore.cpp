@@ -2988,6 +2988,10 @@ void CMPTxList::LoadAlerts(int blockHeight)
             PrintToLog("ERROR: While loading alert %s: levelDB type mismatch, not an alert.\n", txid.GetHex());
             continue;
         }
+        if (!CheckAlertAuthorization(mp_obj.getSender())) {
+            PrintToLog("ERROR: While loading alert %s: sender is not authorized to send alerts.\n", txid.GetHex());
+            continue;
+        }
 
         if (mp_obj.getAlertType() == 65535) { // set alert type to FFFF to clear previously sent alerts
             DeleteAlerts(mp_obj.getSender());
