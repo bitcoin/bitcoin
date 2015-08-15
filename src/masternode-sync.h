@@ -15,7 +15,7 @@
 #define MASTERNODE_SYNC_FAILED            998
 #define MASTERNODE_SYNC_FINISHED          999
 
-#define MASTERNODE_SYNC_TIMEOUT           7
+#define MASTERNODE_SYNC_TIMEOUT           5
 #define MASTERNODE_SYNC_THRESHOLD         4
 
 class CMasternodeSync;
@@ -53,12 +53,16 @@ public:
     int RequestedMasternodeAssets;
     int RequestedMasternodeAttempt;
 
+    // Time when current masternode asset sync started
+    int64_t nAssetSyncStarted;
+
     CMasternodeSync();
 
     void AddedMasternodeList(uint256 hash);
     void AddedMasternodeWinner(uint256 hash);
     void AddedBudgetItem(uint256 hash);
     void GetNextAsset();
+    std::string GetSyncStatus();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     bool IsBudgetFinEmpty();
     bool IsBudgetPropEmpty();

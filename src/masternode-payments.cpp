@@ -362,6 +362,8 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         CMasternodePaymentWinner winner;
         vRecv >> winner;
 
+        if(pfrom->nVersion < MIN_MNW_PEER_PROTO_VERSION) return;
+
         if(chainActive.Tip() == NULL) return;
 
         if(masternodePayments.mapMasternodePayeeVotes.count(winner.GetHash())){
