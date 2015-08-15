@@ -167,8 +167,7 @@ Value masternode(const Array& params, bool fHelp)
         if (params.size() == 2){
             strAddress = params[1].get_str();
         } else {
-            throw runtime_error(
-                "Masternode address required\n");
+            throw runtime_error("Masternode address required\n");
         }
 
         CService addr = CService(strAddress);
@@ -176,15 +175,14 @@ Value masternode(const Array& params, bool fHelp)
         if(ConnectNode((CAddress)addr, NULL, true)){
             return "successfully connected";
         } else {
-            return "error connecting";
+            throw runtime_error("error connecting\n");
         }
     }
 
     if (strCommand == "count")
     {
         if (params.size() > 2){
-            throw runtime_error(
-            "too many parameters\n");
+            throw runtime_error("too many parameters\n");
         }
         if (params.size() == 2)
         {
@@ -233,7 +231,7 @@ Value masternode(const Array& params, bool fHelp)
         CKey key;
         bool found = activeMasternode.GetMasterNodeVin(vin, pubkey, key);
         if(!found){
-            return "Missing masternode input, please look at the documentation for instructions on masternode creation";
+            throw runtime_error("Missing masternode input, please look at the documentation for instructions on masternode creation\n");
         } else {
             return activeMasternode.GetStatus();
         }
@@ -246,7 +244,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "start")
     {
-        if(!fMasterNode) return "you must set masternode=1 in the configuration";
+        if(!fMasterNode) throw runtime_error("you must set masternode=1 in the configuration\n");
 
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -255,12 +253,11 @@ Value masternode(const Array& params, bool fHelp)
             if (params.size() == 2){
                 strWalletPass = params[1].get_str().c_str();
             } else {
-                throw runtime_error(
-                    "Your wallet is locked, passphrase is required\n");
+                throw runtime_error("Your wallet is locked, passphrase is required\n");
             }
 
             if(!pwalletMain->Unlock(strWalletPass)){
-                return "incorrect passphrase";
+                throw runtime_error("incorrect passphrase\n");
             }
         }
 
@@ -276,8 +273,7 @@ Value masternode(const Array& params, bool fHelp)
     if (strCommand == "start-alias")
     {
         if (params.size() < 2){
-            throw runtime_error(
-            "command needs at least 2 parameters\n");
+            throw runtime_error("command needs at least 2 parameters\n");
         }
 
         std::string alias = params[1].get_str();
@@ -289,12 +285,11 @@ Value masternode(const Array& params, bool fHelp)
             if (params.size() == 3){
                 strWalletPass = params[2].get_str().c_str();
             } else {
-                throw runtime_error(
-                "Your wallet is locked, passphrase is required\n");
+                throw runtime_error("Your wallet is locked, passphrase is required\n");
             }
 
             if(!pwalletMain->Unlock(strWalletPass)){
-                return "incorrect passphrase";
+                throw runtime_error("incorrect passphrase\n");
             }
         }
 
@@ -337,12 +332,11 @@ Value masternode(const Array& params, bool fHelp)
             if (params.size() == 2){
                 strWalletPass = params[1].get_str().c_str();
             } else {
-                throw runtime_error(
-                "Your wallet is locked, passphrase is required\n");
+                throw runtime_error("Your wallet is locked, passphrase is required\n");
             }
 
             if(!pwalletMain->Unlock(strWalletPass)){
-                return "incorrect passphrase";
+                throw runtime_error("incorrect passphrase\n");
             }
         }
 
@@ -384,7 +378,7 @@ Value masternode(const Array& params, bool fHelp)
     if (strCommand == "create")
     {
 
-        return "Not implemented yet, please look at the documentation for instructions on masternode creation";
+        throw runtime_error("Not implemented yet, please look at the documentation for instructions on masternode creation\n");
     }
 
     if (strCommand == "genkey")
@@ -430,8 +424,7 @@ Value masternode(const Array& params, bool fHelp)
 
     if(strCommand == "status")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
+        if(!fMasterNode) throw runtime_error("This is not a masternode\n");
 
         CScript pubkey;
         pubkey = GetScriptForDestination(activeMasternode.pubKeyMasternode.GetID());
@@ -442,9 +435,8 @@ Value masternode(const Array& params, bool fHelp)
         Object mnObj;
         mnObj.push_back(Pair("vin", activeMasternode.vin.ToString()));
         mnObj.push_back(Pair("service", activeMasternode.service.ToString()));
-        mnObj.push_back(Pair("status", activeMasternode.status));
         mnObj.push_back(Pair("pubKeyMasternode", address2.ToString()));
-        mnObj.push_back(Pair("notCapableReason", activeMasternode.notCapableReason));
+        mnObj.push_back(Pair("status", activeMasternode.GetStatus()));
         return mnObj;
     }
 
@@ -460,7 +452,7 @@ Value masternode(const Array& params, bool fHelp)
 
         for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
-            obj.push_back(Pair(strprintf("%d", nHeight),       GetRequiredPaymentsString(nHeight)));
+            obj.push_back(Pair(strprintf("%d", nHeight), GetRequiredPaymentsString(nHeight)));
         }
 
         return obj;
@@ -491,7 +483,7 @@ Value masternode(const Array& params, bool fHelp)
                 }
             }
             if(pBestMasternode)
-                obj.push_back(Pair(strprintf("%d", nHeight),       pBestMasternode->vin.prevout.ToStringShort().c_str()));
+                obj.push_back(Pair(strprintf("%d", nHeight), pBestMasternode->vin.prevout.ToStringShort().c_str()));
         }
 
         return obj;
