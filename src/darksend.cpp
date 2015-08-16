@@ -1462,7 +1462,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
     if(nBalanceNeedsDenominated > nOnlyDenominatedBalance) return CreateDenominated(nBalanceNeedsDenominated);
 
     //check if we have the collateral sized inputs
-    if(!pwalletMain->HasCollateralInputs()) return MakeCollateralAmounts();
+    if(!pwalletMain->HasCollateralInputs()) return !pwalletMain->HasCollateralInputs(false) && MakeCollateralAmounts();
 
     std::vector<CTxOut> vOut;
 
