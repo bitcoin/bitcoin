@@ -14,6 +14,8 @@
 #include "wallet.h"
 #endif
 
+#include "omnicore/mbstring.h" // SanitizeInvalidUTF8
+
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
@@ -46,6 +48,9 @@ static boost::thread_group* rpc_worker_group = NULL;
 static boost::asio::io_service::work *rpc_dummy_work = NULL;
 static std::vector<CSubNet> rpc_allow_subnets; //!< List of subnets to allow RPC connections from
 static std::vector< boost::shared_ptr<ip::tcp::acceptor> > rpc_acceptors;
+
+//! Sanitize UTF-8 encoded strings in RPC responses
+static bool fSanitizeResponse = true;
 
 void RPCTypeCheck(const Array& params,
                   const list<Value_type>& typesExpected,
@@ -768,6 +773,9 @@ void StartRPCThreads()
         return;
     }
 
+    // Sanitize non-UTF8 compliant RPC responses
+    fSanitizeResponse = GetBoolArg("-rpcforceutf8", true);
+
     rpc_worker_group = new boost::thread_group();
     for (int i = 0; i < GetArg("-rpcthreads", 4); i++)
         rpc_worker_group->create_thread(boost::bind(&asio::io_service::run, rpc_io_service));
@@ -998,6 +1006,10 @@ static bool HTTPReq_JSONRPC(AcceptedConnection *conn,
             strReply = JSONRPCExecBatch(valRequest.get_array());
         else
             throw JSONRPCError(RPC_PARSE_ERROR, "Top-level object parse error");
+
+        if (fSanitizeResponse) {
+            strReply = mastercore::SanitizeInvalidUTF8(strReply);
+        }
 
         conn->stream() << HTTPReplyHeader(HTTP_OK, fRun, strReply.size()) << strReply << std::flush;
     }
