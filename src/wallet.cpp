@@ -1963,10 +1963,10 @@ int CWallet::CountInputsWithAmount(int64_t nInputAmount)
     return nTotal;
 }
 
-bool CWallet::HasCollateralInputs() const
+bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
 {
     vector<COutput> vCoins;
-    AvailableCoins(vCoins);
+    AvailableCoins(vCoins, fOnlyConfirmed);
 
     int nFound = 0;
     BOOST_FOREACH(const COutput& out, vCoins)
