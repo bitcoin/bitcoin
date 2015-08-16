@@ -1812,6 +1812,7 @@ static int msc_initial_scan(int nFirstBlock)
         }
 
         unsigned int nTxNum = 0;
+        uint32_t nBlockFound = 0;
         mastercore_handler_block_begin(nBlock, pblockindex);
 
         if (!seedBlockFilterEnabled || !SkipBlock(nBlock)) {
@@ -1819,13 +1820,14 @@ static int msc_initial_scan(int nFirstBlock)
             if (!ReadBlockFromDisk(block, pblockindex)) break;
 
             BOOST_FOREACH(const CTransaction&tx, block.vtx) {
-                if (mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) ++nFound;
+                if (mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) ++nBlockFound;
                 ++nTxNum;
             }
         }
 
+        nFound += nBlockFound;
         nTotal += nTxNum;
-        mastercore_handler_block_end(nBlock, pblockindex, nFound);
+        mastercore_handler_block_end(nBlock, pblockindex, nBlockFound);
     }
 
     if (nBlock < nLastBlock) {
