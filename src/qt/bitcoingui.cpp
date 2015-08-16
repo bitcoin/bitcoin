@@ -758,46 +758,38 @@ void BitcoinGUI::setNumBlocks(int count)
 //    if(secs < 25*60) // 90*60 for bitcoin but we are 4x times faster
     if(masternodeSync.IsBlockchainSynced())
     {
+        QString strSyncStatus;
         tooltip = tr("Up to date") + QString(".<br>") + tooltip;
 
-        static int prevAttempt = -1;
-        static int prevAssets = -1;
-        static int progress = 0;
-        if(masternodeSync.RequestedMasternodeAttempt != prevAttempt || masternodeSync.RequestedMasternodeAssets != prevAssets)
-        {
+        if(masternodeSync.IsSynced()) {
+            progressBarLabel->setVisible(false);
+            progressBar->setVisible(false);
+            labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+        } else {
+
+            int nAttempt;
+            int progress = 0;
+
             labelBlocksIcon->setPixmap(QIcon(QString(
                 ":/movies/spinner-%1").arg(spinnerFrame, 3, 10, QChar('0')))
                 .pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
             spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
-            progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
-            prevAttempt = masternodeSync.RequestedMasternodeAttempt + 1;
-            prevAssets = masternodeSync.RequestedMasternodeAssets;
-            if(prevAttempt <= MASTERNODE_SYNC_THRESHOLD) progress = prevAttempt + (prevAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
-            progressBar->setValue(progress);
+
 #ifdef ENABLE_WALLET
             if(walletFrame)
                 walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
+
+            nAttempt = masternodeSync.RequestedMasternodeAttempt < MASTERNODE_SYNC_THRESHOLD ?
+                        masternodeSync.RequestedMasternodeAttempt + 1 : MASTERNODE_SYNC_THRESHOLD;
+            progress = nAttempt + (masternodeSync.RequestedMasternodeAssets - 1) * MASTERNODE_SYNC_THRESHOLD;
+            progressBar->setMaximum(4 * MASTERNODE_SYNC_THRESHOLD);
+            progressBar->setValue(progress);
         }
-        switch (masternodeSync.RequestedMasternodeAssets) {
-            case MASTERNODE_SYNC_SPORKS:
-                progressBarLabel->setText(tr("Synchronizing sporks..."));
-                break;
-            case MASTERNODE_SYNC_LIST:
-                progressBarLabel->setText(tr("Synchronizing masternodes..."));
-                break;
-            case MASTERNODE_SYNC_MNW:
-                progressBarLabel->setText(tr("Synchronizing masternode winners..."));
-                break;
-            case MASTERNODE_SYNC_BUDGET:
-                progressBarLabel->setText(tr("Synchronizing budgets..."));
-                break;
-            case MASTERNODE_SYNC_FINISHED:
-                progressBarLabel->setVisible(false);
-                progressBar->setVisible(false);
-                labelBlocksIcon->setPixmap(QIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-                break;
-        }
+
+        strSyncStatus = QString(masternodeSync.GetSyncStatus().c_str());
+        progressBarLabel->setText(strSyncStatus);
+        tooltip = strSyncStatus + QString("<br>") + tooltip;
     }
     else
     {
