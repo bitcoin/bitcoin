@@ -506,6 +506,14 @@
         <source>Up to date</source>
         <translation>最新狀態</translation>
     </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>正在跟主節點網絡進行同步...</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>正在跟預算案進行同步...</translation>
+    </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation><numerusform>%n 個小時</numerusform></translation>
@@ -661,6 +669,10 @@ Address: %4
         <translation>收款位址</translation>
     </message>
     <message>
+        <source>DS Rounds</source>
+        <translation>匿名發送循環</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>日期</translation>
     </message>
@@ -747,6 +759,10 @@ Address: %4
     <message>
         <source>medium-high</source>
         <translation>中高</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 duff(s) per input.</source>
+        <translation>每組輸入可能有 +/- %1 個 duff(s) 的誤差。</translation>
     </message>
     <message>
         <source>n/a</source>
@@ -1146,6 +1162,10 @@ Address: %4
         <translation>錢包(&amp;W)</translation>
     </message>
     <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
+        <translation>如果你關掉「可以花還沒確認的零錢」，那麼交易中找零的零錢&lt;br/&gt;就必須要等交易至少有一次確認後，才能夠使用。&lt;br/&gt;這也會影響餘額的計算方式。</translation>
+    </message>
+    <message>
         <source>Accept connections from outside</source>
         <translation>接受外來連線</translation>
     </message>
@@ -1164,6 +1184,10 @@ Address: %4
     <message>
         <source>Expert</source>
         <translation>專家</translation>
+    </message>
+    <message>
+        <source>This setting determines the amount of individual masternodes that an input will be anonymized through.&lt;br/&gt;More rounds of anonymization gives a higher degree of privacy, but also costs more in fees.</source>
+        <translation>這項設置決定輸入的資金將會經過多少個主節點進,行匿名處理。&lt;br/&gt;多輪的匿名化處理提供了更高程度的隱私，但也花費更多的費用。</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1254,6 +1278,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation>選擇操作界面和付款時，預設顯示金額的細分單位。</translation>
+    </message>
+    <message>
+        <source>Decimal digits</source>
+        <translation>小數位數</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1407,6 +1435,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>0 達世幣 / 0 循環次數</translation>
     </message>
     <message>
+        <source>Submitted Denom:</source>
+        <translation>已經提交的面額:</translation>
+    </message>
+    <message>
         <source>n/a</source>
         <translation>不適用</translation>
     </message>
@@ -1455,6 +1487,46 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>己禁用</translation>
     </message>
     <message>
+        <source>Start Darksend Mixing</source>
+        <translation>開始匿名發送混合</translation>
+    </message>
+    <message>
+        <source>Stop Darksend Mixing</source>
+        <translation>停止匿名發送混合</translation>
+    </message>
+    <message>
+        <source>No inputs detected</source>
+        <translation>沒有檢測到任何輸入</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n Rounds</source>
+        <translation><numerusform>%n 次循環</numerusform></translation>
+    </message>
+    <message>
+        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
+        <translation>沒有足夠相容的輸入來進行匿名處理&lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;將匿名處理 &lt;span style='color:red;'&gt;%2&lt;/span&gt; 作為代替</translation>
+    </message>
+    <message>
+        <source>Overall progress</source>
+        <translation>整體進度</translation>
+    </message>
+    <message>
+        <source>Denominated</source>
+        <translation>已經除名的</translation>
+    </message>
+    <message>
+        <source>Anonymized</source>
+        <translation>經過匿名處理的</translation>
+    </message>
+    <message>
+        <source>Found enough compatible inputs to anonymize %1</source>
+        <translation>找到足夠的相容的輸入進行匿名處理 %1</translation>
+    </message>
+    <message>
+        <source>Mixed</source>
+        <translation>混合的</translation>
+    </message>
+    <message>
         <source>Enabled</source>
         <translation>己啟用</translation>
     </message>
@@ -1467,6 +1539,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>N/A</source>
         <translation>不適用</translation>
+    </message>
+    <message>
+        <source>Darksend was successfully reset.</source>
+        <translation>匿名發送成功重置。</translation>
     </message>
     </context>
 <context>
@@ -1716,6 +1792,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>區塊鏈</translation>
     </message>
     <message>
+        <source>Number of Masternodes</source>
+        <translation>主節點數目</translation>
+    </message>
+    <message>
         <source>&amp;Console</source>
         <translation>主控台(&amp;C)</translation>
     </message>
@@ -1806,6 +1886,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Salvage wallet</source>
         <translation>搶救錢包</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files</source>
+        <translation>重新掃描區塊鏈文件</translation>
+    </message>
+    <message>
+        <source>Recover transactions 1</source>
+        <translation>復原交易 1</translation>
+    </message>
+    <message>
+        <source>Recover transactions 2</source>
+        <translation>復原交易 2</translation>
+    </message>
+    <message>
+        <source>Upgrade wallet format</source>
+        <translation>升級錢包格式</translation>
+    </message>
+    <message>
+        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
+        <translation>下面的按鈕將重新啟動錢包並使用命令行選項來修復錢包，修復損壞或丟失的區塊鏈文件/過時的交易問題。</translation>
     </message>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
@@ -1903,6 +2003,10 @@ https://www.transifex.com/projects/p/dash/</translation>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>Reuse one of the previously used receiving addresses.&lt;br&gt;Reusing addresses has security and privacy issues.&lt;br&gt;Do not use this unless re-generating a payment request made before.</source>
+        <translation>重新使用以前用過的接收地址。&lt;br&gt;重複使用地址會產生安全和私隱問題。&lt;br&gt;不要使用這個選項，除非再次生成之前提出的支付請求。</translation>
+    </message>
+    <message>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
         <translation>重複使用現有的收款位址(不建議)(&amp;e)</translation>
     </message>
@@ -1917,6 +2021,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>跟新收款位址關聯的標記，可以不填。</translation>
+    </message>
+    <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。&lt;br&gt;注意: 這個訊息不會隨著付款送到達世幣網路上。</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -2152,6 +2260,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>縮小</translation>
     </message>
     <message>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>如果自訂手續費設定為 1000 duffs ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 duffs 的手續費，&lt;br /&gt;而「至少」會支付 1000 duffs。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "total at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>如果自訂手續費設定為 1000 duffs ，而交易資料大小只有 250 個位元組的話，那麽選擇「每千位元組」就只會付 250 duffs 的手續費，&lt;br /&gt;而「總共至少」會支付 1000 duffs。但是如果交易資料大小超過一千個位元組，那麽兩者都是每千位元組的費用。</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <translation>當交易量少於區塊可容納的空間時，只付最低手續費不會有什麽問題。&lt;br /&gt;但是當交易量的需求成長到超過整體網路可以處理的量時，可能會造成一筆一直不會被確認的交易。</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>每千位元組</translation>
     </message>
@@ -2280,8 +2400,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>加做交易手續費</translation>
     </message>
     <message>
+        <source>Total Amount = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</source>
+        <translation>總金額 = &lt;b&gt;%1&lt;/b&gt;&lt;br /&gt;= %2</translation>
+    </message>
+    <message>
         <source>A fee %1 times higher than %2 per kB is considered an insanely high fee.</source>
         <translation>每 kB 手續費高於%2的 %1 倍被認為是非常高的費用。</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>預計可在 %n 個區塊內開始確認。</numerusform></translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -2310,6 +2438,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>交易被拒絕了！有時候會發生這種錯誤，是因為你錢包中的一些錢已經被花掉了。比如說你複製了錢包檔 wallet.dat, 然後用複製的錢包花掉了錢，你現在所用的原來的錢包中，卻沒有那筆錢已經花掉的紀錄。</translation>
+    </message>
+    <message>
+        <source>Error: The wallet was unlocked only to anonymize coins.</source>
+        <translation>錯誤：錢包只是被解鎖來進行匿名處理。</translation>
     </message>
     <message>
         <source>Pay only the minimum fee of %1</source>
@@ -2590,6 +2722,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>到下 %n 個區塊產生前可修改</numerusform></translation>
     </message>
     <message>
+        <source>Open until %1</source>
+        <translation>至 %1 個數據塊時開啟</translation>
+    </message>
+    <message>
         <source>conflicted</source>
         <translation>發生衝突</translation>
     </message>
@@ -2792,6 +2928,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>到下 %n 個區塊產生前可修改</numerusform></translation>
     </message>
     <message>
+        <source>Open until %1</source>
+        <translation>至 %1 個數據塊時開啟</translation>
+    </message>
+    <message>
         <source>Offline</source>
         <translation>離線</translation>
     </message>
@@ -2814,6 +2954,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>未成熟金額 (%1  次確認，經 %2 次確認後方可使用)</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>收款</translation>
     </message>
     <message>
         <source>Received from</source>
@@ -3106,8 +3250,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>即時到帳系統要求輸入的資金最少要有6個確認，你可能需要等待數分鐘然後再重試。</translation>
     </message>
     <message>
+        <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
+        <translation>設定高優先度或低手續費的交易資料大小上限成多少位元組(預設值: %d)</translation>
+    </message>
+    <message>
+        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
+        <translation>設定指令碼驗證的執行緒數目 (%u 到 %d，0 表示程式自動決定，小於 0 表示保留處理器核心不用的數目，預設值: %d)</translation>
+    </message>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation>這是個還沒發表的測試版本 - 使用請自負風險 - 請不要用來開採或商業應用</translation>
+    </message>
+    <message>
         <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
         <translation>沒辦法繫結在這台電腦上的 %s 。達世幣核心可能已經在執行了。</translation>
+    </message>
+    <message>
+        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>警告: -paytxfee 設定了很高的金額！這可是你交易付款所要付的手續費。</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
@@ -3122,6 +3282,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>警告: 讀取錢包檔 wallet.dat 時發生錯誤！所有的密鑰都正確讀取了，但是交易資料或位址簿資料可能會缺少或不正確。</translation>
     </message>
     <message>
+        <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
+        <translation>警告: 錢包檔 wallet.dat 壞掉，但資料被拯救回來了！原來的 wallet.dat 會改儲存在 %s, 檔名是 wallet.{timestamp}.bak. 如果餘額或交易資料有誤，你應該要用備份資料復原回來。</translation>
+    </message>
+    <message>
+        <source>You must specify a masternodeprivkey in the configuration. Please see documentation for help.</source>
+        <translation>您必須在配置文件中指定一個masternodeprivkey。請參閱文檔以獲得幫助。</translation>
+    </message>
+    <message>
         <source>(default: 1)</source>
         <translation>(預設值: 1)</translation>
     </message>
@@ -3132,6 +3300,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
         <translation>允許對 -addnode, -seednode, -connect 的參數使用域名查詢</translation>
+    </message>
+    <message>
+        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
+        <translation>嘗試從壞掉的錢包檔 wallet.dat 復原密鑰</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3148,6 +3320,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Cannot resolve -externalip address: '%s'</source>
         <translation>沒辦法解析 -externalip 位址: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot write default address</source>
+        <translation>沒辦法把預設位址寫進去</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -3206,6 +3382,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>讀取資料庫時發生錯誤，要關閉了。</translation>
     </message>
     <message>
+        <source>Error recovering public key.</source>
+        <translation>恢復公鑰時發生錯誤。</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>錯誤</translation>
     </message>
@@ -3214,8 +3394,36 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>錯誤: 磁碟空間很少！</translation>
     </message>
     <message>
+        <source>Error: Wallet locked, unable to create transaction!</source>
+        <translation>錯誤: 錢包被鎖定，無法創建交易！</translation>
+    </message>
+    <message>
+        <source>Error: You already have pending entries in the Darksend pool</source>
+        <translation>錯誤: 你已經有待處理項目在匿名發送資金池中</translation>
+    </message>
+    <message>
+        <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
+        <translation>在任意的通訊埠聽候失敗。如果你希望這樣的話，可以設定 -listen=0.</translation>
+    </message>
+    <message>
+        <source>Failed to read block</source>
+        <translation>無法讀取區塊</translation>
+    </message>
+    <message>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>允許指定的來源建立 JSON-RPC 連線。&lt;ip&gt; 的有效值可以是一個單獨位址(像是 1.2.3.4)，一個網段/網段罩遮值(例如 1.2.3.4/255.255.255.0)，或是網段/CIDR值(像是 1.2.3.4/24)。這個選項可以設定多次。</translation>
+    </message>
+    <message>
         <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
         <translation>設定在網路上以位址 %s 和通訊埠 %u 聽候 RPC 連線時發生錯誤: %s</translation>
+    </message>
+    <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>和指定的位址繫結，並且把連線過來的節點放進白名單。IPv6 請用 [主機]:通訊埠 這種格式</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>和指定的位址繫結以聽候 JSON-RPC 連線。IPv6 請用 [主機]:通訊埠 這種格式。這個選項可以設定多次。(預設值: 跟所有網路界面上的位址繫結)</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3228,6 +3436,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>這套軟體是依據 MIT 軟體授權條款發布，詳情請見附帶的 COPYING 檔案，或是以下網站:&lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+    </message>
+    <message>
+        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>錯誤: 找到不再支援的 -socks 參數。現在只支援 SOCKS5 協定的代理伺服器了，因為不再能夠指定 SOCKS 協定版本。</translation>
     </message>
     <message>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
@@ -3406,12 +3618,116 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>自動備份的錢包數目 (預設值：10)</translation>
     </message>
     <message>
+        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
+        <translation>只接受與內建的檢查段點吻合的區塊鎖鏈(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Prepend debug output with timestamp (default: %u)</source>
+        <translation>在除錯輸出內容前附加時間(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Run a thread to flush wallet periodically (default: %u)</source>
+        <translation>啟用定期將變動寫入錢包檔的執行緒(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Send trace/debug info to debug.log file (default: %u)</source>
+        <translation>發送追蹤或除錯資訊到debug.log 中 (預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
+        <translation>盡可能送出不用付手續費的交易(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
+        <translation>設定密鑰池大小為 &lt;n&gt; (預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Set minimum block size in bytes (default: %u)</source>
+        <translation>設定區塊大小下限為多少位元組(預設值: %u)</translation>
+    </message>
+    <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>
         <translation>設定處理 RPC 服務請求的執行緒數目(預設值: %d)</translation>
     </message>
     <message>
+        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
+        <translation>在錢包資料庫環境變數設定 DB_PRIVATE 旗標(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Signing timed out.</source>
+        <translation>簽署超時。</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>指定設定檔(預設值: %s)</translation>
+    </message>
+    <message>
+        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
+        <translation>指定連線在幾毫秒後逾時 (最少值: 1, 預設值: %d)</translation>
+    </message>
+    <message>
+        <source>Specify masternode configuration file (default: %s)</source>
+        <translation>指定主節點配置文件(預設值: %s)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: %s)</source>
+        <translation>指定行程識別碼檔案(預設值: %s)</translation>
+    </message>
+    <message>
+        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
+        <translation>傳送交易時可以花還沒確認的零錢(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Stop running after importing blocks from disk (default: %u)</source>
+        <translation>從磁碟匯入區塊資料後停止執行(預設值: %u)</translation>
+    </message>
+    <message>
         <source>This is not a Masternode.</source>
         <translation>這並不是一個主節點。</translation>
+    </message>
+    <message>
+        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
+        <translation>與異常的節點斷線的臨界值 (預設: %u)</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart Dash Core to complete</source>
+        <translation>錢包需要重寫: 請重新啓動達世幣核心來完成</translation>
+    </message>
+    <message>
+        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>警告: 忽略了不再支援的 -benchmark 參數，請改用 -debug=bench.</translation>
+    </message>
+    <message>
+        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>警告: 忽略了不再支援的 -debugnet 參數，請改用 -debug=net.</translation>
+    </message>
+    <message>
+        <source>Will retry...</source>
+        <translation>將重新嘗試...</translation>
+    </message>
+    <message>
+        <source>Loading addresses...</source>
+        <translation>正在載入位址資料...</translation>
+    </message>
+    <message>
+        <source>Loading block index...</source>
+        <translation>正在載入區塊索引...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>正在載入主節點緩存...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>正在載入主節點付款緩存...</translation>
+    </message>
+    <message>
+        <source>Loading wallet... (%3.2f %%)</source>
+        <translation>正在載入錢包資料... (%3.2f %%)</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>正在載入錢包資料...</translation>
     </message>
     <message>
         <source>Masternode:</source>
@@ -3426,6 +3742,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>JSON-RPC 連線密碼</translation>
     </message>
     <message>
+        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
+        <translation>RPC SSL 選項: (SSL 設定程序請見 Bitcoin Wiki)</translation>
+    </message>
+    <message>
         <source>RPC server options:</source>
         <translation>RPC 伺服器選項:</translation>
     </message>
@@ -3434,8 +3754,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>RPC 是否支援 HTTP 持久連線(預設值: %d)</translation>
     </message>
     <message>
+        <source>Rebuild block chain index from current blk000??.dat files</source>
+        <translation>從目前的區塊檔 blk000??.dat 重建區塊鏈的索引</translation>
+    </message>
+    <message>
         <source>Rescanning...</source>
         <translation>正在重新掃描...</translation>
+    </message>
+    <message>
+        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
+        <translation>設定資料庫快取大小是多少百萬位元組(MB，範圍: %d 到 %d，預設值: %d)</translation>
     </message>
     <message>
         <source>Specify data directory</source>
