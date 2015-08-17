@@ -153,6 +153,8 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
                         AbortNode(msgText, msgText);
                     }
                     it = currentOmniAlerts.erase(it);
+                } else {
+                    it++;
                 }
             break;
             case ALERT_BLOCK_EXPIRY:
