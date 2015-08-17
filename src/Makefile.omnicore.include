@@ -6,6 +6,7 @@ OMNICORE_H = \
   omnicore/errors.h \
   omnicore/fetchwallettx.h \
   omnicore/log.h \
+  omnicore/mbstring.h \
   omnicore/mdex.h \
   omnicore/notifications.h \
   omnicore/omnicore.h \
@@ -36,6 +37,7 @@ OMNICORE_CPP = \
   omnicore/encoding.cpp \
   omnicore/fetchwallettx.cpp \
   omnicore/log.cpp \
+  omnicore/mbstring.cpp \
   omnicore/mdex.cpp \
   omnicore/notifications.cpp \
   omnicore/omnicore.cpp \
