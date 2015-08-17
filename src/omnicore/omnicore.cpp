@@ -1777,8 +1777,8 @@ static int msc_initial_scan(int nFirstBlock)
 {
     int nTimeBetweenProgressReports = GetArg("-omniprogressfrequency", 30);  // seconds
     int64_t nNow = GetTime();
-    unsigned int nTotal = 0;
-    unsigned int nFound = 0;
+    unsigned int nTxsTotal = 0;
+    unsigned int nTxsFoundTotal = 0;
     int nBlock = 999999;
     const int nLastBlock = GetHeight();
 
@@ -1812,7 +1812,7 @@ static int msc_initial_scan(int nFirstBlock)
         }
 
         unsigned int nTxNum = 0;
-        uint32_t nBlockFound = 0;
+        unsigned int nTxsFoundInBlock = 0;
         mastercore_handler_block_begin(nBlock, pblockindex);
 
         if (!seedBlockFilterEnabled || !SkipBlock(nBlock)) {
@@ -1820,21 +1820,21 @@ static int msc_initial_scan(int nFirstBlock)
             if (!ReadBlockFromDisk(block, pblockindex)) break;
 
             BOOST_FOREACH(const CTransaction&tx, block.vtx) {
-                if (mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) ++nBlockFound;
+                if (mastercore_handler_tx(tx, nBlock, nTxNum, pblockindex)) ++nTxsFoundInBlock;
                 ++nTxNum;
             }
         }
 
-        nFound += nBlockFound;
-        nTotal += nTxNum;
-        mastercore_handler_block_end(nBlock, pblockindex, nBlockFound);
+        nTxsFoundTotal += nTxsFoundInBlock;
+        nTxsTotal += nTxNum;
+        mastercore_handler_block_end(nBlock, pblockindex, nTxsFoundInBlock);
     }
 
     if (nBlock < nLastBlock) {
         PrintToConsole("Scan stopped early at block %d of block %d\n", nBlock, nLastBlock);
     }
 
-    PrintToConsole("%d transactions processed, %d meta transactions found\n", nTotal, nFound);
+    PrintToConsole("%d transactions processed, %d meta transactions found\n", nTxsTotal, nTxsFoundTotal);
 
     return 0;
 }
