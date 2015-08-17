@@ -6,7 +6,9 @@
 #include "miner.h"
 
 #include "amount.h"
+#include "chain.h"
 #include "chainparams.h"
+#include "coins.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "hash.h"
@@ -15,7 +17,9 @@
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/transaction.h"
+#include "script/standard.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
@@ -80,13 +84,19 @@ public:
     }
 };
 
-void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
+int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
-    pblock->nTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+    int64_t nOldTime = pblock->nTime;
+    int64_t nNewTime = std::max(pindexPrev->GetMedianTimePast()+1, GetAdjustedTime());
+
+    if (nOldTime < nNewTime)
+        pblock->nTime = nNewTime;
 
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+
+    return nNewTime - nOldTime;
 }
 
 CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
@@ -342,7 +352,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
     return pblocktemplate.release();
 }
 
-void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
+void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
 {
     // Update nExtraNonce
     static uint256 hashPrevBlock;
@@ -399,7 +409,7 @@ bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phas
     }
 }
 
-static bool ProcessBlockFound(CBlock* pblock, const CChainParams& chainparams)
+static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainparams)
 {
     LogPrintf("%s\n", pblock->ToString());
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
@@ -517,7 +527,9 @@ void static BitcoinMiner(const CChainParams& chainparams)
                     break;
 
                 // Update nTime every few seconds
-                UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
+                if (UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev) < 0)
+                    break; // Recreate the block if the clock has run backwards,
+                           // so that we can use the correct time.
                 if (chainparams.GetConsensus().fPowAllowMinDifficultyBlocks)
                 {
                     // Changing pblock->nTime can change work required on testnet:

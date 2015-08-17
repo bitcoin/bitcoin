@@ -9,12 +9,13 @@
 #include "bitcoinunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
-#include "scicon.h"
+#include "platformstyle.h"
+#include "txmempool.h"
 #include "walletmodel.h"
 
 #include "coincontrol.h"
 #include "init.h"
-#include "main.h"
+#include "main.h" // For minRelayTxFee
 #include "wallet/wallet.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
@@ -34,10 +35,11 @@ QList<CAmount> CoinControlDialog::payAmounts;
 CCoinControl* CoinControlDialog::coinControl = new CCoinControl();
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
 
-CoinControlDialog::CoinControlDialog(QWidget *parent) :
+CoinControlDialog::CoinControlDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CoinControlDialog),
-    model(0)
+    model(0),
+    platformStyle(platformStyle)
 {
     ui->setupUi(this);
 
@@ -279,7 +281,7 @@ void CoinControlDialog::lockCoin()
     COutPoint outpt(uint256S(contextMenuItem->text(COLUMN_TXHASH).toStdString()), contextMenuItem->text(COLUMN_VOUT_INDEX).toUInt());
     model->lockCoin(outpt);
     contextMenuItem->setDisabled(true);
-    contextMenuItem->setIcon(COLUMN_CHECKBOX, SingleColorIcon(":/icons/lock_closed"));
+    contextMenuItem->setIcon(COLUMN_CHECKBOX, platformStyle->SingleColorIcon(":/icons/lock_closed"));
     updateLabelLocked();
 }
 
@@ -790,7 +792,7 @@ void CoinControlDialog::updateView()
                 COutPoint outpt(txhash, out.i);
                 coinControl->UnSelect(outpt); // just to be sure
                 itemOutput->setDisabled(true);
-                itemOutput->setIcon(COLUMN_CHECKBOX, SingleColorIcon(":/icons/lock_closed"));
+                itemOutput->setIcon(COLUMN_CHECKBOX, platformStyle->SingleColorIcon(":/icons/lock_closed"));
             }
 
             // set checkbox

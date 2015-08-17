@@ -86,7 +86,7 @@ bool UniValue::setFloat(double val)
     oss << std::setprecision(16) << val;
 
     bool ret = setNumStr(oss.str());
-    typ = VREAL;
+    typ = VNUM;
     return ret;
 }
 
@@ -210,7 +210,6 @@ const char *uvTypeName(UniValue::VType t)
     case UniValue::VARR: return "array";
     case UniValue::VSTR: return "string";
     case UniValue::VNUM: return "number";
-    case UniValue::VREAL: return "number";
     }
 
     // not reached
@@ -280,7 +279,7 @@ int64_t UniValue::get_int64() const
 
 double UniValue::get_real() const
 {
-    if (typ != VREAL && typ != VNUM)
+    if (typ != VNUM)
         throw std::runtime_error("JSON value is not a number as expected");
     double retval;
     if (!ParseDouble(getValStr(), &retval))

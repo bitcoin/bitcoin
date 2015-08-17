@@ -14,6 +14,7 @@ from struct import *
 import binascii
 import json
 import StringIO
+import decimal
 
 try:
     import http.client as httplib
@@ -243,7 +244,7 @@ class RESTTest (BitcoinTestFramework):
         response_header_json = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"json", "", True)
         assert_equal(response_header_json.status, 200)
         response_header_json_str = response_header_json.read()
-        json_obj = json.loads(response_header_json_str)
+        json_obj = json.loads(response_header_json_str, parse_float=decimal.Decimal)
         assert_equal(len(json_obj), 1) #ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash) #request/response hash should be the same
 
@@ -290,6 +291,19 @@ class RESTTest (BitcoinTestFramework):
         txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
         txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
         self.sync_all()
+
+        # check that there are exactly 3 transactions in the TX memory pool before generating the block
+        json_string = http_get_call(url.hostname, url.port, '/rest/mempool/info'+self.FORMAT_SEPARATOR+'json')
+        json_obj = json.loads(json_string)
+        assert_equal(json_obj['size'], 3)
+        # the size of the memory pool should be greater than 3x ~100 bytes
+        assert_greater_than(json_obj['bytes'], 300)
+
+        # check that there are our submitted transactions in the TX memory pool
+        json_string = http_get_call(url.hostname, url.port, '/rest/mempool/contents'+self.FORMAT_SEPARATOR+'json')
+        json_obj = json.loads(json_string)
+        for tx in txs:
+            assert_equal(tx in json_obj, True)
 
         # now mine the transactions
         newblockhash = self.nodes[1].generate(1)

@@ -8,7 +8,6 @@
 
 #include "bloom.h"
 #include "compat.h"
-#include "hash.h"
 #include "limitedmap.h"
 #include "mruset.h"
 #include "netbase.h"
@@ -17,7 +16,6 @@
 #include "streams.h"
 #include "sync.h"
 #include "uint256.h"
-#include "utilstrencodings.h"
 
 #include <deque>
 #include <stdint.h>
@@ -31,7 +29,6 @@
 #include <boost/signals2/signal.hpp>
 
 class CAddrMan;
-class CBlockIndex;
 class CScheduler;
 class CNode;
 
@@ -49,6 +46,8 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 2 MiB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;
+/** Maximum length of strSubVer in `version` message */
+static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** -upnp default */
@@ -59,6 +58,8 @@ static const bool DEFAULT_UPNP = false;
 #endif
 /** The maximum number of entries in mapAskFor */
 static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
+/** The maximum number of peer connections to maintain. */
+static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 
 unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
@@ -168,6 +169,9 @@ extern CCriticalSection cs_vAddedNodes;
 
 extern NodeId nLastNodeId;
 extern CCriticalSection cs_nLastNodeId;
+
+/** Subversion as sent to the P2P network in `version` messages */
+extern std::string strSubVersion;
 
 struct LocalServiceInfo {
     int nScore;

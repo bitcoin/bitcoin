@@ -7,7 +7,7 @@
 
 #include "addressbookpage.h"
 #include "guiutil.h"
-#include "scicon.h"
+#include "platformstyle.h"
 #include "walletmodel.h"
 
 #include "base58.h"
@@ -20,21 +20,22 @@
 
 #include <QClipboard>
 
-SignVerifyMessageDialog::SignVerifyMessageDialog(QWidget *parent) :
+SignVerifyMessageDialog::SignVerifyMessageDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SignVerifyMessageDialog),
-    model(0)
+    model(0),
+    platformStyle(platformStyle)
 {
     ui->setupUi(this);
 
-    ui->addressBookButton_SM->setIcon(SingleColorIcon(":/icons/address-book"));
-    ui->pasteButton_SM->setIcon(SingleColorIcon(":/icons/editpaste"));
-    ui->copySignatureButton_SM->setIcon(SingleColorIcon(":/icons/editcopy"));
-    ui->signMessageButton_SM->setIcon(SingleColorIcon(":/icons/edit"));
-    ui->clearButton_SM->setIcon(SingleColorIcon(":/icons/remove"));
-    ui->addressBookButton_VM->setIcon(SingleColorIcon(":/icons/address-book"));
-    ui->verifyMessageButton_VM->setIcon(SingleColorIcon(":/icons/transaction_0"));
-    ui->clearButton_VM->setIcon(SingleColorIcon(":/icons/remove"));
+    ui->addressBookButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
+    ui->pasteButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
+    ui->copySignatureButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/editcopy"));
+    ui->signMessageButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/edit"));
+    ui->clearButton_SM->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
+    ui->addressBookButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
+    ui->verifyMessageButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/transaction_0"));
+    ui->clearButton_VM->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
 
 #if QT_VERSION >= 0x040700
     ui->signatureOut_SM->setPlaceholderText(tr("Click \"Sign Message\" to generate signature"));
@@ -94,7 +95,7 @@ void SignVerifyMessageDialog::on_addressBookButton_SM_clicked()
 {
     if (model && model->getAddressTableModel())
     {
-        AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::ReceivingTab, this);
+        AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::ReceivingTab, this);
         dlg.setModel(model->getAddressTableModel());
         if (dlg.exec())
         {
@@ -148,12 +149,12 @@ void SignVerifyMessageDialog::on_signMessageButton_SM_clicked()
         return;
     }
 
-    CDataStream ss(SER_GETHASH, 0);
+    CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << ui->messageIn_SM->document()->toPlainText().toStdString();
 
     std::vector<unsigned char> vchSig;
-    if (!key.SignCompact(Hash(ss.begin(), ss.end()), vchSig))
+    if (!key.SignCompact(ss.GetHash(), vchSig))
     {
         ui->statusLabel_SM->setStyleSheet("QLabel { color: red; }");
         ui->statusLabel_SM->setText(QString("<nobr>") + tr("Message signing failed.") + QString("</nobr>"));
@@ -185,7 +186,7 @@ void SignVerifyMessageDialog::on_addressBookButton_VM_clicked()
 {
     if (model && model->getAddressTableModel())
     {
-        AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
+        AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
         dlg.setModel(model->getAddressTableModel());
         if (dlg.exec())
         {
@@ -223,12 +224,12 @@ void SignVerifyMessageDialog::on_verifyMessageButton_VM_clicked()
         return;
     }
 
-    CDataStream ss(SER_GETHASH, 0);
+    CHashWriter ss(SER_GETHASH, 0);
     ss << strMessageMagic;
     ss << ui->messageIn_VM->document()->toPlainText().toStdString();
 
     CPubKey pubkey;
-    if (!pubkey.RecoverCompact(Hash(ss.begin(), ss.end()), vchSig))
+    if (!pubkey.RecoverCompact(ss.GetHash(), vchSig))
     {
         ui->signatureIn_VM->setValid(false);
         ui->statusLabel_VM->setStyleSheet("QLabel { color: red; }");

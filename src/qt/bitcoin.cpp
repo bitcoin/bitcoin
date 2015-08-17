@@ -8,12 +8,14 @@
 
 #include "bitcoingui.h"
 
+#include "chainparams.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "guiutil.h"
 #include "intro.h"
 #include "networkstyle.h"
 #include "optionsmodel.h"
+#include "platformstyle.h"
 #include "splashscreen.h"
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
@@ -24,7 +26,6 @@
 #endif
 
 #include "init.h"
-#include "main.h"
 #include "rpcserver.h"
 #include "scheduler.h"
 #include "ui_interface.h"
@@ -59,7 +60,9 @@ Q_IMPORT_PLUGIN(qtwcodecs)
 Q_IMPORT_PLUGIN(qkrcodecs)
 Q_IMPORT_PLUGIN(qtaccessiblewidgets)
 #else
+#if QT_VERSION < 0x050400
 Q_IMPORT_PLUGIN(AccessibleFactory)
+#endif
 #if defined(QT_QPA_PLATFORM_XCB)
 Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_WINDOWS)
@@ -239,6 +242,7 @@ private:
     WalletModel *walletModel;
 #endif
     int returnValue;
+    const PlatformStyle *platformStyle;
 
     void startThread();
 };
@@ -308,6 +312,22 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     returnValue(0)
 {
     setQuitOnLastWindowClosed(false);
+
+    // UI per-platform customization
+    // This must be done inside the BitcoinApplication constructor, or after it, because
+    // PlatformStyle::instantiate requires a QApplication
+#if defined(Q_OS_MAC)
+    std::string platformName = "macosx";
+#elif defined(Q_OS_WIN)
+    std::string platformName = "windows";
+#else
+    std::string platformName = "other";
+#endif
+    platformName = GetArg("-uiplatform", platformName);
+    platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
+    if (!platformStyle) // Fall back to "other" if specified name not found
+        platformStyle = PlatformStyle::instantiate("other");
+    assert(platformStyle);
 }
 
 BitcoinApplication::~BitcoinApplication()
@@ -328,6 +348,8 @@ BitcoinApplication::~BitcoinApplication()
 #endif
     delete optionsModel;
     optionsModel = 0;
+    delete platformStyle;
+    platformStyle = 0;
 }
 
 #ifdef ENABLE_WALLET
@@ -344,7 +366,7 @@ void BitcoinApplication::createOptionsModel()
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
-    window = new BitcoinGUI(networkStyle, 0);
+    window = new BitcoinGUI(platformStyle, networkStyle, 0);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
@@ -419,6 +441,8 @@ void BitcoinApplication::initializeResult(int retval)
     returnValue = retval ? 0 : 1;
     if(retval)
     {
+        // Log this only after AppInit2 finishes, as then logging setup is guaranteed complete
+        qWarning() << "Platform customization:" << platformStyle->getName();
 #ifdef ENABLE_WALLET
         PaymentServer::LoadRootCAs();
         paymentServer->setOptionsModel(optionsModel);
@@ -430,7 +454,7 @@ void BitcoinApplication::initializeResult(int retval)
 #ifdef ENABLE_WALLET
         if(pwalletMain)
         {
-            walletModel = new WalletModel(pwalletMain, optionsModel);
+            walletModel = new WalletModel(platformStyle, pwalletMain, optionsModel);
 
             window->addWallet(BitcoinGUI::DEFAULT_WALLET, walletModel);
             window->setCurrentWallet(BitcoinGUI::DEFAULT_WALLET);

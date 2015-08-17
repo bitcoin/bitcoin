@@ -185,13 +185,13 @@ BITCOIN_QT_H = \
   qt/paymentrequestplus.h \
   qt/paymentserver.h \
   qt/peertablemodel.h \
+  qt/platformstyle.h \
   qt/qvalidatedlineedit.h \
   qt/qvaluecombobox.h \
   qt/receivecoinsdialog.h \
   qt/receiverequestdialog.h \
   qt/recentrequeststablemodel.h \
   qt/rpcconsole.h \
-  qt/scicon.h \
   qt/sendcoinsdialog.h \
   qt/sendcoinsentry.h \
   qt/signverifymessagedialog.h \
@@ -273,10 +273,10 @@ BITCOIN_QT_CPP = \
   qt/optionsdialog.cpp \
   qt/optionsmodel.cpp \
   qt/peertablemodel.cpp \
+  qt/platformstyle.cpp \
   qt/qvalidatedlineedit.cpp \
   qt/qvaluecombobox.cpp \
   qt/rpcconsole.cpp \
-  qt/scicon.cpp \
   qt/splashscreen.cpp \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp

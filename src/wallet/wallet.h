@@ -7,10 +7,7 @@
 #define BITCOIN_WALLET_WALLET_H
 
 #include "amount.h"
-#include "key.h"
-#include "keystore.h"
-#include "primitives/block.h"
-#include "primitives/transaction.h"
+#include "streams.h"
 #include "tinyformat.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
@@ -630,7 +627,7 @@ public:
     CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
-    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason);
+    bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosRet, std::string& strFailReason, bool includeWatching);
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);

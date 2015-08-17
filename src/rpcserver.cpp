@@ -11,7 +11,6 @@
 #include "sync.h"
 #include "ui_interface.h"
 #include "util.h"
-#include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
@@ -121,8 +120,8 @@ void RPCTypeCheckObj(const UniValue& o,
 
 CAmount AmountFromValue(const UniValue& value)
 {
-    if (!value.isReal() && !value.isNum())
-        throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number");
+    if (!value.isNum() && !value.isStr())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Amount is not a number or string");
     CAmount amount;
     if (!ParseFixedPoint(value.getValStr(), 8, &amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
@@ -133,7 +132,12 @@ CAmount AmountFromValue(const UniValue& value)
 
 UniValue ValueFromAmount(const CAmount& amount)
 {
-    return UniValue(UniValue::VREAL, FormatMoney(amount));
+    bool sign = amount < 0;
+    int64_t n_abs = (sign ? -amount : amount);
+    int64_t quotient = n_abs / COIN;
+    int64_t remainder = n_abs % COIN;
+    return UniValue(UniValue::VNUM,
+            strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
 }
 
 uint256 ParseHashV(const UniValue& v, string strName)
@@ -359,6 +363,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "importprivkey",          &importprivkey,          true  },
     { "wallet",             "importwallet",           &importwallet,           true  },
     { "wallet",             "importaddress",          &importaddress,          true  },
+    { "wallet",             "importpubkey",           &importpubkey,           true  },
     { "wallet",             "keypoolrefill",          &keypoolrefill,          true  },
     { "wallet",             "listaccounts",           &listaccounts,           false },
     { "wallet",             "listaddressgroupings",   &listaddressgroupings,   false },
@@ -748,14 +753,14 @@ void StopRPCThreads()
     {
         acceptor->cancel(ec);
         if (ec)
-            LogPrintf("%s: Warning: %s when cancelling acceptor", __func__, ec.message());
+            LogPrintf("%s: Warning: %s when cancelling acceptor\n", __func__, ec.message());
     }
     rpc_acceptors.clear();
     BOOST_FOREACH(const PAIRTYPE(std::string, boost::shared_ptr<deadline_timer>) &timer, deadlineTimers)
     {
         timer.second->cancel(ec);
         if (ec)
-            LogPrintf("%s: Warning: %s when cancelling timer", __func__, ec.message());
+            LogPrintf("%s: Warning: %s when cancelling timer\n", __func__, ec.message());
     }
     deadlineTimers.clear();
 

@@ -29,28 +29,32 @@ file, however it is recommended that a strong and secure password be used
 as this password is security critical to securing the wallet should the
 wallet be enabled.
 
-If bitcoind is run with "-daemon" flag, and no rpcpassword is set, it will
-print a randomly generated suitable password to stderr.  You can also
-generate one from the shell yourself like this:
+If bitcoind is run with the "-server" flag (set by default), and no rpcpassword is set, 
+it will use a special cookie file for authentication. The cookie is generated with random 
+content when the daemon starts, and deleted when it exits. Read access to this file
+controls who can access it through RPC. 
 
-bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'
+By default the cookie is stored in the data directory, but it's location can be overridden 
+with the option '-rpccookiefile'.
 
-Once you have a password in hand, set rpcpassword= in /etc/bitcoin/bitcoin.conf
+This allows for running bitcoind without having to do any manual configuration.
+
+`conf`, `pid`, and `wallet` accept relative paths which are interpreted as 
+relative to the data directory. `wallet` *only* supports relative paths.
 
 For an example configuration file that describes the configuration settings, 
-see contrib/debian/examples/bitcoin.conf.
+see `contrib/debian/examples/bitcoin.conf`.
 
 3. Paths
 ---------------------------------
 
 All three configurations assume several paths that might need to be adjusted.
 
-Binary:              /usr/bin/bitcoind
-Configuration file:  /etc/bitcoin/bitcoin.conf
-Data directory:      /var/lib/bitcoind
-PID file:            /var/run/bitcoind/bitcoind.pid (OpenRC and Upstart)
-                     /var/lib/bitcoind/bitcoind.pid (systemd)
-Lock file:           /var/lock/subsys/bitcoind (CentOS)
+Binary:              `/usr/bin/bitcoind`  
+Configuration file:  `/etc/bitcoin/bitcoin.conf`  
+Data directory:      `/var/lib/bitcoind`  
+PID file:            `/var/run/bitcoind/bitcoind.pid` (OpenRC and Upstart) or `/var/lib/bitcoind/bitcoind.pid` (systemd)  
+Lock file:           `/var/lock/subsys/bitcoind` (CentOS)  
 
 The configuration file, PID directory (if applicable) and data directory
 should all be owned by the bitcoin user and group.  It is advised for security
@@ -65,21 +69,21 @@ can then be controlled by group membership.
 
 Installing this .service file consists of just copying it to
 /usr/lib/systemd/system directory, followed by the command
-"systemctl daemon-reload" in order to update running systemd configuration.
+`systemctl daemon-reload` in order to update running systemd configuration.
 
-To test, run "systemctl start bitcoind" and to enable for system startup run
-"systemctl enable bitcoind"
+To test, run `systemctl start bitcoind` and to enable for system startup run
+`systemctl enable bitcoind`
 
 4b) OpenRC
 
 Rename bitcoind.openrc to bitcoind and drop it in /etc/init.d.  Double
 check ownership and permissions and make it executable.  Test it with
-"/etc/init.d/bitcoind start" and configure it to run on startup with
-"rc-update add bitcoind"
+`/etc/init.d/bitcoind start` and configure it to run on startup with
+`rc-update add bitcoind`
 
 4c) Upstart (for Debian/Ubuntu based distributions)
 
-Drop bitcoind.conf in /etc/init.  Test by running "service bitcoind start"
+Drop bitcoind.conf in /etc/init.  Test by running `service bitcoind start`
 it will automatically start on reboot.
 
 NOTE: This script is incompatible with CentOS 5 and Amazon Linux 2014 as they
@@ -87,7 +91,7 @@ use old versions of Upstart and do not supply the start-stop-daemon utility.
 
 4d) CentOS
 
-Copy bitcoind.init to /etc/init.d/bitcoind. Test by running "service bitcoind start".
+Copy bitcoind.init to /etc/init.d/bitcoind. Test by running `service bitcoind start`.
 
 Using this script, you can adjust the path and flags to the bitcoind program by 
 setting the BITCOIND and FLAGS environment variables in the file 
@@ -98,5 +102,4 @@ setting the BITCOIND and FLAGS environment variables in the file
 
 Auto respawning is currently only configured for Upstart and systemd.
 Reasonable defaults have been chosen but YMMV.
-
 

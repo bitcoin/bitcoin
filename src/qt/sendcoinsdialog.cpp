@@ -11,14 +11,15 @@
 #include "coincontroldialog.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
-#include "scicon.h"
+#include "platformstyle.h"
 #include "sendcoinsentry.h"
 #include "walletmodel.h"
 
 #include "base58.h"
 #include "coincontrol.h"
-#include "main.h"
+#include "main.h" // mempool and minRelayTxFee
 #include "ui_interface.h"
+#include "txmempool.h"
 #include "wallet/wallet.h"
 
 #include <QMessageBox>
@@ -26,25 +27,26 @@
 #include <QSettings>
 #include <QTextDocument>
 
-SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
+SendCoinsDialog::SendCoinsDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
     clientModel(0),
     model(0),
     fNewRecipientAllowed(true),
-    fFeeMinimized(true)
+    fFeeMinimized(true),
+    platformStyle(platformStyle)
 {
     ui->setupUi(this);
 
-#ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
-    ui->addButton->setIcon(QIcon());
-    ui->clearButton->setIcon(QIcon());
-    ui->sendButton->setIcon(QIcon());
-#else
-    ui->addButton->setIcon(SingleColorIcon(":/icons/add"));
-    ui->clearButton->setIcon(SingleColorIcon(":/icons/remove"));
-    ui->sendButton->setIcon(SingleColorIcon(":/icons/send"));
-#endif
+    if (!platformStyle->getImagesOnButtons()) {
+        ui->addButton->setIcon(QIcon());
+        ui->clearButton->setIcon(QIcon());
+        ui->sendButton->setIcon(QIcon());
+    } else {
+        ui->addButton->setIcon(platformStyle->SingleColorIcon(":/icons/add"));
+        ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
+        ui->sendButton->setIcon(platformStyle->SingleColorIcon(":/icons/send"));
+    }
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
 
@@ -363,7 +365,7 @@ void SendCoinsDialog::accept()
 
 SendCoinsEntry *SendCoinsDialog::addEntry()
 {
-    SendCoinsEntry *entry = new SendCoinsEntry(this);
+    SendCoinsEntry *entry = new SendCoinsEntry(platformStyle, this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
     connect(entry, SIGNAL(removeEntry(SendCoinsEntry*)), this, SLOT(removeEntry(SendCoinsEntry*)));
@@ -710,7 +712,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 // Coin Control: button inputs -> show actual coin control dialog
 void SendCoinsDialog::coinControlButtonClicked()
 {
-    CoinControlDialog dlg;
+    CoinControlDialog dlg(platformStyle);
     dlg.setModel(model);
     dlg.exec();
     coinControlUpdateLabels();
@@ -752,10 +754,9 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else // Valid address
         {
-            CPubKey pubkey;
             CKeyID keyid;
             addr.GetKeyID(keyid);
-            if (!model->getPubKey(keyid, pubkey)) // Unknown change address
+            if (!model->havePrivKey(keyid)) // Unknown change address
             {
                 ui->labelCoinControlChangeLabel->setText(tr("Warning: Unknown change address"));
             }

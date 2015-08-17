@@ -12,10 +12,12 @@
 #include "addrman.h"
 #include "chainparams.h"
 #include "clientversion.h"
+#include "crypto/common.h"
+#include "hash.h"
 #include "primitives/transaction.h"
 #include "scheduler.h"
 #include "ui_interface.h"
-#include "crypto/common.h"
+#include "utilstrencodings.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -78,9 +80,10 @@ static CNode* pnodeLocalHost = NULL;
 uint64_t nLocalHostNonce = 0;
 static std::vector<ListenSocket> vhListenSocket;
 CAddrMan addrman;
-int nMaxConnections = 125;
+int nMaxConnections = DEFAULT_MAX_PEER_CONNECTIONS;
 int nWhiteConnections = 0;
 bool fAddressesInitialized = false;
+std::string strSubVersion;
 
 vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;
@@ -443,7 +446,7 @@ void CNode::PushVersion()
     else
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight, true);
+                nLocalHostNonce, strSubVersion, nBestHeight, true);
 }
 
 
@@ -2058,7 +2061,7 @@ unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
 
 CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn) :
     ssSend(SER_NETWORK, INIT_PROTO_VERSION),
-    addrKnown(5000, 0.001, insecure_rand()),
+    addrKnown(5000, 0.001),
     setInventoryKnown(SendBufferSize() / 1000)
 {
     nServices = 0;
@@ -2183,8 +2186,10 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
         Fuzz(GetArg("-fuzzmessagestest", 10));
 
     if (ssSend.size() == 0)
+    {
+        LEAVE_CRITICAL_SECTION(cs_vSend);
         return;
-
+    }
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);

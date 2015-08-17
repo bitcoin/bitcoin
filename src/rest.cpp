@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chain.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "main.h"
@@ -64,6 +65,8 @@ public:
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 extern UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool txDetails = false);
+extern UniValue mempoolInfoToJSON();
+extern UniValue mempoolToJSON(bool fVerbose = false);
 extern void ScriptPubKeyToJSON(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 extern UniValue blockheaderToJSON(const CBlockIndex* blockindex);
 
@@ -280,6 +283,58 @@ static bool rest_chaininfo(AcceptedConnection* conn,
         UniValue rpcParams(UniValue::VARR);
         UniValue chainInfoObject = getblockchaininfo(rpcParams, false);
         string strJSON = chainInfoObject.write() + "\n";
+        conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
+        return true;
+    }
+    default: {
+        throw RESTERR(HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+
+    // not reached
+    return true; // continue to process further HTTP reqs on this cxn
+}
+
+static bool rest_mempool_info(AcceptedConnection* conn,
+                              const std::string& strURIPart,
+                              const std::string& strRequest,
+                              const std::map<std::string, std::string>& mapHeaders,
+                              bool fRun)
+{
+    vector<string> params;
+    const RetFormat rf = ParseDataFormat(params, strURIPart);
+
+    switch (rf) {
+    case RF_JSON: {
+        UniValue mempoolInfoObject = mempoolInfoToJSON();
+
+        string strJSON = mempoolInfoObject.write() + "\n";
+        conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
+        return true;
+    }
+    default: {
+        throw RESTERR(HTTP_NOT_FOUND, "output format not found (available: json)");
+    }
+    }
+
+    // not reached
+    return true; // continue to process further HTTP reqs on this cxn
+}
+
+static bool rest_mempool_contents(AcceptedConnection* conn,
+                                  const std::string& strURIPart,
+                                  const std::string& strRequest,
+                                  const std::map<std::string, std::string>& mapHeaders,
+                                  bool fRun)
+{
+    vector<string> params;
+    const RetFormat rf = ParseDataFormat(params, strURIPart);
+
+    switch (rf) {
+    case RF_JSON: {
+        UniValue mempoolObject = mempoolToJSON(true);
+
+        string strJSON = mempoolObject.write() + "\n";
         conn->stream() << HTTPReply(HTTP_OK, strJSON, fRun) << std::flush;
         return true;
     }
@@ -552,6 +607,8 @@ static const struct {
       {"/rest/block/notxdetails/", rest_block_notxdetails},
       {"/rest/block/", rest_block_extended},
       {"/rest/chaininfo", rest_chaininfo},
+      {"/rest/mempool/info", rest_mempool_info},
+      {"/rest/mempool/contents", rest_mempool_contents},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
 };

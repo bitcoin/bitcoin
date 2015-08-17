@@ -11,6 +11,8 @@
 
 #include "addrman.h"
 #include "amount.h"
+#include "chain.h"
+#include "chainparams.h"
 #include "checkpoints.h"
 #include "compat/sanity.h"
 #include "consensus/validation.h"
@@ -23,11 +25,14 @@
 #include "script/standard.h"
 #include "scheduler.h"
 #include "txdb.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "utilstrencodings.h"
 #include "validationinterface.h"
 #ifdef ENABLE_WALLET
+#include "wallet/db.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
@@ -309,7 +314,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-externalip=<ip>", _("Specify your own public address"));
     strUsage += HelpMessageOpt("-forcednsseed", strprintf(_("Always query for peer addresses via DNS lookup (default: %u)"), 0));
     strUsage += HelpMessageOpt("-listen", _("Accept connections from outside (default: 1 if no -proxy or -connect)"));
-    strUsage += HelpMessageOpt("-maxconnections=<n>", strprintf(_("Maintain at most <n> connections to peers (default: %u)"), 125));
+    strUsage += HelpMessageOpt("-maxconnections=<n>", strprintf(_("Maintain at most <n> connections to peers (default: %u)"), DEFAULT_MAX_PEER_CONNECTIONS));
     strUsage += HelpMessageOpt("-maxreceivebuffer=<n>", strprintf(_("Maximum per-connection receive buffer, <n>*1000 bytes (default: %u)"), 5000));
     strUsage += HelpMessageOpt("-maxsendbuffer=<n>", strprintf(_("Maximum per-connection send buffer, <n>*1000 bytes (default: %u)"), 1000));
     strUsage += HelpMessageOpt("-onion=<ip:port>", strprintf(_("Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)"), "-proxy"));
@@ -337,16 +342,17 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"));
     strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), 100));
     if (showDebug)
-        strUsage += HelpMessageOpt("-mintxfee=<amt>", strprintf("Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)",
-            FormatMoney(CWallet::minTxFee.GetFeePerK())));
-    strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in BTC/kB) to add to transactions you send (default: %s)"), FormatMoney(payTxFee.GetFeePerK())));
+        strUsage += HelpMessageOpt("-mintxfee=<amt>", strprintf("Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)",
+            CURRENCY_UNIT, FormatMoney(CWallet::minTxFee.GetFeePerK())));
+    strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
+        CURRENCY_UNIT, FormatMoney(payTxFee.GetFeePerK())));
     strUsage += HelpMessageOpt("-rescan", _("Rescan the block chain for missing wallet transactions") + " " + _("on startup"));
     strUsage += HelpMessageOpt("-salvagewallet", _("Attempt to recover private keys from a corrupt wallet.dat") + " " + _("on startup"));
     strUsage += HelpMessageOpt("-sendfreetransactions", strprintf(_("Send transactions as zero-fee transactions if possible (default: %u)"), 0));
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), 1));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
-    strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)"),
-        FormatMoney(maxTxFee)));
+    strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)"),
+        CURRENCY_UNIT, FormatMoney(maxTxFee)));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format") + " " + _("on startup"));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), "wallet.dat"));
     strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), true));
@@ -367,7 +373,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", 1));
         strUsage += HelpMessageOpt("-stopafterblockimport", strprintf("Stop running after importing blocks from disk (default: %u)", 0));
     }
-    string debugCategories = "addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, net, proxy, prune"; // Don't translate these and qt below
+    string debugCategories = "addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, mempoolrej, net, proxy, prune"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         debugCategories += ", qt";
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
@@ -383,7 +389,8 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-relaypriority", strprintf("Require high priority for relaying free or low-fee transactions (default: %u)", 1));
         strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf("Limit size of signature cache to <n> entries (default: %u)", 50000));
     }
-    strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)"), FormatMoney(::minRelayTxFee.GetFeePerK())));
+    strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying (default: %s)"),
+        CURRENCY_UNIT, FormatMoney(::minRelayTxFee.GetFeePerK())));
     strUsage += HelpMessageOpt("-printtoconsole", _("Send trace/debug info to console instead of debug.log file"));
     if (showDebug)
     {
@@ -436,6 +443,9 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-min", _("Start minimized"));
         strUsage += HelpMessageOpt("-rootcertificates=<file>", _("Set SSL root certificates for payment request (default: -system-)"));
         strUsage += HelpMessageOpt("-splash", _("Show splash screen on startup (default: 1)"));
+        if (showDebug) {
+            strUsage += HelpMessageOpt("-uiplatform", "Select platform to customize UI for (one of windows, macosx, other; default: platform compiled on)");
+        }
     }
 
     return strUsage;
@@ -668,6 +678,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
     fLogIPs = GetBoolArg("-logips", false);
 
+    LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+    LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
+
     // when specifying an explicit binding address, you want to listen on it
     // even when -connect or -proxy is specified
     if (mapArgs.count("-bind")) {
@@ -739,7 +752,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     
     // Make sure enough file descriptors are available
     int nBind = std::max((int)mapArgs.count("-bind") + (int)mapArgs.count("-whitebind"), 1);
-    int nUserMaxConnections = GetArg("-maxconnections", 125);
+    int nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
     int nUserWhiteConnections = GetArg("-whiteconnections", 0);
     nWhiteConnections = std::max(nUserWhiteConnections, 0);
@@ -941,8 +954,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 #endif
     if (GetBoolArg("-shrinkdebugfile", !fDebug))
         ShrinkDebugFile();
-    LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
+
+    if (fPrintToDebugLog)
+        OpenDebugLog();
+
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
 #ifdef ENABLE_WALLET
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
@@ -1004,6 +1019,13 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 6: network initialization
 
     RegisterNodeSignals(GetNodeSignals());
+
+    // format user agent, check total size
+    strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, mapMultiArgs.count("-uacomment") ? mapMultiArgs["-uacomment"] : std::vector<string>());
+    if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
+        return InitError(strprintf("Total length of network version string %i exceeds maximum of %i characters. Reduce the number and/or size of uacomments.",
+            strSubVersion.size(), MAX_SUBVERSION_LENGTH));
+    }
 
     if (mapArgs.count("-onlynet")) {
         std::set<enum Network> nets;
@@ -1215,6 +1237,18 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                     LogPrintf("Prune: pruned datadir may not have more than %d blocks; -checkblocks=%d may fail\n",
                         MIN_BLOCKS_TO_KEEP, GetArg("-checkblocks", 288));
                 }
+
+                {
+                    LOCK(cs_main);
+                    CBlockIndex* tip = chainActive.Tip();
+                    if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                        strLoadError = _("The block database contains a block which appears to be from the future. "
+                                "This may be due to your computer's date and time being set incorrectly. "
+                                "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                        break;
+                    }
+                }
+
                 if (!CVerifyDB().VerifyDB(pcoinsdbview, GetArg("-checklevel", 3),
                               GetArg("-checkblocks", 288))) {
                     strLoadError = _("Corrupted block database detected");
@@ -1264,15 +1298,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!est_filein.IsNull())
         mempool.ReadFeeEstimates(est_filein);
     fFeeEstimatesInitialized = true;
-
-    // if prune mode, unset NODE_NETWORK and prune block files
-    if (fPruneMode) {
-        LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
-        nLocalServices &= ~NODE_NETWORK;
-        if (!fReindex) {
-            PruneAndFlush();
-        }
-    }
 
     // ********************************************************* Step 8: load wallet
 #ifdef ENABLE_WALLET
@@ -1427,7 +1452,21 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 #else // ENABLE_WALLET
     LogPrintf("No wallet support compiled in!\n");
 #endif // !ENABLE_WALLET
-    // ********************************************************* Step 9: import blocks
+
+    // ********************************************************* Step 9: data directory maintenance
+
+    // if pruning, unset the service bit and perform the initial blockstore prune
+    // after any wallet rescanning has taken place.
+    if (fPruneMode) {
+        uiInterface.InitMessage(_("Pruning blockstore..."));
+        LogPrintf("Unsetting NODE_NETWORK on prune mode\n");
+        nLocalServices &= ~NODE_NETWORK;
+        if (!fReindex) {
+            PruneAndFlush();
+        }
+    }
+
+    // ********************************************************* Step 10: import blocks
 
     if (mapArgs.count("-blocknotify"))
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
@@ -1451,7 +1490,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             MilliSleep(10);
     }
 
-    // ********************************************************* Step 10: start node
+    // ********************************************************* Step 11: start node
 
     if (!CheckDiskSpace())
         return false;

@@ -2,12 +2,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//
 // Unit tests for denial-of-service detection/prevention code
-//
 
-
-
+#include "chainparams.h"
 #include "keystore.h"
 #include "main.h"
 #include "net.h"

@@ -56,7 +56,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 CTxDestination address;
                 sub.idx = parts.size(); // sequence number
                 sub.credit = txout.nValue;
-                sub.involvesWatchAddress = mine == ISMINE_WATCH_ONLY;
+                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
                 if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
                 {
                     // Received by Bitcoin Address
@@ -86,7 +86,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
         {
             isminetype mine = wallet->IsMine(txin);
-            if(mine == ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllFromMe > mine) fAllFromMe = mine;
         }
 
@@ -94,7 +94,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             isminetype mine = wallet->IsMine(txout);
-            if(mine == ISMINE_WATCH_ONLY) involvesWatchAddress = true;
+            if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
             if(fAllToMe > mine) fAllToMe = mine;
         }
 

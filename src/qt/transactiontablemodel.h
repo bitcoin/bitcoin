@@ -10,6 +10,7 @@
 #include <QAbstractTableModel>
 #include <QStringList>
 
+class PlatformStyle;
 class TransactionRecord;
 class TransactionTablePriv;
 class WalletModel;
@@ -23,7 +24,7 @@ class TransactionTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit TransactionTableModel(CWallet* wallet, WalletModel *parent = 0);
+    explicit TransactionTableModel(const PlatformStyle *platformStyle, CWallet* wallet, WalletModel *parent = 0);
     ~TransactionTableModel();
 
     enum ColumnIndex {
@@ -82,6 +83,7 @@ private:
     QStringList columns;
     TransactionTablePriv *priv;
     bool fProcessingQueuedTransactions;
+    const PlatformStyle *platformStyle;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();

@@ -15,6 +15,8 @@ EXTRA_DIST += \
 	test/data/tx394b54bb.hex \
 	test/data/txcreate1.hex \
 	test/data/txcreate2.hex \
+	test/data/txcreatedata1.hex \
+	test/data/txcreatedata2.hex \
 	test/data/txcreatesign.hex
 
 JSON_TEST_FILES = \
@@ -73,6 +75,7 @@ BITCOIN_TESTS =\
   test/test_bitcoin.h \
   test/timedata_tests.cpp \
   test/transaction_tests.cpp \
+  test/txvalidationcache_tests.cpp \
   test/uint256_tests.cpp \
   test/univalue_tests.cpp \
   test/util_tests.cpp
