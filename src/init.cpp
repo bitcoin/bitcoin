@@ -169,7 +169,7 @@ void PrepareShutdown()
     GenerateBitcoins(false, NULL, 0);
 #endif
     StopNode();
-    DumpMasternodes();
+    //DumpMasternodes();
     //DumpBudgets();
     //DumpMasternodePayments();
     UnregisterNodeSignals(GetNodeSignals());
@@ -1411,6 +1411,11 @@ bool AppInit2(boost::thread_group& threadGroup)
 
 
 
+    /*
+
+        We sync all of this information on boot anyway, as it's kept on the network so there's really no point.
+        Also, it seems it might be causing some edge cases where clients can get stuck. I think it's better to just
+        sync from the network instead.
          uiInterface.InitMessage(_("Loading masternode cache..."));
 
          CMasternodeDB mndb;
@@ -1426,11 +1431,6 @@ bool AppInit2(boost::thread_group& threadGroup)
                  LogPrintf("file format is unknown or invalid, please fix it manually\n");
          }
 
-    /*
-
-        We sync all of this information on boot anyway, as it's kept on the network so there's really no point.
-        Also, it seems it might be causing some edge cases where clients can get stuck. I think it's better to just
-        sync from the network instead.
 
         // ---------
         // uiInterface.InitMessage(_("Loading budget cache..."));
