@@ -3,7 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "rpcconsole.h"
-#include "ui_rpcconsole.h"
+#include "ui_debugwindow.h"
 
 #include "bantablemodel.h"
 #include "clientmodel.h"
