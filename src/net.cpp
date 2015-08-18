@@ -103,6 +103,7 @@ NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
 static CSemaphore *semOutbound = NULL;
+boost::condition_variable messageHandlerCondition;
 
 // Signals for message handling
 static CNodeSignals g_signals;
@@ -601,8 +602,10 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         pch += handled;
         nBytes -= handled;
 
-        if (msg.complete())
+        if (msg.complete()) {
             msg.nTime = GetTimeMicros();
+            messageHandlerCondition.notify_one();
+        }
     }
 
     return true;
@@ -1433,6 +1436,9 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
 
 void ThreadMessageHandler()
 {
+    boost::mutex condition_mutex;
+    boost::unique_lock<boost::mutex> lock(condition_mutex);
+    
     SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (true)
     {
@@ -1493,10 +1499,7 @@ void ThreadMessageHandler()
         }
 
         if (fSleep)
-            MilliSleep(1);
-
-        boost::this_thread::interruption_point();
-
+            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(100));
     }
 }
 
