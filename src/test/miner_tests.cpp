@@ -25,10 +25,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     CBlockTemplate *pblocktemplate;
     CMutableTransaction tx,tx2;
     CScript script;
-	std::vector<unsigned char> vchSig;
+    std::vector<unsigned char> vchSig;
     uint256 hash;
-	std::vector<CMutableTransaction> noTxns;
-	CBlock block;
+    std::vector<CMutableTransaction> noTxns;
+    CBlock block;
 
     LOCK(cs_main);
     fCheckpointsEnabled = false;
@@ -158,50 +158,50 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     chainActive.Tip()->nHeight = nHeight;
 
  
-	// non-final txs in mempool
+    // non-final txs in mempool
     SetMockTime(chainActive.Tip()->GetMedianTimePast()+1);
 
-	// height locked
-	tx.vin.resize(1);
+    // height locked
+    tx.vin.resize(1);
     tx.vin[0].prevout.hash = coinbaseTxns[0].GetHash();
-	tx.vin[0].scriptSig = CScript() << OP_1;
+    tx.vin[0].scriptSig = CScript() << OP_1;
     tx.vin[0].prevout.n = 0;
-	tx.vin[0].nSequence = 0;
+    tx.vin[0].nSequence = 0;
     tx.vout.resize(1);
     tx.vout[0].nValue = 4900000000LL;
     tx.vout[0].scriptPubKey = scriptPubKey;
-	tx.nLockTime = chainActive.Tip()->nHeight+1;	
+    tx.nLockTime = chainActive.Tip()->nHeight+1;	
     // Sign:
     vchSig.clear();
     hash = SignatureHash(scriptPubKey, tx, 0, SIGHASH_ALL);
     BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
     vchSig.push_back((unsigned char)SIGHASH_ALL);
     tx.vin[0].scriptSig << vchSig;
-	hash = tx.GetHash();
-	mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
-	BOOST_CHECK(!CheckFinalTx(tx));
+    hash = tx.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(!CheckFinalTx(tx));
     
 
 
     // time locked
-	tx2.vin.resize(1);
+    tx2.vin.resize(1);
     tx2.vin[0].prevout.hash = hash;
-	tx2.vin[0].scriptSig = CScript() << OP_1;
+    tx2.vin[0].scriptSig = CScript() << OP_1;
     tx2.vin[0].prevout.n = 0;
-	tx2.vin[0].nSequence = 0;
+    tx2.vin[0].nSequence = 0;
     tx2.vout.resize(1);
     tx2.vout[0].scriptPubKey = scriptPubKey;
-	tx2.vout[0].nValue = 4900000000LL;
-	tx2.nLockTime = chainActive.Tip()->GetMedianTimePast()+1;
+    tx2.vout[0].nValue = 4900000000LL;
+    tx2.nLockTime = chainActive.Tip()->GetMedianTimePast()+1;
     // Sign:
     vchSig.clear();
     hash = SignatureHash(scriptPubKey, tx2, 0, SIGHASH_ALL);
     BOOST_CHECK(coinbaseKey.Sign(hash, vchSig));
     vchSig.push_back((unsigned char)SIGHASH_ALL);
     tx2.vin[0].scriptSig << vchSig;
-	hash = tx2.GetHash();
-	mempool.addUnchecked(hash, CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
-	BOOST_CHECK(!CheckFinalTx(tx2));
+    hash = tx2.GetHash();
+    mempool.addUnchecked(hash, CTxMemPoolEntry(tx2, 11, GetTime(), 111.0, 11));
+    BOOST_CHECK(!CheckFinalTx(tx2));
     
 
     block = CreateAndProcessBlock(noTxns, scriptPubKey);
