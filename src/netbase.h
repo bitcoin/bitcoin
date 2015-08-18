@@ -100,6 +100,8 @@ class CNetAddr
         inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
             READWRITE(FLATDATA(ip));
         }
+
+        friend class CSubNet;
 };
 
 class CSubNet
