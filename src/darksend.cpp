@@ -2235,7 +2235,7 @@ void ThreadCheckDarkSendPool()
                 CleanTransactionLocksList();
             }
 
-            if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
+            //if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
 
             darkSendPool.CheckTimeout();
             darkSendPool.CheckForCompleteQueue();
