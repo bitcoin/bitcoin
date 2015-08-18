@@ -476,23 +476,10 @@ void TXHistoryDialog::showDetails()
     txid.SetHex(ui->txHistoryTable->item(ui->txHistoryTable->currentRow(),0)->text().toStdString());
     std::string strTXText;
 
-    // first of all check if the TX is a pending tx, if so grab details from pending map
-    bool fPending = false;
-    {
-        LOCK(cs_pending);
-
-        PendingMap::iterator it = my_pending.find(txid);
-        if (it != my_pending.end()) {
-            CMPPending *p_pending = &(it->second);
-            strTXText = "*** THIS TRANSACTION IS UNCONFIRMED ***\n" + p_pending->desc;
-            fPending = true;
-        }
-    }
-
-    if (!fPending) {
-        // otherwise grab details via the RPC populator
-        int pop = populateRPCTransactionObject(txid, txobj, "", true);
-        if (0<=pop) strTXText = write_string(Value(txobj), true);
+    if (txid != 0) {
+        // grab extended transaction details via the RPC populator
+        int rc = populateRPCTransactionObject(txid, txobj, "", true);
+        if (rc >= 0) strTXText = json_spirit::write_string(Value(txobj), true);
     }
 
     if (!strTXText.empty()) {
