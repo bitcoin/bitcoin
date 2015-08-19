@@ -2766,10 +2766,12 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         int interp_ret = mp_obj.interpretPacket();
         if (interp_ret) PrintToLog("!!! interpretPacket() returned %d !!!\n", interp_ret);
 
-        // only valid transactions get recorded
-        bool bValid = (0 <= interp_ret);
-        p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
-
+        // Only structurally valid transactions get recorded in levelDB
+        // PKT_ERROR - 2 = interpret_Transaction failed, structurally invalid payload
+        if (interp_ret != PKT_ERROR - 2) {
+            bool bValid = (0 <= interp_ret);
+            p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
+        }
         fFoundTx |= (interp_ret == 0);
     }
 
