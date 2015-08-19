@@ -1128,7 +1128,7 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
 
 bool TransactionSignatureChecker::CheckLockTime(const CScriptNum& nLockTime) const
 {
-    // There are two times of nLockTime: lock-by-blockheight
+    // There are two kinds of nLockTime: lock-by-blockheight
     // and lock-by-blocktime, distinguished by whether
     // nLockTime < LOCKTIME_THRESHOLD.
     //
