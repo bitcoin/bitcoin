@@ -149,7 +149,7 @@ bitcoin (0.5.3-natty0) natty; urgency=low
 bitcoin (0.5.2-natty1) natty; urgency=low
 
   * Remove mentions on anonymity in package descriptions and manpage.
-    These should never have been there, bitcoin isnt anonymous without
+    These should never have been there, bitcoin isn't anonymous without
     a ton of work that virtually no users will ever be willing and
     capable of doing
 
@@ -190,7 +190,7 @@ bitcoin (0.5.0~rc1-natty1) natty; urgency=low
 
   * Add test_bitcoin to build test
   * Fix clean
-  * Remove uneccessary build-dependancies
+  * Remove unnecessary build-dependancies
 
  -- Matt Corallo <matt@bluematt.me>  Wed, 26 Oct 2011 14:37:18 -0400
 
@@ -350,7 +350,7 @@ bitcoin (0.3.20.01~dfsg-1) unstable; urgency=low
 
 bitcoin (0.3.19~dfsg-6) unstable; urgency=low
 
-  * Fix override agressive optimizations.
+  * Fix override aggressive optimizations.
   * Fix tighten build-dependencies to really fit backporting to Lenny:
     + Add fallback build-dependency on libdb4.6++-dev.
     + Tighten unversioned Boost build-dependencies to recent versions,

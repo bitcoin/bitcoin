@@ -695,7 +695,7 @@ public:
     static bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
     static void SetBannedSetDirty(bool dirty=true);
-    //!clean unused entires (if bantime has expired)
+    //!clean unused entries (if bantime has expired)
     static void SweepBanned();
 
     void copyStats(CNodeStats &stats);

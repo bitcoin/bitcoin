@@ -762,7 +762,7 @@ void PaymentServer::setOptionsModel(OptionsModel *optionsModel)
 
 void PaymentServer::handlePaymentACK(const QString& paymentACKMsg)
 {
-    // currently we don't futher process or store the paymentACK message
+    // currently we don't further process or store the paymentACK message
     Q_EMIT message(tr("Payment acknowledged"), paymentACKMsg, CClientUIInterface::ICON_INFORMATION | CClientUIInterface::MODAL);
 }
 

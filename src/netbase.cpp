@@ -349,7 +349,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
         }
         if (pchRetA[0] != 0x01 || pchRetA[1] != 0x00) {
             CloseSocket(hSocket);
-            return error("Proxy authentication unsuccesful");
+            return error("Proxy authentication unsuccessful");
         }
     } else if (pchRet1[1] == 0x00) {
         // Perform no authentication
