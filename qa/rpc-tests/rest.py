@@ -200,7 +200,7 @@ class RESTTest (BitcoinTestFramework):
         response = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
         assert_equal(response.status, 200) #must be a 500 because we exceeding the limits
 
-        self.nodes[0].generate(1) #generate block to not affect upcomming tests
+        self.nodes[0].generate(1) #generate block to not affect upcoming tests
         self.sync_all()
 
         ################
