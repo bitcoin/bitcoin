@@ -661,7 +661,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     //reference node - hybrid mode
 
     if(!IsReferenceNode(activeMasternode.vin)){
-        int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, GetMinMasternodePaymentsProto());
+        int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, MIN_MNW_PEER_PROTO_VERSION);
 
         if(n == -1)
         {
