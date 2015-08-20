@@ -471,7 +471,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
             pBestMasternode = pmn;
         }
         nCountTenth++;
-        if(nCount >= nTenthNetwork) break;
+        if(nCountTenth >= nTenthNetwork) break;
     }
     return pBestMasternode;
 }
