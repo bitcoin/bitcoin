@@ -622,6 +622,9 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         progressBar->setVisible(false);
     }
 
+    tooltip = tr("Current PoW difficulty is %1.").arg(clientModel->getDifficulty(false)) + QString("<br>") + tooltip;
+    tooltip = tr("Current PoS difficulty is %1.").arg(clientModel->getDifficulty(true)) + QString("<br>") + tooltip;
+
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
     int secs = lastBlockDate.secsTo(QDateTime::currentDateTime());
     QString text;
