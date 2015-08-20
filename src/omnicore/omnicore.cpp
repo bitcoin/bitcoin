@@ -2556,7 +2556,7 @@ static void clear_all_state()
     p_txlistdb->Clear();
     s_stolistdb->Clear();
     t_tradelistdb->Clear();
-
+    assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
 
@@ -2595,6 +2595,7 @@ int mastercore_init()
     }
 
     // check for --startclean option and delete MP_ folders if present
+    bool startClean = false;
     if (GetBoolArg("-startclean", false)) {
         PrintToLog("Process was started with --startclean option, attempting to clear persistence files..\n");
         try {
@@ -2609,6 +2610,7 @@ int mastercore_init()
             if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
             if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
             PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
+            startClean = true;
         } catch (const boost::filesystem::filesystem_error& e) {
             PrintToLog("Failed to delete persistence folders: %s\n", e.what());
             PrintToConsole("Failed to delete persistence folders: %s\n", e.what());
@@ -2623,13 +2625,27 @@ int mastercore_init()
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
 
+    bool wrongDBVersion = (p_txlistdb->getDBVersion() != DB_VERSION);
+
     ++mastercoreInitialized;
 
     nWaterlineBlock = load_most_relevant_state();
+    bool noPreviousState = (nWaterlineBlock <= 0);
+
+    if (startClean) {
+        assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
+    } else if (wrongDBVersion) {
+        nWaterlineBlock = -1; // force a clear_all_state and parse from start
+    }
+
     if (nWaterlineBlock > 0) {
         PrintToConsole("Loading persistent state: OK [block %d]\n", nWaterlineBlock);
     } else {
-        PrintToConsole("Loading persistent state: NONE\n");
+        std::string strReason = "unknown";
+        if (wrongDBVersion) strReason = "client version changed";
+        if (noPreviousState) strReason = "no usable previous state found";
+        if (startClean) strReason = "-startclean parameter used";
+        PrintToConsole("Loading persistent state: NONE (%s)\n", strReason);
     }
 
     if (nWaterlineBlock < 0) {
@@ -3163,6 +3179,41 @@ uint256 CMPTxList::findMetaDExCancel(const uint256 txid)
 
   delete it;
   return 0;
+}
+
+/*
+ * Gets the DB version from txlistdb
+ *
+ * Returns the current version
+ */
+int CMPTxList::getDBVersion()
+{
+    std::string strValue;
+    int verDB = 0;
+
+    Status status = pdb->Get(readoptions, "dbversion", &strValue);
+    if (status.ok()) {
+        verDB = boost::lexical_cast<uint64_t>(strValue);
+    }
+
+    if (msc_debug_txdb) PrintToLog("%s(): dbversion %s status %s, line %d, file: %s\n", __FUNCTION__, strValue, status.ToString(), __LINE__, __FILE__);
+
+    return verDB;
+}
+
+/*
+ * Sets the DB version for txlistdb
+ *
+ * Returns the current version after update
+ */
+int CMPTxList::setDBVersion()
+{
+    std::string verStr = boost::lexical_cast<std::string>(DB_VERSION);
+    Status status = pdb->Put(writeoptions, "dbversion", verStr);
+
+    if (msc_debug_txdb) PrintToLog("%s(): dbversion %s status %s, line %d, file: %s\n", __FUNCTION__, verStr, status.ToString(), __LINE__, __FILE__);
+
+    return getDBVersion();
 }
 
 int CMPTxList::getNumberOfMetaDExCancels(const uint256 txid)
