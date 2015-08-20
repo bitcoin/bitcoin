@@ -134,7 +134,7 @@ Value masternode(const Array& params, bool fHelp)
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
-                "  count        - Print number of all known masternodes (optional: 'ds', 'enabled', 'all')\n"
+                "  count        - Print number of all known masternodes (optional: 'ds', 'enabled', 'all', 'qualify')\n"
                 "  current      - Print info on current masternode winner\n"
                 "  debug        - Print masternode status\n"
                 "  genkey       - Generate new masternodeprivkey\n"
@@ -186,12 +186,19 @@ Value masternode(const Array& params, bool fHelp)
         }
         if (params.size() == 2)
         {
+            int nCount = 0;
+
+            if(chainActive.Tip())
+                mnodeman.GetNextMasternodeInQueueForPayment(chainActive.Tip()->nHeight, true, nCount);
+
             if(params[1] == "ds") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
             if(params[1] == "enabled") return mnodeman.CountEnabled();
-            if(params[1] == "all") return strprintf("Total: %d (DS Compatible: %d / Enabled: %d)",
+            if(params[1] == "qualify") return nCount;
+            if(params[1] == "all") return strprintf("Total: %d (DS Compatible: %d / Enabled: %d / Qualify: %d)",
                                                     mnodeman.size(),
                                                     mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION),
-                                                    mnodeman.CountEnabled());
+                                                    mnodeman.CountEnabled(),
+                                                    nCount);
         }
         return mnodeman.size();
     }

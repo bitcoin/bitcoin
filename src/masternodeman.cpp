@@ -414,9 +414,10 @@ CMasternode *CMasternodeMan::Find(const CPubKey &pubKeyMasternode)
 // 
 // Deterministically select the oldest/best masternode to pay on the network
 //
-CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime)
+CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount)
 {
     LOCK(cs);
+    nCount = 0;
 
     CMasternode *pBestMasternode = NULL;
     std::vector<pair<int64_t, CTxIn> > vecMasternodeLastPaid;
@@ -444,7 +445,11 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(mn.GetMasternodeInputAge() < nMnCount) continue;
 
         vecMasternodeLastPaid.push_back(make_pair(mn.SecondsSincePayment(), mn.vin));
+        nCount++;
     }
+
+    //when the network is in the process of upgrading, don't penalize nodes that recently restarted
+    if(fFilterSigTime && nCount < nMnCount/3) return GetNextMasternodeInQueueForPayment(nBlockHeight, false, nCount);
 
     // Sort them low to high
     sort(vecMasternodeLastPaid.rbegin(), vecMasternodeLastPaid.rend(), CompareLastPaid());
@@ -454,7 +459,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     //  -- 1/100 payments should be a double payment on mainnet - (1/(3000/10))*2
     //  -- (chance per block * chances before IsScheduled will fire)
     int nTenthNetwork = CountEnabled()/10;
-    int nCount = 0; 
+    int nCountTenth = 0; 
     uint256 nHigh = 0;
     BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecMasternodeLastPaid){
         CMasternode* pmn = Find(s.second);
@@ -465,7 +470,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
             nHigh = n;
             pBestMasternode = pmn;
         }
-        nCount++;
+        nCountTenth++;
         if(nCount >= nTenthNetwork) break;
     }
     return pBestMasternode;
