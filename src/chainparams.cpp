@@ -12,8 +12,6 @@
 
 #include <boost/assign/list_of.hpp>
 
-using namespace std;
-
 #include "chainparamsseeds.h"
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
@@ -22,7 +20,7 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     txNew.nVersion = 1;
     txNew.vin.resize(1);
     txNew.vout.resize(1);
-    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
     txNew.vout[0].nValue = genesisReward;
     txNew.vout[0].scriptPubKey = genesisOutputScript;
 
@@ -117,7 +115,7 @@ public:
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = false;
 
-        checkpointData = (Checkpoints::CCheckpointData) {
+        checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
             ( 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d"))
             ( 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6"))
@@ -190,7 +188,7 @@ public:
         fMineBlocksOnDemand = false;
         fTestnetToBeDeprecatedFieldRPC = true;
 
-        checkpointData = (Checkpoints::CCheckpointData) {
+        checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
             ( 546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")),
             1337966069,
@@ -239,7 +237,7 @@ public:
         fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
 
-        checkpointData = (Checkpoints::CCheckpointData){
+        checkpointData = (CCheckpointData){
             boost::assign::map_list_of
             ( 0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")),
             0,
