@@ -379,8 +379,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
 }
 
-int randomizeList (int i) { return std::rand()%i;}
-
 void CDarksendPool::Reset(){
     cachedLastSuccess = 0;
     lastNewBlock = 0;
@@ -533,9 +531,9 @@ void CDarksendPool::Check()
                     txNew.vin.push_back(s);
             }
 
-            // shuffle the outputs for improved anonymity
-            std::random_shuffle ( txNew.vin.begin(),  txNew.vin.end(),  randomizeList);
-            std::random_shuffle ( txNew.vout.begin(), txNew.vout.end(), randomizeList);
+            // BIP69 https://github.com/kristovatlas/bips/blob/master/bip-0069.mediawiki
+            sort(txNew.vin.begin(), txNew.vin.end());
+            sort(txNew.vout.begin(), txNew.vout.end());
 
 
             LogPrint("darksend", "Transaction 1: %s\n", txNew.ToString());
