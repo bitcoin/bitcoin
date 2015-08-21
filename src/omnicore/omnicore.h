@@ -36,6 +36,9 @@ int const MAX_STATE_HISTORY = 50;
 
 #define TEST_ECO_PROPERTY_1 (0x80000003UL)
 
+// increment this value to force a refresh of the state (similar to --startclean)
+#define DB_VERSION 1
+
 // could probably also use: int64_t maxInt64 = std::numeric_limits<int64_t>::max();
 // maximum numeric values from the spec:
 #define MAX_INT_8_BYTES (9223372036854775807UL)
@@ -228,6 +231,9 @@ public:
     bool getPurchaseDetails(const uint256 txid, int purchaseNumber, string *buyer, string *seller, uint64_t *vout, uint64_t *propertyId, uint64_t *nValue);
     int getMPTransactionCountTotal();
     int getMPTransactionCountBlock(int block);
+
+    int getDBVersion();
+    int setDBVersion();
 
     bool exists(const uint256 &txid);
     bool getTX(const uint256 &txid, string &value);

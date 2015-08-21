@@ -90,6 +90,14 @@ CMPSPInfo::~CMPSPInfo()
     if (msc_debug_persistence) PrintToLog("CMPSPInfo closed\n");
 }
 
+void CMPSPInfo::Clear()
+{
+    // wipe database via parent class
+    CDBBase::Clear();
+    // reset "next property identifiers"
+    init();
+}
+
 void CMPSPInfo::init(uint32_t nextSPID, uint32_t nextTestSPID)
 {
     next_spid = nextSPID;
