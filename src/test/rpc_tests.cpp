@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     ar = r.get_array();
     o1 = ar[0].get_obj();
     adr = o1.findValue("address");
-    UniValue banned_until = find_value(o1, "banned_until");
+    UniValue banned_until = o1.findValue("banned_until");
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
     BOOST_CHECK_EQUAL(banned_until.get_int64(), 1607731200); // absolute time check
 
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     ar = r.get_array();
     o1 = ar[0].get_obj();
     adr = o1.findValue("address");
-    banned_until = find_value(o1, "banned_until");
+    banned_until = o1.findValue("banned_until");
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
     int64_t now = GetTime();    
     BOOST_CHECK(banned_until.get_int64() > now);

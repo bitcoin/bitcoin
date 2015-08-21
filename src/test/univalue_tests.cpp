@@ -280,6 +280,18 @@ BOOST_AUTO_TEST_CASE(univalue_object)
     objTypes["cat2"] = UniValue::VSTR;
     BOOST_CHECK(!obj.checkObject(objTypes));
 
+    UniValue obj3(UniValue::VOBJ);
+    BOOST_CHECK(obj3.pushKV("eyes", "open"));
+    BOOST_CHECK(obj3.pushKV("speed", 1337));
+    BOOST_CHECK(obj.pushKV("details", obj3));
+
+    BOOST_CHECK_EQUAL(obj.findValue("first").get_str(), "John");
+    BOOST_CHECK_EQUAL(obj.findValue("distance").get_int(), 25);
+    BOOST_CHECK_EQUAL(obj.findValue("details").findValue("eyes").get_str(), "open");
+    BOOST_CHECK_EQUAL(obj.findValue("details").findValue("speed").get_int(), 1337);
+
+    BOOST_CHECK(obj.findValue("notavailable").isNull());
+
     obj.clear();
     BOOST_CHECK(obj.empty());
     BOOST_CHECK_EQUAL(obj.size(), 0);
