@@ -67,8 +67,22 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
 
         int nDenom;
+        int nNumberOfInputs;
         CTransaction txCollateral;
-        vRecv >> nDenom >> txCollateral;
+        vRecv >> nDenom >> nNumberOfInputs >> txCollateral;
+
+        //non-denom's are incompatible
+        if((nDenom & (1 << 4))) {
+            errorID = ERR_INVALID_DENOM;
+            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
+            return;
+        }
+
+        if(nNumberOfInputs < DARKSEND_MIN_INPUTS || nNumberOfInputs > DARKSEND_MAX_INPUTS) {
+            errorID = ERR_INVALID_INPUTS_NUMBER;
+            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
+            return;
+        }
 
         CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
         if(pmn == NULL)
@@ -88,13 +102,13 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             }
         }
 
-        if(!IsCompatibleWithSession(nDenom, txCollateral, errorID))
+        if(!IsCompatibleWithSession(nDenom, nNumberOfInputs, txCollateral, errorID))
         {
-            LogPrintf("dsa -- not compatible with existing transactions! \n");
+            LogPrintf("dsa -- not compatible with existing transactions!\n");
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
             return;
         } else {
-            LogPrintf("dsa -- is compatible, please submit! \n");
+            LogPrintf("dsa -- is compatible, please submit!\n");
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_ACCEPTED, errorID);
             return;
         }
@@ -109,6 +123,15 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
         CDarksendQueue dsq;
         vRecv >> dsq;
+
+        //non-denom's are incompatible
+        if((dsq.nDenom & (1 << 4))) {
+            return;
+        }
+
+        if(dsq.nNumberOfInputs < DARKSEND_MIN_INPUTS || dsq.nNumberOfInputs > DARKSEND_MAX_INPUTS) {
+            return;
+        }
 
         CService addr;
         if(!dsq.GetAddress(addr)) return;
@@ -173,10 +196,16 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         }
 
         std::vector<CTxIn> in;
-        int64_t nAmount;
         CTransaction txCollateral;
         std::vector<CTxOut> out;
-        vRecv >> in >> nAmount >> txCollateral >> out;
+        vRecv >> in >> txCollateral >> out;
+
+        if((int)in.size() != sessionNumberOfInputs || (int)out.size() != sessionNumberOfInputs) {
+            errorID = ERR_INVALID_INPUTS_NUMBER;
+            pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
+            return;
+        }
+
 
         //do we have enough users in the current session?
         if(!IsSessionReady()){
@@ -270,7 +299,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             }
         }
 
-        if(AddEntry(in, nAmount, txCollateral, out, errorID)){
+        if(AddEntry(in, txCollateral, out, errorID)){
             pfrom->PushMessage("dssu", sessionID, GetState(), GetEntriesCount(), MASTERNODE_ACCEPTED, errorID);
             Check();
 
@@ -886,6 +915,7 @@ void CDarksendPool::CheckForCompleteQueue(){
 
         CDarksendQueue dsq;
         dsq.nDenom = sessionDenom;
+        dsq.nNumberOfInputs = sessionNumberOfInputs;
         dsq.vin = activeMasternode.vin;
         dsq.time = GetTime();
         dsq.ready = true;
@@ -992,11 +1022,11 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
 //
 // Add a clients transaction to the pool
 //
-bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, int& errorID){
+bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, int& errorID){
     if (!fMasterNode) return false;
 
     BOOST_FOREACH(CTxIn in, newInput) {
-        if (in.prevout.IsNull() || nAmount < 0) {
+        if (in.prevout.IsNull()) {
             LogPrint("darksend", "CDarksendPool::AddEntry - input not valid!\n");
             errorID = ERR_INVALID_INPUT;
             sessionUsers--;
@@ -1033,7 +1063,7 @@ bool CDarksendPool::AddEntry(const std::vector<CTxIn>& newInput, const int64_t& 
     }
 
     CDarkSendEntry v;
-    v.Add(newInput, nAmount, txCollateral, newOutput);
+    v.Add(newInput, txCollateral, newOutput);
     entries.push_back(v);
 
     LogPrint("darksend", "CDarksendPool::AddEntry -- adding %s\n", newInput[0].ToString());
@@ -1094,7 +1124,7 @@ bool CDarksendPool::SignaturesComplete(){
 // Execute a Darksend denomination via a Masternode.
 // This is only ran from clients
 //
-void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount){
+void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout){
 
     if(fMasterNode) {
         LogPrintf("CDarksendPool::SendDarksendDenominate() - Darksend from a Masternode is not supported currently.\n");
@@ -1141,13 +1171,10 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
     //check it against the memory pool to make sure it's valid
     {
-        int64_t nValueOut = 0;
-
         CValidationState state;
         CMutableTransaction tx;
 
         BOOST_FOREACH(const CTxOut& o, vout){
-            nValueOut += o.nValue;
             tx.vout.push_back(o);
         }
 
@@ -1174,10 +1201,10 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
 
     // store our entry for later use
     CDarkSendEntry e;
-    e.Add(vin, amount, txCollateral, vout);
+    e.Add(vin, txCollateral, vout);
     entries.push_back(e);
 
-    RelayIn(entries[0].sev, entries[0].amount, txCollateral, entries[0].vout);
+    RelayIn(entries[0].sev, txCollateral, entries[0].vout);
     Check();
 }
 
@@ -1525,6 +1552,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 //non-denom's are incompatible
                 if((dsq.nDenom & (1 << 4))) continue;
 
+                if(dsq.nNumberOfInputs < DARKSEND_MIN_INPUTS || dsq.nNumberOfInputs > DARKSEND_MAX_INPUTS) continue;
+
                 bool fUsed = false;
                 //don't reuse Masternodes
                 BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed){
@@ -1538,8 +1567,13 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 std::vector<CTxIn> vTempCoins;
                 std::vector<COutput> vTempCoins2;
                 // Try to match their denominations if possible
-                if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, nBalanceNeedsAnonymized, vTempCoins, vTempCoins2, nValueIn, 0, nDarksendRounds)){
+                if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, dsq.nNumberOfInputs, vTempCoins, vTempCoins2, 0, nDarksendRounds)){
                     LogPrintf("DoAutomaticDenominating - Couldn't match denominations %d\n", dsq.nDenom);
+                    continue;
+                }
+
+                if ((int)vTempCoins.size() < dsq.nNumberOfInputs) {
+                    LogPrintf("DoAutomaticDenominating - Not enough denominations %d to match queue - %d %d\n", dsq.nDenom, (int)vTempCoins.size(), dsq.nNumberOfInputs);
                     continue;
                 }
 
@@ -1556,9 +1590,10 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                     pSubmittedToMasternode = pmn;
                     vecMasternodesUsed.push_back(dsq.vin);
                     sessionDenom = dsq.nDenom;
+                    sessionNumberOfInputs = dsq.nNumberOfInputs;
 
-                    pnode->PushMessage("dsa", sessionDenom, txCollateral);
-                    LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for %d - %s\n", sessionDenom, pnode->addr.ToString());
+                    pnode->PushMessage("dsa", sessionDenom, sessionNumberOfInputs, txCollateral);
+                    LogPrintf("DoAutomaticDenominating --- connected (from queue), sending dsa for essionNumberOfInputs %d sessionDenom %d - %s\n", sessionNumberOfInputs, sessionDenom, pnode->addr.ToString());
                     strAutoDenomResult = _("Mixing in progress...");
                     dsq.time = 0; //remove node
                     return true;
@@ -1603,8 +1638,23 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 while(sessionDenom == 0)
                     sessionDenom = GetDenominationsByAmounts(vecAmounts);
 
-                pnode->PushMessage("dsa", sessionDenom, txCollateral);
-                LogPrintf("DoAutomaticDenominating --- connected, sending dsa for %d\n", sessionDenom);
+                std::vector<CTxIn> vTempCoins;
+                std::vector<COutput> vTempCoins2;
+                if (!pwalletMain->SelectCoinsByDenominations(sessionDenom, rand() % DARKSEND_MAX_INPUTS + 1, vTempCoins, vTempCoins2, 0, nDarksendRounds)){
+                    // should never really happen
+                    LogPrintf("DoAutomaticDenominating - Couldn't match denominations %d\n", sessionDenom);
+                    continue;
+                }
+
+                if ((int)vTempCoins.size() < DARKSEND_MIN_INPUTS) {
+                    LogPrintf("DoAutomaticDenominating - Not enough denominations to send %d\n", sessionDenom);
+                    continue;
+                }
+
+                sessionNumberOfInputs = std::min(DARKSEND_MAX_INPUTS, (int)vTempCoins.size());
+
+                pnode->PushMessage("dsa", sessionDenom, sessionNumberOfInputs, txCollateral);
+                LogPrintf("DoAutomaticDenominating --- connected, sending dsa for sessionNumberOfInputs %d sessionDenom %d\n", sessionNumberOfInputs, sessionDenom);
                 strAutoDenomResult = _("Mixing in progress...");
                 return true;
             } else {
@@ -1818,16 +1868,18 @@ bool CDarksendPool::IsCompatibleWithEntries(std::vector<CTxOut>& vout)
             LogPrintf(" vout 2 - %s\n", o2.ToString());
 */
         if(GetDenominations(vout) != GetDenominations(v.vout)) return false;
+        if(vout.size() != v.vout.size()) return false;
     }
 
     return true;
 }
 
-bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txCollateral, int& errorID)
+bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, int nNumberOfInputs, CTransaction txCollateral, int& errorID)
 {
     if(nDenom == 0) return false;
 
-    LogPrintf("CDarksendPool::IsCompatibleWithSession - sessionDenom %d sessionUsers %d\n", sessionDenom, sessionUsers);
+    LogPrintf("CDarksendPool::IsCompatibleWithSession - sessionDenom %d sessionUsers %d nDenom %d nNumberOfInputs %d sessionNumberOfInputs %d\n",
+              sessionDenom, sessionUsers, nDenom, nNumberOfInputs, sessionNumberOfInputs);
 
     if (!unitTest && !IsCollateralValid(txCollateral)){
         LogPrint("darksend", "CDarksendPool::IsCompatibleWithSession - collateral not valid!\n");
@@ -1841,12 +1893,14 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
         sessionID = 1 + (rand() % 999999);
         sessionDenom = nDenom;
         sessionUsers++;
+        sessionNumberOfInputs = nNumberOfInputs;
         lastTimeChanged = GetTimeMillis();
 
         if(!unitTest){
             //broadcast that I'm accepting entries, only if it's the first entry through
             CDarksendQueue dsq;
             dsq.nDenom = nDenom;
+            dsq.nNumberOfInputs = nNumberOfInputs;
             dsq.vin = activeMasternode.vin;
             dsq.time = GetTime();
             dsq.Sign();
@@ -1867,6 +1921,11 @@ bool CDarksendPool::IsCompatibleWithSession(int64_t nDenom, CTransaction txColla
 
     if(nDenom != sessionDenom) {
         errorID = ERR_DENOM;
+        return false;
+    }
+
+    if(sessionNumberOfInputs != nNumberOfInputs) {
+        errorID = ERR_INVALID_INPUTS_NUMBER;
         return false;
     }
 
@@ -2016,7 +2075,9 @@ std::string CDarksendPool::GetMessageByID(int messageID) {
     case ERR_EXISTING_TX: return _("Not compatible with existing transactions.");
     case ERR_FEES: return _("Transaction fees are too high.");
     case ERR_INVALID_COLLATERAL: return _("Collateral not valid.");
+    case ERR_INVALID_DENOM: return _("Invalid denominations.");
     case ERR_INVALID_INPUT: return _("Input is not valid.");
+    case ERR_INVALID_INPUTS_NUMBER: return _("Number of inputs is not valid.");
     case ERR_INVALID_SCRIPT: return _("Invalid script detected.");
     case ERR_INVALID_TX: return _("Transaction not valid.");
     case ERR_MAXIMUM: return _("Value more than Darksend pool maximum allows.");
@@ -2171,7 +2232,7 @@ void CDarksendPool::RelayFinalTransaction(const int sessionID, const CTransactio
     }
 }
 
-void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout)
+void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout)
 {
     if(!pSubmittedToMasternode) return;
 
@@ -2187,7 +2248,7 @@ void CDarksendPool::RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmo
     CNode* pnode = FindNode(pSubmittedToMasternode->addr);
     if(pnode != NULL) {
         LogPrintf("RelayIn - found master, relaying message - %s \n", pnode->addr.ToString());
-        pnode->PushMessage("dsi", vin2, nAmount, txCollateral, vout2);
+        pnode->PushMessage("dsi", vin2, txCollateral, vout2);
     }
 }
 
