@@ -356,7 +356,6 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (data retrieval)",         "omni_getallbalancesforid",        &omni_getallbalancesforid,        false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getbalance",                 &omni_getbalance,                 false,      true,       false },
     { "omni layer (data retrieval)",         "omni_gettransaction",             &omni_gettransaction,             false,      true,       false },
-    { "omni layer (data retrieval)",         "omni_listtransactions",           &omni_listtransactions,           false,      true,       true },
     { "omni layer (data retrieval)",         "omni_getproperty",                &omni_getproperty,                false,      true,       false },
     { "omni layer (data retrieval)",         "omni_listproperties",             &omni_listproperties,             false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getcrowdsale",               &omni_getcrowdsale,               false,      true,       false },
@@ -371,6 +370,8 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (data retrieval)",         "omni_gettradehistoryforaddress",  &omni_gettradehistoryforaddress,  false,      true,       false },
     { "omni layer (data retrieval)",         "omni_gettradehistoryforpair",     &omni_gettradehistoryforpair,     false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getcurrentconsensushash",    &omni_getcurrentconsensushash,    false,      true,       false },
+#ifdef ENABLE_WALLET
+    { "omni layer (data retrieval)",         "omni_listtransactions",           &omni_listtransactions,           false,      true,       true },
 
     /* Omni Core configuration calls */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
@@ -397,32 +398,35 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Omni Core hidden calls - development usage (not shown in help) */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
-    { "hidden",                              "mscrpc",                          &mscrpc,                          true,       true,       false },
     { "hidden",                              "omni_sendactivation",             &omni_sendactivation,             false,      true,       true },
     { "hidden",                              "omni_sendalert",                  &omni_sendalert,                  true,       true,       true },
+#endif
+    { "hidden",                              "mscrpc",                          &mscrpc,                          true,       true,       false },
 
     /* Omni Core hidden calls - aliased calls for backwards compatibiltiy - to be depreciated (not shown in help) */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
-    { "hidden",                              "trade_MP",                        &trade_MP,                        false,      true,       true }, // depreciated - to be removed? we haven't released with this call
     { "hidden",                              "getinfo_MP",                      &omni_getinfo,                    true,       true,       false },
-    { "hidden",                              "getallbalancesforid_MP",          &omni_getallbalancesforid,        false,      true,       false },
     { "hidden",                              "getbalance_MP",                   &omni_getbalance,                 false,      true,       false },
-    { "hidden",                              "send_MP",                         &omni_send,                       false,      true,       true },
-    { "hidden",                              "gettransaction_MP",               &omni_gettransaction,             false,      true,       false },
-    { "hidden",                              "listtransactions_MP",             &omni_listtransactions,           false,      true,       true },
+    { "hidden",                              "getallbalancesforaddress_MP",     &omni_getallbalancesforaddress,   false,      true,       false },
+    { "hidden",                              "getallbalancesforid_MP",          &omni_getallbalancesforid,        false,      true,       false },
     { "hidden",                              "getproperty_MP",                  &omni_getproperty,                false,      true,       false },
     { "hidden",                              "listproperties_MP",               &omni_listproperties,             false,      true,       false },
     { "hidden",                              "getcrowdsale_MP",                 &omni_getcrowdsale,               false,      true,       false },
     { "hidden",                              "getgrants_MP",                    &omni_getgrants,                  false,      true,       false },
     { "hidden",                              "getactivedexsells_MP",            &omni_getactivedexsells,          false,      true,       false },
     { "hidden",                              "getactivecrowdsales_MP",          &omni_getactivecrowdsales,        false,      true,       false },
-    { "hidden",                              "getorderbook_MP",                 &omni_getorderbook,               false,      true,       false },
-    { "hidden",                              "sendtoowners_MP",                 &omni_sendsto,                    false,      true,       true },
-    { "hidden",                              "sendrawtx_MP",                    &omni_sendrawtx,                  false,      true,       true },
     { "hidden",                              "getsto_MP",                       &omni_getsto,                     false,      true,       false },
+    { "hidden",                              "getorderbook_MP",                 &omni_getorderbook,               false,      true,       false },
     { "hidden",                              "gettrade_MP",                     &omni_gettrade,                   false,      true,       false },
+    { "hidden",                              "gettransaction_MP",               &omni_gettransaction,             false,      true,       false },
     { "hidden",                              "listblocktransactions_MP",        &omni_listblocktransactions,      false,      true,       false },
-    { "hidden",                              "getallbalancesforaddress_MP",     &omni_getallbalancesforaddress,   false,      true,       false },
+#ifdef ENABLE_WALLET
+    { "hidden",                              "listtransactions_MP",             &omni_listtransactions,           false,      true,       true },
+    { "hidden",                              "sendrawtx_MP",                    &omni_sendrawtx,                  false,      true,       true },
+    { "hidden",                              "send_MP",                         &omni_send,                       false,      true,       true },
+    { "hidden",                              "sendtoowners_MP",                 &omni_sendsto,                    false,      true,       true },
+    { "hidden",                              "trade_MP",                        &trade_MP,                        false,      true,       true }, // depreciated - to be removed? we haven't released with this call
+#endif
 };
 
 CRPCTable::CRPCTable()
