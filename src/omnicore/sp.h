@@ -140,6 +140,9 @@ public:
     CMPSPInfo(const boost::filesystem::path& path, bool fWipe);
     virtual ~CMPSPInfo();
 
+    /** Extends clearing of CDBBase. */
+    void Clear();
+
     void init(uint32_t nextSPID = 0x3UL, uint32_t nextTestSPID = TEST_ECO_PROPERTY_1);
 
     uint32_t peekNextSPID(uint8_t ecosystem) const;
