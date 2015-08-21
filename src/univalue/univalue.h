@@ -154,7 +154,8 @@ public:
     bool push_back(std::pair<std::string,UniValue> pear) {
         return pushKV(pear.first, pear.second);
     }
-    friend const UniValue& find_value( const UniValue& obj, const std::string& name);
+    //!return a value if key was found (only supports VOBJ types)
+    const UniValue findValue(const std::string& key) const;
 };
 
 //
@@ -242,7 +243,5 @@ extern enum jtokentype getJsonToken(std::string& tokenVal,
 extern const char *uvTypeName(UniValue::VType t);
 
 extern const UniValue NullUniValue;
-
-const UniValue& find_value( const UniValue& obj, const std::string& name);
 
 #endif // BITCOIN_UNIVALUE_UNIVALUE_H
