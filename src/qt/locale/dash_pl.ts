@@ -459,6 +459,10 @@
         <translation><numerusform>Pobrano %n blok z historią transakcji.</numerusform><numerusform>Przetworzony przez %n bloków historii transakcji.</numerusform><numerusform>Pobranych zostało %n bloków z historią transakcji.</numerusform></translation>
     </message>
     <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Synchronizuję dodatkowe dane: %p%</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Pokaż wiadomość pomocy Dash Core aby otrzymać listę z dostępnymi opcjami linii komend.</translation>
     </message>
@@ -482,6 +486,10 @@
         <source>Tabs toolbar</source>
         <translation>Pasek zakładek</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Dash network</source>
+        <translation><numerusform>%n aktywne połączenie do sieci Dash</numerusform><numerusform>%n aktywne połączenia do sieci Dash</numerusform><numerusform>%n aktywne połączenia do sieci Dash</numerusform></translation>
+    </message>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Synchronizacja z siecią...</translation>
@@ -502,9 +510,25 @@
         <source>Up to date</source>
         <translation>Aktualny</translation>
     </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n godzina</numerusform><numerusform>%n godzin</numerusform><numerusform>%n godziny</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n dzień</numerusform><numerusform>%n dni</numerusform><numerusform>%n dni</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n tydzień</numerusform><numerusform>%n tygodni</numerusform><numerusform>%n tygodnie</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 i %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n rok</numerusform><numerusform>%n lat</numerusform><numerusform>%n lata</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -569,6 +593,10 @@ Adres: %4
 </context>
 <context>
     <name>ClientModel</name>
+    <message>
+        <source>Total: %1 (DS compatible: %2 / Enabled: %3)</source>
+        <translation>Całość: %1 (zgodne z DS: %2 / włączone: %3)</translation>
+    </message>
     <message>
         <source>Network Alert</source>
         <translation>Sieć Alert</translation>
@@ -1028,6 +1056,10 @@ Adres: %4
         <translation>Ponieważ uruchomiłeś ten program po raz pierwszy, możesz wybrać gdzie Dash Core będzie przechowywał dane.</translation>
     </message>
     <message>
+        <source>Dash Core will download and store a copy of the Dash block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Dash Core ściągnie i przechowa  kopię blockchain na twoim dysku. Co najmniej %1GB danych zostanie zapisanych w tym katalogu, a wraz z upływem czasu blockchain będzie stopniowo wymagał coraz więcej miejsca. Twój portfel również zostanie zapisany w tym katalogu.</translation>
+    </message>
+    <message>
         <source>Use the default data directory</source>
         <translation>Użyj domyślnego folderu danych</translation>
     </message>
@@ -1466,6 +1498,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>No inputs detected</source>
         <translation>Nie wykryto wejść</translation>
     </message>
+    <message numerus="yes">
+        <source>%n Rounds</source>
+        <translation><numerusform>%n Runda</numerusform><numerusform>%n Rundy</numerusform><numerusform>%n Rundy</numerusform></translation>
+    </message>
     <message>
         <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
         <translation>Nie ma wystarczającej ilośći środków aby moć dokonać anonimizacji &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;zamiast oryginalnej sumy &lt;spam style='color:red;'&gt;%2&lt;/spam&gt; zostanie zanonimizowanych.</translation>
@@ -1642,6 +1678,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Wpisz adres Dash (np. %1)</translation>
     </message>
     <message>
+        <source>%1 d</source>
+        <translation>%1 dzień</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 godz.</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 min.</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 sec.</translation>
+    </message>
+    <message>
         <source>NETWORK</source>
         <translation>SIEĆ</translation>
     </message>
@@ -1657,7 +1709,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>N/A</source>
         <translation>Nie ważne</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 milisec.</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1976,7 +2032,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>R&amp;euse an existing receiving address (not recommended)</source>
-        <translation>O&amp;drzuć istniejący adres odbiorczy (nie zalecane)</translation>
+        <translation>Użyj istniejący adres odbiorczy (nie zalecane)</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Dash network.</source>
@@ -2360,6 +2416,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>anonimowe środki</translation>
     </message>
     <message>
+        <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
+        <translation>(darksend wymaga aby kwota ta została zaokrąglona do najbliższego %1).</translation>
+    </message>
+    <message>
         <source>any available funds (not recommended)</source>
         <translation>jakiekolwiek dostępne środki (niezalecane)</translation>
     </message>
@@ -2722,6 +2782,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1/offline (zweryfikowane przez instantx)</translation>
     </message>
     <message>
+        <source>%1/confirmed (verified via instantx)</source>
+        <translation>%1/potwierdzony (zweryfikowane przez instantx)</translation>
+    </message>
+    <message>
+        <source>%1 confirmations (verified via instantx)</source>
+        <translation>%1 potwierdzeń (zweryfikowane przez instantx)</translation>
+    </message>
+    <message>
         <source>%1/offline</source>
         <translation>%1/offline</translation>
     </message>
@@ -2902,6 +2970,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Address</source>
         <translation>Adres</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Otwarty na %n kolejny blok</numerusform><numerusform>Otwarty na %n kolejne bloki</numerusform><numerusform>Otwarty na %n kolejne bloki</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3322,10 +3394,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nie znaleziono wystarczającej ilości nie zdenominowanych środków Darksend dla tej transakcji, które nie równają się 1000 DASH</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Nie znaleziono wystarczającej ilości zdenominowanych środków Darksend dla tej transakcji.</translation>
-    </message>
-    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Uwaga: -paytxfee jest bardzo wysoka! To jest opłata którą będziesz musiał uiścić jeśli dokonasz transakcji.</translation>
     </message>
@@ -3454,6 +3522,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Błąd podczas inicjowania bazy dancyh bloku</translation>
     </message>
     <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation>Błąd podczas inicjowania środowiska bazy danych portfela %s!</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>Błąd wczytywania bloku bazy danych</translation>
     </message>
@@ -3542,12 +3614,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Usuń wszystkie transakcje portfela i odzyskaj tylko te części blockchainu - zeskanuj powonie na starcie.</translation>
     </message>
     <message>
+        <source>Disable all Dash specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>Wyłącz wszystkie dodatkowe funckje Dash (Masternody, Darksend, InstanX, Budżetowanie) (0-1, domyślnie: %u)</translation>
+    </message>
+    <message>
         <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
         <translation>Rozpowszechniane na licencji MIT. Jeśli chcesz się dowiedzieć więcej otwórz towarzyszący plik o nzwie COPYING lub odwiedź &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Enable instantx, show confirmations for locked transactions (bool, default: %s)</source>
         <translation>Włącz instantx, pokaż potwierdzenia dla zamkniętych transakcji (bool, domyślnie: %s)</translation>
+    </message>
+    <message>
+        <source>Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)</source>
+        <translation>Włącz możliwość automatyzacji Darksend dla środków zgromadzonych w  tym portfelu (0-1, domyślnie: %u)</translation>
     </message>
     <message>
         <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
@@ -3606,6 +3686,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Informacje na temat debugowania danych wyjściowych (domyślnie: %u, podanie &lt;category&gt; jest opcjonalne)</translation>
     </message>
     <message>
+        <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
+        <translation>Dostarcz Darksend płynności przez rzadkie ale ciągłe mieszanie monet (0-100, domyślnie: %u, 1=bardzo często, wysokie opłaty, 100=bardzo rzadko, małe opłaty)</translation>
+    </message>
+    <message>
         <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
         <translation>Wymagaj wysokiego priorytetu aby retransmitować darmowe transakcje lub te o niskich opłatach (domyślnie: %u)</translation>
     </message>
@@ -3647,6 +3731,10 @@ Twoje hasło NIE MOŻE być takie samo jak twój login.
 Jeśli plik ten nie istnieje, stwórz go z uprawnieniami do odczytu tylko przez właściciela.
 Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać ci znać w razie wystąpienia jekiegoś problemu, na przykład: alertnotify=echo %%s I -s "Dash Alert" admin@foo.com
 </translation>
+    </message>
+    <message>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>Niemożliwe jest zlokalizowanie wystarczającej ilości środków dla tej transakcji, które nie są równe 1000 DASH.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -3951,6 +4039,10 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Klucz prywatny serwera (domyślnie: %s)</translation>
     </message>
     <message>
+        <source>Set external address:port to get to this masternode (example: %s)</source>
+        <translation>Ustaw zewnętrzny address:port aby połączyć się z tym masternodem (na przykład: %s)</translation>
+    </message>
+    <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Ustaw ilość kluczy w key pool na &lt;n&gt; (domyślny: %u)</translation>
     </message>
@@ -4005,6 +4097,34 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Przesłano do masterdnoda, czekaj na swoją kolej %s</translation>
+    </message>
+    <message>
+        <source>Synchronization doesn't yet started</source>
+        <translation>Synchronizacja jeszcze się nie zaczęła</translation>
+    </message>
+    <message>
+        <source>Synchronization failed</source>
+        <translation>Synchronizacja nie powiodła się</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>Synchronizacja zakończona</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>Synchronizuję budżet...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synchronizuję zwycięskie masternody...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synchronizuję masternody...</translation>
+    </message>
+    <message>
+        <source>Synchronizing sporks...</source>
+        <translation>Synchronizuję sporki...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4109,18 +4229,6 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <source>Loading block index...</source>
         <translation>Wczytuje indeks bloków</translation>
-    </message>
-    <message>
-        <source>Loading budget cache...</source>
-        <translation>Ładuje pamięć podręczną budżetu...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Ładuje pamięć podręczną masternoda...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Ładuję pamięć podręczną płatności masternodów...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>
