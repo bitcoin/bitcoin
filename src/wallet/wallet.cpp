@@ -771,6 +771,25 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
     return false;
 }
 
+void CWallet::TransactionConflicted(const uint256& txid)
+{
+    // When a transaction becomes conflicted, we simply have to mark it dirty
+    // so that any cached balances get recalculated.
+    // Note that it is critical that main.cpp holds the cs_main lock for all
+    // TransactionConflicted and all SyncTransaction calls for a single
+    // connect event, otherwise a poorly-timed getbalance call might break
+    // the balance caching logic
+    LOCK2(cs_main, cs_wallet);
+    if (mapWallet.count(txid)) {
+        mapWallet[txid].MarkDirty();
+        BOOST_FOREACH(const CTxIn& txin, mapWallet[txid].vin)
+        {
+            if (mapWallet.count(txin.prevout.hash))
+                mapWallet[txin.prevout.hash].MarkDirty();
+        }
+    }
+}
+
 void CWallet::SyncTransaction(const CTransaction& tx, const CBlock* pblock)
 {
     LOCK2(cs_main, cs_wallet);

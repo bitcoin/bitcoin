@@ -305,7 +305,6 @@ public:
             mapValue["fromaccount"] = strFromAccount;
 
             WriteOrderPos(nOrderPos, mapValue);
-
             if (nTimeSmart)
                 mapValue["timesmart"] = strprintf("%u", nTimeSmart);
         }
@@ -616,6 +615,7 @@ public:
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletDB* pwalletdb);
     void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+    void TransactionConflicted(const uint256& txid);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();
