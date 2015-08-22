@@ -1525,12 +1525,15 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 //non-denom's are incompatible
                 if((dsq.nDenom & (1 << 4))) continue;
 
+                bool fUsed = false;
                 //don't reuse Masternodes
                 BOOST_FOREACH(CTxIn usedVin, vecMasternodesUsed){
                     if(dsq.vin == usedVin) {
-                        continue;
+                        fUsed = true;
+                        break;
                     }
                 }
+                if(fUsed) continue;
 
                 std::vector<CTxIn> vTempCoins;
                 std::vector<COutput> vTempCoins2;
@@ -1563,7 +1566,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                     LogPrintf("DoAutomaticDenominating --- error connecting \n");
                     strAutoDenomResult = _("Error connecting to Masternode.");
                     dsq.time = 0; //remove node
-                    return DoAutomaticDenominating();
+                    continue;
                 }
             }
         }
@@ -1605,6 +1608,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 strAutoDenomResult = _("Mixing in progress...");
                 return true;
             } else {
+                vecMasternodesUsed.push_back(pmn->vin); // postpone MN we wasn't able to connect to
                 i++;
                 continue;
             }
