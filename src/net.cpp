@@ -846,6 +846,8 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
         }
     }
 
+    if (vEvictionCandidates.empty()) return false;
+
     // Protect connections with certain characteristics
 
     // Deterministically select 4 peers to protect by netgroup.
@@ -854,18 +856,21 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), comparerNetGroupKeyed);
     vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(4, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
 
+    if (vEvictionCandidates.empty()) return false;
+
     // Protect the 8 nodes with the best ping times.
     // An attacker cannot manipulate this metric without physically moving nodes closer to the target.
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeMinPingTime);
     vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(8, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
 
+    if (vEvictionCandidates.empty()) return false;
+
     // Protect the 64 nodes which have been connected the longest.
     // This replicates the existing implicit behavior.
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
-    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(static_cast<int>(vEvictionCandidates.size() / 2), static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+    vEvictionCandidates.erase(vEvictionCandidates.end() - static_cast<int>(vEvictionCandidates.size() / 2), vEvictionCandidates.end());
 
-    if (vEvictionCandidates.empty())
-        return false;
+    if (vEvictionCandidates.empty()) return false;
 
     // Identify CNetAddr with the most connections
     CNetAddr naMostConnections;
