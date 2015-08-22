@@ -862,7 +862,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     // Protect the 64 nodes which have been connected the longest.
     // This replicates the existing implicit behavior.
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
-    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(64, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(static_cast<int>(vEvictionCandidates.size() / 2), static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
 
     if (vEvictionCandidates.empty())
         return false;
