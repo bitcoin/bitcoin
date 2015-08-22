@@ -295,12 +295,12 @@
     <name>BitcoinGUI</name>
     <message>
         <location filename="../bitcoingui.cpp" line="+107"/>
-        <location line="+759"/>
+        <location line="+752"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
     </message>
     <message>
-        <location line="-750"/>
+        <location line="-743"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
@@ -581,7 +581,12 @@
         <translation><numerusform>Processed %n block of transaction history.</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform></translation>
     </message>
     <message>
-        <location line="-376"/>
+        <location line="+32"/>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Synchronizing additional data: %p%</translation>
+    </message>
+    <message>
+        <location line="-408"/>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Show the Dash Core help message to get a list with possible Dash command-line options</translation>
     </message>
@@ -636,32 +641,12 @@
         <translation>No block source available...</translation>
     </message>
     <message>
-        <location line="+16"/>
+        <location line="+17"/>
         <source>Up to date</source>
         <translation>Up to date</translation>
     </message>
-    <message>
-        <location line="+19"/>
-        <source>Synchronizing sporks...</source>
-        <translation>Synchronizing sporks...</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Synchronizing masternodes...</source>
-        <translation>Synchronizing masternodes...</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Synchronizing masternode winners...</translation>
-    </message>
-    <message>
-        <location line="+3"/>
-        <source>Synchronizing budgets...</source>
-        <translation>Synchronizing budgets...</translation>
-    </message>
     <message numerus="yes">
-        <location line="+23"/>
+        <location line="+43"/>
         <source>%n hour(s)</source>
         <translation><numerusform>%n hour</numerusform><numerusform>%n hours</numerusform></translation>
     </message>
@@ -4349,12 +4334,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.</translation>
     </message>
     <message>
-        <location line="+3"/>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Unable to locate enough Darksend non-denominated funds for this transaction.</translation>
-    </message>
-    <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</translation>
     </message>
@@ -4584,7 +4564,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>If &lt;category&gt; is not supplied, output all debugging information.</translation>
     </message>
     <message>
-        <location line="-267"/>
+        <location line="-268"/>
         <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
         <translation>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</translation>
     </message>
@@ -4774,7 +4754,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
 </translation>
     </message>
     <message>
-        <location line="+22"/>
+        <location line="+20"/>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</translation>
     </message>
@@ -5056,7 +5041,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+5"/>
         <source>Lock is already in place.</source>
         <translation>Lock is already in place.</translation>
     </message>
@@ -5226,6 +5211,41 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Submitted to masternode, waiting in queue %s</translation>
     </message>
     <message>
+        <location line="+1"/>
+        <source>Synchronization doesn&apos;t yet started</source>
+        <translation>Synchronization doesn&apos;t yet started</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Synchronization failed</source>
+        <translation>Synchronization failed</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Synchronization finished</source>
+        <translation>Synchronization finished</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Synchronizing budgets...</source>
+        <translation>Synchronizing budgets...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synchronizing masternode winners...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synchronizing masternodes...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Synchronizing sporks...</source>
+        <translation>Synchronizing sporks...</translation>
+    </message>
+    <message>
         <location line="+4"/>
         <source>This is not a Masternode.</source>
         <translation>This is not a Masternode.</translation>
@@ -5271,7 +5291,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Will retry...</translation>
     </message>
     <message>
-        <location line="-129"/>
+        <location line="-133"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Invalid masternodeprivkey. Please see documenation.</translation>
     </message>
@@ -5354,21 +5374,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <location line="+1"/>
         <source>Loading block index...</source>
         <translation>Loading block index...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Loading budget cache...</source>
-        <translation>Loading budget cache...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Loading masternode cache...</source>
-        <translation>Loading masternode cache...</translation>
-    </message>
-    <message>
-        <location line="+1"/>
-        <source>Loading masternode payment cache...</source>
-        <translation>Loading masternode payment cache...</translation>
     </message>
     <message>
         <location line="+1"/>
@@ -5561,7 +5566,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Specify your own public address</translation>
     </message>
     <message>
-        <location line="+6"/>
+        <location line="+13"/>
         <source>This help message</source>
         <translation>This help message</translation>
     </message>

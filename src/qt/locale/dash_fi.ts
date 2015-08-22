@@ -459,6 +459,10 @@
         <translation><numerusform>Käsitelty %n lohko tapahtumahistoriasta.</numerusform><numerusform>Käsitelty %n lohkoa tapahtumahistoriasta.</numerusform></translation>
     </message>
     <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Synkronoidaan lisätietoja: %p%</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Näytä Dash Core ohjelista komentorivin valinnoista</translation>
     </message>
@@ -505,22 +509,6 @@
     <message>
         <source>Up to date</source>
         <translation>Tapahtumahistoria on ajan tasalla</translation>
-    </message>
-    <message>
-        <source>Synchronizing sporks...</source>
-        <translation>Synkronoidaan sporkit...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Synkronoidaan masternodet...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Synkronoidaan masternode voittajat...</translation>
-    </message>
-    <message>
-        <source>Synchronizing budgets...</source>
-        <translation>Synkronoidaan budjetit...</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -3411,10 +3399,6 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <translation>Ei tarpeeksi Darksend ei-anonymisoituja varoja tälle siirtotapahtumalle, joka ei ole 1000 DASH.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Ei tarpeeksi Darksend ei-anonymisoituja varoja tälle siirtotapahtumalle.</translation>
-    </message>
-    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Varoitus: Siirtomaksu on asetettu erittäin korkeaksi! Tämä on siirtomaksu jonka tulet maksamaan kun lähetät siirron.</translation>
     </message>
@@ -3730,7 +3714,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin &lt;https://www.openssl.org/&gt; sekä Eric Youngin kehittämän salausohjelmiston ja Thomas Bernardin kehittämän UPnP ohjelmiston.
 
-Käännös päivitetty: 12.8.2015 by AjM.</translation>
+Käännös päivitetty: 22.8.2015 by AjM.</translation>
     </message>
     <message>
         <source>To use dashd, or the -server option to dash-qt, you must set an rpcpassword in the configuration file:
@@ -3755,6 +3739,10 @@ Jos tiedostoa ei ole, luo se vain omistajan-luku-oikeudella.
 Suositellaan asetettavaksi alertnotify jotta saat tietoa ongelmista,
 esimerkiksi: alertnotify=echo %%s | mail -s "Dash Hälytys" admin@foo.com
 </translation>
+    </message>
+    <message>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>Ei tarpeeksi varoja tälle siirtotapahtumalle, joka ei ole 1000 DASH.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -4119,6 +4107,34 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Dash Hälytys" admin@foo.com
         <translation>Esitetty masternodelle, odotetaan jonossa %s</translation>
     </message>
     <message>
+        <source>Synchronization doesn't yet started</source>
+        <translation>Synkronointia ei ole vielä aloitettu</translation>
+    </message>
+    <message>
+        <source>Synchronization failed</source>
+        <translation>Synkronointi epäonnistui</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>Synkronointi valmis</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>Synkronoidaan budjetit...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synkronoidaan masternode voittajat...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synkronoidaan masternodet...</translation>
+    </message>
+    <message>
+        <source>Synchronizing sporks...</source>
+        <translation>Synkronoidaan sporkit...</translation>
+    </message>
+    <message>
         <source>This is not a Masternode.</source>
         <translation>Tämä ei ole Masternode.</translation>
     </message>
@@ -4221,18 +4237,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Dash Hälytys" admin@foo.com
     <message>
         <source>Loading block index...</source>
         <translation>Ladataan lohkoindeksiä...</translation>
-    </message>
-    <message>
-        <source>Loading budget cache...</source>
-        <translation>Ladataan budjettivälimuistia...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Ladataan masternodevälimuistia...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Ladataan masternode maksuvälimuistia...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>
