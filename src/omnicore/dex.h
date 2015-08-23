@@ -133,8 +133,8 @@ public:
     // TODO: it may not intuitive that this is *not* the hash of the accept order
     uint256 getHash() const { return offer_txid; }
 
-    int64_t getOfferAmountOriginal() { return offer_amount_original; }
-    int64_t getBTCDesiredOriginal() { return BTC_desired_original; }
+    int64_t getOfferAmountOriginal() const { return offer_amount_original; }
+    int64_t getBTCDesiredOriginal() const { return BTC_desired_original; }
 
     uint8_t getBlockTimeLimit() const { return blocktimelimit; }
     uint32_t getProperty() const { return property; }
@@ -222,6 +222,9 @@ typedef std::map<std::string, CMPAccept> AcceptMap;
 
 extern OfferMap my_offers;
 extern AcceptMap my_accepts;
+
+/** Determines the amount of bitcoins desired, in case it needs to be recalculated. TODO: don't expose! */
+int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountAvailable);
 
 bool DEx_offerExists(const std::string& addressSeller, uint32_t propertyId);
 CMPOffer* DEx_getOffer(const std::string& addressSeller, uint32_t propertyId);

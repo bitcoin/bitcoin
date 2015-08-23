@@ -110,11 +110,17 @@ static int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t am
 }
 
 /**
- * Determines adjusted amount desired, in case it needs to be recalculated.
- * @return The new number of tokens
+ * Determines the amount of bitcoins desired, in case it needs to be recalculated.
+ *
+ * TODO: use plain integers, don't expose it!
+ * @return The amount of bitcoins desired
  */
-static int64_t adjustDExOffer(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountAvailable)
+int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountAvailable)
 {
+    if (amountOffered == 0) {
+        return 0; // divide by null protection
+    }
+
     return legacy::calculateDesiredBTC(amountOffered, amountDesired, amountAvailable);
 }
 
@@ -152,8 +158,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
                         FormatDivisibleMP(balanceReallyAvailable), strMPProperty(propertyId));
 
         // AND we must also re-adjust the BTC desired in this case...
-        // TODO: no floating numbers
-        amountDesired = adjustDExOffer(amountOffered, amountDesired, balanceReallyAvailable);
+        amountDesired = calculateDesiredBTC(amountOffered, amountDesired, balanceReallyAvailable);
         amountOffered = balanceReallyAvailable;
         if (nAmended) *nAmended = amountOffered;
 
