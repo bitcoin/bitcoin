@@ -88,19 +88,34 @@ CMPAccept* DEx_getAccept(const std::string& addressSeller, uint32_t propertyId, 
 namespace legacy
 {
 /**
+ * Legacy calculation of Master Core 0.0.9.
+ *
+ * @see:
+ * https://github.com/mastercoin-MSC/mastercore/blob/mscore-0.0.9/src/mastercore_dex.cpp#L439-L449
+ */
+static int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountAvailable)
+{
+    uint64_t nValue = static_cast<uint64_t>(amountOffered);
+    uint64_t amount_des = static_cast<uint64_t>(amountDesired);
+    uint64_t balanceReallyAvailable = static_cast<uint64_t>(amountAvailable);
+
+    double BTC;
+
+    BTC = amount_des * balanceReallyAvailable;
+    BTC /= (double) nValue;
+    amount_des = rounduint64(BTC);
+
+    return static_cast<int64_t>(amount_des);
+}
+}
+
+/**
  * Determines adjusted amount desired, in case it needs to be recalculated.
  * @return The new number of tokens
  */
-static int64_t adjustDExOffer(int64_t amountOffered, int64_t amountDesired, int64_t amountAvailable)
+static int64_t adjustDExOffer(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountAvailable)
 {
-    double BTC;
-
-    BTC = amountDesired * amountAvailable;
-    BTC /= (double) amountOffered;
-    amountDesired = rounduint64(BTC);
-
-    return static_cast<int64_t>(amountDesired);
-}
+    return legacy::calculateDesiredBTC(amountOffered, amountDesired, amountAvailable);
 }
 
 /**
@@ -138,7 +153,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
 
         // AND we must also re-adjust the BTC desired in this case...
         // TODO: no floating numbers
-        amountDesired = legacy::adjustDExOffer(amountOffered, amountDesired, balanceReallyAvailable);
+        amountDesired = adjustDExOffer(amountOffered, amountDesired, balanceReallyAvailable);
         amountOffered = balanceReallyAvailable;
         if (nAmended) *nAmended = amountOffered;
 
@@ -337,15 +352,37 @@ int DEx_acceptDestroy(const std::string& addressBuyer, const std::string& addres
 namespace legacy
 {
 /**
- * Determine traded amount for a DEx payment.
- * @return The number of tokens that can be purchased
+ * Legacy calculation of Master Core 0.0.9.
+ *
+ * @see:
+ * https://github.com/mastercoin-MSC/mastercore/blob/mscore-0.0.9/src/mastercore_dex.cpp#L660-L668
  */
-static int64_t calculateDExTrade(int64_t amountOffered, int64_t amountDesired, int64_t amountPaid)
+static int64_t calculateDExTrade(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
 {
-    double amountPurchased = double(amountPaid) * double(amountOffered) / double(amountDesired);
+    uint64_t acceptOfferAmount = static_cast<uint64_t>(amountOffered);
+    uint64_t acceptBTCDesired = static_cast<uint64_t>(amountDesired);
+    uint64_t BTC_paid = static_cast<uint64_t>(amountPaid);
 
-    return static_cast<int64_t>(rounduint64(amountPurchased));
+    const double BTC_desired_original = acceptBTCDesired;
+    const double offer_amount_original = acceptOfferAmount;
+
+    double perc_X = (double) BTC_paid / BTC_desired_original;
+    double Purchased = offer_amount_original * perc_X;
+
+    uint64_t units_purchased = rounduint64(Purchased);
+
+    return static_cast<int64_t>(units_purchased);
 }
+}
+
+/**
+ * Determines the amount of bitcoins desired, in case it needs to be recalculated.
+ *
+ * @return The amount of bitcoins desired
+ */
+static int64_t calculateDExTrade(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
+{
+    return legacy::calculateDExTrade(amountOffered, amountDesired, amountPaid);
 }
 
 /**
@@ -384,7 +421,7 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
         return (DEX_ERROR_PAYMENT -2);
     }
 
-    int64_t amountPurchased = legacy::calculateDExTrade(amountOffered, amountDesired, amountPaid);
+    int64_t amountPurchased = calculateDExTrade(amountOffered, amountDesired, amountPaid);
 
     // -------------------------------------------------------------------------
 
