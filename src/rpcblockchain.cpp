@@ -5,6 +5,10 @@
 
 #include "main.h"
 #include "bitcoinrpc.h"
+#include <boost/filesystem.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/stream.hpp>
+#include <ostream>
 
 using namespace json_spirit;
 using namespace std;
@@ -265,13 +269,92 @@ Value getblockbynumber(const Array& params, bool fHelp)
     while (pblockindex->nHeight > nHeight)
         pblockindex = pblockindex->pprev;
 
-    uint256 hash = *pblockindex->phashBlock;
-
-    pblockindex = mapBlockIndex[hash];
+    pblockindex = mapBlockIndex[*pblockindex->phashBlock];
     block.ReadFromDisk(pblockindex, true);
 
     return blockToJSON(block, pblockindex, params.size() > 1 ? params[1].get_bool() : false);
 }
+
+bool ExportBlock(const string& strBlockHash, const CDataStream& ssBlock)
+{
+    boost::filesystem::path pathDest = GetDataDir() / strBlockHash;
+    if (boost::filesystem::is_directory(pathDest))
+        pathDest /= strBlockHash;
+
+    try {
+        boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf(pathDest.c_str());
+        ostream                     exportStream(&buf);
+        exportStream << HexStr(ssBlock.begin(), ssBlock.end());
+        exportStream.flush();
+
+        printf("Successfully exported block to %s\n", pathDest.string().c_str());
+        return true;
+    } catch(const boost::filesystem::filesystem_error &e) {
+        printf("error exporting the block data %s (%s)\n", pathDest.string().c_str(), e.what());
+        return false;
+    }
+}
+
+
+Value dumpblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "dumpblock <hash> [destination]\n"
+            "Returns serialized contents of a block with given block-hash.");
+
+    std::string strHash = params[0].get_str();
+    uint256 hash(strHash);
+
+    if (mapBlockIndex.count(hash) == 0)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+
+    CBlock block;
+    CBlockIndex* pblockindex = mapBlockIndex[hash];
+    block.ReadFromDisk(pblockindex, true);
+
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+    ssBlock << block;
+
+    if (params.size() > 1)
+    {
+        return ExportBlock(params[1].get_str(), ssBlock);
+    }
+
+    return HexStr(ssBlock.begin(), ssBlock.end());
+}
+
+
+Value dumpblockbynumber(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "dumpblockbynumber <number>  [destination]\n"
+            "Returns serialized contents of a block with given block-number.");
+
+    int nHeight = params[0].get_int();
+    if (nHeight < 0 || nHeight > nBestHeight)
+        throw runtime_error("Block number out of range.");
+
+    CBlock block;
+    CBlockIndex* pblockindex = mapBlockIndex[hashBestChain];
+    while (pblockindex->nHeight > nHeight)
+        pblockindex = pblockindex->pprev;
+
+    pblockindex = mapBlockIndex[*pblockindex->phashBlock];
+    block.ReadFromDisk(pblockindex, true);
+
+    CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
+    ssBlock << block;
+
+    if (params.size() > 1)
+    {
+        return ExportBlock(params[1].get_str(), ssBlock);
+    }
+
+    return HexStr(ssBlock.begin(), ssBlock.end());
+}
+
 
 // get information of sync-checkpoint
 Value getcheckpoint(const Array& params, bool fHelp)
