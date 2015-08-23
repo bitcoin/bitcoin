@@ -66,6 +66,9 @@ bool fAlerts = DEFAULT_ALERTS;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying and mining) */
 CFeeRate minRelayTxFee = CFeeRate(1000);
 
+/** Use FSS-RBF rules only for replacements paying less than this amount in fees **/
+CAmount nMaxFssRbfFee = 1 * COIN;
+
 CTxMemPool mempool(::minRelayTxFee);
 
 struct COrphanTx {
@@ -1099,6 +1102,26 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                             break;
                         }
                     }
+
+                    // Use Full-RBF rules for extremely high fee replacements.
+                    //
+                    // A high-fee replacement most likely means one of two
+                    // things:
+                    //
+                    // 1) Someone is trying to reverse a mistaken high-value
+                    //    transaction, e.g. due to a theft-in-progress or
+                    //    because they accidentally sent the money to the wrong
+                    //    person.
+                    //
+                    // 2) Someone sent a large amount of money to an
+                    //    anyone-can-spend address. (e.g. a sacrifice to fees
+                    //    tx)
+                    //
+                    // What it's not likely is that the recipient is accepting
+                    // the transation without a confirm - that'd be crazy given
+                    // the notoriously poor security of zeroconf.
+                    if (nMaxFssRbfFee && nFees > nMaxFssRbfFee)
+                        fFssRbf = false;
                 }
 
                 if (fFssRbf)

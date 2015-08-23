@@ -402,6 +402,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1));
     strUsage += HelpMessageOpt("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY));
     strUsage += HelpMessageOpt("-fssrbf", _("Use FSS-RBF for replacements rather than Full-RBF. (default: 0)"));
+    strUsage += HelpMessageOpt("-maxfssrbffee", strprintf(_("Maximum fee where FSS-RBF rules are used; Full-RBF otherwise. Set to zero to always apply FSS-RBF. (default: %s BTC)"), FormatMoney(nMaxFssRbfFee)));
 
     strUsage += HelpMessageGroup(_("Block creation options:"));
     strUsage += HelpMessageOpt("-blockminsize=<n>", strprintf(_("Set minimum block size in bytes (default: %u)"), 0));
@@ -823,6 +824,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             ::minRelayTxFee = CFeeRate(n);
         else
             return InitError(strprintf(_("Invalid amount for -minrelaytxfee=<amount>: '%s'"), mapArgs["-minrelaytxfee"]));
+    }
+
+    if (mapArgs.count("-maxfssrbffee"))
+    {
+        CAmount n = 0;
+        if (ParseMoney(mapArgs["-maxfssrbffee"], n) && n > 0)
+            nMaxFssRbfFee = n;
+        else
+            return InitError(strprintf(_("Invalid amount for -maxfssrbffee=<amount>: '%s'"), mapArgs["-maxfssrbffee"]));
     }
 
 #ifdef ENABLE_WALLET
