@@ -38,8 +38,7 @@ public:
         nRPCPort = 9341;
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
         nSubsidyHalvingInterval = 2100000;
-        /* FIXME: Set actual hardfork height!  */
-        nAuxpowStartHeight = 1000000;
+        nAuxpowStartHeight = 453273;
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -122,8 +121,7 @@ public:
         vAlertPubKey = ParseHex("04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a");
         nDefaultPort = 19340;
         nRPCPort = 19341;
-        /* FIXME: Set actual hardfork height!  */
-        nAuxpowStartHeight = 1000000;
+        nAuxpowStartHeight = 453273;
         strDataDir = "testnet3";
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
