@@ -1090,7 +1090,9 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
             "      {\n"
             "        \"buyer\" : \"address\",                (string) the Bitcoin address of the buyer\n"
             "        \"block\" : nnnnnn,                   (number) the index of the block that contains the \"accept\" order\n"
-            "        \"amount\" : \"n.nnnnnnnn\"             (string) the number of tokens accepted\n"
+            "        \"blocksleft\" : nn,                  (number) the number of blocks left to pay\n"
+            "        \"amount\" : \"n.nnnnnnnn\"             (string) the amount of tokens accepted and reserved\n"
+            "        \"amounttopay\" : \"n.nnnnnnnn\"        (string) the amount in bitcoins needed finalize the trade\n"
             "      },\n"
             "      ...\n"
             "    ]\n"
@@ -1133,14 +1135,15 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
         // TODO: no math, and especially no rounding here (!)
         // TODO: no math, and especially no rounding here (!)
 
-        //unit price & updated bitcoin desired calcs
-        double unitPriceFloat = 0;
-        if ((sellOfferAmount > 0) && (sellBitcoinDesired > 0)) unitPriceFloat = (double) sellBitcoinDesired / (double) sellOfferAmount; //divide by zero protection
-        uint64_t unitPrice = rounduint64(unitPriceFloat * COIN);
-        uint64_t bitcoinDesired = rounduint64(amountAvailable * unitPriceFloat);
+        // calculate unit price and updated amount of bitcoin desired
+        double unitPriceFloat = 0.0;
+        if ((sellOfferAmount > 0) && (sellBitcoinDesired > 0)) {
+            unitPriceFloat = (double) sellBitcoinDesired / (double) sellOfferAmount; // divide by zero protection
+        }
+        int64_t unitPrice = rounduint64(unitPriceFloat * COIN);
+        int64_t bitcoinDesired = calculateDesiredBTC(sellOfferAmount, sellBitcoinDesired, amountAvailable);
 
         Object responseObj;
-
         responseObj.push_back(Pair("txid", txid));
         responseObj.push_back(Pair("propertyid", (uint64_t) propertyId));
         responseObj.push_back(Pair("seller", seller));
@@ -1162,11 +1165,16 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
             if (accept.getHash() == selloffer.getHash()) {
                 // split acceptCombo out to get the buyer address
                 std::string buyer = acceptCombo.substr((acceptCombo.find("+") + 1), (acceptCombo.size()-(acceptCombo.find("+") + 1)));
-                int acceptBlock = accept.getAcceptBlock();
-                int64_t acceptAmount = accept.getAcceptAmountRemaining();
+                int blockOfAccept = accept.getAcceptBlock();
+                int blocksLeftToPay = (blockOfAccept + selloffer.getBlockTimeLimit()) - GetHeight();
+                int64_t amountAccepted = accept.getAcceptAmountRemaining();
+                // TODO: don't recalculate!
+                int64_t amountToPayInBTC = calculateDesiredBTC(accept.getOfferAmountOriginal(), accept.getBTCDesiredOriginal(), amountAccepted);
                 matchedAccept.push_back(Pair("buyer", buyer));
-                matchedAccept.push_back(Pair("block", acceptBlock));
-                matchedAccept.push_back(Pair("amount", FormatDivisibleMP(acceptAmount)));
+                matchedAccept.push_back(Pair("block", blockOfAccept));
+                matchedAccept.push_back(Pair("blocksleft", blocksLeftToPay));
+                matchedAccept.push_back(Pair("amount", FormatDivisibleMP(amountAccepted)));
+                matchedAccept.push_back(Pair("amounttopay", FormatDivisibleMP(amountToPayInBTC)));
                 acceptsMatched.push_back(matchedAccept);
             }
         }

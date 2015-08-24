@@ -246,35 +246,41 @@ void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
 {
     CMPOffer temp_offer(omniObj);
     uint32_t propertyId = omniObj.getProperty();
-    int64_t amount = omniObj.getAmount();
+    int64_t amountOffered = omniObj.getAmount();
+    int64_t amountDesired = temp_offer.getBTCDesiredOriginal();
+    uint8_t sellSubAction = temp_offer.getSubaction();
 
-    // NOTE: some manipulation of sell_subaction is needed here
-    // TODO: interpretPacket should provide reliable data, cleanup at RPC layer is not cool
-    uint8_t sell_subaction = temp_offer.getSubaction();
-    if (sell_subaction > 3) sell_subaction = 0; // case where subaction byte >3, to have been allowed must be a v0 sell, flip byte to 0
-    if (sell_subaction == 0 && amount > 0) sell_subaction = 1; // case where subaction byte=0, must be a v0 sell, amount > 0 means a new sell
-    if (sell_subaction == 0 && amount == 0) sell_subaction = 3; // case where subaction byte=0. must be a v0 sell, amount of 0 means a cancel
-
-    // Check levelDB to see if the amount for sale has been amended due to a partial purchase
-    // TODO: DEx phase 1 really needs an overhaul to work like MetaDEx with original amounts for sale and amounts remaining etc
-    // TODO: if the amount of the transaction is not used here, then the BTC amount should be recalculated (?)
-    int tmpblock = 0;
-    unsigned int tmptype = 0;
-    uint64_t amountNew = 0;
-    LOCK(cs_tally);
-    bool tmpValid = getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
-    if (tmpValid && amountNew > 0) amount = amountNew;
+    {
+        // NOTE: some manipulation of sell_subaction is needed here
+        // TODO: interpretPacket should provide reliable data, cleanup at RPC layer is not cool
+        if (sellSubAction > 3) sellSubAction = 0; // case where subaction byte >3, to have been allowed must be a v0 sell, flip byte to 0
+        if (sellSubAction == 0 && amountOffered > 0) sellSubAction = 1; // case where subaction byte=0, must be a v0 sell, amount > 0 means a new sell
+        if (sellSubAction == 0 && amountOffered == 0) sellSubAction = 3; // case where subaction byte=0. must be a v0 sell, amount of 0 means a cancel
+    }
+    {
+        // Check levelDB to see if the amount for sale has been amended due to a partial purchase
+        // TODO: DEx phase 1 really needs an overhaul to work like MetaDEx with original amounts for sale and amounts remaining etc
+        int tmpblock = 0;
+        unsigned int tmptype = 0;
+        uint64_t amountNew = 0;
+        LOCK(cs_tally);
+        bool tmpValid = getValidMPTX(omniObj.getHash(), &tmpblock, &tmptype, &amountNew);
+        if (tmpValid && amountNew > 0) {
+            amountDesired = calculateDesiredBTC(amountOffered, amountDesired, amountNew);
+            amountOffered = amountNew;
+        }
+    }
 
     // Populate
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
-    txobj.push_back(Pair("amount", FormatMP(propertyId, amount)));
-    txobj.push_back(Pair("bitcoindesired", FormatDivisibleMP(temp_offer.getBTCDesiredOriginal())));
+    txobj.push_back(Pair("amount", FormatMP(propertyId, amountOffered)));
+    txobj.push_back(Pair("bitcoindesired", FormatDivisibleMP(amountDesired)));
     txobj.push_back(Pair("timelimit",  temp_offer.getBlockTimeLimit()));
     txobj.push_back(Pair("feerequired", FormatDivisibleMP(temp_offer.getMinFee())));
-    if (sell_subaction == 1) txobj.push_back(Pair("action", "new"));
-    if (sell_subaction == 2) txobj.push_back(Pair("action", "update"));
-    if (sell_subaction == 3) txobj.push_back(Pair("action", "cancel"));
+    if (sellSubAction == 1) txobj.push_back(Pair("action", "new"));
+    if (sellSubAction == 2) txobj.push_back(Pair("action", "update"));
+    if (sellSubAction == 3) txobj.push_back(Pair("action", "cancel"));
 }
 
 void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool extendedDetails)
