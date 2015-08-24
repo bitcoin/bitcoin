@@ -36,6 +36,7 @@ testScripts=(
     'nodehandling.py'
     'reindex.py'
     'decodescript.py'
+    'p2p-fullblocktest.py'
 );
 testScriptsExt=(
     'bipdersig-p2p.py'
