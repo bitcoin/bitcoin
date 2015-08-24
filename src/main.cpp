@@ -4248,6 +4248,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         mapAlreadyAskedFor.erase(inv);
 
+        // Check for recently rejected (and do other quick existence checks)
+        if (AlreadyHave(inv))
+            return true;
+
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
             mempool.check(pcoinsTip);
@@ -4323,13 +4327,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (nEvicted > 0)
                 LogPrint("mempool", "mapOrphan overflow, removed %u tx\n", nEvicted);
         } else {
-            // AcceptToMemoryPool() returned false, possibly because the tx is
-            // already in the mempool; if the tx isn't in the mempool that
-            // means it was rejected and we shouldn't ask for it again.
-            if (!mempool.exists(tx.GetHash())) {
-                assert(recentRejects);
-                recentRejects->insert(tx.GetHash());
-            }
+            assert(recentRejects);
+            recentRejects->insert(tx.GetHash());
+
             if (pfrom->fWhitelisted) {
                 // Always relay transactions received from whitelisted peers, even
                 // if they were rejected from the mempool, allowing the node to
