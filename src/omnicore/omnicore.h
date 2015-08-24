@@ -126,10 +126,10 @@ enum FILETYPES {
 #define OMNI_PROPERTY_TMSC  2
 
 // forward declarations
-std::string FormatDivisibleMP(int64_t n, bool fSign = false);
-std::string FormatDivisibleShortMP(int64_t);
-std::string FormatMP(uint32_t, int64_t n, bool fSign = false);
-std::string FormatShortMP(uint32_t, int64_t);
+std::string FormatDivisibleMP(int64_t amount, bool fSign = false);
+std::string FormatDivisibleShortMP(int64_t amount);
+std::string FormatMP(uint32_t propertyId, int64_t amount, bool fSign = false);
+std::string FormatShortMP(uint32_t propertyId, int64_t amount);
 std::string FormatByType(int64_t amount, uint16_t propertyType);
 
 /** Returns the Exodus address. */
