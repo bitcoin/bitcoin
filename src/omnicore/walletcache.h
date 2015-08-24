@@ -5,6 +5,8 @@ class uint256;
 
 #include <vector>
 
+namespace mastercore
+{
 //! Global vector of Omni transactions in the wallet
 extern std::vector<uint256> walletTXIDCache;
 
@@ -16,6 +18,6 @@ void WalletTXIDCacheInit();
 
 /** Updates the cache and returns whether any wallet addresses were changed */
 int WalletCacheUpdate();
-
+}
 
 #endif // OMNICORE_WALLETCACHE_H

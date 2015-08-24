@@ -1111,18 +1111,6 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 7.5: load omni core
 
-#ifndef ENABLE_WALLET
-    bool fDisableWallet = true;
-#endif
-
-    if (fDisableWallet) {
-        return InitError(_(
-                "Disabled wallet detected.\n\n"
-                "Omni Core requires an enabled wallet. Please start your client "
-                "without the \"-disablewallet\" option to enable the wallet."
-            ));
-    }
-
     if (!fTxIndex) {
         // ask the user if they would like us to modify their config file for them
         std::string msg = _("Disabled transaction index detected.\n\n"

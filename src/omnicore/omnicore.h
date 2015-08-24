@@ -134,7 +134,6 @@ std::string FormatDivisibleShortMP(int64_t amount);
 std::string FormatMP(uint32_t propertyId, int64_t amount, bool fSign = false);
 std::string FormatShortMP(uint32_t propertyId, int64_t amount);
 std::string FormatByType(int64_t amount, uint16_t propertyType);
-bool feeCheck(const std::string& address, size_t nDataSize);
 
 /** Returns the Exodus address. */
 const CBitcoinAddress ExodusAddress();
@@ -256,9 +255,6 @@ extern std::set<uint32_t> global_wallet_property_list;
 
 int64_t getMPbalance(const std::string& address, uint32_t propertyId, TallyType ttype);
 int64_t getUserAvailableMPbalance(const std::string& address, uint32_t propertyId);
-int IsMyAddress(const std::string& address);
-
-std::string getLabel(const std::string& address);
 
 /** Global handler to initialize Omni Core. */
 int mastercore_init();
@@ -310,6 +306,9 @@ std::string strTransactionType(uint16_t txType);
 
 /** Returns the encoding class, used to embed a payload. */
 int GetEncodingClass(const CTransaction& tx, int nBlock);
+
+/** Determines, whether it is valid to use a Class C transaction for a given payload size. */
+bool UseEncodingClassC(size_t nDataSize);
 
 bool getValidMPTX(const uint256 &txid, int *block = NULL, unsigned int *type = NULL, uint64_t *nAmended = NULL);
 

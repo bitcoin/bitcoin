@@ -18,6 +18,7 @@
 #include "omnicore/sp.h"
 #include "omnicore/pending.h"
 #include "omnicore/utilsbitcoin.h"
+#include "omnicore/wallettxs.h"
 
 #include <stdint.h>
 #include <map>

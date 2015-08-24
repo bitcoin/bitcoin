@@ -18,13 +18,14 @@
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
 #include "omnicore/utilsbitcoin.h"
+#include "omnicore/wallettxs.h"
 
 #include "amount.h"
 #include "base58.h"
 #include "main.h"
 #include "sync.h"
 #include "uint256.h"
-#include "wallet.h"
+#include "wallet_ismine.h"
 
 #include <stdint.h>
 #include <map>
@@ -96,12 +97,12 @@ void SendMPDialog::setWalletModel(WalletModel *model)
 
 void SendMPDialog::updatePropSelector()
 {
+    LOCK(cs_tally);
+
     uint32_t nextPropIdMainEco = GetNextPropertyId(true);  // these allow us to end the for loop at the highest existing
     uint32_t nextPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
     ui->propertyComboBox->clear();
-
-    LOCK(cs_tally);
 
     for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
         if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
@@ -157,7 +158,7 @@ void SendMPDialog::updateFrom()
             ui->balanceLabel->setText(QString::fromStdString("Address Balance: " + FormatMP(propertyId, getUserAvailableMPbalance(currentSetFromAddress, propertyId)) + getTokenLabel(propertyId)));
         }
         // warning label will be lit if insufficient fees for simple send (16 byte payload)
-        if (feeCheck(currentSetFromAddress, 16)) {
+        if (CheckFee(currentSetFromAddress, 16)) {
             ui->feeWarningLabel->setVisible(false);
         } else {
             ui->feeWarningLabel->setText("WARNING: The sending address is low on BTC for transaction fees. Please topup the BTC balance for the sending address to send Omni Layer transactions.");

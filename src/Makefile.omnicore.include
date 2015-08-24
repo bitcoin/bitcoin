@@ -28,7 +28,8 @@ OMNICORE_H = \
   omnicore/utils.h \
   omnicore/utilsbitcoin.h \
   omnicore/version.h \
-  omnicore/walletcache.h
+  omnicore/walletcache.h \
+  omnicore/wallettxs.h
 
 OMNICORE_CPP = \
   omnicore/convert.cpp \
@@ -59,7 +60,8 @@ OMNICORE_CPP = \
   omnicore/utils.cpp \
   omnicore/utilsbitcoin.cpp \
   omnicore/version.cpp \
-  omnicore/walletcache.cpp
+  omnicore/walletcache.cpp \
+  omnicore/wallettxs.cpp
 
 libbitcoin_server_a_SOURCES += \
   $(OMNICORE_CPP) \

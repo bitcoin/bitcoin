@@ -20,6 +20,7 @@
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/walletcache.h"
+#include "omnicore/wallettxs.h"
 
 #include "init.h"
 #include "main.h"
@@ -180,12 +181,12 @@ void TXHistoryDialog::setWalletModel(WalletModel *model)
 
 int TXHistoryDialog::PopulateHistoryMap()
 {
-    CWallet *wallet = pwalletMain;
-    if (NULL == wallet) return 0;
+    // TODO: locks may not be needed here -- looks like wallet lock can be removed
+    if (NULL == pwalletMain) return 0;
     // try and fix intermittent freeze on startup and while running by only updating if we can get required locks
     TRY_LOCK(cs_main,lckMain);
     if (!lckMain) return 0;
-    TRY_LOCK(wallet->cs_wallet, lckWallet);
+    TRY_LOCK(pwalletMain->cs_wallet, lckWallet);
     if (!lckWallet) return 0;
 
     int64_t nProcessed = 0; // counter for how many transactions we've added to history this time
@@ -194,7 +195,6 @@ int TXHistoryDialog::PopulateHistoryMap()
     std::map<std::string,uint256> walletTransactions = FetchWalletOmniTransactions(GetArg("-omniuiwalletscope", 1000));
 
     // reverse iterate over (now ordered) transactions and populate history map for each one
-    Array response;
     for (std::map<std::string,uint256>::reverse_iterator it = walletTransactions.rbegin(); it != walletTransactions.rend(); it++) {
         uint256 txHash = it->second;
 
@@ -226,7 +226,6 @@ int TXHistoryDialog::PopulateHistoryMap()
         uint256 blockHash = 0;
         if (!GetTransaction(txHash, wtx, blockHash, true)) continue;
         if ((0 == blockHash) || (NULL == GetBlockIndex(blockHash))) {
-
             // this transaction is unconfirmed, should be one of our pending transactions
             LOCK(cs_pending);
             PendingMap::iterator pending_it = my_pending.find(txHash);
@@ -268,12 +267,15 @@ int TXHistoryDialog::PopulateHistoryMap()
             uint64_t tmpPropertyId = 0;
             bool bIsBuy = false;
             int numberOfPurchases = 0;
-            LOCK(cs_tally);
-            p_txlistdb->getPurchaseDetails(txHash, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
+            {
+                LOCK(cs_tally);
+                p_txlistdb->getPurchaseDetails(txHash, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
+            }
             bIsBuy = IsMyAddress(tmpBuyer);
             numberOfPurchases = p_txlistdb->getNumberOfPurchases(txHash);
             if (0 >= numberOfPurchases) continue;
             for (int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
+                LOCK(cs_tally);
                 p_txlistdb->getPurchaseDetails(txHash, purchaseNumber, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
                 total += tmpNValue;
             }
@@ -339,7 +341,7 @@ int TXHistoryDialog::PopulateHistoryMap()
 
 void TXHistoryDialog::UpdateConfirmations()
 {
-    int chainHeight = chainActive.Height(); // get the chain height
+    int chainHeight = GetHeight(); // get the chain height
     int rowCount = ui->txHistoryTable->rowCount();
     for (int row = 0; row < rowCount; row++) {
         int confirmations = 0;
@@ -399,6 +401,7 @@ void TXHistoryDialog::UpdateHistory()
                 QDateTime txTime;
                 QTableWidgetItem *dateCell = new QTableWidgetItem;
                 if (htxo.blockHeight>0) {
+                    LOCK(cs_main);
                     CBlockIndex* pBlkIdx = chainActive[htxo.blockHeight];
                     if (NULL != pBlkIdx) txTime.setTime_t(pBlkIdx->GetBlockTime());
                     dateCell->setData(Qt::DisplayRole, txTime);

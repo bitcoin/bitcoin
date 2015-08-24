@@ -1,4 +1,8 @@
-// RPC calls
+/**
+ * @file rpc.cpp
+ *
+ * This file contains RPC calls for data retrieval.
+ */
 
 #include "omnicore/rpc.h"
 
@@ -30,7 +34,9 @@
 #include "tinyformat.h"
 #include "uint256.h"
 #include "utilstrencodings.h"
+#ifdef ENABLE_WALLET
 #include "wallet.h"
+#endif
 
 #include "json/json_spirit_value.h"
 
@@ -272,6 +278,7 @@ Value mscrpc(const Array& params, bool fHelp)
             PrintToConsole("Unlocking cs_main now\n");
             break;
         }
+#ifdef ENABLE_WALLET
         case 11:
         {
             PrintToConsole("Locking pwalletMain->cs_wallet for %d milliseconds..\n", extra2);
@@ -280,6 +287,7 @@ Value mscrpc(const Array& params, bool fHelp)
             PrintToConsole("Unlocking pwalletMain->cs_wallet now\n");
             break;
         }
+#endif
         default:
             break;
     }

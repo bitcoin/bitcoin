@@ -25,12 +25,15 @@
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 #include "omnicore/walletcache.h"
+#include "omnicore/wallettxs.h"
 
 #include "base58.h"
 #include "chainparams.h"
 #include "coincontrol.h"
 #include "coins.h"
+#include "core_io.h"
 #include "init.h"
+#include "main.h"
 #include "primitives/block.h"
 #include "primitives/transaction.h"
 #include "script/script.h"
@@ -38,11 +41,14 @@
 #include "sync.h"
 #include "tinyformat.h"
 #include "uint256.h"
+#include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
-#include "ui_interface.h"
+#ifdef ENABLE_WALLET
 #include "wallet.h"
+#include "wallet_ismine.h"
+#endif
 
 #include <boost/algorithm/string.hpp>
 #include <boost/exception/to_string.hpp>
@@ -469,7 +475,7 @@ void CheckWalletUpdate(bool forceUpdate)
             return;
         }
     }
-
+#ifdef ENABLE_WALLET
     LOCK(cs_tally);
 
     // balance changes were found in the wallet, update the global totals and signal a Omni balance change
@@ -499,6 +505,7 @@ void CheckWalletUpdate(bool forceUpdate)
     }
     // signal an Omni balance change
     uiInterface.OmniBalanceChanged();
+#endif
 }
 
 /**
@@ -2795,115 +2802,13 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
     return fFoundTx;
 }
 
-// IsMine wrapper to determine whether the address is in our local wallet
-int IsMyAddress(const std::string &address)
-{
-    if (!pwalletMain) return ISMINE_NO;
-    const CBitcoinAddress& omniAddress = address;
-    CTxDestination omniDest = omniAddress.Get();
-    return IsMine(*pwalletMain, omniDest);
-}
-
-// gets a label for a Bitcoin address from the wallet, mainly to the UI (used in demo)
-string getLabel(const string &address)
-{
-CWallet *wallet = pwalletMain;
-
-  if (wallet)
-   {
-        LOCK(wallet->cs_wallet);
-        CBitcoinAddress address_parsed(address);
-        std::map<CTxDestination, CAddressBookData>::iterator mi = wallet->mapAddressBook.find(address_parsed.Get());
-        if (mi != wallet->mapAddressBook.end())
-        {
-            return (mi->second.name);
-        }
-    }
-
-  return string();
-}
-
-static int64_t selectCoins(const string &FromAddress, CCoinControl &coinControl, int64_t additional)
-{
-  CWallet *wallet = pwalletMain;
-  if (NULL == wallet) { return 0; }
-
-  int64_t n_max = (COIN * (20 * (0.0001))); // assume 20KBytes max TX size at 0.0001 per kilobyte
-  // FUTURE: remove n_max and try 1st smallest input, then 2 smallest inputs etc. -- i.e. move Coin Control selection closer to CreateTransaction
-  int64_t n_total = 0;  // total output funds collected
-
-  // if referenceamount is set it is needed to be accounted for here too
-  if (0 < additional) n_max += additional;
-
-  int nHeight = GetHeight();
-  LOCK2(cs_main, wallet->cs_wallet);
-
-    string sAddress = "";
-
-    // iterate over the wallet
-    for (map<uint256, CWalletTx>::iterator it = wallet->mapWallet.begin();
-        it != wallet->mapWallet.end(); ++it) {
-      const uint256& wtxid = it->first;
-      const CWalletTx* pcoin = &(*it).second;
-      bool bIsMine;
-      bool bIsSpent;
-
-      if (pcoin->IsTrusted()) {
-        const int64_t nAvailable = pcoin->GetAvailableCredit();
-
-        if (!nAvailable)
-          continue;
-
-        for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-          txnouttype whichType;
-          if (!GetOutputType(pcoin->vout[i].scriptPubKey, whichType))
-            continue;
-
-          if (!IsAllowedInputType(whichType, nHeight))
-            continue;
-
-          CTxDestination dest;
-          if (!ExtractDestination(pcoin->vout[i].scriptPubKey, dest))
-            continue;
-
-          bIsMine = IsMine(*wallet, dest);
-          bIsSpent = wallet->IsSpent(wtxid, i);
-
-          if (!bIsMine || bIsSpent)
-            continue;
-
-          int64_t n = bIsSpent ? 0 : pcoin->vout[i].nValue;
-
-          sAddress = CBitcoinAddress(dest).ToString();
-          if (msc_debug_tokens)
-            PrintToLog("%s:IsMine()=%s:IsSpent()=%s:%s: i=%d, nValue= %lu\n",
-                sAddress, bIsMine ? "yes" : "NO",
-                bIsSpent ? "YES" : "no", wtxid.ToString(), i, n);
-
-          // only use funds from the Sender's address for our MP transaction
-          // TODO: may want to a little more selective here, i.e. use smallest possible (~0.1 BTC), but large amounts lead to faster confirmations !
-          if (FromAddress == sAddress) {
-            COutPoint outpt(wtxid, i);
-            coinControl.Select(outpt);
-
-            n_total += n;
-
-            if (n_max <= n_total)
-              break;
-          }
-        } // for pcoin end
-      }
-
-      if (n_max <= n_total)
-        break;
-    } // for iterate over the wallet end
-
-// return 0;
-return n_total;
-}
-
-// This function determines whether it is valid to use a Class C transaction for a given payload size
-static bool UseEncodingClassC(size_t nDataSize)
+/**
+ * Determines, whether it is valid to use a Class C transaction for a given payload size.
+ *
+ * @param nDataSize The length of the payload
+ * @return True, if Class C is enabled and the payload is small enough
+ */
+bool mastercore::UseEncodingClassC(size_t nDataSize)
 {
     size_t nTotalSize = nDataSize + GetOmMarker().size(); // Marker "omni"
     bool fDataEnabled = GetBoolArg("-datacarrier", true);
@@ -2914,73 +2819,42 @@ static bool UseEncodingClassC(size_t nDataSize)
     return nTotalSize <= nMaxDatacarrierBytes && fDataEnabled;
 }
 
-bool feeCheck(const string &address, size_t nDataSize)
-{
-    // check the supplied address against selectCoins to determine if sufficient fees for send
-    CCoinControl coinControl;
-    int64_t inputTotal = selectCoins(address, coinControl, 0);
-    bool ClassC = UseEncodingClassC(nDataSize);
-    int64_t minFee = 0;
-
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-
-    // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
-    if (ClassC) {
-        // estimated minimum fee calculation for Class C with payload of nDataSize
-        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
-        minFee = 10000; // simply warn when below 10,000 satoshi for now
-    } else {
-        // estimated minimum fee calculation for Class B with payload of nDataSize
-        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
-        minFee = 10000; // simply warn when below 10,000 satoshi for now
-    }
-
-    return inputTotal >= minFee;
-}
-
 // This function requests the wallet create an Omni transaction using the supplied parameters and payload
 int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, const std::string& receiverAddress, const std::string& redemptionAddress,
                           int64_t referenceAmount, const std::vector<unsigned char>& data, uint256& txid, std::string& rawHex, bool commit)
 {
+#ifdef ENABLE_WALLET
+    if (pwalletMain == NULL) return MP_ERR_WALLET_ACCESS;
+
     // Determine the class to send the transaction via - default is Class C
     int omniTxClass = OMNI_CLASS_C;
     if (!UseEncodingClassC(data.size())) omniTxClass = OMNI_CLASS_B;
 
     // Prepare the transaction - first setup some vars
-    CWallet *wallet = pwalletMain;
     CCoinControl coinControl;
     txid = 0;
     CWalletTx wtxNew;
     int64_t nFeeRet = 0;
     std::string strFailReason;
-    vector< pair<CScript, int64_t> > vecSend;
-    CReserveKey reserveKey(wallet);
+    std::vector<std::pair<CScript, int64_t> > vecSend;
+    CReserveKey reserveKey(pwalletMain);
 
     // Next, we set the change address to the sender
     CBitcoinAddress addr = CBitcoinAddress(senderAddress);
     coinControl.destChange = addr.Get();
 
     // Select the inputs
-    if (0 > selectCoins(senderAddress, coinControl, referenceAmount)) { return MP_INPUTS_INVALID; }
+    if (0 > SelectCoins(senderAddress, coinControl, referenceAmount)) { return MP_INPUTS_INVALID; }
 
     // Encode the data outputs
     switch(omniTxClass) {
         case OMNI_CLASS_B: { // declaring vars in a switch here so use an expicit code block
-            CBitcoinAddress address;
             CPubKey redeemingPubKey;
-            if (!redemptionAddress.empty()) { address.SetString(redemptionAddress); } else { address.SetString(senderAddress); }
-            if (wallet && address.IsValid()) { // validate the redemption address
-                if (address.IsScript()) {
-                    PrintToLog("%s() ERROR: Redemption Address must be specified !\n", __FUNCTION__);
-                    return MP_REDEMP_ILLEGAL;
-                } else {
-                    CKeyID keyID;
-                    if (!address.GetKeyID(keyID)) return MP_REDEMP_BAD_KEYID;
-                    if (!wallet->GetPubKey(keyID, redeemingPubKey)) return MP_REDEMP_FETCH_ERR_PUBKEY;
-                    if (!redeemingPubKey.IsFullyValid()) return MP_REDEMP_INVALID_PUBKEY;
-                }
-            } else return MP_REDEMP_BAD_VALIDATION;
-            if(!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,data,vecSend)) { return MP_ENCODING_ERROR; }
+            const std::string& sAddress = redemptionAddress.empty() ? senderAddress : redemptionAddress;
+            if (!AddressToPubKey(sAddress, redeemingPubKey)) {
+                return MP_REDEMP_BAD_VALIDATION;
+            }
+            if (!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,data,vecSend)) { return MP_ENCODING_ERROR; }
         break; }
         case OMNI_CLASS_C:
             if(!OmniCore_Encode_ClassC(data,vecSend)) { return MP_ENCODING_ERROR; }
@@ -2990,30 +2864,30 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
     // Then add a paytopubkeyhash output for the recipient (if needed) - note we do this last as we want this to be the highest vout
     if (!receiverAddress.empty()) {
         CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(receiverAddress).Get());
-        vecSend.push_back(make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustThreshold(scriptPubKey)));
+        vecSend.push_back(std::make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : GetDustThreshold(scriptPubKey)));
     }
 
     // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
-    if (!wallet) return MP_ERR_WALLET_ACCESS;
+
     if (!coinControl.HasSelected()) return MP_ERR_INPUTSELECT_FAIL;
 
     // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
-    if (!wallet->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
+    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reserveKey, nFeeRet, strFailReason, &coinControl)) { return MP_ERR_CREATE_TX; }
 
     // If this request is only to create, but not commit the transaction then display it and exit
     if (!commit) {
-        CTransaction tx = (CTransaction) wtxNew;
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << tx;
-        rawHex = HexStr(ssTx.begin(), ssTx.end());
+        rawHex = EncodeHexTx(wtxNew);
         return 0;
     } else {
         // Commit the transaction to the wallet and broadcast)
         PrintToLog("%s():%s; nFeeRet = %lu, line %d, file: %s\n", __FUNCTION__, wtxNew.ToString(), nFeeRet, __LINE__, __FILE__);
-        if (!wallet->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
+        if (!pwalletMain->CommitTransaction(wtxNew, reserveKey)) return MP_ERR_COMMIT_TX;
         txid = wtxNew.GetHash();
         return 0;
     }
+#else
+    return MP_ERR_WALLET_ACCESS;
+#endif
 }
 
 void CMPTxList::LoadActivations()

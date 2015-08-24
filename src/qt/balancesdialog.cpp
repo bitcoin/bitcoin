@@ -10,6 +10,7 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
 #include "omnicore/tally.h"
+#include "omnicore/wallettxs.h"
 
 #include "amount.h"
 #include "sync.h"
@@ -244,9 +245,9 @@ void BalancesDialog::PopulateBalances(unsigned int propertyId)
 
             // add the row
             if (!watchAddress) {
-                AddRow(getLabel(my_it->first), address, reservedStr, availableStr);
+                AddRow(GetAddressLabel(my_it->first), address, reservedStr, availableStr);
             } else {
-                AddRow(getLabel(my_it->first), address + " (watch-only)", reservedStr, availableStr);
+                AddRow(GetAddressLabel(my_it->first), address + " (watch-only)", reservedStr, availableStr);
             }
         }
     }
