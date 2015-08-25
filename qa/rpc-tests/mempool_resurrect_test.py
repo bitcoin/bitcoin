@@ -24,8 +24,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.is_network_split = False
 
     def create_tx(self, from_txid, to_address, amount):
+        amountSatoshis = int(amount * 100000000) - int(exampleFee * 100000000)
         inputs = [{ "txid" : from_txid, "vout" : 0}]
-        outputs = { to_address : amount }
+        outputs = { to_address : float(amountSatoshis) / 100000000}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         signresult = self.nodes[0].signrawtransaction(rawtx)
         assert_equal(signresult["complete"], True)
