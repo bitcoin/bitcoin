@@ -339,6 +339,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 {
     if(!masternodeSync.IsBlockchainSynced()) return;
 
+    if(fLiteMode) return; //disable all Darksend/Masternode related functionality
+
+
     if (strCommand == "mnget") { //Masternode Payments Request Sync
         if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
@@ -595,7 +598,7 @@ void CMasternodePayments::CleanPaymentList()
     if(chainActive.Tip() == NULL) return;
 
     //keep up to five cycles for historical sake
-    int nLimit = std::max(((int)mnodeman.size())*5, 1000);
+    int nLimit = std::max(((int)mnodeman.size())*2, 1000);
 
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
