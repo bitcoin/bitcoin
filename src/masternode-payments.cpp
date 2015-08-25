@@ -593,7 +593,7 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
 
 void CMasternodePayments::CleanPaymentList()
 {
-    LOCK(cs_mapMasternodePayeeVotes);
+    LOCK2(cs_mapMasternodePayeeVotes, cs_mapMasternodeBlocks);
 
     if(chainActive.Tip() == NULL) return;
 
@@ -608,6 +608,7 @@ void CMasternodePayments::CleanPaymentList()
             LogPrint("mnpayments", "CMasternodePayments::CleanPaymentList - Removing old Masternode payment - block %d\n", winner.nBlockHeight);
             masternodeSync.mapSeenSyncMNW.erase((*it).first);
             mapMasternodePayeeVotes.erase(it++);
+            mapMasternodeBlocks.erase(winner.nBlockHeight);
         } else {
             ++it;
         }
