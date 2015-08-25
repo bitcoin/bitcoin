@@ -333,6 +333,51 @@ void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minC
 }
 
 /**
+ * TODO: currently clone of CheckAlertAuthorization - worth merging the functions?
+ *
+ * Determines whether the sender is an authorized source for Omni Core feature activation.
+ *
+ * The option "-omniactivationallowsender=source" can be used to whitelist additional sources,
+ * and the option "-omniactivationignoresender=source" can be used to ignore a source.
+ *
+ * To consider any activation as authorized, "-omniactivationallowsender=any" can be used. This
+ * should only be done for testing purposes!
+ */
+bool CheckActivationAuthorization(const std::string& sender)
+{
+    std::set<std::string> whitelisted;
+
+    // Mainnet
+    whitelisted.insert("1OmniFoundation1111111111111111111"); // Omni Foundation <????@omni.foundation>
+
+    // Testnet / Regtest
+    // use -omniactivationallowsender for testing
+
+    // Add manually whitelisted sources
+    if (mapArgs.count("-omniactivationallowsender")) {
+        const std::vector<std::string>& sources = mapMultiArgs["-omniactivationallowsender"];
+
+        for (std::vector<std::string>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
+            whitelisted.insert(*it);
+        }
+    }
+
+    // Remove manually ignored sources
+    if (mapArgs.count("-omniactivationignoresender")) {
+        const std::vector<std::string>& sources = mapMultiArgs["-omniactivationignoresender"];
+
+        for (std::vector<std::string>::const_iterator it = sources.begin(); it != sources.end(); ++it) {
+            whitelisted.erase(*it);
+        }
+    }
+
+    bool fAuthorized = (whitelisted.count(sender) ||
+                        whitelisted.count("any"));
+
+    return fAuthorized;
+}
+
+/**
  * Activates a feature at a specific block height, authorization has already been validated.
  *
  * Note: Feature activations are consensus breaking.  It is not permitted to activate a feature within

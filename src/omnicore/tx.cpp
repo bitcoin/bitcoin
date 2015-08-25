@@ -1888,7 +1888,7 @@ int CMPTransaction::logicMath_Activation()
     }
 
     // is sender authorized - temporarily use alert auths but ## TO BE MOVED TO FOUNDATION P2SH KEY ##
-    bool authorized = CheckAlertAuthorization(sender);
+    bool authorized = CheckActivationAuthorization(sender);
 
     PrintToLog("\t          sender: %s\n", sender);
     PrintToLog("\t      authorized: %s\n", authorized);
