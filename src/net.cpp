@@ -898,29 +898,29 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
 
     if (vEvictionCandidates.empty()) return false;
 
-    // Identify CNetAddr with the most connections
-    CNetAddr naMostConnections;
+    // Identify the network group with the most connections
+    std::vector<unsigned char> naMostConnections;
     unsigned int nMostConnections = 0;
-    std::map<CNetAddr, std::vector<CNodeRef> > mapAddrCounts;
+    std::map<std::vector<unsigned char>, std::vector<CNodeRef> > mapAddrCounts;
     BOOST_FOREACH(const CNodeRef &node, vEvictionCandidates) {
-        mapAddrCounts[node->addr].push_back(node);
+        mapAddrCounts[node->addr.GetGroup()].push_back(node);
 
-        if (mapAddrCounts[node->addr].size() > nMostConnections) {
-            nMostConnections = mapAddrCounts[node->addr].size();
-            naMostConnections = node->addr;
+        if (mapAddrCounts[node->addr.GetGroup()].size() > nMostConnections) {
+            nMostConnections = mapAddrCounts[node->addr.GetGroup()].size();
+            naMostConnections = node->addr.GetGroup();
         }
     }
 
-    // Reduce to the CNetAddr with the most connections
+    // Reduce to the network group with the most connections
     vEvictionCandidates = mapAddrCounts[naMostConnections];
 
-    // Do not disconnect peers who have only 1 evictable connection
+    // Do not disconnect peers if there is only 1 connection from their network group
     if (vEvictionCandidates.size() <= 1)
         // unless we prefer the new connection (for whitelisted peers)
         if (!fPreferNewConnection)
             return false;
 
-    // Disconnect the most recent connection from the CNetAddr with the most connections
+    // Disconnect the most recent connection from the network group with the most connections
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
     vEvictionCandidates[0]->fDisconnect = true;
 
