@@ -188,7 +188,6 @@ std::string GetWarnings(const std::string& strFor);
 bool GetTransaction(const uint256 &hash, CTransaction &tx, uint256 &hashBlock, bool fAllowSlow = false);
 /** Find the best known block, and make it the tip of the block chain */
 bool ActivateBestChain(CValidationState &state, const CBlock *pblock = NULL);
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 /**
  * Prune block and undo files (blk???.dat and undo???.dat) so that the disk space used is less than a user-defined target.
@@ -222,6 +221,9 @@ void Misbehaving(NodeId nodeid, int howmuch);
 void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
+
+/** Convert CValidationState to a human-readable message for logging */
+std::string FormatStateMessage(const CValidationState& state);
 
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
@@ -263,23 +265,6 @@ struct CDiskTxPos : public CDiskBlockPos
 
 CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree);
 
-/** 
- * Count ECDSA signature operations the old-fashioned (pre-0.6) way
- * @return number of sigops this transaction's outputs will produce when spent
- * @see CTransaction::FetchInputs
- */
-unsigned int GetLegacySigOpCount(const CTransaction& tx);
-
-/**
- * Count ECDSA signature operations in pay-to-script-hash inputs.
- * 
- * @param[in] mapInputs Map of previous transactions that have outputs we're spending
- * @return maximum number of sigops required to validate this transaction's inputs
- * @see CTransaction::FetchInputs
- */
-unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& mapInputs);
-
-
 /**
  * Check whether all inputs of this transaction are valid (no double spends, scripts & sigs, amounts)
  * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
@@ -290,12 +275,6 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);
-
-/**
- * Check if transaction is final and can be included in a block with the
- * specified height and time. Consensus critical.
- */
-bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime);
 
 /**
  * Check if transaction will be final in the next block to be created.
@@ -355,14 +334,6 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
 
 /** Apply the effects of this block (with given index) on the UTXO set represented by coins */
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck = false);
-
-/** Context-independent validity checks */
-bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
-
-/** Context-dependent validity checks */
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex *pindexPrev);
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
 
 /** Check a block is completely valid from start to finish (only works on top of our current best block, with cs_main held) */
 bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex *pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
