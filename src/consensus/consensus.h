@@ -10,6 +10,9 @@
 
 #include <stdint.h>
 
+class CBlock;
+class CBlockHeader;
+class CBlockIndex;
 class CCoinsViewCache;
 class CTransaction;
 class CValidationState;
@@ -35,6 +38,28 @@ bool CheckTx(const CTransaction& tx, CValidationState& state, const Params& cons
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const Params& consensusParams, const CCoinsViewCache& inputs, int nSpendHeight);
 
 } // namespace Consensus
+
+/** Block header validation functions */
+
+/**
+ * Context-independent CBlockHeader validity checks
+ */
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
+/**
+ * Context-dependent CBlockHeader validity checks
+ */
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex *pindexPrev);
+
+/** Block validation functions */
+
+/**
+ * Context-independent CBlock validity checks
+ */
+bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+/**
+ * Context-dependent CBlock validity checks
+ */
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
 
 /** Block validation utility functions */
 
