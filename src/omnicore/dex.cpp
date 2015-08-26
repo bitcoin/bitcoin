@@ -18,6 +18,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
 #include <openssl/sha.h>
 
@@ -379,7 +380,7 @@ namespace legacy
  * @see:
  * https://github.com/mastercoin-MSC/mastercore/blob/mscore-0.0.9/src/mastercore_dex.cpp#L660-L668
  */
-static int64_t calculateDExTrade(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
+static int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
 {
     uint64_t acceptOfferAmount = static_cast<uint64_t>(amountOffered);
     uint64_t acceptBTCDesired = static_cast<uint64_t>(amountDesired);
@@ -398,13 +399,23 @@ static int64_t calculateDExTrade(const int64_t amountOffered, const int64_t amou
 }
 
 /**
- * Determines the amount of bitcoins desired, in case it needs to be recalculated.
+ * Determines the purchased amount of tokens.
  *
- * @return The amount of bitcoins desired
+ * The amount is rounded up, which may be in favor of the buyer, to avoid small
+ * leftovers of 1 willet. This is not exploitable due to transaction fees.
+ *
+ * The desired amount must not be zero, and the purchased amount should be checked
+ * against the actual amount that is still left for sale.
+ *
+ * @return The amount of tokens purchased
  */
-static int64_t calculateDExTrade(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
+int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
 {
-    return legacy::calculateDExTrade(amountOffered, amountDesired, amountPaid);
+    using boost::multiprecision::int128_t;
+
+    int128_t amountPurchased = int128_t(1) + ((int128_t(amountPaid) * int128_t(amountOffered)) - int128_t(1)) / int128_t(amountDesired);
+
+    return amountPurchased.convert_to<int64_t>();
 }
 
 /**
@@ -431,7 +442,6 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     }
 
     // -------------------------------------------------------------------------
-    // TODO: no floating numbers
 
     const int64_t amountDesired = p_accept->getBTCDesiredOriginal();
     const int64_t amountOffered = p_accept->getOfferAmountOriginal();
@@ -443,7 +453,24 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
         return (DEX_ERROR_PAYMENT -2);
     }
 
-    int64_t amountPurchased = calculateDExTrade(amountOffered, amountDesired, amountPaid);
+    int64_t amountPurchased = 0;
+
+    /**
+     * As long as this feature is disabled, floating point math is used to
+     * determine the purchased amount.
+     *
+     * After this feature is enabled, plain integer math is used to determine
+     * the purchased amount. The purchased amount is rounded up, which may be
+     * in favor of the buyer, to avoid small leftovers of 1 willet.
+     *
+     * This is not exploitable due to transaction fees.
+     */
+    if (IsFeatureActivated(FEATURE_DEXMATH, block)) {
+        amountPurchased = calculateDExPurchase(amountOffered, amountDesired, amountPaid);
+    } else {
+        // Fallback to original calculation:
+        amountPurchased = legacy::calculateDExPurchase(amountOffered, amountDesired, amountPaid);
+    }
 
     // -------------------------------------------------------------------------
 
