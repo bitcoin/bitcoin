@@ -38,29 +38,29 @@ bool CheckTx(const CTransaction& tx, CValidationState& state, const Params& cons
  */
 bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const Params& consensusParams, const CCoinsViewCache& inputs, int nSpendHeight);
 
-} // namespace Consensus
-
 /** Block header validation functions */
 
 /**
  * Context-independent CBlockHeader validity checks
  */
-bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
+bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true);
 /**
  * Context-dependent CBlockHeader validity checks
  */
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex *pindexPrev);
+bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
 
 /** Block validation functions */
 
 /**
  * Context-independent CBlock validity checks
  */
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
+bool CheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, int64_t nTime, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 /**
  * Context-dependent CBlock validity checks
  */
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex *pindexPrev);
+bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev);
+
+} // namespace Consensus
 
 /** Transaction validation utility functions */
 

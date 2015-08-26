@@ -6,11 +6,9 @@
 #include "consensus/consensus.h"
 
 #include "chain.h"
-#include "chainparams.h"
 #include "coins.h"
 #include "consensus/validation.h"
 #include "main.h" // for FormatStateMessage
-#include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "version.h"
@@ -177,24 +175,23 @@ bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequir
     return (nFound >= nRequired);
 }
 
-bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW)
+bool Consensus::CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, bool fCheckPOW)
 {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus()))
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
         return state.DoS(50, error("CheckBlockHeader(): proof of work failed"),
                          REJECT_INVALID, "high-hash");
 
     // Check timestamp
-    if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+    if (block.GetBlockTime() > nTime + 2 * 60 * 60)
         return state.Invalid(error("CheckBlockHeader(): block timestamp too far in the future"),
                              REJECT_INVALID, "time-too-new");
 
     return true;
 }
 
-bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex * const pindexPrev)
+bool Consensus::ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Params& consensusParams, const CBlockIndex* pindexPrev)
 {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
     // Check proof of work
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.DoS(100, error("%s: incorrect proof of work", __func__),
@@ -231,17 +228,14 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     return nSubsidy;
 }
 
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
+bool Consensus::CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, int64_t nTime, bool fCheckPOW, bool fCheckMerkleRoot)
 {
-    const Consensus::Params& consensusParams = Params().GetConsensus();
-    // These are checks that are independent of context.
-
     if (block.fChecked)
         return true;
 
     // Check that the header is valid (particularly PoW).  This is mostly
     // redundant with the call in AcceptBlockHeader.
-    if (!CheckBlockHeader(block, state, fCheckPOW))
+    if (!CheckBlockHeader(block, state, consensusParams, nTime, fCheckPOW))
         return false;
 
     // Check the merkle root.
@@ -302,10 +296,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     return true;
 }
 
-bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex * const pindexPrev)
+bool Consensus::ContextualCheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev)
 {
     const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
-    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
