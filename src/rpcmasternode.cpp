@@ -123,8 +123,8 @@ Value masternode(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" &&
-         strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce" &&
+        (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "start-all" && strCommand != "start-missing" &&
+         strCommand != "start-disabled" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce" &&
         strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" &&
         strCommand != "outputs" && strCommand != "status" && strCommand != "calcscore"))
         throw runtime_error(
@@ -142,7 +142,7 @@ Value masternode(const Array& params, bool fHelp)
                 "  outputs      - Print masternode compatible outputs\n"
                 "  start        - Start masternode configured in dash.conf\n"
                 "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
-                "  start-many   - Start all masternodes configured in masternode.conf\n"
+                "  start-<mode> - Start masternodes configured in masternode.conf (<mode>: 'all', 'missing', 'disabled')\n"
                 "  status       - Print masternode status information\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
@@ -330,7 +330,7 @@ Value masternode(const Array& params, bool fHelp)
 
     }
 
-    if (strCommand == "start-many")
+    if (strCommand == "start-many" || strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -357,6 +357,12 @@ Value masternode(const Array& params, bool fHelp)
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
+
+            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CMasternode *pmn = mnodeman.Find(vin);
+
+            if(strCommand == "start-missing" && pmn) continue;
+            if(strCommand == "start-disabled" && pmn && pmn->IsEnabled()) continue;
 
             bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
 
