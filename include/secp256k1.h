@@ -5,6 +5,84 @@
 extern "C" {
 # endif
 
+/** Opaque data structure that holds context information (precomputed tables etc.).
+ *
+ *  The purpose of context structures is to cache large precomputed data tables
+ *  that are expensive to construct, and also to maintain the randomization data
+ *  for blinding.
+ *
+ *  Do not create a new context object for each operation, as construction is
+ *  far slower than all other API calls (~100 times slower than an ECDSA
+ *  verification).
+ *
+ *  A constructed context can safely be used from multiple threads
+ *  simultaneously, but API call that take a non-const pointer to a context
+ *  need exclusive access to it. In particular this is the case for
+ *  secp256k1_context_destroy and secp256k1_context_randomize.
+ *
+ *  Regarding randomization, either do it once at creation time (in which case
+ *  you do not need any locking for the other calls), or use a read-write lock.
+ */
+typedef struct secp256k1_context_struct secp256k1_context_t;
+
+/** Opaque data structure that holds a parsed and valid public key.
+ *
+ *  The exact representation of data inside is implementation defined and not
+ *  guaranteed to be portable between different platforms or versions. It is
+ *  however guaranteed to be 64 bytes in size, and can be safely copied/moved.
+ *  If you need to convert to a format suitable for storage or transmission, use
+ *  secp256k1_ec_pubkey_serialize and secp256k1_ec_pubkey_parse.
+ *
+ *  Furthermore, it is guaranteed that identical public keys (ignoring
+ *  compression) will have identical representation, so they can be memcmp'ed.
+ */
+typedef struct {
+    unsigned char data[64];
+} secp256k1_pubkey_t;
+
+/** Opaque data structured that holds a parsed ECDSA signature, optionally
+ *  supporting pubkey recovery.
+ *
+ *  The exact representation of data inside is implementation defined and not
+ *  guaranteed to be portable between different platforms or versions. It is
+ *  however guaranteed to be 65 bytes in size, and can be safely copied/moved.
+ *  If you need to convert to a format suitable for storage or transmission, use
+ *  the secp256k1_ecdsa_signature_serialize_* and
+ *  secp256k1_ecdsa_signature_serialize_* functions.
+ *
+ *  Furthermore, it is guaranteed to identical signatures (including their
+ *  recoverability) will have identical representation, so they can be
+ *  memcmp'ed.
+ */
+typedef struct {
+    unsigned char data[65];
+} secp256k1_ecdsa_signature_t;
+
+/** A pointer to a function to deterministically generate a nonce.
+ *
+ * Returns: 1 if a nonce was successfully generated. 0 will cause signing to fail.
+ * In:      msg32:     the 32-byte message hash being verified (will not be NULL)
+ *          key32:     pointer to a 32-byte secret key (will not be NULL)
+ *          algo16:    pointer to a 16-byte array describing the signature
+ *                     algorithm (will be NULL for ECDSA for compatibility).
+ *          attempt:   how many iterations we have tried to find a nonce.
+ *                     This will almost always be 0, but different attempt values
+ *                     are required to result in a different nonce.
+ *          data:      Arbitrary data pointer that is passed through.
+ * Out:     nonce32:   pointer to a 32-byte array to be filled by the function.
+ *
+ * Except for test cases, this function should compute some cryptographic hash of
+ * the message, the algorithm, the key and the attempt.
+ */
+typedef int (*secp256k1_nonce_function_t)(
+    unsigned char *nonce32,
+    const unsigned char *msg32,
+    const unsigned char *key32,
+    const unsigned char *algo16,
+    unsigned int attempt,
+    const void *data
+);
+
 # if !defined(SECP256K1_GNUC_PREREQ)
 #  if defined(__GNUC__)&&defined(__GNUC_MINOR__)
 #   define SECP256K1_GNUC_PREREQ(_maj,_min) \
@@ -40,83 +118,86 @@ extern "C" {
 #  define SECP256K1_ARG_NONNULL(_x)
 # endif
 
-/** Opaque data structure that holds context information (precomputed tables etc.).
- *  Only functions that take a pointer to a non-const context require exclusive
- *  access to it. Multiple functions that take a pointer to a const context may
- *  run simultaneously.
- */
-typedef struct secp256k1_context_struct secp256k1_context_t;
-
 /** Flags to pass to secp256k1_context_create. */
 # define SECP256K1_CONTEXT_VERIFY (1 << 0)
 # define SECP256K1_CONTEXT_SIGN   (1 << 1)
 
 /** Create a secp256k1 context object.
+ *
  *  Returns: a newly created context object.
  *  In:      flags: which parts of the context to initialize.
  */
 secp256k1_context_t* secp256k1_context_create(
-  int flags
+    int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 
 /** Copies a secp256k1 context object.
+ *
  *  Returns: a newly created context object.
- *  In:      ctx: an existing context to copy
+ *  In:      ctx: an existing context to copy (cannot be NULL)
  */
 secp256k1_context_t* secp256k1_context_clone(
-  const secp256k1_context_t* ctx
-) SECP256K1_WARN_UNUSED_RESULT;
+    const secp256k1_context_t* ctx
+) SECP256K1_ARG_NONNULL(1) SECP256K1_WARN_UNUSED_RESULT;
 
 /** Destroy a secp256k1 context object.
+ *
  *  The context pointer may not be used afterwards.
+ *  In:     ctx: an existing context to destroy (cannot be NULL)
  */
 void secp256k1_context_destroy(
-  secp256k1_context_t* ctx
+    secp256k1_context_t* ctx
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Set a callback function to be called when an illegal argument is passed to
- *  an API call. The philosophy is that these shouldn't be dealt with through a
+ *  an API call. It will only trigger for violations that are mentioned
+ *  explicitly in the header.
+ *
+ *  The philosophy is that these shouldn't be dealt with through a
  *  specific return value, as calling code should not have branches to deal with
  *  the case that this code itself is broken.
+ *
  *  On the other hand, during debug stage, one would want to be informed about
  *  such mistakes, and the default (crashing) may be inadvisable.
  *  When this callback is triggered, the API function called is guaranteed not
  *  to cause a crash, though its return value and output arguments are
  *  undefined.
+ *
+ *  In:   ctx: an existing context object (cannot be NULL)
+ *        fun: a pointer to a function to call when an illegal argument is
+ *             passed to the API, taking a message and an opaque pointer
+ *             (cannot be NULL).
+ *        data: the opaque pointer to pass to fun above.
  */
 void secp256k1_context_set_illegal_callback(
-  secp256k1_context_t* ctx,
-  void (*fun)(const char* message, void* data),
-  void* data
+    secp256k1_context_t* ctx,
+    void (*fun)(const char* message, void* data),
+    void* data
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
 
 /** Set a callback function to be called when an internal consistency check
  *  fails. The default is crashing.
+ *
  *  This can only trigger in case of a hardware failure, miscompilation,
  *  memory corruption, serious bug in the library, or other error would can
  *  otherwise result in undefined behaviour. It will not trigger due to mere
  *  incorrect usage of the API (see secp256k1_context_set_illegal_callback
  *  for that). After this callback returns, anything may happen, including
  *  crashing.
+ *
+ *  In:   ctx: an existing context object (cannot be NULL)
+ *        fun: a pointer to a function to call when an interal error occurs,
+ *             taking a message and an opaque pointer (cannot be NULL).
+ *        data: the opaque pointer to pass to fun above.
  */
 void secp256k1_context_set_error_callback(
-  secp256k1_context_t* ctx,
-  void (*fun)(const char* message, void* data),
-  void* data
+    secp256k1_context_t* ctx,
+    void (*fun)(const char* message, void* data),
+    void* data
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
 
-/** Data type to hold a parsed and valid public key.
-    This data type should be considered opaque to the user, and only created
-    through API functions. It is not guaranteed to be compatible between
-    different implementations. If you need to convert to a format suitable
-    for storage or transmission, use secp256k1_ec_pubkey_serialize and
-    secp256k1_ec_pubkey_parse.
- */
-typedef struct {
-  unsigned char data[64];
-} secp256k1_pubkey_t;
-
 /** Parse a variable-length public key into the pubkey object.
+ *
  *  Returns: 1 if the public key was fully valid.
  *           0 if the public key could not be parsed or is invalid.
  *  In:  ctx:      a secp256k1 context object.
@@ -124,18 +205,20 @@ typedef struct {
  *       inputlen: length of the array pointed to by input
  *  Out: pubkey:   pointer to a pubkey object. If 1 is returned, it is set to a
  *                 parsed version of input. If not, its value is undefined.
+ *
  *  This function supports parsing compressed (33 bytes, header byte 0x02 or
  *  0x03), uncompressed (65 bytes, header byte 0x04), or hybrid (65 bytes, header
  *  byte 0x06 or 0x07) format public keys.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
-  const secp256k1_context_t* ctx,
-  secp256k1_pubkey_t* pubkey,
-  const unsigned char *input,
-  int inputlen
+    const secp256k1_context_t* ctx,
+    secp256k1_pubkey_t* pubkey,
+    const unsigned char *input,
+    int inputlen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize a pubkey object into a serialized byte sequence.
+ *
  *  Returns: 1 always.
  *  In:   ctx:        a secp256k1 context object.
  *        pubkey:     a pointer to a secp256k1_pubkey_t containing an initialized
@@ -147,43 +230,34 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
  *                    size.
  */
 int secp256k1_ec_pubkey_serialize(
-  const secp256k1_context_t* ctx,
-  unsigned char *output,
-  int *outputlen,
-  const secp256k1_pubkey_t* pubkey,
-  int compressed
+    const secp256k1_context_t* ctx,
+    unsigned char *output,
+    int *outputlen,
+    const secp256k1_pubkey_t* pubkey,
+    int compressed
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
-/** Data type to hold a parsed ECDSA signature, optionally supporting pubkey
- *  recovery.
-    This data type should be considered opaque to the user, and only created
-    through API functions. It is not guaranteed to be compatible between
-    different implementations. If you need to convert to a format suitable
-    for storage or transmission, use secp256k1_ecdsa_signature_serialize_* and
-    secp256k1_ecdsa_signature_parse_* functions. */
-typedef struct {
-  unsigned char data[65];
-} secp256k1_ecdsa_signature_t;
-
 /** Parse a DER ECDSA signature.
+ *
  *  Returns: 1 when the signature could be parsed, 0 otherwise.
  *  In:  ctx:      a secp256k1 context object
  *       input:    a pointer to the signature to be parsed
  *       inputlen: the length of the array pointed to be input
  *  Out: sig:      a pointer to a signature object
  *
- *  Note that this function also supports some violations of DER.
+ *  Note that this function also supports some violations of DER and even BER.
  *
  *  The resulting signature object will not support pubkey recovery.
  */
 int secp256k1_ecdsa_signature_parse_der(
-  const secp256k1_context_t* ctx,
-  secp256k1_ecdsa_signature_t* sig,
-  const unsigned char *input,
-  int inputlen
+    const secp256k1_context_t* ctx,
+    secp256k1_ecdsa_signature_t* sig,
+    const unsigned char *input,
+    int inputlen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Parse a compact ECDSA signature (64 bytes + recovery id).
+ *
  *  Returns: 1 when the signature could be parsed, 0 otherwise
  *  In:  ctx:     a secp256k1 context object
  *       input64: a pointer to a 64-byte compact signature
@@ -194,13 +268,14 @@ int secp256k1_ecdsa_signature_parse_der(
  *  recovery.
  */
 int secp256k1_ecdsa_signature_parse_compact(
-  const secp256k1_context_t* ctx,
-  secp256k1_ecdsa_signature_t* sig,
-  const unsigned char *input64,
-  int recid
+    const secp256k1_context_t* ctx,
+    secp256k1_ecdsa_signature_t* sig,
+    const unsigned char *input64,
+    int recid
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize an ECDSA signature in DER format.
+ *
  *  Returns: 1 if enough space was available to serialize, 0 otherwise
  *  In:     ctx:       a secp256k1 context object
  *          sig:       a pointer to an initialized signature object
@@ -211,13 +286,14 @@ int secp256k1_ecdsa_signature_parse_compact(
  *                     if 0 was returned).
  */
 int secp256k1_ecdsa_signature_serialize_der(
-  const secp256k1_context_t* ctx,
-  unsigned char *output,
-  int *outputlen,
-  const secp256k1_ecdsa_signature_t* sig
+    const secp256k1_context_t* ctx,
+    unsigned char *output,
+    int *outputlen,
+    const secp256k1_ecdsa_signature_t* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Serialize an ECDSA signature in compact format (64 bytes + recovery id).
+ *
  *  Returns: 1
  *  In: ctx:       a secp256k1 context object
  *      sig:       a pointer to an initialized signature object (cannot be NULL)
@@ -227,13 +303,14 @@ int secp256k1_ecdsa_signature_serialize_der(
  *  If recid is not NULL, the signature must support pubkey recovery.
  */
 int secp256k1_ecdsa_signature_serialize_compact(
-  const secp256k1_context_t* ctx,
-  unsigned char *output64,
-  int *recid,
-  const secp256k1_ecdsa_signature_t* sig
+    const secp256k1_context_t* ctx,
+    unsigned char *output64,
+    int *recid,
+    const secp256k1_ecdsa_signature_t* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
 
 /** Verify an ECDSA signature.
+ *
  *  Returns: 1: correct signature
  *           0: incorrect or unparseable signature
  * In:       ctx:       a secp256k1 context object, initialized for verification.
@@ -242,34 +319,11 @@ int secp256k1_ecdsa_signature_serialize_compact(
  *           pubkey:    pointer to an initialized public key to verify with (cannot be NULL)
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
-  const secp256k1_context_t* ctx,
-  const unsigned char *msg32,
-  const secp256k1_ecdsa_signature_t *sig,
-  const secp256k1_pubkey_t *pubkey
+    const secp256k1_context_t* ctx,
+    const unsigned char *msg32,
+    const secp256k1_ecdsa_signature_t *sig,
+    const secp256k1_pubkey_t *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
-
-/** A pointer to a function to deterministically generate a nonce.
- * Returns: 1 if a nonce was successfully generated. 0 will cause signing to fail.
- * In:      msg32:     the 32-byte message hash being verified (will not be NULL)
- *          key32:     pointer to a 32-byte secret key (will not be NULL)
- *          algo16:    pointer to a 16-byte array describing the signature
- *                     algorithm (will be NULL for ECDSA for compatibility).
- *          attempt:   how many iterations we have tried to find a nonce.
- *                     This will almost always be 0, but different attempt values
- *                     are required to result in a different nonce.
- *          data:      Arbitrary data pointer that is passed through.
- * Out:     nonce32:   pointer to a 32-byte array to be filled by the function.
- * Except for test cases, this function should compute some cryptographic hash of
- * the message, the key and the attempt.
- */
-typedef int (*secp256k1_nonce_function_t)(
-  unsigned char *nonce32,
-  const unsigned char *msg32,
-  const unsigned char *key32,
-  const unsigned char *algo16,
-  unsigned int attempt,
-  const void *data
-);
 
 /** An implementation of RFC6979 (using HMAC-SHA256) as nonce generation function.
  * If a data pointer is passed, it is assumed to be a pointer to 32 bytes of
@@ -281,6 +335,7 @@ extern const secp256k1_nonce_function_t secp256k1_nonce_function_rfc6979;
 extern const secp256k1_nonce_function_t secp256k1_nonce_function_default;
 
 /** Create an ECDSA signature.
+ *
  *  Returns: 1: signature created
  *           0: the nonce generation function failed, or the private key was invalid.
  *  In:      ctx:    pointer to a context object, initialized for signing (cannot be NULL)
@@ -295,6 +350,7 @@ extern const secp256k1_nonce_function_t secp256k1_nonce_function_default;
  * The sig always has an s value in the lower half of the range (From 0x1
  * to 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
  * inclusive), unlike many other implementations.
+ *
  * With ECDSA a third-party can can forge a second distinct signature
  * of the same message given a single initial signature without knowing
  * the key by setting s to its additive inverse mod-order, 'flipping' the
@@ -319,41 +375,44 @@ extern const secp256k1_nonce_function_t secp256k1_nonce_function_default;
  * be taken when this property is required for an application.
  */
 int secp256k1_ecdsa_sign(
-  const secp256k1_context_t* ctx,
-  const unsigned char *msg32,
-  secp256k1_ecdsa_signature_t *sig,
-  const unsigned char *seckey,
-  secp256k1_nonce_function_t noncefp,
-  const void *ndata
+    const secp256k1_context_t* ctx,
+    const unsigned char *msg32,
+    secp256k1_ecdsa_signature_t *sig,
+    const unsigned char *seckey,
+    secp256k1_nonce_function_t noncefp,
+    const void *ndata
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Recover an ECDSA public key from a signature.
+ *
  *  Returns: 1: public key successfully recovered (which guarantees a correct signature).
  *           0: otherwise.
  *  In:      ctx:        pointer to a context object, initialized for verification (cannot be NULL)
  *           msg32:      the 32-byte message hash assumed to be signed (cannot be NULL)
- *           sig64:      pointer to initialized signature that supports pubkey recovery (cannot be NULL)
+ *           sig:        pointer to initialized signature that supports pubkey recovery (cannot be NULL)
  *  Out:     pubkey:     pointer to the recoved public key (cannot be NULL)
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_recover(
-  const secp256k1_context_t* ctx,
-  const unsigned char *msg32,
-  const secp256k1_ecdsa_signature_t *sig,
-  secp256k1_pubkey_t *pubkey
+    const secp256k1_context_t* ctx,
+    const unsigned char *msg32,
+    const secp256k1_ecdsa_signature_t *sig,
+    secp256k1_pubkey_t *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Verify an ECDSA secret key.
+ *
  *  Returns: 1: secret key is valid
  *           0: secret key is invalid
  *  In:      ctx: pointer to a context object (cannot be NULL)
  *           seckey: pointer to a 32-byte secret key (cannot be NULL)
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
-  const secp256k1_context_t* ctx,
-  const unsigned char *seckey
+    const secp256k1_context_t* ctx,
+    const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
 
 /** Compute the public key for a secret key.
+ *
  *  In:     ctx:        pointer to a context object, initialized for signing (cannot be NULL)
  *          seckey:     pointer to a 32-byte private key (cannot be NULL)
  *  Out:    pubkey:     pointer to the created public key (cannot be NULL)
@@ -361,60 +420,115 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
  *           0: secret was invalid, try again
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
-  const secp256k1_context_t* ctx,
-  secp256k1_pubkey_t *pubkey,
-  const unsigned char *seckey
+    const secp256k1_context_t* ctx,
+    secp256k1_pubkey_t *pubkey,
+    const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-/** Export a private key in DER format.
- * In: ctx: pointer to a context object, initialized for signing (cannot be NULL)
+/** Export a private key in BER format.
+ *
+ *  In: ctx:         pointer to a context object, initialized for signing (cannot
+ *                   be NULL)
+ *      seckey:      pointer to a 32-byte secret key to export.
+ *      compressed:  whether the key should be exported in compressed format.
+ *  Out: privkey:    pointer to an array for storing the private key in BER.
+ *                   Should have space for 279 bytes, and cannot be NULL.
+ *       privkeylen: Pointer to an int where the length of the private key in
+ *                   privkey will be stored.
+ *  Returns: 1 if the private key was valid.
+ *
+ *  This function is purely meant for compatibility with applications that
+ *  require BER encoded keys. When working with secp256k1-specific code, the
+ *  simple 32-byte private keys are sufficient.
+ *
+ *  Note that this function does not guarantee correct DER output. It is
+ *  guaranteed to be parsable by secp256k1_ec_privkey_import.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_export(
-  const secp256k1_context_t* ctx,
-  const unsigned char *seckey,
-  unsigned char *privkey,
-  int *privkeylen,
-  int compressed
+    const secp256k1_context_t* ctx,
+    const unsigned char *seckey,
+    unsigned char *privkey,
+    int *privkeylen,
+    int compressed
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
-/** Import a private key in DER format. */
+/** Import a private key in DER format.
+ * Returns: 1 if a private key was extracted.
+ * In:  ctx:        pointer to a context object (cannot be NULL).
+ *      privkey:    pointer to a private key in DER format (cannot be NULL).
+ *      privkeylen: length of the DER private key pointed to be privkey.
+ * Out: seckey:     pointer to a 32-byte array for storing the private key.
+ *                  (cannot be NULL).
+ *
+ * This function will accept more than just strict DER, and even allow some BER
+ * violations. The public key stored inside the DER-encoded private key is not
+ * verified for correctness, nor are the curve parameters. Use this function
+ * only if you know in advance it is supposed to contain a secp256k1 private
+ * key.
+ */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_import(
-  const secp256k1_context_t* ctx,
-  unsigned char *seckey,
-  const unsigned char *privkey,
-  int privkeylen
+    const secp256k1_context_t* ctx,
+    unsigned char *seckey,
+    const unsigned char *privkey,
+    int privkeylen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-/** Tweak a private key by adding tweak to it. */
+/** Tweak a private key by adding tweak to it.
+ * In:     ctx:    pointer to a context object (cannot be NULL).
+ *         tweak:  pointer to a 32-byte tweak.
+ * In/Out: seckey: pointer to a 32-byte private key.
+ * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
+ *          uniformly random 32-byte arrays, or if the resulting private key
+ *          would be invalid (only when the tweak is the complement of the
+ *          private key). 1 otherwise.
+ */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
-  const secp256k1_context_t* ctx,
-  unsigned char *seckey,
-  const unsigned char *tweak
+    const secp256k1_context_t* ctx,
+    unsigned char *seckey,
+    const unsigned char *tweak
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Tweak a public key by adding tweak times the generator to it.
- * In: ctx: pointer to a context object, initialized for verification (cannot be NULL)
+ * In:     ctx:    pointer to a context object initialized for validation
+ *                 (cannot be NULL).
+ *         tweak:  pointer to a 32-byte tweak.
+ * In/Out: pubkey: pointer to a public key object.
+ * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
+ *          uniformly random 32-byte arrays, or if the resulting public key
+ *          would be invalid (only when the tweak is the complement of the
+ *          corresponding private key). 1 otherwise.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_add(
-  const secp256k1_context_t* ctx,
-  secp256k1_pubkey_t *pubkey,
-  const unsigned char *tweak
+    const secp256k1_context_t* ctx,
+    secp256k1_pubkey_t *pubkey,
+    const unsigned char *tweak
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-/** Tweak a private key by multiplying it with tweak. */
+/** Tweak a private key by multiplying it by a tweak.
+ * In:     ctx:    pointer to a context object (cannot be NULL).
+ *         tweak:  pointer to a 32-byte tweak.
+ * In/Out: seckey: pointer to a 32-byte private key.
+ * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
+ *          uniformly random 32-byte arrays, or equal to zero. 1 otherwise.
+ */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
-  const secp256k1_context_t* ctx,
-  unsigned char *seckey,
-  const unsigned char *tweak
+    const secp256k1_context_t* ctx,
+    unsigned char *seckey,
+    const unsigned char *tweak
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-/** Tweak a public key by multiplying it with tweak.
- * In: ctx: pointer to a context object, initialized for verification (cannot be NULL)
+/** Tweak a public key by multiplying it by a tweak value.
+ * In:     ctx:    pointer to a context object initialized for validation
+ *                 (cannot be NULL).
+ *         tweak:  pointer to a 32-byte tweak.
+ * In/Out: pubkey: pointer to a public key obkect.
+ * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
+ *          uniformly random 32-byte arrays, or equal to zero. 1 otherwise.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
-  const secp256k1_context_t* ctx,
-  secp256k1_pubkey_t *pubkey,
-  const unsigned char *tweak
+    const secp256k1_context_t* ctx,
+    secp256k1_pubkey_t *pubkey,
+    const unsigned char *tweak
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Updates the context randomization.
@@ -424,8 +538,8 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
  *           seed32:    pointer to a 32-byte random seed (NULL resets to initial state)
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
-  secp256k1_context_t* ctx,
-  const unsigned char *seed32
+    secp256k1_context_t* ctx,
+    const unsigned char *seed32
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Add a number of public keys together.
@@ -440,10 +554,10 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
  *  uncompressed format is needed.
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
-  const secp256k1_context_t* ctx,
-  secp256k1_pubkey_t *out,
-  int n,
-  const secp256k1_pubkey_t * const * ins
+    const secp256k1_context_t* ctx,
+    secp256k1_pubkey_t *out,
+    int n,
+    const secp256k1_pubkey_t * const * ins
 ) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
 
 # ifdef __cplusplus
