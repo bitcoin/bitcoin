@@ -77,7 +77,7 @@ testScripts = [
     'rawtransactions.py',
     'rest.py',
     'mempool_spendcoinbase.py',
-    'mempool_coinbase_spends.py',
+    'mempool_reorg.py',
     'httpbasics.py',
     'zapwallettxes.py',
     'proxy_test.py',
