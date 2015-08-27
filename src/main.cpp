@@ -992,21 +992,22 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, uint256 &hashBlock
                 if (coins)
                     nHeight = coins->nHeight;
             }
-            if (nHeight > 0)
+            if (nHeight > 0){
                 pindexSlow = chainActive[nHeight];
-        }
-    }
-
-    if (pindexSlow) {
-        CBlock block;
-        if (ReadBlockFromDisk(block, pindexSlow)) {
-            BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-                if (tx.GetHash() == hash) {
-                    txOut = tx;
-                    hashBlock = pindexSlow->GetBlockHash();
-                    return true;
+                
+                if (pindexSlow) {
+                    CBlock block;
+                    if (ReadBlockFromDisk(block, pindexSlow)) {
+                        BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+                            if (tx.GetHash() == hash) {
+                                txOut = tx;
+                                hashBlock = pindexSlow->GetBlockHash();
+                                return true;
+                            }
+                        }
+                    }
                 }
-            }
+            }      
         }
     }
 
