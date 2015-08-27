@@ -22,6 +22,8 @@ const uint16_t FEATURE_METADEX = 2;
 const uint16_t FEATURE_BETTING = 3;
 //! Feature identifier to disable crowdsale participations when "granting tokens"
 const uint16_t FEATURE_GRANTEFFECTS = 4;
+//! Feature identifier to disable DEx "over-offers" and to switch to plain integer math
+const uint16_t FEATURE_DEXMATH = 5;
 
 /** A structure to represent transaction restrictions.
  */
@@ -99,6 +101,8 @@ public:
 
     //! Block to deactivate crowdsale participations when "granting tokens"
     int GRANTEFFECTS_FEATURE_BLOCK;
+    //! Block to disable DEx "over-offers" and to switch to plain integer math
+    int DEXMATH_FEATURE_BLOCK;
 
     /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
     virtual std::vector<TransactionRestriction> GetRestrictions() const;

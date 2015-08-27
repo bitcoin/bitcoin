@@ -10,6 +10,7 @@
 #include "omnicore/errors.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/rules.h"
 
 #include "main.h"
 #include "tinyformat.h"
@@ -17,6 +18,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
 #include <openssl/sha.h>
 
@@ -112,7 +114,7 @@ static int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t am
 /**
  * Determines the amount of bitcoins desired, in case it needs to be recalculated.
  *
- * TODO: use plain integers, don't expose it!
+ * TODO: don't expose it!
  * @return The amount of bitcoins desired
  */
 int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountAvailable)
@@ -151,6 +153,21 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
 
     const int64_t balanceReallyAvailable = getMPbalance(addressSeller, propertyId, BALANCE);
 
+    /**
+     * After this feature is enabled, it is no longer valid to create orders, which offer more than
+     * the seller has available, and the amounts are no longer adjusted based on the actual balance.
+     */
+    if (IsFeatureActivated(FEATURE_DEXMATH, block)) {
+        if (amountOffered > balanceReallyAvailable) {
+            PrintToLog("%s: rejected: sender %s has insufficient balance of property %d [%s < %s]\n", __func__,
+                        addressSeller, propertyId, FormatDivisibleMP(balanceReallyAvailable), FormatDivisibleMP(amountOffered));
+            return (DEX_ERROR_SELLOFFER -25);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // legacy::
+
     // if offering more than available -- put everything up on sale
     if (amountOffered > balanceReallyAvailable) {
         PrintToLog("%s: adjusting order: %s offers %s %s, but has only %s %s available\n", __func__,
@@ -165,6 +182,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
         PrintToLog("%s: adjusting order: updated amount for sale: %s %s, offered for: %s BTC\n", __func__,
                         FormatDivisibleMP(amountOffered), strMPProperty(propertyId), FormatDivisibleMP(amountDesired));
     }
+    // -------------------------------------------------------------------------
 
     if (amountOffered > 0) {
         assert(update_tally_map(addressSeller, propertyId, -amountOffered, BALANCE));
@@ -362,7 +380,7 @@ namespace legacy
  * @see:
  * https://github.com/mastercoin-MSC/mastercore/blob/mscore-0.0.9/src/mastercore_dex.cpp#L660-L668
  */
-static int64_t calculateDExTrade(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
+static int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
 {
     uint64_t acceptOfferAmount = static_cast<uint64_t>(amountOffered);
     uint64_t acceptBTCDesired = static_cast<uint64_t>(amountDesired);
@@ -381,13 +399,23 @@ static int64_t calculateDExTrade(const int64_t amountOffered, const int64_t amou
 }
 
 /**
- * Determines the amount of bitcoins desired, in case it needs to be recalculated.
+ * Determines the purchased amount of tokens.
  *
- * @return The amount of bitcoins desired
+ * The amount is rounded up, which may be in favor of the buyer, to avoid small
+ * leftovers of 1 willet. This is not exploitable due to transaction fees.
+ *
+ * The desired amount must not be zero, and the purchased amount should be checked
+ * against the actual amount that is still left for sale.
+ *
+ * @return The amount of tokens purchased
  */
-static int64_t calculateDExTrade(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
+int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
 {
-    return legacy::calculateDExTrade(amountOffered, amountDesired, amountPaid);
+    using boost::multiprecision::int128_t;
+
+    int128_t amountPurchased = int128_t(1) + ((int128_t(amountPaid) * int128_t(amountOffered)) - int128_t(1)) / int128_t(amountDesired);
+
+    return amountPurchased.convert_to<int64_t>();
 }
 
 /**
@@ -414,7 +442,6 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     }
 
     // -------------------------------------------------------------------------
-    // TODO: no floating numbers
 
     const int64_t amountDesired = p_accept->getBTCDesiredOriginal();
     const int64_t amountOffered = p_accept->getOfferAmountOriginal();
@@ -426,7 +453,24 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
         return (DEX_ERROR_PAYMENT -2);
     }
 
-    int64_t amountPurchased = calculateDExTrade(amountOffered, amountDesired, amountPaid);
+    int64_t amountPurchased = 0;
+
+    /**
+     * As long as this feature is disabled, floating point math is used to
+     * determine the purchased amount.
+     *
+     * After this feature is enabled, plain integer math is used to determine
+     * the purchased amount. The purchased amount is rounded up, which may be
+     * in favor of the buyer, to avoid small leftovers of 1 willet.
+     *
+     * This is not exploitable due to transaction fees.
+     */
+    if (IsFeatureActivated(FEATURE_DEXMATH, block)) {
+        amountPurchased = calculateDExPurchase(amountOffered, amountDesired, amountPaid);
+    } else {
+        // Fallback to original calculation:
+        amountPurchased = legacy::calculateDExPurchase(amountOffered, amountDesired, amountPaid);
+    }
 
     // -------------------------------------------------------------------------
 

@@ -147,6 +147,7 @@ CMainConsensusParams::CMainConsensusParams()
     MSC_BET_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
+    DEXMATH_FEATURE_BLOCK = 999999;
 }
 
 /**
@@ -179,6 +180,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     MSC_BET_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
+    DEXMATH_FEATURE_BLOCK = 999999;
 }
 
 /**
@@ -211,6 +213,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     MSC_BET_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
+    DEXMATH_FEATURE_BLOCK = 999999;
 }
 
 //! Consensus parameters for mainnet
@@ -350,6 +353,13 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlo
                        "granting tokens, is going to be disabled at block %d.\n",
                        featureId, params.GRANTEFFECTS_FEATURE_BLOCK);
             return true;
+        case FEATURE_DEXMATH:
+            MutableConsensusParams().DEXMATH_FEATURE_BLOCK = activationBlock;
+            PrintToLog("Feature activation of ID %d succeeded. "
+                       "Offering more tokens than available on the traditional DEx "
+                       "is no longer allowed and going to be disabled at block %d.\n",
+                       featureId, params.DEXMATH_FEATURE_BLOCK);
+            return true;
     }
 
     PrintToLog("Feature activation of id %d refused due to unknown feature ID\n", featureId);
@@ -376,6 +386,9 @@ bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
             break;
         case FEATURE_GRANTEFFECTS:
             activationBlock = params.GRANTEFFECTS_FEATURE_BLOCK;
+            break;
+        case FEATURE_DEXMATH:
+            activationBlock = params.DEXMATH_FEATURE_BLOCK;
             break;
         default:
             return false;
