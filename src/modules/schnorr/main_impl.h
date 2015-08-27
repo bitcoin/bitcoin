@@ -19,7 +19,7 @@ static void secp256k1_schnorr_msghash_sha256(unsigned char *h32, const unsigned 
 
 static const unsigned char secp256k1_schnorr_algo16[16] = "Schnorr+SHA256  ";
 
-int secp256k1_schnorr_sign(const secp256k1_context_t* ctx, const unsigned char *msg32, unsigned char *sig64, const unsigned char *seckey, secp256k1_nonce_function_t noncefp, const void* noncedata) {
+int secp256k1_schnorr_sign(const secp256k1_context_t* ctx, unsigned char *sig64, const unsigned char *msg32, const unsigned char *seckey, secp256k1_nonce_function_t noncefp, const void* noncedata) {
     secp256k1_scalar_t sec, non;
     int ret = 0;
     int overflow = 0;
@@ -36,7 +36,7 @@ int secp256k1_schnorr_sign(const secp256k1_context_t* ctx, const unsigned char *
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
     while (1) {
         unsigned char nonce32[32];
-        ret = noncefp(nonce32, msg32, seckey, secp256k1_schnorr_algo16, count, noncedata);
+        ret = noncefp(nonce32, msg32, seckey, secp256k1_schnorr_algo16, noncedata, count);
         if (!ret) {
             break;
         }
@@ -57,7 +57,7 @@ int secp256k1_schnorr_sign(const secp256k1_context_t* ctx, const unsigned char *
     return ret;
 }
 
-int secp256k1_schnorr_verify(const secp256k1_context_t* ctx, const unsigned char *msg32, const unsigned char *sig64, const secp256k1_pubkey_t *pubkey) {
+int secp256k1_schnorr_verify(const secp256k1_context_t* ctx, const unsigned char *sig64, const unsigned char *msg32, const secp256k1_pubkey_t *pubkey) {
     secp256k1_ge_t q;
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
@@ -69,7 +69,7 @@ int secp256k1_schnorr_verify(const secp256k1_context_t* ctx, const unsigned char
     return secp256k1_schnorr_sig_verify(&ctx->ecmult_ctx, sig64, &q, secp256k1_schnorr_msghash_sha256, msg32);
 }
 
-int secp256k1_schnorr_recover(const secp256k1_context_t* ctx, const unsigned char *msg32, const unsigned char *sig64, secp256k1_pubkey_t *pubkey) {
+int secp256k1_schnorr_recover(const secp256k1_context_t* ctx, secp256k1_pubkey_t *pubkey, const unsigned char *sig64, const unsigned char *msg32) {
     secp256k1_ge_t q;
 
     VERIFY_CHECK(ctx != NULL);
@@ -87,7 +87,7 @@ int secp256k1_schnorr_recover(const secp256k1_context_t* ctx, const unsigned cha
     }
 }
 
-int secp256k1_schnorr_generate_nonce_pair(const secp256k1_context_t* ctx, const unsigned char *msg32, const unsigned char *sec32, secp256k1_nonce_function_t noncefp, const void* noncedata, secp256k1_pubkey_t *pubnonce, unsigned char *privnonce32) {
+int secp256k1_schnorr_generate_nonce_pair(const secp256k1_context_t* ctx, secp256k1_pubkey_t *pubnonce, unsigned char *privnonce32, const unsigned char *sec32, const unsigned char *msg32, secp256k1_nonce_function_t noncefp, const void* noncedata) {
     int count = 0;
     int ret = 1;
     secp256k1_gej_t Qj;
@@ -107,7 +107,7 @@ int secp256k1_schnorr_generate_nonce_pair(const secp256k1_context_t* ctx, const 
 
     do {
         int overflow;
-        ret = noncefp(privnonce32, msg32, sec32, secp256k1_schnorr_algo16, count++, noncedata);
+        ret = noncefp(privnonce32, sec32, msg32, secp256k1_schnorr_algo16, noncedata, count++);
         if (!ret) {
             break;
         }
@@ -129,7 +129,7 @@ int secp256k1_schnorr_generate_nonce_pair(const secp256k1_context_t* ctx, const 
     return ret;
 }
 
-int secp256k1_schnorr_partial_sign(const secp256k1_context_t* ctx, const unsigned char *msg32, unsigned char *sig64, const unsigned char *sec32, const unsigned char *secnonce32, const secp256k1_pubkey_t *pubnonce_others) {
+int secp256k1_schnorr_partial_sign(const secp256k1_context_t* ctx, unsigned char *sig64, const unsigned char *msg32, const unsigned char *sec32, const secp256k1_pubkey_t *pubnonce_others, const unsigned char *secnonce32) {
     int overflow = 0;
     secp256k1_scalar_t sec, non;
     secp256k1_ge_t pubnon;
@@ -153,7 +153,7 @@ int secp256k1_schnorr_partial_sign(const secp256k1_context_t* ctx, const unsigne
     return secp256k1_schnorr_sig_sign(&ctx->ecmult_gen_ctx, sig64, &sec, &non, &pubnon, secp256k1_schnorr_msghash_sha256, msg32);
 }
 
-int secp256k1_schnorr_partial_combine(const secp256k1_context_t* ctx, unsigned char *sig64, int n, const unsigned char * const *sig64sin) {
+int secp256k1_schnorr_partial_combine(const secp256k1_context_t* ctx, unsigned char *sig64, const unsigned char * const *sig64sin, int n) {
     ARG_CHECK(sig64 != NULL);
     ARG_CHECK(n >= 1);
     ARG_CHECK(sig64sin != NULL);

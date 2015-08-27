@@ -83,7 +83,7 @@ int secp256k1_ecdsa_recoverable_signature_convert(const secp256k1_context_t* ctx
     return 1;
 }
 
-int secp256k1_ecdsa_sign_recoverable(const secp256k1_context_t* ctx, const unsigned char *msg32, secp256k1_ecdsa_recoverable_signature_t *signature, const unsigned char *seckey, secp256k1_nonce_function_t noncefp, const void* noncedata) {
+int secp256k1_ecdsa_sign_recoverable(const secp256k1_context_t* ctx, secp256k1_ecdsa_recoverable_signature_t *signature, const unsigned char *msg32, const unsigned char *seckey, secp256k1_nonce_function_t noncefp, const void* noncedata) {
     secp256k1_scalar_t r, s;
     secp256k1_scalar_t sec, non, msg;
     int recid;
@@ -105,7 +105,7 @@ int secp256k1_ecdsa_sign_recoverable(const secp256k1_context_t* ctx, const unsig
         secp256k1_scalar_set_b32(&msg, msg32, NULL);
         while (1) {
             unsigned char nonce32[32];
-            ret = noncefp(nonce32, msg32, seckey, NULL, count, noncedata);
+            ret = noncefp(nonce32, seckey, msg32, NULL, noncedata, count);
             if (!ret) {
                 break;
             }
@@ -130,7 +130,7 @@ int secp256k1_ecdsa_sign_recoverable(const secp256k1_context_t* ctx, const unsig
     return ret;
 }
 
-int secp256k1_ecdsa_recover(const secp256k1_context_t* ctx, const unsigned char *msg32, const secp256k1_ecdsa_recoverable_signature_t *signature, secp256k1_pubkey_t *pubkey) {
+int secp256k1_ecdsa_recover(const secp256k1_context_t* ctx, secp256k1_pubkey_t *pubkey, const secp256k1_ecdsa_recoverable_signature_t *signature, const unsigned char *msg32) {
     secp256k1_ge_t q;
     secp256k1_scalar_t r, s;
     secp256k1_scalar_t m;
