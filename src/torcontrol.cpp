@@ -408,8 +408,10 @@ void TorController::add_onion_cb(TorControlConnection& conn, const TorControlRep
         }
         AddLocal(service, LOCAL_MANUAL);
         // ... onion requested - keep connection open
+    } else if (reply.code == 510) { // 510 Unrecognized command
+        LogPrintf("[tor] Add onion failed with unrecognized command (You probably need to upgrade Tor)\n");
     } else {
-        LogPrintf("[tor] Add onion failed\n");
+        LogPrintf("[tor] Add onion failed; error code %d\n", reply.code);
     }
 }
 
