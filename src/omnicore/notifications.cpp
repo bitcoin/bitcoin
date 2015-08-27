@@ -144,33 +144,11 @@ bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime)
     for (std::vector<AlertData>::iterator it = currentOmniAlerts.begin(); it != currentOmniAlerts.end(); ) {
         AlertData alert = *it;
         switch (alert.alert_type) {
-            case ALERT_FEATURE_UNSUPPORTED:
-                if (curBlock >= alert.alert_expiry) {
-                    std::string msgText = strprintf("Shutting down due to alert: %s", alert.alert_message);
-                    PrintToLog(msgText);
-                    PrintToConsole(msgText);
-                    if (!GetBoolArg("-overrideforcedshutdown", false)) {
-                        AbortNode(msgText, msgText);
-                    }
-                    it = currentOmniAlerts.erase(it);
-                } else {
-                    it++;
-                }
-            break;
             case ALERT_BLOCK_EXPIRY:
                 if (curBlock >= alert.alert_expiry) {
                     PrintToLog("Expiring alert (from %s: type:%d expiry:%d message:%s)\n", alert.alert_sender,
                         alert.alert_type, alert.alert_expiry, alert.alert_message);
                     it = currentOmniAlerts.erase(it);
-
-                    // if expiring a feature activation because it's gone live, add another notification
-                    // to say we're now live and expire it in 1024 blocks.
-                    size_t replacePosition = alert.alert_message.find("') will go live at block ");
-                    if (replacePosition != std::string::npos) {
-                        std::string newAlertMessage = alert.alert_message.substr(0, replacePosition) + "') is now live.";
-                        AddAlert("omnicore", 1, alert.alert_expiry + 1024, newAlertMessage);
-                    }
-
                     uiInterface.OmniStateChanged();
                 } else {
                     it++;

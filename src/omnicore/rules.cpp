@@ -12,9 +12,12 @@
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
 
+#include "alert.h"
 #include "chainparams.h"
+#include "main.h"
 #include "script/standard.h"
 #include "uint256.h"
+#include "ui_interface.h"
 
 #include <openssl/sha.h>
 
@@ -28,7 +31,12 @@ namespace mastercore
 /**
  * Pending activations
  */
-std::vector<PendingActivation> PendingActivations;
+std::vector<FeatureActivation> PendingActivations;
+
+/**
+ * Completed activations
+ */
+std::vector<FeatureActivation> CompletedActivations;
 
 /**
  * Returns a mapping of transaction types, and the blocks at which they are enabled.
@@ -318,18 +326,90 @@ bool IsAllowedOutputType(int whichType, int nBlock)
 }
 
 /**
- * Adds a pending activation to the PendingActivations vector.
+ * Adds a feature activation to the PendingActivations vector.
  *
  */
 void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minClientVersion, const std::string& featureName)
 {
-    PendingActivation pa;
-    pa.featureId = featureId;
-    pa.activationBlock = activationBlock;
-    pa.minClientVersion = minClientVersion;
-    pa.featureName = featureName;
+    FeatureActivation featureActivation;
 
-    PendingActivations.push_back(pa);
+    featureActivation.featureId = featureId;
+    featureActivation.featureName = featureName;
+    featureActivation.activationBlock = activationBlock;
+    featureActivation.minClientVersion = minClientVersion;
+
+    PendingActivations.push_back(featureActivation);
+}
+
+/**
+ * Deletes a pending activation from the PendingActivations vector.  Deletion is not supported on the CompletedActivations vector.
+ *
+ */
+void DeletePendingActivation(uint16_t featureId)
+{
+   for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ) {
+       if ((*it).featureId == featureId) {
+           it = PendingActivations.erase(it);
+       } else {
+           it++;
+       }
+   }
+}
+
+/**
+ * Checks if any activations went live in the block
+ *
+ */
+void CheckLiveActivations(int blockHeight)
+{
+    std::vector<FeatureActivation> PendingActivations = GetPendingActivations();
+    for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ++it) {
+       if ((*it).activationBlock > blockHeight) continue;
+       FeatureActivation LiveActivation = *it;
+       if (OMNICORE_VERSION < LiveActivation.minClientVersion) {
+           std::string msgText = strprintf("Shutting down due to unsupported feature activation (%d: %s)", LiveActivation.featureId, LiveActivation.featureName);
+           PrintToLog(msgText);
+           PrintToConsole(msgText);
+           if (!GetBoolArg("-overrideforcedshutdown", false)) {
+               AbortNode(msgText, msgText);
+           }
+       }
+       PendingActivationCompleted(LiveActivation.featureId);
+       uiInterface.OmniStateChanged();
+    }
+}
+
+/**
+ * Moves an activation from PendingActivations to CompletedActivations when it is activated
+ *
+ */
+void PendingActivationCompleted(uint16_t featureId)
+{
+   for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ) {
+       if ((*it).featureId == featureId) {
+           FeatureActivation completedActivation = *it;
+           CompletedActivations.push_back(completedActivation);
+           it = PendingActivations.erase(it);
+       } else {
+           it++;
+       }
+   }
+}
+
+/**
+ * Returns the vector of pending activations.
+ */
+std::vector<FeatureActivation> GetPendingActivations()
+{
+    return PendingActivations;
+}
+
+/**
+ * Returns the vector of completed activations.
+ */
+std::vector<FeatureActivation> GetCompletedActivations()
+{
+    return CompletedActivations;
 }
 
 /**
@@ -428,13 +508,14 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
         break;
     }
     PrintToLog("Feature activation of ID %d processed. %s will be enabled at block %d.\n", featureId, featureName, activationBlock);
+    DeletePendingActivation(featureId); // if this feature id was previously scheduled for activation, delete the stale pending object
     AddPendingActivation(featureId, activationBlock, minClientVersion, featureName);
-    AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, strprintf("Feature %d ('%s') will go live at block %d", featureId, featureName, activationBlock));
     if (!supported) {
         PrintToLog("WARNING!!! AS OF BLOCK %d THIS CLIENT WILL BE OUT OF CONSENSUS AND WILL AUTOMATICALLY SHUTDOWN.\n", activationBlock);
-        AddAlert("omnicore", ALERT_FEATURE_UNSUPPORTED, activationBlock,
-                 strprintf("Your client must be updated and will shutdown at block %d "
-                           "(unsupported feature %d ('%s') activated)\n", activationBlock, featureId, featureName));
+        std::string alertText = strprintf("Your client must be updated and will shutdown at block %d (unsupported feature %d ('%s') activated)\n",
+                                          activationBlock, featureId, featureName);
+        AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, alertText);
+        CAlert::Notify(alertText, true);
     }
     return true;
 }

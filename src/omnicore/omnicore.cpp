@@ -2678,7 +2678,7 @@ int mastercore_init()
     }
 
     // load feature activation messages from txlistdb and process them accordingly
-    p_txlistdb->LoadActivations();
+    p_txlistdb->LoadActivations(nWaterlineBlock);
 
     // load all alerts from levelDB (and immediately expire old ones)
     p_txlistdb->LoadAlerts(nWaterlineBlock);
@@ -2888,7 +2888,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
 #endif
 }
 
-void CMPTxList::LoadActivations()
+void CMPTxList::LoadActivations(int blockHeight)
 {
     if (!pdb) return;
 
@@ -2945,6 +2945,7 @@ void CMPTxList::LoadActivations()
         }
     }
     delete it;
+    CheckLiveActivations(blockHeight);
 }
 
 void CMPTxList::LoadAlerts(int blockHeight)
@@ -4065,6 +4066,9 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
             msc_initial_scan(nWaterlineBlock + 1);
         }
     }
+
+    // handle any features that go live with this block
+    CheckLiveActivations(pBlockIndex->nHeight);
 
     eraseExpiredCrowdsale(pBlockIndex);
 

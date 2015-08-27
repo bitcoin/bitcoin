@@ -16,6 +16,7 @@
 
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 #include "omnicore/pending.h"
@@ -622,10 +623,29 @@ void OverviewPage::updateDisplayUnit()
 void OverviewPage::updateAlerts()
 {
     QString alertString = QString::fromStdString(GetWarnings("statusbar")); // get current bitcoin alert/warning directly
+
+    // get alert messages
     std::vector<std::string> omniAlerts = GetOmniCoreAlertMessages();
     for (std::vector<std::string>::iterator it = omniAlerts.begin(); it != omniAlerts.end(); it++) {
         if (!alertString.isEmpty()) alertString += "\n";
         alertString += QString::fromStdString(*it);
+    }
+
+    // get activations
+    std::vector<FeatureActivation> PendingActivations = GetPendingActivations();
+    for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ++it) {
+        if (!alertString.isEmpty()) alertString += "\n";
+        FeatureActivation pendingAct = *it;
+        alertString += QString::fromStdString(strprintf("Feature %d ('%s') will go live at block %d",
+                                                  pendingAct.featureId, pendingAct.featureName, pendingAct.activationBlock));
+    }
+    int currentHeight = GetHeight();
+    std::vector<FeatureActivation> CompletedActivations = GetCompletedActivations();
+    for (std::vector<FeatureActivation>::iterator it = CompletedActivations.begin(); it != CompletedActivations.end(); ++it) {
+        if (currentHeight > (*it).activationBlock+1024) continue; // don't include after live+1024 blocks
+        if (!alertString.isEmpty()) alertString += "\n";
+        FeatureActivation completedAct = *it;
+        alertString += QString::fromStdString(strprintf("Feature %d ('%s') is now live.", completedAct.featureId, completedAct.featureName));
     }
 
     if (!alertString.isEmpty()) {

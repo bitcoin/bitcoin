@@ -245,7 +245,7 @@ public:
     bool getTX(const uint256 &txid, string &value);
 
     void LoadAlerts(int blockHeight);
-    void LoadActivations();
+    void LoadActivations(int blockHeight);
 
     void printStats();
     void printAll();

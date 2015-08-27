@@ -1487,11 +1487,75 @@ Value omni_getinfo(const Array& params, bool fHelp)
         alertResponse.push_back(Pair("alerttype", alertTypeStr));
         alertResponse.push_back(Pair("alertexpiry", FormatIndivisibleMP(alert.alert_expiry)));
         alertResponse.push_back(Pair("alertmessage", alert.alert_message));
-    alerts.push_back(alertResponse);
+        alerts.push_back(alertResponse);
     }
     infoResponse.push_back(Pair("alerts", alerts));
 
     return infoResponse;
+}
+
+Value omni_getactivations(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "omni_getactivations\n"
+            "Returns pending and completed feature activations.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"pendingactivations\": [                 (array of JSON objects) a list of pending feature activations\n"
+            "    {\n"
+            "      \"featureid\" : n                     (number) the id of the feature\n"
+            "      \"featurename\" : \"xxxxxxxx\"        (string) the name of the feature\n"
+            "      \"activationblock\" : n               (number) the block the feature will be activated\n"
+            "      \"minimumversion\" : n                (number) the minimum client version needed to support this feature\n"
+            "    },\n"
+            "    ...\n"
+            "  ]\n"
+            "  \"completedactivations\": [               (array of JSON objects) a list of completed feature activations\n"
+            "    {\n"
+            "      \"featureid\" : n                     (number) the id of the feature\n"
+            "      \"featurename\" : \"xxxxxxxx\"        (string) the name of the feature\n"
+            "      \"activationblock\" : n               (number) the block the feature will be activated\n"
+            "      \"minimumversion\" : n                (number) the minimum client version needed to support this feature\n"
+            "    },\n"
+            "    ...\n"
+            "  ]\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getactivations", "")
+            + HelpExampleRpc("omni_getactivations", "")
+        );
+
+    Object response;
+
+    Array arrayPendingActivations;
+    std::vector<FeatureActivation> PendingActivations = GetPendingActivations();
+    for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ++it) {
+        Object actObj;
+        FeatureActivation pendingAct = *it;
+        actObj.push_back(Pair("featureid", pendingAct.featureId));
+        actObj.push_back(Pair("featurename", pendingAct.featureName));
+        actObj.push_back(Pair("activationblock", FormatIndivisibleMP(pendingAct.activationBlock)));
+        actObj.push_back(Pair("minimumversion", (uint64_t)pendingAct.minClientVersion));
+        arrayPendingActivations.push_back(actObj);
+    }
+
+    Array arrayCompletedActivations;
+    std::vector<FeatureActivation> CompletedActivations = GetCompletedActivations();
+    for (std::vector<FeatureActivation>::iterator it = CompletedActivations.begin(); it != CompletedActivations.end(); ++it) {
+        Object actObj;
+        FeatureActivation completedAct = *it;
+        actObj.push_back(Pair("featureid", completedAct.featureId));
+        actObj.push_back(Pair("featurename", completedAct.featureName));
+        actObj.push_back(Pair("activationblock", FormatIndivisibleMP(completedAct.activationBlock)));
+        actObj.push_back(Pair("minimumversion", (uint64_t)completedAct.minClientVersion));
+        arrayCompletedActivations.push_back(actObj);
+    }
+
+    response.push_back(Pair("pendingactivations", arrayPendingActivations));
+    response.push_back(Pair("completedactivations", arrayCompletedActivations));
+
+    return response;
 }
 
 Value omni_getsto(const Array& params, bool fHelp)
