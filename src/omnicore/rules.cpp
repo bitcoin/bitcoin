@@ -31,12 +31,12 @@ namespace mastercore
 /**
  * Pending activations
  */
-std::vector<FeatureActivation> PendingActivations;
+std::vector<FeatureActivation> vecPendingActivations;
 
 /**
  * Completed activations
  */
-std::vector<FeatureActivation> CompletedActivations;
+std::vector<FeatureActivation> vecCompletedActivations;
 
 /**
  * Returns a mapping of transaction types, and the blocks at which they are enabled.
@@ -338,7 +338,7 @@ void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minC
     featureActivation.activationBlock = activationBlock;
     featureActivation.minClientVersion = minClientVersion;
 
-    PendingActivations.push_back(featureActivation);
+    vecPendingActivations.push_back(featureActivation);
 }
 
 /**
@@ -347,9 +347,9 @@ void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minC
  */
 void DeletePendingActivation(uint16_t featureId)
 {
-   for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ) {
+   for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ) {
        if ((*it).featureId == featureId) {
-           it = PendingActivations.erase(it);
+           it = vecPendingActivations.erase(it);
        } else {
            it++;
        }
@@ -362,19 +362,19 @@ void DeletePendingActivation(uint16_t featureId)
  */
 void CheckLiveActivations(int blockHeight)
 {
-    std::vector<FeatureActivation> PendingActivations = GetPendingActivations();
-    for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ++it) {
+    std::vector<FeatureActivation> vecPendingActivations = GetPendingActivations();
+    for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ++it) {
        if ((*it).activationBlock > blockHeight) continue;
-       FeatureActivation LiveActivation = *it;
-       if (OMNICORE_VERSION < LiveActivation.minClientVersion) {
-           std::string msgText = strprintf("Shutting down due to unsupported feature activation (%d: %s)", LiveActivation.featureId, LiveActivation.featureName);
+       FeatureActivation liveActivation = *it;
+       if (OMNICORE_VERSION < liveActivation.minClientVersion) {
+           std::string msgText = strprintf("Shutting down due to unsupported feature activation (%d: %s)", liveActivation.featureId, liveActivation.featureName);
            PrintToLog(msgText);
            PrintToConsole(msgText);
            if (!GetBoolArg("-overrideforcedshutdown", false)) {
                AbortNode(msgText, msgText);
            }
        }
-       PendingActivationCompleted(LiveActivation.featureId);
+       PendingActivationCompleted(liveActivation.featureId);
        uiInterface.OmniStateChanged();
     }
 }
@@ -385,11 +385,11 @@ void CheckLiveActivations(int blockHeight)
  */
 void PendingActivationCompleted(uint16_t featureId)
 {
-   for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ) {
+   for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ) {
        if ((*it).featureId == featureId) {
            FeatureActivation completedActivation = *it;
-           CompletedActivations.push_back(completedActivation);
-           it = PendingActivations.erase(it);
+           vecCompletedActivations.push_back(completedActivation);
+           it = vecPendingActivations.erase(it);
        } else {
            it++;
        }
@@ -401,7 +401,7 @@ void PendingActivationCompleted(uint16_t featureId)
  */
 std::vector<FeatureActivation> GetPendingActivations()
 {
-    return PendingActivations;
+    return vecPendingActivations;
 }
 
 /**
@@ -409,7 +409,7 @@ std::vector<FeatureActivation> GetPendingActivations()
  */
 std::vector<FeatureActivation> GetCompletedActivations()
 {
-    return CompletedActivations;
+    return vecCompletedActivations;
 }
 
 /**

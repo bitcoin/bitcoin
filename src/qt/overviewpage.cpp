@@ -632,16 +632,16 @@ void OverviewPage::updateAlerts()
     }
 
     // get activations
-    std::vector<FeatureActivation> PendingActivations = GetPendingActivations();
-    for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ++it) {
+    std::vector<FeatureActivation> vecPendingActivations = GetPendingActivations();
+    for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ++it) {
         if (!alertString.isEmpty()) alertString += "\n";
         FeatureActivation pendingAct = *it;
         alertString += QString::fromStdString(strprintf("Feature %d ('%s') will go live at block %d",
                                                   pendingAct.featureId, pendingAct.featureName, pendingAct.activationBlock));
     }
     int currentHeight = GetHeight();
-    std::vector<FeatureActivation> CompletedActivations = GetCompletedActivations();
-    for (std::vector<FeatureActivation>::iterator it = CompletedActivations.begin(); it != CompletedActivations.end(); ++it) {
+    std::vector<FeatureActivation> vecCompletedActivations = GetCompletedActivations();
+    for (std::vector<FeatureActivation>::iterator it = vecCompletedActivations.begin(); it != vecCompletedActivations.end(); ++it) {
         if (currentHeight > (*it).activationBlock+1024) continue; // don't include after live+1024 blocks
         if (!alertString.isEmpty()) alertString += "\n";
         FeatureActivation completedAct = *it;

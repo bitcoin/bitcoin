@@ -1529,25 +1529,25 @@ Value omni_getactivations(const Array& params, bool fHelp)
     Object response;
 
     Array arrayPendingActivations;
-    std::vector<FeatureActivation> PendingActivations = GetPendingActivations();
-    for (std::vector<FeatureActivation>::iterator it = PendingActivations.begin(); it != PendingActivations.end(); ++it) {
+    std::vector<FeatureActivation> vecPendingActivations = GetPendingActivations();
+    for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ++it) {
         Object actObj;
         FeatureActivation pendingAct = *it;
         actObj.push_back(Pair("featureid", pendingAct.featureId));
         actObj.push_back(Pair("featurename", pendingAct.featureName));
-        actObj.push_back(Pair("activationblock", FormatIndivisibleMP(pendingAct.activationBlock)));
+        actObj.push_back(Pair("activationblock", pendingAct.activationBlock));
         actObj.push_back(Pair("minimumversion", (uint64_t)pendingAct.minClientVersion));
         arrayPendingActivations.push_back(actObj);
     }
 
     Array arrayCompletedActivations;
-    std::vector<FeatureActivation> CompletedActivations = GetCompletedActivations();
-    for (std::vector<FeatureActivation>::iterator it = CompletedActivations.begin(); it != CompletedActivations.end(); ++it) {
+    std::vector<FeatureActivation> vecCompletedActivations = GetCompletedActivations();
+    for (std::vector<FeatureActivation>::iterator it = vecCompletedActivations.begin(); it != vecCompletedActivations.end(); ++it) {
         Object actObj;
         FeatureActivation completedAct = *it;
         actObj.push_back(Pair("featureid", completedAct.featureId));
         actObj.push_back(Pair("featurename", completedAct.featureName));
-        actObj.push_back(Pair("activationblock", FormatIndivisibleMP(completedAct.activationBlock)));
+        actObj.push_back(Pair("activationblock", completedAct.activationBlock));
         actObj.push_back(Pair("minimumversion", (uint64_t)completedAct.minClientVersion));
         arrayCompletedActivations.push_back(actObj);
     }
