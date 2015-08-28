@@ -176,7 +176,7 @@ Value mnbudget(const Array& params, bool fHelp)
         std::string strError = "";
         int nConf = 0;
         if(!IsBudgetCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf)){
-            //return "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError;
+            return "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError;
         }
 
         if(!masternodeSync.IsBlockchainSynced()){
