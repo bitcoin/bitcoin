@@ -320,7 +320,7 @@ static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue)
     queue->Run();
 }
 
-bool StartHTTPServer(boost::thread_group& threadGroup)
+bool InitHTTPServer()
 {
     struct evhttp* http = 0;
     struct event_base* base = 0;
@@ -366,19 +366,25 @@ bool StartHTTPServer(boost::thread_group& threadGroup)
         return false;
     }
 
-    LogPrint("http", "Starting HTTP server\n");
+    LogPrint("http", "Initialized HTTP server\n");
     int workQueueDepth = std::max((long)GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
-    int rpcThreads = std::max((long)GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
-    LogPrintf("HTTP: creating work queue of depth %d and %d worker threads\n", workQueueDepth, rpcThreads);
-    workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
+    LogPrintf("HTTP: creating work queue of depth %d\n", workQueueDepth);
 
-    threadGroup.create_thread(boost::bind(&ThreadHTTP, base, http));
+    workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
+    eventBase = base;
+    eventHTTP = http;
+    return true;
+}
+
+bool StartHTTPServer(boost::thread_group& threadGroup)
+{
+    LogPrint("http", "Starting HTTP server\n");
+    int rpcThreads = std::max((long)GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
+    LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
+    threadGroup.create_thread(boost::bind(&ThreadHTTP, eventBase, eventHTTP));
 
     for (int i = 0; i < rpcThreads; i++)
         threadGroup.create_thread(boost::bind(&HTTPWorkQueueRun, workQueue));
-
-    eventBase = base;
-    eventHTTP = http;
     return true;
 }
 
