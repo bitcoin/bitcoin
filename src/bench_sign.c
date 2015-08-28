@@ -26,16 +26,16 @@ static void bench_sign(void* arg) {
     int i;
     bench_sign_t *data = (bench_sign_t*)arg;
 
-    unsigned char sig[64];
+    unsigned char sig[74];
+    int siglen = 74;
     for (i = 0; i < 20000; i++) {
         int j;
-        int recid = 0;
         secp256k1_ecdsa_signature_t signature;
         CHECK(secp256k1_ecdsa_sign(data->ctx, data->msg, &signature, data->key, NULL, NULL));
-        CHECK(secp256k1_ecdsa_signature_serialize_compact(data->ctx, sig, &recid, &signature));
+        CHECK(secp256k1_ecdsa_signature_serialize_der(data->ctx, sig, &siglen, &signature));
         for (j = 0; j < 32; j++) {
-            data->msg[j] = sig[j];             /* Move former R to message. */
-            data->key[j] = sig[j + 32];        /* Move former S to key.     */
+            data->msg[j] = sig[j];
+            data->key[j] = sig[j + 32];
         }
     }
 }
