@@ -4,8 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
-from test_framework import BitcoinTestFramework
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 class RemoveTest(BitcoinTestFramework):
     def setup_chain(self):
@@ -13,7 +13,7 @@ class RemoveTest(BitcoinTestFramework):
         initialize_chain_clean(self.options.tmpdir, 3)
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(3, self.options.tmpdir)
+        self.nodes = start_nodes(3, self.options.tmpdir, [["-relaypriority=false"], ["-relaypriority=false"], ["-relaypriority=false"]])
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
         self.is_network_split = False
@@ -21,11 +21,11 @@ class RemoveTest(BitcoinTestFramework):
 
     def run_test (self):
         print("Mining blocks...")
-        self.nodes[2].setgenerate(True, 105)
+        self.nodes[2].generate(105)
         self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 11)
         self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 42)
         self.nodes[2].sendtoaddress(self.nodes[1].getnewaddress(), 15)
-        self.nodes[2].setgenerate(True)
+        self.nodes[2].generate(1)
         self.sync_all()
 
         node1utxos = self.nodes[1].listunspent(1)
@@ -62,11 +62,11 @@ class RemoveTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getunconfirmedbalance(), 1)
 
         stop_node(self.nodes[0],0)
-        self.nodes[0] = start_node(0, self.options.tmpdir, ["-debug"])
+        self.nodes[0] = start_node(0, self.options.tmpdir, ["-debug", "-relaypriority=false"])
         stop_node(self.nodes[1],1)
-        self.nodes[1] = start_node(1, self.options.tmpdir, ["-debug"])
+        self.nodes[1] = start_node(1, self.options.tmpdir, ["-debug", "-relaypriority=false"])
         stop_node(self.nodes[2],2)
-        self.nodes[2] = start_node(2, self.options.tmpdir, ["-debug"])
+        self.nodes[2] = start_node(2, self.options.tmpdir, ["-debug", "-relaypriority=false"])
 
         self.nodes[0].getbalance()
         self.nodes[0].getunconfirmedbalance()
@@ -77,7 +77,7 @@ class RemoveTest(BitcoinTestFramework):
         txto1_1_ds_raw = self.nodes[1].createrawtransaction([{"txid": utxo["txid"], "vout": utxo["vout"]}, {"txid": utxo3["txid"], "vout": utxo3["vout"]}], {self.nodes[1].getnewaddress(): utxo["amount"], txto1_1_ds_node2_addr: utxo3["amount"]})
         txto1_1_ds_raw = self.nodes[1].signrawtransaction(txto1_1_ds_raw)["hex"]
         txto1_1_ds_hash = self.nodes[2].sendrawtransaction(txto1_1_ds_raw)
-        self.nodes[2].setgenerate(True)
+        self.nodes[2].generate(1)
 
         connect_nodes(self.nodes[1], 2)
         connect_nodes(self.nodes[0], 1)
@@ -93,7 +93,7 @@ class RemoveTest(BitcoinTestFramework):
         assert_equal(self.nodes[1].getunconfirmedbalance(), 0)
 
         stop_node(self.nodes[2],2)
-        self.nodes[2] = start_node(2, self.options.tmpdir, ["-debug"])
+        self.nodes[2] = start_node(2, self.options.tmpdir, ["-debug", "-relaypriority=false"])
 
         txto1_1_ds_vout = 1 if self.nodes[1].getrawtransaction(txto1_1_ds_hash, 1)["vout"][0]["scriptPubKey"]["addresses"][0] == txto1_1_ds_node2_addr else 0
         txto0_3_raw = self.nodes[1].createrawtransaction([{"txid": txto1_1_ds_hash, "vout": txto1_1_ds_vout}], {self.nodes[0].getnewaddress(): utxo["amount"]})
@@ -102,19 +102,19 @@ class RemoveTest(BitcoinTestFramework):
         txto0_3_ds_raw = self.nodes[1].signrawtransaction(txto0_3_ds_raw)["hex"]
 
         txto0_3_hash = self.nodes[1].sendrawtransaction(txto0_3_raw)
-        self.nodes[1].setgenerate(True)
+        self.nodes[1].generate(1)
 
         assert_equal(self.nodes[1].getbalance(), utxo2["amount"])
         assert_equal(self.nodes[1].getunconfirmedbalance(), 0)
 
         sync_blocks([self.nodes[0], self.nodes[1]])
         txto1_3_hash = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
-        #self.nodes[0].setgenerate(True)
+        #self.nodes[0].generate(1)
         assert(self.nodes[0].getbalance() > utxo["amount"] - 2 and self.nodes[0].getbalance() < utxo["amount"] - 1)
         assert_equal(self.nodes[0].getunconfirmedbalance(), 0)
 
         txto0_3_ds_hash = self.nodes[2].sendrawtransaction(txto0_3_ds_raw)
-        self.nodes[2].setgenerate(True, 2)
+        self.nodes[2].generate(2)
 
         connect_nodes(self.nodes[1], 2)
         self.sync_all()
