@@ -2528,5 +2528,7 @@ int main(int argc, char **argv) {
 
     /* shutdown */
     secp256k1_context_destroy(ctx);
+
+    printf("no problems found\n");
     return 0;
 }
