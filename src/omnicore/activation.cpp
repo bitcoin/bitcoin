@@ -17,21 +17,6 @@
 #include <string>
 #include <vector>
 
-/*
-#include "omnicore/omnicore.h"
-#include "omnicore/notifications.h"
-#include "omnicore/utilsbitcoin.h"
-
-#include "alert.h"
-#include "chainparams.h"
-#include "script/standard.h"
-#include "uint256.h"
-
-#include <openssl/sha.h>
-
-#include <limits>
-*/
-
 namespace mastercore
 {
 
