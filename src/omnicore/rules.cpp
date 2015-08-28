@@ -483,18 +483,34 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
     bool supported = OMNICORE_VERSION >= minClientVersion;
     switch (featureId) {
         case FEATURE_CLASS_C:
+            if (params.NULLDATA_BLOCK <= transactionBlock) {
+                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
+                return false;
+            }
             MutableConsensusParams().NULLDATA_BLOCK = activationBlock;
             featureName = "Class C transaction encoding";
         break;
         case FEATURE_METADEX:
+            if (params.MSC_METADEX_BLOCK <= transactionBlock) {
+                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
+                return false;
+            }
             MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
             featureName = "Distributed Meta Token Exchange";
         break;
         case FEATURE_BETTING:
+            if (params.MSC_BET_BLOCK <= transactionBlock) {
+                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
+                return false;
+            }
             MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
             featureName = "Bet transactions";
         break;
         case FEATURE_GRANTEFFECTS:
+            if (params.GRANTEFFECTS_FEATURE_BLOCK <= transactionBlock) {
+                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
+                return false;
+            }
             MutableConsensusParams().GRANTEFFECTS_FEATURE_BLOCK = activationBlock;
             featureName = "Remove grant side effects";
         break;
