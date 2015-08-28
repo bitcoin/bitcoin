@@ -355,7 +355,7 @@ bool StartHTTPServer(boost::thread_group& threadGroup)
         return false;
     }
 
-    evhttp_set_timeout(http, GetArg("-rpctimeout", 30));
+    evhttp_set_timeout(http, GetArg("-rpctimeout", DEFAULT_HTTP_TIMEOUT));
     evhttp_set_max_body_size(http, MAX_SIZE);
     evhttp_set_gencb(http, http_request_cb, NULL);
 
@@ -367,8 +367,8 @@ bool StartHTTPServer(boost::thread_group& threadGroup)
     }
 
     LogPrint("http", "Starting HTTP server\n");
-    int workQueueDepth = std::max((long)GetArg("-rpcworkqueue", 16), 1L);
-    int rpcThreads = std::max((long)GetArg("-rpcthreads", 4), 1L);
+    int workQueueDepth = std::max((long)GetArg("-rpcworkqueue", DEFAULT_HTTP_WORKQUEUE), 1L);
+    int rpcThreads = std::max((long)GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
     LogPrintf("HTTP: creating work queue of depth %d and %d worker threads\n", workQueueDepth, rpcThreads);
     workQueue = new WorkQueue<HTTPClosure>(workQueueDepth);
 

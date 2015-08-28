@@ -11,6 +11,10 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/function.hpp>
 
+static const int DEFAULT_HTTP_THREADS=4;
+static const int DEFAULT_HTTP_WORKQUEUE=16;
+static const int DEFAULT_HTTP_TIMEOUT=30;
+
 struct evhttp_request;
 struct event_base;
 class CService;
