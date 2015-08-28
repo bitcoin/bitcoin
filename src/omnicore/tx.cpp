@@ -2,6 +2,7 @@
 
 #include "omnicore/tx.h"
 
+#include "omnicore/activation.h"
 #include "omnicore/convert.h"
 #include "omnicore/dex.h"
 #include "omnicore/log.h"

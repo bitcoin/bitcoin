@@ -14,6 +14,7 @@
 #include "transactiontablemodel.h"
 #include "walletmodel.h"
 
+#include "omnicore/activation.h"
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/rules.h"

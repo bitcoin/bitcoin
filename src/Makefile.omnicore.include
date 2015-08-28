@@ -1,4 +1,5 @@
 OMNICORE_H = \
+  omnicore/activation.h \
   omnicore/convert.h \
   omnicore/createpayload.h \
   omnicore/dex.h \
@@ -34,6 +35,7 @@ OMNICORE_H = \
   omnicore/wallettxs.h
 
 OMNICORE_CPP = \
+  omnicore/activation.cpp \
   omnicore/convert.cpp \
   omnicore/createpayload.cpp \
   omnicore/dex.cpp \

@@ -173,18 +173,6 @@ const CConsensusParams& ConsensusParams();
 /** Returns currently active mutable consensus parameter. */
 CConsensusParams& MutableConsensusParams();
 
-/** Determines whether the sender is an authorized source for Omni Core activations. */
-bool CheckActivationAuthorization(const std::string& sender);
-/** Returns the vector of pending activations */
-std::vector<FeatureActivation> GetPendingActivations();
-/** Returns the vector of completed activations */
-std::vector<FeatureActivation> GetCompletedActivations();
-/** Moves a feature activation from pending vector to completed vector */
-void PendingActivationCompleted(uint16_t featureId);
-/** Checks if any activations went live in the block */
-void CheckLiveActivations(int blockHeight);
-/** Deletes a pending activation */
-void DeletePendingActivation(uint16_t featureId);
 /** Activates a feature at a specific block height. */
 bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClientVersion, int transactionBlock);
 /** Checks, whether a feature is activated at the given block. */
