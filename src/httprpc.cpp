@@ -19,24 +19,16 @@
 class HTTPRPCTimer : public RPCTimerBase
 {
 public:
-    HTTPRPCTimer(struct event_base* eventBase, boost::function<void(void)>& func, int64_t seconds) : ev(eventBase, false, new Handler(func))
+    HTTPRPCTimer(struct event_base* eventBase, boost::function<void(void)>& func, int64_t millis) :
+        ev(eventBase, false, func)
     {
-        struct timeval tv = {seconds, 0};
+        struct timeval tv;
+        tv.tv_sec = millis/1000;
+        tv.tv_usec = (millis%1000)*1000;
         ev.trigger(&tv);
     }
 private:
     HTTPEvent ev;
-
-    class Handler : public HTTPClosure
-    {
-    public:
-        Handler(const boost::function<void(void)>& func) : func(func)
-        {
-        }
-    private:
-        boost::function<void(void)> func;
-        void operator()() { func(); }
-    };
 };
 
 class HTTPRPCTimerInterface : public RPCTimerInterface
@@ -49,9 +41,9 @@ public:
     {
         return "HTTP";
     }
-    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t seconds)
+    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis)
     {
-        return new HTTPRPCTimer(base, func, seconds);
+        return new HTTPRPCTimer(base, func, millis);
     }
 private:
     struct event_base* base;
