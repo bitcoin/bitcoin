@@ -618,13 +618,15 @@ bool AppInitServers(boost::thread_group& threadGroup)
 {
     RPCServer::OnStopped(&OnRPCStopped);
     RPCServer::OnPreCommand(&OnRPCPreCommand);
-    if (!StartHTTPServer(threadGroup))
+    if (!InitHTTPServer())
         return false;
     if (!StartRPC())
         return false;
     if (!StartHTTPRPC())
         return false;
     if (GetBoolArg("-rest", false) && !StartREST())
+        return false;
+    if (!StartHTTPServer(threadGroup))
         return false;
     return true;
 }
