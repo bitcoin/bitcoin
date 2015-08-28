@@ -1475,7 +1475,7 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     if((fMasterNode || masternodeConfig.getCount() > -1) && fTxIndex == false) {
         return InitError("Enabling Masternode support requires turning on transaction indexing."
-                  "Please add txindex=1 to your configuration and start with --reindex=1");
+                  "Please add txindex=1 to your configuration and start with -reindex");
     }
 
     if(fMasterNode) {
