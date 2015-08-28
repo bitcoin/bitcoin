@@ -412,18 +412,15 @@ struct event_base* EventBase()
 
 static void httpevent_callback_fn(evutil_socket_t, short, void* data)
 {
-    // Static handler simply passes through execution flow to _handle method
-    ((HTTPEvent*)data)->_handle();
+    // Static handler: simply call inner handler
+    HTTPEvent *self = ((HTTPEvent*)data);
+    self->handler();
+    if (self->deleteWhenTriggered)
+        delete self;
 }
 
-void HTTPEvent::_handle()
-{
-    (*handler)();
-    if (deleteWhenTriggered)
-        delete this;
-}
-
-HTTPEvent::HTTPEvent(struct event_base* base, bool deleteWhenTriggered, HTTPClosure* handler) : deleteWhenTriggered(deleteWhenTriggered), handler(handler)
+HTTPEvent::HTTPEvent(struct event_base* base, bool deleteWhenTriggered, const boost::function<void(void)>& handler):
+    deleteWhenTriggered(deleteWhenTriggered), handler(handler)
 {
     ev = event_new(base, -1, 0, httpevent_callback_fn, this);
     assert(ev);
@@ -496,20 +493,6 @@ void HTTPRequest::WriteHeader(const std::string& hdr, const std::string& value)
  * Replies must be sent in the main loop in the main http thread,
  * this cannot be done from worker threads.
  */
-struct HTTPSendReplyHandler : HTTPClosure {
-public:
-    HTTPSendReplyHandler(struct evhttp_request* req, int nStatus) : req(req), nStatus(nStatus)
-    {
-    }
-    void operator()()
-    {
-        evhttp_send_reply(req, nStatus, NULL, NULL);
-    }
-private:
-    struct evhttp_request* req;
-    int nStatus;
-};
-
 void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
 {
     assert(!replySent && req);
@@ -518,7 +501,7 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
     assert(evb);
     evbuffer_add(evb, strReply.data(), strReply.size());
     HTTPEvent* ev = new HTTPEvent(eventBase, true,
-                                  new HTTPSendReplyHandler(req, nStatus));
+        boost::bind(evhttp_send_reply, req, nStatus, (const char*)NULL, (struct evbuffer *)NULL));
     ev->trigger(0);
     replySent = true;
     req = 0; // transferred back to main thread

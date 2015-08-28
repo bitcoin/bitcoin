@@ -92,12 +92,12 @@ public:
     /** Implementation name */
     virtual const char *Name() = 0;
     /** Factory function for timers.
-     * RPC will call the function to create a timer that will call func in *seconds* seconds.
+     * RPC will call the function to create a timer that will call func in *millis* milliseconds.
      * @note As the RPC mechanism is backend-neutral, it can use different implementations of timers.
      * This is needed to cope with the case in which there is no HTTP server, but
      * only GUI RPC console, and to break the dependency of pcserver on httprpc.
      */
-    virtual RPCTimerBase* NewTimer(boost::function<void(void)>&, int64_t) = 0;
+    virtual RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis) = 0;
 };
 
 /** Register factory function for timers */
