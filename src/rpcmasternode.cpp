@@ -439,16 +439,12 @@ Value masternode(const Array& params, bool fHelp)
     {
         if(!fMasterNode) throw runtime_error("This is not a masternode\n");
 
-        CScript pubkey;
-        pubkey = GetScriptForDestination(activeMasternode.pubKeyMasternode.GetID());
-        CTxDestination address1;
-        ExtractDestination(pubkey, address1);
-        CBitcoinAddress address2(address1);
-
         Object mnObj;
+        CMasternode *pmn = mnodeman.Find(activeMasternode.vin);
+
         mnObj.push_back(Pair("vin", activeMasternode.vin.ToString()));
         mnObj.push_back(Pair("service", activeMasternode.service.ToString()));
-        mnObj.push_back(Pair("pubKeyMasternode", address2.ToString()));
+        if (pmn) mnObj.push_back(Pair("pubkey", CBitcoinAddress(pmn->pubkey.GetID()).ToString()));
         mnObj.push_back(Pair("status", activeMasternode.GetStatus()));
         return mnObj;
     }
