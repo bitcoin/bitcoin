@@ -323,18 +323,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
             ++it2;
         }
     }
-
-    // remove expired mapSeenMasternodeBroadcast
-    map<uint256, CMasternodeBroadcast>::iterator it3 = mapSeenMasternodeBroadcast.begin();
-    while(it3 != mapSeenMasternodeBroadcast.end()){
-        if((*it3).second.lastPing.sigTime < GetTime()-(MASTERNODE_REMOVAL_SECONDS*2)){
-            mapSeenMasternodeBroadcast.erase(it3++);
-            masternodeSync.mapSeenSyncMNB.erase((*it3).second.GetHash());
-        } else {
-            ++it3;
-        }
-    }
-
+    
     // remove expired mapSeenMasternodePing
     map<uint256, CMasternodePing>::iterator it4 = mapSeenMasternodePing.begin();
     while(it4 != mapSeenMasternodePing.end()){

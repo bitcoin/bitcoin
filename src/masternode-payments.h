@@ -63,15 +63,21 @@ class CMasternodePayee
 public:
     CScript scriptPubKey;
     int nVotes;
+    uint256 nInvHash;
+    int nMasternodeRank;
 
     CMasternodePayee() {
         scriptPubKey = CScript();
         nVotes = 0;
+        nInvHash = 0;
+        nMasternodeRank = 99999;
     }
 
-    CMasternodePayee(CScript payee, int nVotesIn) {
+    CMasternodePayee(CScript payee, int nVotesIn, uint256 nInvHashIn, int nMasternodeRankIn) {
         scriptPubKey = payee;
         nVotes = nVotesIn;
+        nInvHash = nInvHashIn;
+        nMasternodeRank = nMasternodeRankIn;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -80,6 +86,8 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(scriptPubKey);
         READWRITE(nVotes);
+        READWRITE(nInvHash);
+        READWRITE(nMasternodeRank);
      }
 };
 
@@ -99,17 +107,23 @@ public:
         vecPayments.clear();
     }
 
-    void AddPayee(CScript payeeIn, int nIncrement){
+    void AddPayee(CScript payeeIn, int nIncrement, uint256 nInvHashIn, int nMasternodeRankIn){
         LOCK(cs_vecPayments);
 
         BOOST_FOREACH(CMasternodePayee& payee, vecPayments){
             if(payee.scriptPubKey == payeeIn) {
                 payee.nVotes += nIncrement;
+                //keep track of the "best" (highest rank) masternode's inventory item so we can send that one
+                // when syncing, we will consume much less bandwidth because of this
+                if(payee.nMasternodeRank > nMasternodeRankIn){
+                    payee.nMasternodeRank = nMasternodeRankIn;
+                    payee.nInvHash = nInvHashIn;
+                }
                 return;
             }
         }
 
-        CMasternodePayee c(payeeIn, nIncrement);
+        CMasternodePayee c(payeeIn, nIncrement, nInvHashIn, nMasternodeRankIn);
         vecPayments.push_back(c);
     }
 
@@ -126,6 +140,30 @@ public:
         }
 
         return (nVotes > -1);
+    }
+
+    int CountVotes()
+    {
+        int nVotes = 0;
+        BOOST_FOREACH(CMasternodePayee& p, vecPayments)
+            nVotes += p.nVotes;
+
+        return nVotes;
+    }
+
+    bool GetPayeeInventoryItems(vector<uint256>& vecHash)
+    {
+        LOCK(cs_vecPayments);
+
+        BOOST_FOREACH(CMasternodePayee& p, vecPayments){
+            //if we're syncing another client from a partial list, send everything.
+            // otherwise, we'll require 2 votes per item (those are the ones that count on the winners list)
+            if(p.nVotes >= 2 || CountVotes() <= 5){
+                vecHash.push_back(p.nInvHash);
+            }
+        }
+
+        return vecHash.size() >= 1;
     }
 
     bool HasPayeeWithVotes(CScript payee, int nVotesReq)
@@ -183,7 +221,7 @@ public:
     }
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool IsValid(CNode* pnode, std::string& strError);
+    bool IsValid(CNode* pnode, std::string& strError, int& nRank);
     bool SignatureValid();
     void Relay();
 
@@ -240,7 +278,7 @@ public:
         mapMasternodePayeeVotes.clear();
     }
 
-    bool AddWinningMasternode(CMasternodePaymentWinner& winner);
+    bool AddWinningMasternode(CMasternodePaymentWinner& winner, int nRank);
     bool ProcessBlock(int nBlockHeight);
 
     void Sync(CNode* node, int nCountNeeded);
