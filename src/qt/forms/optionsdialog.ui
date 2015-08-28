@@ -131,7 +131,7 @@
         </spacer>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2_Main">
+        <layout class="QHBoxLayout" name="horizontalLayout_4_Main">
          <item>
           <widget class="QLabel" name="label">
            <property name="toolTip">

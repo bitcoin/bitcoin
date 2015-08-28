@@ -1237,7 +1237,7 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
     if(fMasterNode) return false;
 
     finalTransaction = finalTransactionNew;
-    LogPrintf("CDarksendPool::SignFinalTransaction %s\n", finalTransaction.ToString());
+    LogPrintf("CDarksendPool::SignFinalTransaction %s", finalTransaction.ToString());
 
     vector<CTxIn> sigs;
 
