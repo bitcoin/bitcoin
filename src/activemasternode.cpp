@@ -78,7 +78,7 @@ void CActiveMasternode::ManageStatus()
             return;
         }
 
-        if(!ConnectNode((CAddress)service, service.ToString().c_str())){
+        if(!ConnectNode((CAddress)service, NULL, true)){
             notCapableReason = "Could not connect to " + service.ToString();
             LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
