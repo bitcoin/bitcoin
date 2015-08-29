@@ -1631,16 +1631,6 @@ bool CFinalizedBudget::AddOrUpdateVote(CFinalizedBudgetVote& vote, std::string& 
         }
     }
 
-    //if we're synced, the vote should have been recent
-    if(masternodeSync.IsSynced()) {
-        //up to an hour ago
-        if(vote.nTime < GetTime() - (60*60)){
-            strError = strprintf("new vote is too old - %s - nTime %lli - Min Time %lli\n", vote.GetHash().ToString(), vote.nTime, GetTime() - (60*60));
-            LogPrint("mnbudget", "CFinalizedBudget::AddOrUpdateVote - %s\n", strError);
-            return false;
-        }        
-    }
-
     if(vote.nTime > GetTime() + (60*60)){
         strError = strprintf("new vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", vote.GetHash().ToString(), vote.nTime, GetTime() + (60*60));
         LogPrint("mnbudget", "CFinalizedBudget::AddOrUpdateVote - %s\n", strError);
