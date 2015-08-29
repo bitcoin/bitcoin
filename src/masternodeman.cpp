@@ -768,8 +768,12 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
             if(mn.IsEnabled()) {
                 LogPrint("masnernode", "dseg - Sending Masternode entry - %s \n", mn.addr.ToString());
                 if(vin == CTxIn() || vin == mn.vin){
-                    CInv inv(MSG_MASTERNODE_ANNOUNCE, CMasternodeBroadcast(mn).GetHash());
+                    CMasternodeBroadcast mnb = CMasternodeBroadcast(mn);
+                    uint256 hash = mnb.GetHash();
+                    CInv inv(MSG_MASTERNODE_ANNOUNCE, hash);
                     vInv.push_back(inv);
+
+                    if(!mapSeenMasternodeBroadcast.count(hash)) mapSeenMasternodeBroadcast.insert(make_pair(hash, mnb));
 
                     if(vin == mn.vin) {
                         LogPrintf("dseg - Sent 1 Masternode entries to %s\n", pfrom->addr.ToString());
