@@ -271,10 +271,7 @@ int64_t CMasternode::GetLastPaid() {
                 Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
                 to converge on the same payees quickly, then keep the same schedule.
             */
-
-            //if we've synced we'll have 1 vote per winning masternode, those count. Otherwise we'll have 10 votes, then only 2 votes min count
-            int nMinVotes = masternodePayments.mapMasternodeBlocks[BlockReading->nHeight].CountVotes() >= 6 ? 2 : 1;
-            if(masternodePayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, nMinVotes)){
+            if(masternodePayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
                 return BlockReading->nTime + nOffset;
             }
         }

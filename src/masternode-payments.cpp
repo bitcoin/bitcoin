@@ -382,8 +382,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         }
 
         std::string strError = "";
-        int nRank = 99999;
-        if(!winner.IsValid(pfrom, strError, nRank)){
+        if(!winner.IsValid(pfrom, strError)){
             if(strError != "") LogPrintf("mnw - invalid message - %s\n", strError);
             return;
         }
@@ -407,7 +406,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         LogPrint("mnpayments", "mnw - winning vote - Addr %s Height %d bestHeight %d - %s\n", address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight, winner.vinMasternode.prevout.ToStringShort());
 
-        if(masternodePayments.AddWinningMasternode(winner, nRank)){
+        if(masternodePayments.AddWinningMasternode(winner)){
             winner.Relay();
             masternodeSync.AddedMasternodeWinner(winner.GetHash());
         }
@@ -472,7 +471,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
     return false;
 }
 
-bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn, int nRank)
+bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
     uint256 blockHash = 0;
     if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-100)) {
@@ -496,7 +495,7 @@ bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerI
 
     int n = 1;
     if(IsReferenceNode(winnerIn.vinMasternode)) n = 100;
-    mapMasternodeBlocks[winnerIn.nBlockHeight].AddPayee(winnerIn.payee, n, winnerIn.GetHash(), nRank);
+    mapMasternodeBlocks[winnerIn.nBlockHeight].AddPayee(winnerIn.payee, n);
 
     return true;
 }
@@ -626,7 +625,7 @@ bool IsReferenceNode(CTxIn& vin)
     return false;
 }
 
-bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError, int& nRank)
+bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError)
 {
     if(IsReferenceNode(vinMasternode)) return true;
 
@@ -647,15 +646,15 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError, int&
         return false;
     }
 
-    nRank = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, MIN_MNW_PEER_PROTO_VERSION);
+    int n = mnodeman.GetMasternodeRank(vinMasternode, nBlockHeight-100, MIN_MNW_PEER_PROTO_VERSION);
 
-    if(nRank > MNPAYMENTS_SIGNATURES_TOTAL)
+    if(n > MNPAYMENTS_SIGNATURES_TOTAL)
     {    
         //It's common to have masternodes mistakenly think they are in the top 10
         // We don't want to print all of these messages, or punish them unless they're way off
-        if(nRank > MNPAYMENTS_SIGNATURES_TOTAL*2)
+        if(n > MNPAYMENTS_SIGNATURES_TOTAL*2)
         {
-            strError = strprintf("Masternode not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL, nRank);
+            strError = strprintf("Masternode not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL, n);
             LogPrintf("CMasternodePaymentWinner::IsValid - %s\n", strError);
             Misbehaving(pnode->GetId(), 20);            
         }
@@ -671,19 +670,18 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 
     //reference node - hybrid mode
 
-    int nRank = 9999;
     if(!IsReferenceNode(activeMasternode.vin)){
-        int nRank = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, MIN_MNW_PEER_PROTO_VERSION);
+        int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, MIN_MNW_PEER_PROTO_VERSION);
 
-        if(nRank == -1)
+        if(n == -1)
         {
             LogPrint("mnpayments", "CMasternodePayments::ProcessBlock - Unknown Masternode\n");
             return false;
         }
 
-        if(nRank > MNPAYMENTS_SIGNATURES_TOTAL)
+        if(n > MNPAYMENTS_SIGNATURES_TOTAL)
         {
-            LogPrint("mnpayments", "CMasternodePayments::ProcessBlock - Masternode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, nRank);
+            LogPrint("mnpayments", "CMasternodePayments::ProcessBlock - Masternode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, n);
             return false;
         }
     }
@@ -736,7 +734,7 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
     {
         LogPrintf("CMasternodePayments::ProcessBlock() - AddWinningMasternode\n");
 
-        if(AddWinningMasternode(newWinner, nRank))
+        if(AddWinningMasternode(newWinner))
         {
             newWinner.Relay();
             nLastBlockHeight = nBlockHeight;
@@ -781,34 +779,19 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
 
     if(chainActive.Tip() == NULL) return;
 
-    int nCount = mnodeman.CountEnabled()*1.5;
+    int nCount = (mnodeman.CountEnabled()*2);
     if(nCountNeeded > nCount) nCountNeeded = nCount;
+
     vector<CInv> vInv;
-
-    //get 1 winner per block for the previous nCount blocks
-    vector<uint256> vecHash;
-    for(int nBlockHeight = chainActive.Tip()->nHeight-nCount; nBlockHeight < chainActive.Tip()->nHeight-5; nBlockHeight++)
-    {
-        if(mapMasternodeBlocks[nBlockHeight].GetPayeeInventoryItems(vecHash)){
-            BOOST_FOREACH(uint256& nHash, vecHash)
-            {
-                CInv inv(MSG_MASTERNODE_WINNER, nHash);
-                vInv.push_back(inv);
-            }
-        }    
-    }
-
-    //get 10 winners per block for the previous 5 blocks and next 20 (usually will be 10 though)
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
-        CMasternodePaymentWinner& winner = (*it).second;
-        if(winner.nBlockHeight >= chainActive.Tip()->nHeight-5 && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20) {
+        CMasternodePaymentWinner winner = (*it).second;
+        if(winner.nBlockHeight >= chainActive.Tip()->nHeight-nCountNeeded && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20) {
             CInv inv(MSG_MASTERNODE_WINNER, winner.GetHash());
             vInv.push_back(inv);
         }
         ++it;
     }
-
     node->PushMessage("ssc", MASTERNODE_SYNC_MNW, (int)vInv.size());
     if(vInv.size() > 0) node->PushMessage("inv", vInv);
 }
