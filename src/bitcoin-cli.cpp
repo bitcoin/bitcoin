@@ -3,8 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "base58.h"
 #include "chainparamsbase.h"
 #include "clientversion.h"
+#include "compat/sanity.h"
+#include "hash.h"
 #include "rpcclient.h"
 #include "rpcprotocol.h"
 #include "util.h"
@@ -100,6 +103,11 @@ static bool AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error: SSL mode for RPC (-rpcssl) is no longer supported.\n");
         return false;
     }
+    // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
+    if (!SelectParamsFromCommandLine()) {
+        fprintf(stderr, "Error: Invalid combination of -regtest and -testnet.\n");
+        return false;
+    }
     return true;
 }
 
@@ -175,10 +183,40 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     assert(output_headers);
     evhttp_add_header(output_headers, "Host", host.c_str());
     evhttp_add_header(output_headers, "Connection", "close");
-    evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(strRPCUserColonPass)).c_str());
-
-    // Attach request data
     std::string strRequest = JSONRPCRequest(strMethod, params, 1);
+
+    // Add optional signature for ec pubkey auth
+    if (mapArgs["-rpcprivkey"] != "")
+    {
+        CHashWriter ss(SER_GETHASH, 0);
+        ss << strRequest;
+        CBitcoinSecret vchSecret;
+        bool fGood = vchSecret.SetString(mapArgs["-rpcprivkey"]);
+        if (!fGood)
+            throw runtime_error("privatekey not valid");
+
+        // Initialize elliptic curve code
+        ECC_Start();
+
+        // Sanity check
+        if(!ECC_InitSanityCheck() || !glibc_sanity_test() || !glibcxx_sanity_test()) {
+            throw runtime_error("Initialization sanity check failed. Bitcoin-cli is shutting down.");
+        }
+
+        CKey key = vchSecret.GetKey();
+        if (!key.IsValid())
+            throw runtime_error("privatekey not valid");
+        std::vector<unsigned char> vchSig;
+        key.Sign(ss.GetHash(), vchSig);
+
+        //add http header with signature of uri+body
+        evhttp_add_header(output_headers, "x-signature", HexStr(vchSig).c_str());
+    }
+    else
+    {
+        evhttp_add_header(output_headers, "Authorization", (std::string("Basic ") + EncodeBase64(strRPCUserColonPass)).c_str());
+    }
+    // Attach request data
     struct evbuffer * output_buffer = evhttp_request_get_output_buffer(req);
     assert(output_buffer);
     evbuffer_add(output_buffer, strRequest.data(), strRequest.size());
@@ -197,7 +235,7 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     if (response.status == 0)
         throw CConnectionFailed("couldn't connect to server");
     else if (response.status == HTTP_UNAUTHORIZED)
-        throw runtime_error("incorrect rpcuser or rpcpassword (authorization failed)");
+        throw runtime_error("incorrect rpcuser, rpcpassword or rpcprivatekey (authorization failed)");
     else if (response.status >= 400 && response.status != HTTP_BAD_REQUEST && response.status != HTTP_NOT_FOUND && response.status != HTTP_INTERNAL_SERVER_ERROR)
         throw runtime_error(strprintf("server returned HTTP error %d", response.status));
     else if (response.body.empty())
