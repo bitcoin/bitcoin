@@ -458,7 +458,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
         }
     }
 
-    LogPrint("masnernode", "mnb - Accepted Masternode entry\n");
+    LogPrint("masternode", "mnb - Accepted Masternode entry\n");
 
     if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
         LogPrintf("mnb - Input must have at least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
@@ -585,7 +585,7 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
         return false;
     }
 
-    LogPrint("masnernode", "CMasternodePing::CheckAndUpdate - New Ping - %s - %s - %lli\n", GetHash().ToString(), blockHash.ToString(), sigTime);
+    LogPrint("masternode", "CMasternodePing::CheckAndUpdate - New Ping - %s - %s - %lli\n", GetHash().ToString(), blockHash.ToString(), sigTime);
 
     // see if we have this Masternode
     CMasternode* pmn = mnodeman.Find(vin);
@@ -639,16 +639,16 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
             pmn->Check(true);
             if(!pmn->IsEnabled()) return false;
 
-            LogPrint("masnernode", "CMasternodePing::CheckAndUpdate - Masternode ping accepted, vin: %s\n", vin.ToString());
+            LogPrint("masternode", "CMasternodePing::CheckAndUpdate - Masternode ping accepted, vin: %s\n", vin.ToString());
 
             Relay();
             return true;
         }
-        LogPrint("masnernode", "CMasternodePing::CheckAndUpdate - Masternode ping arrived too early, vin: %s\n", vin.ToString());
+        LogPrint("masternode", "CMasternodePing::CheckAndUpdate - Masternode ping arrived too early, vin: %s\n", vin.ToString());
         //nDos = 1; //disable, this is happening frequently and causing banned peers
         return false;
     }
-    LogPrint("masnernode", "CMasternodePing::CheckAndUpdate - Couldn't find compatible Masternode entry, vin: %s\n", vin.ToString());
+    LogPrint("masternode", "CMasternodePing::CheckAndUpdate - Couldn't find compatible Masternode entry, vin: %s\n", vin.ToString());
 
     return false;
 }

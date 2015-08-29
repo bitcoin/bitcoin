@@ -123,8 +123,8 @@ Value masternode(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "stop" && strCommand != "stop-alias" &&
-         strCommand != "stop-many" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce" &&
+        (strCommand != "start" && strCommand != "start-alias" && strCommand != "start-many" && strCommand != "start-all" && strCommand != "start-missing" &&
+         strCommand != "start-disabled" && strCommand != "list" && strCommand != "list-conf" && strCommand != "count"  && strCommand != "enforce" &&
         strCommand != "debug" && strCommand != "current" && strCommand != "winners" && strCommand != "genkey" && strCommand != "connect" &&
         strCommand != "outputs" && strCommand != "status" && strCommand != "calcscore"))
         throw runtime_error(
@@ -142,7 +142,7 @@ Value masternode(const Array& params, bool fHelp)
                 "  outputs      - Print masternode compatible outputs\n"
                 "  start        - Start masternode configured in dash.conf\n"
                 "  start-alias  - Start single masternode by assigned alias configured in masternode.conf\n"
-                "  start-many   - Start all masternodes configured in masternode.conf\n"
+                "  start-<mode> - Start masternodes configured in masternode.conf (<mode>: 'all', 'missing', 'disabled')\n"
                 "  status       - Print masternode status information\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
@@ -208,16 +208,11 @@ Value masternode(const Array& params, bool fHelp)
         CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
         if(winner) {
             Object obj;
-            CScript pubkey;
-            pubkey = GetScriptForDestination(winner->pubkey.GetID());
-            CTxDestination address1;
-            ExtractDestination(pubkey, address1);
-            CBitcoinAddress address2(address1);
 
             obj.push_back(Pair("IP:port",       winner->addr.ToString()));
             obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
             obj.push_back(Pair("vin",           winner->vin.prevout.hash.ToString()));
-            obj.push_back(Pair("pubkey",        address2.ToString()));
+            obj.push_back(Pair("pubkey",        CBitcoinAddress(winner->pubkey.GetID()).ToString()));
             obj.push_back(Pair("lastseen",      (winner->lastPing == CMasternodePing()) ? winner->sigTime :
                                                         (int64_t)winner->lastPing.sigTime));
             obj.push_back(Pair("activeseconds", (winner->lastPing == CMasternodePing()) ? 0 :
@@ -330,7 +325,7 @@ Value masternode(const Array& params, bool fHelp)
 
     }
 
-    if (strCommand == "start-many")
+    if (strCommand == "start-many" || strCommand == "start-all" || strCommand == "start-missing" || strCommand == "start-disabled")
     {
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -357,6 +352,12 @@ Value masternode(const Array& params, bool fHelp)
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
+
+            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CMasternode *pmn = mnodeman.Find(vin);
+
+            if(strCommand == "start-missing" && pmn) continue;
+            if(strCommand == "start-disabled" && pmn && pmn->IsEnabled()) continue;
 
             bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
 
@@ -433,16 +434,12 @@ Value masternode(const Array& params, bool fHelp)
     {
         if(!fMasterNode) throw runtime_error("This is not a masternode\n");
 
-        CScript pubkey;
-        pubkey = GetScriptForDestination(activeMasternode.pubKeyMasternode.GetID());
-        CTxDestination address1;
-        ExtractDestination(pubkey, address1);
-        CBitcoinAddress address2(address1);
-
         Object mnObj;
+        CMasternode *pmn = mnodeman.Find(activeMasternode.vin);
+
         mnObj.push_back(Pair("vin", activeMasternode.vin.ToString()));
         mnObj.push_back(Pair("service", activeMasternode.service.ToString()));
-        mnObj.push_back(Pair("pubKeyMasternode", address2.ToString()));
+        if (pmn) mnObj.push_back(Pair("pubkey", CBitcoinAddress(pmn->pubkey.GetID()).ToString()));
         mnObj.push_back(Pair("status", activeMasternode.GetStatus()));
         return mnObj;
     }
@@ -555,12 +552,6 @@ Value masternodelist(const Array& params, bool fHelp)
                     strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       mn.addr.ToString()));
             } else if (strMode == "full") {
-                CScript pubkey;
-                pubkey = GetScriptForDestination(mn.pubkey.GetID());
-                CTxDestination address1;
-                ExtractDestination(pubkey, address1);
-                CBitcoinAddress address2(address1);
-
                 std::ostringstream addrStream;
                 addrStream << setw(21) << strVin;
 
@@ -568,7 +559,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 stringStream << setw(9) <<
                                mn.Status() << " " <<
                                mn.protocolVersion << " " <<
-                               address2.ToString() << " " << setw(21) <<
+                               CBitcoinAddress(mn.pubkey.GetID()).ToString() << " " << setw(21) <<
                                mn.addr.ToString() << " " <<
                                (int64_t)mn.lastPing.sigTime << " " << setw(8) <<
                                (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
@@ -590,15 +581,11 @@ Value masternodelist(const Array& params, bool fHelp)
                     strVin.find(strFilter) == string::npos) continue;
                 obj.push_back(Pair(strVin,       (int64_t)mn.protocolVersion));
             } else if (strMode == "pubkey") {
-                CScript pubkey;
-                pubkey = GetScriptForDestination(mn.pubkey.GetID());
-                CTxDestination address1;
-                ExtractDestination(pubkey, address1);
-                CBitcoinAddress address2(address1);
+                CBitcoinAddress address(mn.pubkey.GetID());
 
-                if(strFilter !="" && address2.ToString().find(strFilter) == string::npos &&
+                if(strFilter !="" && address.ToString().find(strFilter) == string::npos &&
                     strVin.find(strFilter) == string::npos) continue;
-                obj.push_back(Pair(strVin,       address2.ToString()));
+                obj.push_back(Pair(strVin,       address.ToString()));
             } else if(strMode == "status") {
                 std::string strStatus = mn.Status();
                 if(strFilter !="" && strVin.find(strFilter) == string::npos && strStatus.find(strFilter) == string::npos) continue;

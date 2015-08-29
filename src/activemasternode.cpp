@@ -78,7 +78,7 @@ void CActiveMasternode::ManageStatus()
             return;
         }
 
-        if(!ConnectNode((CAddress)service, service.ToString().c_str())){
+        if(!ConnectNode((CAddress)service, NULL, true)){
             notCapableReason = "Could not connect to " + service.ToString();
             LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
@@ -180,6 +180,12 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
 
         pmn->lastPing = mnp;
         mnodeman.mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
+
+        //mnodeman.mapSeenMasternodeBroadcast.lastPing is probably outdated, so we'll update it
+        CMasternodeBroadcast mnb(*pmn);
+        uint256 hash = mnb.GetHash();
+        if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) mnodeman.mapSeenMasternodeBroadcast[hash].lastPing = mnp;
+
         mnp.Relay();
 
         /*

@@ -459,6 +459,10 @@
         <translation><numerusform>%n Block des Transaktionsverlaufs verarbeitet.</numerusform><numerusform>%n Blöcke des Transaktionsverlaufs verarbeitet.</numerusform></translation>
     </message>
     <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Synchronisiere zusätzliche Daten:  %p%</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Zeige den "Dash Core"-Hilfetext, um eine Liste mit möglichen Kommandozeilenoptionen zu erhalten</translation>
     </message>
@@ -505,22 +509,6 @@
     <message>
         <source>Up to date</source>
         <translation>Auf aktuellem Stand</translation>
-    </message>
-    <message>
-        <source>Synchronizing sporks...</source>
-        <translation>Synchronisiere Sporks...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Synchronisiere Masternodes...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Synchronisiere Masternode Gewinner...</translation>
-    </message>
-    <message>
-        <source>Synchronizing budgets...</source>
-        <translation>Synchronisiere Budgets...</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -3406,10 +3394,6 @@ Dies kann passieren, wenn einige Dash aus ihrer Wallet bereits ausgegeben wurden
         <translation>Für diese Transaktion konnten nicht genug nicht mit Darksend gestückelte Beträge gefunden werden, die ungleich 1000 DASH sind.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Für diese Transaktion konnten nicht genug nicht mit Darksend gestückelte Beträge gefunden werden.</translation>
-    </message>
-    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Warnung: -paytxfee ist auf einen sehr hohen Wert festgelegt! Dies ist die Gebühr die beim Senden einer Transaktion fällig wird.</translation>
     </message>
@@ -3747,6 +3731,10 @@ Der Benutzername und das Passwort dürfen NICHT identisch sein.
 Falls die Konfigurationsdatei nicht existiert, erzeugen Sie diese bitte mit Leserechten nur für den Dateibesitzer.
 Es wird ebenfalls empfohlen alertnotify anzugeben, um im Problemfall benachrichtigt zu werden;
 zum Beispiel: alertnotify=echo %%s | mail -s \"Dash Alert\" admin@foo.com</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>Für diese Transaktion konnten nicht genug Beträge gefunden werden, die ungleich 1000 DASH sind.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -4112,6 +4100,34 @@ Dash Core wird heruntergefahren.</translation>
         <translation>An Masternode übermittelt, wartet in Warteschlange %s</translation>
     </message>
     <message>
+        <source>Synchronization doesn't yet started</source>
+        <translation>Die Synchronisation hat noch nicht begonnen.</translation>
+    </message>
+    <message>
+        <source>Synchronization failed</source>
+        <translation>Synchronisation fehlgeschlagen</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>Synchronisation beendet</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>Synchronisiere Budgets...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synchronisiere Masternode Gewinner...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synchronisiere Masternodes...</translation>
+    </message>
+    <message>
+        <source>Synchronizing sporks...</source>
+        <translation>Synchronisiere Sporks...</translation>
+    </message>
+    <message>
         <source>This is not a Masternode.</source>
         <translation>Dies ist kein Masternode.</translation>
     </message>
@@ -4214,18 +4230,6 @@ Dash Core wird heruntergefahren.</translation>
     <message>
         <source>Loading block index...</source>
         <translation>Lade Blockindex...</translation>
-    </message>
-    <message>
-        <source>Loading budget cache...</source>
-        <translation>Lade Budget-Cache...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Lade Masternode-Cache...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Lade Masternode Zahlungs-Cache...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>

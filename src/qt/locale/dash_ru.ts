@@ -459,6 +459,10 @@
         <translation><numerusform>Обработано %n блок из истории транзакций.</numerusform><numerusform>Обработано %n блока из истории транзакций.</numerusform><numerusform>Обработано %n блоков из истории транзакций.</numerusform><numerusform>Обработано %n блоков из истории транзакций.</numerusform></translation>
     </message>
     <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Синхронизация дополнительных данных: %p%</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Показать помощь о Dash Core со списком возможных параметров командной строки</translation>
     </message>
@@ -505,22 +509,6 @@
     <message>
         <source>Up to date</source>
         <translation>Синхронизировано</translation>
-    </message>
-    <message>
-        <source>Synchronizing sporks...</source>
-        <translation>Синхронизация спорков...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Синхронизация списка мастернод...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Синхронизация списка мастернод-победителей...</translation>
-    </message>
-    <message>
-        <source>Synchronizing budgets...</source>
-        <translation>Синхронизация бюджетов...</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -3406,10 +3394,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не удалось обнаружить достаточных для выполнения этой транзакции неденоминированных средств, отличающихся от 1000DRK.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции неденоминированных средств.</translation>
-    </message>
-    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Внимание: установлено очень большое значение -paytxfee. Это комиссия, которую Вы заплатите при проведении транзакции.</translation>
     </message>
@@ -3748,6 +3732,10 @@ rpcpassword=%s
 Также рекомендуется включить alertnotify для оповещения о проблемах;
 Например: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
 </translation>
+    </message>
+    <message>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции средств, отличающихся от 1000DRK.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -4112,6 +4100,34 @@ rpcpassword=%s
         <translation>Отправлено на мастерноду, ожидаем в очереди %s</translation>
     </message>
     <message>
+        <source>Synchronization doesn't yet started</source>
+        <translation>Синхронизация еще не началась</translation>
+    </message>
+    <message>
+        <source>Synchronization failed</source>
+        <translation>Синхронизация закончилась неудачно</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>Синхронизация завершена</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>Синхронизация бюджетов...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Синхронизация списка мастернод-победителей...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>Синхронизация списка мастернод...</translation>
+    </message>
+    <message>
+        <source>Synchronizing sporks...</source>
+        <translation>Синхронизация спорков...</translation>
+    </message>
+    <message>
         <source>This is not a Masternode.</source>
         <translation>Это не мастернода.</translation>
     </message>
@@ -4214,18 +4230,6 @@ rpcpassword=%s
     <message>
         <source>Loading block index...</source>
         <translation>Загрузка индекса блоков...</translation>
-    </message>
-    <message>
-        <source>Loading budget cache...</source>
-        <translation>Загрузка кэша бюджетов...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Загрузка кэша мастернод...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Загрузка кэша выплат Мастернодам...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>
