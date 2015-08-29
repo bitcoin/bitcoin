@@ -51,10 +51,12 @@ WalletView::WalletView(QWidget *parent):
 
     // Sum of selected transactions
     QLabel *transactionSumLabel = new QLabel(); // Label
+    transactionSumLabel->setObjectName("transactionSumLabel"); // Label ID as CSS-reference
     transactionSumLabel->setText(tr("Selected amount:"));
     hbox_buttons->addWidget(transactionSumLabel);
 
     transactionSum = new QLabel(); // Amount
+    transactionSum->setObjectName("transactionSum"); // Label ID as CSS-reference
     transactionSum->setMinimumSize(200, 8);
     transactionSum->setTextInteractionFlags(Qt::TextSelectableByMouse);
     hbox_buttons->addWidget(transactionSum);

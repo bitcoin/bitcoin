@@ -439,21 +439,6 @@ void CleanTransactionLocksList()
         if(GetTime() > it->second.nExpiration){ //keep them for an hour
             LogPrintf("Removing old transaction lock %s\n", it->second.txHash.ToString().c_str());
 
-            // loop through masternodes that responded
-            for(int nRank = 0; nRank <= INSTANTX_SIGNATURES_TOTAL; nRank++)
-            {
-                CMasternode* pmn = mnodeman.GetMasternodeByRank(nRank, it->second.nBlockHeight, MIN_INSTANTX_PROTO_VERSION);
-                if(!pmn) continue;
-
-                bool fFound = false;
-                BOOST_FOREACH(CConsensusVote& v, it->second.vecConsensusVotes)
-                {
-                    if(pmn->vin == v.vinMasternode){ //Masternode responded
-                        fFound = true;
-                    }
-                }
-            }
-
             if(mapTxLockReq.count(it->second.txHash)){
                 CTransaction& tx = mapTxLockReq[it->second.txHash];
 
@@ -495,17 +480,6 @@ bool CConsensusVote::SignatureValid()
         return false;
     }
 
-    //LogPrintf("verify addr %s \n", vecMasternodes[0].addr.ToString().c_str());
-    //LogPrintf("verify addr %s \n", vecMasternodes[1].addr.ToString().c_str());
-    //LogPrintf("verify addr %d %s \n", n, vecMasternodes[n].addr.ToString().c_str());
-
-    CScript pubkey;
-    pubkey = GetScriptForDestination(pmn->pubkey2.GetID());
-    CTxDestination address1;
-    ExtractDestination(pubkey, address1);
-    CBitcoinAddress address2(address1);
-    //LogPrintf("verify pubkey2 %s \n", address2.ToString().c_str());
-
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchMasterNodeSignature, strMessage, errorMessage)) {
         LogPrintf("InstantX::CConsensusVote::SignatureValid() - Verify message failed\n");
         return false;
@@ -529,13 +503,6 @@ bool CConsensusVote::Sign()
         LogPrintf("CConsensusVote::Sign() - ERROR: Invalid masternodeprivkey: '%s'\n", errorMessage.c_str());
         return false;
     }
-
-    CScript pubkey;
-    pubkey = GetScriptForDestination(pubkey2.GetID());
-    CTxDestination address1;
-    ExtractDestination(pubkey, address1);
-    CBitcoinAddress address2(address1);
-    //LogPrintf("signing pubkey2 %s \n", address2.ToString().c_str());
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchMasterNodeSignature, key2)) {
         LogPrintf("CConsensusVote::Sign() - Sign message failed");

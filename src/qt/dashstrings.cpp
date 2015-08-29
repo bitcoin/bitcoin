@@ -169,7 +169,8 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to locate enough Darksend non-denominated funds for this transaction "
 "that are not equal 1000 DASH."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Unable to locate enough Darksend non-denominated funds for this transaction."),
+"Unable to locate enough funds for this transaction that are not equal 1000 "
+"DASH."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: "
 "%s)"),
@@ -312,9 +313,6 @@ QT_TRANSLATE_NOOP("dash-core", "Listen for JSON-RPC connections on <port> (defau
 QT_TRANSLATE_NOOP("dash-core", "Listen for connections on <port> (default: %u or testnet: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Loading addresses..."),
 QT_TRANSLATE_NOOP("dash-core", "Loading block index..."),
-QT_TRANSLATE_NOOP("dash-core", "Loading budget cache..."),
-QT_TRANSLATE_NOOP("dash-core", "Loading masternode cache..."),
-QT_TRANSLATE_NOOP("dash-core", "Loading masternode payment cache..."),
 QT_TRANSLATE_NOOP("dash-core", "Loading wallet... (%3.2f %%)"),
 QT_TRANSLATE_NOOP("dash-core", "Loading wallet..."),
 QT_TRANSLATE_NOOP("dash-core", "Lock is already in place."),
@@ -387,6 +385,13 @@ QT_TRANSLATE_NOOP("dash-core", "Stop running after importing blocks from disk (d
 QT_TRANSLATE_NOOP("dash-core", "Submitted following entries to masternode: %u / %d"),
 QT_TRANSLATE_NOOP("dash-core", "Submitted to masternode, waiting for more entries ( %u / %d ) %s"),
 QT_TRANSLATE_NOOP("dash-core", "Submitted to masternode, waiting in queue %s"),
+QT_TRANSLATE_NOOP("dash-core", "Synchronization doesn't yet started"),
+QT_TRANSLATE_NOOP("dash-core", "Synchronization failed"),
+QT_TRANSLATE_NOOP("dash-core", "Synchronization finished"),
+QT_TRANSLATE_NOOP("dash-core", "Synchronizing budgets..."),
+QT_TRANSLATE_NOOP("dash-core", "Synchronizing masternode winners..."),
+QT_TRANSLATE_NOOP("dash-core", "Synchronizing masternodes..."),
+QT_TRANSLATE_NOOP("dash-core", "Synchronizing sporks..."),
 QT_TRANSLATE_NOOP("dash-core", "This help message"),
 QT_TRANSLATE_NOOP("dash-core", "This is experimental software."),
 QT_TRANSLATE_NOOP("dash-core", "This is intended for regression testing tools and app development."),

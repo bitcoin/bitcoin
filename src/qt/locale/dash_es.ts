@@ -459,6 +459,10 @@
         <translation><numerusform>Procesado %n bloque del historial de transacciones.</numerusform><numerusform>Procesados %n bloques del historial de transacciones.</numerusform></translation>
     </message>
     <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Sincronizando datos adicionales: %p%</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Mostrar el mensaje de ayuda de Dash Core para obtener una lista con las posibles opciones de la consola de comandos</translation>
     </message>
@@ -506,25 +510,13 @@
         <source>Up to date</source>
         <translation>Actualizado</translation>
     </message>
-    <message>
-        <source>Synchronizing sporks...</source>
-        <translation>Sincronizando sporks...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Sincronizando nodos maestros...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Sincronizando ganadores de los nodos maestros...</translation>
-    </message>
-    <message>
-        <source>Synchronizing budgets...</source>
-        <translation>Sincronizando presupuestos...</translation>
-    </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
         <translation><numerusform>%n hora(s)</numerusform><numerusform>%n hora(s)</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n día</numerusform><numerusform>%n días</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n week(s)</source>
@@ -1444,7 +1436,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Submitted Denom:</source>
-        <translation>Denom Enviados:</translation>
+        <translation>Denom Enviadas:</translation>
     </message>
     <message>
         <source>n/a</source>
@@ -1797,7 +1789,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Using OpenSSL version</source>
-        <translation>Utilizando la versión OpenSSL</translation>
+        <translation>Utilizando versión de OpenSSL</translation>
     </message>
     <message>
         <source>Build date</source>
@@ -3390,16 +3382,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Esta es una versión de pre-prueba - utilícela bajo su propio riesgo. No la utilice para usos comerciales o de minería.</translation>
     </message>
     <message>
+        <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
+        <translation>No se puede enlazar a %s en este equipo. Dash Core probablemente ya está en funcionamiento.</translation>
+    </message>
+    <message>
         <source>Unable to locate enough Darksend denominated funds for this transaction.</source>
         <translation>No se pueden localizar fondos denominados de Darksend suficientes para esta transacción.</translation>
     </message>
     <message>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.</source>
         <translation>No se pueden localizar fondos no denominados de Darksend suficientes para esta transacción que no sean iguales a 1000 DASH.</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>No se pueden localizar fondos no denominados de Darksend suficientes para esta transacción.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -3675,6 +3667,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Registrar prioridad de las transacciones y la comisión por kB al minar bloques (predeterminado: %u)</translation>
     </message>
     <message>
+        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
+        <translation>Mantener índice de transacciones completo, utilizado por la llamada rpc getrawtransaction (predeterminado: %u)</translation>
+    </message>
+    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Tamaño máximo de datos en las transacciones de portadora de datos que transmitimos y minamos (predeterminado: %u)</translation>
     </message>
@@ -3737,6 +3733,10 @@ Si el archivo no existe, créelo con permisos de sólo lectura para su propietar
 También resulta recomendable establecer alertnotify para que se le notifique de posibles problemas;
 por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
 </translation>
+    </message>
+    <message>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>No se pueden localizar fondos suficientes para esta transacción que no sean iguales a 1000 DASH.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -3847,6 +3847,10 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
     <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Error: Se encontró el argumento no soportado -tor, use -onion.</translation>
+    </message>
+    <message>
+        <source>Fee (in DASH/kB) to add to transactions you send (default: %s)</source>
+        <translation>Comisión (en DASH/kB) a añadir sobre las transacciones que envíe (predeterminado: %s)</translation>
     </message>
     <message>
         <source>Finalizing transaction.</source>
@@ -3967,6 +3971,10 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
     <message>
         <source>Lock masternodes from masternode configuration file (default: %u)</source>
         <translation>Asegurar nodos maestros a partir del archivo de configuración del nodo maestro (predeterminado: %u)</translation>
+    </message>
+    <message>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
+        <translation>Mantener como máximo &lt;n&gt; conexiones a pares (predeterminado: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
@@ -4093,6 +4101,34 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
         <translation>Enviado al nodo maestro, esperando en cola %s</translation>
     </message>
     <message>
+        <source>Synchronization doesn't yet started</source>
+        <translation>La sincronización aún no ha comenzado</translation>
+    </message>
+    <message>
+        <source>Synchronization failed</source>
+        <translation>La sincronización falló</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>La sincronización finalizó</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>Sincronizando presupuestos...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Sincronizando ganadores de los nodos maestros...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>Sincronizando nodos maestros...</translation>
+    </message>
+    <message>
+        <source>Synchronizing sporks...</source>
+        <translation>Sincronizando sporks...</translation>
+    </message>
+    <message>
         <source>This is not a Masternode.</source>
         <translation>Esto no es un Nodo Maestro.</translation>
     </message>
@@ -4177,6 +4213,10 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
         <translation>Conservar N DASH anónimos (predeterminado: %u)</translation>
     </message>
     <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>Mantenga a lo sumo &lt;n&gt; transacciones no conectables en la memoria (por defecto: %u)</translation>
+    </message>
+    <message>
         <source>Last Darksend was too recent.</source>
         <translation>El último Darksend era demasiado reciente.</translation>
     </message>
@@ -4191,18 +4231,6 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
     <message>
         <source>Loading block index...</source>
         <translation>Cargando el índice de bloques...</translation>
-    </message>
-    <message>
-        <source>Loading budget cache...</source>
-        <translation>Cargando caché del presupuesto...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Cargando caché de nodos maestros...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Cargando caché de pago del nodo maestro...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>

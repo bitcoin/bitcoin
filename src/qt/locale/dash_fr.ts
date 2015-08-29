@@ -459,6 +459,10 @@
         <translation><numerusform> Traités %n blocs de l'historique des transactions.</numerusform><numerusform> Traités %n blocs de l'historique des transactions.</numerusform></translation>
     </message>
     <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Synchronisation des données additionnelles: %p%</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Afficher le message d'aide de Dash Core pour obtenir une liste des options de ligne de commande Bitcoin possibles.</translation>
     </message>
@@ -505,22 +509,6 @@
     <message>
         <source>Up to date</source>
         <translation>À jour</translation>
-    </message>
-    <message>
-        <source>Synchronizing sporks...</source>
-        <translation>Synchronisation des sporks...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Synchronisation des masternodes...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Synchronisation des masternodes vainqueurs...</translation>
-    </message>
-    <message>
-        <source>Synchronizing budgets...</source>
-        <translation>Synchronisation des budgets...</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -3406,10 +3394,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Impossible de localiser suffisamment de fonds non-dénominés Darksend pour cette transaction qui ne sont pas égaux à 1000 DASH.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Impossible de localiser suffisamment de fonds Darksend non-dénominés  pour cette transaction.</translation>
-    </message>
-    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Attention : -paytxfee est réglée sur un montant très élevé ! Il s'agit des frais de transaction que vous payerez si vous envoyez une transaction.</translation>
     </message>
@@ -3750,6 +3734,10 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Dash" admin@foo.com
 </translation>
     </message>
     <message>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>Impossible de localiser suffisamment de fonds pour cette transaction qui ne sont pas égaux à 1000 DASH.</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Utiliser un serveur proxy SOCKS5 séparé pour atteindre les pairs par les services cachés de Tor (par défaut : %s)</translation>
     </message>
@@ -4032,6 +4020,10 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Dash" admin@foo.com
         <translation>Ajouter l'horodatage au début de la sortie de débogage (par défaut : %u)</translation>
     </message>
     <message>
+        <source>Run a thread to flush wallet periodically (default: %u)</source>
+        <translation>Exécuter une tâche pour purger le portefeuille périodiquement (par défaut : %u) </translation>
+    </message>
+    <message>
         <source>Send trace/debug info to debug.log file (default: %u)</source>
         <translation>Envoyer les informations de débogage/trace au fichier debug.log (par défaut: %u)</translation>
     </message>
@@ -4106,6 +4098,34 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Dash" admin@foo.com
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Soumis au masternode, dans la file d'attente %s</translation>
+    </message>
+    <message>
+        <source>Synchronization doesn't yet started</source>
+        <translation>La synchronisation n'a pas encore démarrée</translation>
+    </message>
+    <message>
+        <source>Synchronization failed</source>
+        <translation>La synchronisation a échouée</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>La synchronisation est terminée</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>Synchronisation des budgets...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Synchronisation des masternodes vainqueurs...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>Synchronisation des masternodes...</translation>
+    </message>
+    <message>
+        <source>Synchronizing sporks...</source>
+        <translation>Synchronisation des sporks...</translation>
     </message>
     <message>
         <source>This is not a Masternode.</source>
@@ -4210,18 +4230,6 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Dash" admin@foo.com
     <message>
         <source>Loading block index...</source>
         <translation>Chargement de l’index des blocs...</translation>
-    </message>
-    <message>
-        <source>Loading budget cache...</source>
-        <translation>Chargement du cache de budget...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Chargement du cache de masternode...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Chargement du cache de paiement masternode...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>
