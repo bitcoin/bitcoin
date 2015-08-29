@@ -359,6 +359,12 @@ BitcoinApplication::~BitcoinApplication()
     delete paymentServer;
     paymentServer = 0;
 #endif
+    // Delete Qt-settings if user clicked on "Reset Options"
+    QSettings settings;
+    if(optionsModel->resetSettings){
+        settings.clear();
+        settings.sync();
+    }
     delete optionsModel;
     optionsModel = 0;
 }
