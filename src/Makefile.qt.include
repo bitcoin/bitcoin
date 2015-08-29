@@ -5,6 +5,7 @@ EXTRA_LIBRARIES += qt/libbitcoinqt.a
 QT_TS = \
   qt/locale/dash_bg.ts \
   qt/locale/dash_de.ts \
+  qt/locale/dash_en.ts \
   qt/locale/dash_es.ts \
   qt/locale/dash_fi.ts \
   qt/locale/dash_fr.ts \
