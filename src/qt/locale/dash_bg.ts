@@ -459,6 +459,10 @@
         <translation><numerusform>Обработени %n блока от историята на транзакциите.</numerusform><numerusform>Обработени %n блока от историята на транзакциите.</numerusform></translation>
     </message>
     <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>Синхронизиране на допълнителни данни: %p%</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Покажи съобщението за помощ на Dash ядрото за да получиш списък на възможните опции за командния ред</translation>
     </message>
@@ -505,22 +509,6 @@
     <message>
         <source>Up to date</source>
         <translation>Синхронизиран</translation>
-    </message>
-    <message>
-        <source>Synchronizing sporks...</source>
-        <translation>Синхронизиране на sporks...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>Синхронизиране на masternodes ...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode winners...</source>
-        <translation>Синхронизиране на masternode победителите ...</translation>
-    </message>
-    <message>
-        <source>Synchronizing budgets...</source>
-        <translation>Синхронизиране на бюджетите ...</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -3406,10 +3394,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не са намерени достатъчно Darksend неденоминирани средства за тази транзакция, които не са равни на 1000 DASH.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Не са намерени достатъчно Darksend неденоминирани средства за тази транзакция.</translation>
-    </message>
-    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Внимание: -paytxfee е с много голяма зададена стойност! Това е транзакционната такса, която ще платите ако направите транзакция.</translation>
     </message>
@@ -3739,6 +3723,10 @@ for example: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
 </source>
         <translation>За използване на dashd, или the -server опция към dash-qt, трябва да зададете rpcpassword в конфигурационния файл: %s Препоръчително е да използвате следната произволна парола: rpcuser=dashrpc rpcpassword=%s (не е нужно да запомняте тази парола) Потребителя и паролата НЕ ТРЯБВА да са еднакви. Ако файла не съществува , създайте го с права за само за четене. Препоръчително е да създадете сигнал за уведомяване за да бъдете осведомени при проблем; Пример: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com 
 </translation>
+    </message>
+    <message>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>Не са намерени достатъчно  средства за тази транзакция, които не са равни на 1000 DASH.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -4103,6 +4091,34 @@ for example: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
         <translation>Изпратено към Мастернода, чака в опашката %s</translation>
     </message>
     <message>
+        <source>Synchronization doesn't yet started</source>
+        <translation>Синхронизацията все още не е започнала</translation>
+    </message>
+    <message>
+        <source>Synchronization failed</source>
+        <translation>Синхронизацията е неуспешна</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>Синхронизацията е завършена</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>Синхронизиране на бюджетите ...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode winners...</source>
+        <translation>Синхронизиране на masternode победителите ...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>Синхронизиране на masternodes ...</translation>
+    </message>
+    <message>
+        <source>Synchronizing sporks...</source>
+        <translation>Синхронизиране на sporks...</translation>
+    </message>
+    <message>
         <source>This is not a Masternode.</source>
         <translation>Това не е Masternode.</translation>
     </message>
@@ -4205,18 +4221,6 @@ for example: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
     <message>
         <source>Loading block index...</source>
         <translation>Зареждане на блок индекса...</translation>
-    </message>
-    <message>
-        <source>Loading budget cache...</source>
-        <translation>Зареждане на бюджетния кеш...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Зареждане на masternode кеш...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Зараждане на masternode кеш за плащане</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>

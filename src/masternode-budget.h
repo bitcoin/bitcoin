@@ -488,13 +488,10 @@ public:
 // Proposals are cast then sent to peers with this object, which leaves the votes out
 class CBudgetProposalBroadcast : public CBudgetProposal
 {
-private:
-    std::vector<unsigned char> vchSig;
-
 public:
-    CBudgetProposalBroadcast();
-    CBudgetProposalBroadcast(const CBudgetProposal& other);
-    CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other);
+    CBudgetProposalBroadcast() : CBudgetProposal(){}
+    CBudgetProposalBroadcast(const CBudgetProposal& other) : CBudgetProposal(other){}
+    CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other) : CBudgetProposal(other){}
     CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
 
     void swap(CBudgetProposalBroadcast& first, CBudgetProposalBroadcast& second) // nothrow

@@ -2,6 +2,7 @@
     <qresource prefix="/translations">
         <file alias="bg">locale/dash_bg.qm</file>
         <file alias="de">locale/dash_de.qm</file>
+        <file alias="en">locale/dash_en.qm</file>
         <file alias="es">locale/dash_es.qm</file>
         <file alias="fi">locale/dash_fi.qm</file>
         <file alias="fr">locale/dash_fr.qm</file>
