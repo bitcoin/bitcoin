@@ -785,7 +785,7 @@ void CBudgetManager::NewBlock()
 
     // incremental sync with our peers
     if(masternodeSync.IsSynced()){
-        LogPrintf("CBudgetManager::NewBlock - incremental sync started");
+        LogPrintf("CBudgetManager::NewBlock - incremental sync started\n");
         if(chainActive.Height() % 600 == rand() % 600) {
             ClearSeen();
             ResetSync();
@@ -1503,41 +1503,6 @@ int CBudgetProposal::GetRemainingPaymentCount()
     int nTotal = (GetBlockEndCycle() - GetBlockStartCycle()) / GetBudgetPaymentCycleBlocks();
     // Take the lowest value
     return (nPayments <= nTotal ? nPayments : nTotal);
-}
-
-CBudgetProposalBroadcast::CBudgetProposalBroadcast()
-{
-    strProposalName = "unknown";
-    strURL = "";
-    nBlockStart = 0;
-    nBlockEnd = 0;
-    nAmount = 0;
-    nFeeTXHash = 0;
-    nTime = 0;
-}
-
-CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposal& other)
-{
-    strProposalName = other.strProposalName;
-    strURL = other.strURL;
-    nBlockStart = other.nBlockStart;
-    nBlockEnd = other.nBlockEnd;
-    address = other.address;
-    nAmount = other.nAmount;
-    nFeeTXHash = other.nFeeTXHash;
-    nTime = other.nTime;
-}
-
-CBudgetProposalBroadcast::CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other)
-{
-    strProposalName = other.strProposalName;
-    strURL = other.strURL;
-    nBlockStart = other.nBlockStart;
-    nBlockEnd = other.nBlockEnd;
-    address = other.address;
-    nAmount = other.nAmount;
-    nFeeTXHash = other.nFeeTXHash;
-    nTime = other.nTime;
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn)
