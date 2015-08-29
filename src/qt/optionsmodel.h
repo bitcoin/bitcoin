@@ -70,6 +70,7 @@ public:
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired();
+    bool resetSettings;
 
 private:
     /* Qt-only settings */
