@@ -71,6 +71,8 @@ void CScheduler::serviceQueue()
             f();
             lock.lock();
         } catch (...) {
+            if (!lock.owns_lock())
+                lock.lock();
             --nThreadsServicingQueue;
             throw;
         }
