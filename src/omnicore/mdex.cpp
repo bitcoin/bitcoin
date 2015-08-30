@@ -662,27 +662,52 @@ bool mastercore::MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale)
     return false;
 }
 
-// returns a string denoting the status of a trade
-// to save doing a second levelDB iteration if already done in calling function, pass in optional totalSold & totalBought
-std::string mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold, int64_t totalReceived)
+/**
+ * Returns a string describing the status of a trade
+ *
+ */
+std::string mastercore::MetaDEx_getStatusText(int tradeStatus)
 {
-    if (totalSold == -1 || totalReceived == -1) { // TODO: do we need this?
-        // can only skip calling getMatchingTrades if these values were supplied (ie != default value of -1)
+    switch (tradeStatus) {
+        case TRADE_OPEN: return "open";
+        case TRADE_OPEN_PART_FILLED: return "open part filled";
+        case TRADE_FILLED: return "filled";
+        case TRADE_CANCELLED: return "cancelled";
+        case TRADE_CANCELLED_PART_FILLED: return "cancelled part filled";
+        default: return "unknown";
+    }
+}
+
+/**
+ * Returns the status of a MetaDEx trade
+ *
+ */
+int mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold)
+{
+    // NOTE: If the calling code is already aware of the total amount sold, pass the value in to this function to avoid duplication of
+    //       work.  If the calling code doesn't know the amount, leave default (-1) and we will calculate it from levelDB lookups.
+    if (totalSold == -1) {
         Array tradeArray;
+        int64_t totalReceived;
         t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
     }
-    bool orderOpen = MetaDEx_isOpen(txid, propertyIdForSale);
-    bool partialFilled = false;
-    bool filled = false;
-    std::string statusText = "unknown";
-    if (totalSold > 0) partialFilled = true;
-    if (totalSold >= amountForSale) filled = true;
-    if (!orderOpen && !partialFilled) statusText = "cancelled"; // offers that are closed but not filled must have been cancelled
-    if (!orderOpen && partialFilled) statusText = "cancelled part filled"; // offers that are closed but not filled must have been cancelled
-    if (!orderOpen && filled) statusText = "filled"; // filled offers are closed
-    if (orderOpen && !partialFilled) statusText = "open"; // offer exists but no matches yet
-    if (orderOpen && partialFilled) statusText = "open part filled"; // offer exists, some matches but not filled yet
-    return statusText;
+
+    // Calculate and return the status of the trade via the amount sold and open/closed attributes.
+    if (MetaDEx_isOpen(txid, propertyIdForSale)) {
+        if (totalSold == 0) {
+            return TRADE_OPEN;
+        } else {
+            return TRADE_OPEN_PART_FILLED;
+        }
+    } else {
+        if (totalSold == 0) {
+            return TRADE_CANCELLED;
+        } else if (totalSold < amountForSale) {
+            return TRADE_CANCELLED_PART_FILLED;
+        } else {
+            return TRADE_FILLED;
+        }
+    }
 }
 
 void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
