@@ -26,6 +26,14 @@ typedef boost::rational<int128_t> rational_t;
 
 #define DISPLAY_PRECISION_LEN  50
 
+// MetaDEx trade statuses
+#define TRADE_INVALID                 -1
+#define TRADE_OPEN                    1
+#define TRADE_OPEN_PART_FILLED        2
+#define TRADE_FILLED                  3
+#define TRADE_CANCELLED               4
+#define TRADE_CANCELLED_PART_FILLED   5
+
 std::string xToString(const dec_float& value);
 std::string xToString(const int128_t& value);
 std::string xToString(const rational_t& value);
@@ -128,7 +136,12 @@ int MetaDEx_CANCEL_EVERYTHING(const uint256& txid, uint32_t block, const std::st
 bool MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx);
 void MetaDEx_debug_print(bool bShowPriceLevel = false, bool bDisplay = false);
 bool MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale = 0);
-std::string MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold = -1, int64_t totalReceived = -1);
+int MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold = -1);
+std::string MetaDEx_getStatusText(int tradeStatus);
+
+// Locates a trade in the MetaDEx maps via txid and returns the trade object
+const CMPMetaDEx* MetaDEx_RetrieveTrade(const uint256& txid);
+
 }
 
 
