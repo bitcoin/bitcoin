@@ -348,7 +348,7 @@ void CMasternodeSync::Process()
                 CBlockIndex* pindexPrev = chainActive.Tip();
                 if(pindexPrev == NULL) return;
 
-                int nMnCount = mnodeman.CountEnabled();
+                int nMnCount = mnodeman.CountEnabled()*2;
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 RequestedMasternodeAttempt++;
 
