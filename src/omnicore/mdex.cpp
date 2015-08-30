@@ -674,6 +674,7 @@ std::string mastercore::MetaDEx_getStatusText(int tradeStatus)
         case TRADE_FILLED: return "filled";
         case TRADE_CANCELLED: return "cancelled";
         case TRADE_CANCELLED_PART_FILLED: return "cancelled part filled";
+        case TRADE_INVALID: return "trade invalid";
         default: return "unknown";
     }
 }
@@ -691,6 +692,9 @@ int mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSal
         int64_t totalReceived;
         t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
     }
+
+    // Return a "trade invalid" status if the trade was invalidated at parsing/interpretation (eg insufficient funds)
+    if (!getValidMPTX(txid)) return TRADE_INVALID;
 
     // Calculate and return the status of the trade via the amount sold and open/closed attributes.
     if (MetaDEx_isOpen(txid, propertyIdForSale)) {

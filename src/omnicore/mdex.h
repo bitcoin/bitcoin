@@ -27,6 +27,7 @@ typedef boost::rational<int128_t> rational_t;
 #define DISPLAY_PRECISION_LEN  50
 
 // MetaDEx trade statuses
+#define TRADE_INVALID                 -1
 #define TRADE_OPEN                    1
 #define TRADE_OPEN_PART_FILLED        2
 #define TRADE_FILLED                  3
