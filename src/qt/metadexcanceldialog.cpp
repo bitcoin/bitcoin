@@ -81,7 +81,6 @@ void MetaDExCancelDialog::setWalletModel(WalletModel *model)
 
 void MetaDExCancelDialog::ReinitUI()
 {
-    ui->fromCombo->clear();
     UpdateAddressSelector();
 }
 
@@ -96,6 +95,9 @@ void MetaDExCancelDialog::UpdateAddressSelector()
 {
     LOCK(cs_tally);
 
+    QString selectedItem = ui->fromCombo->currentText();
+    ui->fromCombo->clear();
+
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         md_PricesMap & prices = my_it->second;
         for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
@@ -108,6 +110,12 @@ void MetaDExCancelDialog::UpdateAddressSelector()
                 }
             }
         }
+    }
+
+    // restore initial selection
+    int idx = ui->fromCombo->findText(selectedItem);
+    if (idx != -1) {
+        ui->fromCombo->setCurrentIndex(idx);
     }
 }
 
