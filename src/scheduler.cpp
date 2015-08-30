@@ -6,7 +6,6 @@
 
 #include <assert.h>
 #include <boost/bind.hpp>
-#include <boost/thread/reverse_lock.hpp>
 #include <utility>
 
 CScheduler::CScheduler() : nThreadsServicingQueue(0), stopRequested(false), stopWhenEmpty(false)
@@ -66,12 +65,11 @@ void CScheduler::serviceQueue()
             Function f = taskQueue.begin()->second;
             taskQueue.erase(taskQueue.begin());
 
-            {
-                // Unlock before calling f, so it can reschedule itself or another task
-                // without deadlocking:
-                boost::reverse_lock<boost::unique_lock<boost::mutex> > rlock(lock);
-                f();
-            }
+            // Unlock before calling f, so it can reschedule itself or another task
+            // without deadlocking:
+            lock.unlock();
+            f();
+            lock.lock();
         } catch (...) {
             --nThreadsServicingQueue;
             throw;
