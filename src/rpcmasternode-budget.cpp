@@ -24,7 +24,7 @@ Value mnbudget(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-many" && strCommand != "prepare" && strCommand != "submit" && strCommand != "vote" && strCommand != "getvotes" && strCommand != "getinfo" && strCommand != "show" && strCommand != "projection" && strCommand != "check"))
+        (strCommand != "vote-many" && strCommand != "prepare" && strCommand != "submit" && strCommand != "vote" && strCommand != "getvotes" && strCommand != "getinfo" && strCommand != "show" && strCommand != "projection" && strCommand != "check" && strCommand != "nextblock"))
         throw runtime_error(
                 "mnbudget \"command\"... ( \"passphrase\" )\n"
                 "Vote or show current budgets\n"
@@ -39,7 +39,17 @@ Value mnbudget(const Array& params, bool fHelp)
                 "  show               - Show all budgets\n"
                 "  projection         - Show the projection of which proposals will be paid the next cycle\n"
                 "  check              - Scan proposals and remove invalid\n"
+                "  nextblock          - Get next superblock for budget system\n"
                 );
+
+    if(strCommand == "nextblock")
+    {
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(!pindexPrev) return "unknown";
+
+        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        return nNext;
+    }
 
     if(strCommand == "prepare")
     {

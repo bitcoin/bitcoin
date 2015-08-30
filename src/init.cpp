@@ -169,9 +169,9 @@ void PrepareShutdown()
     GenerateBitcoins(false, NULL, 0);
 #endif
     StopNode();
-    //DumpMasternodes();
-    //DumpBudgets();
-    //DumpMasternodePayments();
+    DumpMasternodes();
+    DumpBudgets();
+    DumpMasternodePayments();
     UnregisterNodeSignals(GetNodeSignals());
 
     if (fFeeEstimatesInitialized)
@@ -1409,67 +1409,57 @@ bool AppInit2(boost::thread_group& threadGroup)
 
     // ********************************************************* Step 10: setup DarkSend
 
+    uiInterface.InitMessage(_("Loading masternode cache..."));
+
+    CMasternodeDB mndb;
+    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
+    if (readResult == CMasternodeDB::FileError)
+        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
+    else if (readResult != CMasternodeDB::Ok)
+    {
+        LogPrintf("Error reading mncache.dat: ");
+        if(readResult == CMasternodeDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
+    uiInterface.InitMessage(_("Loading budget cache..."));
+
+    CBudgetDB budgetdb;
+    CBudgetDB::ReadResult readResult2 = budgetdb.Read(budget);
+    
+    if (readResult2 == CBudgetDB::FileError)
+        LogPrintf("Missing budget cache - budget.dat, will try to recreate\n");
+    else if (readResult2 != CBudgetDB::Ok)
+    {
+        LogPrintf("Error reading budget.dat: ");
+        if(readResult2 == CBudgetDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
+
+    //flag our cached items so we send them to our peers
+    budget.ResetSync();
+    budget.ClearSeen();
 
 
-    /*
+    uiInterface.InitMessage(_("Loading masternode payment cache..."));
 
-        We sync all of this information on boot anyway, as it's kept on the network so there's really no point.
-        Also, it seems it might be causing some edge cases where clients can get stuck. I think it's better to just
-        sync from the network instead.
-         uiInterface.InitMessage(_("Loading masternode cache..."));
-
-         CMasternodeDB mndb;
-         CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
-         if (readResult == CMasternodeDB::FileError)
-             LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
-         else if (readResult != CMasternodeDB::Ok)
-         {
-             LogPrintf("Error reading mncache.dat: ");
-             if(readResult == CMasternodeDB::IncorrectFormat)
-                 LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-             else
-                 LogPrintf("file format is unknown or invalid, please fix it manually\n");
-         }
-
-
-        // ---------
-        // uiInterface.InitMessage(_("Loading budget cache..."));
-
-        // CBudgetDB budgetdb;
-        // CBudgetDB::ReadResult readResult2 = budgetdb.Read(budget);
-        
-        // if (readResult2 == CBudgetDB::FileError)
-        //     LogPrintf("Missing budget cache - budget.dat, will try to recreate\n");
-        // else if (readResult2 != CBudgetDB::Ok)
-        // {
-        //     LogPrintf("Error reading budget.dat: ");
-        //     if(readResult2 == CBudgetDB::IncorrectFormat)
-        //         LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        //     else
-        //         LogPrintf("file format is unknown or invalid, please fix it manually\n");
-        // }
-
-        // //flag our cached items so we send them to our peers
-        // budget.ResetSync();
-        // budget.ClearSeen();
-
-
-        // uiInterface.InitMessage(_("Loading masternode payment cache..."));
-
-        // CMasternodePaymentDB mnpayments;
-        // CMasternodePaymentDB::ReadResult readResult3 = mnpayments.Read(masternodePayments);
-        
-        // if (readResult3 == CMasternodePaymentDB::FileError)
-        //     LogPrintf("Missing masternode payment cache - mnpayments.dat, will try to recreate\n");
-        // else if (readResult3 != CMasternodePaymentDB::Ok)
-        // {
-        //     LogPrintf("Error reading mnpayments.dat: ");
-        //     if(readResult3 == CMasternodePaymentDB::IncorrectFormat)
-        //         LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        //     else
-        //         LogPrintf("file format is unknown or invalid, please fix it manually\n");
-        // }
-    */
+    CMasternodePaymentDB mnpayments;
+    CMasternodePaymentDB::ReadResult readResult3 = mnpayments.Read(masternodePayments);
+    
+    if (readResult3 == CMasternodePaymentDB::FileError)
+        LogPrintf("Missing masternode payment cache - mnpayments.dat, will try to recreate\n");
+    else if (readResult3 != CMasternodePaymentDB::Ok)
+    {
+        LogPrintf("Error reading mnpayments.dat: ");
+        if(readResult3 == CMasternodePaymentDB::IncorrectFormat)
+            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        else
+            LogPrintf("file format is unknown or invalid, please fix it manually\n");
+    }
 
     fMasterNode = GetBoolArg("-masternode", false);
 
