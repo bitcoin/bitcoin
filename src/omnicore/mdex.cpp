@@ -735,3 +735,21 @@ void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
     }
     PrintToLog(">>>\n");
 }
+
+/**
+ * Locates a trade in the MetaDEx maps via txid and returns the trade object
+ *
+ */
+const CMPMetaDEx* mastercore::MetaDEx_RetrieveTrade(const uint256& txid)
+{
+    for (md_PropertiesMap::iterator propIter = metadex.begin(); propIter != metadex.end(); ++propIter) {
+        md_PricesMap & prices = propIter->second;
+        for (md_PricesMap::iterator pricesIter = prices.begin(); pricesIter != prices.end(); ++pricesIter) {
+            md_Set & indexes = pricesIter->second;
+            for (md_Set::iterator tradesIter = indexes.begin(); tradesIter != indexes.end(); ++tradesIter) {
+                if (txid == (*tradesIter).getHash()) return &(*tradesIter);
+            }
+        }
+    }
+    return (CMPMetaDEx*) NULL;
+}

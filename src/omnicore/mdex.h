@@ -137,6 +137,10 @@ void MetaDEx_debug_print(bool bShowPriceLevel = false, bool bDisplay = false);
 bool MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale = 0);
 int MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold = -1);
 std::string MetaDEx_getStatusText(int tradeStatus);
+
+// Locates a trade in the MetaDEx maps via txid and returns the trade object
+const CMPMetaDEx* MetaDEx_RetrieveTrade(const uint256& txid);
+
 }
 
 
