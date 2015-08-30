@@ -136,13 +136,10 @@ void MetaDExCancelDialog::UpdateCancelCombo()
         return; // no radio button is selected
     }
 
-    if (ui->radioCancelEverything->isChecked()) {
-        ui->cancelCombo->clear();
-        ui->cancelCombo->addItem("All currently active sell orders","ALL");
-        return; // don't waste time on work we don't need to do for this case
-    }
-
     ui->cancelCombo->clear();
+
+    bool fMainEcosystem = false;
+    bool fTestEcosystem = false;
 
     LOCK(cs_tally);
 
@@ -153,6 +150,10 @@ void MetaDExCancelDialog::UpdateCancelCombo()
             for (md_Set::iterator it = indexes.begin(); it != indexes.end(); ++it) {
                 CMPMetaDEx obj = *it;
                 if(senderAddress == obj.getAddr()) {
+                    // for "cancel all":
+                    if (isMainEcosystemProperty(obj.getProperty())) fMainEcosystem = true;
+                    if (isTestEcosystemProperty(obj.getProperty())) fTestEcosystem = true;
+
                     bool isBuy = false; // sell or buy? (from UI perspective)
                     if ((obj.getProperty() == OMNI_PROPERTY_MSC) || (obj.getProperty() == OMNI_PROPERTY_TMSC)) isBuy = true;
                     string sellToken = getPropertyName(obj.getProperty()).c_str();
@@ -177,6 +178,13 @@ void MetaDExCancelDialog::UpdateCancelCombo()
             }
         }
     }
+
+    if (ui->radioCancelEverything->isChecked()) {
+        ui->cancelCombo->clear();
+        if (fMainEcosystem) ui->cancelCombo->addItem("All active orders in the main ecosystem", 1);
+        if (fTestEcosystem) ui->cancelCombo->addItem("All active orders in the test ecosystem", 2);
+    }
+
     int idx = ui->cancelCombo->findText(existingSelection, Qt::MatchExactly);
     if (idx != -1) ui->cancelCombo->setCurrentIndex(idx); // if value selected before update and it still exists, reselect it
 }
@@ -252,6 +260,7 @@ void MetaDExCancelDialog::SendCancelTransaction()
         priceStr = dataStr.substr(colonPos+1,std::string::npos);
     }
 
+    uint8_t ecosystem = 0;
     uint32_t propertyIdForSale = 0;
     uint32_t propertyIdDesired = 0;
 
@@ -260,8 +269,18 @@ void MetaDExCancelDialog::SendCancelTransaction()
             propertyIdForSale = boost::lexical_cast<uint32_t>(propertyIdForSaleStr);
             propertyIdDesired = boost::lexical_cast<uint32_t>(propertyIdDesiredStr);
         } catch(boost::bad_lexical_cast& e) {
-            printf("Failed to parse property identifiers: %s\n", e.what()); // TODO: print to log instead
+            QMessageBox::critical(this, "Unable to send transaction",
+                    QString("Failed to parse property identifiers: ").append(e.what()));
+            return;
         }
+    } else {
+        bool ok = false;
+        int ecosystemInt = ui->cancelCombo->itemData(ui->cancelCombo->currentIndex()).toInt(&ok);
+        if (!ok) {
+            QMessageBox::critical(this, "Unable to send transaction", "No ecosystem selected");
+            return;
+        }
+        ecosystem = static_cast<uint8_t>(ecosystemInt);
     }
 
     int64_t amountForSale = 0, amountDesired = 0;
@@ -299,25 +318,31 @@ void MetaDExCancelDialog::SendCancelTransaction()
         case 3: strMsgText += "3 (Cancel by pair)\n"; break;
         case 4: strMsgText += "4 (Cancel all)\n"; break;
     }
-    string sellToken = getPropertyName(propertyIdForSale).c_str();
-    string desiredToken = getPropertyName(propertyIdDesired).c_str();
-    string sellId = static_cast<ostringstream*>( &(ostringstream() << propertyIdForSale) )->str();
-    string desiredId = static_cast<ostringstream*>( &(ostringstream() << propertyIdDesired) )->str();
-    if(sellToken.size()>30) sellToken=sellToken.substr(0,30)+"...";
-    sellToken += " (#" + sellId + ")";
-    if(desiredToken.size()>30) desiredToken=desiredToken.substr(0,30)+"...";
-    desiredToken += " (#" + desiredId + ")";
-    string messageStr = "Cancel all orders ";
-    if ((propertyIdForSale == OMNI_PROPERTY_MSC) || (propertyIdForSale == OMNI_PROPERTY_TMSC)) { // "buy" order
-        messageStr += "buying " + desiredToken;
+
+    std::string messageStr = "Cancel all orders ";
+    if (action != 4) {
+        string sellToken = getPropertyName(propertyIdForSale).c_str();
+        string desiredToken = getPropertyName(propertyIdDesired).c_str();
+        string sellId = static_cast<ostringstream*>( &(ostringstream() << propertyIdForSale) )->str();
+        string desiredId = static_cast<ostringstream*>( &(ostringstream() << propertyIdDesired) )->str();
+        if(sellToken.size()>30) sellToken=sellToken.substr(0,30)+"...";
+        sellToken += " (#" + sellId + ")";
+        if(desiredToken.size()>30) desiredToken=desiredToken.substr(0,30)+"...";
+        desiredToken += " (#" + desiredId + ")";
+        if ((propertyIdForSale == OMNI_PROPERTY_MSC) || (propertyIdForSale == OMNI_PROPERTY_TMSC)) { // "buy" order
+            messageStr += "buying " + desiredToken;
+        } else {
+            messageStr += "selling " + sellToken;
+        }
+        if (action == 2) { // append price if needed - display the first 24 digits
+             std::string displayPrice = StripTrailingZeros(priceStr);
+             if (displayPrice.size()>24) displayPrice = displayPrice.substr(0,24)+"...";
+             messageStr += " priced at " + displayPrice;
+             if ((propertyIdForSale == OMNI_PROPERTY_MSC) || (propertyIdDesired == OMNI_PROPERTY_MSC)) { messageStr += " MSC/SPT"; } else { messageStr += " TMSC/SPT"; }
+        }
     } else {
-        messageStr += "selling " + sellToken;
-    }
-    if (action == 2) { // append price if needed - display the first 24 digits
-         std::string displayPrice = StripTrailingZeros(priceStr);
-         if (displayPrice.size()>24) displayPrice = displayPrice.substr(0,24)+"...";
-         messageStr += " priced at " + displayPrice;
-         if ((propertyIdForSale == OMNI_PROPERTY_MSC) || (propertyIdDesired == OMNI_PROPERTY_MSC)) { messageStr += " MSC/SPT"; } else { messageStr += " TMSC/SPT"; }
+        if (isMainEcosystemProperty(ecosystem)) messageStr += "in the main ecosystem";
+        if (isTestEcosystemProperty(ecosystem)) messageStr += "in the test ecosystem";
     }
     strMsgText += "Message: " + messageStr;
     strMsgText += "\n\nAre you sure you wish to send this transaction?";
@@ -351,9 +376,6 @@ void MetaDExCancelDialog::SendCancelTransaction()
         payload = CreatePayload_MetaDExCancelPair(propertyIdForSale, propertyIdDesired);
     }
     if (action == 4) { // CANCEL_ALL_FOR_PAIR
-        uint8_t ecosystem = 0;
-        if (isMainEcosystemProperty(propertyIdForSale) && isMainEcosystemProperty(propertyIdDesired)) ecosystem = OMNI_PROPERTY_MSC;
-        if (isTestEcosystemProperty(propertyIdForSale) && isTestEcosystemProperty(propertyIdDesired)) ecosystem = OMNI_PROPERTY_TMSC;
         payload = CreatePayload_MetaDExCancelEcosystem(ecosystem);
     }
 
@@ -374,7 +396,7 @@ void MetaDExCancelDialog::SendCancelTransaction()
         } else {
             if (action == 2) PendingAdd(txid, fromAddress, MSC_TYPE_METADEX_CANCEL_PRICE, propertyIdForSale, amountForSale, false);
             if (action == 3) PendingAdd(txid, fromAddress, MSC_TYPE_METADEX_CANCEL_PAIR, propertyIdForSale, 0, false);
-            if (action == 4) PendingAdd(txid, fromAddress, MSC_TYPE_METADEX_CANCEL_ECOSYSTEM, propertyIdForSale, 0, false);
+            if (action == 4) PendingAdd(txid, fromAddress, MSC_TYPE_METADEX_CANCEL_ECOSYSTEM, ecosystem, 0, false);
             PopulateTXSentDialog(txid.GetHex());
         }
     }
