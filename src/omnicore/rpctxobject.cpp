@@ -305,11 +305,9 @@ void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool ex
     txobj.push_back(Pair("propertyidforsale", (uint64_t)omniObj.getProperty()));
     txobj.push_back(Pair("propertyidforsaleisdivisible", propertyIdForSaleIsDivisible));
     txobj.push_back(Pair("amountforsale", FormatMP(omniObj.getProperty(), omniObj.getAmount())));
-    txobj.push_back(Pair("amountremaining", FormatMP(omniObj.getProperty(), metaObj.getAmountRemaining())));
     txobj.push_back(Pair("propertyiddesired", (uint64_t)metaObj.getDesProperty()));
     txobj.push_back(Pair("propertyiddesiredisdivisible", propertyIdDesiredIsDivisible));
     txobj.push_back(Pair("amountdesired", FormatMP(metaObj.getDesProperty(), metaObj.getAmountDesired())));
-    txobj.push_back(Pair("amounttofill", FormatMP(metaObj.getDesProperty(), metaObj.getAmountToFill())));
     txobj.push_back(Pair("unitprice", unitPriceStr));
     if (extendedDetails) populateRPCExtendedTypeMetaDExTrade(omniObj.getHash(), omniObj.getProperty(), omniObj.getAmount(), txobj);
 }
@@ -484,9 +482,16 @@ void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyI
     int64_t totalReceived = 0, totalSold = 0;
     LOCK(cs_tally);
     t_tradelistdb->getMatchingTrades(txid, propertyIdForSale, tradeArray, totalSold, totalReceived);
-    std::string statusText = MetaDEx_getStatus(txid, propertyIdForSale, amountForSale, totalSold, totalReceived);
-    txobj.push_back(Pair("status", statusText));
-    if (statusText == "cancelled" || statusText == "cancelled part filled") {
+    int tradeStatus = MetaDEx_getStatus(txid, propertyIdForSale, amountForSale, totalSold);
+    if (tradeStatus == TRADE_OPEN || tradeStatus == TRADE_OPEN_PART_FILLED) {
+        const CMPMetaDEx* tradeObj = MetaDEx_RetrieveTrade(txid);
+        if (tradeObj != NULL) {
+            txobj.push_back(Pair("amountremaining", FormatMP(tradeObj->getProperty(), tradeObj->getAmountRemaining())));
+            txobj.push_back(Pair("amounttofill", FormatMP(tradeObj->getDesProperty(), tradeObj->getAmountToFill())));
+        }
+    }
+    txobj.push_back(Pair("status", MetaDEx_getStatusText(tradeStatus)));
+    if (tradeStatus == TRADE_CANCELLED || tradeStatus == TRADE_CANCELLED_PART_FILLED) {
         txobj.push_back(Pair("canceltxid", p_txlistdb->findMetaDExCancel(txid).GetHex()));
     }
     txobj.push_back(Pair("matches", tradeArray));
