@@ -273,6 +273,16 @@ CConsensusParams& MutableConsensusParams()
 }
 
 /**
+ * Resets consensus paramters.
+ */
+void ResetConsensusParams()
+{
+    mainConsensusParams = CMainConsensusParams();
+    testNetConsensusParams = CTestNetConsensusParams();
+    regTestConsensusParams = CRegTestConsensusParams();
+}
+
+/**
  * Checks, if the script type is allowed as input.
  */
 bool IsAllowedInputType(int whichType, int nBlock)
