@@ -1144,22 +1144,22 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     */
 
-    vector<CInv> vInv;
+    int nInvCount = 0;
 
     std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
     while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fValid && (nProp == 0 || (*it1).first == nProp)){
-            CInv inv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash());
-            vInv.push_back(inv);
+            pfrom->PushInventory(CInv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash()));
+            nInvCount++;
         
             //send votes
             std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
             while(it2 != pbudgetProposal->mapVotes.end()){
                 if((*it2).second.fValid){
                     if((fPartial && !(*it2).second.fSynced) || !fPartial) {
-                        CInv inv(MSG_BUDGET_VOTE, (*it2).second.GetHash());
-                        vInv.push_back(inv);
+                        pfrom->PushInventory(CInv(MSG_BUDGET_VOTE, (*it2).second.GetHash()));
+                        nInvCount++;
                     }
                 }
                 ++it2;
@@ -1168,27 +1168,26 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
         ++it1;
     }
 
-    pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_PROP, (int)vInv.size());
-    if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
+    pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_PROP, nInvCount);
 
-    LogPrintf("CBudgetManager::Sync - sent %d items\n", (int)vInv.size());
+    LogPrintf("CBudgetManager::Sync - sent %d items\n", nInvCount);
 
-    vInv.clear();
+    nInvCount = 0;
 
     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
         if(pfinalizedBudget && pfinalizedBudget->fValid && (nProp == 0 || (*it3).first == nProp)){
-            CInv inv(MSG_BUDGET_FINALIZED, (*it3).second.GetHash());
-            vInv.push_back(inv);
+            pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED, (*it3).second.GetHash()));
+            nInvCount++;
 
             //send votes
             std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
             while(it4 != pfinalizedBudget->mapVotes.end()){
                 if((*it4).second.fValid) {
                     if((fPartial && !(*it4).second.fSynced) || !fPartial) {
-                        CInv inv(MSG_BUDGET_FINALIZED_VOTE, (*it4).second.GetHash());
-                        vInv.push_back(inv);
+                        pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED_VOTE, (*it4).second.GetHash()));
+                        nInvCount++;
                     }
                 }
                 ++it4;
@@ -1197,9 +1196,8 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
         ++it3;
     }
 
-    pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_FIN, (int)vInv.size());
-    if(vInv.size() > 0) pfrom->PushMessage("inv", vInv);
-    LogPrintf("CBudgetManager::Sync - sent %d items\n", (int)vInv.size());
+    pfrom->PushMessage("ssc", MASTERNODE_SYNC_BUDGET_FIN, nInvCount);
+    LogPrintf("CBudgetManager::Sync - sent %d items\n", nInvCount);
 
 }
 
