@@ -269,7 +269,7 @@ Cancel all offers on the distributed token exchange.
 **Arguments:**
 
 1. ***fromaddress          (string, required):*** the address to trade with
-2. ***ecosystem            (number, required):*** the ecosystem of the offers to cancel: (0) both, (1) main, (2) test
+2. ***ecosystem            (number, required):*** the ecosystem of the offers to cancel: (1) main, (2) test
 
 **Example:**
 

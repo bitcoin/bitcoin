@@ -1260,7 +1260,10 @@ int CMPTransaction::logicMath_MetaDExCancelEcosystem()
         return (PKT_ERROR_METADEX -22);
     }
 
-    // ------------------------------------------
+    if (OMNI_PROPERTY_MSC != ecosystem && OMNI_PROPERTY_TMSC != ecosystem) {
+        PrintToLog("%s(): rejected: invalid ecosystem: %d\n", __func__, ecosystem);
+        return (PKT_ERROR_METADEX -21);
+    }
 
     int rc = MetaDEx_CANCEL_EVERYTHING(txid, block, sender, ecosystem);
 

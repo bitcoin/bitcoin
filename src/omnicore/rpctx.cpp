@@ -929,7 +929,7 @@ Value omni_sendcancelalltrades(const Array& params, bool fHelp)
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to trade with\n"
-            "2. ecosystem            (number, required) the ecosystem of the offers to cancel: (0) both, (1) main, (2) test\n"
+            "2. ecosystem            (number, required) the ecosystem of the offers to cancel: (1) main, (2) test\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
@@ -941,7 +941,7 @@ Value omni_sendcancelalltrades(const Array& params, bool fHelp)
 
     // obtain parameters & info
     std::string fromAddress = ParseAddress(params[0]);
-    uint8_t ecosystem = (params[1].get_int() != 0) ? ParseEcosystem(params[1]): 0;
+    uint8_t ecosystem = ParseEcosystem(params[1]);
 
     // perform checks
     // TODO: check, if there are matching offers to cancel

@@ -130,7 +130,7 @@
              <string notr="true">padding-left:10px;</string>
             </property>
             <property name="text">
-             <string>Cancel everything</string>
+             <string>Cancel by ecosystem</string>
             </property>
            </widget>
           </item>
