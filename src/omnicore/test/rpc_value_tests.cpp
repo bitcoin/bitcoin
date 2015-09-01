@@ -39,6 +39,35 @@ BOOST_AUTO_TEST_CASE(rpcvalues_address)
     BOOST_CHECK_THROW(ParseAddress(ValueFromString("0.1")), std::runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE(rpcvalues_address_or_empty)
+{
+    // Valid input
+    BOOST_CHECK_EQUAL(ParseAddressOrEmpty(Value()), "");
+    BOOST_CHECK_EQUAL(ParseAddressOrEmpty(Value("")), "");
+    BOOST_CHECK_EQUAL(ParseAddressOrEmpty(ValueFromString("null")), "");
+    BOOST_CHECK_EQUAL(ParseAddressOrEmpty(Value("1f2dj45pxYb8BCW5sSbCgJ5YvXBfSapeX")), "1f2dj45pxYb8BCW5sSbCgJ5YvXBfSapeX");
+    // Invalid CBitcoinAddress
+    BOOST_CHECK_THROW(ParseAddressOrEmpty(Value("*")), Object);
+    BOOST_CHECK_THROW(ParseAddressOrEmpty(Value("asdrf234")), Object);
+    // Invalid types
+    BOOST_CHECK_THROW(ParseAddressOrEmpty(ValueFromString("0.1")), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(rpcvalues_address_or_wildcard)
+{
+    // Valid input
+    BOOST_CHECK_EQUAL(ParseAddressOrWildcard(Value("*")), "*");
+    BOOST_CHECK_EQUAL(ParseAddressOrWildcard(Value("3MbYQMMmSkC3AgWkj9FMo5LsPTW1zBTwXL")), "3MbYQMMmSkC3AgWkj9FMo5LsPTW1zBTwXL");
+    // Invalid CBitcoinAddress
+    BOOST_CHECK_THROW(ParseAddressOrWildcard(Value("")), Object);
+    BOOST_CHECK_THROW(ParseAddressOrWildcard(Value("-")), Object);
+    BOOST_CHECK_THROW(ParseAddressOrWildcard(Value("9EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P")), Object);
+    // Invalid types
+    BOOST_CHECK_THROW(ParseAddressOrWildcard(Value()), std::runtime_error);
+    BOOST_CHECK_THROW(ParseAddressOrWildcard(ValueFromString("null")), std::runtime_error);
+    BOOST_CHECK_THROW(ParseAddressOrWildcard(ValueFromString("123456789")), std::runtime_error);
+}
+
 BOOST_AUTO_TEST_CASE(rpcvalues_property_id)
 {
     // Valid input

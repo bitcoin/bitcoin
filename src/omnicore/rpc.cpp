@@ -347,8 +347,8 @@ Value omni_sendrawtx(const Array& params, bool fHelp)
 
     std::string fromAddress = ParseAddress(params[0]);
     std::vector<unsigned char> data = ParseHexV(params[1], "raw transaction");
-    std::string toAddress = (params.size() > 2 && !ParseText(params[2]).empty()) ? ParseAddress(params[2]): "";
-    std::string redeemAddress = (params.size() > 3 && !ParseText(params[3]).empty()) ? ParseAddress(params[3]): "";
+    std::string toAddress = (params.size() > 2) ? ParseAddressOrEmpty(params[2]): "";
+    std::string redeemAddress = (params.size() > 3) ? ParseAddressOrEmpty(params[3]): "";
     int64_t referenceAmount = (params.size() > 4) ? ParseAmount(params[4], true): 0;
 
     //some sanity checking of the data supplied?
@@ -1115,7 +1115,7 @@ Value omni_getactivedexsells(const Array& params, bool fHelp)
     std::string addressFilter;
 
     if (params.size() > 0) {
-        addressFilter = ParseAddress(params[0]);
+        addressFilter = ParseAddressOrEmpty(params[0]);
     }
 
     Array response;
@@ -1275,7 +1275,7 @@ Value omni_gettransaction(const Array& params, bool fHelp)
             + HelpExampleRpc("omni_gettransaction", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    uint256 hash(params[0].get_str());
+    uint256 hash = ParseHashV(params[0], "txid");
 
     Object txobj;
     int populateResult = populateRPCTransactionObject(hash, txobj);
@@ -1491,9 +1491,9 @@ Value omni_getsto(const Array& params, bool fHelp)
             + HelpExampleRpc("omni_getsto", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"*\"")
         );
 
-    uint256 hash(params[0].get_str());
+    uint256 hash = ParseHashV(params[0], "txid");
     std::string filterAddress;
-    if (params.size() > 1) filterAddress = ParseAddress(params[1]);
+    if (params.size() > 1) filterAddress = ParseAddressOrWildcard(params[1]);
 
     Object txobj;
     int populateResult = populateRPCTransactionObject(hash, txobj, "", true, filterAddress);
@@ -1549,7 +1549,7 @@ Value omni_gettrade(const Array& params, bool fHelp)
             + HelpExampleRpc("omni_gettrade", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
 
-    uint256 hash(params[0].get_str());
+    uint256 hash = ParseHashV(params[0], "txid");
 
     Object txobj;
     int populateResult = populateRPCTransactionObject(hash, txobj, "", true);

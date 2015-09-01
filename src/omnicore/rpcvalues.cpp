@@ -20,6 +20,22 @@ std::string ParseAddress(const json_spirit::Value& value)
     return address.ToString();
 }
 
+std::string ParseAddressOrEmpty(const json_spirit::Value& value)
+{
+    if (value.is_null() || value.get_str().empty()) {
+        return "";
+    }
+    return ParseAddress(value);
+}
+
+std::string ParseAddressOrWildcard(const json_spirit::Value& value)
+{
+    if (value.get_str() == "*") {
+        return "*";
+    }
+    return ParseAddress(value);
+}
+
 uint32_t ParsePropertyId(const json_spirit::Value& value)
 {
     int64_t propertyId = value.get_int64();
