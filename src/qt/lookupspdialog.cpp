@@ -283,12 +283,12 @@ void LookupSPDialog::updateDisplayedProperty()
     }
     // overrides for MSC and TMSC - temporary code can be removed when metadata is modified
     if(propertyId==1) {
-        ui->dataLabel->setText(QString::fromStdString("MasterCoin serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer"));
-        ui->urlLabel->setText(QString::fromStdString("http://www.mastercoin.org"));
+        ui->dataLabel->setText(QString::fromStdString("Omni serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer"));
+        ui->urlLabel->setText(QString::fromStdString("http://www.omnilayer.org"));
     }
     if(propertyId==2) {
-        ui->dataLabel->setText(QString::fromStdString("Test MasterCoin serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer"));
-        ui->urlLabel->setText(QString::fromStdString("http://www.mastercoin.org"));
+        ui->dataLabel->setText(QString::fromStdString("Test Omni serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer"));
+        ui->urlLabel->setText(QString::fromStdString("http://www.omnilayer.org"));
     }
 
     string strTotalTokens;
@@ -306,7 +306,7 @@ void LookupSPDialog::updateDisplayedProperty()
     }
     else
     {
-       if (propertyId == 1) { tokenLabel = " MSC"; } else { tokenLabel = " TMSC"; }
+       if (propertyId == 1) { tokenLabel = " OMNI"; } else { tokenLabel = " TOMNI"; }
     }
     if (divisible) { strTotalTokens = FormatDivisibleMP(totalTokens); } else { strTotalTokens = FormatIndivisibleMP(totalTokens); }
     if (divisible) { strWalletTokens = FormatDivisibleMP(walletTokens); } else { strWalletTokens = FormatIndivisibleMP(walletTokens); }

@@ -388,9 +388,15 @@ void OverviewPage::UpdatePropertyBalance(unsigned int propertyId, uint64_t avail
     QLabel *propLabel = new QLabel(QString::fromStdString(spName));
     propLabel->setStyleSheet("QLabel { font-weight:bold; }");
     vlayout->addWidget(propLabel);
-    // customizations based on property
-    if(propertyId == 0) { divisible = true; } else { divisible = isPropertyDivisible(propertyId); } // override for bitcoin
-    if(propertyId == 0) {tokenStr = " BTC";} else {if(propertyId == 1) {tokenStr = " MSC";} else {if(propertyId ==2) {tokenStr = " TMSC";} else {tokenStr = " SPT";}}}
+
+    if (propertyId == 0) { // override for bitcoin
+        divisible = true;
+        tokenStr = " BTC";
+    } else {
+        divisible = isPropertyDivisible(propertyId);
+        tokenStr = getTokenLabel(propertyId);
+    }
+
     // Left Panel
     QVBoxLayout *vlayoutleft = new QVBoxLayout();
     QLabel *balReservedLabel = new QLabel;

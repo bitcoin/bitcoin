@@ -129,9 +129,9 @@ public:
     };
 
 private:
-    // implied version of msc and tmsc so they don't hit the leveldb
-    Entry implied_msc;
-    Entry implied_tmsc;
+    // implied version of OMNI and TOMNI so they don't hit the leveldb
+    Entry implied_omni;
+    Entry implied_tomni;
 
     uint32_t next_spid;
     uint32_t next_test_spid;
