@@ -239,7 +239,11 @@ int TXHistoryDialog::PopulateHistoryMap()
             htxo.amount = "-" + FormatShortMP(pending.prop, pending.amount) + getTokenLabel(pending.prop);
             bool fundsMoved = true;
             htxo.txType = shrinkTxType(pending.type, &fundsMoved);
-            if (pending.type == MSC_TYPE_METADEX_CANCEL_PRICE || pending.type == MSC_TYPE_METADEX_CANCEL_PAIR || pending.type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) htxo.amount = "N/A";
+            if (pending.type == MSC_TYPE_METADEX_CANCEL_PRICE || pending.type == MSC_TYPE_METADEX_CANCEL_PAIR ||
+                pending.type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || pending.type == MSC_TYPE_SEND_ALL ||
+                pending.type == 0 /* Unknown */) {
+                htxo.amount = "N/A";
+            }
             txHistoryMap.insert(std::make_pair(txHash, htxo));
             nProcessed++;
             continue;
@@ -320,7 +324,8 @@ int TXHistoryDialog::PopulateHistoryMap()
             }
         }
         // override - hide display amount for cancels and unknown transactions as we can't display amount/property as no prop exists
-        if (type == MSC_TYPE_METADEX_CANCEL_PRICE || type == MSC_TYPE_METADEX_CANCEL_PAIR || type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || htxo.txType == "Unknown") {
+        if (type == MSC_TYPE_METADEX_CANCEL_PRICE || type == MSC_TYPE_METADEX_CANCEL_PAIR ||
+            type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || type == MSC_TYPE_SEND_ALL || htxo.txType == "Unknown") {
             displayAmount = "N/A";
         }
         // override - display amount received not STO amount in packet (the total amount) for STOs I didn't send
