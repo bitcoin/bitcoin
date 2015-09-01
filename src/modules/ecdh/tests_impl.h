@@ -20,7 +20,7 @@ void test_ecdh_generator_basepoint(void) {
         unsigned char output_ecdh[32];
         unsigned char output_ser[32];
         unsigned char point_ser[33];
-        int point_ser_len = sizeof(point_ser);
+        size_t point_ser_len = sizeof(point_ser);
         secp256k1_scalar_t s;
 
         random_scalar_order(&s);

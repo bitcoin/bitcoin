@@ -1378,7 +1378,7 @@ void test_point_times_order(const secp256k1_gej_t *point) {
     secp256k1_gej_t res1, res2;
     secp256k1_ge_t res3;
     unsigned char pub[65];
-    int psize = 65;
+    size_t psize = 65;
     random_scalar_order_test(&x);
     secp256k1_scalar_negate(&nx, &x);
     secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &x, &x); /* calc res1 = x * point + x * G; */
@@ -1845,12 +1845,12 @@ void test_ecdsa_end_to_end(void) {
     unsigned char privkey2[32];
     secp256k1_ecdsa_signature_t signature[5];
     unsigned char sig[74];
-    int siglen = 74;
+    size_t siglen = 74;
     unsigned char pubkeyc[65];
-    int pubkeyclen = 65;
+    size_t pubkeyclen = 65;
     secp256k1_pubkey_t pubkey;
     unsigned char seckey[300];
-    int seckeylen = 300;
+    size_t seckeylen = 300;
 
     /* Generate a random key and message. */
     {
@@ -1949,7 +1949,7 @@ void test_random_pubkeys(void) {
     unsigned char in[65];
     /* Generate some randomly sized pubkeys. */
     uint32_t r = secp256k1_rand32();
-    int len = (r & 3) == 0 ? 65 : 33;
+    size_t len = (r & 3) == 0 ? 65 : 33;
     r>>=2;
     if ((r & 3) == 0) {
         len = (r & 252) >> 3;
@@ -1975,7 +1975,7 @@ void test_random_pubkeys(void) {
         unsigned char out[65];
         unsigned char firstb;
         int res;
-        int size = len;
+        size_t size = len;
         firstb = in[0];
         /* If the pubkey can be parsed, it should round-trip... */
         CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, len == 33));
@@ -2046,7 +2046,7 @@ void test_ecdsa_edge_cases(void) {
     /*Signature where s would be zero.*/
     {
         unsigned char signature[72];
-        int siglen;
+        size_t siglen;
         const unsigned char nonce[32] = {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -2152,7 +2152,7 @@ void test_ecdsa_edge_cases(void) {
             0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
             0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41,
         };
-        int outlen = 300;
+        size_t outlen = 300;
         CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 0));
         CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 1));
     }
@@ -2165,7 +2165,7 @@ void run_ecdsa_edge_cases(void) {
 #ifdef ENABLE_OPENSSL_TESTS
 EC_KEY *get_openssl_key(const secp256k1_scalar_t *key) {
     unsigned char privkey[300];
-    int privkeylen;
+    size_t privkeylen;
     const unsigned char* pbegin = privkey;
     int compr = secp256k1_rand32() & 1;
     EC_KEY *ec_key = EC_KEY_new_by_curve_name(NID_secp256k1);
@@ -2184,7 +2184,7 @@ void test_ecdsa_openssl(void) {
     secp256k1_scalar_t key, msg;
     EC_KEY *ec_key;
     unsigned int sigsize = 80;
-    int secp_sigsize = 80;
+    size_t secp_sigsize = 80;
     unsigned char message[32];
     unsigned char signature[80];
     secp256k1_rand256_test(message);

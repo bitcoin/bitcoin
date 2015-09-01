@@ -23,7 +23,7 @@ void bench_recover(void* arg) {
 
     for (i = 0; i < 20000; i++) {
         int j;
-        int pubkeylen = 33;
+        size_t pubkeylen = 33;
         secp256k1_ecdsa_recoverable_signature_t sig;
         CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(data->ctx, &sig, data->sig, i % 2));
         CHECK(secp256k1_ecdsa_recover(data->ctx, &pubkey, &sig, data->msg));

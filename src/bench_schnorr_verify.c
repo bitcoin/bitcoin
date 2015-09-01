@@ -16,7 +16,7 @@ typedef struct {
     unsigned char key[32];
     unsigned char sig[64];
     unsigned char pubkey[33];
-    int pubkeylen;
+    size_t pubkeylen;
 } benchmark_schnorr_sig_t;
 
 typedef struct {

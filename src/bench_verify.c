@@ -16,9 +16,9 @@ typedef struct {
     unsigned char msg[32];
     unsigned char key[32];
     unsigned char sig[72];
-    int siglen;
+    size_t siglen;
     unsigned char pubkey[33];
-    int pubkeylen;
+    size_t pubkeylen;
 } benchmark_verify_t;
 
 static void benchmark_verify(void* arg) {

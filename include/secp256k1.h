@@ -5,6 +5,8 @@
 extern "C" {
 # endif
 
+#include <stddef.h>
+
 /* These rules specify the order of arguments in API calls:
  *
  * 1. Context pointers go first, followed by output arguments, combined
@@ -228,7 +230,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
     const secp256k1_context_t* ctx,
     secp256k1_pubkey_t* pubkey,
     const unsigned char *input,
-    int inputlen
+    size_t inputlen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize a pubkey object into a serialized byte sequence.
@@ -246,7 +248,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
 int secp256k1_ec_pubkey_serialize(
     const secp256k1_context_t* ctx,
     unsigned char *output,
-    int *outputlen,
+    size_t *outputlen,
     const secp256k1_pubkey_t* pubkey,
     int compressed
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
@@ -265,7 +267,7 @@ int secp256k1_ecdsa_signature_parse_der(
     const secp256k1_context_t* ctx,
     secp256k1_ecdsa_signature_t* sig,
     const unsigned char *input,
-    int inputlen
+    size_t inputlen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize an ECDSA signature in DER format.
@@ -282,7 +284,7 @@ int secp256k1_ecdsa_signature_parse_der(
 int secp256k1_ecdsa_signature_serialize_der(
     const secp256k1_context_t* ctx,
     unsigned char *output,
-    int *outputlen,
+    size_t *outputlen,
     const secp256k1_ecdsa_signature_t* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
@@ -406,7 +408,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_export(
     const secp256k1_context_t* ctx,
     unsigned char *privkey,
-    int *privkeylen,
+    size_t *privkeylen,
     const unsigned char *seckey,
     int compressed
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
@@ -429,7 +431,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_import(
     const secp256k1_context_t* ctx,
     unsigned char *seckey,
     const unsigned char *privkey,
-    int privkeylen
+    size_t privkeylen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Tweak a private key by adding tweak to it.
