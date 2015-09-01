@@ -90,7 +90,7 @@ int secp256k1_ecdsa_sign_recoverable(const secp256k1_context_t* ctx, const unsig
     int ret = 0;
     int overflow = 0;
     unsigned int count = 0;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     ARG_CHECK(msg32 != NULL);
     ARG_CHECK(signature != NULL);
@@ -135,7 +135,7 @@ int secp256k1_ecdsa_recover(const secp256k1_context_t* ctx, const unsigned char 
     secp256k1_scalar_t r, s;
     secp256k1_scalar_t m;
     int recid;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
     ARG_CHECK(msg32 != NULL);
     ARG_CHECK(signature != NULL);
