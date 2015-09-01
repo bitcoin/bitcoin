@@ -36,7 +36,7 @@ int secp256k1_schnorr_sign(const secp256k1_context_t* ctx, unsigned char *sig64,
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
     while (1) {
         unsigned char nonce32[32];
-        ret = noncefp(nonce32, msg32, seckey, secp256k1_schnorr_algo16, noncedata, count);
+        ret = noncefp(nonce32, msg32, seckey, secp256k1_schnorr_algo16, (void*)noncedata, count);
         if (!ret) {
             break;
         }
@@ -107,7 +107,7 @@ int secp256k1_schnorr_generate_nonce_pair(const secp256k1_context_t* ctx, secp25
 
     do {
         int overflow;
-        ret = noncefp(privnonce32, sec32, msg32, secp256k1_schnorr_algo16, noncedata, count++);
+        ret = noncefp(privnonce32, sec32, msg32, secp256k1_schnorr_algo16, (void*)noncedata, count++);
         if (!ret) {
             break;
         }

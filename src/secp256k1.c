@@ -22,7 +22,7 @@
 
 #define ARG_CHECK(cond) do { \
     if (EXPECT(!(cond), 0)) { \
-        ctx->illegal_callback.fn(#cond, ctx->illegal_callback.data); \
+        secp256k1_callback(&ctx->illegal_callback, #cond); \
         return 0; \
     } \
 } while(0)
@@ -94,14 +94,14 @@ void secp256k1_context_destroy(secp256k1_context_t* ctx) {
     free(ctx);
 }
 
-void secp256k1_context_set_illegal_callback(secp256k1_context_t* ctx, void (*fun)(const char* message, void* data), void* data) {
+void secp256k1_context_set_illegal_callback(secp256k1_context_t* ctx, void (*fun)(const char* message, void* data), const void* data) {
     if (!fun)
         fun = default_illegal_callback_fn;
     ctx->illegal_callback.fn = fun;
     ctx->illegal_callback.data = data;
 }
 
-void secp256k1_context_set_error_callback(secp256k1_context_t* ctx, void (*fun)(const char* message, void* data), void* data) {
+void secp256k1_context_set_error_callback(secp256k1_context_t* ctx, void (*fun)(const char* message, void* data), const void* data) {
     if (!fun)
         fun = default_error_callback_fn;
     ctx->error_callback.fn = fun;
@@ -230,7 +230,7 @@ int secp256k1_ecdsa_verify(const secp256k1_context_t* ctx, const secp256k1_ecdsa
             secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &r, &s, &q, &m));
 }
 
-static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
+static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
    unsigned char keydata[112];
    int keylen = 64;
    secp256k1_rfc6979_hmac_sha256_t rng;
@@ -285,7 +285,7 @@ int secp256k1_ecdsa_sign(const secp256k1_context_t* ctx, secp256k1_ecdsa_signatu
         secp256k1_scalar_set_b32(&msg, msg32, NULL);
         while (1) {
             unsigned char nonce32[32];
-            ret = noncefp(nonce32, msg32, seckey, NULL, noncedata, count);
+            ret = noncefp(nonce32, msg32, seckey, NULL, (void*)noncedata, count);
             if (!ret) {
                 break;
             }

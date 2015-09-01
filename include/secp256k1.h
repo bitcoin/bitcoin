@@ -94,7 +94,7 @@ typedef int (*secp256k1_nonce_function_t)(
     const unsigned char *msg32,
     const unsigned char *key32,
     const unsigned char *algo16,
-    const void *data,
+    void *data,
     unsigned int attempt
 );
 
@@ -187,7 +187,7 @@ void secp256k1_context_destroy(
 void secp256k1_context_set_illegal_callback(
     secp256k1_context_t* ctx,
     void (*fun)(const char* message, void* data),
-    void* data
+    const void* data
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Set a callback function to be called when an internal consistency check
@@ -209,7 +209,7 @@ void secp256k1_context_set_illegal_callback(
 void secp256k1_context_set_error_callback(
     secp256k1_context_t* ctx,
     void (*fun)(const char* message, void* data),
-    void* data
+    const void* data
 ) SECP256K1_ARG_NONNULL(1);
 
 /** Parse a variable-length public key into the pubkey object.

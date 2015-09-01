@@ -1787,7 +1787,7 @@ void run_ecdsa_sign_verify(void) {
 }
 
 /** Dummy nonce generation function that just uses a precomputed nonce, and fails if it is not accepted. Use only for testing. */
-static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
+static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
     (void)msg32;
     (void)key32;
     (void)algo16;
@@ -1795,7 +1795,7 @@ static int precomputed_nonce_function(unsigned char *nonce32, const unsigned cha
     return (counter == 0);
 }
 
-static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
+static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
    /* Dummy nonce generator that has a fatal error on the first counter value. */
    if (counter == 0) {
        return 0;
@@ -1803,7 +1803,7 @@ static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char 
    return nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 1);
 }
 
-static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
+static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
    /* Dummy nonce generator that produces unacceptable nonces for the first several counter values. */
    if (counter < 3) {
        memset(nonce32, counter==0 ? 0 : 255, 32);
