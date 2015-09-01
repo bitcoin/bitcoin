@@ -141,7 +141,7 @@ typedef int (*secp256k1_nonce_function_t)(
  *  In:      flags: which parts of the context to initialize.
  */
 secp256k1_context_t* secp256k1_context_create(
-    int flags
+    unsigned int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 
 /** Copies a secp256k1 context object.

@@ -57,7 +57,7 @@ struct secp256k1_context_struct {
     callback_t error_callback;
 };
 
-secp256k1_context_t* secp256k1_context_create(int flags) {
+secp256k1_context_t* secp256k1_context_create(unsigned int flags) {
     secp256k1_context_t* ret = (secp256k1_context_t*)checked_malloc(&default_error_callback, sizeof(secp256k1_context_t));
     ret->illegal_callback = default_illegal_callback;
     ret->error_callback = default_error_callback;
