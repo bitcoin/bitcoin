@@ -95,11 +95,15 @@ void secp256k1_context_destroy(secp256k1_context_t* ctx) {
 }
 
 void secp256k1_context_set_illegal_callback(secp256k1_context_t* ctx, void (*fun)(const char* message, void* data), void* data) {
+    if (!fun)
+        fun = default_illegal_callback_fn;
     ctx->illegal_callback.fn = fun;
     ctx->illegal_callback.data = data;
 }
 
 void secp256k1_context_set_error_callback(secp256k1_context_t* ctx, void (*fun)(const char* message, void* data), void* data) {
+    if (!fun)
+        fun = default_error_callback_fn;
     ctx->error_callback.fn = fun;
     ctx->error_callback.data = data;
 }

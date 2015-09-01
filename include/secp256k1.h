@@ -179,14 +179,14 @@ void secp256k1_context_destroy(
  *  Args: ctx:  an existing context object (cannot be NULL)
  *  In:   fun:  a pointer to a function to call when an illegal argument is
  *              passed to the API, taking a message and an opaque pointer
- *              (cannot be NULL).
+ *              (NULL restores a default handler that calls abort).
  *        data: the opaque pointer to pass to fun above.
  */
 void secp256k1_context_set_illegal_callback(
     secp256k1_context_t* ctx,
     void (*fun)(const char* message, void* data),
     void* data
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+) SECP256K1_ARG_NONNULL(1);
 
 /** Set a callback function to be called when an internal consistency check
  *  fails. The default is crashing.
@@ -200,14 +200,15 @@ void secp256k1_context_set_illegal_callback(
  *
  *  Args: ctx:  an existing context object (cannot be NULL)
  *  In:   fun:  a pointer to a function to call when an interal error occurs,
- *              taking a message and an opaque pointer (cannot be NULL).
+ *              taking a message and an opaque pointer (NULL restores a default
+ *              handler that calls abort).
  *        data: the opaque pointer to pass to fun above.
  */
 void secp256k1_context_set_error_callback(
     secp256k1_context_t* ctx,
     void (*fun)(const char* message, void* data),
     void* data
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+) SECP256K1_ARG_NONNULL(1);
 
 /** Parse a variable-length public key into the pubkey object.
  *
