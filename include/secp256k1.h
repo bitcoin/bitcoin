@@ -160,7 +160,7 @@ secp256k1_context_t* secp256k1_context_clone(
  */
 void secp256k1_context_destroy(
     secp256k1_context_t* ctx
-) SECP256K1_ARG_NONNULL(1);
+);
 
 /** Set a callback function to be called when an illegal argument is passed to
  *  an API call. It will only trigger for violations that are mentioned

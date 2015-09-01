@@ -85,6 +85,9 @@ secp256k1_context_t* secp256k1_context_clone(const secp256k1_context_t* ctx) {
 }
 
 void secp256k1_context_destroy(secp256k1_context_t* ctx) {
+    if (!ctx)
+        return;
+
     secp256k1_ecmult_context_clear(&ctx->ecmult_ctx);
     secp256k1_ecmult_gen_context_clear(&ctx->ecmult_gen_ctx);
 
