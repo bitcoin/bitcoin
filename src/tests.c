@@ -1937,6 +1937,7 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 1);
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
     /* Serialize/destroy/parse DER and verify again. */
+    siglen = 74;
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     sig[secp256k1_rand32() % siglen] += 1 + (secp256k1_rand32() % 255);
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 0 ||
@@ -2154,6 +2155,7 @@ void test_ecdsa_edge_cases(void) {
         };
         size_t outlen = 300;
         CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 0));
+        outlen = 300;
         CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 1));
     }
 }
