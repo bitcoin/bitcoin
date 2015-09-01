@@ -137,6 +137,9 @@ typedef int (*secp256k1_nonce_function_t)(
 # define SECP256K1_CONTEXT_VERIFY (1 << 0)
 # define SECP256K1_CONTEXT_SIGN   (1 << 1)
 
+/** Flag to pass to secp256k1_ec_pubkey_serialize and secp256k1_ec_privkey_export. */
+# define SECP256K1_EC_COMPRESSED  (1 << 0)
+
 /** Create a secp256k1 context object.
  *
  *  Returns: a newly created context object.
@@ -243,14 +246,15 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
  *                    size.
  *  In:   pubkey:     a pointer to a secp256k1_pubkey_t containing an initialized
  *                    public key.
- *        compressed: whether to serialize in compressed format.
+ *        flags:      SECP256K1_EC_COMPRESSED if serialization should be in
+ *                    compressed format.
  */
 int secp256k1_ec_pubkey_serialize(
     const secp256k1_context_t* ctx,
     unsigned char *output,
     size_t *outputlen,
     const secp256k1_pubkey_t* pubkey,
-    int compressed
+    unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Parse a DER ECDSA signature.
@@ -396,7 +400,8 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
  *       privkeylen:  Pointer to an int where the length of the private key in
  *                    privkey will be stored.
  *  In:  seckey:      pointer to a 32-byte secret key to export.
- *       compressed:  whether the key should be exported in compressed format.
+ *       flags:       SECP256K1_EC_COMPRESSED if the key should be exported in
+ *                    compressed format.
  *
  *  This function is purely meant for compatibility with applications that
  *  require BER encoded keys. When working with secp256k1-specific code, the
@@ -410,7 +415,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_export(
     unsigned char *privkey,
     size_t *privkeylen,
     const unsigned char *seckey,
-    int compressed
+    unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Import a private key in DER format.
