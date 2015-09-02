@@ -342,6 +342,12 @@ Value masternode(const Array& params, bool fHelp)
             }
         }
 
+        if((strCommand == "start-missing" || strCommand == "start-disabled") &&
+         (masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_LIST ||
+          masternodeSync.RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED)) {
+            throw runtime_error("You can't use this command until masternode list is synced\n");
+        }
+
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
@@ -405,12 +411,18 @@ Value masternode(const Array& params, bool fHelp)
         Object resultObj;
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CMasternode *pmn = mnodeman.Find(vin);
+
+            std::string strStatus = pmn ? pmn->Status() : "MISSING";
+
             Object mnObj;
             mnObj.push_back(Pair("alias", mne.getAlias()));
             mnObj.push_back(Pair("address", mne.getIp()));
             mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
             mnObj.push_back(Pair("txHash", mne.getTxHash()));
             mnObj.push_back(Pair("outputIndex", mne.getOutputIndex()));
+            mnObj.push_back(Pair("status", strStatus));
             resultObj.push_back(Pair("masternode", mnObj));
         }
 
