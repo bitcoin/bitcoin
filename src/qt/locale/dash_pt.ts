@@ -1,4 +1,4 @@
-<TS language="pt" version="2.1">
+<TS language="pt" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -505,22 +505,6 @@
     <message>
         <source>Up to date</source>
         <translation>Actualizado</translation>
-    </message>
-    <message>
-        <source>Synchronizing sporks...</source>
-        <translation>A sincronizar sporks...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>A sincronizar masternodes...</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternode winners...</source>
-        <translation>A sincronizar masternodes vencedores...</translation>
-    </message>
-    <message>
-        <source>Synchronizing budgets...</source>
-        <translation>A sincronizar orçamentos...</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -3394,10 +3378,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Não foi possível localizar fundos Darksend não denominados suficientes para esta transacção que não sejam igual a 1000DRK.</translation>
     </message>
     <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Não foi possível localizar fundos Darksend não denominados suficientes para esta transacção.</translation>
-    </message>
-    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Aviso: -paytxfee tem um valor muito elevado! Esta é a taxa de transacção que será paga se enviar uma transacção.</translation>
     </message>
@@ -3586,6 +3566,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>(1 = mantem meta dados das transacções ex. dono da conta e informação das solicitações de pagamento, 2 = elimina os meta dados das transacções)</translation>
     </message>
     <message>
+        <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
+        <translation>Ocorreu um erro ao configurar o endereço RPC %s na porta %u para escutar: %s</translation>
+    </message>
+    <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>Vincular a um determinado endereço e ouvir sempre aí. Use a notação [host]:porta para IPv6</translation>
     </message>
@@ -3634,6 +3618,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Informação de depuração de saída (omissão: %u, fornecer &lt;category&gt; é opcional)</translation>
     </message>
     <message>
+        <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
+        <translation>Providenciar liquidez para o Darksend misturando moedas continuamente com baixa frequência (0-100, omissão: %u, 1=muito frequente taxas elevadas, 100=pouco frequente, taxas reduzidas)</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file (default: %u)</source>
         <translation>Enviar informação de execução/depuração para a consola em vez de enviar para o ficheiro debug.log (omissão: %u)</translation>
     </message>
@@ -3644,6 +3632,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Show N confirmations for a successfully locked transaction (0-9999, default: %u)</source>
         <translation>Mostrar N confirmações para uma transacção bloqueada com sucesso (0-9999, omissão: %u)</translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Este produto inclui software desenvolvido pelo Projecto OpenSSL para uso no OpenSSL Toolkit &lt;https://www.openssl.org/&gt;, software criptográfico escrito por Eric Young e software UPnP escrito por Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
+        <translation>Não foi possível localizar fundos suficientes para esta transacção que não sejam igual a 1000DRK.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
@@ -3772,6 +3768,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Gerar moedas (default: %u)</translation>
     </message>
     <message>
+        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
+        <translation>Quanto blocos deve verificar no arranque (omissão: %u, 0 = all)</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>A importar...</translation>
     </message>
@@ -3858,6 +3858,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Escutar ligações na &lt;port&gt; (default: %u or testnet: %u)</translation>
+    </message>
+    <message>
+        <source>Loading budget cache...</source>
+        <translation>Carregando cache de orçamentos...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>A carregar a cache de masternodes...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Carregando cache de pagamento de maternodes...</translation>
     </message>
     <message>
         <source>Lock is already in place.</source>
@@ -3996,6 +4008,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Apresentado ao masternode, esperando na fila %s </translation>
     </message>
     <message>
+        <source>Synchronizing budgets...</source>
+        <translation>A sincronizar orçamentos...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternode winners...</source>
+        <translation>A sincronizar masternodes vencedores...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>A sincronizar masternodes...</translation>
+    </message>
+    <message>
+        <source>Synchronizing sporks...</source>
+        <translation>A sincronizar sporks...</translation>
+    </message>
+    <message>
         <source>This is not a Masternode.</source>
         <translation>Este não é um Masternode</translation>
     </message>
@@ -4098,18 +4126,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Loading block index...</source>
         <translation>A carregar índice de blocos...</translation>
-    </message>
-    <message>
-        <source>Loading budget cache...</source>
-        <translation>Carregando cache de orçamentos...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>Carregando cache de masternode...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>Carregando cache de pagamento de maternodes...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>
