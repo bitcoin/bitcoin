@@ -35,12 +35,12 @@ $ omnicore-cli "omni_send" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoML
 
 ### omni_senddexsell
 
-Place, update or cancel a sell offer on the traditional distributed MSC/BTC exchange.
+Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.
 
 **Arguments:**
 
 1. ***fromaddress          (string, required):*** the address to send from
-2. ***propertyidforsale    (number, required):*** the identifier of the tokens to list for sale (must be MSC or TMSC)
+2. ***propertyidforsale    (number, required):*** the identifier of the tokens to list for sale (must be OMNI or TOMNI)
 3. ***amountforsale        (string, required):*** the amount of tokens to list for sale
 4. ***amountdesired        (string, required):*** the amount of bitcoins desired
 5. ***paymentwindow        (number, required):*** a time limit in blocks a buyer has to pay following a successful accept
