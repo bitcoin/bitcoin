@@ -13,6 +13,10 @@
 #include "primitives/transaction.h"
 #include "sync.h"
 
+#undef foreach
+#include "boost/multi_index_container.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+
 class CAutoFile;
 
 inline double AllowFreeThreshold()
@@ -54,12 +58,46 @@ public:
 
     const CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
-    CAmount GetFee() const { return nFee; }
+    const CAmount& GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
+};
+
+// extracts a TxMemPoolEntry's transaction hash
+struct mempoolentry_txid
+{
+    typedef uint256 result_type;
+    result_type operator() (const CTxMemPoolEntry &entry) const
+    {
+        return entry.GetTx().GetHash();
+    }
+};
+
+class CompareTxMemPoolEntryByFeeRate
+{
+public:
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
+    {
+        // Avoid a division by rewriting (a/b > c/d) as (a*d > c*b).
+        double f1 = (double)a.GetFee() * b.GetTxSize();
+        double f2 = (double)b.GetFee() * a.GetTxSize();
+        if (f1 == f2) {
+            return a.GetTime() < b.GetTime();
+        }
+        return f1 > f2;
+    }
+};
+
+class CompareTxMemPoolEntryByEntryTime
+{
+public:
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
+    {
+        return a.GetTime() < b.GetTime();
+    }
 };
 
 class CBlockPolicyEstimator;
@@ -99,10 +137,29 @@ private:
     uint64_t cachedInnerUsage; //! sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
 public:
+    typedef boost::multi_index_container<
+        CTxMemPoolEntry,
+        boost::multi_index::indexed_by<
+            // sorted by txid
+            boost::multi_index::ordered_unique<mempoolentry_txid>,
+            // sorted by fee rate
+            boost::multi_index::ordered_non_unique<
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                CompareTxMemPoolEntryByFeeRate
+            >,
+            // sorted by entry time
+            boost::multi_index::ordered_non_unique<
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                CompareTxMemPoolEntryByEntryTime
+            >
+        >
+    > indexed_transaction_set;
+
     mutable CCriticalSection cs;
-    std::map<uint256, CTxMemPoolEntry> mapTx;
+    indexed_transaction_set mapTx;
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
+    size_t bypassedSize;
 
     CTxMemPool(const CFeeRate& _minRelayFee);
     ~CTxMemPool();
@@ -117,6 +174,7 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
+    void removeUnchecked(const uint256& hash);
     void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
     void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
@@ -137,6 +195,28 @@ public:
     void PrioritiseTransaction(const uint256 hash, const std::string strHash, double dPriorityDelta, const CAmount& nFeeDelta);
     void ApplyDeltas(const uint256 hash, double &dPriorityDelta, CAmount &nFeeDelta);
     void ClearPrioritisation(const uint256 hash);
+
+    // StageTrimToSize will call TrimMempool for any mempool usage over the size limit up to the size of toadd.
+    bool StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, CAmount nFeesReserved, std::set<uint256>& stage, CAmount& nFeesRemoved);
+    // SurplusTrim will call TrimMempool for usageToTrim with synthetic fees and size based on multiplier*minRelayRate.
+    void SurplusTrim(int mutliplier, CFeeRate minRelayRate, size_t usageToTrim);
+private:
+    /** TrimMempool will build a list of transactions (hashes) to remove until it reaches sizeToTrim:
+     *  - No txs in protect are removed.
+     *  - The total fees removed are not more than the feeToUse (minus any nFeesReserved).
+     *  - The feerate of what is removed is not better than the feerate of feeToUse/sizeToUse.
+     *  - if mustTrimAllSize return false unless sizeToTrim is met
+     *  - iterextra helps provide a bound on how many txs will be iterated over.
+     *  - The list returned in stage is consistent (if a parent is included, all its descendants are included as well).
+     *  - Total fees removed are returned in nfeesRemoved
+     */
+    bool TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
+		     bool mustTrimAllSize, int iterextra, std::set<uint256>& stage, CAmount &nfeesRemoved);
+public:
+    void RemoveStaged(std::set<uint256>& stage);
+
+    /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
+    int Expire(int64_t time);
 
     unsigned long size()
     {
@@ -169,6 +249,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    size_t GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const;
 };
 
 /** 

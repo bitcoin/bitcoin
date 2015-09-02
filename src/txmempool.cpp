@@ -48,9 +48,10 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
     return dResult;
 }
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
-    nTransactionsUpdated(0)
+CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee)
 {
+    clear();
+
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
     // of transactions in the pool
@@ -96,8 +97,8 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     // Used by main.cpp AcceptToMemoryPool(), which DOES do
     // all the appropriate checks.
     LOCK(cs);
-    mapTx[hash] = entry;
-    const CTransaction& tx = mapTx[hash].GetTx();
+    mapTx.insert(entry);
+    const CTransaction& tx = mapTx.find(hash)->GetTx();
     for (unsigned int i = 0; i < tx.vin.size(); i++)
         mapNextTx[tx.vin[i].prevout] = CInPoint(&tx, i);
     nTransactionsUpdated++;
@@ -108,6 +109,19 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     return true;
 }
 
+void CTxMemPool::removeUnchecked(const uint256& hash)
+{
+    indexed_transaction_set::iterator it = mapTx.find(hash);
+
+    BOOST_FOREACH(const CTxIn& txin, it->GetTx().vin)
+        mapNextTx.erase(txin.prevout);
+
+    totalTxSize -= it->GetTxSize();
+    cachedInnerUsage -= it->DynamicMemoryUsage();
+    mapTx.erase(it);
+    nTransactionsUpdated++;
+    minerPolicyEstimator->removeTx(hash);
+}
 
 void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& removed, bool fRecursive)
 {
@@ -134,7 +148,7 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
             txToRemove.pop_front();
             if (!mapTx.count(hash))
                 continue;
-            const CTransaction& tx = mapTx[hash].GetTx();
+            const CTransaction& tx = mapTx.find(hash)->GetTx();
             if (fRecursive) {
                 for (unsigned int i = 0; i < tx.vout.size(); i++) {
                     std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(hash, i));
@@ -143,15 +157,8 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
                     txToRemove.push_back(it->second.ptx->GetHash());
                 }
             }
-            BOOST_FOREACH(const CTxIn& txin, tx.vin)
-                mapNextTx.erase(txin.prevout);
-
             removed.push_back(tx);
-            totalTxSize -= mapTx[hash].GetTxSize();
-            cachedInnerUsage -= mapTx[hash].DynamicMemoryUsage();
-            mapTx.erase(hash);
-            nTransactionsUpdated++;
-            minerPolicyEstimator->removeTx(hash);
+            removeUnchecked(hash);
         }
     }
 }
@@ -161,10 +168,10 @@ void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned in
     // Remove transactions spending a coinbase which are now immature
     LOCK(cs);
     list<CTransaction> transactionsToRemove;
-    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
-        const CTransaction& tx = it->second.GetTx();
+    for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+        const CTransaction& tx = it->GetTx();
         BOOST_FOREACH(const CTxIn& txin, tx.vin) {
-            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end())
                 continue;
             const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
@@ -209,8 +216,10 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         uint256 hash = tx.GetHash();
-        if (mapTx.count(hash))
-            entries.push_back(mapTx[hash]);
+
+        indexed_transaction_set::iterator i = mapTx.find(hash);
+        if (i != mapTx.end())
+            entries.push_back(*i);
     }
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
@@ -230,6 +239,7 @@ void CTxMemPool::clear()
     mapNextTx.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
+    bypassedSize = 0;
     ++nTransactionsUpdated;
 }
 
@@ -247,17 +257,17 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     LOCK(cs);
     list<const CTxMemPoolEntry*> waitingOnDependants;
-    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
+    for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
-        checkTotal += it->second.GetTxSize();
-        innerUsage += it->second.DynamicMemoryUsage();
-        const CTransaction& tx = it->second.GetTx();
+        checkTotal += it->GetTxSize();
+        innerUsage += it->DynamicMemoryUsage();
+        const CTransaction& tx = it->GetTx();
         bool fDependsWait = false;
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             // Check that every mempool transaction's inputs refer to available coins, or other mempool tx's.
-            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+            indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
             if (it2 != mapTx.end()) {
-                const CTransaction& tx2 = it2->second.GetTx();
+                const CTransaction& tx2 = it2->GetTx();
                 assert(tx2.vout.size() > txin.prevout.n && !tx2.vout[txin.prevout.n].IsNull());
                 fDependsWait = true;
             } else {
@@ -272,7 +282,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
             i++;
         }
         if (fDependsWait)
-            waitingOnDependants.push_back(&it->second);
+            waitingOnDependants.push_back(&(*it));
         else {
             CValidationState state;
             assert(CheckInputs(tx, state, mempoolDuplicate, false, 0, false, NULL));
@@ -296,8 +306,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     }
     for (std::map<COutPoint, CInPoint>::const_iterator it = mapNextTx.begin(); it != mapNextTx.end(); it++) {
         uint256 hash = it->second.ptx->GetHash();
-        map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(hash);
-        const CTransaction& tx = it2->second.GetTx();
+        indexed_transaction_set::const_iterator it2 = mapTx.find(hash);
+        const CTransaction& tx = it2->GetTx();
         assert(it2 != mapTx.end());
         assert(&tx == it->second.ptx);
         assert(tx.vin.size() > it->second.n);
@@ -314,16 +324,16 @@ void CTxMemPool::queryHashes(vector<uint256>& vtxid)
 
     LOCK(cs);
     vtxid.reserve(mapTx.size());
-    for (map<uint256, CTxMemPoolEntry>::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
-        vtxid.push_back((*mi).first);
+    for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+        vtxid.push_back(mi->GetTx().GetHash());
 }
 
 bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
 {
     LOCK(cs);
-    map<uint256, CTxMemPoolEntry>::const_iterator i = mapTx.find(hash);
+    indexed_transaction_set::const_iterator i = mapTx.find(hash);
     if (i == mapTx.end()) return false;
-    result = i->second.GetTx();
+    result = i->GetTx();
     return true;
 }
 
@@ -403,6 +413,7 @@ void CTxMemPool::ClearPrioritisation(const uint256 hash)
 
 bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 {
+    LOCK(cs);
     for (unsigned int i = 0; i < tx.vin.size(); i++)
         if (exists(tx.vin[i].prevout.hash))
             return false;
@@ -429,5 +440,164 @@ bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
 
 size_t CTxMemPool::DynamicMemoryUsage() const {
     LOCK(cs);
-    return memusage::DynamicUsage(mapTx) + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
+    // Estimate the overhead of mapTx to be 9 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + cachedInnerUsage;
+}
+
+size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
+    return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) + entry.DynamicMemoryUsage() + memusage::IncrementalDynamicUsage(mapNextTx) * entry.GetTx().vin.size();
+}
+
+bool CTxMemPool::StageTrimToSize(size_t sizelimit, const CTxMemPoolEntry& toadd, CAmount nFeesReserved,
+                                 std::set<uint256>& stage, CAmount& nFeesRemoved) {
+    std::set<uint256> protect;
+    BOOST_FOREACH(const CTxIn& in, toadd.GetTx().vin) {
+        protect.insert(in.prevout.hash);
+    }
+
+    size_t incUsage = GuessDynamicMemoryUsage(toadd);
+    size_t expsize = DynamicMemoryUsage() + incUsage; // Track the expected resulting memory usage of the mempool.
+    if (expsize <= sizelimit) {
+        return true;
+    }
+    size_t sizeToTrim = std::min(expsize - sizelimit, incUsage);
+    return TrimMempool(sizeToTrim, protect, nFeesReserved, toadd.GetTxSize(), toadd.GetFee(), true, 10, stage, nFeesRemoved);
+}
+
+void CTxMemPool::SurplusTrim(int multiplier, CFeeRate minRelayRate, size_t usageToTrim) {
+    CFeeRate excessRate(multiplier * minRelayRate.GetFeePerK());
+    std::set<uint256> noprotect;
+    CAmount nFeesRemoved = 0;
+    std::set<uint256> stageTrimDelete;
+    size_t sizeToTrim = usageToTrim / 4;  //Conservatively assume we have transactions at least 1/4 the size of the mempool space they've taken
+    if (TrimMempool(usageToTrim, noprotect, 0, sizeToTrim, excessRate.GetFee(sizeToTrim), false, 100, stageTrimDelete, nFeesRemoved)) {
+        size_t oldUsage = DynamicMemoryUsage();
+        size_t txsToDelete = stageTrimDelete.size();
+        RemoveStaged(stageTrimDelete);
+        size_t curUsage = DynamicMemoryUsage();
+        LogPrint("mempool", "Removing %u transactions (%ld total usage) using periodic trim from reserve size\n", txsToDelete, oldUsage - curUsage);
+    }
+}
+
+bool CTxMemPool::TrimMempool(size_t sizeToTrim, std::set<uint256> &protect, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
+                             bool mustTrimAllSize, int iterextra, std::set<uint256>& stage, CAmount &nFeesRemoved) {
+    size_t usageRemoved = 0;
+    indexed_transaction_set::nth_index<1>::type::reverse_iterator it = mapTx.get<1>().rbegin();
+    int fails = 0; // Number of mempool transactions iterated over that were not included in the stage.
+    int iterperfail = 10;
+    int itertotal = 0;
+    int failmax = 10; //Try no more than 10 starting transactions
+    seed_insecure_rand();
+    // Iterate from lowest feerate to highest feerate in the mempool:
+    while (usageRemoved < sizeToTrim && it != mapTx.get<1>().rend()) {
+        if (insecure_rand()%10) {
+            // Only try 1/10 of the transactions so we don't get stuck on the same long chains
+            it++;
+            continue;
+        }
+        const uint256& hash = it->GetTx().GetHash();
+        if (stage.count(hash)) {
+            // If the transaction is already staged for deletion, we know its descendants are already processed, so skip it.
+            it++;
+            continue;
+        }
+        if ((double)it->GetFee() * sizeToUse > (double)feeToUse * it->GetTxSize()) {
+            // If the transaction's feerate is worse than what we're looking for, nothing else we will iterate over
+            // could improve the staged set. If we don't have an acceptable solution by now, bail out.
+            break;
+        }
+        std::deque<uint256> todo; // List of hashes that we still need to process (descendants of 'hash').
+        std::set<uint256> now; // Set of hashes that will need to be added to stage if 'hash' is included.
+        CAmount nowfee = 0; // Sum of the fees in 'now'.
+        size_t nowsize = 0; // Sum of the tx sizes in 'now'.
+        size_t nowusage = 0; // Sum of the memory usages of transactions in 'now'.
+        todo.push_back(it->GetTx().GetHash()); // Add 'hash' to the todo list, to initiate processing its children.
+        bool good = true; // Whether including 'hash' (and all its descendants) is a good idea.
+        // Iterate breadth-first over all descendants of transaction with hash 'hash'.
+        while (!todo.empty()) {
+            uint256 hashnow = todo.front();
+            if (protect.count(hashnow)) {
+                // If this transaction is in the protected set, we're done with 'hash'.
+                good = false;
+                break;
+            }
+            itertotal++; // We only count transactions we actually had to go find in the mempool.
+            if (itertotal > iterextra + iterperfail*(fails+1)) {
+                good = false;
+                break;
+            }
+            const CTxMemPoolEntry* origTx = &*mapTx.find(hashnow);
+            nowfee += origTx->GetFee();
+            if (nFeesReserved + nFeesRemoved + nowfee > feeToUse) {
+                // If this pushes up to the total fees deleted too high, we're done with 'hash'.
+                good = false;
+                break;
+            }
+            todo.pop_front();
+            // Add 'hashnow' to the 'now' set, and update its statistics.
+            now.insert(hashnow);
+            nowusage += GuessDynamicMemoryUsage(*origTx);
+            nowsize += origTx->GetTxSize();
+            // Find dependencies of 'hashnow' and them to todo.
+            std::map<COutPoint, CInPoint>::iterator iter = mapNextTx.lower_bound(COutPoint(hashnow, 0));
+            while (iter != mapNextTx.end() && iter->first.hash == hashnow) {
+                const uint256& nexthash = iter->second.ptx->GetHash();
+                if (!(stage.count(nexthash) || now.count(nexthash))) {
+                    todo.push_back(nexthash);
+                }
+                iter++;
+            }
+        }
+        if (good && (double)nowfee * sizeToUse > (double)feeToUse * nowsize) {
+            // The new transaction's feerate is below that of the set we're removing.
+            good = false;
+        }
+        if (good) {
+            stage.insert(now.begin(), now.end());
+            nFeesRemoved += nowfee;
+            usageRemoved += nowusage;
+        } else {
+            fails++;
+            if (fails > failmax) {
+                // Bail out after traversing failmax transactions that are not acceptable.
+                break;
+            }
+        }
+        it++;
+    }
+    //We've added all we can.  Is it enough?
+    if (mustTrimAllSize && usageRemoved < sizeToTrim)
+        return false;
+    if (stage.empty() && sizeToTrim > 0)
+        return false;
+    return true;
+}
+
+void CTxMemPool::RemoveStaged(std::set<uint256>& stage) {
+    BOOST_FOREACH(const uint256& hash, stage) {
+        removeUnchecked(hash);
+    }
+}
+
+int CTxMemPool::Expire(int64_t time) {
+    LOCK(cs);
+    indexed_transaction_set::nth_index<2>::type::iterator it = mapTx.get<2>().begin();
+    std::set<uint256> toremove;
+    int ret = 0;
+    while (it != mapTx.get<2>().end() && it->GetTime() < time) {
+        toremove.insert(it->GetTx().GetHash());
+        it++;
+    }
+    while (!toremove.empty()) {
+        std::set<uint256>::iterator ite = toremove.begin();
+        std::map<COutPoint, CInPoint>::iterator iter = mapNextTx.lower_bound(COutPoint(*ite, 0));
+        while (iter != mapNextTx.end() && iter->first.hash == *ite) {
+            toremove.insert(iter->second.ptx->GetHash());
+            iter++;
+        }
+        ret++;
+        removeUnchecked(*ite);
+        toremove.erase(ite);
+    }
+    return ret;
 }
