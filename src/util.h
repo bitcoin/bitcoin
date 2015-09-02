@@ -39,6 +39,7 @@ extern bool fLogIPs;
 extern volatile bool fReopenDebugLog;
 
 void SetupEnvironment();
+bool SetupNetworking();
 
 /** Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
