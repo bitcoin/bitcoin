@@ -1,8 +1,8 @@
 package=miniupnpc
-$(package)_version=1.9.20150609
+$(package)_version=1.9.20150730
 $(package)_download_path=http://miniupnp.free.fr/files
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=86e6ccec5b660ba6889893d1f3fca21db087c6466b1a90f495a1f87ab1cd1c36
+$(package)_sha256_hash=1d64fab1fd3b4c8545139341ba197f19329a863f4f21b578fc2a228ab586a604
 
 define $(package)_set_vars
 $(package)_build_opts=CC="$($(package)_cc)"
