@@ -1328,6 +1328,12 @@ padding-right:10px;
 min-height:25px;
 }
 
+QDialog#CoinControlDialog .QFrame#frame .QPushButton#pushButtonToggleLock { /* Toggle lock state button */
+padding-left:10px;
+padding-right:10px;
+min-height:25px;
+}
+
 QDialog#CoinControlDialog .QDialogButtonBox#buttonBox QPushButton { /* Coin Control 'OK' button */
 }
 
