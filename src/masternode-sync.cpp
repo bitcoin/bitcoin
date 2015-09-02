@@ -265,7 +265,7 @@ void CMasternodeSync::Process()
             } else if(RequestedMasternodeAttempt < 4) {
                 mnodeman.DsegUpdate(pnode); 
             } else if(RequestedMasternodeAttempt < 6) {
-                int nMnCount = mnodeman.CountEnabled()*2;
+                int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 uint256 n = 0;
                 pnode->PushMessage("mnvs", n); //sync masternode votes
@@ -351,7 +351,7 @@ void CMasternodeSync::Process()
                 CBlockIndex* pindexPrev = chainActive.Tip();
                 if(pindexPrev == NULL) return;
 
-                int nMnCount = mnodeman.CountEnabled()*2;
+                int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 RequestedMasternodeAttempt++;
 
