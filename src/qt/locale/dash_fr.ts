@@ -1,4 +1,4 @@
-<TS language="fr" version="2.1">
+<TS language="fr" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -3964,6 +3964,18 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Dash" admin@foo.com
         <translation>Écouter les connexions sur &lt;port&gt; (par défaut: %u ou testnet: %u)</translation>
     </message>
     <message>
+        <source>Loading budget cache...</source>
+        <translation>Chargement du cache de budget...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>Chargement du cache de masternode...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Chargement du cache de paiement masternode...</translation>
+    </message>
+    <message>
         <source>Lock is already in place.</source>
         <translation>Verrou déjà en place.</translation>
     </message>
@@ -4098,10 +4110,6 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Dash" admin@foo.com
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Soumis au masternode, dans la file d'attente %s</translation>
-    </message>
-    <message>
-        <source>Synchronization doesn't yet started</source>
-        <translation>La synchronisation n'a pas encore démarrée</translation>
     </message>
     <message>
         <source>Synchronization failed</source>

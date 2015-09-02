@@ -1,4 +1,4 @@
-<TS language="pl" version="2.1">
+<TS language="pl" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -1456,7 +1456,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
-        <translation>Denominacje, które wysłałeś do Masternoda.&lt;br&gt;Aby zostały one ymieszane, inni użytkownicy muszą wysłać dokładnie takie same denominacje. </translation>
+        <translation>Denominacje, które wysłałeś do Masternoda.&lt;br&gt;Aby zostały one wymieszane, inni użytkownicy muszą wysłać dokładnie takie same denominacje. </translation>
     </message>
     <message>
         <source>(Last Message)</source>
@@ -3963,6 +3963,18 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
         <translation>Nasłuchuj połączeń na &lt;port&gt; (domyślnie: %u lub testnet: %u)</translation>
     </message>
     <message>
+        <source>Loading budget cache...</source>
+        <translation>Ładuje pamięć podręczną budżetu...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>Ładuję pamięć podręczną masternoda...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Ładuję pamięć podręczną płatności masternodów...</translation>
+    </message>
+    <message>
         <source>Lock is already in place.</source>
         <translation>Transakcja została już zamknięta.</translation>
     </message>
@@ -4097,10 +4109,6 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Przesłano do masterdnoda, czekaj na swoją kolej %s</translation>
-    </message>
-    <message>
-        <source>Synchronization doesn't yet started</source>
-        <translation>Synchronizacja jeszcze się nie zaczęła</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4381,6 +4389,10 @@ Zaleca się również aby ustawić alarm powiadomień tzw. alertnotify, aby dać
     <message>
         <source>Specify your own public address</source>
         <translation>Sprecyzuj swój adres publiczny</translation>
+    </message>
+    <message>
+        <source>Synchronization pending...</source>
+        <translation>Synchronizacja w toku...</translation>
     </message>
     <message>
         <source>This help message</source>

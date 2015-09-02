@@ -1,4 +1,4 @@
-<TS language="sv" version="2.1">
+<TS language="sv" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -406,6 +406,10 @@
     <message>
         <source>Open a dash: URI or payment request</source>
         <translation>Öppna en Dash-URI eller betalningsbegäran</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>&amp;Kommandoradalternativ</translation>
     </message>
     <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
@@ -2670,8 +2674,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Gå in i regressionstestläget, vilken använder en särskild kedja i vilken block kan lösas direkt.</translation>
     </message>
     <message>
+        <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
+        <translation>Fel: Lyssnande på inkommande anslutningar misslyckades (avlyssna återkommande fel %s)</translation>
+    </message>
+    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Exekvera kommandot när ett viktigt larm mottas eller vi ser en jättelång förgrening (%s i cmd ersätts av ett meddelande)</translation>
+    </message>
+    <message>
+        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
+        <translation>Exekvera kommandot när en plånbokstransaktion ändras (%s i cmd ersätts av TxID) </translation>
+    </message>
+    <message>
+        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
+        <translation>Exekvera kommandot när det bästa blocket ändras (%s i cmd ersätts av blockhash)</translation>
     </message>
     <message>
         <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
@@ -2712,10 +2728,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.</source>
         <translation>Kunde inte hitta tillräckliga Darksend-icke-denominationsmedel för denna transaktion som inte är likvärdiga 1000 DASH.</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Kunde inte hitta tillräckliga Darksend-icke-denominationsmedel för denna transaktion.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -3162,6 +3174,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Transaktionen är för stor</translation>
     </message>
     <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation>Kan inte binda %s till denna dator (bindande återgav ett fel %s)</translation>
+    </message>
+    <message>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>Kan inte sporka meddelandet, fel nyckel?</translation>
     </message>
@@ -3200,6 +3216,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Verifying wallet...</source>
         <translation>Bekräftar plånbok...</translation>
+    </message>
+    <message>
+        <source>Wallet %s resides outside data directory %s</source>
+        <translation>Plånboken %s återfinns utanför datakatalogen %s</translation>
     </message>
     <message>
         <source>Wallet is locked.</source>

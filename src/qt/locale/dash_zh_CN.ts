@@ -1,4 +1,4 @@
-<TS language="zh_CN" version="2.1">
+<TS language="zh_CN" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -279,6 +279,10 @@
         <translation>&amp;关于达世币核心</translation>
     </message>
     <message>
+        <source>Show information about Dash Core</source>
+        <translation>显示关于达世币核心信息</translation>
+    </message>
+    <message>
         <source>About &amp;Qt</source>
         <translation>关于 &amp;Qt</translation>
     </message>
@@ -415,6 +419,10 @@
         <translation>&amp;命令行 选项</translation>
     </message>
     <message>
+        <source>Dash Core client</source>
+        <translation>达世币核心客户端</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>打开达世币核心帮助信息取得可使用的命令行列表</translation>
     </message>
@@ -437,6 +445,10 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>分页工具栏</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Dash network</source>
+        <translation><numerusform>%n 已连接至达世币网络</numerusform></translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
@@ -893,6 +905,10 @@ Address: %4
         <translation>版本</translation>
     </message>
     <message>
+        <source>About Dash Core</source>
+        <translation>关于 达世币核心</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>使用：</translation>
     </message>
@@ -951,6 +967,10 @@ Address: %4
     <message>
         <source>Use a custom data directory:</source>
         <translation>使用自定义的数据目录：</translation>
+    </message>
+    <message>
+        <source>Dash Core</source>
+        <translation>达世币核心</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1029,6 +1049,10 @@ Address: %4
     <message>
         <source>W&amp;allet</source>
         <translation>&amp;钱包</translation>
+    </message>
+    <message>
+        <source>Connect to the Dash network through a SOCKS5 proxy.</source>
+        <translation>通过SOCKS5代理链接达世币网络。</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1318,6 +1342,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>匿名化被成功重置。</translation>
     </message>
     <message>
+        <source>Darksend requires at least %1 to use.</source>
+        <translation>匿名化要求至少 %1 以使用</translation>
+    </message>
+    <message>
         <source>Wallet is locked and user declined to unlock. Disabling Darksend.</source>
         <translation>钱包已锁定需要用户解锁。 正在关闭匿名化。</translation>
     </message>
@@ -1343,6 +1371,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Payment request file handling</source>
         <translation>付款请求文件处理 </translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Dash address or malformed URI parameters.</source>
+        <translation>链接不能被解析! 原因可能是无效的达世币地址或输入的链接有错。</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
@@ -1378,6 +1410,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Enter a Dash address (e.g. %1)</source>
+        <translation>输入达世币地址(e.g. %1)</translation>
+    </message>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -1546,6 +1582,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
         <translation>可为新建的收款地址添加一个标签。</translation>
+    </message>
+    <message>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened.&lt;br&gt;Note: The message will not be sent with the payment over the Dash network.</source>
+        <translation>附加在付款要求中的讯息，可以不填，打开要求内容时会显示。&lt;br&gt;注意: 这个讯息不会随着付款送到达世币网路上。</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>
@@ -1916,6 +1956,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>付给(&amp;T)：</translation>
     </message>
     <message>
+        <source>The Dash address to send the payment to</source>
+        <translation>选择发款地址</translation>
+    </message>
+    <message>
         <source>Choose previously used address</source>
         <translation>选择以前用过的地址</translation>
     </message>
@@ -2002,6 +2046,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>您可以用你的地址对消息进行签名，以证明您是该地址的所有人。注意不要对模棱两可的消息签名，以免遭受钓鱼式攻击。请确保消息内容准确的表达了您的真实意愿。</translation>
     </message>
     <message>
+        <source>The Dash address to sign the message with</source>
+        <translation>对此地址进行签名</translation>
+    </message>
+    <message>
         <source>Choose previously used address</source>
         <translation>选择以前用过的地址</translation>
     </message>
@@ -2052,6 +2100,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
         <translation>在下面输入签名地址，消息（请确保换行符、空格符、制表符等等一个不漏）和签名以验证消息。请确保签名信息准确，提防中间人攻击。</translation>
+    </message>
+    <message>
+        <source>The Dash address the message was signed with</source>
+        <translation>已签名的地址</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Dash address</source>
@@ -2612,7 +2664,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>Send Coins</source>
         <translation>发送达世币</translation>
     </message>
-    </context>
+    <message>
+        <source>InstantX doesn't support sending values that high yet. Transactions are currently limited to %1 DASH.</source>
+        <translation>即时支付功能目前还不支持发送如此高的金额.目前限制在%1 达世币.</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -2685,6 +2741,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>InstantX requires inputs with at least 6 confirmations, you might need to wait a few minutes and try again.</source>
         <translation>即时支付功能需要6步确认，您可以稍后重试。</translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer. Dash Core is probably already running.</source>
+        <translation>无法绑定%s此计算机. 达世币核心应该已经在运行中了.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2859,6 +2919,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>读取数据块失败</translation>
     </message>
     <message>
+        <source>Disable all Dash specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)</source>
+        <translation>禁止所有达世币附加功能(主节点, 匿名发送, 即时发送, 预算) (0-1, default: %u)</translation>
+    </message>
+    <message>
+        <source>Fees (in DASH/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>如果手续费比这个值低,就视为没有付手续费(当产生交易时)(默认: %s)</translation>
+    </message>
+    <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>未确认的面额化输出，将等待他们确认后继续。</translation>
     </message>
@@ -3013,6 +3081,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>以兆字节为单位设置缓存数据大小 (%d to %d, 默认： %d)</translation>
+    </message>
+    <message>
+        <source>Set maximum block size in bytes (default: %d)</source>
+        <translation>以字节为单位设置最大的块(默认： %d)</translation>
     </message>
     <message>
         <source>Set the masternode private key</source>
