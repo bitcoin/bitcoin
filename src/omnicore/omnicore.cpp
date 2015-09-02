@@ -2899,17 +2899,22 @@ void CMPTxList::LoadActivations(int blockHeight)
 
     PrintToLog("Loading feature activations from levelDB\n");
 
-    for (it->SeekToFirst(); it->Valid(); it->Next()) {
-        skey = it->key();
-        svalue = it->value();
-        std::string itData = svalue.ToString();
+    std::vector<std::pair<int64_t, uint256> > loadOrder;
 
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string itData = it->value().ToString();
         std::vector<std::string> vstr;
         boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
-        if (4 != vstr.size()) continue;
+        if (4 != vstr.size()) continue; // unexpected number of tokens
         if (atoi(vstr[2]) != OMNICORE_MESSAGE_TYPE_ACTIVATION || atoi(vstr[0]) != 1) continue; // we only care about valid activations
+        uint256 txid(it->key().ToString());;
+        loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
+    }
 
-        uint256 hash(skey.ToString());
+    std::sort (loadOrder.begin(), loadOrder.end());
+
+    for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
+        uint256 hash = (*it).second;
         uint256 blockHash = 0;
         CTransaction wtx;
         CMPTransaction mp_obj;
