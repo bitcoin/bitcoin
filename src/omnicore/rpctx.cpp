@@ -1078,7 +1078,7 @@ Value omni_sendactivation(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 4)
         throw runtime_error(
-            "omni_sendactivation \"fromaddress\" featureid block\n"
+            "omni_sendactivation \"fromaddress\" featureid block minclientversion\n"
             "\nActivate a protocol feature.\n"
             "\nNote: Omni Core ignores activations from unauthorized sources.\n"
             "\nArguments:\n"
