@@ -6,6 +6,7 @@
 
 os: linux
 language: cpp
+compiler: gcc
 env:
   global:
     - MAKEJOBS=-j3
@@ -79,6 +80,8 @@ matrix:
             - libbz2-dev
             - zlib1g-dev
             - libcap-dev
+  exclude:
+    - compiler: gcc
 
 before_install:
     - mkdir -p depends/SDKs depends/sdk-sources
