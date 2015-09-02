@@ -598,7 +598,7 @@ void CMasternodePayments::CleanPaymentList()
     if(chainActive.Tip() == NULL) return;
 
     //keep up to five cycles for historical sake
-    int nLimit = std::max(((int)mnodeman.size())*2, 1000);
+    int nLimit = std::max(((int)mnodeman.size())*1.25, 1000);
 
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
@@ -782,18 +782,17 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
     int nCount = (mnodeman.CountEnabled()*2);
     if(nCountNeeded > nCount) nCountNeeded = nCount;
 
-    vector<CInv> vInv;
+    int nInvCount = 0;
     std::map<uint256, CMasternodePaymentWinner>::iterator it = mapMasternodePayeeVotes.begin();
     while(it != mapMasternodePayeeVotes.end()) {
         CMasternodePaymentWinner winner = (*it).second;
         if(winner.nBlockHeight >= chainActive.Tip()->nHeight-nCountNeeded && winner.nBlockHeight <= chainActive.Tip()->nHeight + 20) {
-            CInv inv(MSG_MASTERNODE_WINNER, winner.GetHash());
-            vInv.push_back(inv);
+            node->PushInventory(CInv(MSG_MASTERNODE_WINNER, winner.GetHash()));
+            nInvCount++;
         }
         ++it;
     }
-    node->PushMessage("ssc", MASTERNODE_SYNC_MNW, (int)vInv.size());
-    if(vInv.size() > 0) node->PushMessage("inv", vInv);
+    node->PushMessage("ssc", MASTERNODE_SYNC_MNW, nInvCount);
 }
 
 std::string CMasternodePayments::ToString() const
