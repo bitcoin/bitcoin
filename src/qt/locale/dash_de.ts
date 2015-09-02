@@ -1,4 +1,4 @@
-<TS language="de" version="2.1">
+<TS language="de" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -3964,6 +3964,18 @@ Dash Core wird heruntergefahren.</translation>
         <translation>&lt;port&gt; nach Verbindungen abhören (Standard: %u oder Testnetz: %u)</translation>
     </message>
     <message>
+        <source>Loading budget cache...</source>
+        <translation>Lade Budget-Cache...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>Lade Masternode-Cache...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Lade Masternode Zahlungs-Cache...</translation>
+    </message>
+    <message>
         <source>Lock is already in place.</source>
         <translation>Schon gesperrt.</translation>
     </message>
@@ -4098,10 +4110,6 @@ Dash Core wird heruntergefahren.</translation>
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>An Masternode übermittelt, wartet in Warteschlange %s</translation>
-    </message>
-    <message>
-        <source>Synchronization doesn't yet started</source>
-        <translation>Die Synchronisation hat noch nicht begonnen.</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4382,6 +4390,10 @@ Dash Core wird heruntergefahren.</translation>
     <message>
         <source>Specify your own public address</source>
         <translation>Die eigene öffentliche Adresse angeben</translation>
+    </message>
+    <message>
+        <source>Synchronization pending...</source>
+        <translation>Synchronisation steht bevor...</translation>
     </message>
     <message>
         <source>This help message</source>
