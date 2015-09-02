@@ -1,4 +1,4 @@
-<TS language="it" version="2.1">
+<TS language="it" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -446,6 +446,10 @@
         <source>Dash Core client</source>
         <translation>Cliente Dash Core</translation>
     </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>Processato %n blocco della cronologia transazioni.</numerusform><numerusform>Processati %n blocchi della cronologia transazioni.</numerusform></translation>
+    </message>
     <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Mostra il messaggio di aiuto di Dash Core per ottenere una lista con le possibili opzioni di linea di comando di Dash</translation>
@@ -469,6 +473,10 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Barra degli strumenti "Tabs"</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Dash network</source>
+        <translation><numerusform>%n connessione attiva alla rete Dash</numerusform><numerusform>%n connessioni attive alla rete Dash</numerusform></translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
@@ -859,6 +867,10 @@ Indirizzo: %4
     <message>
         <source>Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash's configuration screen.</source>
         <translation>Dark send è statto correttamente impostato su base (%1 e 2 round). Puoi cambiare questa impostazione in qualsiasi momento tu lo voglia dalla finestra di configurazione.</translation>
+    </message>
+    <message>
+        <source>Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash's configuration screen.</source>
+        <translation>Darksend è stata impostata correttamente a elevato (%1 e 8 turni). È possibile modificare in qualsiasi momento aprendo schermata di configurazione di Dash.</translation>
     </message>
     <message>
         <source>Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash's configuration screen.</source>
@@ -1439,6 +1451,10 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>No inputs detected</source>
         <translation>Non ci sono input rilevati</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n Rounds</source>
+        <translation><numerusform>%n Round</numerusform><numerusform>%n Rounds</numerusform></translation>
     </message>
     <message>
         <source>Found enough compatible inputs to anonymize %1</source>
@@ -2250,6 +2266,10 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>fondi anonimi</translation>
     </message>
     <message>
+        <source>(darksend requires this amount to be rounded up to the nearest %1).</source>
+        <translation>(darksend richiede questo importo da arrotondato al più vicino %1).</translation>
+    </message>
+    <message>
         <source>any available funds (not recommended)</source>
         <translation>tutti i fondi disponibili (non raccomandato)</translation>
     </message>
@@ -2276,6 +2296,10 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>A fee %1 times higher than %2 per kB is considered an insanely high fee.</source>
         <translation>Una commissione %1 volte piú alta che %2 per kB é considerata incredibilmente alta.</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Inizio della confirmazione stimato in %n blocco</numerusform><numerusform>Inizio della confirmazione stimato in %n blocchi</numerusform></translation>
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
@@ -2583,6 +2607,10 @@ Più URL vengono separati da una barra verticale |.</translation>
 </context>
 <context>
     <name>TransactionDesc</name>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Aperto per %n blocco in piú</numerusform><numerusform>Aperto per %n blocchi in piú</numerusform></translation>
+    </message>
     <message>
         <source>Open until %1</source>
         <translation>Aperto fino a %1</translation>
@@ -2643,6 +2671,10 @@ Più URL vengono separati da una barra verticale |.</translation>
         <source>, has not been successfully broadcast yet</source>
         <translation>, non è stato ancora trasmesso con successo</translation>
     </message>
+    <message numerus="yes">
+        <source>, broadcast through %n node(s)</source>
+        <translation><numerusform>, trasmettere attraverso %n nodo</numerusform><numerusform>, trasmettere attraverso %n nodi</numerusform></translation>
+    </message>
     <message>
         <source>Date</source>
         <translation>Data</translation>
@@ -2682,6 +2714,10 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Credit</source>
         <translation>Credito</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation><numerusform>Matura in %n blocco in piú</numerusform><numerusform>Matura in %n blocchi in piú</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2776,6 +2812,10 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Address</source>
         <translation>Indirizzo</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Aperto per %n blocco in piú</numerusform><numerusform>Aperto per %n blocchi in piú</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -3124,6 +3164,10 @@ Più URL vengono separati da una barra verticale |.</translation>
         <translation>Associa all'indirizzo indicato e resta permanentemente in ascolto su questo. Usa la notazione [host]:porta per l'IPv6</translation>
     </message>
     <message>
+        <source>Cannot obtain a lock on data directory %s. Dash Core is probably already running.</source>
+        <translation>Impossibile ottenere un blocco sulla data directory %s. Dash Core è probabilmente già in esecuzione.</translation>
+    </message>
+    <message>
         <source>Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.</source>
         <translation>Darksend utilizza esatto denominato importo a inviare fondi, si potrebbe semplicemente bisogno di anonimizzare alcuni più monete.</translation>
     </message>
@@ -3186,10 +3230,6 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.</source>
         <translation>Impossibile trovare un numero sufficiente di non denominati fondi Darksend per questa operazione che non sono uguali a 1000 DASH.</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough Darksend non-denominated funds for this transaction.</source>
-        <translation>Impossibile trovare un numero sufficiente di non denominati fondi Darksend per questa transazione.</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -3542,6 +3582,10 @@ Più URL vengono separati da una barra verticale |.</translation>
     <message>
         <source>KeePassHttp key for AES encrypted communication with KeePass</source>
         <translation>Chiave KeePassHttp per AES comunicazione cripra con KeePass</translation>
+    </message>
+    <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>Mantenere al massimo &lt;n&gt; le operazioni in collegabile in memoria (predefinito: %u)</translation>
     </message>
     <message>
         <source>Last Darksend was too recent.</source>
