@@ -391,7 +391,9 @@ CNode* FindNode(const CService& addr)
 CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool darkSendMaster)
 {
     if (pszDest == NULL) {
-        if (IsLocal(addrConnect))
+        // we clean masternode connections in CMasternodeMan::ProcessMasternodeConnections()
+        // so should be safe to skip this and connect to local Hot MN on CActiveMasternode::ManageStatus()
+        if (IsLocal(addrConnect) && !darkSendMaster)
             return NULL;
 
         // Look for an existing connection
