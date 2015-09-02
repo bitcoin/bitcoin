@@ -394,6 +394,7 @@ Value mnbudget(const Array& params, bool fHelp)
             CBitcoinAddress address2(address1);
 
             Object bObj;
+            bObj.push_back(Pair("Name",  pbudgetProposal->GetName()));
             bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
             bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
             bObj.push_back(Pair("FeeHash",  pbudgetProposal->nFeeTXHash.ToString()));

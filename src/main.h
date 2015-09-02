@@ -238,7 +238,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                         bool* pfMissingInputs, bool fRejectInsaneFee=false, bool ignoreFees=false);
 
 bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fRejectInsaneFee=false, bool ignoreFees=false);
+                        bool* pfMissingInputs, bool fRejectInsaneFee=false, bool isDSTX=false);
 
 int GetInputAge(CTxIn& vin);
 int GetInputAgeIX(uint256 nTXHash, CTxIn& vin);
