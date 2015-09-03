@@ -219,7 +219,7 @@ static int secp256k1_fe_normalizes_to_zero_var(secp256k1_fe_t *r) {
 
     t4 &= 0x0FFFFFFFFFFFFULL;
 
-    t1 += (t0 >> 52); t0  = z0;
+    t1 += (t0 >> 52);
     t2 += (t1 >> 52); t1 &= 0xFFFFFFFFFFFFFULL; z0 |= t1; z1 &= t1;
     t3 += (t2 >> 52); t2 &= 0xFFFFFFFFFFFFFULL; z0 |= t2; z1 &= t2;
     t4 += (t3 >> 52); t3 &= 0xFFFFFFFFFFFFFULL; z0 |= t3; z1 &= t3;
