@@ -20,6 +20,8 @@ import re
 from authproxy import AuthServiceProxy, JSONRPCException
 from util import *
 
+exampleFee = Decimal('0.001')
+
 def p2p_port(n):
     return 11000 + n + os.getpid()%999
 def rpc_port(n):

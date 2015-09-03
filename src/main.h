@@ -216,7 +216,7 @@ void FlushStateToDisk();
 void PruneAndFlush();
 
 /** (try to) add transaction to memory pool **/
-bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
+bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx,
                         bool* pfMissingInputs, bool fRejectAbsurdFee=false);
 
 
@@ -253,7 +253,7 @@ struct CDiskTxPos : public CDiskBlockPos
 };
 
 
-CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree);
+CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes);
 
 /** 
  * Count ECDSA signature operations the old-fashioned (pre-0.6) way
@@ -277,7 +277,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  * This does not modify the UTXO set. If pvChecks is not NULL, script checks are pushed onto it
  * instead of being performed inline.
  */
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
+bool CheckInputsScripts(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view,
                  unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */

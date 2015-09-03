@@ -29,7 +29,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
     def create_tx(self, from_txid, to_address, amount):
         inputs = [{ "txid" : from_txid, "vout" : 0}]
-        outputs = { to_address : amount }
+        outputs = { to_address : amount - exampleFee}
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         signresult = self.nodes[0].signrawtransaction(rawtx)
         assert_equal(signresult["complete"], True)
@@ -64,8 +64,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
 
         # Create 102_1 and 103_1:
-        spend_102_1_raw = self.create_tx(spend_102_id, node1_address, 50)
-        spend_103_1_raw = self.create_tx(spend_103_id, node1_address, 50)
+        spend_102_1_raw = self.create_tx(spend_102_id, node1_address, 50 - exampleFee)
+        spend_103_1_raw = self.create_tx(spend_103_id, node1_address, 50 - exampleFee)
 
         # Broadcast and mine 103_1:
         spend_103_1_id = self.nodes[0].sendrawtransaction(spend_103_1_raw)
