@@ -1311,6 +1311,16 @@ $ omnicore-cli "omni_decodetransaction" "010000000163af14ce6d477e1c793507e32a5b7
 
 ---
 
+### omni_getactivations
+
+Returns pending and completed feature activations.
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getactivations"
+```
+
 ## Depreciated API calls
 
 To ensure backwards compatibility, depreciated RPCs are kept for at least one major version.
