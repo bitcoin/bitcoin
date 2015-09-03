@@ -5,6 +5,7 @@ OMNICORE_TEST_CPP = \
   omnicore/test/alert_tests.cpp \
   omnicore/test/checkpoint_tests.cpp \
   omnicore/test/create_payload_tests.cpp \
+  omnicore/test/crowdsale_participation_tests.cpp \
   omnicore/test/dex_purchase_tests.cpp \
   omnicore/test/encoding_b_tests.cpp \
   omnicore/test/encoding_c_tests.cpp \
