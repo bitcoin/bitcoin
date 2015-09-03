@@ -1140,7 +1140,7 @@ bool AppInit2(boost::thread_group& threadGroup)
                     "Your configuration file has been updated.\n\n"
                     "Omni Core will now shutdown - please restart the client for your new configuration to take effect.");
             uiInterface.ThreadSafeMessageBox(strUpdated, "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL);
-            StartShutdown();
+            return false;
         } else {
             return InitError(_("Please add txindex=1 to your configuration file manually.\n\nOmni Core will now shutdown."));
         }
