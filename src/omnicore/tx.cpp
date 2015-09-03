@@ -969,7 +969,7 @@ int CMPTransaction::logicMath_TradeOffer()
     }
 
     if (OMNI_PROPERTY_TMSC != property && OMNI_PROPERTY_MSC != property) {
-        PrintToLog("%s(): rejected: property for sale %d must be MSC or TMSC\n", __func__, property);
+        PrintToLog("%s(): rejected: property for sale %d must be OMNI or TOMNI\n", __func__, property);
         return (PKT_ERROR_TRADEOFFER -47);
     }
 
@@ -1123,7 +1123,7 @@ int CMPTransaction::logicMath_MetaDExTrade()
 
     if ((property != OMNI_PROPERTY_MSC) && (desired_property != OMNI_PROPERTY_MSC) &&
         (property != OMNI_PROPERTY_TMSC) && (desired_property != OMNI_PROPERTY_TMSC)) {
-        PrintToLog("%s(): rejected: one side of a trade [%d, %d] must be MSC or TMSC\n", __func__, property, desired_property);
+        PrintToLog("%s(): rejected: one side of a trade [%d, %d] must be OMNI or TOMNI\n", __func__, property, desired_property);
         return (PKT_ERROR_METADEX -35);
     }
 

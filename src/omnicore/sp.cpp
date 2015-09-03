@@ -64,23 +64,23 @@ CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
     leveldb::Status status = Open(path, fWipe);
     PrintToConsole("Loading smart property database: %s\n", status.ToString());
 
-    // special cases for constant SPs MSC and TMSC
-    implied_msc.issuer = ExodusAddress().ToString();
-    implied_msc.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
-    implied_msc.num_tokens = 700000;
-    implied_msc.category = "N/A";
-    implied_msc.subcategory = "N/A";
-    implied_msc.name = "MasterCoin";
-    implied_msc.url = "www.mastercoin.org";
-    implied_msc.data = "***data***";
-    implied_tmsc.issuer = ExodusAddress().ToString();
-    implied_tmsc.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
-    implied_tmsc.num_tokens = 700000;
-    implied_tmsc.category = "N/A";
-    implied_tmsc.subcategory = "N/A";
-    implied_tmsc.name = "Test MasterCoin";
-    implied_tmsc.url = "www.mastercoin.org";
-    implied_tmsc.data = "***data***";
+    // special cases for constant SPs OMNI and TOMNI
+    implied_omni.issuer = ExodusAddress().ToString();
+    implied_omni.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
+    implied_omni.num_tokens = 700000;
+    implied_omni.category = "N/A";
+    implied_omni.subcategory = "N/A";
+    implied_omni.name = "Omni";
+    implied_omni.url = "http://www.omnilayer.org";
+    implied_omni.data = "Omni serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer.";
+    implied_tomni.issuer = ExodusAddress().ToString();
+    implied_tomni.prop_type = MSC_PROPERTY_TYPE_DIVISIBLE;
+    implied_tomni.num_tokens = 700000;
+    implied_tomni.category = "N/A";
+    implied_tomni.subcategory = "N/A";
+    implied_tomni.name = "Test Omni";
+    implied_tomni.url = "http://www.omnilayer.org";
+    implied_tomni.data = "Test Omni serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer.";
 
     init();
 }
@@ -230,10 +230,10 @@ bool CMPSPInfo::getSP(uint32_t propertyId, Entry& info) const
 {
     // special cases for constant SPs MSC and TMSC
     if (OMNI_PROPERTY_MSC == propertyId) {
-        info = implied_msc;
+        info = implied_omni;
         return true;
     } else if (OMNI_PROPERTY_TMSC == propertyId) {
-        info = implied_tmsc;
+        info = implied_tomni;
         return true;
     }
 

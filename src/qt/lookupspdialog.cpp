@@ -234,7 +234,7 @@ void LookupSPDialog::addSPToMatchingResults(unsigned int propertyId)
 
 void LookupSPDialog::updateDisplayedProperty()
 {
-    uint64_t maxLabelWidth=70; // fairly safe value for now, next version consider wrapping
+    uint64_t maxLabelWidth=100; // fairly safe value for now, next version consider wrapping
                                // instead of truncation and evaluate effects on vertical layout
     QString strId = ui->matchingComboBox->itemData(ui->matchingComboBox->currentIndex()).toString();
     // protect against an empty matchedComboBox
@@ -281,15 +281,6 @@ void LookupSPDialog::updateDisplayedProperty()
     } else {
         ui->urlLabel->setText(QString::fromStdString(sp.url));
     }
-    // overrides for MSC and TMSC - temporary code can be removed when metadata is modified
-    if(propertyId==1) {
-        ui->dataLabel->setText(QString::fromStdString("MasterCoin serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer"));
-        ui->urlLabel->setText(QString::fromStdString("http://www.mastercoin.org"));
-    }
-    if(propertyId==2) {
-        ui->dataLabel->setText(QString::fromStdString("Test MasterCoin serve as the binding between Bitcoin, smart properties and contracts created on the Omni Layer"));
-        ui->urlLabel->setText(QString::fromStdString("http://www.mastercoin.org"));
-    }
 
     string strTotalTokens;
     string strWalletTokens;
@@ -306,7 +297,7 @@ void LookupSPDialog::updateDisplayedProperty()
     }
     else
     {
-       if (propertyId == 1) { tokenLabel = " MSC"; } else { tokenLabel = " TMSC"; }
+       if (propertyId == 1) { tokenLabel = " OMNI"; } else { tokenLabel = " TOMNI"; }
     }
     if (divisible) { strTotalTokens = FormatDivisibleMP(totalTokens); } else { strTotalTokens = FormatIndivisibleMP(totalTokens); }
     if (divisible) { strWalletTokens = FormatDivisibleMP(walletTokens); } else { strWalletTokens = FormatIndivisibleMP(walletTokens); }

@@ -100,12 +100,12 @@ Value omni_senddexsell(const Array& params, bool fHelp)
         throw runtime_error(
             "omni_senddexsell \"fromaddress\" propertyidforsale \"amountforsale\" \"amountdesired\" paymentwindow minacceptfee action\n"
 
-            "\nPlace, update or cancel a sell offer on the traditional distributed MSC/BTC exchange.\n"
+            "\nPlace, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.\n"
 
             "\nArguments:\n"
 
             "1. fromaddress          (string, required) the address to send from\n"
-            "2. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be MSC or TMSC)\n"
+            "2. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be OMNI or TOMNI)\n"
             "3. amountforsale        (string, required) the amount of tokens to list for sale\n"
             "4. amountdesired        (string, required) the amount of bitcoins desired\n"
             "5. paymentwindow        (number, required) a time limit in blocks a buyer has to pay following a successful accept\n"

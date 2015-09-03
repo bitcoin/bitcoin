@@ -156,9 +156,9 @@ std::string mastercore::strMPProperty(uint32_t propertyId)
         switch (propertyId) {
             case OMNI_PROPERTY_BTC: str = "BTC";
                 break;
-            case OMNI_PROPERTY_MSC: str = "MSC";
+            case OMNI_PROPERTY_MSC: str = "OMNI";
                 break;
-            case OMNI_PROPERTY_TMSC: str = "TMSC";
+            case OMNI_PROPERTY_TMSC: str = "TOMNI";
                 break;
             default:
                 str = strprintf("SP token: %d", propertyId);
@@ -305,9 +305,9 @@ std::string mastercore::getTokenLabel(uint32_t propertyId)
     std::string tokenStr;
     if (propertyId < 3) {
         if (propertyId == 1) {
-            tokenStr = " MSC";
+            tokenStr = " OMNI";
         } else {
-            tokenStr = " TMSC";
+            tokenStr = " TOMNI";
         }
     } else {
         tokenStr = strprintf(" SPT#%d", propertyId);
@@ -445,7 +445,7 @@ static int64_t calculate_and_update_devmsc(unsigned int nTime)
 
     // sanity check that devmsc isn't an impossible value
     if (devmsc > all_reward || 0 > devmsc) {
-        PrintToLog("%s(): ERROR: insane number of Dev MSC (nTime=%d, exodus_prev=%d, devmsc=%d)\n", __func__, nTime, exodus_prev, devmsc);
+        PrintToLog("%s(): ERROR: insane number of Dev OMNI (nTime=%d, exodus_prev=%d, devmsc=%d)\n", __func__, nTime, exodus_prev, devmsc);
         return 0;
     }
 
@@ -2692,7 +2692,7 @@ int mastercore_init()
     int64_t exodus_balance = getMPbalance(exodus_address, OMNI_PROPERTY_MSC, BALANCE);
     PrintToLog("Exodus balance after initialization: %s\n", FormatDivisibleMP(exodus_balance));
 
-    PrintToConsole("Exodus balance: %s MSC\n", FormatDivisibleMP(exodus_balance));
+    PrintToConsole("Exodus balance: %s OMNI\n", FormatDivisibleMP(exodus_balance));
     PrintToConsole("Omni Core initialization completed\n");
 
     return 0;

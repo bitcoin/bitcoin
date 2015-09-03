@@ -1,6 +1,6 @@
 # Omni Core Testing Guide
 
-Please note this guide utilizes the testnet network.  All tokens such as MSC will be testnet tokens and carry no value.
+Please note this guide utilizes the testnet network.  All tokens such as OMNI will be testnet tokens and carry no value.
 
 ### Step 1
 
@@ -68,11 +68,11 @@ If you have difficulty using these faucets you can find a list of additional fau
 
 ### Step 6
 
-Once you have received your testnet bitcoins, you can convert some of them into Testnet MSC by sending them to the "moneyman" address.  This address runs a perpetual Exodus crowdsale for testing purposes.
+Once you have received your testnet bitcoins, you can convert some of them into Testnet OMNI by sending them to the "moneyman" address.  This address runs a perpetual Exodus crowdsale for testing purposes.
 
 1. Click the 'Send' page, followed by the 'Bitcoin' tab.
 2. Enter the following address in the 'Pay To' field:  ```moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP```
-3. Enter the amount of testnet BTC you would like to convert to testnet MSC
+3. Enter the amount of testnet BTC you would like to convert to testnet OMNI
 4. Use the 'Send' button to broadcast the transaction to the testnet network.
 
 ![alt tag](http://i.imgur.com/PnLyAYe.png)
@@ -83,7 +83,7 @@ Wait for the transaction to confirm (you can use the 'Transactions' page, 'Bitco
 
 ### Step 7
 
-There is a known bug in this preview build, where Exodus crowdsale purchases do not trigger an update to the UI.  Close down and reopen the client to refresh your testnet MSC balance after sending funds to the 'moneyman' address.
+There is a known bug in this preview build, where Exodus crowdsale purchases do not trigger an update to the UI.  Close down and reopen the client to refresh your testnet OMNI balance after sending funds to the 'moneyman' address.
 
 Note this bug will be fixed in a subsequent build.
 

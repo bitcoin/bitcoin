@@ -216,7 +216,7 @@ void MetaDExDialog::SwitchMarket()
     // check that not trying to trade primary for primary (eg market 1 or 2)
     if ((searchPropertyId == 1) || (searchPropertyId == 2)) {
         QMessageBox::critical( this, "Unable to switch market",
-        "You cannot trade MSC/TMSC against itself." );
+        "You cannot trade OMNI/TOMNI against itself." );
         return;
     }
     // check that the property exists
@@ -448,14 +448,14 @@ void MetaDExDialog::FullRefresh()
     bool testeco = false;
     if (propertyId >= TEST_ECO_PROPERTY_1) testeco = true;
     if(testeco) {
-        ui->marketLabel->setText(QString::fromStdString("Trade " + propNameStr + " (#" + FormatIndivisibleMP(propertyId) + ") for Test Mastercoin"));
+        ui->marketLabel->setText(QString::fromStdString("Trade " + propNameStr + " (#" + FormatIndivisibleMP(propertyId) + ") for Test Omni"));
     } else {
-        ui->marketLabel->setText(QString::fromStdString("Trade " + propNameStr + " (#" + FormatIndivisibleMP(propertyId) + ") for Mastercoin"));
+        ui->marketLabel->setText(QString::fromStdString("Trade " + propNameStr + " (#" + FormatIndivisibleMP(propertyId) + ") for Omni"));
     }
 
     // update form labels to reflect market
     std::string primaryToken;
-    if (testeco) { primaryToken = "TMSC"; } else { primaryToken = "MSC"; }
+    if (testeco) { primaryToken = "TOMNI"; } else { primaryToken = "OMNI"; }
     ui->exchangeLabel->setText("Exchange - SP#" + QString::fromStdString(FormatIndivisibleMP(propertyId) + "/" + primaryToken));
     ui->buyTotalLabel->setText("0.00000000 " + QString::fromStdString(primaryToken));
     ui->sellTotalLabel->setText("0.00000000 " + QString::fromStdString(primaryToken));
@@ -540,9 +540,9 @@ void MetaDExDialog::recalcTotal(bool useBuyFields)
     if (divisible) totalPrice = totalPrice/COIN;
     QString totalLabel = QString::fromStdString(FormatDivisibleMP(totalPrice));
     if (testeco) {
-        if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " TMSC"); } else { ui->sellTotalLabel->setText(totalLabel + " TMSC"); }
+        if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " TOMNI"); } else { ui->sellTotalLabel->setText(totalLabel + " TOMNI"); }
     } else {
-        if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " MSC"); } else { ui->sellTotalLabel->setText(totalLabel + " MSC"); }
+        if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " OMNI"); } else { ui->sellTotalLabel->setText(totalLabel + " OMNI"); }
     }
 }
 
@@ -644,17 +644,17 @@ void MetaDExDialog::sendTrade(bool sell)
         if (divisible) { buyStr = FormatDivisibleMP(amountDes); } else { buyStr = FormatIndivisibleMP(amountDes); }
         buyStr += "   SPT " + propDetails + "";
         sellStr = FormatDivisibleMP(amountSell);
-        if (testeco) { sellStr += "   TMSC"; } else { sellStr += "   MSC"; }
+        if (testeco) { sellStr += "   TOMNI"; } else { sellStr += "   OMNI"; }
         strMsgText += "Buying: " + buyStr + "\nPrice: " + FormatDivisibleMP(price) + "   SP" + propDetails + "/";
-        if (testeco) { strMsgText += "TMSC"; } else { strMsgText += "MSC"; }
+        if (testeco) { strMsgText += "TOMNI"; } else { strMsgText += "OMNI"; }
         strMsgText += "\nTotal: " + sellStr;
     } else { // clicked sell
         buyStr = FormatDivisibleMP(amountDes);
         if (divisible) { sellStr = FormatDivisibleMP(amountSell); } else { sellStr = FormatIndivisibleMP(amountSell); }
-        if (testeco) { buyStr += "   TMSC"; } else { buyStr += "   MSC"; }
+        if (testeco) { buyStr += "   TOMNI"; } else { buyStr += "   OMNI"; }
         sellStr += "   SPT " + propDetails + "";
         strMsgText += "Selling: " + sellStr + "\nPrice: " + FormatDivisibleMP(price) + "   SP" + propDetails + "/";
-        if (testeco) { strMsgText += "TMSC"; } else { strMsgText += "MSC"; }
+        if (testeco) { strMsgText += "TOMNI"; } else { strMsgText += "OMNI"; }
         strMsgText += "\nTotal: " + buyStr;
     }
     strMsgText += "\n\nAre you sure you wish to send this transaction?";
