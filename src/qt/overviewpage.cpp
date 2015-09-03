@@ -464,8 +464,8 @@ void OverviewPage::reinitOmni()
 {
     recentCache.clear();
     ui->overviewLW->clear();
-    UpdatePropertyBalance(0,0,0);
-    UpdatePropertyBalance(1,0,0);
+    UpdatePropertyBalance(0, walletModel->getBalance(), walletModel->getUnconfirmedBalance());
+    UpdatePropertyBalance(1, 0, 0);
     updateOmni();
 }
 
