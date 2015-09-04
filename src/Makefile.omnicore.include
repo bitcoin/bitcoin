@@ -25,6 +25,7 @@ OMNICORE_H = \
   omnicore/sto.h \
   omnicore/tally.h \
   omnicore/tx.h \
+  omnicore/uint256_extensions.h \
   omnicore/utils.h \
   omnicore/utilsbitcoin.h \
   omnicore/version.h \
