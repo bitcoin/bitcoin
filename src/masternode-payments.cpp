@@ -375,9 +375,9 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
             return;
         }
 
-        int nFirstBlock = chainActive.Tip()->nHeight - (mnodeman.CountEnabled()*2);
+        int nFirstBlock = chainActive.Tip()->nHeight - (mnodeman.CountEnabled()*1.25);
         if(winner.nBlockHeight < nFirstBlock || winner.nBlockHeight > chainActive.Tip()->nHeight+20){
-            LogPrintf("mnw - winner out of range - FirstBlock %d Height %d bestHeight %d\n", nFirstBlock, winner.nBlockHeight, chainActive.Tip()->nHeight);
+            LogPrint("mnpayments", "mnw - winner out of range - FirstBlock %d Height %d bestHeight %d\n", nFirstBlock, winner.nBlockHeight, chainActive.Tip()->nHeight);
             return;
         }
 
@@ -779,7 +779,7 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
 
     if(chainActive.Tip() == NULL) return;
 
-    int nCount = (mnodeman.CountEnabled()*2);
+    int nCount = (mnodeman.CountEnabled()*1.25);
     if(nCountNeeded > nCount) nCountNeeded = nCount;
 
     int nInvCount = 0;
