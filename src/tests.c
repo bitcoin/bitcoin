@@ -1291,7 +1291,7 @@ void test_ec_combine(void) {
         secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &Qj, &sum);
         secp256k1_ge_set_gej(&Q, &Qj);
         secp256k1_pubkey_save(&sd, &Q);
-        CHECK(secp256k1_ec_pubkey_combine(ctx, &sd2, i, d) == 1);
+        CHECK(secp256k1_ec_pubkey_combine(ctx, &sd2, d, i) == 1);
         CHECK(memcmp(&sd, &sd2, sizeof(sd)) == 0);
     }
 }
@@ -1787,7 +1787,7 @@ void run_ecdsa_sign_verify(void) {
 }
 
 /** Dummy nonce generation function that just uses a precomputed nonce, and fails if it is not accepted. Use only for testing. */
-static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, unsigned int counter, const void *data) {
+static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
     (void)msg32;
     (void)key32;
     (void)algo16;
@@ -1795,15 +1795,15 @@ static int precomputed_nonce_function(unsigned char *nonce32, const unsigned cha
     return (counter == 0);
 }
 
-static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, unsigned int counter, const void *data) {
+static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
    /* Dummy nonce generator that has a fatal error on the first counter value. */
    if (counter == 0) {
        return 0;
    }
-   return nonce_function_rfc6979(nonce32, msg32, key32, algo16, counter - 1, data);
+   return nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 1);
 }
 
-static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, unsigned int counter, const void *data) {
+static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
    /* Dummy nonce generator that produces unacceptable nonces for the first several counter values. */
    if (counter < 3) {
        memset(nonce32, counter==0 ? 0 : 255, 32);
@@ -1830,7 +1830,7 @@ static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char
    if (counter > 5) {
        return 0;
    }
-   return nonce_function_rfc6979(nonce32, msg32, key32, algo16, counter - 5, data);
+   return nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 5);
 }
 
 int is_empty_signature(const secp256k1_ecdsa_signature_t *sig) {
@@ -1871,7 +1871,7 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
 
     /* Verify private key import and export. */
-    CHECK(secp256k1_ec_privkey_export(ctx, privkey, seckey, &seckeylen, secp256k1_rand32() % 2) == 1);
+    CHECK(secp256k1_ec_privkey_export(ctx, seckey, &seckeylen, privkey, secp256k1_rand32() % 2) == 1);
     CHECK(secp256k1_ec_privkey_import(ctx, privkey2, seckey, seckeylen) == 1);
     CHECK(memcmp(privkey, privkey2, 32) == 0);
 
@@ -1910,14 +1910,14 @@ void test_ecdsa_end_to_end(void) {
     }
 
     /* Sign. */
-    CHECK(secp256k1_ecdsa_sign(ctx, message, &signature[0], privkey, NULL, NULL) == 1);
-    CHECK(secp256k1_ecdsa_sign(ctx, message, &signature[4], privkey, NULL, NULL) == 1);
-    CHECK(secp256k1_ecdsa_sign(ctx, message, &signature[1], privkey, NULL, extra) == 1);
+    CHECK(secp256k1_ecdsa_sign(ctx, &signature[0], message, privkey, NULL, NULL) == 1);
+    CHECK(secp256k1_ecdsa_sign(ctx, &signature[4], message, privkey, NULL, NULL) == 1);
+    CHECK(secp256k1_ecdsa_sign(ctx, &signature[1], message, privkey, NULL, extra) == 1);
     extra[31] = 1;
-    CHECK(secp256k1_ecdsa_sign(ctx, message, &signature[2], privkey, NULL, extra) == 1);
+    CHECK(secp256k1_ecdsa_sign(ctx, &signature[2], message, privkey, NULL, extra) == 1);
     extra[31] = 0;
     extra[0] = 1;
-    CHECK(secp256k1_ecdsa_sign(ctx, message, &signature[3], privkey, NULL, extra) == 1);
+    CHECK(secp256k1_ecdsa_sign(ctx, &signature[3], message, privkey, NULL, extra) == 1);
     CHECK(memcmp(&signature[0], &signature[4], sizeof(signature[0])) == 0);
     CHECK(memcmp(&signature[0], &signature[1], sizeof(signature[0])) != 0);
     CHECK(memcmp(&signature[0], &signature[2], sizeof(signature[0])) != 0);
@@ -1926,21 +1926,21 @@ void test_ecdsa_end_to_end(void) {
     CHECK(memcmp(&signature[1], &signature[3], sizeof(signature[0])) != 0);
     CHECK(memcmp(&signature[2], &signature[3], sizeof(signature[0])) != 0);
     /* Verify. */
-    CHECK(secp256k1_ecdsa_verify(ctx, message, &signature[0], &pubkey) == 1);
-    CHECK(secp256k1_ecdsa_verify(ctx, message, &signature[1], &pubkey) == 1);
-    CHECK(secp256k1_ecdsa_verify(ctx, message, &signature[2], &pubkey) == 1);
-    CHECK(secp256k1_ecdsa_verify(ctx, message, &signature[3], &pubkey) == 1);
+    CHECK(secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
+    CHECK(secp256k1_ecdsa_verify(ctx, &signature[1], message, &pubkey) == 1);
+    CHECK(secp256k1_ecdsa_verify(ctx, &signature[2], message, &pubkey) == 1);
+    CHECK(secp256k1_ecdsa_verify(ctx, &signature[3], message, &pubkey) == 1);
 
     /* Serialize/parse DER and verify again */
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     memset(&signature[0], 0, sizeof(signature[0]));
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 1);
-    CHECK(secp256k1_ecdsa_verify(ctx, message, &signature[0], &pubkey) == 1);
+    CHECK(secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
     /* Serialize/destroy/parse DER and verify again. */
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     sig[secp256k1_rand32() % siglen] += 1 + (secp256k1_rand32() % 255);
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 0 ||
-          secp256k1_ecdsa_verify(ctx, message, &signature[0], &pubkey) == 0);
+          secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 0);
 }
 
 void test_random_pubkeys(void) {
@@ -2071,11 +2071,11 @@ void test_ecdsa_edge_cases(void) {
             0xb8, 0x12, 0xe0, 0x0b, 0x81, 0x7a, 0x77, 0x62,
             0x65, 0xdf, 0xdd, 0x31, 0xb9, 0x3e, 0x29, 0xa9,
         };
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig, key, precomputed_nonce_function, nonce) == 0);
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig, key, precomputed_nonce_function, nonce2) == 0);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce) == 0);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 0);
         msg[31] = 0xaa;
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig, key, precomputed_nonce_function, nonce) == 1);
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig, key, precomputed_nonce_function, nonce2) == 1);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce) == 1);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, precomputed_nonce_function, nonce2) == 1);
         siglen = 72;
         CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, &sig) == 1);
         siglen = 10;
@@ -2096,31 +2096,31 @@ void test_ecdsa_edge_cases(void) {
         msg[31] = 1;
         /* High key results in signature failure. */
         memset(key, 0xFF, 32);
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig, key, NULL, extra) == 0);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
         CHECK(is_empty_signature(&sig));
         /* Zero key results in signature failure. */
         memset(key, 0, 32);
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig, key, NULL, extra) == 0);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, NULL, extra) == 0);
         CHECK(is_empty_signature(&sig));
         /* Nonce function failure results in signature failure. */
         key[31] = 1;
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig, key, nonce_function_test_fail, extra) == 0);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_fail, extra) == 0);
         CHECK(is_empty_signature(&sig));
         /* The retry loop successfully makes its way to the first good value. */
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig, key, nonce_function_test_retry, extra) == 1);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig, msg, key, nonce_function_test_retry, extra) == 1);
         CHECK(!is_empty_signature(&sig));
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig2, key, nonce_function_rfc6979, extra) == 1);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, nonce_function_rfc6979, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
         /* The default nonce function is determinstic. */
-        CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig2, key, NULL, extra) == 1);
+        CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
         /* The default nonce function changes output with different messages. */
         for(i = 0; i < 256; i++) {
             int j;
             msg[0] = i;
-            CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig2, key, NULL, extra) == 1);
+            CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
             CHECK(!is_empty_signature(&sig2));
             secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, &sig2);
             for (j = 0; j < i; j++) {
@@ -2133,7 +2133,7 @@ void test_ecdsa_edge_cases(void) {
         for(i = 256; i < 512; i++) {
             int j;
             key[0] = i - 256;
-            CHECK(secp256k1_ecdsa_sign(ctx, msg, &sig2, key, NULL, extra) == 1);
+            CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
             CHECK(!is_empty_signature(&sig2));
             secp256k1_ecdsa_signature_load(ctx, &sr[i], &ss, &sig2);
             for (j = 0; j < i; j++) {
@@ -2153,8 +2153,8 @@ void test_ecdsa_edge_cases(void) {
             0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41,
         };
         int outlen = 300;
-        CHECK(!secp256k1_ec_privkey_export(ctx, seckey, privkey, &outlen, 0));
-        CHECK(!secp256k1_ec_privkey_export(ctx, seckey, privkey, &outlen, 1));
+        CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 0));
+        CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 1));
     }
 }
 

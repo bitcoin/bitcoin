@@ -34,7 +34,7 @@ static void benchmark_schnorr_init(void* arg) {
     for (k = 0; k < data->numsigs; k++) {
         secp256k1_pubkey_t pubkey;
         for (i = 0; i < 32; i++) data->sigs[k].key[i] = 33 + i + k;
-        secp256k1_schnorr_sign(data->ctx, data->msg, data->sigs[k].sig, data->sigs[k].key, NULL, NULL);
+        secp256k1_schnorr_sign(data->ctx, data->sigs[k].sig, data->msg, data->sigs[k].key, NULL, NULL);
         data->sigs[k].pubkeylen = 33;
         CHECK(secp256k1_ec_pubkey_create(data->ctx, &pubkey, data->sigs[k].key));
         CHECK(secp256k1_ec_pubkey_serialize(data->ctx, data->sigs[k].pubkey, &data->sigs[k].pubkeylen, &pubkey, 1));
@@ -49,7 +49,7 @@ static void benchmark_schnorr_verify(void* arg) {
         secp256k1_pubkey_t pubkey;
         data->sigs[0].sig[(i >> 8) % 64] ^= (i & 0xFF);
         CHECK(secp256k1_ec_pubkey_parse(data->ctx, &pubkey, data->sigs[0].pubkey, data->sigs[0].pubkeylen));
-        CHECK(secp256k1_schnorr_verify(data->ctx, data->msg, data->sigs[0].sig, &pubkey) == ((i & 0xFF) == 0));
+        CHECK(secp256k1_schnorr_verify(data->ctx, data->sigs[0].sig, data->msg, &pubkey) == ((i & 0xFF) == 0));
         data->sigs[0].sig[(i >> 8) % 64] ^= (i & 0xFF);
     }
 }

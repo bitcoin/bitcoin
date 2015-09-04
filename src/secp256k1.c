@@ -207,7 +207,7 @@ int secp256k1_ecdsa_signature_serialize_der(const secp256k1_context_t* ctx, unsi
     return secp256k1_ecdsa_sig_serialize(output, outputlen, &r, &s);
 }
 
-int secp256k1_ecdsa_verify(const secp256k1_context_t* ctx, const unsigned char *msg32, const secp256k1_ecdsa_signature_t *sig, const secp256k1_pubkey_t *pubkey) {
+int secp256k1_ecdsa_verify(const secp256k1_context_t* ctx, const secp256k1_ecdsa_signature_t *sig, const unsigned char *msg32, const secp256k1_pubkey_t *pubkey) {
     secp256k1_ge_t q;
     secp256k1_scalar_t r, s;
     secp256k1_scalar_t m;
@@ -223,7 +223,7 @@ int secp256k1_ecdsa_verify(const secp256k1_context_t* ctx, const unsigned char *
             secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &r, &s, &q, &m));
 }
 
-static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, unsigned int counter, const void *data) {
+static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
    unsigned char keydata[112];
    int keylen = 64;
    secp256k1_rfc6979_hmac_sha256_t rng;
@@ -257,7 +257,7 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
 const secp256k1_nonce_function_t secp256k1_nonce_function_rfc6979 = nonce_function_rfc6979;
 const secp256k1_nonce_function_t secp256k1_nonce_function_default = nonce_function_rfc6979;
 
-int secp256k1_ecdsa_sign(const secp256k1_context_t* ctx, const unsigned char *msg32, secp256k1_ecdsa_signature_t *signature, const unsigned char *seckey, secp256k1_nonce_function_t noncefp, const void* noncedata) {
+int secp256k1_ecdsa_sign(const secp256k1_context_t* ctx, secp256k1_ecdsa_signature_t *signature, const unsigned char *msg32, const unsigned char *seckey, secp256k1_nonce_function_t noncefp, const void* noncedata) {
     secp256k1_scalar_t r, s;
     secp256k1_scalar_t sec, non, msg;
     int ret = 0;
@@ -278,7 +278,7 @@ int secp256k1_ecdsa_sign(const secp256k1_context_t* ctx, const unsigned char *ms
         secp256k1_scalar_set_b32(&msg, msg32, NULL);
         while (1) {
             unsigned char nonce32[32];
-            ret = noncefp(nonce32, msg32, seckey, NULL, count, noncedata);
+            ret = noncefp(nonce32, msg32, seckey, NULL, noncedata, count);
             if (!ret) {
                 break;
             }
@@ -431,7 +431,7 @@ int secp256k1_ec_pubkey_tweak_mul(const secp256k1_context_t* ctx, secp256k1_pubk
     return ret;
 }
 
-int secp256k1_ec_privkey_export(const secp256k1_context_t* ctx, const unsigned char *seckey, unsigned char *privkey, int *privkeylen, int compressed) {
+int secp256k1_ec_privkey_export(const secp256k1_context_t* ctx, unsigned char *privkey, int *privkeylen, const unsigned char *seckey, int compressed) {
     secp256k1_scalar_t key;
     int ret = 0;
     VERIFY_CHECK(ctx != NULL);
@@ -468,7 +468,7 @@ int secp256k1_context_randomize(secp256k1_context_t* ctx, const unsigned char *s
     return 1;
 }
 
-int secp256k1_ec_pubkey_combine(const secp256k1_context_t* ctx, secp256k1_pubkey_t *pubnonce, int n, const secp256k1_pubkey_t * const *pubnonces) {
+int secp256k1_ec_pubkey_combine(const secp256k1_context_t* ctx, secp256k1_pubkey_t *pubnonce, const secp256k1_pubkey_t * const *pubnonces, int n) {
     int i;
     secp256k1_gej_t Qj;
     secp256k1_ge_t Q;
