@@ -87,6 +87,7 @@ $(gen_context_BIN): $(gen_context_OBJECTS)
 
 $(libsecp256k1_la_OBJECTS): src/ecmult_static_context.h
 $(tests_OBJECTS): src/ecmult_static_context.h
+$(bench_internal_OBJECTS): src/ecmult_static_context.h
 
 src/ecmult_static_context.h: $(gen_context_BIN)
 	./$(gen_context_BIN)
