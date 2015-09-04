@@ -28,7 +28,7 @@ Then, to tunnel a SSL connection on 28332 to a RPC server bound on localhost on 
 It can also be set up system-wide in inetd style.
 
 Another way to re-attain SSL would be to setup a httpd reverse proxy. This solution
-would allow the use of different authentication, loadbalancing, on-thy-fly compressing and
+would allow the use of different authentication, loadbalancing, on-the-fly compression and
 caching. A sample config for apache2 could look like:
 
     Listen 443
