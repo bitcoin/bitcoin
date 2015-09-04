@@ -8,6 +8,11 @@ CURDIR=$(cd $(dirname "$0"); pwd)
 export BITCOIND=${REAL_BITCOIND}
 export BITCOINCLI=${REAL_BITCOINCLI}
 
+if [ "x${EXEEXT}" = "x.exe" ]; then
+  echo "Win tests currently disabled"
+  exit 0
+fi
+
 #Run the tests
 
 testScripts=(
