@@ -1,4 +1,4 @@
-<TS language="zh_TW" version="2.1">
+<TS language="zh_TW" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -459,6 +459,10 @@
         <translation><numerusform>已經處理了 %n 個區塊的交易紀錄。</numerusform></translation>
     </message>
     <message>
+        <source>Synchronizing additional data: %p%</source>
+        <translation>正在同步額外的數據: %p%</translation>
+    </message>
+    <message>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>顯示達世幣核心的說明訊息，來取得可用命令列選項的列表</translation>
     </message>
@@ -505,14 +509,6 @@
     <message>
         <source>Up to date</source>
         <translation>最新狀態</translation>
-    </message>
-    <message>
-        <source>Synchronizing masternodes...</source>
-        <translation>正在跟主節點網絡進行同步...</translation>
-    </message>
-    <message>
-        <source>Synchronizing budgets...</source>
-        <translation>正在跟預算案進行同步...</translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -1817,11 +1813,11 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Received</source>
-        <translation>收款</translation>
+        <translation>接收</translation>
     </message>
     <message>
         <source>Sent</source>
-        <translation>付款</translation>
+        <translation>發送</translation>
     </message>
     <message>
         <source>&amp;Peers</source>
@@ -1925,7 +1921,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>-upgradewallet: Upgrade wallet to latest format on startup. (Note: this is NOT an update of the wallet itself!)</source>
-        <translation>-upgradewallet: 在啟動時升級錢包到最新的格式。 (注：這不是錢包本身的更新！)</translation>
+        <translation>-upgradewallet: 在啟動時升級錢包到最新的格式。 (注：這不是錢包軟件本身的更新！)</translation>
     </message>
     <message>
         <source>Wallet repair options.</source>
@@ -3052,7 +3048,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Sent to</source>
-        <translation>付款</translation>
+        <translation>付款給</translation>
     </message>
     <message>
         <source>Darksent</source>
@@ -3442,6 +3438,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>錯誤: 找到不再支援的 -socks 參數。現在只支援 SOCKS5 協定的代理伺服器了，因為不再能夠指定 SOCKS 協定版本。</translation>
     </message>
     <message>
+        <source>Fees (in DASH/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
+        <translation>當處理轉發的交易時，如果每千位元組(Kb)的手續費比這個值低，就視為沒付手續費 (預設值: %s)</translation>
+    </message>
+    <message>
+        <source>Fees (in DASH/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>當建立交易時，如果每千位元組(Kb)的手續費比這個值低，就視為沒付手續費 (預設值: %s)</translation>
+    </message>
+    <message>
         <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
         <translation>每當累積到 &lt;n&gt; 百萬位元組(MB)時，才將資料庫的變動從記憶體暫存池中寫進磁碟紀錄檔(預設值: %u)</translation>
     </message>
@@ -3460,6 +3464,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
         <translation>開採區塊的時候，紀錄交易的優先度以及每千位元組(kB)的手續費(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
+        <translation>維護全部交易的索引，用在 getrawtransaction 這個 RPC 請求(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+        <translation>轉發和開採時，對只帶資料的交易的大小上限(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>單一的錢包交易允許付出最高的總手續費，設定太低的話，可能會無法進行資料量大的交易(預設值: %s)</translation>
+    </message>
+    <message>
+        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
+        <translation>避免與異常的節點重新連線的秒數(預設: %u)</translation>
+    </message>
+    <message>
+        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
+        <translation>輸出除錯資訊(預設值: %u, 不一定要指定 &lt;category&gt;)</translation>
     </message>
     <message>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
@@ -3598,6 +3622,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>在通訊埠 &lt;port&gt; 聽候 JSON-RPC 連線(預設值: %u, 或若為測試網路: %u)</translation>
     </message>
     <message>
+        <source>Loading masternode cache...</source>
+        <translation>正在載入主節點緩存...</translation>
+    </message>
+    <message>
         <source>Mixing in progress...</source>
         <translation>正在進行混合...</translation>
     </message>
@@ -3620,6 +3648,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
         <translation>只接受與內建的檢查段點吻合的區塊鎖鏈(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
+        <translation>只會連接到網絡節點 &lt;net&gt;  (IPv4，IPv6或onion)</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -3682,6 +3714,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>從磁碟匯入區塊資料後停止執行(預設值: %u)</translation>
     </message>
     <message>
+        <source>Synchronization failed</source>
+        <translation>同步失敗</translation>
+    </message>
+    <message>
+        <source>Synchronization finished</source>
+        <translation>同步完成</translation>
+    </message>
+    <message>
+        <source>Synchronizing budgets...</source>
+        <translation>正在跟預算案進行同步...</translation>
+    </message>
+    <message>
+        <source>Synchronizing masternodes...</source>
+        <translation>正在跟主節點網絡進行同步...</translation>
+    </message>
+    <message>
         <source>This is not a Masternode.</source>
         <translation>這並不是一個主節點。</translation>
     </message>
@@ -3712,14 +3760,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Loading block index...</source>
         <translation>正在載入區塊索引...</translation>
-    </message>
-    <message>
-        <source>Loading masternode cache...</source>
-        <translation>正在載入主節點緩存...</translation>
-    </message>
-    <message>
-        <source>Loading masternode payment cache...</source>
-        <translation>正在載入主節點付款緩存...</translation>
     </message>
     <message>
         <source>Loading wallet... (%3.2f %%)</source>

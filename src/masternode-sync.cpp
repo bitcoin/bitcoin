@@ -160,7 +160,7 @@ void CMasternodeSync::GetNextAsset()
 std::string CMasternodeSync::GetSyncStatus()
 {
     switch (masternodeSync.RequestedMasternodeAssets) {
-        case MASTERNODE_SYNC_INITIAL: return _("Synchronization doesn't yet started");
+        case MASTERNODE_SYNC_INITIAL: return _("Synchronization pending...");
         case MASTERNODE_SYNC_SPORKS: return _("Synchronizing sporks...");
         case MASTERNODE_SYNC_LIST: return _("Synchronizing masternodes...");
         case MASTERNODE_SYNC_MNW: return _("Synchronizing masternode winners...");
@@ -265,7 +265,7 @@ void CMasternodeSync::Process()
             } else if(RequestedMasternodeAttempt < 4) {
                 mnodeman.DsegUpdate(pnode); 
             } else if(RequestedMasternodeAttempt < 6) {
-                int nMnCount = mnodeman.CountEnabled()*2;
+                int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 uint256 n = 0;
                 pnode->PushMessage("mnvs", n); //sync masternode votes
@@ -351,7 +351,7 @@ void CMasternodeSync::Process()
                 CBlockIndex* pindexPrev = chainActive.Tip();
                 if(pindexPrev == NULL) return;
 
-                int nMnCount = mnodeman.CountEnabled()*2;
+                int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 RequestedMasternodeAttempt++;
 

@@ -1,4 +1,4 @@
-<TS language="fi" version="2.1">
+<TS language="fi" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -3714,7 +3714,7 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>Tämä ohjelma sisältää OpenSSL projektin OpenSSL työkalupakin &lt;https://www.openssl.org/&gt; sekä Eric Youngin kehittämän salausohjelmiston ja Thomas Bernardin kehittämän UPnP ohjelmiston.
 
-Käännös päivitetty: 22.8.2015 by AjM.</translation>
+Käännös päivitetty: 1.9.2015 by AjM.</translation>
     </message>
     <message>
         <source>To use dashd, or the -server option to dash-qt, you must set an rpcpassword in the configuration file:
@@ -3971,6 +3971,18 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Dash Hälytys" admin@foo.com
         <translation>Kuuntele yhteyksiä portissa &lt;port&gt; (oletus: %u tai testiverkossa: %u)</translation>
     </message>
     <message>
+        <source>Loading budget cache...</source>
+        <translation>Ladataan budjetti välimuistia...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>Ladataan masternode välimuistia...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Ladataan masternode maksuvälimuistia...</translation>
+    </message>
+    <message>
         <source>Lock is already in place.</source>
         <translation>On jo lukittu.</translation>
     </message>
@@ -4105,10 +4117,6 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Dash Hälytys" admin@foo.com
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Esitetty masternodelle, odotetaan jonossa %s</translation>
-    </message>
-    <message>
-        <source>Synchronization doesn't yet started</source>
-        <translation>Synkronointia ei ole vielä aloitettu</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4389,6 +4397,10 @@ esimerkiksi: alertnotify=echo %%s | mail -s "Dash Hälytys" admin@foo.com
     <message>
         <source>Specify your own public address</source>
         <translation>Määritä julkinen osoitteesi</translation>
+    </message>
+    <message>
+        <source>Synchronization pending...</source>
+        <translation>Synkronointi odottaa...</translation>
     </message>
     <message>
         <source>This help message</source>

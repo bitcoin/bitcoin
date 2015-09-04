@@ -1,4 +1,4 @@
-<TS language="ru" version="2.1">
+<TS language="ru" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -3964,6 +3964,18 @@ rpcpassword=%s
         <translation>Принимать входящие подключения на порт &lt;port&gt; (по умолчанию: %u или testnet: %u)</translation>
     </message>
     <message>
+        <source>Loading budget cache...</source>
+        <translation>Загрузка кэша бюджетов...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>Загрузка кэша мастернод...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Загрузка кэша выплат Мастернодам...</translation>
+    </message>
+    <message>
         <source>Lock is already in place.</source>
         <translation>Установлена блокировка.</translation>
     </message>
@@ -4098,10 +4110,6 @@ rpcpassword=%s
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Отправлено на мастерноду, ожидаем в очереди %s</translation>
-    </message>
-    <message>
-        <source>Synchronization doesn't yet started</source>
-        <translation>Синхронизация еще не началась</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4382,6 +4390,10 @@ rpcpassword=%s
     <message>
         <source>Specify your own public address</source>
         <translation>Укажите Ваш собственный публичный адрес</translation>
+    </message>
+    <message>
+        <source>Synchronization pending...</source>
+        <translation>Ожидание синхронизации...</translation>
     </message>
     <message>
         <source>This help message</source>

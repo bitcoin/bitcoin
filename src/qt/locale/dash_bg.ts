@@ -1,4 +1,4 @@
-<TS language="bg" version="2.1">
+<TS language="bg" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -3955,6 +3955,18 @@ for example: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
         <translation>Слушане за входящи връзки на &lt;port&gt; (по подразбиране:%u или за тестовата мрежа: %u)</translation>
     </message>
     <message>
+        <source>Loading budget cache...</source>
+        <translation>Зареждане на бюджетния кеш...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>Зареждане на masternode кеш...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Зараждане на masternode кеш за плащане</translation>
+    </message>
+    <message>
         <source>Lock is already in place.</source>
         <translation>Заключването е вече налично.</translation>
     </message>
@@ -4089,10 +4101,6 @@ for example: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Изпратено към Мастернода, чака в опашката %s</translation>
-    </message>
-    <message>
-        <source>Synchronization doesn't yet started</source>
-        <translation>Синхронизацията все още не е започнала</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4373,6 +4381,10 @@ for example: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
     <message>
         <source>Specify your own public address</source>
         <translation>Въведете Ваш публичен адрес</translation>
+    </message>
+    <message>
+        <source>Synchronization pending...</source>
+        <translation>Изчаква синхронизация ...</translation>
     </message>
     <message>
         <source>This help message</source>
