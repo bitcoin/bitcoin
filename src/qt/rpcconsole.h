@@ -14,6 +14,7 @@
 
 class ClientModel;
 class PlatformStyle;
+class RPCTimerInterface;
 
 namespace Ui {
     class RPCConsole;
@@ -108,6 +109,7 @@ private:
     NodeId cachedNodeid;
     QMenu *contextMenu;
     const PlatformStyle *platformStyle;
+    RPCTimerInterface *rpcTimerInterface;
 };
 
 #endif // BITCOIN_QT_RPCCONSOLE_H
