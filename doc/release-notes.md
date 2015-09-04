@@ -4,6 +4,29 @@ release-notes at release time)
 Notable changes
 ===============
 
+SSL support for RPC dropped
+----------------------------
+
+SSL support for RPC, previously enabled by the option `rpcssl` has been dropped
+from both the client and the server. This was done in preparation for removing
+the dependency on OpenSSL for the daemon completely.
+
+Trying to use `rpcssl` will result in an error:
+
+    Error: SSL mode for RPC (-rpcssl) is no longer supported.
+
+If you are one of the few people that relies on this feature, a flexible
+migration path is to use `stunnel`. This is an utility that can tunnel
+arbitrary TCP connections inside SSL. On e.g. Ubuntu it can be installed with:
+
+    sudo apt-get install stunnel4
+
+Then, to tunnel a SSL connection on 28332 to a RPC server bound on localhost on port 18332 do:
+
+    stunnel -d 28332 -r 127.0.0.1:18332 -p stunnel.pem -P ''
+
+It can also be set up system-wide in inetd style.
+
 Random-cookie RPC authentication
 ---------------------------------
 

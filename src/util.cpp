@@ -794,6 +794,18 @@ void SetupEnvironment()
     boost::filesystem::path::imbue(loc);
 }
 
+bool SetupNetworking()
+{
+#ifdef WIN32
+    // Initialize Windows Sockets
+    WSADATA wsadata;
+    int ret = WSAStartup(MAKEWORD(2,2), &wsadata);
+    if (ret != NO_ERROR || LOBYTE(wsadata.wVersion ) != 2 || HIBYTE(wsadata.wVersion) != 2)
+        return false;
+#endif
+    return true;
+}
+
 void SetThreadPriority(int nPriority)
 {
 #ifdef WIN32
