@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(overpayment_close)
             tokensCreated, fClosed);
 
     BOOST_CHECK(fClosed);
-    BOOST_CHECK_EQUAL(8384883669867978007LL, tokens.first); // user
-    BOOST_CHECK_EQUAL(838488366986797800LL, tokens.second); // issuer
+    BOOST_CHECK_EQUAL(8384883669867978007LL, tokensCreated.first); // user
+    BOOST_CHECK_EQUAL(838488366986797800LL, tokensCreated.second); // issuer
 }
 
 
