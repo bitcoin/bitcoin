@@ -652,6 +652,7 @@ TRANSLATIONS += src/qt/locale/dash_bg.ts \
                 src/qt/locale/dash_pl.ts \
                 src/qt/locale/dash_pt.ts \
                 src/qt/locale/dash_ru.ts \
+                src/qt/locale/dash_sk.ts \
                 src/qt/locale/dash_sv.ts \
                 src/qt/locale/dash_vi.ts \
                 src/qt/locale/dash_zh_CN.ts \

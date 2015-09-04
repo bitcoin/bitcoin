@@ -1,4 +1,4 @@
-<TS language="es" version="2.1">
+<TS language="es" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -790,7 +790,7 @@ Dirección: %4
     </message>
     <message>
         <source>(%1 locked)</source>
-        <translation>(%1 bloqueada)</translation>
+        <translation>(%1 bloqueadas)</translation>
     </message>
     <message>
         <source>none</source>
@@ -3965,6 +3965,18 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
         <translation>Escuchar a las conexiones en el &lt;port&gt; (predeterminado: %u ó testnet: %u)</translation>
     </message>
     <message>
+        <source>Loading budget cache...</source>
+        <translation>Cargando caché del presupuesto...</translation>
+    </message>
+    <message>
+        <source>Loading masternode cache...</source>
+        <translation>Cargando caché de nodos maestros...</translation>
+    </message>
+    <message>
+        <source>Loading masternode payment cache...</source>
+        <translation>Cargando caché de pago del nodo maestro...</translation>
+    </message>
+    <message>
         <source>Lock is already in place.</source>
         <translation>El bloqueo ya está activo.</translation>
     </message>
@@ -4099,10 +4111,6 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
     <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Enviado al nodo maestro, esperando en cola %s</translation>
-    </message>
-    <message>
-        <source>Synchronization doesn't yet started</source>
-        <translation>La sincronización aún no ha comenzado</translation>
     </message>
     <message>
         <source>Synchronization failed</source>
@@ -4383,6 +4391,10 @@ por ejemplo: alertnotify=echo %%s | mail -s "Alerta de Dash" admin@foo.com
     <message>
         <source>Specify your own public address</source>
         <translation>Especifique su propia dirección pública</translation>
+    </message>
+    <message>
+        <source>Synchronization pending...</source>
+        <translation>Sincronización pendiente...</translation>
     </message>
     <message>
         <source>This help message</source>
