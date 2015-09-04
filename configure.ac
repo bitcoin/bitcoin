@@ -30,15 +30,6 @@ if test x"$ac_cv_prog_cc_c89" = x"no"; then
   AC_MSG_ERROR([c89 compiler support required])
 fi
 
-case $host in
-  *mingw*)
-     use_pkgconfig=no
-     ;;
-   *)
-     use_pkgconfig=yes
-     ;;
-esac
-
 case $host_os in
   *darwin*)
      if  test x$cross_compiling != xyes; then
