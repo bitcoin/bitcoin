@@ -27,8 +27,8 @@ static void bench_sign(void* arg) {
     bench_sign_t *data = (bench_sign_t*)arg;
 
     unsigned char sig[74];
-    int siglen = 74;
     for (i = 0; i < 20000; i++) {
+        int siglen = 74;
         int j;
         secp256k1_ecdsa_signature_t signature;
         CHECK(secp256k1_ecdsa_sign(data->ctx, data->msg, &signature, data->key, NULL, NULL));
