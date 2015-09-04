@@ -46,16 +46,6 @@ Listen for RPC connections on this TCP port.
 \fBrpcconnect=\fR\fI'127.0.0.1'\fR
 You can use *bitcoin* or *bitcoind(1)* to send commands to *bitcoin*/*bitcoind(1)* running on another host using this option.
 .TP
-\fBrpcssl=\fR\fI'1'\fR
-Use Secure Sockets Layer (also known as TLS or HTTPS) to communicate with *bitcoin* '\-server' or *bitcoind(1)*. Example of OpenSSL settings used when *rpcssl*='1':
-.TP
-\fB\-rpcsslciphers=\fR<ciphers>
-Acceptable ciphers (default: TLSv1+HIGH:\:!SSLv2:\:!aNULL:\:!eNULL:\:!AH:\:!3DES:\:@STRENGTH)
-.TP
-\fBrpcsslcertificatechainfile=\fR\fI'server.cert'\fR
-.TP
-\fBrpcsslprivatekeyfile=\fR\fI'server.pem'\fR
-.TP
 .SH MISCELLANEOUS OPTIONS
 .TP
 \fBgen=\fR[\fI'0'\fR|\fI'1'\fR]
