@@ -11,6 +11,7 @@
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/rules.h"
+#include "omnicore/uint256_extensions.h"
 
 #include "main.h"
 #include "tinyformat.h"
@@ -18,7 +19,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
 
 #include <openssl/sha.h>
 
@@ -411,11 +411,16 @@ static int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t a
  */
 int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
 {
-    using boost::multiprecision::int128_t;
+    // conversion
+    uint256 amountOffered256 = ConvertTo256(amountOffered);
+    uint256 amountDesired256 = ConvertTo256(amountDesired);
+    uint256 amountPaid256 = ConvertTo256(amountPaid);
 
-    int128_t amountPurchased = int128_t(1) + ((int128_t(amountPaid) * int128_t(amountOffered)) - int128_t(1)) / int128_t(amountDesired);
+    // actual calculation; round up
+    uint256 amountPurchased256 = DivideAndRoundUp((amountPaid256 * amountOffered256), amountDesired256);
 
-    return amountPurchased.convert_to<int64_t>();
+    // convert back to int64_t
+    return ConvertTo64(amountPurchased256);
 }
 
 /**
