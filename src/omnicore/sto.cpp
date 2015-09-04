@@ -3,10 +3,9 @@
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/tally.h"
+#include "omnicore/uint256_extensions.h"
 
 #include "sync.h"
-
-#include <boost/multiprecision/cpp_int.hpp>
 
 #include <assert.h>
 #include <stdint.h>
@@ -14,8 +13,6 @@
 #include <set>
 #include <string>
 #include <utility>
-
-using boost::multiprecision::int128_t;
 
 namespace mastercore
 {
@@ -76,12 +73,12 @@ OwnerAddrType STO_GetReceivers(const std::string& sender, uint32_t property, int
     for (OwnerAddrType::reverse_iterator it = ownerAddrSet.rbegin(); it != ownerAddrSet.rend(); ++it) {
         const std::string& address = it->second;
 
-        int128_t owns = int128_t(it->first);
-        int128_t temp = owns * int128_t(amount);
-        int128_t piece = 1 + ((temp - 1) / int128_t(totalTokens));
+        uint256 owns = ConvertTo256(it->first);
+        uint256 temp = owns * ConvertTo256(amount);
+        uint256 piece = DivideAndRoundUp(temp, ConvertTo256(totalTokens));
 
         int64_t will_really_receive = 0;
-        int64_t should_receive = piece.convert_to<int64_t>();
+        int64_t should_receive = ConvertTo64(piece);
 
         // Ensure that no more than available is distributed
         if ((amount - sent_so_far) < should_receive) {
@@ -94,7 +91,7 @@ OwnerAddrType STO_GetReceivers(const std::string& sender, uint32_t property, int
 
         if (msc_debug_sto) {
             PrintToLog("%14d = %s, temp= %38s, should_get= %19d, will_really_get= %14d, sent_so_far= %14d\n",
-                owns, address, temp.str(), should_receive, will_really_receive, sent_so_far);
+                it->first, address, temp.ToString(), should_receive, will_really_receive, sent_so_far);
         }
 
         // Stop, once the whole amount is allocated
