@@ -2260,6 +2260,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nPingNonceSent = 0;
     nPingUsecStart = 0;
     nPingUsecTime = 0;
+    nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     fPingQueued = false;
 
     {
