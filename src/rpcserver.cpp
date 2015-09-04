@@ -13,7 +13,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include "univalue/univalue.h"
+#include <univalue.h>
 
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
