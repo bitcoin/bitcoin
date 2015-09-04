@@ -1,4 +1,4 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="en" version="2.1">
+<?xml version="1.0" ?><!DOCTYPE TS><TS language="en" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -294,7 +294,7 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoingui.cpp" line="+107"/>
+        <location filename="../bitcoingui.cpp" line="+108"/>
         <location line="+752"/>
         <source>Dash Core</source>
         <translation>Dash Core</translation>
@@ -581,12 +581,12 @@
         <translation><numerusform>Processed %n block of transaction history.</numerusform><numerusform>Processed %n blocks of transaction history.</numerusform></translation>
     </message>
     <message>
-        <location line="+32"/>
+        <location line="+31"/>
         <source>Synchronizing additional data: %p%</source>
         <translation>Synchronizing additional data: %p%</translation>
     </message>
     <message>
-        <location line="-408"/>
+        <location line="-407"/>
         <source>Show the Dash Core help message to get a list with possible Dash command-line options</source>
         <translation>Show the Dash Core help message to get a list with possible Dash command-line options</translation>
     </message>
@@ -641,12 +641,12 @@
         <translation>No block source available...</translation>
     </message>
     <message>
-        <location line="+17"/>
+        <location line="+18"/>
         <source>Up to date</source>
         <translation>Up to date</translation>
     </message>
     <message numerus="yes">
-        <location line="+43"/>
+        <location line="+42"/>
         <source>%n hour(s)</source>
         <translation><numerusform>%n hour</numerusform><numerusform>%n hours</numerusform></translation>
     </message>
@@ -1815,7 +1815,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <location line="+573"/>
-        <location filename="../overviewpage.cpp" line="+487"/>
+        <location filename="../overviewpage.cpp" line="+488"/>
         <location line="+10"/>
         <location line="+10"/>
         <location line="+14"/>
@@ -4206,12 +4206,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Export the data in the current tab to a file</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+9"/>
         <source>Selected amount:</source>
         <translation>Selected amount:</translation>
     </message>
     <message>
-        <location line="+193"/>
+        <location line="+194"/>
         <source>Backup Wallet</source>
         <translation>Backup Wallet</translation>
     </message>
@@ -5041,7 +5041,22 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+3"/>
+        <source>Loading budget cache...</source>
+        <translation>Loading budget cache...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Loading masternode cache...</source>
+        <translation>Loading masternode cache...</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Loading masternode payment cache...</source>
+        <translation>Loading masternode payment cache...</translation>
+    </message>
+    <message>
+        <location line="+3"/>
         <source>Lock is already in place.</source>
         <translation>Lock is already in place.</translation>
     </message>
@@ -5212,11 +5227,6 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
     </message>
     <message>
         <location line="+1"/>
-        <source>Synchronization doesn&apos;t yet started</source>
-        <translation>Synchronization doesn&apos;t yet started</translation>
-    </message>
-    <message>
-        <location line="+1"/>
         <source>Synchronization failed</source>
         <translation>Synchronization failed</translation>
     </message>
@@ -5226,7 +5236,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Synchronization finished</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+2"/>
         <source>Synchronizing budgets...</source>
         <translation>Synchronizing budgets...</translation>
     </message>
@@ -5291,7 +5301,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Will retry...</translation>
     </message>
     <message>
-        <location line="-133"/>
+        <location line="-136"/>
         <source>Invalid masternodeprivkey. Please see documenation.</source>
         <translation>Invalid masternodeprivkey. Please see documenation.</translation>
     </message>
@@ -5376,7 +5386,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Loading block index...</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+4"/>
         <source>Loading wallet... (%3.2f %%)</source>
         <translation>Loading wallet... (%3.2f %%)</translation>
     </message>
@@ -5566,7 +5576,12 @@ for example: alertnotify=echo %%s | mail -s &quot;Dash Alert&quot; admin@foo.com
         <translation>Specify your own public address</translation>
     </message>
     <message>
-        <location line="+13"/>
+        <location line="+8"/>
+        <source>Synchronization pending...</source>
+        <translation>Synchronization pending...</translation>
+    </message>
+    <message>
+        <location line="+5"/>
         <source>This help message</source>
         <translation>This help message</translation>
     </message>
