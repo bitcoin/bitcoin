@@ -211,7 +211,7 @@ int secp256k1_ecdsa_verify(const secp256k1_context_t* ctx, const unsigned char *
     secp256k1_ge_t q;
     secp256k1_scalar_t r, s;
     secp256k1_scalar_t m;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
     ARG_CHECK(msg32 != NULL);
     ARG_CHECK(sig != NULL);
@@ -263,7 +263,7 @@ int secp256k1_ecdsa_sign(const secp256k1_context_t* ctx, const unsigned char *ms
     int ret = 0;
     int overflow = 0;
     unsigned int count = 0;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     ARG_CHECK(msg32 != NULL);
     ARG_CHECK(signature != NULL);
@@ -307,7 +307,7 @@ int secp256k1_ec_seckey_verify(const secp256k1_context_t* ctx, const unsigned ch
     secp256k1_scalar_t sec;
     int ret;
     int overflow;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(seckey != NULL);
     (void)ctx;
 
@@ -323,7 +323,7 @@ int secp256k1_ec_pubkey_create(const secp256k1_context_t* ctx, secp256k1_pubkey_
     secp256k1_scalar_t sec;
     int overflow;
     int ret = 0;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     ARG_CHECK(pubkey != NULL);
     ARG_CHECK(seckey != NULL);
@@ -345,7 +345,7 @@ int secp256k1_ec_privkey_tweak_add(const secp256k1_context_t* ctx, unsigned char
     secp256k1_scalar_t sec;
     int ret = 0;
     int overflow = 0;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(seckey != NULL);
     ARG_CHECK(tweak != NULL);
     (void)ctx;
@@ -368,7 +368,7 @@ int secp256k1_ec_pubkey_tweak_add(const secp256k1_context_t* ctx, secp256k1_pubk
     secp256k1_scalar_t term;
     int ret = 0;
     int overflow = 0;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
     ARG_CHECK(pubkey != NULL);
     ARG_CHECK(tweak != NULL);
@@ -391,7 +391,7 @@ int secp256k1_ec_privkey_tweak_mul(const secp256k1_context_t* ctx, unsigned char
     secp256k1_scalar_t sec;
     int ret = 0;
     int overflow = 0;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(seckey != NULL);
     ARG_CHECK(tweak != NULL);
     (void)ctx;
@@ -413,7 +413,7 @@ int secp256k1_ec_pubkey_tweak_mul(const secp256k1_context_t* ctx, secp256k1_pubk
     secp256k1_scalar_t factor;
     int ret = 0;
     int overflow = 0;
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_context_is_built(&ctx->ecmult_ctx));
     ARG_CHECK(pubkey != NULL);
     ARG_CHECK(tweak != NULL);
@@ -434,10 +434,10 @@ int secp256k1_ec_pubkey_tweak_mul(const secp256k1_context_t* ctx, secp256k1_pubk
 int secp256k1_ec_privkey_export(const secp256k1_context_t* ctx, const unsigned char *seckey, unsigned char *privkey, int *privkeylen, int compressed) {
     secp256k1_scalar_t key;
     int ret = 0;
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(seckey != NULL);
     ARG_CHECK(privkey != NULL);
     ARG_CHECK(privkeylen != NULL);
-    ARG_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
 
     secp256k1_scalar_set_b32(&key, seckey, NULL);
@@ -462,7 +462,7 @@ int secp256k1_ec_privkey_import(const secp256k1_context_t* ctx, unsigned char *s
 }
 
 int secp256k1_context_randomize(secp256k1_context_t* ctx, const unsigned char *seed32) {
-    ARG_CHECK(ctx != NULL);
+    VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
     secp256k1_ecmult_gen_blind(&ctx->ecmult_gen_ctx, seed32);
     return 1;
