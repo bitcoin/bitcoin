@@ -62,11 +62,11 @@ Value mnbudget(const Array& params, bool fHelp)
         if (params.size() != 7)
             throw runtime_error("Correct usage is 'mnbudget prepare proposal-name url payment_count block_start dash_address monthly_payment_dash'");
 
-        std::string strProposalName = params[1].get_str();
+        std::string strProposalName = SanitizeString(params[1].get_str());
         if(strProposalName.size() > 20)
             return "Invalid proposal name, limit of 20 characters.";
 
-        std::string strURL = params[2].get_str();
+        std::string strURL = SanitizeString(params[2].get_str());
         if(strURL.size() > 64)
             return "Invalid url, limit of 64 characters.";
 
@@ -142,11 +142,11 @@ Value mnbudget(const Array& params, bool fHelp)
         // Check these inputs the same way we check the vote commands:
         // **********************************************************
 
-        std::string strProposalName = params[1].get_str();
+        std::string strProposalName = SanitizeString(params[1].get_str());
         if(strProposalName.size() > 20)
             return "Invalid proposal name, limit of 20 characters.";
 
-        std::string strURL = params[2].get_str();
+        std::string strURL = SanitizeString(params[2].get_str());
         if(strURL.size() > 64)
             return "Invalid url, limit of 64 characters.";
 
