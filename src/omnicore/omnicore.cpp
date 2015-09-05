@@ -3804,7 +3804,7 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
       inversePrice = rational_t(amountSold, amountReceived);
       if (!propertyIdSideAIsDivisible) unitPrice = unitPrice / COIN;
       if (!propertyIdSideBIsDivisible) inversePrice = inversePrice / COIN;
-      std::string unitPriceStr = xToString(unitPrice);
+      std::string unitPriceStr = xToString(unitPrice); // TODO: not here!
       std::string inversePriceStr = xToString(inversePrice);
 
       int64_t blockNum = boost::lexical_cast<int64_t>(vecValues[6]);

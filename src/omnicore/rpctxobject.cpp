@@ -291,15 +291,7 @@ void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool ex
     // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
     bool propertyIdForSaleIsDivisible = isPropertyDivisible(omniObj.getProperty());
     bool propertyIdDesiredIsDivisible = isPropertyDivisible(metaObj.getDesProperty());
-    rational_t tempUnitPrice(int128_t(0));
-    if ((omniObj.getProperty() == OMNI_PROPERTY_MSC) || (omniObj.getProperty() == OMNI_PROPERTY_TMSC)) {
-        tempUnitPrice = metaObj.inversePrice();
-        if (!propertyIdDesiredIsDivisible) tempUnitPrice = tempUnitPrice/COIN;
-    } else {
-        tempUnitPrice = metaObj.unitPrice();
-        if (!propertyIdForSaleIsDivisible) tempUnitPrice = tempUnitPrice/COIN;
-    }
-    std::string unitPriceStr = xToString(tempUnitPrice);
+    std::string unitPriceStr = metaObj.displayFullUnitPrice();
 
     // populate
     txobj.push_back(Pair("propertyidforsale", (uint64_t)omniObj.getProperty()));
@@ -319,15 +311,7 @@ void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, Object& txobj, b
     // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
     bool propertyIdForSaleIsDivisible = isPropertyDivisible(omniObj.getProperty());
     bool propertyIdDesiredIsDivisible = isPropertyDivisible(metaObj.getDesProperty());
-    rational_t tempUnitPrice(int128_t(0));
-    if ((omniObj.getProperty() == OMNI_PROPERTY_MSC) || (omniObj.getProperty() == OMNI_PROPERTY_TMSC)) {
-        tempUnitPrice = metaObj.inversePrice();
-        if (!propertyIdDesiredIsDivisible) tempUnitPrice = tempUnitPrice/COIN;
-    } else {
-        tempUnitPrice = metaObj.unitPrice();
-        if (!propertyIdForSaleIsDivisible) tempUnitPrice = tempUnitPrice/COIN;
-    }
-    std::string unitPriceStr = xToString(tempUnitPrice);
+    std::string unitPriceStr = metaObj.displayFullUnitPrice();
 
     // populate
     txobj.push_back(Pair("propertyidforsale", (uint64_t)omniObj.getProperty()));
