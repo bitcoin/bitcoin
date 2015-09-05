@@ -35,7 +35,7 @@ Testnet mode allows Omni Core to be run on the Bitcoin testnet blockchain for sa
 
 1. To run Omni Core in testnet mode, run Omni Core with the following option in place: `-testnet`.
 
-2. To receive MSC (and TMSC) on testnet please send TBTC to `moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP`. For each 1 TBTC you will receive 100 MSC and 100 TMSC.
+2. To receive OMNI (and TOMNI) on testnet please send TBTC to `moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP`. For each 1 TBTC you will receive 100 OMNI and 100 TOMNI.
 
 Dependencies
 ------------
@@ -88,7 +88,7 @@ In bitcoin.conf:
 server=1
 ```
 
-After this step completes, check that the installation went smoothly by issuing the following command `./omnicore-cli getinfo_MP` which should return the `mastercoreversion` as well as some
+After this step completes, check that the installation went smoothly by issuing the following command `./omnicore-cli omni_getinfo` which should return the `mastercoreversion` as well as some
 additional information related to the client.
 
 The documentation for the RPC interface and command-line is located in [src/omnicore/doc/rpc-api.md] (src/omnicore/doc/rpc-api.md).
@@ -96,25 +96,25 @@ The documentation for the RPC interface and command-line is located in [src/omni
 Current feature set:
 --------------------
 
-* Broadcasting of simple send (tx 0), and send to owners (tx 3) [doc] (src/omnicore/doc/rpc-api.md#broadcasting-a-simple-send-transaction)
+* Broadcasting of simple send (tx 0) [doc] (src/omnicore/doc/rpc-api.md#omni_send), and send to owners (tx 3) [doc] (src/omnicore/doc/rpc-api.md#omni_sendsto)
 
-* Obtaining a Omni Layer balance [doc] (src/omnicore/doc/rpc-api.md#obtaining-a-master-protocol-balance)
+* Obtaining a Omni Layer balance [doc] (src/omnicore/doc/rpc-api.md#omni_getbalance)
 
-* Obtaining all balances (including smart property) for an address [doc] (src/omnicore/doc/rpc-api.md#obtaining-all-master-protocol-balances-for-an-address)
+* Obtaining all balances (including smart property) for an address [doc] (src/omnicore/doc/rpc-api.md#omni_getallbalancesforaddress)
 
-* Obtaining all balances associated with a specific smart property [doc] (src/omnicore/doc/rpc-api.md#obtaining-all-master-protocol-balances-for-a-property-id)
+* Obtaining all balances associated with a specific smart property [doc] (src/omnicore/doc/rpc-api.md#omni_getallbalancesforid)
 
-* Retrieving information about any Omni Layer transaction [doc] (src/omnicore/doc/rpc-api.md#retrieving-a-master-protocol-transaction)
+* Retrieving information about any Omni Layer transaction [doc] (src/omnicore/doc/rpc-api.md#omni_gettransaction)
 
-* Listing historical transactions of addresses in the wallet [doc] (src/omnicore/doc/rpc-api.md#listing-historical-transactions)
+* Listing historical transactions of addresses in the wallet [doc] (src/omnicore/doc/rpc-api.md#omni_listtransactions)
 
-* Retreiving detailed information about a smart property [doc] (src/omnicore/doc/rpc-api.md#retrieving-information-about-a-master-protocol-property)
+* Retreiving detailed information about a smart property [doc] (src/omnicore/doc/rpc-api.md#omni_getproperty)
 
-* Retreiving active and expired crowdsale information [doc] (src/omnicore/doc/rpc-api.md#retrieving-information-for-a-master-protocol-crowdsale)
+* Retreiving active and expired crowdsale information [doc] (src/omnicore/doc/rpc-api.md#omni_getcrowdsale)
 
-* Sending a specific BTC amount to a receiver with referenceamount in `send_OMNI`
+* Sending a specific BTC amount to a receiver with referenceamount in `omni_send`
 
-* Creating and broadcasting transactions based on raw Omni Layer transactions with `sendrawtx_OMNI`
+* Creating and broadcasting transactions based on raw Omni Layer transactions with `omni_sendrawtx`
 
 * Functional UI for balances, sending and historical transactions
 
