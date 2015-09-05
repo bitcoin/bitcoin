@@ -413,10 +413,6 @@
            <property name="text">
             <string/>
            </property>
-           <property name="icon">
-            <iconset resource="../dash.qrc">
-             <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
-           </property>
            <property name="shortcut">
             <string notr="true">Ctrl+L</string>
            </property>

@@ -222,6 +222,9 @@ RPCConsole::RPCConsole(QWidget *parent) :
     ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
 #endif
 
+    // Needed on Mac also
+    ui->clearButton->setIcon(QIcon(":/icons/remove"));
+
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
     ui->messagesWidget->installEventFilter(this);

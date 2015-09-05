@@ -35,6 +35,11 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     ui->copyAddress->setIcon(QIcon());
     ui->deleteAddress->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
+#else
+    ui->newAddress->setIcon(QIcon(":/icons/add"));
+    ui->copyAddress->setIcon(QIcon(":/icons/editcopy"));
+    ui->deleteAddress->setIcon(QIcon(":/icons/remove"));
+    ui->exportButton->setIcon(QIcon(":/icons/export"));
 #endif
 
     switch(mode)
