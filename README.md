@@ -96,7 +96,7 @@ The documentation for the RPC interface and command-line is located in [src/omni
 Current feature set:
 --------------------
 
-* Broadcasting of simple send (tx 0), and send to owners (tx 3) [doc] (src/omnicore/doc/rpc-api.md#omni_send)
+* Broadcasting of simple send (tx 0) [doc] (src/omnicore/doc/rpc-api.md#omni_send), and send to owners (tx 3) [doc] (src/omnicore/doc/rpc-api.md#omni_sendsto)
 
 * Obtaining a Omni Layer balance [doc] (src/omnicore/doc/rpc-api.md#omni_getbalance)
 
