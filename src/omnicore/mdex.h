@@ -19,12 +19,7 @@
 #include <set>
 #include <string>
 
-using boost::multiprecision::int128_t;
-
-typedef boost::multiprecision::cpp_dec_float_100 dec_float;
-typedef boost::rational<int128_t> rational_t;
-
-#define DISPLAY_PRECISION_LEN  50
+typedef boost::rational<boost::multiprecision::checked_int128_t> rational_t;
 
 // MetaDEx trade statuses
 #define TRADE_INVALID                 -1
