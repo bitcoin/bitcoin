@@ -282,7 +282,7 @@ bool ExportBlock(const string& strBlockHash, const CDataStream& ssBlock)
         pathDest /= strBlockHash;
 
     try {
-        boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf(pathDest.c_str());
+        boost::iostreams::stream_buffer<boost::iostreams::file_sink> buf(pathDest.string());
         ostream                     exportStream(&buf);
         exportStream << HexStr(ssBlock.begin(), ssBlock.end());
         exportStream.flush();
