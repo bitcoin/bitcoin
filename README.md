@@ -91,26 +91,26 @@ server=1
 After this step completes, check that the installation went smoothly by issuing the following command `./omnicore-cli getinfo_MP` which should return the `mastercoreversion` as well as some
 additional information related to the client.
 
-The documentation for the RPC interface and command-line is located in [doc/apidocumentation.md] (doc/apidocumentation.md).
+The documentation for the RPC interface and command-line is located in [src/omnicore/doc/rpc-api.md] (src/omnicore/doc/rpc-api.md).
 
 Current feature set:
 --------------------
 
-* Broadcasting of simple send (tx 0), and send to owners (tx 3) [doc] (doc/apidocumentation.md#broadcasting-a-simple-send-transaction)
+* Broadcasting of simple send (tx 0), and send to owners (tx 3) [doc] (src/omnicore/doc/rpc-api.md#broadcasting-a-simple-send-transaction)
 
-* Obtaining a Omni Layer balance [doc] (doc/apidocumentation.md#obtaining-a-master-protocol-balance)
+* Obtaining a Omni Layer balance [doc] (src/omnicore/doc/rpc-api.md#obtaining-a-master-protocol-balance)
 
-* Obtaining all balances (including smart property) for an address [doc] (doc/apidocumentation.md#obtaining-all-master-protocol-balances-for-an-address)
+* Obtaining all balances (including smart property) for an address [doc] (src/omnicore/doc/rpc-api.md#obtaining-all-master-protocol-balances-for-an-address)
 
-* Obtaining all balances associated with a specific smart property [doc] (doc/apidocumentation.md#obtaining-all-master-protocol-balances-for-a-property-id)
+* Obtaining all balances associated with a specific smart property [doc] (src/omnicore/doc/rpc-api.md#obtaining-all-master-protocol-balances-for-a-property-id)
 
-* Retrieving information about any Omni Layer transaction [doc] (doc/apidocumentation.md#retrieving-a-master-protocol-transaction)
+* Retrieving information about any Omni Layer transaction [doc] (src/omnicore/doc/rpc-api.md#retrieving-a-master-protocol-transaction)
 
-* Listing historical transactions of addresses in the wallet [doc] (doc/apidocumentation.md#listing-historical-transactions)                            
+* Listing historical transactions of addresses in the wallet [doc] (src/omnicore/doc/rpc-api.md#listing-historical-transactions)
 
-* Retreiving detailed information about a smart property [doc] (doc/apidocumentation.md#retrieving-information-about-a-master-protocol-property)
+* Retreiving detailed information about a smart property [doc] (src/omnicore/doc/rpc-api.md#retrieving-information-about-a-master-protocol-property)
 
-* Retreiving active and expired crowdsale information [doc] (doc/apidocumentation.md#retrieving-information-for-a-master-protocol-crowdsale)
+* Retreiving active and expired crowdsale information [doc] (src/omnicore/doc/rpc-api.md#retrieving-information-for-a-master-protocol-crowdsale)
 
 * Sending a specific BTC amount to a receiver with referenceamount in `send_OMNI`
 
