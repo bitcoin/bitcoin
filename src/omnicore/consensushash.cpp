@@ -90,7 +90,7 @@ uint256 GetConsensusHash()
         std::string seller = sellCombo.substr(0, sellCombo.size() - 2);
 
         // "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit|availableamount|acceptedamount"
-        std::string dataStr = strprintf("%s|%s|%d|%d|%d|%d|%d|%d",
+        std::string dataStr = strprintf("%s|%s|%d|%d|%d|%d|%d|%d|%d",
                 selloffer.getHash().GetHex(), seller, propertyId, selloffer.getOfferAmountOriginal(),
                 selloffer.getBTCDesiredOriginal(), selloffer.getMinFee(), selloffer.getBlockTimeLimit(),
                 getMPbalance(seller, propertyId, SELLOFFER_RESERVE), getMPbalance(seller, propertyId, ACCEPT_RESERVE));
