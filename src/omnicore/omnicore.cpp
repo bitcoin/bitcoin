@@ -7,6 +7,7 @@
 #include "omnicore/omnicore.h"
 
 #include "omnicore/activation.h"
+#include "omnicore/consensushash.h"
 #include "omnicore/convert.h"
 #include "omnicore/dex.h"
 #include "omnicore/encoding.h"
