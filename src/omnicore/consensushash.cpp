@@ -9,6 +9,7 @@
 #include "omnicore/mdex.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/sp.h"
 
 #include <stdint.h>
 #include <string>
@@ -121,6 +122,22 @@ uint256 GetConsensusHash()
                 SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
             }
         }
+    }
+
+    // Crowdsales - loop through open crowdsales and add to the consensus hash
+    // Note: the variables of the crowdsale (amount, bonus etc) are not part of the crowdsale map and not included here to
+    // avoid additionalal loading of SP entries from the database
+    for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
+        const CMPCrowd& crowd = it->second;
+
+        // "propertyid|propertyiddesired|deadline|usertokens|issuertokens"
+        std::string dataStr = strprintf("%d|%d|%d|%d|%d",
+            crowd.getPropertyId(), crowd.getCurrDes(), crowd.getDeadline(), crowd.getUserCreated(), crowd.getIssuerCreated());
+
+        if (msc_debug_consensus_hash) PrintToLog("Adding Crowdsale entry to consensus hash: %s\n", dataStr);
+
+        // update the sha context with the data string
+        SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
     // extract the final result and return the hash
