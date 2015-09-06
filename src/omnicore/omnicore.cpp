@@ -2802,6 +2802,11 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         fFoundTx |= (interp_ret == 0);
     }
 
+    if (fFoundTx && msc_debug_consensus_hash_every_transaction) {
+        uint256 consensusHash = GetConsensusHash();
+        PrintToLog("Consensus hash for transaction %s: %s\n", tx.GetHash().GetHex(), consensusHash.GetHex());
+    }
+
     return fFoundTx;
 }
 

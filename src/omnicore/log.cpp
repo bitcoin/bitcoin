@@ -61,6 +61,8 @@ bool msc_debug_consensus_hash     = 0;
 bool msc_debug_consensus_hash_every_block = 0;
 //! Print extra info on alert processing
 bool msc_debug_alerts             = 1;
+//! Print consensus hashes for each transaction when parsing
+bool msc_debug_consensus_hash_every_transaction = 0;
 
 /**
  * LogPrintf() has been broken a couple of times now
@@ -260,6 +262,7 @@ void InitDebugLogLevels()
         if (*it == "consensus_hash") msc_debug_consensus_hash = true;
         if (*it == "consensus_hash_every_block") msc_debug_consensus_hash_every_block = true;
         if (*it == "alerts") msc_debug_alerts = true;
+        if (*it == "consensus_hash_every_transaction") msc_debug_consensus_hash_every_transaction = true;
         if (*it == "none" || *it == "all") {
             bool allDebugState = false;
             if (*it == "all") allDebugState = true;
@@ -294,6 +297,7 @@ void InitDebugLogLevels()
             msc_debug_consensus_hash = allDebugState;
             msc_debug_consensus_hash_every_block = allDebugState;
             msc_debug_alerts = allDebugState;
+            msc_debug_consensus_hash_every_transaction = allDebugState;
         }
     }
 }
