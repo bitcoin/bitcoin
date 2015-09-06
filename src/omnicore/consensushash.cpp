@@ -19,6 +19,24 @@
 namespace mastercore
 {
 /**
+ * Calculates the total number of from the tally map
+ *
+ * Note - faster than using getTotalTokens() as doesn't require loading SP from database
+ **/
+int64_t GetTallyPropertyTotal(uint32_t propertyId)
+{
+    int64_t totalTokens = 0;
+    for (std::map<std::string, CMPTally>::const_iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
+        const CMPTally& tally = it->second;
+        totalTokens += tally.getMoney(propertyId, BALANCE);
+        totalTokens += tally.getMoney(propertyId, SELLOFFER_RESERVE);
+        totalTokens += tally.getMoney(propertyId, ACCEPT_RESERVE);
+        totalTokens += tally.getMoney(propertyId, METADEX_RESERVE);
+    }
+    return totalTokens;
+}
+
+/**
  * Obtains a hash of all balances to use for consensus verification and checkpointing.
  *
  * For increased flexibility, so other implementations like OmniWallet and OmniChest can
@@ -138,6 +156,20 @@ uint256 GetConsensusHash()
 
         // update the sha context with the data string
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
+    }
+
+    // Properties - loop through each property calculating the number of total tokens
+    // Note: avoiding use of getTotalTokens() here to avoid additional loading of SP entries from the database
+    // Placeholders: "propertyid|totaltokens"
+    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
+        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
+        for (uint32_t propertyId = startPropertyId; propertyId < _my_sps->peekNextSPID(ecosystem); propertyId++) {
+            std::string dataStr = strprintf("%d|%d", propertyId, GetTallyPropertyTotal(propertyId));
+
+            if (msc_debug_consensus_hash) PrintToLog("Adding property to consensus hash: %s\n", dataStr);
+
+            SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
+        }
     }
 
     // extract the final result and return the hash
