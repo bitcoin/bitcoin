@@ -102,22 +102,24 @@ uint256 GetConsensusHash()
         }
     }
 
-    // DEx sell offers - loop through the DEx and add each sell offer to the consensus hash
+    // DEx sell offers - loop through the DEx and add each sell offer to the consensus hash (ordered by txid)
+    // Placeholders: "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit|availableamount|acceptedamount"
+    std::vector<std::pair<uint256, std::string> > vecDExOffers;
     for (OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it) {
         const CMPOffer& selloffer = it->second;
         const std::string& sellCombo = it->first;
         uint32_t propertyId = selloffer.getProperty();
         std::string seller = sellCombo.substr(0, sellCombo.size() - 2);
-
-        // "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit|availableamount|acceptedamount"
         std::string dataStr = strprintf("%s|%s|%d|%d|%d|%d|%d|%d|%d",
                 selloffer.getHash().GetHex(), seller, propertyId, selloffer.getOfferAmountOriginal(),
                 selloffer.getBTCDesiredOriginal(), selloffer.getMinFee(), selloffer.getBlockTimeLimit(),
                 getMPbalance(seller, propertyId, SELLOFFER_RESERVE), getMPbalance(seller, propertyId, ACCEPT_RESERVE));
-
+        vecDExOffers.push_back(std::make_pair(selloffer.getHash(), dataStr));
+    }
+    std::sort (vecDExOffers.begin(), vecDExOffers.end());
+    for (std::vector<std::pair<uint256, std::string> >::iterator it = vecDExOffers.begin(); it != vecDExOffers.end(); ++it) {
+        std::string dataStr = (*it).second;
         if (msc_debug_consensus_hash) PrintToLog("Adding DEx offer data to consensus hash: %s\n", dataStr);
-
-        // update the sha context with the data string
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
@@ -136,25 +138,27 @@ uint256 GetConsensusHash()
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
-    // MetaDEx trades - loop through the MetaDEx maps and add each open trade to the consensus hash
+    // MetaDEx trades - loop through the MetaDEx maps and add each open trade to the consensus hash (ordered by txid)
+    // Placeholders: "txid|address|propertyidforsale|amountforsale|propertyiddesired|amountdesired|amountremaining"
+    std::vector<std::pair<uint256, std::string> > vecMetaDExTrades;
     for (md_PropertiesMap::const_iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         const md_PricesMap& prices = my_it->second;
         for (md_PricesMap::const_iterator it = prices.begin(); it != prices.end(); ++it) {
             const md_Set& indexes = it->second;
             for (md_Set::const_iterator it = indexes.begin(); it != indexes.end(); ++it) {
                 const CMPMetaDEx& obj = *it;
-
-                // "txid|address|propertyidforsale|amountforsale|propertyiddesired|amountdesired|amountremaining"
                 std::string dataStr = strprintf("%s|%s|%d|%d|%d|%d|%d",
                     obj.getHash().GetHex(), obj.getAddr(), obj.getProperty(), obj.getAmountForSale(),
                     obj.getDesProperty(), obj.getAmountDesired(), obj.getAmountRemaining());
-
-                if (msc_debug_consensus_hash) PrintToLog("Adding MetaDEx trade data to consensus hash: %s\n", dataStr);
-
-                // update the sha context with the data string
-                SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
+                    vecMetaDExTrades.push_back(std::make_pair(obj.getHash(), dataStr));
             }
         }
+    }
+    std::sort (vecMetaDExTrades.begin(), vecMetaDExTrades.end());
+    for (std::vector<std::pair<uint256, std::string> >::iterator it = vecMetaDExTrades.begin(); it != vecMetaDExTrades.end(); ++it) {
+        std::string dataStr = (*it).second;
+        if (msc_debug_consensus_hash) PrintToLog("Adding MetaDEx trade data to consensus hash: %s\n", dataStr);
+        SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
     // Crowdsales - loop through open crowdsales and add to the consensus hash (ordered by property ID)
