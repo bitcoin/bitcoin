@@ -6,6 +6,7 @@
 
 #include "omnicore/consensushash.h"
 #include "omnicore/dex.h"
+#include "omnicore/mdex.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 
@@ -99,6 +100,27 @@ uint256 GetConsensusHash()
 
         // update the sha context with the data string
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
+    }
+
+    // MetaDEx trades - loop through the MetaDEx maps and add each open trade to the consensus hash
+    for (md_PropertiesMap::const_iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        const md_PricesMap& prices = my_it->second;
+        for (md_PricesMap::const_iterator it = prices.begin(); it != prices.end(); ++it) {
+            const md_Set& indexes = it->second;
+            for (md_Set::const_iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                const CMPMetaDEx& obj = *it;
+
+                // "txid|address|propertyidforsale|amountforsale|propertyiddesired|amountdesired|amountremaining"
+                std::string dataStr = strprintf("%s|%s|%d|%d|%d|%d|%d",
+                    obj.getHash().GetHex(), obj.getAddr(), obj.getProperty(), obj.getAmountForSale(),
+                    obj.getDesProperty(), obj.getAmountDesired(), obj.getAmountRemaining());
+
+                if (msc_debug_consensus_hash) PrintToLog("Adding MetaDEx trade data to consensus hash: %s\n", dataStr);
+
+                // update the sha context with the data string
+                SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
+            }
+        }
     }
 
     // extract the final result and return the hash
