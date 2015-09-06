@@ -55,6 +55,8 @@ static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static HTTPRPCTimerInterface* httpRPCTimerInterface = 0;
 
+static CPubKey pubKeyAuth;
+
 static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
 {
     // Send error reply from json-rpc error object
@@ -72,8 +74,18 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
     req->WriteReply(nStatus, strReply);
 }
 
-static bool RPCAuthorized(const std::string& strAuth)
+static bool RPCAuthorized(const std::string& strAuth, const std::string& uri, const std::string& body, const std::string& signature)
 {
+    if (pubKeyAuth.IsValid())
+    {
+        std::vector<unsigned char> vchSig = ParseHex(signature);
+        CHashWriter ss(SER_GETHASH, 0);
+        ss << (uri+body);
+
+        //verify signature of uri+body with possible pubkey
+        return pubKeyAuth.Verify(ss.GetHash(), vchSig);
+    }
+
     if (strRPCUserColonPass.empty()) // Belt-and-suspenders measure if InitRPCAuthentication was not called
         return false;
     if (strAuth.substr(0, 6) != "Basic ")
@@ -98,7 +110,9 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
-    if (!RPCAuthorized(authHeader.second)) {
+    std::string body = req->ReadBody();
+    std::pair<bool, std::string> sigHeader = req->GetHeader("x-signature");
+    if (!RPCAuthorized(authHeader.second, req->GetURI(), body, sigHeader.second)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", req->GetPeer().ToString());
 
         /* Deter brute-forcing
@@ -114,7 +128,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
     try {
         // Parse request
         UniValue valRequest;
-        if (!valRequest.read(req->ReadBody()))
+        if (!valRequest.read(body))
             throw JSONRPCError(RPC_PARSE_ERROR, "Parse error");
 
         std::string strReply;
@@ -147,7 +161,30 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
 
 static bool InitRPCAuthentication()
 {
-    if (mapArgs["-rpcpassword"] == "")
+    //only allow pubkey auth if user has set -rpcpubkey
+    //disable http base auth if user enables rpcpubkey auth
+    if (mapArgs["-rpcpubkey"] != "")
+    {
+        std::string pubKeyHex = mapArgs["-rpcpubkey"];
+        bool invalidPubKey = false;
+        if (!IsHex(pubKeyHex))
+            invalidPubKey = true;
+
+        std::vector<unsigned char> data(ParseHex(pubKeyHex));
+        pubKeyAuth = CPubKey(data.begin(), data.end());
+        if (!pubKeyAuth.IsValid())
+            invalidPubKey = true;
+
+        if (invalidPubKey)
+        {
+            LogPrintf("-rpcpubkey is invalid or not encoded in hex");
+            uiInterface.ThreadSafeMessageBox(
+                _("Error: A fatal internal error occurred, see debug.log for details"), // Same message as AbortNode
+                "", CClientUIInterface::MSG_ERROR);
+            return false;
+        }
+    }
+    else if (mapArgs["-rpcpassword"] == "")
     {
         LogPrintf("No rpcpassword set - using random cookie authentication\n");
         if (!GenerateAuthCookie(&strRPCUserColonPass)) {
@@ -158,6 +195,14 @@ static bool InitRPCAuthentication()
         }
     } else {
         strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
+    }
+    if (mapArgs["-rpcpubkey"] != "")
+    {
+        std::string pubKeyHex = mapArgs["-rpcpubkey"];
+        if (!IsHex(pubKeyHex))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey must be a hex string");
+        std::vector<unsigned char> data(ParseHex(pubKeyHex));
+        pubKeyAuth = CPubKey(data.begin(), data.end());
     }
     return true;
 }
