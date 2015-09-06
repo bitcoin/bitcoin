@@ -5,6 +5,7 @@
  */
 
 #include "omnicore/consensushash.h"
+#include "omnicore/dex.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 
@@ -56,7 +57,7 @@ uint256 GetConsensusHash()
 
     if (msc_debug_consensus_hash) PrintToLog("Beginning generation of current consensus hash...\n");
 
-    // loop through the tally map, updating the sha context with the data from each balance and tally type
+    // Balances - loop through the tally map, updating the sha context with the data from each balance and tally type
     for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         const std::string& address = my_it->first;
         CMPTally& tally = my_it->second;
@@ -74,11 +75,30 @@ uint256 GetConsensusHash()
             std::string dataStr = strprintf("%s|%d|%d|%d|%d|%d",
                     address, propertyId, balance, sellOfferReserve, acceptReserve, metaDExReserve);
 
-            if (msc_debug_consensus_hash) PrintToLog("Adding data to consensus hash: %s\n", dataStr);
+            if (msc_debug_consensus_hash) PrintToLog("Adding balance data to consensus hash: %s\n", dataStr);
 
             // update the sha context with the data string
             SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
         }
+    }
+
+    // DEx sell offers - loop through the DEx and add each sell offer to the consensus hash
+    for (OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it) {
+        const CMPOffer& selloffer = it->second;
+        const std::string& sellCombo = it->first;
+        uint32_t propertyId = selloffer.getProperty();
+        std::string seller = sellCombo.substr(0, sellCombo.size() - 2);
+
+        // "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit|availableamount|acceptedamount"
+        std::string dataStr = strprintf("%s|%s|%d|%d|%d|%d|%d|%d",
+                selloffer.getHash().GetHex(), seller, propertyId, selloffer.getOfferAmountOriginal(),
+                selloffer.getBTCDesiredOriginal(), selloffer.getMinFee(), selloffer.getBlockTimeLimit(),
+                getMPbalance(seller, propertyId, SELLOFFER_RESERVE), getMPbalance(seller, propertyId, ACCEPT_RESERVE));
+
+        if (msc_debug_consensus_hash) PrintToLog("Adding DEx offer data to consensus hash: %s\n", dataStr);
+
+        // update the sha context with the data string
+        SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
     // extract the final result and return the hash
