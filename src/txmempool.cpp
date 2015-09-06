@@ -481,7 +481,7 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
 
 void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight)
 {
-    // Remove transactions spending a coinbase which are now immature
+    // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     LOCK(cs);
     list<CTransaction> transactionsToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
