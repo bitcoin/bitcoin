@@ -3974,7 +3974,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                   pfrom->nStartingHeight, addrMe.ToString(), pfrom->id,
                   remoteAddr);
 
-        int64_t nTimeOffset = nTime - GetTime();
+        int64_t nTimeOffset = nTime - nTimeReceived / 1000000;
         pfrom->nTimeOffset = nTimeOffset;
         AddTimeData(pfrom->addr, nTimeOffset);
     }
