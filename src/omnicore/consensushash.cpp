@@ -157,23 +157,26 @@ uint256 GetConsensusHash()
         }
     }
 
-    // Crowdsales - loop through open crowdsales and add to the consensus hash
+    // Crowdsales - loop through open crowdsales and add to the consensus hash (ordered by property ID)
     // Note: the variables of the crowdsale (amount, bonus etc) are not part of the crowdsale map and not included here to
     // avoid additionalal loading of SP entries from the database
+    // Placeholders: "propertyid|propertyiddesired|deadline|usertokens|issuertokens"
+    std::vector<std::pair<uint32_t, std::string> > crowdOrder;
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         const CMPCrowd& crowd = it->second;
-
-        // "propertyid|propertyiddesired|deadline|usertokens|issuertokens"
+        uint32_t propertyId = crowd.getPropertyId();
         std::string dataStr = strprintf("%d|%d|%d|%d|%d",
             crowd.getPropertyId(), crowd.getCurrDes(), crowd.getDeadline(), crowd.getUserCreated(), crowd.getIssuerCreated());
-
+        crowdOrder.push_back(std::make_pair(propertyId, dataStr));
+    }
+    std::sort (crowdOrder.begin(), crowdOrder.end());
+    for (std::vector<std::pair<uint32_t, std::string> >::iterator it = crowdOrder.begin(); it != crowdOrder.end(); ++it) {
+        std::string dataStr = (*it).second;
         if (msc_debug_consensus_hash) PrintToLog("Adding Crowdsale entry to consensus hash: %s\n", dataStr);
-
-        // update the sha context with the data string
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
-    // Properties - loop through each property calculating the number of total tokens
+    // Properties - loop through each property calculating the number of total tokens (ordered by property ID)
     // Note: avoiding use of getTotalTokens() here to avoid additional loading of SP entries from the database
     // Placeholders: "propertyid|totaltokens"
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
