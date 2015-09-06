@@ -19,12 +19,7 @@
 #include <set>
 #include <string>
 
-using boost::multiprecision::int128_t;
-
-typedef boost::multiprecision::cpp_dec_float_100 dec_float;
-typedef boost::rational<int128_t> rational_t;
-
-#define DISPLAY_PRECISION_LEN  50
+typedef boost::rational<boost::multiprecision::checked_int128_t> rational_t;
 
 // MetaDEx trade statuses
 #define TRADE_INVALID                 -1
@@ -34,8 +29,7 @@ typedef boost::rational<int128_t> rational_t;
 #define TRADE_CANCELLED               4
 #define TRADE_CANCELLED_PART_FILLED   5
 
-std::string xToString(const dec_float& value);
-std::string xToString(const int128_t& value);
+/** Converts price to string. */
 std::string xToString(const rational_t& value);
 
 /** A trade on the distributed exchange.
@@ -100,8 +94,10 @@ public:
     rational_t unitPrice() const;
     rational_t inversePrice() const;
 
+    /** Used for display of unit prices to 8 decimal places at UI layer. */
     std::string displayUnitPrice() const;
-    std::string displayInversePrice() const;
+    /** Used for display of unit prices with 50 decimal places at RPC layer. */
+    std::string displayFullUnitPrice() const;
 
     void saveOffer(std::ofstream& file, SHA256_CTX* shaCtx) const;
 };

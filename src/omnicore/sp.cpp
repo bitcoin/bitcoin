@@ -4,6 +4,7 @@
 
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/uint256_extensions.h"
 
 #include "base58.h"
 #include "clientversion.h"
@@ -15,7 +16,6 @@
 #include "utiltime.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -660,66 +660,63 @@ void mastercore::calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
         int64_t fundraiserSecs, int64_t currentSecs, int64_t numProps, uint8_t issuerPerc, int64_t totalTokens,
         std::pair<int64_t, int64_t>& tokens, bool& close_crowdsale)
 {
-    using boost::multiprecision::cpp_int;
-    using boost::multiprecision::int128_t;
-
     // Weeks in seconds
-    int128_t weeks_sec_(604800);
+    uint256 weeks_sec_ = ConvertTo256(604800);
 
     // Precision for all non-bitcoin values (bonus percentages, for example)
-    int128_t precision_(1000000000000LL);
+    uint256 precision_ = ConvertTo256(1000000000000LL);
 
     // Precision for all percentages (10/100 = 10%)
-    int128_t percentage_precision(100);
+    uint256 percentage_precision = ConvertTo256(100);
 
     // Calculate the bonus seconds
-    int128_t bonusSeconds_ = fundraiserSecs - currentSecs;
+    uint256 bonusSeconds_ = ConvertTo256(fundraiserSecs) - ConvertTo256(currentSecs);
 
     // Calculate the whole number of weeks to apply bonus
-    int128_t weeks_ = (bonusSeconds_ / weeks_sec_) * precision_;
-    weeks_ += ((bonusSeconds_ % weeks_sec_) * precision_) / weeks_sec_;
+    uint256 weeks_ = (bonusSeconds_ / weeks_sec_) * precision_;
+    weeks_ += (Modulo256(bonusSeconds_, weeks_sec_) * precision_) / weeks_sec_;
 
     // Calculate the earlybird percentage to be applied
-    int128_t ebPercentage_ = weeks_ * bonusPerc;
+    uint256 ebPercentage_ = weeks_ * ConvertTo256(bonusPerc);
 
     // Calcluate the bonus percentage to apply up to percentage_precision number of digits
-    int128_t bonusPercentage_ = (precision_ * percentage_precision);
+    uint256 bonusPercentage_ = (precision_ * percentage_precision);
     bonusPercentage_ += ebPercentage_;
     bonusPercentage_ /= percentage_precision;
 
     // Calculate the bonus percentage for the issuer
-    int128_t issuerPercentage_(issuerPerc);
+    uint256 issuerPercentage_ = ConvertTo256(issuerPerc);
     issuerPercentage_ *= precision_;
     issuerPercentage_ /= percentage_precision;
 
     // Precision for bitcoin amounts (satoshi)
-    int128_t satoshi_precision_(100000000L);
+    uint256 satoshi_precision_ = ConvertTo256(100000000L);
 
     // Total tokens including remainders
-    cpp_int createdTokens(amtTransfer);
-    createdTokens *= cpp_int(numProps);
-    createdTokens *= cpp_int(bonusPercentage_);
+    uint256 createdTokens = ConvertTo256(amtTransfer);
+    createdTokens *= ConvertTo256(numProps);
+    createdTokens *= bonusPercentage_;
 
-    cpp_int issuerTokens = createdTokens / satoshi_precision_;
+    uint256 issuerTokens = createdTokens / satoshi_precision_;
     issuerTokens /= precision_;
     issuerTokens *= (issuerPercentage_ / 100);
     issuerTokens *= precision_;
 
-    cpp_int createdTokens_int = createdTokens / precision_;
+    uint256 createdTokens_int = createdTokens / precision_;
     createdTokens_int /= satoshi_precision_;
 
-    cpp_int issuerTokens_int = issuerTokens / precision_;
+    uint256 issuerTokens_int = issuerTokens / precision_;
     issuerTokens_int /= satoshi_precision_;
     issuerTokens_int /= 100;
 
-    cpp_int newTotalCreated = totalTokens + createdTokens_int + issuerTokens_int;
+    uint256 newTotalCreated = ConvertTo256(totalTokens) + createdTokens_int + issuerTokens_int;
 
-    if (newTotalCreated > MAX_INT_8_BYTES) {
-        cpp_int maxCreatable = MAX_INT_8_BYTES - totalTokens;
-        cpp_int created = createdTokens_int + issuerTokens_int;
+    if (newTotalCreated > ConvertTo256(MAX_INT_8_BYTES)) {
+        uint256 maxCreatable = ConvertTo256(MAX_INT_8_BYTES) - ConvertTo256(totalTokens);
+        uint256 created = createdTokens_int + issuerTokens_int;
 
         // Calcluate the ratio of tokens for what we can create and apply it
-        cpp_int ratio = created * precision_;
+        uint256 ratio = created * precision_;
         ratio *= satoshi_precision_;
         ratio /= maxCreatable;
 
@@ -729,16 +726,14 @@ void mastercore::calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
         issuerTokens_int /= ratio;
 
         // The tokens for the user
-        createdTokens_int = MAX_INT_8_BYTES - issuerTokens_int;
+        createdTokens_int = ConvertTo256(MAX_INT_8_BYTES) - issuerTokens_int;
 
         // Close the crowdsale after assigning all tokens
         close_crowdsale = true;
     }
 
     // The tokens to credit
-    assert(createdTokens_int <= std::numeric_limits<int64_t>::max());
-    assert(issuerTokens_int <= std::numeric_limits<int64_t>::max());
-    tokens = std::make_pair(createdTokens_int.convert_to<int64_t>(), issuerTokens_int.convert_to<int64_t>());
+    tokens = std::make_pair(ConvertTo64(createdTokens_int), ConvertTo64(issuerTokens_int));
 }
 
 // go hunting for whether a simple send is a crowdsale purchase

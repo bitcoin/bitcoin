@@ -5,6 +5,7 @@ OMNICORE_TEST_CPP = \
   omnicore/test/alert_tests.cpp \
   omnicore/test/checkpoint_tests.cpp \
   omnicore/test/create_payload_tests.cpp \
+  omnicore/test/crowdsale_participation_tests.cpp \
   omnicore/test/dex_purchase_tests.cpp \
   omnicore/test/encoding_b_tests.cpp \
   omnicore/test/encoding_c_tests.cpp \
@@ -30,6 +31,7 @@ OMNICORE_TEST_CPP = \
   omnicore/test/strtoint64_tests.cpp \
   omnicore/test/swapbyteorder_tests.cpp \
   omnicore/test/tally_tests.cpp \
+  omnicore/test/uint256_extensions_tests.cpp \
   omnicore/test/utils_tx.cpp
 
 BITCOIN_TESTS += \

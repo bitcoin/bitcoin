@@ -5,6 +5,7 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
+#include "omnicore/uint256_extensions.h"
 
 #include "chain.h"
 #include "main.h"
@@ -25,7 +26,13 @@
 #include <set>
 #include <string>
 
+typedef boost::multiprecision::cpp_dec_float_100 dec_float;
+typedef boost::multiprecision::checked_int128_t int128_t;
+
 using namespace mastercore;
+
+//! Number of digits of unit price
+#define DISPLAY_PRECISION_LEN  50
 
 //! Global map for price and order data
 md_PropertiesMap mastercore::metadex;
@@ -71,33 +78,23 @@ static const std::string getTradeReturnType(MatchReturnType ret)
     }
 }
 
+// Used by rangeInt64, xToInt64
 static bool rangeInt64(const int128_t& value)
 {
     return (std::numeric_limits<int64_t>::min() <= value && value <= std::numeric_limits<int64_t>::max());
 }
 
+// Used by xToString
 static bool rangeInt64(const rational_t& value)
 {
     return (rangeInt64(value.numerator()) && rangeInt64(value.denominator()));
 }
 
-static int128_t xToInt128(const rational_t& value, bool fRoundUp)
+// Used by CMPMetaDEx::displayUnitPrice
+static int64_t xToRoundUpInt64(const rational_t& value)
 {
     // for integer rounding up: ceil(num / denom) => 1 + (num - 1) / denom
-    int128_t result(0);
-
-    if (!fRoundUp) {
-        result = value.numerator() / value.denominator();
-    } else {
-        result = int128_t(1) + (value.numerator() - int128_t(1)) / value.denominator();
-    }
-
-    return result;
-}
-
-static int64_t xToInt64(const rational_t& value, bool fRoundUp)
-{
-    int128_t result = xToInt128(value, fRoundUp);
+    int128_t result = int128_t(1) + (value.numerator() - int128_t(1)) / value.denominator();
 
     assert(rangeInt64(result));
 
@@ -203,15 +200,13 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             // First determine how many representable (indivisible) tokens Alice can
             // purchase from Bob, using Bob's unit price
-            rational_t rCouldBuy = pnew->getAmountRemaining() * pold->inversePrice();
-
             // This implies rounding down, since rounding up is impossible, and would
             // require more tokens than Alice has
-            int128_t iCouldBuy = xToInt128(rCouldBuy, false);
+            uint256 iCouldBuy = (ConvertTo256(pnew->getAmountRemaining()) * ConvertTo256(pold->getAmountForSale())) / ConvertTo256(pold->getAmountDesired());
 
             int64_t nCouldBuy = 0;
-            if (iCouldBuy < int128_t(pold->getAmountRemaining())) {
-                nCouldBuy = iCouldBuy.convert_to<int64_t>();
+            if (iCouldBuy < ConvertTo256(pold->getAmountRemaining())) {
+                nCouldBuy = ConvertTo64(iCouldBuy);
             } else {
                 nCouldBuy = pold->getAmountRemaining();
             }
@@ -225,11 +220,10 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             // If the amount Alice would have to pay to buy Bob's tokens at his price
             // is fractional, always round UP the amount Alice has to pay
-            rational_t rWouldPay = nCouldBuy * pold->unitPrice();
-
             // This will always be better for Bob. Rounding in the other direction
             // will always be impossible, because ot would violate Bob's accepted price
-            int64_t nWouldPay = xToInt64(rWouldPay, true);
+            uint256 iWouldPay = DivideAndRoundUp((ConvertTo256(nCouldBuy) * ConvertTo256(pold->getAmountDesired())), ConvertTo256(pold->getAmountForSale()));
+            int64_t nWouldPay = ConvertTo64(iWouldPay);
 
             // If the resulting adjusted unit price is higher than Alice' price, the
             // orders shall not execute, and no representable fill is made
@@ -319,16 +313,20 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
     return NewReturn;
 }
 
-// Used for display of unit prices to 8 decimal places at UI layer - automatically returns unit or inverse price as needed
+/**
+ * Used for display of unit prices to 8 decimal places at UI layer.
+ *
+ * Automatically returns unit or inverse price as needed.
+ */
 std::string CMPMetaDEx::displayUnitPrice() const
 {
      rational_t tmpDisplayPrice;
-     if (desired_property == OMNI_PROPERTY_MSC || desired_property == OMNI_PROPERTY_TMSC) {
+     if (getDesProperty() == OMNI_PROPERTY_MSC || getDesProperty() == OMNI_PROPERTY_TMSC) {
          tmpDisplayPrice = unitPrice();
-         if (isPropertyDivisible(property)) tmpDisplayPrice = tmpDisplayPrice * COIN;
+         if (isPropertyDivisible(getProperty())) tmpDisplayPrice = tmpDisplayPrice * COIN;
      } else {
          tmpDisplayPrice = inversePrice();
-         if (isPropertyDivisible(desired_property)) tmpDisplayPrice = tmpDisplayPrice * COIN;
+         if (isPropertyDivisible(getDesProperty())) tmpDisplayPrice = tmpDisplayPrice * COIN;
      }
 
      // offers with unit prices under 0.00000001 will be excluded from UI layer - TODO: find a better way to identify sub 0.00000001 prices
@@ -338,30 +336,50 @@ std::string CMPMetaDEx::displayUnitPrice() const
      // we must always round up here - for example if the actual price required is 0.3333333344444
      // round: 0.33333333 - price is insufficient and thus won't result in a trade
      // round: 0.33333334 - price will be sufficient to result in a trade
-     std::string displayValue = FormatDivisibleMP(xToInt64(tmpDisplayPrice, true));
+     std::string displayValue = FormatDivisibleMP(xToRoundUpInt64(tmpDisplayPrice));
      return displayValue;
+}
+
+/**
+ * Used for display of unit prices with 50 decimal places at RPC layer.
+ *
+ * Automatically returns unit or inverse price as needed.
+ */
+std::string CMPMetaDEx::displayFullUnitPrice() const
+{
+    // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
+    rational_t tempUnitPrice;
+    if ((getProperty() == OMNI_PROPERTY_MSC) || (getProperty() == OMNI_PROPERTY_TMSC)) {
+        tempUnitPrice = inversePrice();
+        if (!isPropertyDivisible(getDesProperty())) tempUnitPrice = tempUnitPrice/COIN;
+    } else {
+        tempUnitPrice = unitPrice();
+        if (!isPropertyDivisible(getProperty())) tempUnitPrice = tempUnitPrice/COIN;
+    }
+    std::string unitPriceStr = xToString(tempUnitPrice);
+    return unitPriceStr;
 }
 
 rational_t CMPMetaDEx::unitPrice() const
 {
-    rational_t effectivePrice(int128_t(0));
+    rational_t effectivePrice;
     if (amount_forsale) effectivePrice = rational_t(amount_desired, amount_forsale);
     return effectivePrice;
 }
 
 rational_t CMPMetaDEx::inversePrice() const
 {
-    rational_t inversePrice(int128_t(0));
+    rational_t inversePrice;
     if (amount_desired) inversePrice = rational_t(amount_forsale, amount_desired);
     return inversePrice;
 }
 
 int64_t CMPMetaDEx::getAmountToFill() const
 {
-    rational_t rAmountNeededToFill = amount_remaining * unitPrice();
     // round up to ensure that the amount we present will actually result in buying all available tokens
-    int64_t iAmountNeededToFill = xToInt64(rAmountNeededToFill, true);
-    return iAmountNeededToFill;
+    uint256 iAmountNeededToFill = DivideAndRoundUp((ConvertTo256(amount_remaining) * ConvertTo256(amount_desired)), ConvertTo256(amount_forsale));
+    int64_t nAmountNeededToFill = ConvertTo64(iAmountNeededToFill);
+    return nAmountNeededToFill;
 }
 
 int64_t CMPMetaDEx::getBlockTime() const

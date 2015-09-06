@@ -55,7 +55,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
 
 #include <openssl/sha.h>
 
@@ -75,7 +74,6 @@
 #include <vector>
 
 using boost::algorithm::token_compress_on;
-using boost::multiprecision::int128_t;
 using boost::to_string;
 
 using json_spirit::Array;
@@ -3798,13 +3796,11 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
           continue;
       }
 
-      rational_t unitPrice(int128_t(0));
-      rational_t inversePrice(int128_t(0));
-      unitPrice = rational_t(amountReceived, amountSold);
-      inversePrice = rational_t(amountSold, amountReceived);
+      rational_t unitPrice(amountReceived, amountSold);
+      rational_t inversePrice(amountSold, amountReceived);
       if (!propertyIdSideAIsDivisible) unitPrice = unitPrice / COIN;
       if (!propertyIdSideBIsDivisible) inversePrice = inversePrice / COIN;
-      std::string unitPriceStr = xToString(unitPrice);
+      std::string unitPriceStr = xToString(unitPrice); // TODO: not here!
       std::string inversePriceStr = xToString(inversePrice);
 
       int64_t blockNum = boost::lexical_cast<int64_t>(vecValues[6]);
