@@ -136,6 +136,8 @@ public:
     int64_t getOfferAmountOriginal() const { return offer_amount_original; }
     int64_t getBTCDesiredOriginal() const { return BTC_desired_original; }
 
+    int64_t getAcceptAmount() const { return accept_amount_original; }
+
     uint8_t getBlockTimeLimit() const { return blocktimelimit; }
     uint32_t getProperty() const { return property; }
 

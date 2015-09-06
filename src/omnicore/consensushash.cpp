@@ -121,6 +121,21 @@ uint256 GetConsensusHash()
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
+    // DEx accepts - loop through the accepts map and add each accept to the consensus hash
+    for (AcceptMap::const_iterator it = my_accepts.begin(); it != my_accepts.end(); ++it) {
+        const CMPAccept& accept = it->second;
+        const std::string& acceptCombo = it->first;
+        std::string buyer = acceptCombo.substr((acceptCombo.find("+") + 1), (acceptCombo.size()-(acceptCombo.find("+") + 1)));
+
+        // "buyer|matchedselloffertxid|acceptamount|acceptamountremaining|acceptblock"
+        std::string dataStr = strprintf("%s|%s|%d|%d|%d",
+                buyer, accept.getHash().GetHex(), accept.getAcceptAmount(), accept.getAcceptAmountRemaining(), accept.getAcceptBlock());
+
+        if (msc_debug_consensus_hash) PrintToLog("Adding DEx accept to consensus hash: %s\n", dataStr);
+
+        SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
+    }
+
     // MetaDEx trades - loop through the MetaDEx maps and add each open trade to the consensus hash
     for (md_PropertiesMap::const_iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         const md_PricesMap& prices = my_it->second;
