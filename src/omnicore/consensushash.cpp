@@ -37,35 +37,53 @@ int64_t GetTallyPropertyTotal(uint32_t propertyId)
 }
 
 /**
- * Obtains a hash of all balances to use for consensus verification and checkpointing.
+ * Obtains a hash of the active state to use for consensus verification and checkpointing.
  *
  * For increased flexibility, so other implementations like OmniWallet and OmniChest can
  * also apply this methodology without necessarily using the same exact data types (which
  * would be needed to hash the data bytes directly), create a string in the following
- * format for each address/property identifier combo to use for hashing:
+ * format for each entry to use for hashing:
  *
- * Format specifiers:
- *   "%s|%d|%d|%d|%d|%d"
- *
- * With placeholders:
- *   "address|propertyid|balance|selloffer_reserve|accept_reserve|metadex_reserve"
- *
- * Example:
- *   SHA256 round 1: "1LCShN3ntEbeRrj8XBFWdScGqw5NgDXL5R|31|8000|0|0|0"
- *   SHA256 round 2: "1LCShN3ntEbeRrj8XBFWdScGqw5NgDXL5R|2147483657|0|0|0|234235245"
- *   SHA256 round 3: "1LP7G6uiHPaG8jm64aconFF8CLBAnRGYcb|1|0|100|0|0"
- *   SHA256 round 4: "1LP7G6uiHPaG8jm64aconFF8CLBAnRGYcb|2|0|0|0|50000"
- *   SHA256 round 5: "1LP7G6uiHPaG8jm64aconFF8CLBAnRGYcb|10|0|0|1|0"
- *   SHA256 round 6: "3CwZ7FiQ4MqBenRdCkjjc41M5bnoKQGC2b|1|12345|5|777|9000"
- *
- * Result:
- *   "3580e94167f75620dfa8c267862aa47af46164ed8edaec3a800d732050ec0607"
- *
- * The byte order is important, and in the example we assume:
- *   SHA256("abc") = "ad1500f261ff10b49c7a1796a36103b02322ae5dde404141eacf018fbf1678ba"
+ * ---STAGE 1 - BALANCES---
+ * Format specifiers & placeholders:
+ *   "%s|%d|%d|%d|%d|%d" - "address|propertyid|balance|selloffer_reserve|accept_reserve|metadex_reserve"
  *
  * Note: empty balance records and the pending tally are ignored. Addresses are sorted based
  * on lexicographical order, and balance records are sorted by the property identifiers.
+ *
+ * ---STAGE 2 - DEX SELL OFFERS---
+ * Format specifiers & placeholders:
+ *   "%s|%s|%d|%d|%d|%d|%d|%d|%d" - "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit|availableamount|acceptedamount"
+ *
+ * Note: ordered ascending by txid.
+ *
+ * ---STAGE 3 - DEX ACCEPTS---
+ * Format specifiers & placeholders:
+ *   "%s|%s|%d|%d|%d" - "matchedselloffertxid|buyer|acceptamount|acceptamountremaining|acceptblock"
+ *
+ * Note: ordered ascending by matchedselloffertxid followed by buyer.
+ *
+ * ---STAGE 4 - METADEX TRADES---
+ * Format specifiers & placeholders:
+ *   "%s|%s|%d|%d|%d|%d|%d" - "txid|address|propertyidforsale|amountforsale|propertyiddesired|amountdesired|amountremaining"
+ *
+ * Note: ordered ascending by txid.
+ *
+ * ---STAGE 5 - CROWDSALES---
+ * Format specifiers & placeholders:
+ *   "%d|%d|%d|%d|%d" - "propertyid|propertyiddesired|deadline|usertokens|issuertokens"
+ *
+ * Note: ordered by property ID.
+ *
+ * ---STAGE 6 - PROPERTIES---
+ * Format specifiers & placeholders:
+ *   "%d|%d" - "propertyid|totaltokens"
+ *
+ * Note: ordered by property ID.
+ *
+ * The byte order is important, and we assume:
+ *   SHA256("abc") = "ad1500f261ff10b49c7a1796a36103b02322ae5dde404141eacf018fbf1678ba"
+ *
  */
 uint256 GetConsensusHash()
 {
@@ -78,6 +96,7 @@ uint256 GetConsensusHash()
     if (msc_debug_consensus_hash) PrintToLog("Beginning generation of current consensus hash...\n");
 
     // Balances - loop through the tally map, updating the sha context with the data from each balance and tally type
+    // Placeholders:  "address|propertyid|balance|selloffer_reserve|accept_reserve|metadex_reserve"
     for (std::map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         const std::string& address = my_it->first;
         CMPTally& tally = my_it->second;
@@ -94,10 +113,7 @@ uint256 GetConsensusHash()
 
             std::string dataStr = strprintf("%s|%d|%d|%d|%d|%d",
                     address, propertyId, balance, sellOfferReserve, acceptReserve, metaDExReserve);
-
             if (msc_debug_consensus_hash) PrintToLog("Adding balance data to consensus hash: %s\n", dataStr);
-
-            // update the sha context with the data string
             SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
         }
     }
@@ -169,16 +185,16 @@ uint256 GetConsensusHash()
     // Note: the variables of the crowdsale (amount, bonus etc) are not part of the crowdsale map and not included here to
     // avoid additionalal loading of SP entries from the database
     // Placeholders: "propertyid|propertyiddesired|deadline|usertokens|issuertokens"
-    std::vector<std::pair<uint32_t, std::string> > crowdOrder;
+    std::vector<std::pair<uint32_t, std::string> > vecCrowds;
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         const CMPCrowd& crowd = it->second;
         uint32_t propertyId = crowd.getPropertyId();
         std::string dataStr = strprintf("%d|%d|%d|%d|%d",
             crowd.getPropertyId(), crowd.getCurrDes(), crowd.getDeadline(), crowd.getUserCreated(), crowd.getIssuerCreated());
-        crowdOrder.push_back(std::make_pair(propertyId, dataStr));
+        vecCrowds.push_back(std::make_pair(propertyId, dataStr));
     }
-    std::sort (crowdOrder.begin(), crowdOrder.end());
-    for (std::vector<std::pair<uint32_t, std::string> >::iterator it = crowdOrder.begin(); it != crowdOrder.end(); ++it) {
+    std::sort (vecCrowds.begin(), vecCrowds.end());
+    for (std::vector<std::pair<uint32_t, std::string> >::iterator it = vecCrowds.begin(); it != vecCrowds.end(); ++it) {
         std::string dataStr = (*it).second;
         if (msc_debug_consensus_hash) PrintToLog("Adding Crowdsale entry to consensus hash: %s\n", dataStr);
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
@@ -191,9 +207,7 @@ uint256 GetConsensusHash()
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
         for (uint32_t propertyId = startPropertyId; propertyId < _my_sps->peekNextSPID(ecosystem); propertyId++) {
             std::string dataStr = strprintf("%d|%d", propertyId, GetTallyPropertyTotal(propertyId));
-
             if (msc_debug_consensus_hash) PrintToLog("Adding property to consensus hash: %s\n", dataStr);
-
             SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
         }
     }
