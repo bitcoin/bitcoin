@@ -123,18 +123,22 @@ uint256 GetConsensusHash()
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
-    // DEx accepts - loop through the accepts map and add each accept to the consensus hash
+    // DEx accepts - loop through the accepts map and add each accept to the consensus hash (ordered by matchedtxid then buyer)
+    // Placeholders: "matchedselloffertxid|buyer|acceptamount|acceptamountremaining|acceptblock"
+    std::vector<std::pair<std::string, std::string> > vecAccepts;
     for (AcceptMap::const_iterator it = my_accepts.begin(); it != my_accepts.end(); ++it) {
         const CMPAccept& accept = it->second;
         const std::string& acceptCombo = it->first;
         std::string buyer = acceptCombo.substr((acceptCombo.find("+") + 1), (acceptCombo.size()-(acceptCombo.find("+") + 1)));
-
-        // "buyer|matchedselloffertxid|acceptamount|acceptamountremaining|acceptblock"
         std::string dataStr = strprintf("%s|%s|%d|%d|%d",
-                buyer, accept.getHash().GetHex(), accept.getAcceptAmount(), accept.getAcceptAmountRemaining(), accept.getAcceptBlock());
-
+                accept.getHash().GetHex(), buyer, accept.getAcceptAmount(), accept.getAcceptAmountRemaining(), accept.getAcceptBlock());
+        std::string sortKey = strprintf("%s-%s", accept.getHash().GetHex(), buyer);
+        vecAccepts.push_back(std::make_pair(sortKey, dataStr));
+    }
+    std::sort (vecAccepts.begin(), vecAccepts.end());
+    for (std::vector<std::pair<std::string, std::string> >::iterator it = vecAccepts.begin(); it != vecAccepts.end(); ++it) {
+        std::string dataStr = (*it).second;
         if (msc_debug_consensus_hash) PrintToLog("Adding DEx accept to consensus hash: %s\n", dataStr);
-
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
