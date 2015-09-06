@@ -1011,7 +1011,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
 
-    // ********************************************************* Step 7: load block chain
+    // ********************************************************* Step 6: load block chain
 
     fReindex = GetBoolArg("-reindex", false);
 
@@ -1182,7 +1182,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         mempool.ReadFeeEstimates(est_filein);
     fFeeEstimatesInitialized = true;
 
-    // ********************************************************* Step 8: load wallet
+    // ********************************************************* Step 7: load wallet
 #ifdef ENABLE_WALLET
     if (fDisableWallet) {
         pwalletMain = NULL;
@@ -1336,7 +1336,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("No wallet support compiled in!\n");
 #endif // !ENABLE_WALLET
 
-    // ********************************************************* Step 9: data directory maintenance
+    // ********************************************************* Step 8: data directory maintenance
 
     // if pruning, unset the service bit and perform the initial blockstore prune
     // after any wallet rescanning has taken place.
@@ -1349,7 +1349,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    // ********************************************************* Step 10: import blocks
+    // ********************************************************* Step 9: import blocks
 
     if (mapArgs.count("-blocknotify"))
         uiInterface.NotifyBlockTip.connect(BlockNotifyCallback);
@@ -1373,7 +1373,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             MilliSleep(10);
     }
 
-    // ********************************************************* Step 6: network initialization
+    // ********************************************************* Step 10: network initialization
 
     RegisterNodeSignals(GetNodeSignals());
 
@@ -1515,7 +1515,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", false), GetArg("-genproclimit", 1), Params());
 
-    // ********************************************************* Step 11: finished
+    // ********************************************************* Step 12: finished
 
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));
