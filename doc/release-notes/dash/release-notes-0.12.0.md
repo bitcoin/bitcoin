@@ -1,5 +1,3 @@
-*This is a draft!*
-
 0.12.0 Release notes
 ====================
 
