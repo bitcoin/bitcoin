@@ -77,9 +77,7 @@ int64_t GetTallyPropertyTotal(uint32_t propertyId)
  *
  * ---STAGE 6 - PROPERTIES---
  * Format specifiers & placeholders:
- *   "%d|%d" - "propertyid|totaltokens"
- *
- * Note: ordered by property ID.
+ *   "%d|%d" - "nextavailablepropertyidmaineco|nextavailablepropertyidtesteco"
  *
  * The byte order is important, and we assume:
  *   SHA256("abc") = "ad1500f261ff10b49c7a1796a36103b02322ae5dde404141eacf018fbf1678ba"
@@ -200,17 +198,11 @@ uint256 GetConsensusHash()
         SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
     }
 
-    // Properties - loop through each property calculating the number of total tokens (ordered by property ID)
-    // Note: avoiding use of getTotalTokens() here to avoid additional loading of SP entries from the database
-    // Placeholders: "propertyid|totaltokens"
-    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
-        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t propertyId = startPropertyId; propertyId < _my_sps->peekNextSPID(ecosystem); propertyId++) {
-            std::string dataStr = strprintf("%d|%d", propertyId, GetTallyPropertyTotal(propertyId));
-            if (msc_debug_consensus_hash) PrintToLog("Adding property to consensus hash: %s\n", dataStr);
-            SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
-        }
-    }
+    // Properties - add the next available property ID in both the main and test ecosystems
+    // Placeholders: "nextavailablepropertyidmaineco|nextavailablepropertyidtesteco"
+    std::string dataStr = strprintf("%d|%d", _my_sps->peekNextSPID(1), _my_sps->peekNextSPID(2));
+    if (msc_debug_consensus_hash) PrintToLog("Adding property to consensus hash: %s\n", dataStr);
+    SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
 
     // extract the final result and return the hash
     uint256 consensusHash;
