@@ -35,7 +35,7 @@ namespace mastercore
  *
  * ---STAGE 2 - DEX SELL OFFERS---
  * Format specifiers & placeholders:
- *   "%s|%s|%d|%d|%d|%d|%d|%d|%d" - "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit|availableamount|acceptedamount"
+ *   "%s|%s|%d|%d|%d|%d|%d" - "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit"
  *
  * Note: ordered ascending by txid.
  *
@@ -99,17 +99,16 @@ uint256 GetConsensusHash()
     }
 
     // DEx sell offers - loop through the DEx and add each sell offer to the consensus hash (ordered by txid)
-    // Placeholders: "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit|availableamount|acceptedamount"
+    // Placeholders: "txid|address|propertyid|offeramount|btcdesired|minfee|timelimit"
     std::vector<std::pair<uint256, std::string> > vecDExOffers;
     for (OfferMap::iterator it = my_offers.begin(); it != my_offers.end(); ++it) {
         const CMPOffer& selloffer = it->second;
         const std::string& sellCombo = it->first;
         uint32_t propertyId = selloffer.getProperty();
         std::string seller = sellCombo.substr(0, sellCombo.size() - 2);
-        std::string dataStr = strprintf("%s|%s|%d|%d|%d|%d|%d|%d|%d",
+        std::string dataStr = strprintf("%s|%s|%d|%d|%d|%d|%d",
                 selloffer.getHash().GetHex(), seller, propertyId, selloffer.getOfferAmountOriginal(),
-                selloffer.getBTCDesiredOriginal(), selloffer.getMinFee(), selloffer.getBlockTimeLimit(),
-                getMPbalance(seller, propertyId, SELLOFFER_RESERVE), getMPbalance(seller, propertyId, ACCEPT_RESERVE));
+                selloffer.getBTCDesiredOriginal(), selloffer.getMinFee(), selloffer.getBlockTimeLimit());
         vecDExOffers.push_back(std::make_pair(selloffer.getHash(), dataStr));
     }
     std::sort (vecDExOffers.begin(), vecDExOffers.end());
