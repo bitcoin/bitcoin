@@ -34,7 +34,7 @@ CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 unsigned int nTxConfirmTarget = DEFAULT_TX_CONFIRM_TARGET;
 bool bSpendZeroConfChange = true;
 bool fSendFreeTransactions = false;
-bool fPayAtLeastCustomFee = true;
+bool fPayAtLeastCustomFee = false;
 
 /**
  * Fees smaller than this (in satoshi) are considered zero fee (for transaction creation)
