@@ -2,7 +2,7 @@ Dash Core 0.12
 ==================
 
 Dash Core tree 0.12.x release notes can be found here:
-- [v0.12.0](release-notes/dash/release-notes-0.12.0.md) not released yet.
+- [v0.12.0](release-notes/dash/release-notes-0.12.0.md)
 
 Dash Core tree 0.12.x is a fork of Bitcoin Core tree 0.10.2
 
