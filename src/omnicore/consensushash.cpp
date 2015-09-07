@@ -19,24 +19,6 @@
 namespace mastercore
 {
 /**
- * Calculates the total number of from the tally map
- *
- * Note - faster than using getTotalTokens() as doesn't require loading SP from database
- **/
-int64_t GetTallyPropertyTotal(uint32_t propertyId)
-{
-    int64_t totalTokens = 0;
-    for (std::map<std::string, CMPTally>::const_iterator it = mp_tally_map.begin(); it != mp_tally_map.end(); ++it) {
-        const CMPTally& tally = it->second;
-        totalTokens += tally.getMoney(propertyId, BALANCE);
-        totalTokens += tally.getMoney(propertyId, SELLOFFER_RESERVE);
-        totalTokens += tally.getMoney(propertyId, ACCEPT_RESERVE);
-        totalTokens += tally.getMoney(propertyId, METADEX_RESERVE);
-    }
-    return totalTokens;
-}
-
-/**
  * Obtains a hash of the active state to use for consensus verification and checkpointing.
  *
  * For increased flexibility, so other implementations like OmniWallet and OmniChest can
