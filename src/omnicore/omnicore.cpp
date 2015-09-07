@@ -4101,11 +4101,6 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
     // transactions were found in the block, signal the UI accordingly
     if (countMP > 0) CheckWalletUpdate();
 
-    // save out the state after this block
-    if (writePersistence(nBlockNow)) {
-        mastercore_save_state(pBlockIndex);
-    }
-
     // calculate and print a consensus hash if required
     if (msc_debug_consensus_hash_every_block) {
         uint256 consensusHash = GetConsensusHash();
@@ -4119,6 +4114,11 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
         const std::string& msg = strprintf("Shutting down due to failed checkpoint for block %d (hash %s)\n", nBlockNow, pBlockIndex->GetBlockHash().GetHex());
         PrintToLog(msg);
         if (!GetBoolArg("-overrideforcedshutdown", false)) AbortNode(msg, msg);
+    } else {
+        // save out the state after this block
+        if (writePersistence(nBlockNow)) {
+            mastercore_save_state(pBlockIndex);
+        }
     }
 
     return 0;
