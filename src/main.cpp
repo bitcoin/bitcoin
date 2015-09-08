@@ -4591,6 +4591,21 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
+    else if (!(nLocalServices & NODE_BLOOM) &&
+              (strCommand == "filterload" ||
+               strCommand == "filteradd" ||
+               strCommand == "filterclear") &&
+              //TODO: Remove this line after reasonable network upgrade
+              pfrom->nVersion >= NO_BLOOM_VERSION)
+    {
+        if (pfrom->nVersion >= NO_BLOOM_VERSION)
+            Misbehaving(pfrom->GetId(), 100);
+        //TODO: Enable this after reasonable network upgrade
+        //else
+        //    pfrom->fDisconnect = true;
+    }
+
+
     else if (strCommand == "filterload")
     {
         CBloomFilter filter;
