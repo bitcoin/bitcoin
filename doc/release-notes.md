@@ -27,6 +27,36 @@ Then, to tunnel a SSL connection on 28332 to a RPC server bound on localhost on 
 
 It can also be set up system-wide in inetd style.
 
+Another way to re-attain SSL would be to setup a httpd reverse proxy. This solution
+would allow the use of different authentication, loadbalancing, on-the-fly compression and
+caching. A sample config for apache2 could look like:
+
+    Listen 443
+
+    NameVirtualHost *:443
+    <VirtualHost *:443>
+
+    SSLEngine On
+    SSLCertificateFile /etc/apache2/ssl/server.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/server.key
+
+    <Location /bitcoinrpc>
+        ProxyPass http://127.0.0.1:8332/
+        ProxyPassReverse http://127.0.0.1:8332/
+        # optional enable digest auth
+        # AuthType Digest
+        # ...
+        
+        # optional bypass bitcoind rpc basic auth
+        # RequestHeader set Authorization "Basic <hash>"
+        # get the <hash> from the shell with: base64 <<< bitcoinrpc:<password>
+    </Location>
+
+    # Or, balance the load:
+    # ProxyPass / balancer://balancer_cluster_name
+
+    </VirtualHost>
+
 Random-cookie RPC authentication
 ---------------------------------
 
