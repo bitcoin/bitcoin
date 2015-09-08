@@ -384,6 +384,10 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             featureName = "Remove grant side effects";
         break;
         case FEATURE_DEXMATH:
+            if (params.DEXMATH_FEATURE_BLOCK <= transactionBlock) {
+                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
+                return false;
+            }
             MutableConsensusParams().DEXMATH_FEATURE_BLOCK = activationBlock;
             featureName = "DEx integer math update";
         break;
