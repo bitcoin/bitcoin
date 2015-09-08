@@ -57,6 +57,8 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
         { MSC_TYPE_METADEX_CANCEL_PAIR,       MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
         { MSC_TYPE_METADEX_CANCEL_ECOSYSTEM,  MP_TX_PKT_V0,  false,   MSC_METADEX_BLOCK  },
 
+        { MSC_TYPE_SEND_ALL,                  MP_TX_PKT_V0,  false,   MSC_SEND_ALL_BLOCK },
+
         { MSC_TYPE_OFFER_ACCEPT_A_BET,        MP_TX_PKT_V0,  false,   MSC_BET_BLOCK      },
     };
 
@@ -144,6 +146,7 @@ CMainConsensusParams::CMainConsensusParams()
     MSC_MANUALSP_BLOCK = 323230;
     MSC_STO_BLOCK = 342650;
     MSC_METADEX_BLOCK = 999999;
+    MSC_SEND_ALL_BLOCK = 999999;
     MSC_BET_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
@@ -177,6 +180,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     MSC_MANUALSP_BLOCK = 0;
     MSC_STO_BLOCK = 0;
     MSC_METADEX_BLOCK = 0;
+    MSC_SEND_ALL_BLOCK = 0;
     MSC_BET_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
@@ -210,6 +214,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     MSC_MANUALSP_BLOCK = 0;
     MSC_STO_BLOCK = 0;
     MSC_METADEX_BLOCK = 0;
+    MSC_SEND_ALL_BLOCK = 0;
     MSC_BET_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;

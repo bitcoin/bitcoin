@@ -152,7 +152,7 @@ Create new tokens with manageable supply.
 1. ***fromaddress          (string, required):*** the address to send from
 2. ***propertyid           (number, required):*** the identifier of the tokens to distribute
 3. ***amount               (string, required):*** the amount to distribute
-4. ***redeemaddress        (string, optional):*** an address that can spent the transaction dust (sender by default)
+4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
 
 **Example:**
 
@@ -293,6 +293,24 @@ Change the issuer on record of the given tokens.
 $ omnicore-cli "omni_sendchangeissuer" "1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 3
 ```
 
+### omni_sendall
+
+Transfers all available tokens in the given ecosystem to the recipient.
+
+**Arguments:**
+
+1. ***fromaddress          (string, required):*** the address to send from
+2. ***toaddress            (string, required):*** the address of the receiver
+3. ***ecosystem            (number, required):*** the ecosystem of the tokens to send: (1) main, (2) test
+4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
+5. ***referenceamount      (string, optional):*** a bitcoin amount that is sent to the receiver (minimal by default)
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendall" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 2
+```
+
 ### omni_sendrawtx
 
 Broadcasts a raw Omni Layer transaction.
@@ -302,7 +320,7 @@ Broadcasts a raw Omni Layer transaction.
 1. ***fromaddress          (string, required):*** the address to send from
 2. ***rawtransaction       (string, required):*** the hex-encoded raw transaction
 3. ***referenceaddress     (string, optional):*** a reference address (empty by default)
-4. ***redeemaddress        (string, optional):*** an address that can spent the transaction dust (sender by default)
+4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
 5. ***referenceamount      (string, optional):*** a bitcoin amount that is sent to the receiver (minimal by default)
 
 **Example:**

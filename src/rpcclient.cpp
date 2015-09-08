@@ -133,6 +133,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     /* Omni Core - transaction calls */
     { "omni_send", 2 },
     { "omni_sendsto", 1 },
+    { "omni_sendall", 2 },
     { "omni_sendtrade", 1 },
     { "omni_sendtrade", 3 },
     { "omni_sendcanceltradesbyprice", 1 },

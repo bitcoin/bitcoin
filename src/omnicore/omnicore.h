@@ -66,6 +66,7 @@ enum TransactionType {
   MSC_TYPE_SIMPLE_SEND              =  0,
   MSC_TYPE_RESTRICTED_SEND          =  2,
   MSC_TYPE_SEND_TO_OWNERS           =  3,
+  MSC_TYPE_SEND_ALL                 =  4,
   MSC_TYPE_SAVINGS_MARK             = 10,
   MSC_TYPE_SAVINGS_COMPROMISED      = 11,
   MSC_TYPE_RATELIMITED_MARK         = 12,
@@ -123,6 +124,7 @@ enum FILETYPES {
 #define PKT_ERROR_METADEX     (-80000)
 #define METADEX_ERROR         (-81000)
 #define PKT_ERROR_TOKENS      (-82000)
+#define PKT_ERROR_SEND_ALL    (-83000)
 
 #define OMNI_PROPERTY_BTC   0
 #define OMNI_PROPERTY_MSC   1
@@ -222,12 +224,17 @@ public:
     void recordTX(const uint256 &txid, bool fValid, int nBlock, unsigned int type, uint64_t nValue);
     void recordPaymentTX(const uint256 &txid, bool fValid, int nBlock, unsigned int vout, unsigned int propertyId, uint64_t nValue, string buyer, string seller);
     void recordMetaDExCancelTX(const uint256 &txidMaster, const uint256 &txidSub, bool fValid, int nBlock, unsigned int propertyId, uint64_t nValue);
+    /** Records a "send all" sub record. */
+    void recordSendAllSubRecord(const uint256& txid, int subRecordNumber, uint32_t propertyId, int64_t nvalue);
 
     string getKeyValue(string key);
     uint256 findMetaDExCancel(const uint256 txid);
-    int getNumberOfPurchases(const uint256 txid);
+    /** Returns the number of sub records. */
+    int getNumberOfSubRecords(const uint256& txid);
     int getNumberOfMetaDExCancels(const uint256 txid);
     bool getPurchaseDetails(const uint256 txid, int purchaseNumber, string *buyer, string *seller, uint64_t *vout, uint64_t *propertyId, uint64_t *nValue);
+    /** Retrieves details about a "send all" record. */
+    bool getSendAllDetails(const uint256& txid, int subSend, uint32_t& propertyId, int64_t& amount);
     int getMPTransactionCountTotal();
     int getMPTransactionCountBlock(int block);
 

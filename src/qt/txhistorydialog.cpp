@@ -239,7 +239,11 @@ int TXHistoryDialog::PopulateHistoryMap()
             htxo.amount = "-" + FormatShortMP(pending.prop, pending.amount) + getTokenLabel(pending.prop);
             bool fundsMoved = true;
             htxo.txType = shrinkTxType(pending.type, &fundsMoved);
-            if (pending.type == MSC_TYPE_METADEX_CANCEL_PRICE || pending.type == MSC_TYPE_METADEX_CANCEL_PAIR || pending.type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) htxo.amount = "N/A";
+            if (pending.type == MSC_TYPE_METADEX_CANCEL_PRICE || pending.type == MSC_TYPE_METADEX_CANCEL_PAIR ||
+                pending.type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || pending.type == MSC_TYPE_SEND_ALL ||
+                pending.type == 0 /* Unknown */) {
+                htxo.amount = "N/A";
+            }
             txHistoryMap.insert(std::make_pair(txHash, htxo));
             nProcessed++;
             continue;
@@ -272,7 +276,7 @@ int TXHistoryDialog::PopulateHistoryMap()
                 p_txlistdb->getPurchaseDetails(txHash, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
             }
             bIsBuy = IsMyAddress(tmpBuyer);
-            numberOfPurchases = p_txlistdb->getNumberOfPurchases(txHash);
+            numberOfPurchases = p_txlistdb->getNumberOfSubRecords(txHash);
             if (0 >= numberOfPurchases) continue;
             for (int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
                 LOCK(cs_tally);
@@ -320,7 +324,8 @@ int TXHistoryDialog::PopulateHistoryMap()
             }
         }
         // override - hide display amount for cancels and unknown transactions as we can't display amount/property as no prop exists
-        if (type == MSC_TYPE_METADEX_CANCEL_PRICE || type == MSC_TYPE_METADEX_CANCEL_PAIR || type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || htxo.txType == "Unknown") {
+        if (type == MSC_TYPE_METADEX_CANCEL_PRICE || type == MSC_TYPE_METADEX_CANCEL_PAIR ||
+            type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || type == MSC_TYPE_SEND_ALL || htxo.txType == "Unknown") {
             displayAmount = "N/A";
         }
         // override - display amount received not STO amount in packet (the total amount) for STOs I didn't send
@@ -503,6 +508,7 @@ std::string TXHistoryDialog::shrinkTxType(int txType, bool *fundsMoved)
         case MSC_TYPE_SIMPLE_SEND: displayType = "Send"; break;
         case MSC_TYPE_RESTRICTED_SEND: displayType = "Rest. Send"; break;
         case MSC_TYPE_SEND_TO_OWNERS: displayType = "Send To Owners"; break;
+        case MSC_TYPE_SEND_ALL: displayType = "Send All"; break;
         case MSC_TYPE_SAVINGS_MARK: displayType = "Mark Savings"; *fundsMoved = false; break;
         case MSC_TYPE_SAVINGS_COMPROMISED: ; displayType = "Lock Savings"; break;
         case MSC_TYPE_RATELIMITED_MARK: displayType = "Rate Limit"; break;

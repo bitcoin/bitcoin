@@ -54,7 +54,7 @@ private:
     // CreatePropertyMananged, GrantTokens, RevokeTokens, ChangeIssuer
     unsigned int property;
 
-    // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged, MetaDEx
+    // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged, MetaDEx, SendAll
     unsigned char ecosystem;
 
     // CreatePropertyFixed, CreatePropertyVariable, CreatePropertyMananged
@@ -99,6 +99,7 @@ private:
     bool interpret_TransactionType();
     bool interpret_SimpleSend();
     bool interpret_SendToOwners();
+    bool interpret_SendAll();
     bool interpret_TradeOffer();
     bool interpret_MetaDExTrade();
     bool interpret_MetaDExCancelPrice();
@@ -120,6 +121,7 @@ private:
      */
     int logicMath_SimpleSend();
     int logicMath_SendToOwners();
+    int logicMath_SendAll();
     int logicMath_TradeOffer();
     int logicMath_AcceptOffer_BTC();
     int logicMath_MetaDExTrade();

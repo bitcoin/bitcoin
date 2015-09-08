@@ -139,6 +139,9 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, Object& txobj, uint32_t txType,
         case MSC_TYPE_SEND_TO_OWNERS:
             populateRPCTypeSendToOwners(mp_obj, txobj, extendedDetails, extendedDetailsFilter);
             break;
+        case MSC_TYPE_SEND_ALL:
+            populateRPCTypeSendAll(mp_obj, txobj);
+            break;
         case MSC_TYPE_TRADE_OFFER:
             populateRPCTypeTradeOffer(mp_obj, txobj);
             break;
@@ -201,6 +204,7 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_GRANT_PROPERTY_TOKENS: return true;
         case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return false;
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return true;
+        case MSC_TYPE_SEND_ALL: return true;
     }
     return true; // default to true, shouldn't be needed but just in case
 }
@@ -241,6 +245,14 @@ void populateRPCTypeSendToOwners(CMPTransaction& omniObj, Object& txobj, bool ex
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
     txobj.push_back(Pair("amount", FormatMP(propertyId, omniObj.getAmount())));
     if (extendedDetails) populateRPCExtendedTypeSendToOwners(omniObj.getHash(), extendedDetailsFilter, txobj);
+}
+
+void populateRPCTypeSendAll(CMPTransaction& omniObj, Object& txobj)
+{
+    Array subSends;
+    if (omniObj.getEcosystem() == 1) txobj.push_back(Pair("ecosystem", "main"));
+    if (omniObj.getEcosystem() == 2) txobj.push_back(Pair("ecosystem", "test"));
+    if (populateRPCSendAllSubSends(omniObj.getHash(), subSends) > 0) txobj.push_back(Pair("subsends", subSends));
 }
 
 void populateRPCTypeTradeOffer(CMPTransaction& omniObj, Object& txobj)
@@ -508,6 +520,36 @@ void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, Object& txobj)
     txobj.push_back(Pair("cancelledtransactions", cancelArray));
 }
 
+/* Function to enumerate sub sends for a given txid and add to supplied JSON array
+ * Note: this function exists as send all has the potential to carry multiple sends in a single transaction.
+ */
+int populateRPCSendAllSubSends(const uint256& txid, Array& subSends)
+{
+    int numberOfSubSends = 0;
+    {
+        LOCK(cs_tally);
+        numberOfSubSends = p_txlistdb->getNumberOfSubRecords(txid);
+    }
+    if (numberOfSubSends <= 0) {
+        PrintToLog("TXLISTDB Error: Transaction %s parsed as a send all but could not locate sub sends in txlistdb.\n", txid.GetHex());
+        return -1;
+    }
+    for (int subSend = 1; subSend <= numberOfSubSends; subSend++) {
+        Object subSendObj;
+        uint32_t propertyId;
+        int64_t amount;
+        {
+            LOCK(cs_tally);
+            p_txlistdb->getSendAllDetails(txid, subSend, propertyId, amount);
+        }
+        subSendObj.push_back(Pair("propertyid", (uint64_t)propertyId));
+        subSendObj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
+        subSendObj.push_back(Pair("amount", FormatMP(propertyId, amount)));
+        subSends.push_back(subSendObj);
+    }
+    return subSends.size();
+}
+
 /* Function to enumerate DEx purchases for a given txid and add to supplied JSON array
  * Note: this function exists as it is feasible for a single transaction to carry multiple outputs
  *       and thus make multiple purchases from a single transaction
@@ -517,7 +559,7 @@ int populateRPCDExPurchases(const CTransaction& wtx, Array& purchases, std::stri
     int numberOfPurchases = 0;
     {
         LOCK(cs_tally);
-        numberOfPurchases = p_txlistdb->getNumberOfPurchases(wtx.GetHash());
+        numberOfPurchases = p_txlistdb->getNumberOfSubRecords(wtx.GetHash());
     }
     if (numberOfPurchases <= 0) {
         PrintToLog("TXLISTDB Error: Transaction %s parsed as a DEx payment but could not locate purchases in txlistdb.\n", wtx.GetHash().GetHex());

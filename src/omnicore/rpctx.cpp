@@ -48,7 +48,7 @@ Value omni_send(const Array& params, bool fHelp)
             "2. toaddress            (string, required) the address of the receiver\n"
             "3. propertyid           (number, required) the identifier of the tokens to send\n"
             "4. amount               (string, required) the amount to send\n"
-            "5. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "5. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
             "6. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
 
             "\nResult:\n"
@@ -88,6 +88,61 @@ Value omni_send(const Array& params, bool fHelp)
             return rawHex;
         } else {
             PendingAdd(txid, fromAddress, MSC_TYPE_SIMPLE_SEND, propertyId, amount);
+            return txid.GetHex();
+        }
+    }
+}
+
+// omni_sendall - send all
+Value omni_sendall(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 3 || params.size() > 5)
+        throw runtime_error(
+            "omni_sendall \"fromaddress\" \"toaddress\" ecosystem ( \"redeemaddress\" \"referenceamount\" )\n"
+
+            "\nTransfers all available tokens in the given ecosystem to the recipient.\n"
+
+            "\nArguments:\n"
+            "1. fromaddress          (string, required) the address to send from\n"
+            "2. toaddress            (string, required) the address of the receiver\n"
+            "3. ecosystem            (number, required) the ecosystem of the tokens to send: (1) main, (2) test\n"
+            "4. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
+            "5. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
+
+            "\nResult:\n"
+            "\"hash\"                  (string) the hex-encoded transaction hash\n"
+
+            "\nExamples:\n"
+            + HelpExampleCli("omni_sendall", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 2")
+            + HelpExampleRpc("omni_sendall", "\"3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 2")
+        );
+
+    // obtain parameters & info
+    std::string fromAddress = ParseAddress(params[0]);
+    std::string toAddress = ParseAddress(params[1]);
+    uint8_t ecosystem = ParseEcosystem(params[2]);
+    std::string redeemAddress = (params.size() > 3 && !ParseText(params[3]).empty()) ? ParseAddress(params[3]): "";
+    int64_t referenceAmount = (params.size() > 4) ? ParseAmount(params[4], true): 0;
+
+    // perform checks
+    RequireSaneReferenceAmount(referenceAmount);
+
+    // create a payload for the transaction
+    std::vector<unsigned char> payload = CreatePayload_SendAll(ecosystem);
+
+    // request the wallet build the transaction (and if needed commit it)
+    uint256 txid;
+    std::string rawHex;
+    int result = ClassAgnosticWalletTXBuilder(fromAddress, toAddress, redeemAddress, referenceAmount, payload, txid, rawHex, autoCommit);
+
+    // check error and return the txid (or raw hex depending on autocommit)
+    if (result != 0) {
+        throw JSONRPCError(result, error_str(result));
+    } else {
+        if (!autoCommit) {
+            return rawHex;
+        } else {
+            // TODO: pending
             return txid.GetHex();
         }
     }
@@ -480,7 +535,7 @@ Value omni_sendsto(const Array& params, bool fHelp)
             "1. fromaddress          (string, required) the address to send from\n"
             "2. propertyid           (number, required) the identifier of the tokens to distribute\n"
             "3. amount               (string, required) the amount to distribute\n"
-            "4. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
+            "4. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"

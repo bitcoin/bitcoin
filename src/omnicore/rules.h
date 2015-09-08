@@ -96,6 +96,8 @@ public:
     int MSC_STO_BLOCK;
     //! Block to enable MetaDEx transactions
     int MSC_METADEX_BLOCK;
+    //! Block to enable "send all" transactions
+    int MSC_SEND_ALL_BLOCK;
     //! Block to enable betting transactions
     int MSC_BET_BLOCK;
 

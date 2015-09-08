@@ -127,7 +127,9 @@ public:
                     omniAmountStr = QString::fromStdString(FormatIndivisibleMP(p_pending->amount) + getTokenLabel(p_pending->prop));
                 }
                 // override amount for cancels
-                if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR || p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR ||
+                    p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || p_pending->type == MSC_TYPE_SEND_ALL ||
+                    p_pending->type == 0 /* Unknown */) {
                     omniAmountStr = QString::fromStdString("N/A");
                 }
             }
@@ -166,7 +168,7 @@ public:
                                 }
                                 bool bIsBuy = IsMyAddress(tmpBuyer);
                                 LOCK(cs_tally);
-                                int numberOfPurchases=p_txlistdb->getNumberOfPurchases(hash);
+                                int numberOfPurchases=p_txlistdb->getNumberOfSubRecords(hash);
                                 if (0<numberOfPurchases) { // calculate total bought/sold
                                     for(int purchaseNumber = 1; purchaseNumber <= numberOfPurchases; purchaseNumber++) {
                                         p_txlistdb->getPurchaseDetails(hash,purchaseNumber,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
@@ -203,7 +205,9 @@ public:
                             }
 
                             // override amount for cancels
-                            if (mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PRICE || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PAIR || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM) {
+                            if (mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PRICE || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PAIR ||
+                                mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || mp_obj.getType() == MSC_TYPE_SEND_ALL ||
+                                mp_obj.getType() == 0 /* Unknown */) {
                                 omniAmountStr = QString::fromStdString("N/A");
                             }
 
