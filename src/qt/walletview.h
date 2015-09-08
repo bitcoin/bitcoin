@@ -18,6 +18,7 @@ class SendCoinsDialog;
 class SendCoinsRecipient;
 class TransactionView;
 class WalletModel;
+class AddressBookPage;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -61,6 +62,8 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
+    AddressBookPage *usedSendingAddressesPage;
+    AddressBookPage *usedReceivingAddressesPage;
 
     TransactionView *transactionView;
 

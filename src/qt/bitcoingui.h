@@ -28,6 +28,7 @@ class SendCoinsRecipient;
 class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
+class HelpMessageDialog;
 
 class CWallet;
 
@@ -113,6 +114,7 @@ private:
     QMenu *trayIconMenu;
     Notificator *notificator;
     RPCConsole *rpcConsole;
+    HelpMessageDialog *helpMessageDialog;
 
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
