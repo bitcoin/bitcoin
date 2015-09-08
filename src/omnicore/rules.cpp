@@ -387,6 +387,14 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             MutableConsensusParams().DEXMATH_FEATURE_BLOCK = activationBlock;
             featureName = "DEx integer math update";
         break;
+        case FEATURE_SENDALL:
+            if (params.MSC_SEND_ALL_BLOCK <= transactionBlock) {
+                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
+                return false;
+            }
+            MutableConsensusParams().MSC_SEND_ALL_BLOCK = activationBlock;
+            featureName = "Send All transactions";
+        break;
         default:
             featureName = "Unknown feature";
             supported = false;
@@ -428,6 +436,9 @@ bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
             break;
         case FEATURE_DEXMATH:
             activationBlock = params.DEXMATH_FEATURE_BLOCK;
+            break;
+        case FEATURE_SENDALL:
+            activationBlock = params.MSC_SEND_ALL_BLOCK;
             break;
         default:
             return false;

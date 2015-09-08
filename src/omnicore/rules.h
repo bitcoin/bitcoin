@@ -24,6 +24,8 @@ const uint16_t FEATURE_BETTING = 3;
 const uint16_t FEATURE_GRANTEFFECTS = 4;
 //! Feature identifier to disable DEx "over-offers" and to switch to plain integer math
 const uint16_t FEATURE_DEXMATH = 5;
+//! Feature identifier to enable Send All transactions
+const uint16_t FEATURE_SENDALL = 6;
 
 /** A structure to represent a feature activation
  */
