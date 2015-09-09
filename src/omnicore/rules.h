@@ -27,16 +27,6 @@ const uint16_t FEATURE_DEXMATH = 5;
 //! Feature identifier to enable Send All transactions
 const uint16_t FEATURE_SENDALL = 6;
 
-/** A structure to represent a feature activation
- */
-struct FeatureActivation
-{
-    uint16_t featureId;
-    int activationBlock;
-    uint32_t minClientVersion;
-    std::string featureName;
-};
-
 /** A structure to represent transaction restrictions.
  */
 struct TransactionRestriction

@@ -9,6 +9,16 @@
 
 namespace mastercore
 {
+/** A structure to represent a feature activation
+ */
+struct FeatureActivation
+{
+    uint16_t featureId;
+    int activationBlock;
+    uint32_t minClientVersion;
+    std::string featureName;
+};
+
 /** Determines whether the sender is an authorized source for Omni Core activations. */
 bool CheckActivationAuthorization(const std::string& sender);
 /** Returns the vector of pending activations */
