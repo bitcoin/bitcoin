@@ -2558,6 +2558,7 @@ static void clear_all_state()
     metadex.clear();
     my_pending.clear();
     ResetConsensusParams();
+    ClearActivations();
 
     // LevelDB based storage
     _my_sps->Clear();

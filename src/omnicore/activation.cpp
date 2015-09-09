@@ -112,6 +112,18 @@ std::vector<FeatureActivation> GetCompletedActivations()
 }
 
 /**
+ * Removes all pending or completed activations.
+ *
+ * A signal is fired to notify the UI about the status update.
+ */
+void ClearActivations()
+{
+    vecPendingActivations.clear();
+    vecCompletedActivations.clear();
+    uiInterface.OmniStateChanged();
+}
+
+/**
  * Determines whether the sender is an authorized source for Omni Core feature activation.
  *
  * The option "-omniactivationallowsender=source" can be used to whitelist additional sources,

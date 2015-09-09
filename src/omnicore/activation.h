@@ -25,6 +25,8 @@ bool CheckActivationAuthorization(const std::string& sender);
 std::vector<FeatureActivation> GetPendingActivations();
 /** Returns the vector of completed activations */
 std::vector<FeatureActivation> GetCompletedActivations();
+/** Removes all pending or completed activations. */
+void ClearActivations();
 /** Checks if any activations went live in the block */
 void CheckLiveActivations(int blockHeight);
 /** Adds a pending activation */
