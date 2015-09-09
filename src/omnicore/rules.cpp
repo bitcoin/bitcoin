@@ -386,9 +386,10 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             supported = false;
         break;
     }
+
     PrintToLog("Feature activation of ID %d processed. %s will be enabled at block %d.\n", featureId, featureName, activationBlock);
-    DeletePendingActivation(featureId); // if this feature id was previously scheduled for activation, delete the stale pending object
     AddPendingActivation(featureId, activationBlock, minClientVersion, featureName);
+
     if (!supported) {
         PrintToLog("WARNING!!! AS OF BLOCK %d THIS CLIENT WILL BE OUT OF CONSENSUS AND WILL AUTOMATICALLY SHUTDOWN.\n", activationBlock);
         std::string alertText = strprintf("Your client must be updated and will shutdown at block %d (unsupported feature %d ('%s') activated)\n",
@@ -396,6 +397,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
         AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, alertText);
         CAlert::Notify(alertText, true);
     }
+
     return true;
 }
 

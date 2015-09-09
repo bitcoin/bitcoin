@@ -7,6 +7,7 @@
  */
 
 #include "omnicore/activation.h"
+
 #include "omnicore/log.h"
 #include "omnicore/version.h"
 
@@ -19,25 +20,49 @@
 
 namespace mastercore
 {
-
-/**
- * Pending activations
- */
+//! Pending activations
 std::vector<FeatureActivation> vecPendingActivations;
+//! Completed activations
+std::vector<FeatureActivation> vecCompletedActivations;
 
 /**
- * Completed activations
+ * Deletes pending activations with the given identifier.
+ *
+ * Deletion is not supported on the CompletedActivations vector.
  */
-std::vector<FeatureActivation> vecCompletedActivations;
+static void DeletePendingActivation(uint16_t featureId)
+{
+   for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ) {
+       if ((*it).featureId == featureId) {
+           it = vecPendingActivations.erase(it);
+       } else {
+           ++it;
+       }
+   }
+}
+
+/**
+ * Moves an activation from PendingActivations to CompletedActivations when it is activated.
+ *
+ * A signal is fired to notify the UI about the status update.
+ */
+static void PendingActivationCompleted(const FeatureActivation& activation)
+{
+    DeletePendingActivation(activation.featureId);
+    vecCompletedActivations.push_back(activation);
+    uiInterface.OmniStateChanged();
+}
 
 /**
  * Adds a feature activation to the PendingActivations vector.
  *
+ * If this feature was previously scheduled for activation, then the state pending objects are deleted.
  */
 void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minClientVersion, const std::string& featureName)
 {
-    FeatureActivation featureActivation;
+    DeletePendingActivation(featureId);
 
+    FeatureActivation featureActivation;
     featureActivation.featureId = featureId;
     featureActivation.featureName = featureName;
     featureActivation.activationBlock = activationBlock;
@@ -47,59 +72,28 @@ void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minC
 }
 
 /**
- * Deletes a pending activation from the PendingActivations vector.  Deletion is not supported on the CompletedActivations vector.
- *
- */
-void DeletePendingActivation(uint16_t featureId)
-{
-   for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ) {
-       if ((*it).featureId == featureId) {
-           it = vecPendingActivations.erase(it);
-       } else {
-           it++;
-       }
-   }
-}
-
-/**
- * Checks if any activations went live in the block
- *
+ * Checks if any activations went live in the block.
  */
 void CheckLiveActivations(int blockHeight)
 {
     std::vector<FeatureActivation> vecPendingActivations = GetPendingActivations();
     for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ++it) {
-       if ((*it).activationBlock > blockHeight) continue;
-       FeatureActivation liveActivation = *it;
-       if (OMNICORE_VERSION < liveActivation.minClientVersion) {
-           std::string msgText = strprintf("Shutting down due to unsupported feature activation (%d: %s)", liveActivation.featureId, liveActivation.featureName);
-           PrintToLog(msgText);
-           PrintToConsole(msgText);
-           if (!GetBoolArg("-overrideforcedshutdown", false)) {
-               AbortNode(msgText, msgText);
-           }
-       }
-       PendingActivationCompleted(liveActivation.featureId);
-       uiInterface.OmniStateChanged();
+        const FeatureActivation& liveActivation = *it;
+        if (liveActivation.activationBlock > blockHeight) {
+            continue;
+        }
+        if (OMNICORE_VERSION < liveActivation.minClientVersion) {
+            std::string msgText = strprintf("Shutting down due to unsupported feature activation (%d: %s)", liveActivation.featureId, liveActivation.featureName);
+            PrintToLog(msgText);
+            PrintToConsole(msgText);
+            if (!GetBoolArg("-overrideforcedshutdown", false)) {
+                AbortNode(msgText, msgText);
+            }
+        }
+        PendingActivationCompleted(liveActivation);
     }
 }
 
-/**
- * Moves an activation from PendingActivations to CompletedActivations when it is activated
- *
- */
-void PendingActivationCompleted(uint16_t featureId)
-{
-   for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ) {
-       if ((*it).featureId == featureId) {
-           FeatureActivation completedActivation = *it;
-           vecCompletedActivations.push_back(completedActivation);
-           it = vecPendingActivations.erase(it);
-       } else {
-           it++;
-       }
-   }
-}
 
 /**
  * Returns the vector of pending activations.
