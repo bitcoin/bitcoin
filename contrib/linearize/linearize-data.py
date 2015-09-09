@@ -16,6 +16,7 @@ import base64
 import httplib
 import sys
 import hashlib
+import dash_hash
 import datetime
 import time
 from collections import namedtuple
@@ -44,15 +45,17 @@ def wordreverse(in_buf):
 	return ''.join(out_words)
 
 def calc_hdr_hash(blk_hdr):
-	hash1 = hashlib.sha256()
-	hash1.update(blk_hdr)
-	hash1_o = hash1.digest()
+	#hash1 = hashlib.sha256()
+	#hash1.update(blk_hdr)
+	#hash1_o = hash1.digest()
 
-	hash2 = hashlib.sha256()
-	hash2.update(hash1_o)
-	hash2_o = hash2.digest()
+	#hash2 = hashlib.sha256()
+	#hash2.update(hash1_o)
+	#hash2_o = hash2.digest()
 
-	return hash2_o
+	#return hash2_o
+        pow_hash = dash_hash.getPoWHash(blk_hdr)
+        return pow_hash
 
 def calc_hash_str(blk_hdr):
 	hash = calc_hdr_hash(blk_hdr)
@@ -264,7 +267,9 @@ if __name__ == '__main__':
 	f.close()
 
 	if 'netmagic' not in settings:
-		settings['netmagic'] = 'f9beb4d9'
+		settings['netmagic'] = 'cee2caff'
+	if 'genesis' not in settings:
+		settings['genesis'] = '00000bafbc94add76cb75e2ec92894837288a481e5c005f6563d91623bf8bc2c'
 	if 'input' not in settings:
 		settings['input'] = 'input'
 	if 'hashlist' not in settings:
@@ -291,9 +296,8 @@ if __name__ == '__main__':
 	blkindex = get_block_hashes(settings)
 	blkmap = mkblockmap(blkindex)
 
-	if not "000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f" in blkmap:
-		print("not found")
+	if not settings['genesis'] in blkmap:
+		print("genesis not found")
 	else:
 		BlockDataCopier(settings, blkindex, blkmap).run()
-
 
