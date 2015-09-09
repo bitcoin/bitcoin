@@ -309,14 +309,14 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
 
     /* Dash features */
-    { "dash",               "mnsync",                 &mnsync,                 true,      false,      false },
-    { "dash",               "spork",                  &spork,                  true,      false,      false },
-    { "dash",               "masternode",             &masternode,             true,      false,      true  },
-    { "dash",               "mnbudget",               &mnbudget,               true,      false,      false },
-    { "dash",               "mnfinalbudget",          &mnfinalbudget,          true,      false,      false },
-    { "dash",               "masternodelist",         &masternodelist,         true,      false,      false },
+    { "dash",               "masternode",             &masternode,             true,      true,       false },
+    { "dash",               "masternodelist",         &masternodelist,         true,      true,       false },
+    { "dash",               "mnbudget",               &mnbudget,               true,      true,       false },
+    { "dash",               "mnfinalbudget",          &mnfinalbudget,          true,      true,       false },
+    { "dash",               "mnsync",                 &mnsync,                 true,      true,       false },
+    { "dash",               "spork",                  &spork,                  true,      true,       false },
 #ifdef ENABLE_WALLET
-    { "dash",               "darksend",               &darksend,               false,     false,      true  },
+    { "dash",               "darksend",               &darksend,               false,     false,      true  }, /* not threadSafe because of SendMoney */
 
     /* Wallet */
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },
