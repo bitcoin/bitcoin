@@ -946,7 +946,7 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
         nValueOut += o.nValue;
 
         if(!o.scriptPubKey.IsNormalPaymentScript()){
-            LogPrintf ("CDarksendPool::IsCollateralValid - Invalid Script %s\n", txCollateral.ToString());
+            LogPrintf ("CDarksendPool::IsCollateralValid - Invalid Script %s", txCollateral.ToString());
             return false;
         }
     }
@@ -964,17 +964,17 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
     }
 
     if(missingTx){
-        LogPrint("darksend", "CDarksendPool::IsCollateralValid - Unknown inputs in collateral transaction - %s\n", txCollateral.ToString());
+        LogPrint("darksend", "CDarksendPool::IsCollateralValid - Unknown inputs in collateral transaction - %s", txCollateral.ToString());
         return false;
     }
 
     //collateral transactions are required to pay out DARKSEND_COLLATERAL as a fee to the miners
     if(nValueIn - nValueOut < DARKSEND_COLLATERAL) {
-        LogPrint("darksend", "CDarksendPool::IsCollateralValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString());
+        LogPrint("darksend", "CDarksendPool::IsCollateralValid - did not include enough fees in transaction %d\n%s", nValueOut-nValueIn, txCollateral.ToString());
         return false;
     }
 
-    LogPrint("darksend", "CDarksendPool::IsCollateralValid %s\n", txCollateral.ToString());
+    LogPrint("darksend", "CDarksendPool::IsCollateralValid %s", txCollateral.ToString());
 
     {
         LOCK(cs_main);
