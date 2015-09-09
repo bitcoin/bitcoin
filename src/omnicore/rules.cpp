@@ -347,55 +347,37 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             return false;
     }
 
+    // check whether the feature is already active
+    if (IsFeatureActivated(featureId, transactionBlock)) {
+        PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
+        return false;
+    }
+
     // check feature is recognized and activation is successful
     std::string featureName;
     bool supported = OMNICORE_VERSION >= minClientVersion;
     switch (featureId) {
         case FEATURE_CLASS_C:
-            if (params.NULLDATA_BLOCK <= transactionBlock) {
-                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
-                return false;
-            }
             MutableConsensusParams().NULLDATA_BLOCK = activationBlock;
             featureName = "Class C transaction encoding";
         break;
         case FEATURE_METADEX:
-            if (params.MSC_METADEX_BLOCK <= transactionBlock) {
-                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
-                return false;
-            }
             MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
             featureName = "Distributed Meta Token Exchange";
         break;
         case FEATURE_BETTING:
-            if (params.MSC_BET_BLOCK <= transactionBlock) {
-                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
-                return false;
-            }
             MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
             featureName = "Bet transactions";
         break;
         case FEATURE_GRANTEFFECTS:
-            if (params.GRANTEFFECTS_FEATURE_BLOCK <= transactionBlock) {
-                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
-                return false;
-            }
             MutableConsensusParams().GRANTEFFECTS_FEATURE_BLOCK = activationBlock;
             featureName = "Remove grant side effects";
         break;
         case FEATURE_DEXMATH:
-            if (params.DEXMATH_FEATURE_BLOCK <= transactionBlock) {
-                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
-                return false;
-            }
             MutableConsensusParams().DEXMATH_FEATURE_BLOCK = activationBlock;
             featureName = "DEx integer math update";
         break;
         case FEATURE_SENDALL:
-            if (params.MSC_SEND_ALL_BLOCK <= transactionBlock) {
-                PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
-                return false;
-            }
             MutableConsensusParams().MSC_SEND_ALL_BLOCK = activationBlock;
             featureName = "Send All transactions";
         break;
