@@ -886,7 +886,27 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CAmount txMinFee = GetMinRelayFee(tx, nSize, true);
         if (fLimitFree && nFees < txMinFee)
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee", false,
-                strprintf("%d < %d", nFees, txMinFee));
+                strprintf("%ld < %ld", nFees, txMinFee));
+
+        // Divide mempool into 50 bands of increasing required minimum fee
+        static const int numBands = 50;
+        size_t mempoolBand = std::max((int64_t)0, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000/numBands);
+        size_t expsize = pool.DynamicMemoryUsage() + pool.GuessDynamicMemoryUsage(entry);
+        // Once mempool size is above first band, free transactions are no longer accepted
+        // and a higher minimum fee is required.
+        if (mempoolBand && expsize > mempoolBand) {
+            int bandNumber = expsize/mempoolBand;
+            // Enforce the hard cap
+            if (bandNumber >= numBands) {
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full hard cap", false,
+                                 strprintf("%u", mempoolBand * numBands));
+            }
+            double feeMultiplier = pow(1.1, bandNumber); // Fee requirement increases by 10% every band
+            if (nFees < feeMultiplier * ::minRelayTxFee.GetFee(nSize)) {
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee for mempool size", false,
+                                 strprintf("Mult: %.1f Fees: %ld < %ld", feeMultiplier, nFees, feeMultiplier * ::minRelayTxFee.GetFee(nSize)));
+            }
+        }
 
         // Require that free transactions have sufficient priority to be mined in the next block.
         if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
@@ -4275,10 +4295,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
 
-            LogPrint("mempool", "AcceptToMemoryPool: peer=%d %s: accepted %s (poolsz %u)\n",
-                pfrom->id, pfrom->cleanSubVer,
-                tx.GetHash().ToString(),
-                mempool.mapTx.size());
+            LogPrint("mempool", "AcceptToMemoryPool: peer=%d %s: accepted %s (poolsz %u txs %.2f M usage)\n",
+                     pfrom->id, pfrom->cleanSubVer,
+                     tx.GetHash().ToString(),
+                     mempool.mapTx.size(), (double)mempool.DynamicMemoryUsage()/1000000);
 
             // Recursively process any orphan transactions that depended on this one
             set<NodeId> setMisbehaving;
