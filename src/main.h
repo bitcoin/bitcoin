@@ -467,7 +467,7 @@ bool InvalidateBlock(CValidationState& state, const Consensus::Params& consensus
 /** Remove invalidity status from a block and its descendants. */
 bool ReconsiderBlock(CValidationState& state, CBlockIndex *pindex);
 
-/** The currently-connected chain of blocks. */
+/** The currently-connected chain of blocks (protected by cs_main). */
 extern CChain chainActive;
 
 /** Global variable that points to the active CCoinsView (protected by cs_main) */
