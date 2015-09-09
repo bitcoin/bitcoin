@@ -8,8 +8,6 @@ Download the Omni Core preview build for your operating system from the below li
 
 http://omnichest.info/files/omnicore-0.0.9.99-dev-win64.zip
 
-http://omnichest.info/files/omnicore-0.0.9.99-dev-win64-setup.exe
-
 http://omnichest.info/files/omnicore-0.0.9.99-dev-osx64.tar.gz
 
 http://omnichest.info/files/omnicore-0.0.9.99-dev-osx-unsigned.dmg
@@ -81,11 +79,7 @@ Wait for the transaction to confirm (you can use the 'Transactions' page, 'Bitco
 
 ![alt tag](http://i.imgur.com/j62Cnig.png)
 
-### Step 7
-
-There is a known bug in this preview build, where Exodus crowdsale purchases do not trigger an update to the UI.  Close down and reopen the client to refresh your testnet OMNI balance after sending funds to the 'moneyman' address.
-
-Note this bug will be fixed in a subsequent build.
+You should now have a balance of OMNI tokens on testnet.
 
 ### Step 8
 
