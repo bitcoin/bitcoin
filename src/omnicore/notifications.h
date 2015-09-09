@@ -32,19 +32,19 @@ bool CheckAlertAuthorization(const std::string& sender);
 
 /** Deletes previously broadcast alerts from the sender. */
 void DeleteAlerts(const std::string& sender);
+/** Removes all active alerts. */
+void ClearAlerts();
 
 /** Adds a new alert to the alerts vector. */
 void AddAlert(const std::string& sender, uint16_t alertType, uint32_t alertExpiry, const std::string& alertMessage);
 
 /** Alert string including meta data. */
 std::vector<AlertData> GetOmniCoreAlerts();
-
 /** Human readable alert messages. */
 std::vector<std::string> GetOmniCoreAlertMessages();
 
 /** Expires any alerts that need expiring. */
 bool CheckExpiredAlerts(unsigned int curBlock, uint64_t curTime);
-
 }
 
 #endif // OMNICORE_NOTIFICATIONS_H

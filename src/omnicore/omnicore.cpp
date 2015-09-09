@@ -2559,6 +2559,7 @@ static void clear_all_state()
     my_pending.clear();
     ResetConsensusParams();
     ClearActivations();
+    ClearAlerts();
 
     // LevelDB based storage
     _my_sps->Clear();

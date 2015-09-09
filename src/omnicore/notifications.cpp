@@ -44,6 +44,17 @@ void DeleteAlerts(const std::string& sender)
 }
 
 /**
+ * Removes all active alerts.
+ *
+ * A signal is fired to notify the UI about the status update.
+ */
+void ClearAlerts()
+{
+    currentOmniAlerts.clear();
+    uiInterface.OmniStateChanged();
+}
+
+/**
  * Adds a new alert to the alerts vector
  *
  */
