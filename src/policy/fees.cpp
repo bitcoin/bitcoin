@@ -249,7 +249,7 @@ unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
     unsigned int bucketindex = bucketMap.lower_bound(val)->second;
     unsigned int blockIndex = nBlockHeight % unconfTxs.size();
     unconfTxs[blockIndex][bucketindex]++;
-    LogPrint("estimatefee", "adding to %s\n", dataTypeString);
+    LogPrint("estimatefee", "adding to %s", dataTypeString);
     return bucketindex;
 }
 
@@ -261,7 +261,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
         blocksAgo = 0;
     if (blocksAgo < 0) {
         LogPrint("estimatefee", "Blockpolicy error, blocks ago is negative for mempool tx\n");
-        return;  //This can't happen becasue we call this with our best seen height, no entries can have higher
+        return;  //This can't happen because we call this with our best seen height, no entries can have higher
     }
 
     if (blocksAgo >= (int)unconfTxs.size()) {
@@ -390,8 +390,9 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
         mapMemPoolTxs[hash].bucketIndex = feeStats.NewTx(txHeight, (double)feeRate.GetFeePerK());
     }
     else {
-        LogPrint("estimatefee", "not adding\n");
+        LogPrint("estimatefee", "not adding");
     }
+    LogPrint("estimatefee", "\n");
 }
 
 void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry)

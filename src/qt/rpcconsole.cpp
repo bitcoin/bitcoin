@@ -8,9 +8,8 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "peertablemodel.h"
-#include "scicon.h"
+#include "platformstyle.h"
 
-#include "main.h"
 #include "chainparams.h"
 #include "rpcserver.h"
 #include "rpcclient.h"
@@ -29,6 +28,7 @@
 #include <QScrollBar>
 #include <QThread>
 #include <QTime>
+#include <QTimer>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -66,6 +66,40 @@ public Q_SLOTS:
 Q_SIGNALS:
     void reply(int category, const QString &command);
 };
+
+/** Class for handling RPC timers
+ * (used for e.g. re-locking the wallet after a timeout)
+ */
+class QtRPCTimerBase: public QObject, public RPCTimerBase
+{
+    Q_OBJECT
+public:
+    QtRPCTimerBase(boost::function<void(void)>& func, int64_t millis):
+        func(func)
+    {
+        timer.setSingleShot(true);
+        connect(&timer, SIGNAL(timeout()), this, SLOT(timeout()));
+        timer.start(millis);
+    }
+    ~QtRPCTimerBase() {}
+private Q_SLOTS:
+    void timeout() { func(); }
+private:
+    QTimer timer;
+    boost::function<void(void)> func;
+};
+
+class QtRPCTimerInterface: public RPCTimerInterface
+{
+public:
+    ~QtRPCTimerInterface() {}
+    const char *Name() { return "Qt"; }
+    RPCTimerBase* NewTimer(boost::function<void(void)>& func, int64_t millis)
+    {
+        return new QtRPCTimerBase(func, millis);
+    }
+};
+
 
 #include "rpcconsole.moc"
 
@@ -201,21 +235,22 @@ void RPCExecutor::request(const QString &command)
     }
 }
 
-RPCConsole::RPCConsole(QWidget *parent) :
+RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RPCConsole),
     clientModel(0),
     historyPtr(0),
     cachedNodeid(-1),
-    contextMenu(0)
+    contextMenu(0),
+    platformStyle(platformStyle)
 {
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
 
-#ifndef Q_OS_MAC
-    ui->openDebugLogfileButton->setIcon(SingleColorIcon(":/icons/export"));
-#endif
-    ui->clearButton->setIcon(SingleColorIcon(":/icons/remove"));
+    if (platformStyle->getImagesOnButtons()) {
+        ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
+    }
+    ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
@@ -232,6 +267,9 @@ RPCConsole::RPCConsole(QWidget *parent) :
     ui->label_berkeleyDBVersion->hide();
     ui->berkeleyDBVersion->hide();
 #endif
+    // Register RPC timer interface
+    rpcTimerInterface = new QtRPCTimerInterface();
+    RPCRegisterTimerInterface(rpcTimerInterface);
 
     startExecutor();
     setTrafficGraphRange(INITIAL_TRAFFIC_GRAPH_MINS);
@@ -246,6 +284,8 @@ RPCConsole::~RPCConsole()
 {
     GUIUtil::saveWindowGeometry("nRPCConsoleWindow", this);
     Q_EMIT stopExecutor();
+    RPCUnregisterTimerInterface(rpcTimerInterface);
+    delete rpcTimerInterface;
     delete ui;
 }
 
@@ -330,10 +370,10 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         // Provide initial values
         ui->clientVersion->setText(model->formatFullVersion());
+        ui->clientUserAgent->setText(model->formatSubVersion());
         ui->clientName->setText(model->clientName());
         ui->buildDate->setText(model->formatBuildDate());
         ui->startupTime->setText(model->formatClientStartupTime());
-
         ui->networkName->setText(QString::fromStdString(Params().NetworkIDString()));
     }
 }
@@ -364,7 +404,7 @@ void RPCConsole::clear()
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    SingleColorImage(ICON_MAPPING[i].source, SingleColor()).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     // Set default style sheet
@@ -570,7 +610,7 @@ void RPCConsole::peerLayoutChanged()
 
     if (detailNodeRow < 0)
     {
-        // detail node dissapeared from table (node disconnected)
+        // detail node disappeared from table (node disconnected)
         fUnselect = true;
     }
     else

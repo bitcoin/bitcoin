@@ -8,7 +8,6 @@
 
 #include "bloom.h"
 #include "compat.h"
-#include "hash.h"
 #include "limitedmap.h"
 #include "mruset.h"
 #include "netbase.h"
@@ -17,7 +16,6 @@
 #include "streams.h"
 #include "sync.h"
 #include "uint256.h"
-#include "utilstrencodings.h"
 
 #include <deque>
 #include <stdint.h>
@@ -33,7 +31,6 @@
 #include "statsd_client.h"
 
 class CAddrMan;
-class CBlockIndex;
 class CScheduler;
 class CNode;
 
@@ -51,6 +48,8 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 2 MiB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;
+/** Maximum length of strSubVer in `version` message */
+static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** -upnp default */
@@ -61,6 +60,8 @@ static const bool DEFAULT_UPNP = false;
 #endif
 /** The maximum number of entries in mapAskFor */
 static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
+/** The maximum number of peer connections to maintain. */
+static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 
 unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
@@ -145,19 +146,8 @@ extern uint64_t nLocalServices;
 extern uint64_t nLocalHostNonce;
 extern CAddrMan addrman;
 
-// The allocation of connections against the maximum allowed (nMaxConnections)
-// is prioritized as follows:
-// 1st: Outbound connections (MAX_OUTBOUND_CONNECTIONS)
-// 2nd: Inbound connections from whitelisted peers (nWhiteConnections)
-// 3rd: Inbound connections from non-whitelisted peers
-// Thus, the number of connection slots for the general public to use is:
-// nMaxConnections - (MAX_OUTBOUND_CONNECTIONS + nWhiteConnections)
-// Any additional inbound connections beyond limits will be immediately closed
-
 /** Maximum number of connections to simultaneously allow (aka connection slots) */
 extern int nMaxConnections;
-/** Number of connection slots to reserve for inbound from whitelisted peers */
-extern int nWhiteConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
@@ -171,6 +161,9 @@ extern CCriticalSection cs_vAddedNodes;
 
 extern NodeId nLastNodeId;
 extern CCriticalSection cs_nLastNodeId;
+
+/** Subversion as sent to the P2P network in `version` messages */
+extern std::string strSubVersion;
 
 struct LocalServiceInfo {
     int nScore;
@@ -199,6 +192,7 @@ public:
     bool fWhitelisted;
     double dPingTime;
     double dPingWait;
+    double dPingMin;
     std::string addrLocal;
 };
 
@@ -394,6 +388,8 @@ public:
     int64_t nPingUsecStart;
     // Last measured round-trip time.
     int64_t nPingUsecTime;
+    // Best measured round-trip time.
+    int64_t nMinPingUsecTime;
     // Whether a ping is requested.
     bool fPingQueued;
 
@@ -726,7 +722,7 @@ public:
     static bool BannedSetIsDirty();
     //!set the "dirty" flag for the banlist
     static void SetBannedSetDirty(bool dirty=true);
-    //!clean unused entires (if bantime has expired)
+    //!clean unused entries (if bantime has expired)
     static void SweepBanned();
 
     void copyStats(CNodeStats &stats);

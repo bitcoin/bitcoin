@@ -22,11 +22,13 @@ class ClientModel;
 class NetworkStyle;
 class Notificator;
 class OptionsModel;
+class PlatformStyle;
 class RPCConsole;
 class SendCoinsRecipient;
 class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
+class HelpMessageDialog;
 
 class CWallet;
 
@@ -47,7 +49,7 @@ class BitcoinGUI : public QMainWindow
 public:
     static const QString DEFAULT_WALLET;
 
-    explicit BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent = 0);
+    explicit BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = 0);
     ~BitcoinGUI();
 
     /** Set the client model.
@@ -112,10 +114,13 @@ private:
     QMenu *trayIconMenu;
     Notificator *notificator;
     RPCConsole *rpcConsole;
+    HelpMessageDialog *helpMessageDialog;
 
     /** Keep track of previous number of blocks, to detect progress */
     int prevBlocks;
     int spinnerFrame;
+
+    const PlatformStyle *platformStyle;
 
     /** Create the main UI actions. */
     void createActions();
@@ -215,7 +220,7 @@ class UnitDisplayStatusBarControl : public QLabel
     Q_OBJECT
 
 public:
-    explicit UnitDisplayStatusBarControl();
+    explicit UnitDisplayStatusBarControl(const PlatformStyle *platformStyle);
     /** Lets the control know about the Options Model (and its signals) */
     void setOptionsModel(OptionsModel *optionsModel);
 

@@ -59,6 +59,7 @@ inline std::string _(const char* psz)
 }
 
 void SetupEnvironment();
+bool SetupNetworking();
 
 /** Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
@@ -125,6 +126,7 @@ void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
 boost::filesystem::path GetTempPath();
+void OpenDebugLog();
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
 

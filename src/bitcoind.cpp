@@ -3,17 +3,22 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "clientversion.h"
 #include "rpcserver.h"
 #include "init.h"
-#include "main.h"
 #include "noui.h"
 #include "scheduler.h"
 #include "util.h"
+#include "httpserver.h"
+#include "httprpc.h"
+#include "rpcserver.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+
+#include <stdio.h>
 
 /* Introduction text for doxygen: */
 
@@ -44,7 +49,7 @@ void WaitForShutdown(boost::thread_group* threadGroup)
     }
     if (threadGroup)
     {
-        threadGroup->interrupt_all();
+        Interrupt(*threadGroup);
         threadGroup->join_all();
     }
 }
@@ -154,7 +159,7 @@ bool AppInit(int argc, char* argv[])
 
     if (!fRet)
     {
-        threadGroup.interrupt_all();
+        Interrupt(threadGroup);
         // threadGroup.join_all(); was left out intentionally here, because we didn't re-test all of
         // the startup-failure cases to make sure they don't result in a hang due to some
         // thread-blocking-waiting-for-another-thread-during-startup case

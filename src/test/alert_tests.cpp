@@ -2,17 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//
 // Unit tests for alert system
-//
 
 #include "alert.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "clientversion.h"
 #include "data/alertTests.raw.h"
-
-#include "main.h"
+#include "main.h" // For PartitionCheck
 #include "serialize.h"
 #include "streams.h"
 #include "util.h"
@@ -165,8 +162,8 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
     SetMockTime(11);
     const std::vector<unsigned char>& alertKey = Params(CBaseChainParams::MAIN).AlertKey();
 
-    boost::filesystem::path temp = GetTempPath() / "alertnotify.txt";
-    boost::filesystem::remove(temp);
+    boost::filesystem::path temp = GetTempPath() /
+        boost::filesystem::unique_path("alertnotify-%%%%.txt");
 
     mapArgs["-alertnotify"] = std::string("echo %s >> ") + temp.string();
 

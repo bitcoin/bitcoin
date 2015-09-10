@@ -9,30 +9,30 @@
 #include "addresstablemodel.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
-#include "scicon.h"
+#include "platformstyle.h"
 #include "walletmodel.h"
 
 #include <QApplication>
 #include <QClipboard>
 
-SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
+SendCoinsEntry::SendCoinsEntry(const PlatformStyle *platformStyle, QWidget *parent) :
     QStackedWidget(parent),
     ui(new Ui::SendCoinsEntry),
-    model(0)
+    model(0),
+    platformStyle(platformStyle)
 {
     ui->setupUi(this);
 
-    ui->addressBookButton->setIcon(SingleColorIcon(":/icons/address-book"));
-    ui->pasteButton->setIcon(SingleColorIcon(":/icons/editpaste"));
-    ui->deleteButton->setIcon(SingleColorIcon(":/icons/remove"));
-    ui->deleteButton_is->setIcon(SingleColorIcon(":/icons/remove"));
-    ui->deleteButton_s->setIcon(SingleColorIcon(":/icons/remove"));
+    ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
+    ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
+    ui->deleteButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
+    ui->deleteButton_is->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
+    ui->deleteButton_s->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
 
     setCurrentWidget(ui->SendCoins);
 
-#ifdef Q_OS_MAC
-    ui->payToLayout->setSpacing(4);
-#endif
+    if (platformStyle->getUseExtraSpacing())
+        ui->payToLayout->setSpacing(4);
 #if QT_VERSION >= 0x040700
     ui->addAsLabel->setPlaceholderText(tr("Enter a label for this address to add it to your address book"));
 #endif
@@ -65,7 +65,7 @@ void SendCoinsEntry::on_addressBookButton_clicked()
 {
     if(!model)
         return;
-    AddressBookPage dlg(AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
+    AddressBookPage dlg(platformStyle, AddressBookPage::ForSelection, AddressBookPage::SendingTab, this);
     dlg.setModel(model->getAddressTableModel());
     if(dlg.exec())
     {

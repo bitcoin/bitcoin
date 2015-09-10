@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "amount.h"
+#include "chain.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
@@ -14,7 +15,9 @@
 #include "net.h"
 #include "pow.h"
 #include "rpcserver.h"
+#include "txmempool.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "validationinterface.h"
 
 #include <stdint.h>
@@ -116,7 +119,7 @@ UniValue generate(const UniValue& params, bool fHelp)
             "generate numblocks\n"
             "\nMine blocks immediately (before the RPC call returns)\n"
             "\nNote: this function can only be used on the regtest network\n"
-            "1. numblocks    (numeric) How many blocks are generated immediately.\n"
+            "1. numblocks    (numeric, required) How many blocks are generated immediately.\n"
             "\nResult\n"
             "[ blockhashes ]     (array) hashes of blocks generated\n"
             "\nExamples:\n"
@@ -135,8 +138,12 @@ UniValue generate(const UniValue& params, bool fHelp)
     boost::shared_ptr<CReserveScript> coinbaseScript;
     GetMainSignals().ScriptForMining(coinbaseScript);
 
+    // If the keypool is exhausted, no script is returned at all.  Catch this.
+    if (!coinbaseScript)
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+
     //throw an error if no script was provided
-    if (!coinbaseScript->reserveScript.size())
+    if (coinbaseScript->reserveScript.empty())
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available (mining requires a wallet)");
 
     {   // Don't keep cs_main locked
@@ -666,16 +673,15 @@ UniValue estimatefee(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "estimatefee nblocks\n"
-            "\nEstimates the approximate fee per kilobyte\n"
-            "needed for a transaction to begin confirmation\n"
-            "within nblocks blocks.\n"
+            "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+            "confirmation within nblocks blocks.\n"
             "\nArguments:\n"
             "1. nblocks     (numeric)\n"
             "\nResult:\n"
-            "n :    (numeric) estimated fee-per-kilobyte\n"
+            "n              (numeric) estimated fee-per-kilobyte\n"
             "\n"
-            "-1.0 is returned if not enough transactions and\n"
-            "blocks have been observed to make an estimate.\n"
+            "A negative value is returned if not enough transactions and blocks\n"
+            "have been observed to make an estimate.\n"
             "\nExample:\n"
             + HelpExampleCli("estimatefee", "6")
             );
@@ -698,16 +704,15 @@ UniValue estimatepriority(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "estimatepriority nblocks\n"
-            "\nEstimates the approximate priority\n"
-            "a zero-fee transaction needs to begin confirmation\n"
-            "within nblocks blocks.\n"
+            "\nEstimates the approximate priority a zero-fee transaction needs to begin\n"
+            "confirmation within nblocks blocks.\n"
             "\nArguments:\n"
             "1. nblocks     (numeric)\n"
             "\nResult:\n"
-            "n :    (numeric) estimated priority\n"
+            "n              (numeric) estimated priority\n"
             "\n"
-            "-1.0 is returned if not enough transactions and\n"
-            "blocks have been observed to make an estimate.\n"
+            "A negative value is returned if not enough transactions and blocks\n"
+            "have been observed to make an estimate.\n"
             "\nExample:\n"
             + HelpExampleCli("estimatepriority", "6")
             );

@@ -9,12 +9,13 @@
 #include "bitcoinunits.h"
 #include "guiutil.h"
 #include "optionsmodel.h"
-#include "scicon.h"
+#include "platformstyle.h"
+#include "txmempool.h"
 #include "walletmodel.h"
 
 #include "coincontrol.h"
 #include "init.h"
-#include "main.h"
+#include "main.h" // For minRelayTxFee
 #include "wallet/wallet.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
@@ -30,15 +31,15 @@
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 
-using namespace std;
 QList<CAmount> CoinControlDialog::payAmounts;
 CCoinControl* CoinControlDialog::coinControl = new CCoinControl();
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
 
-CoinControlDialog::CoinControlDialog(QWidget *parent) :
+CoinControlDialog::CoinControlDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CoinControlDialog),
-    model(0)
+    model(0),
+    platformStyle(platformStyle)
 {
     ui->setupUi(this);
 
@@ -280,7 +281,7 @@ void CoinControlDialog::lockCoin()
     COutPoint outpt(uint256S(contextMenuItem->text(COLUMN_TXHASH).toStdString()), contextMenuItem->text(COLUMN_VOUT_INDEX).toUInt());
     model->lockCoin(outpt);
     contextMenuItem->setDisabled(true);
-    contextMenuItem->setIcon(COLUMN_CHECKBOX, SingleColorIcon(":/icons/lock_closed"));
+    contextMenuItem->setIcon(COLUMN_CHECKBOX, platformStyle->SingleColorIcon(":/icons/lock_closed"));
     updateLabelLocked();
 }
 
@@ -442,7 +443,7 @@ QString CoinControlDialog::getPriorityLabel(double dPriority, double mempoolEsti
 // shows count of locked unspent outputs
 void CoinControlDialog::updateLabelLocked()
 {
-    vector<COutPoint> vOutpts;
+    std::vector<COutPoint> vOutpts;
     model->listLockedCoins(vOutpts);
     if (vOutpts.size() > 0)
     {
@@ -467,7 +468,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         if (amount > 0)
         {
-            CTxOut txout(amount, (CScript)vector<unsigned char>(24, 0));
+            CTxOut txout(amount, (CScript)std::vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
             if (txout.IsDust(::minRelayTxFee))
                fDust = true;
@@ -487,8 +488,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
     int nQuantityUncompressed   = 0;
     bool fAllowFree             = false;
 
-    vector<COutPoint> vCoinControl;
-    vector<COutput>   vOutputs;
+    std::vector<COutPoint> vCoinControl;
+    std::vector<COutput>   vOutputs;
     coinControl->ListSelected(vCoinControl);
     model->getOutputs(vCoinControl, vOutputs);
 
@@ -568,7 +569,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             // Never create dust outputs; if we would, just add the dust to the fee.
             if (nChange > 0 && nChange < CENT)
             {
-                CTxOut txout(nChange, (CScript)vector<unsigned char>(24, 0));
+                CTxOut txout(nChange, (CScript)std::vector<unsigned char>(24, 0));
                 if (txout.IsDust(::minRelayTxFee))
                 {
                     if (CoinControlDialog::fSubtractFeeFromAmount) // dust-change will be raised until no dust
@@ -687,10 +688,10 @@ void CoinControlDialog::updateView()
     int nDisplayUnit = model->getOptionsModel()->getDisplayUnit();
     double mempoolEstimatePriority = mempool.estimatePriority(nTxConfirmTarget);
 
-    map<QString, vector<COutput> > mapCoins;
+    std::map<QString, std::vector<COutput> > mapCoins;
     model->listCoins(mapCoins);
 
-    BOOST_FOREACH(const PAIRTYPE(QString, vector<COutput>)& coins, mapCoins) {
+    BOOST_FOREACH(const PAIRTYPE(QString, std::vector<COutput>)& coins, mapCoins) {
         QTreeWidgetItem *itemWalletAddress = new QTreeWidgetItem();
         itemWalletAddress->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
         QString sWalletAddress = coins.first;
@@ -791,7 +792,7 @@ void CoinControlDialog::updateView()
                 COutPoint outpt(txhash, out.i);
                 coinControl->UnSelect(outpt); // just to be sure
                 itemOutput->setDisabled(true);
-                itemOutput->setIcon(COLUMN_CHECKBOX, SingleColorIcon(":/icons/lock_closed"));
+                itemOutput->setIcon(COLUMN_CHECKBOX, platformStyle->SingleColorIcon(":/icons/lock_closed"));
             }
 
             // set checkbox

@@ -13,6 +13,8 @@
 #include <QWidget>
 
 class ClientModel;
+class PlatformStyle;
+class RPCTimerInterface;
 
 namespace Ui {
     class RPCConsole;
@@ -29,7 +31,7 @@ class RPCConsole: public QWidget
     Q_OBJECT
 
 public:
-    explicit RPCConsole(QWidget *parent);
+    explicit RPCConsole(const PlatformStyle *platformStyle, QWidget *parent);
     ~RPCConsole();
 
     void setClientModel(ClientModel *model);
@@ -106,6 +108,8 @@ private:
     int historyPtr;
     NodeId cachedNodeid;
     QMenu *contextMenu;
+    const PlatformStyle *platformStyle;
+    RPCTimerInterface *rpcTimerInterface;
 };
 
 #endif // BITCOIN_QT_RPCCONSOLE_H

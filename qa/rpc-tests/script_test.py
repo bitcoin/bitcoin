@@ -124,10 +124,10 @@ def ParseScript(json_script):
     return parsed_script
             
 class TestBuilder(object):
-    def create_credit_tx(self, scriptPubKey):
+    def create_credit_tx(self, scriptPubKey, height):
         # self.tx1 is a coinbase transaction, modeled after the one created by script_tests.cpp
         # This allows us to reuse signatures created in the unit test framework.
-        self.tx1 = create_coinbase()                 # this has a bip34 scriptsig,
+        self.tx1 = create_coinbase(height)                 # this has a bip34 scriptsig,
         self.tx1.vin[0].scriptSig = CScript([0, 0])  # but this matches the unit tests
         self.tx1.vout[0].nValue = 0
         self.tx1.vout[0].scriptPubKey = scriptPubKey
@@ -168,7 +168,7 @@ class ScriptTest(ComparisonTestFramework):
 
         test = TestInstance(sync_every_block=False)
         test_build = TestBuilder()
-        test_build.create_credit_tx(scriptpubkey)
+        test_build.create_credit_tx(scriptpubkey, self.height)
         test_build.create_spend_tx(scriptsig)
         test_build.rehash()
 
@@ -176,16 +176,18 @@ class ScriptTest(ComparisonTestFramework):
         self.block_time += 1
         block.solve()
         self.tip = block.sha256
+        self.height += 1
         test.blocks_and_transactions = [[block, True]]
 
         for i in xrange(100):
-            block = create_block(self.tip, create_coinbase(), self.block_time)
+            block = create_block(self.tip, create_coinbase(self.height), self.block_time)
             self.block_time += 1
             block.solve()
             self.tip = block.sha256
+            self.height += 1
             test.blocks_and_transactions.append([block, True])
 
-        block = create_block(self.tip, create_coinbase(), self.block_time)
+        block = create_block(self.tip, create_coinbase(self.height), self.block_time)
         self.block_time += 1
         block.vtx.append(test_build.tx2)
         block.hashMerkleRoot = block.calc_merkle_root()
@@ -198,14 +200,16 @@ class ScriptTest(ComparisonTestFramework):
     def get_tests(self):
         self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.block_time = 1333230000  # before the BIP16 switchover
+        self.height = 1
 
         '''
         Create a new block with an anyone-can-spend coinbase
         '''
-        block = create_block(self.tip, create_coinbase(), self.block_time)
+        block = create_block(self.tip, create_coinbase(self.height), self.block_time)
         self.block_time += 1
         block.solve()
         self.tip = block.sha256
+        self.height += 1
         yield TestInstance(objects=[[block, True]])
 
         '''
@@ -213,11 +217,12 @@ class ScriptTest(ComparisonTestFramework):
         '''
         test = TestInstance(objects=[], sync_every_block=False, sync_every_tx=False)
         for i in xrange(100):
-            b = create_block(self.tip, create_coinbase(), self.block_time)
+            b = create_block(self.tip, create_coinbase(self.height), self.block_time)
             b.solve()
             test.blocks_and_transactions.append([b, True])
             self.tip = b.sha256
             self.block_time += 1
+            self.height += 1
         yield test
  
         ''' Iterate through script tests. '''
@@ -229,6 +234,7 @@ class ScriptTest(ComparisonTestFramework):
                 self.nodes[1].invalidateblock(self.nodes[1].getblockhash(102))
 
             self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
+            self.height = 102
 
             [scriptsig, scriptpubkey, flags] = script_test[0:3]
             flags = ParseScriptFlags(flags)

@@ -31,8 +31,9 @@ These dependencies are required:
 
  Library     | Purpose          | Description
  ------------|------------------|----------------------
- libssl      | SSL Support      | Secure communications
- libboost    | Boost            | C++ Library
+ libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
+ libboost    | Utility          | Library for threading, data structures, etc
+ libevent    | Networking       | OS independent asynchronous networking
 
 Optional dependencies:
 
@@ -57,7 +58,7 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev
+	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libevent-dev
 	
 For Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be installed:
 
@@ -154,7 +155,8 @@ make install
 
 # Configure Bitcoin Core to use our own-built instance of BDB
 cd $BITCOIN_ROOT
-./configure (other args...) LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"
+./autogen.sh
+./configure LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/" # (other args...)
 ```
 
 **Note**: You only need Berkeley DB if the wallet is enabled (see the section *Disable-Wallet mode* below).

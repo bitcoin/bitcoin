@@ -4,6 +4,7 @@
 
 #include "rpcserver.h"
 
+#include "chainparams.h"
 #include "clientversion.h"
 #include "main.h"
 #include "net.h"
@@ -12,6 +13,7 @@
 #include "sync.h"
 #include "timedata.h"
 #include "util.h"
+#include "utilstrencodings.h"
 #include "version.h"
 
 #include <boost/assign/list_of.hpp>
@@ -95,6 +97,7 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
             "    \"conntime\": ttt,           (numeric) The connection time in seconds since epoch (Jan 1 1970 GMT)\n"
             "    \"timeoffset\": ttt,         (numeric) The time offset in seconds\n"
             "    \"pingtime\": n,             (numeric) ping time\n"
+            "    \"minping\": n,              (numeric) minimum observed ping time\n"
             "    \"pingwait\": n,             (numeric) ping wait\n"
             "    \"version\": v,              (numeric) The peer version, such as 7001\n"
             "    \"subver\": \"/Satoshi:0.8.5/\",  (string) The string version\n"
@@ -138,6 +141,7 @@ UniValue getpeerinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("conntime", stats.nTimeConnected));
         obj.push_back(Pair("timeoffset", stats.nTimeOffset));
         obj.push_back(Pair("pingtime", stats.dPingTime));
+        obj.push_back(Pair("minping", stats.dPingMin));
         if (stats.dPingWait > 0.0)
             obj.push_back(Pair("pingwait", stats.dPingWait));
         obj.push_back(Pair("version", stats.nVersion));
@@ -422,7 +426,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
             "  }\n"
             "  ,...\n"
             "  ],\n"
-            "  \"relayfee\": x.xxxxxxxx,                (numeric) minimum relay fee for non-free transactions in btc/kb\n"
+            "  \"relayfee\": x.xxxxxxxx,                (numeric) minimum relay fee for non-free transactions in " + CURRENCY_UNIT + "/kB\n"
             "  \"localaddresses\": [                    (array) list of local addresses\n"
             "  {\n"
             "    \"address\": \"xxxx\",                 (string) network address\n"
@@ -442,8 +446,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("version",       CLIENT_VERSION));
-    obj.push_back(Pair("subversion",
-        FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>())));
+    obj.push_back(Pair("subversion",    strSubVersion));
     obj.push_back(Pair("protocolversion",PROTOCOL_VERSION));
     obj.push_back(Pair("localservices",       strprintf("%016x", nLocalServices)));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
