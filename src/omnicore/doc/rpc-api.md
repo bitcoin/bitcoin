@@ -1,18 +1,18 @@
-Omni Core API Documentation
-===========================
+JSON-RPC API
+============
 
-## Introduction
-
-Omni Core is a fork of Bitcoin Core, with Omni Protocol feature support added as a new layer of functionality on top. As such interacting with the API is done in the same manner (JSON-RPC) as Bitcoin Core, simply with additional RPC calls available for utilizing Omni Protocol features.
+Omni Core is a fork of Bitcoin Core, with Omni Protocol feature support added as a new layer of functionality on top. As such interacting with the API is done in the same manner (JSON-RPC) as Bitcoin Core, simply with additional RPCs available for utilizing Omni Protocol features.
 
 As all existing Bitcoin Core functionality is inherent to Omni Core, the RPC port by default remains as `8332` as per Bitcoin Core.  If you wish to run Omni Core in tandem with Bitcoin Core (eg. via a separate datadir) you may utilize the `-rpcport<port>` option to nominate an alternative port number.
 
-*Please note: this document is a work in progress and is subject to change at any time. There may be errors, omissions or inaccuracies present.*
+All available commands can be listed with `"help"`, and information about a specific command can be retrieved with `"help <command>"`.
+
+*Please note: this document may not always be up-to-date. There may be errors, omissions or inaccuracies present.*
 
 
-## RPC Calls for Transaction Creation
+## Transaction creation
 
-The RPC calls for transaction creation can be used to create and broadcast Omni Protocol transactions.
+The RPCs for transaction creation can be used to create and broadcast Omni Protocol transactions.
 
 A hash of the broadcasted transaction is returned as result.
 
@@ -26,6 +26,11 @@ Create and broadcast a simple send transaction.
 2. ***toaddress            (string, required):*** the address of the receiver
 3. ***propertyid           (number, required):*** the identifier of the tokens to send
 4. ***amount               (string, required):*** the amount to send
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -45,7 +50,12 @@ Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exc
 4. ***amountdesired        (string, required):*** the amount of bitcoins desired
 5. ***paymentwindow        (number, required):*** a time limit in blocks a buyer has to pay following a successful accept
 6. ***minacceptfee         (string, required):*** a minimum mining fee a buyer has to pay to accept the offer
-7. ***action               (number, required):*** the action to take: (1) new, (2) update, (3) cancel
+7. ***action               (number, required):*** the action to take: (1) "new", (2) "update", (3) "cancel"
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -65,6 +75,11 @@ Create and broadcast an accept offer for the specified token and amount.
 4. ***amount               (string, required):*** the amount to accept
 5. ***override             (boolean, optional):*** override minimum accept fee and payment window checks (use with caution!)
 
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
+
 **Example:**
 
 ```bash
@@ -78,8 +93,8 @@ Create new tokens as crowdsale.
 **Arguments:**
 
 1. ***fromaddress          (string, required):*** the address to send from
-2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) main, (2) test
-3. ***type                 (number, required):*** the type of the tokens to create: (1) indivisible, (2) divisible
+2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) "main", (2) "test"
+3. ***type                 (number, required):*** the type of the tokens to create: (1) "indivisible", (2) "divisible"
 4. ***previousid           (number, optional):*** an identifier of a predecessor token (0 for new crowdsales)
 5. ***category             (string, optional):*** a category for the new tokens (can be "")
 6. ***subcategory          (string, optional):*** a subcategory for the new tokens  (can be "")
@@ -91,6 +106,11 @@ Create new tokens as crowdsale.
 12. ***deadline            (number, required):*** the deadline of the crowdsale as Unix timestamp
 13. ***earlybonus          (number, required):*** an early bird bonus for participants in percent per week (default: 0)
 14. ***issuerpercentage    (number, required):*** a percentage of tokens that will be granted to the issuer (default: 0)
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -105,8 +125,8 @@ Create new tokens with fixed supply.
 **Arguments:**
 
 1. ***fromaddress          (string, required):*** the address to send from
-2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) main, (2) test
-3. ***type                 (number, required):*** the type of the tokens to create: (1) indivisible, (2) divisible
+2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) "main", (2) "test"
+3. ***type                 (number, required):*** the type of the tokens to create: (1) "indivisible", (2) "divisible"
 4. ***previousid           (number, optional):*** an identifier of a predecessor token (0 for new tokens)
 5. ***category             (string, optional):*** a category for the new tokens (can be "")
 6. ***subcategory          (string, optional):*** a subcategory for the new tokens  (can be "")
@@ -114,6 +134,11 @@ Create new tokens with fixed supply.
 8. ***url                  (string, optional):*** an URL for further information about the new tokens (can be "")
 9. ***data                 (string, optional):*** a description for the new tokens (can be "")
 10. ***amount              (string, required):*** the number of tokens to create
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -128,14 +153,19 @@ Create new tokens with manageable supply.
 **Arguments:**
 
 1. ***fromaddress          (string, required):*** the address to send from
-2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) main, (2) test
-3. ***type                 (number, required):*** the type of the tokens to create: (1) indivisible, (2) divisible
+2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) "main", (2) "test"
+3. ***type                 (number, required):*** the type of the tokens to create: (1) "indivisible", (2) "divisible"
 4. ***previousid           (number, optional):*** an identifier of a predecessor token (0 for new tokens)
 5. ***category             (string, optional):*** a category for the new tokens (can be "")
 6. ***subcategory          (string, optional):*** a subcategory for the new tokens  (can be "")
 7. ***name                 (string, required):*** the name of the new tokens to create
 8. ***url                  (string, optional):*** an URL for further information about the new tokens (can be "")
 9. ***data                 (string, optional):*** a description for the new tokens (can be "")
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -153,6 +183,11 @@ Create new tokens with manageable supply.
 2. ***propertyid           (number, required):*** the identifier of the tokens to distribute
 3. ***amount               (string, required):*** the amount to distribute
 4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -172,6 +207,11 @@ Issue or grant new units of managed tokens.
 4. ***amount               (string, required):*** the amount of tokens to create
 5. ***memo                 (string, optional):*** a text note attached to this transaction (none by default)
 
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
+
 **Example:**
 
 ```bash
@@ -189,6 +229,11 @@ Revoke units of managed tokens.
 3. ***amount               (string, required):*** the amount of tokens to revoke
 4. ***memo                 (string, optional):*** a text note attached to this transaction (none by default)
 
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
+
 **Example:**
 
 ```bash
@@ -203,6 +248,11 @@ Manually close a crowdsale.
 
 1. ***fromaddress          (string, required):*** the address associated with the crowdsale to close
 2. ***propertyid           (number, required):*** the identifier of the crowdsale to close
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -222,6 +272,11 @@ Place a trade offer on the distributed token exchange.
 4. ***propertiddesired     (number, required):*** the identifier of the tokens desired in exchange
 5. ***amountdesired        (string, required):*** the amount of tokens desired in exchange
 
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
+
 **Example:**
 
 ```bash
@@ -240,6 +295,11 @@ Cancel offers on the distributed token exchange with the specified price.
 4. ***propertiddesired     (number, required):*** the identifier of the tokens desired in exchange
 5. ***amountdesired        (string, required):*** the amount of tokens desired in exchange
 
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
+
 **Example:**
 
 ```bash
@@ -256,6 +316,11 @@ Cancel all offers on the distributed token exchange with the given currency pair
 2. ***propertyidforsale    (number, required):*** the identifier of the tokens listed for sale
 3. ***propertiddesired     (number, required):*** the identifier of the tokens desired in exchange
 
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
+
 **Example:**
 
 ```bash
@@ -269,7 +334,12 @@ Cancel all offers on the distributed token exchange.
 **Arguments:**
 
 1. ***fromaddress          (string, required):*** the address to trade with
-2. ***ecosystem            (number, required):*** the ecosystem of the offers to cancel: (1) main, (2) test
+2. ***ecosystem            (number, required):*** the ecosystem of the offers to cancel: (1) "main", (2) "test"
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -287,6 +357,11 @@ Change the issuer on record of the given tokens.
 2. ***toaddress            (string, required):*** the address to transfer administrative control to
 3. ***propertyid           (number, required):*** the identifier of the tokens
 
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
+
 **Example:**
 
 ```bash
@@ -301,9 +376,14 @@ Transfers all available tokens in the given ecosystem to the recipient.
 
 1. ***fromaddress          (string, required):*** the address to send from
 2. ***toaddress            (string, required):*** the address of the receiver
-3. ***ecosystem            (number, required):*** the ecosystem of the tokens to send: (1) main, (2) test
+3. ***ecosystem            (number, required):*** the ecosystem of the tokens to send: (1) "main", (2) "test"
 4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
 5. ***referenceamount      (string, optional):*** a bitcoin amount that is sent to the receiver (minimal by default)
+
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
 
 **Example:**
 
@@ -323,6 +403,11 @@ Broadcasts a raw Omni Layer transaction.
 4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
 5. ***referenceamount      (string, optional):*** a bitcoin amount that is sent to the receiver (minimal by default)
 
+**Result:**
+```js
+"hash"   (string) the hex-encoded transaction hash
+```
+
 **Example:**
 
 ```bash
@@ -330,13 +415,36 @@ $ omnicore-cli "omni_sendrawtx" "1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8" "0000000000
 ```
 
 
-## RPC Calls for Data Retrieval
+## Data retrieval
 
-The RPC calls for data retrieval can be used to get information about the state of the Omni ecosystem.
+The RPCs for data retrieval can be used to get information about the state of the Omni ecosystem.
 
 ### omni_getinfo
 
 Returns various state information of the client and protocol.
+
+**Result:**
+```js
+Result:
+{
+  "mastercoreversion" : "x.x.x.x-xxx",   (string) client version
+  "bitcoincoreversion" : "x.x.x",        (string) Bitcoin Core version
+  "commitinfo" : "xxxxxxx",              (string) build commit identifier
+  "block" : nnnnnn,                      (number) index of the last processed block
+  "blocktime" : nnnnnnnnnn,              (number) timestamp of the last processed block
+  "blocktransactions" : nnnn,            (number) Omni transactions found in the last processed block
+  "totaltransactions" : nnnnnnnn,        (number) Omni transactions processed in total
+  "alerts" : [                           (array of JSON objects) active protocol alert (if any)
+    {
+      "alerttype" : n                        (number) alert type as integer
+      "alerttype" : "xxx"                    (string) alert type (can be "alertexpiringbyblock", "alertexpiringbyblocktime", "alertexpiringbyclientversion" or "error")
+      "alertexpiry" : nnnnnnnnnn             (number) expiration criteria (can refer to block height, timestamp or client verion)
+      "alertmessage" : "xxx"                 (string) information about the alert
+    },
+    ...
+  ]
+}
+```
 
 **Example:**
 
@@ -353,6 +461,14 @@ Returns the token balance for a given address and property.
 1. ***address              (string, required):*** the address
 2. ***propertyid           (number, required):*** the property identifier
 
+**Result:**
+```js
+{
+  "balance" : "n.nnnnnnnn",   (string) the available balance of the address
+  "reserved" : "n.nnnnnnnn"   (string) the amount reserved by sell offers and accepts
+}
+```
+
 **Example:**
 
 ```bash
@@ -366,6 +482,18 @@ Returns a list of token balances for a given currency or property identifier.
 **Arguments:**
 
 1. ***propertyid           (number, required):*** the property identifier
+
+**Result:**
+```js
+[                           (array of JSON objects)
+  {
+    "address" : "address",      (string) the address
+    "balance" : "n.nnnnnnnn",   (string) the available balance of the address
+    "reserved" : "n.nnnnnnnn"   (string) the amount reserved by sell offers and accepts
+  },
+  ...
+]
+```
 
 **Example:**
 
@@ -381,6 +509,18 @@ Returns a list of all token balances for a given address.
 
 1. ***address              (string, required):*** the address
 
+**Result:**
+```js
+[                           (array of JSON objects)
+  {
+    "propertyid" : n,           (number) the property identifier
+    "balance" : "n.nnnnnnnn",   (string) the available balance of the address
+    "reserved" : "n.nnnnnnnn"   (string) the amount reserved by sell offers and accepts
+  },
+  ...
+]
+```
+
 **Example:**
 
 ```bash
@@ -394,6 +534,24 @@ Get detailed information about an Omni transaction.
 **Arguments:**
 
 1. txid                 (string, required):*** the hash of the transaction to lookup
+
+**Result:**
+```js
+{
+  "txid" : "hash",                  (string) the hex-encoded hash of the transaction
+  "sendingaddress" : "address",     (string) the Bitcoin address of the sender
+  "referenceaddress" : "address",   (string) a Bitcoin address used as reference (if any)
+  "ismine" : true|false,            (boolean) whether the transaction involes an address in the wallet
+  "confirmations" : nnnnnnnnnn,     (number) the number of transaction confirmations
+  "fee" : "n.nnnnnnnn",             (string) the transaction fee in bitcoins
+  "blocktime" : nnnnnnnnnn,         (number) the timestamp of the block that contains the transaction
+  "valid" : true|false,             (boolean) whether the transaction is valid
+  "version" : n,                    (number) the transaction version
+  "type_int" : n,                   (number) the transaction type as number
+  "type" : "type",                  (string) the transaction type as string
+  [...]                             (mixed) other transaction type specific properties
+}
+```
 
 **Example:**
 
@@ -413,6 +571,27 @@ List wallet transactions, optionally filtered by an address and block boundaries
 4. ***startblock           (number, optional):*** first block to begin the search (default: 0)
 5. ***endblock             (number, optional):*** last block to include in the search (default: 999999)
 
+**Result:**
+```js
+[                                 (array of JSON objects)
+  {
+    "txid" : "hash",                  (string) the hex-encoded hash of the transaction
+    "sendingaddress" : "address",     (string) the Bitcoin address of the sender
+    "referenceaddress" : "address",   (string) a Bitcoin address used as reference (if any)
+    "ismine" : true|false,            (boolean) whether the transaction involes an address in the wallet
+    "confirmations" : nnnnnnnnnn,     (number) the number of transaction confirmations
+    "fee" : "n.nnnnnnnn",             (string) the transaction fee in bitcoins
+    "blocktime" : nnnnnnnnnn,         (number) the timestamp of the block that contains the transaction
+    "valid" : true|false,             (boolean) whether the transaction is valid
+    "version" : n,                    (number) the transaction version
+    "type_int" : n,                   (number) the transaction type as number
+    "type" : "type",                  (string) the transaction type as string
+    [...]                             (mixed) other transaction type specific properties
+  },
+  ...
+]
+```
+
 **Example:**
 
 ```bash
@@ -426,6 +605,14 @@ Lists all Omni transactions in a block.
 **Arguments:**
 
 1. ***index                (number, required):*** the block height or block index
+
+**Result:**
+```js
+[                       (array of string)
+  "hash",                 (string) the hash of the transaction
+  ...
+]
+```
 
 **Example:**
 
@@ -445,6 +632,24 @@ Note: the validity of pending transactions is uncertain, and the state of the me
 
 1. ***address              (string, optional):*** filter results by address (default: "" for no filter)
 
+**Result:**
+```js
+[                                 (array of JSON objects)
+  {
+    "txid" : "hash",                  (string) the hex-encoded hash of the transaction
+    "sendingaddress" : "address",     (string) the Bitcoin address of the sender
+    "referenceaddress" : "address",   (string) a Bitcoin address used as reference (if any)
+    "ismine" : true|false,            (boolean) whether the transaction involes an address in the wallet
+    "fee" : "n.nnnnnnnn",             (string) the transaction fee in bitcoins
+    "version" : n,                    (number) the transaction version
+    "type_int" : n,                   (number) the transaction type as number
+    "type" : "type",                  (string) the transaction type as string
+    [...]                             (mixed) other transaction type specific properties
+  },
+  ...
+]
+```
+
 **Example:**
 
 ```bash
@@ -459,6 +664,34 @@ Returns currently active offers on the distributed exchange.
 
 1. ***address              (string, optional):*** address filter (default: include any)
 
+**Result:**
+```js
+[                                   (array of JSON objects)
+  {
+    "txid" : "hash",                    (string) the hash of the transaction of this offer
+    "propertyid" : n,                   (number) the identifier of the tokens for sale
+    "seller" : "address",               (string) the Bitcoin address of the seller
+    "amountavailable" : "n.nnnnnnnn",   (string) the number of tokens still listed for sale and currently available
+    "bitcoindesired" : "n.nnnnnnnn",    (string) the number of bitcoins desired in exchange
+    "unitprice" : "n.nnnnnnnn" ,        (string) the unit price (BTC/token)
+    "timelimit" : nn,                   (number) the time limit in blocks a buyer has to pay following a successful accept
+    "minimumfee" : "n.nnnnnnnn",        (string) the minimum mining fee a buyer has to pay to accept this offer
+    "amountaccepted" : "n.nnnnnnnn",    (string) the number of tokens currently reserved for pending "accept" orders
+    "accepts": [                        (array of JSON objects) a list of pending "accept" orders
+      {
+        "buyer" : "address",                (string) the Bitcoin address of the buyer
+        "block" : nnnnnn,                   (number) the index of the block that contains the "accept" order
+        "blocksleft" : nn,                  (number) the number of blocks left to pay
+        "amount" : "n.nnnnnnnn"             (string) the amount of tokens accepted and reserved
+        "amounttopay" : "n.nnnnnnnn"        (string) the amount in bitcoins needed finalize the trade
+      },
+      ...
+    ]
+  },
+  ...
+]
+```
+
 **Example:**
 
 ```bash
@@ -468,6 +701,22 @@ $ omnicore-cli "omni_getactivedexsells"
 ### omni_listproperties
 
 Lists all tokens or smart properties.
+
+**Result:**
+```js
+[                                (array of JSON objects)
+  {
+    "propertyid" : n,                (number) the identifier of the tokens
+    "name" : "name",                 (string) the name of the tokens
+    "category" : "category",         (string) the category used for the tokens
+    "subcategory" : "subcategory",   (string) the subcategory used for the tokens
+    "data" : "information",          (string) additional information or a description
+    "url" : "uri",                   (string) an URI, for example pointing to a website
+    "divisible" : true|false         (boolean) whether the tokens are divisible
+  },
+  ...
+]
+```
 
 **Example:**
 
@@ -483,6 +732,23 @@ Returns details for about the tokens or smart property to lookup.
 
 1. ***propertyid           (number, required):*** the identifier of the tokens or property
 
+**Result:**
+```js
+{
+  "propertyid" : n,                (number) the identifier
+  "name" : "name",                 (string) the name of the tokens
+  "category" : "category",         (string) the category used for the tokens
+  "subcategory" : "subcategory",   (string) the subcategory used for the tokens
+  "data" : "information",          (string) additional information or a description
+  "url" : "uri",                   (string) an URI, for example pointing to a website
+  "divisible" : true|false,        (boolean) whether the tokens are divisible
+  "issuer" : "address",            (string) the Bitcoin address of the issuer on record
+  "creationtxid" : "hash",         (string) the hex-encoded creation transaction hash
+  "fixedissuance" : true|false,    (boolean) whether the token supply is fixed
+  "totaltokens" : "n.nnnnnnnn"     (string) the total number of tokens in existence
+}
+```
+
 **Example:**
 
 ```bash
@@ -492,6 +758,24 @@ $ omnicore-cli "omni_getproperty" 3
 ### omni_getactivecrowdsales
 
 Lists currently active crowdsales.
+
+**Result:**
+```js
+[                                 (array of JSON objects)
+  {
+    "propertyid" : n,                 (number) the identifier of the crowdsale
+    "name" : "name",                  (string) the name of the tokens issued via the crowdsale
+    "issuer" : "address",             (string) the Bitcoin address of the issuer on record
+    "propertyiddesired" : n,          (number) the identifier of the tokens eligible to participate in the crowdsale
+    "tokensperunit" : "n.nnnnnnnn",   (string) the amount of tokens granted per unit invested in the crowdsale
+    "earlybonus" : n,                 (number) an early bird bonus for participants in percent per week
+    "percenttoissuer" : n,            (number) a percentage of tokens that will be granted to the issuer
+    "starttime" : nnnnnnnnnn,         (number) the start time of the of the crowdsale as Unix timestamp
+    "deadline" : nnnnnnnnnn           (number) the deadline of the crowdsale as Unix timestamp
+  },
+  ...
+]
+```
 
 **Example:**
 
@@ -508,6 +792,38 @@ Returns information about a crowdsale.
 1. ***propertyid           (number, required):*** the identifier of the crowdsale
 2. ***verbose              (boolean, optional):*** list crowdsale participants (default: false)
 
+**Result:**
+```js
+{
+  "propertyid" : n,                     (number) the identifier of the crowdsale
+  "name" : "name",                      (string) the name of the tokens issued via the crowdsale
+  "active" : true|false,                (boolean) whether the crowdsale is still active
+  "issuer" : "address",                 (string) the Bitcoin address of the issuer on record
+  "propertyiddesired" : n,              (number) the identifier of the tokens eligible to participate in the crowdsale
+  "tokensperunit" : "n.nnnnnnnn",       (string) the amount of tokens granted per unit invested in the crowdsale
+  "earlybonus" : n,                     (number) an early bird bonus for participants in percent per week
+  "percenttoissuer" : n,                (number) a percentage of tokens that will be granted to the issuer
+  "starttime" : nnnnnnnnnn,             (number) the start time of the of the crowdsale as Unix timestamp
+  "deadline" : nnnnnnnnnn,              (number) the deadline of the crowdsale as Unix timestamp
+  "amountraised" : "n.nnnnnnnn",        (string) the amount of tokens invested by participants
+  "tokensissued" : "n.nnnnnnnn",        (string) the total number of tokens issued via the crowdsale
+  "addedissuertokens" : "n.nnnnnnnn",   (string) the amount of tokens granted to the issuer as bonus
+  "closedearly" : true|false,           (boolean) whether the crowdsale ended early (if not active)
+  "maxtokens" : true|false,             (boolean) whether the crowdsale ended early due to reaching the limit of max. issuable tokens (if not active)
+  "endedtime" : nnnnnnnnnn,             (number) the time when the crowdsale ended (if closed early)
+  "closetx" : "hash",                   (string) the hex-encoded hash of the transaction that closed the crowdsale (if closed manually)
+  "participanttransactions": [          (array of JSON objects) a list of crowdsale participations (if verbose=true)
+    {
+      "txid" : "hash",                      (string) the hex-encoded hash of participation transaction
+      "amountsent" : "n.nnnnnnnn",          (string) the amount of tokens invested by the participant
+      "participanttokens" : "n.nnnnnnnn",   (string) the tokens granted to the participant
+      "issuertokens" : "n.nnnnnnnn"         (string) the tokens granted to the issuer as bonus
+    },
+    ...
+  ]
+}
+```
+
 **Example:**
 
 ```bash
@@ -517,6 +833,28 @@ $ omnicore-cli "omni_getcrowdsale" 3 true
 ### omni_getgrants
 
 Returns information about granted and revoked units of managed tokens.
+
+**Result:**
+```js
+{
+  "propertyid" : n,               (number) the identifier of the managed tokens
+  "name" : "name",                (string) the name of the tokens
+  "issuer" : "address",           (string) the Bitcoin address of the issuer on record
+  "creationtxid" : "hash",        (string) the hex-encoded creation transaction hash
+  "totaltokens" : "n.nnnnnnnn",   (string) the total number of tokens in existence
+  "issuances": [                  (array of JSON objects) a list of the granted and revoked tokens
+    {
+      "txid" : "hash",                (string) the hash of the transaction that granted tokens
+      "grant" : "n.nnnnnnnn"          (string) the number of tokens granted by this transaction
+    },
+    {
+      "txid" : "hash",                (string) the hash of the transaction that revoked tokens
+      "grant" : "n.nnnnnnnn"          (string) the number of tokens revoked by this transaction
+    },
+    ...
+  ]
+}
+```
 
 **Arguments:**
 
@@ -537,6 +875,33 @@ Get information and recipients of a send-to-owners transaction.
 1. ***txid                 (string, required):*** the hash of the transaction to lookup
 2. ***recipientfilter      (string, optional):*** a filter for recipients (wallet by default, "\*" for all)
 
+**Result:**
+```js
+{
+  "txid" : "hash",                (string) the hex-encoded hash of the transaction
+  "sendingaddress" : "address",   (string) the Bitcoin address of the sender
+  "ismine" : true|false,          (boolean) whether the transaction involes an address in the wallet
+  "confirmations" : nnnnnnnnnn,   (number) the number of transaction confirmations
+  "fee" : "n.nnnnnnnn",           (string) the transaction fee in bitcoins
+  "blocktime" : nnnnnnnnnn,       (number) the timestamp of the block that contains the transaction
+  "valid" : true|false,           (boolean) whether the transaction is valid
+  "version" : n,                  (number) the transaction version
+  "type_int" : n,                 (number) the transaction type as number
+  "type" : "type",                (string) the transaction type as string
+  "propertyid" : n,               (number) the identifier of sent tokens
+  "divisible" : true|false,       (boolean) whether the sent tokens are divisible
+  "amount" : "n.nnnnnnnn",        (string) the number of tokens sent to owners
+  "totalstofee" : "n.nnnnnnnn",     (string) the fee paid by the sender, nominated in OMNI or TOMNI
+  "recipients": [                   (array of JSON objects) a list of recipients
+    {
+      "address" : "address",            (string) the Bitcoin address of the recipient
+      "amount" : "n.nnnnnnnn"           (string) the number of tokens sent to this recipient
+    },
+    ...
+  ]
+}
+```
+
 **Example:**
 
 ```bash
@@ -550,6 +915,41 @@ Get detailed information and trade matches for orders on the distributed token e
 **Arguments:**
 
 1. ***txid                 (string, required):*** the hash of the order to lookup
+
+**Result:**
+```js
+{
+  "txid" : "hash",                               (string) the hex-encoded hash of the transaction of the order
+  "sendingaddress" : "address",                  (string) the Bitcoin address of the trader
+  "ismine" : true|false,                         (boolean) whether the order involes an address in the wallet
+  "confirmations" : nnnnnnnnnn,                  (number) the number of transaction confirmations
+  "fee" : "n.nnnnnnnn",                          (string) the transaction fee in bitcoins
+  "blocktime" : nnnnnnnnnn,                      (number) the timestamp of the block that contains the transaction
+  "valid" : true|false,                          (boolean) whether the transaction is valid
+  "version" : n,                                 (number) the transaction version
+  "type_int" : n,                                (number) the transaction type as number
+  "type" : "type",                               (string) the transaction type as string
+  "propertyidforsale" : n,                       (number) the identifier of the tokens put up for sale
+  "propertyidforsaleisdivisible" : true|false,   (boolean) whether the tokens for sale are divisible
+  "amountforsale" : "n.nnnnnnnn",                (string) the amount of tokens initially offered
+  "propertyiddesired" : n,                       (number) the identifier of the tokens desired in exchange
+  "propertyiddesiredisdivisible" : true|false,   (boolean) whether the desired tokens are divisible
+  "amountdesired" : "n.nnnnnnnn",                (string) the amount of tokens initially desired
+  "unitprice" : "n.nnnnnnnnnnn..."               (string) the unit price nominated in OMNI or TOMNI
+  "status" : "status"                            (string) the status of the order ("open", "cancelled", "filled", ...)
+  "canceltxid" : "hash",                         (string) the hash of the transaction that cancelled the order (if cancelled)
+  "matches": [                                   (array of JSON objects) a list of matched orders and executed trades
+    {
+      "txid" : "hash",                               (string) the hash of the transaction that was matched against
+      "block" : nnnnnn,                              (number) the index of the block that contains this transaction
+      "address" : "address",                         (string) the Bitcoin address of the other trader
+      "amountsold" : "n.nnnnnnnn",                   (string) the number of tokens sold in this trade
+      "amountreceived" : "n.nnnnnnnn"                (string) the number of tokens traded in exchange
+    },
+    ...
+  ]
+}
+```
 
 **Example:**
 
@@ -565,6 +965,29 @@ List active offers on the distributed token exchange.
 
 1. ***propertyid           (number, required):*** filter orders by propertyid for sale
 2. ***propertyid           (number, optional):*** filter orders by propertyid desired
+
+**Result:**
+```js
+[                                              (array of JSON objects)
+  {
+    "address" : "address",                         (string) the Bitcoin address of the trader
+    "txid" : "hash",                               (string) the hex-encoded hash of the transaction of the order
+    "ecosystem" : "main"|"test",                   (string) the ecosytem in which the order was made (if "cancel-ecosystem")
+    "propertyidforsale" : n,                       (number) the identifier of the tokens put up for sale
+    "propertyidforsaleisdivisible" : true|false,   (boolean) whether the tokens for sale are divisible
+    "amountforsale" : "n.nnnnnnnn",                (string) the amount of tokens initially offered
+    "amountremaining" : "n.nnnnnnnn",              (string) the amount of tokens still up for sale
+    "propertyiddesired" : n,                       (number) the identifier of the tokens desired in exchange
+    "propertyiddesiredisdivisible" : true|false,   (boolean) whether the desired tokens are divisible
+    "amountdesired" : "n.nnnnnnnn",                (string) the amount of tokens initially desired
+    "amounttofill" : "n.nnnnnnnn",                 (string) the amount of tokens still needed to fill the offer completely
+    "action" : n,                                  (number) the action of the transaction: (1) "trade", (2) "cancel-price", (3) "cancel-pair", (4) "cancel-ecosystem"
+    "block" : nnnnnn,                              (number) the index of the block that contains the transaction
+    "blocktime" : nnnnnnnnnn                       (number) the timestamp of the block that contains the transaction
+  },
+  ...
+]
+```
 
 **Example:**
 
@@ -582,6 +1005,24 @@ Retrieves the history of trades on the distributed token exchange for the specif
 2. ***propertyid           (number, required):*** the second side of the traded pair
 3. ***count                (number, optional):*** number of trades to retrieve (default: 10)
 
+**Result:**
+```js
+[                                      (array of JSON objects)
+  {
+    "block" : nnnnnn,                      (number) the index of the block that contains the trade match
+    "unitprice" : "n.nnnnnnnnnnn..." ,     (string) the unit price used to execute this trade (received/sold)
+    "inverseprice" : "n.nnnnnnnnnnn...",   (string) the inverse unit price (sold/received)
+    "sellertxid" : "hash",                 (string) the hash of the transaction of the seller
+    "address" : "address",                 (string) the Bitcoin address of the seller
+    "amountsold" : "n.nnnnnnnn",           (string) the number of tokens sold in this trade
+    "amountreceived" : "n.nnnnnnnn",       (string) the number of tokens traded in exchange
+    "matchingtxid" : "hash",               (string) the hash of the transaction that was matched against
+    "matchingaddress" : "address"          (string) the Bitcoin address of the other party of this trade
+  },
+  ...
+]
+```
+
 **Example:**
 
 ```bash
@@ -598,6 +1039,44 @@ Retrieves the history of orders on the distributed exchange for the supplied add
 2. ***count                (number, optional):*** number of orders to retrieve (default: 10)
 3. ***propertyid           (number, optional):*** filter by propertyid transacted (default: no filter)
 
+**Result:**
+```js
+[                                              (array of JSON objects)
+  {
+    "txid" : "hash",                               (string) the hex-encoded hash of the transaction of the order
+    "sendingaddress" : "address",                  (string) the Bitcoin address of the trader
+    "ismine" : true|false,                         (boolean) whether the order involes an address in the wallet
+    "confirmations" : nnnnnnnnnn,                  (number) the number of transaction confirmations
+    "fee" : "n.nnnnnnnn",                          (string) the transaction fee in bitcoins
+    "blocktime" : nnnnnnnnnn,                      (number) the timestamp of the block that contains the transaction
+    "valid" : true|false,                          (boolean) whether the transaction is valid
+    "version" : n,                                 (number) the transaction version
+    "type_int" : n,                                (number) the transaction type as number
+    "type" : "type",                               (string) the transaction type as string
+    "propertyidforsale" : n,                       (number) the identifier of the tokens put up for sale
+    "propertyidforsaleisdivisible" : true|false,   (boolean) whether the tokens for sale are divisible
+    "amountforsale" : "n.nnnnnnnn",                (string) the amount of tokens initially offered
+    "propertyiddesired" : n,                       (number) the identifier of the tokens desired in exchange
+    "propertyiddesiredisdivisible" : true|false,   (boolean) whether the desired tokens are divisible
+    "amountdesired" : "n.nnnnnnnn",                (string) the amount of tokens initially desired
+    "unitprice" : "n.nnnnnnnnnnn..."               (string) the unit price nominated in OMNI or TOMNI
+    "status" : "status"                            (string) the status of the order ("open", "cancelled", "filled", ...)
+    "canceltxid" : "hash",                         (string) the hash of the transaction that cancelled the order (if cancelled)
+    "matches": [                                   (array of JSON objects) a list of matched orders and executed trades
+      {
+        "txid" : "hash",                               (string) the hash of the transaction that was matched against
+        "block" : nnnnnn,                              (number) the index of the block that contains this transaction
+        "address" : "address",                         (string) the Bitcoin address of the other trader
+        "amountsold" : "n.nnnnnnnn",                   (string) the number of tokens sold in this trade
+        "amountreceived" : "n.nnnnnnnn"                (string) the number of tokens traded in exchange
+      },
+      ...
+    ]
+  },
+  ...
+]
+```
+
 **Example:**
 
 ```bash
@@ -605,9 +1084,9 @@ $ omnicore-cli "omni_gettradehistoryforaddress" "1MCHESTptvd2LnNp7wmr2sGTpRomteA
 ```
 
 
-## Depreciated RPC Calls
+## Depreciated API calls
 
-To ensure compatibility, depreciated RPC calls are kept for at least one major version.
+To ensure backwards compatibility, depreciated RPCs are kept for at least one major version.
 
 The following calls are replaced in Omni Core 0.0.10, and queries with the old command are forwarded.
 
