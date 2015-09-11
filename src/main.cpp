@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2012 The Bitcoin developers
-// Copyright (c) 2011-2013 The PPCoin developers
+// Copyright (c) 2011-2015 The Peercoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -591,7 +591,9 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
         if (txout.IsEmpty() && (!IsCoinBase()) && (!IsCoinStake()))
             return state.DoS(100, error("CTransaction::CheckTransaction() : txout empty for user transaction"));
         // ppcoin: enforce minimum output amount
-        if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT)
+        // v0.5 protocol: zero amount allowed
+        if ((!txout.IsEmpty()) && txout.nValue < MIN_TXOUT_AMOUNT &&
+            !(IsProtocolV05(nTime) && (txout.nValue == 0)))
             return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue below minimum"));
         if (txout.nValue > MAX_MONEY)
             return state.DoS(100, error("CTransaction::CheckTransaction() : txout.nValue too high"));
