@@ -2613,7 +2613,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!CheckTransaction(tx, state))
+        if (!ExistInPool(tx) && !CheckTransaction(tx, state))
             return error("CheckBlock(): CheckTransaction of %s failed with %s",
                 tx.GetHash().ToString(),
                 FormatStateMessage(state));
