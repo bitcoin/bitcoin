@@ -140,10 +140,6 @@
             <property name="text">
              <string>&amp;Request payment</string>
             </property>
-            <property name="icon">
-             <iconset resource="../dash.qrc">
-              <normaloff>:/icons/receiving_addresses</normaloff>:/icons/receiving_addresses</iconset>
-            </property>
            </widget>
           </item>
           <item>
@@ -159,10 +155,6 @@
             </property>
             <property name="text">
              <string>Clear</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../dash.qrc">
-              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
             </property>
             <property name="autoDefault">
              <bool>false</bool>
@@ -263,10 +255,6 @@
           <property name="text">
            <string>Show</string>
           </property>
-          <property name="icon">
-           <iconset resource="../dash.qrc">
-            <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
-          </property>
           <property name="autoDefault">
            <bool>false</bool>
           </property>
@@ -282,10 +270,6 @@
           </property>
           <property name="text">
            <string>Remove</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../dash.qrc">
-            <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
           </property>
           <property name="autoDefault">
            <bool>false</bool>

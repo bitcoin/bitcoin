@@ -33,6 +33,11 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     ui->receiveButton->setIcon(QIcon());
     ui->showRequestButton->setIcon(QIcon());
     ui->removeRequestButton->setIcon(QIcon());
+#else
+    ui->clearButton->setIcon(QIcon(":/icons/remove"));
+    ui->receiveButton->setIcon(QIcon(":/icons/receiving_addresses"));
+    ui->showRequestButton->setIcon(QIcon(":/icons/edit"));
+    ui->removeRequestButton->setIcon(QIcon(":/icons/remove"));
 #endif
 
     // context menu actions
