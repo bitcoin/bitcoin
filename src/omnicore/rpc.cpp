@@ -667,7 +667,6 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
         database = sp.historicalData;
     }
 
-    int64_t amountRaised = 0;
     int64_t tokensIssued = getTotalTokens(propertyId);
     const std::string& txidClosed = sp.txid_close.GetHex();
 
@@ -686,7 +685,6 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
     response.push_back(Pair("percenttoissuer", sp.percentage));
     response.push_back(Pair("starttime", startTime));
     response.push_back(Pair("deadline", sp.deadline));
-    response.push_back(Pair("amountraised", FormatMP(sp.property_desired, amountRaised)));
     response.push_back(Pair("tokensissued", FormatMP(propertyId, tokensIssued)));
     response.push_back(Pair("addedissuertokens", FormatMP(propertyId, sp.missedTokens)));
 
@@ -696,28 +694,24 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
     if (sp.close_early) response.push_back(Pair("endedtime", sp.timeclosed));
     if (sp.close_early && !sp.max_tokens) response.push_back(Pair("closetx", txidClosed));
 
-    // TODO: sort by height?
-
-    // array of txids contributing to crowdsale here if needed
     if (showVerbose) {
-        Array participanttxs;
-        std::map<uint256, std::vector<int64_t> >::const_iterator it;
-        for (it = database.begin(); it != database.end(); it++) {
+        int64_t amountRaised = 0;
+        std::map<int64_t, Object> sortMap;
+        for (std::map<uint256, std::vector<int64_t> >::const_iterator it = database.begin(); it != database.end(); it++) {
             Object participanttx;
-
             std::string txid = it->first.GetHex();
-            int64_t userTokens = it->second.at(2);
-            int64_t issuerTokens = it->second.at(3);
-            int64_t amountSent = it->second.at(0);
-
-            amountRaised += amountSent;
+            amountRaised += it->second.at(0);
             participanttx.push_back(Pair("txid", txid));
-            participanttx.push_back(Pair("amountsent", FormatMP(sp.property_desired, amountSent)));
-            participanttx.push_back(Pair("participanttokens", FormatMP(propertyId, userTokens)));
-            participanttx.push_back(Pair("issuertokens", FormatMP(propertyId, issuerTokens)));
-            participanttxs.push_back(participanttx);
+            participanttx.push_back(Pair("amountsent", FormatMP(sp.property_desired, (int64_t)it->second.at(0))));
+            participanttx.push_back(Pair("participanttokens", FormatMP(propertyId, (int64_t)it->second.at(2))));
+            participanttx.push_back(Pair("issuertokens", FormatMP(propertyId, (int64_t)it->second.at(3))));
+            sortMap.insert(make_pair((int64_t)it->second.at(1), participanttx));
         }
-
+        Array participanttxs;
+        for (std::map<int64_t, Object>::iterator it = sortMap.begin(); it != sortMap.end(); ++it) {
+            participanttxs.push_back(it->second);
+        }
+        response.push_back(Pair("amountraised", FormatMP(sp.property_desired, amountRaised)));
         response.push_back(Pair("participanttransactions", participanttxs));
     }
 
