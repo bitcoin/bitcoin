@@ -1,6 +1,7 @@
-for i in {1..35}
+FRAMEDIR=$(dirname $0)
+for i in {0..35}
 do
-    value=$(printf "%03d" $i)
+    frame=$(printf "%03d" $i)
     angle=$(($i * 10))
-    convert spinner-000.png -background "rgba(0,0,0,0.0)" -distort SRT $angle spinner-$value.png
+    convert $FRAMEDIR/../src/spinner.png -background "rgba(0,0,0,0.0)" -distort SRT $angle $FRAMEDIR/spinner-$frame.png
 done
