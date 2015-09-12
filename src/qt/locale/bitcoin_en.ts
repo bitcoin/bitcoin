@@ -28,8 +28,12 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="114"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;This is experimental software.&lt;/p&gt;&lt;p&gt;Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;br/&gt;&lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Main icon was designed by VisualPharm.com (&lt;a href=&quot;mailto:team@visualpharm.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;team@visualpharm.com&lt;/span&gt;&lt;/a&gt;). This product also includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;) and cryptographic software written by Eric Young (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;) and UPnP software written by Thomas Bernard(&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;This is experimental software.&lt;/p&gt;&lt;p&gt;Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;br/&gt;&lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;) and cryptographic software written by Eric Young (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;) and UPnP software written by Thomas Bernard(&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;This is experimental software.&lt;/p&gt;&lt;p&gt;Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;br/&gt;&lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;) and cryptographic software written by Eric Young (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;) and UPnP software written by Thomas Bernard(&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <translation type="vanished">&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;This is experimental software.&lt;/p&gt;&lt;p&gt;Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;br/&gt;&lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;) and cryptographic software written by Eric Young (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;) and UPnP software written by Thomas Bernard(&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -115,22 +119,22 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
         <translation>&amp;Edit</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="321"/>
+        <location filename="../addressbookpage.cpp" line="327"/>
         <source>Export Address Book Data</source>
         <translation>Export Address Book Data</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="322"/>
+        <location filename="../addressbookpage.cpp" line="328"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="335"/>
+        <location filename="../addressbookpage.cpp" line="341"/>
         <source>Error exporting</source>
         <translation>Error exporting</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="335"/>
+        <location filename="../addressbookpage.cpp" line="341"/>
         <source>Could not write to file %1.</source>
         <translation>Could not write to file %1.</translation>
     </message>
@@ -309,301 +313,301 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoin.cpp" line="111"/>
+        <location filename="../bitcoin.cpp" line="146"/>
         <source>A fatal error occurred. NovaCoin can no longer continue safely and will quit.</source>
         <translation>A fatal error occurred. NovaCoin can no longer continue safely and will quit.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="93"/>
-        <location filename="../bitcoingui.cpp" line="740"/>
+        <location filename="../bitcoingui.cpp" line="94"/>
+        <location filename="../bitcoingui.cpp" line="725"/>
         <source>NovaCoin</source>
         <translation>NovaCoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="93"/>
+        <location filename="../bitcoingui.cpp" line="94"/>
         <source>Wallet</source>
         <translation>Wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
+        <location filename="../bitcoingui.cpp" line="239"/>
         <source>&amp;Overview</source>
         <translation>&amp;Overview</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="238"/>
+        <location filename="../bitcoingui.cpp" line="240"/>
         <source>Show general overview of wallet</source>
         <translation>Show general overview of wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
+        <location filename="../bitcoingui.cpp" line="245"/>
         <source>&amp;Send coins</source>
         <translation>&amp;Send coins</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="244"/>
+        <location filename="../bitcoingui.cpp" line="246"/>
         <source>Send coins to a NovaCoin address</source>
         <translation>Send coins to a NovaCoin address</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
+        <location filename="../bitcoingui.cpp" line="251"/>
         <source>&amp;Receive coins</source>
         <translation>&amp;Receive coins</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
+        <location filename="../bitcoingui.cpp" line="252"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Show the list of addresses for receiving payments</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="255"/>
+        <location filename="../bitcoingui.cpp" line="257"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Transactions</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="256"/>
+        <location filename="../bitcoingui.cpp" line="258"/>
         <source>Browse transaction history</source>
         <translation>Browse transaction history</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="261"/>
+        <location filename="../bitcoingui.cpp" line="263"/>
         <source>&amp;Minting</source>
         <translation>&amp;Minting</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="262"/>
+        <location filename="../bitcoingui.cpp" line="264"/>
         <source>Show your minting capacity</source>
         <translation>Show your minting capacity</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="267"/>
+        <location filename="../bitcoingui.cpp" line="269"/>
         <source>&amp;Address Book</source>
         <translation>&amp;Address Book</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="268"/>
+        <location filename="../bitcoingui.cpp" line="270"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Edit the list of stored addresses and labels</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="273"/>
+        <location filename="../bitcoingui.cpp" line="275"/>
         <source>Multisig</source>
         <translation>Multisig</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="274"/>
+        <location filename="../bitcoingui.cpp" line="276"/>
         <source>Open window for working with multisig addresses</source>
         <translation>Open window for working with multisig addresses</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="292"/>
+        <location filename="../bitcoingui.cpp" line="294"/>
         <source>E&amp;xit</source>
         <translation>E&amp;xit</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="293"/>
+        <location filename="../bitcoingui.cpp" line="295"/>
         <source>Quit application</source>
         <translation>Quit application</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="296"/>
+        <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;About NovaCoin</source>
         <translation>&amp;About NovaCoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="297"/>
+        <location filename="../bitcoingui.cpp" line="299"/>
         <source>Show information about NovaCoin</source>
         <translation>Show information about NovaCoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="300"/>
         <location filename="../bitcoingui.cpp" line="302"/>
+        <location filename="../bitcoingui.cpp" line="304"/>
         <source>About &amp;Qt</source>
         <translation>About &amp;Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="304"/>
+        <location filename="../bitcoingui.cpp" line="306"/>
         <source>Show information about Qt</source>
         <translation>Show information about Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="306"/>
+        <location filename="../bitcoingui.cpp" line="308"/>
         <source>&amp;Options...</source>
         <translation>&amp;Options...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="307"/>
+        <location filename="../bitcoingui.cpp" line="309"/>
         <source>Modify configuration options for NovaCoin</source>
         <translation>Modify configuration options for NovaCoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="309"/>
+        <location filename="../bitcoingui.cpp" line="311"/>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Show / Hide</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="310"/>
+        <location filename="../bitcoingui.cpp" line="312"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Encrypt Wallet...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="311"/>
+        <location filename="../bitcoingui.cpp" line="313"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Encrypt or decrypt wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="313"/>
+        <location filename="../bitcoingui.cpp" line="315"/>
         <source>&amp;Backup Wallet...</source>
         <translation>&amp;Backup Wallet...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="314"/>
+        <location filename="../bitcoingui.cpp" line="316"/>
         <source>Backup wallet to another location</source>
         <translation>Backup wallet to another location</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="315"/>
+        <location filename="../bitcoingui.cpp" line="317"/>
         <source>&amp;Dump Wallet...</source>
         <translation>&amp;Dump Wallet...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="316"/>
+        <location filename="../bitcoingui.cpp" line="318"/>
         <source>Dump keys to a text file</source>
         <translation>Dump keys to a text file</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="317"/>
+        <location filename="../bitcoingui.cpp" line="319"/>
         <source>&amp;Import Wallet...</source>
         <translation>&amp;Import Wallet...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="318"/>
+        <location filename="../bitcoingui.cpp" line="320"/>
         <source>Import keys into a wallet</source>
         <translation>Import keys into a wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="319"/>
+        <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Change Passphrase...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="320"/>
+        <location filename="../bitcoingui.cpp" line="322"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Change the passphrase used for wallet encryption</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="321"/>
+        <location filename="../bitcoingui.cpp" line="323"/>
         <source>Sign &amp;message...</source>
         <translation>Sign &amp;message...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="322"/>
+        <location filename="../bitcoingui.cpp" line="324"/>
         <source>Sign messages with your Novacoin addresses to prove you own them</source>
         <translation>Sign messages with your Novacoin addresses to prove you own them</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="323"/>
+        <location filename="../bitcoingui.cpp" line="325"/>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verify message...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="324"/>
+        <location filename="../bitcoingui.cpp" line="326"/>
         <source>Verify messages to ensure they were signed with specified Novacoin addresses</source>
         <translation>Verify messages to ensure they were signed with specified Novacoin addresses</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="326"/>
+        <location filename="../bitcoingui.cpp" line="328"/>
         <source>&amp;Lock wallet</source>
         <translation>&amp;Lock wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="327"/>
+        <location filename="../bitcoingui.cpp" line="329"/>
         <source>Lock wallet</source>
         <translation>Lock wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="330"/>
+        <location filename="../bitcoingui.cpp" line="332"/>
         <source>Unlo&amp;ck wallet</source>
         <translation>Unlo&amp;ck wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="331"/>
+        <location filename="../bitcoingui.cpp" line="333"/>
         <source>Unlock wallet</source>
         <translation>Unlock wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="334"/>
+        <location filename="../bitcoingui.cpp" line="336"/>
         <source>Unlo&amp;ck wallet for mining</source>
         <translation>Unlo&amp;ck wallet for mining</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="335"/>
+        <location filename="../bitcoingui.cpp" line="337"/>
         <source>Unlock wallet for mining</source>
         <translation>Unlock wallet for mining</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="338"/>
+        <location filename="../bitcoingui.cpp" line="340"/>
         <source>&amp;Export...</source>
         <translation>&amp;Export...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="339"/>
+        <location filename="../bitcoingui.cpp" line="341"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Export the data in the current tab to a file</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="340"/>
+        <location filename="../bitcoingui.cpp" line="342"/>
         <source>&amp;Debug window</source>
         <translation>&amp;Debug window</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="341"/>
+        <location filename="../bitcoingui.cpp" line="343"/>
         <source>Open debugging and diagnostic console</source>
         <translation>Open debugging and diagnostic console</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="371"/>
+        <location filename="../bitcoingui.cpp" line="373"/>
         <source>&amp;File</source>
         <translation>&amp;File</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="383"/>
+        <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Settings</source>
         <translation>&amp;Settings</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="384"/>
+        <location filename="../bitcoingui.cpp" line="386"/>
         <source>&amp;Wallet security</source>
         <translation>&amp;Wallet security</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="392"/>
+        <location filename="../bitcoingui.cpp" line="394"/>
         <source>&amp;Help</source>
         <translation>&amp;Help</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="401"/>
+        <location filename="../bitcoingui.cpp" line="403"/>
         <source>Tabs toolbar</source>
         <translation>Tabs toolbar</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="410"/>
+        <location filename="../bitcoingui.cpp" line="412"/>
         <source>Actions toolbar</source>
         <translation>Actions toolbar</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="425"/>
-        <location filename="../bitcoingui.cpp" line="434"/>
+        <location filename="../bitcoingui.cpp" line="427"/>
+        <location filename="../bitcoingui.cpp" line="436"/>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="434"/>
-        <location filename="../bitcoingui.cpp" line="501"/>
+        <location filename="../bitcoingui.cpp" line="436"/>
+        <location filename="../bitcoingui.cpp" line="503"/>
         <source>NovaCoin client</source>
         <translation>NovaCoin client</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="573"/>
+        <location filename="../bitcoingui.cpp" line="575"/>
         <source>%n active connection(s) to NovaCoin network</source>
         <translation>
             <numerusform>%n active connection to NovaCoin network</numerusform>
@@ -611,12 +615,12 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="597"/>
+        <location filename="../bitcoingui.cpp" line="599"/>
         <source>Synchronizing with network...</source>
         <translation>Synchronizing with network...</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="599"/>
+        <location filename="../bitcoingui.cpp" line="601"/>
         <source>~%n block(s) remaining</source>
         <translation>
             <numerusform>~%n block remaining</numerusform>
@@ -624,17 +628,27 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="605"/>
+        <location filename="../bitcoingui.cpp" line="607"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
         <translation>Downloaded %1 of %2 blocks of transaction history (%3% done).</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="613"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Downloaded %1 blocks of transaction history.</translation>
     </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="626"/>
+        <source>Current PoW difficulty is %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="627"/>
+        <source>Current PoS difficulty is %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="635"/>
+        <location filename="../bitcoingui.cpp" line="640"/>
         <source>%n second(s) ago</source>
         <translation>
             <numerusform>%n second ago</numerusform>
@@ -642,7 +656,7 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="639"/>
+        <location filename="../bitcoingui.cpp" line="644"/>
         <source>%n minute(s) ago</source>
         <translation>
             <numerusform>%n minute ago</numerusform>
@@ -650,7 +664,7 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="643"/>
+        <location filename="../bitcoingui.cpp" line="648"/>
         <source>%n hour(s) ago</source>
         <translation>
             <numerusform>%n hour ago</numerusform>
@@ -658,7 +672,7 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
         </translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="647"/>
+        <location filename="../bitcoingui.cpp" line="652"/>
         <source>%n day(s) ago</source>
         <translation>
             <numerusform>%n day ago</numerusform>
@@ -666,82 +680,86 @@ Copyright © 2012-2015 The NovaCoin developers</translation>
         </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="653"/>
+        <location filename="../bitcoingui.cpp" line="658"/>
         <source>Up to date</source>
         <translation>Up to date</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="660"/>
+        <location filename="../bitcoingui.cpp" line="665"/>
         <source>Catching up...</source>
         <translation>Catching up...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="670"/>
+        <location filename="../bitcoingui.cpp" line="675"/>
         <source>Last received block was generated %1.</source>
         <translation>Last received block was generated %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="690"/>
+        <location filename="../bitcoingui.cpp" line="695"/>
         <source>Wallet is offline</source>
         <translation>Wallet is offline</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="696"/>
+        <location filename="../bitcoingui.cpp" line="701"/>
         <source>Wallet is locked</source>
         <translation>Wallet is locked</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="702"/>
+        <location filename="../bitcoingui.cpp" line="707"/>
         <source>Blockchain download is in progress</source>
         <translation>Blockchain download is in progress</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="732"/>
-        <source>Stake miner is active&lt;br&gt;Kernel rate is %1 k/s&lt;br&gt;CD rate is %2 CD/s&lt;br&gt;Network weight is %3</source>
-        <translation>Stake miner is active&lt;br&gt;Kernel rate is %1 k/s&lt;br&gt;CD rate is %2 CD/s&lt;br&gt;Network weight is %3</translation>
+        <location filename="../bitcoingui.cpp" line="717"/>
+        <source>Stake miner is active&lt;br&gt;%1 inputs being used for mining&lt;br&gt;Network weight is %3</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="735"/>
+        <source>Stake miner is active&lt;br&gt;Kernel rate is %1 k/s&lt;br&gt;CD rate is %2 CD/s&lt;br&gt;Network weight is %3</source>
+        <translation type="vanished">Stake miner is active&lt;br&gt;Kernel rate is %1 k/s&lt;br&gt;CD rate is %2 CD/s&lt;br&gt;Network weight is %3</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="720"/>
         <source>No suitable inputs were found</source>
         <translation>No suitable inputs were found</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="749"/>
+        <location filename="../bitcoingui.cpp" line="734"/>
         <source>Error</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="752"/>
+        <location filename="../bitcoingui.cpp" line="737"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="755"/>
+        <location filename="../bitcoingui.cpp" line="740"/>
         <source>Information</source>
         <translation>Information</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="827"/>
+        <location filename="../bitcoingui.cpp" line="812"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="832"/>
+        <location filename="../bitcoingui.cpp" line="817"/>
         <source>Confirm transaction fee</source>
         <translation>Confirm transaction fee</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="859"/>
+        <location filename="../bitcoingui.cpp" line="844"/>
         <source>Sent transaction</source>
         <translation>Sent transaction</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="860"/>
+        <location filename="../bitcoingui.cpp" line="845"/>
         <source>Incoming transaction</source>
         <translation>Incoming transaction</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="861"/>
+        <location filename="../bitcoingui.cpp" line="846"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -754,94 +772,94 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="978"/>
-        <location filename="../bitcoingui.cpp" line="993"/>
+        <location filename="../bitcoingui.cpp" line="964"/>
+        <location filename="../bitcoingui.cpp" line="979"/>
         <source>URI handling</source>
         <translation>URI handling</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="978"/>
-        <location filename="../bitcoingui.cpp" line="993"/>
+        <location filename="../bitcoingui.cpp" line="964"/>
+        <location filename="../bitcoingui.cpp" line="979"/>
         <source>URI can not be parsed! This can be caused by an invalid NovaCoin address or malformed URI parameters.</source>
         <translation>URI can not be parsed! This can be caused by an invalid NovaCoin address or malformed URI parameters.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1012"/>
+        <location filename="../bitcoingui.cpp" line="998"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1031"/>
+        <location filename="../bitcoingui.cpp" line="1017"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1080"/>
+        <location filename="../bitcoingui.cpp" line="1066"/>
         <source>Backup Wallet</source>
         <translation>Backup Wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1080"/>
+        <location filename="../bitcoingui.cpp" line="1066"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Wallet Data (*.dat)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1083"/>
+        <location filename="../bitcoingui.cpp" line="1069"/>
         <source>Backup Failed</source>
         <translation>Backup Failed</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1083"/>
+        <location filename="../bitcoingui.cpp" line="1069"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>There was an error trying to save the wallet data to the new location.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1105"/>
+        <location filename="../bitcoingui.cpp" line="1091"/>
         <source>Dump Wallet</source>
         <translation>There was an error trying to save the wallet data to the new location.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1105"/>
-        <location filename="../bitcoingui.cpp" line="1138"/>
+        <location filename="../bitcoingui.cpp" line="1091"/>
+        <location filename="../bitcoingui.cpp" line="1124"/>
         <source>Wallet dump (*.txt)</source>
         <translation>Wallet dump (*.txt)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1108"/>
+        <location filename="../bitcoingui.cpp" line="1094"/>
         <source>Dump failed</source>
         <translation>Dump failed</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1109"/>
+        <location filename="../bitcoingui.cpp" line="1095"/>
         <source>An error happened while trying to save the keys to your location.
 Keys were not saved.</source>
         <translation>An error happened while trying to save the keys to your location.
 Keys were not saved.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1114"/>
+        <location filename="../bitcoingui.cpp" line="1100"/>
         <source>Dump successful</source>
         <translation>Dump successful</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1115"/>
+        <location filename="../bitcoingui.cpp" line="1101"/>
         <source>Keys were saved to this file:
 %2</source>
         <translation>Keys were saved to this file:
 %2</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1138"/>
+        <location filename="../bitcoingui.cpp" line="1124"/>
         <source>Import Wallet</source>
         <translation>Import Wallet</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1141"/>
+        <location filename="../bitcoingui.cpp" line="1127"/>
         <source>Import Failed</source>
         <translation>Import Failed</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1142"/>
+        <location filename="../bitcoingui.cpp" line="1128"/>
         <source>An error happened while trying to import the keys.
 Some or all keys from:
  %1,
@@ -852,12 +870,12 @@ Some or all keys from:
  were not imported into your wallet.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1148"/>
+        <location filename="../bitcoingui.cpp" line="1134"/>
         <source>Import Successful</source>
         <translation>Import Successful</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1149"/>
+        <location filename="../bitcoingui.cpp" line="1135"/>
         <source>All keys from:
  %1,
  were imported into your wallet.</source>
@@ -887,10 +905,8 @@ Some or all keys from:
         <translation>Quantity:</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="64"/>
-        <location filename="../forms/coincontroldialog.ui" line="96"/>
         <source>0</source>
-        <translation>0</translation>
+        <translation type="vanished">0</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
@@ -903,12 +919,8 @@ Some or all keys from:
         <translation>Amount:</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="144"/>
-        <location filename="../forms/coincontroldialog.ui" line="224"/>
-        <location filename="../forms/coincontroldialog.ui" line="310"/>
-        <location filename="../forms/coincontroldialog.ui" line="348"/>
         <source>0.00 NVC</source>
-        <translation>0.00 NVC</translation>
+        <translation type="vanished">0.00 NVC</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="157"/>
@@ -1231,47 +1243,139 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
 </context>
 <context>
+    <name>FreespaceChecker</name>
+    <message>
+        <location filename="../intro.cpp" line="68"/>
+        <source>A new data directory will be created.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="90"/>
+        <source>name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="92"/>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="95"/>
+        <source>Path already exists, and is not a directory.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="102"/>
+        <source>Cannot create data directory here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="448"/>
-        <location filename="../guiutil.cpp" line="460"/>
+        <location filename="../guiutil.cpp" line="476"/>
+        <location filename="../guiutil.cpp" line="488"/>
         <source>NovaCoin-Qt</source>
         <translation>NovaCoin-Qt</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="448"/>
+        <location filename="../guiutil.cpp" line="476"/>
         <source>version</source>
         <translation>version</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="450"/>
+        <location filename="../guiutil.cpp" line="478"/>
         <source>Usage:</source>
         <translation>Usage:</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="451"/>
+        <location filename="../guiutil.cpp" line="479"/>
         <source>command-line options</source>
         <translation>command-line options</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="455"/>
+        <location filename="../guiutil.cpp" line="483"/>
         <source>UI options</source>
         <translation>UI options</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="456"/>
+        <location filename="../guiutil.cpp" line="484"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
         <translation>Set language, for example &quot;de_DE&quot; (default: system locale)</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="457"/>
+        <location filename="../guiutil.cpp" line="485"/>
         <source>Start minimized</source>
         <translation>Start minimized</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="458"/>
+        <location filename="../guiutil.cpp" line="486"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Show splash screen on startup (default: 1)</translation>
+    </message>
+</context>
+<context>
+    <name>Intro</name>
+    <message>
+        <location filename="../forms/intro.ui" line="14"/>
+        <source>Welcome</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="23"/>
+        <source>Welcome to novacoin-qt.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="49"/>
+        <source>As this is the first time the program is launched, you can choose where novacoin-qt will store its data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="59"/>
+        <source>novacoin-qt will download and store a copy of the Novacoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="69"/>
+        <source>Use the default data directory</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="76"/>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="184"/>
+        <source>Novacoin-qt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="185"/>
+        <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="209"/>
+        <source>Error</source>
+        <translation type="unfinished">Error</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../intro.cpp" line="218"/>
+        <source>%n GB of free space available</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../intro.cpp" line="221"/>
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -1606,9 +1710,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Enter a number</translation>
     </message>
     <message>
-        <location filename="../forms/multisigdialog.ui" line="159"/>
         <source>/ 1</source>
-        <translation>/ 1</translation>
+        <translation type="vanished">/ 1</translation>
     </message>
     <message>
         <location filename="../forms/multisigdialog.ui" line="183"/>
@@ -1671,18 +1774,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Inputs amount:</translation>
     </message>
     <message>
-        <location filename="../forms/multisigdialog.ui" line="392"/>
-        <location filename="../forms/multisigdialog.ui" line="511"/>
-        <location filename="../forms/multisigdialog.ui" line="552"/>
         <source>123.456</source>
-        <translation>123.456</translation>
+        <translation type="vanished">123.456</translation>
     </message>
     <message>
-        <location filename="../forms/multisigdialog.ui" line="402"/>
-        <location filename="../forms/multisigdialog.ui" line="521"/>
-        <location filename="../forms/multisigdialog.ui" line="559"/>
         <source>NVC</source>
-        <translation>NVC</translation>
+        <translation type="vanished">NVC</translation>
     </message>
     <message>
         <location filename="../forms/multisigdialog.ui" line="413"/>
@@ -2106,101 +2203,101 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Form</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="47"/>
-        <location filename="../forms/overviewpage.ui" line="360"/>
+        <location filename="../forms/overviewpage.ui" line="46"/>
+        <location filename="../forms/overviewpage.ui" line="365"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="226"/>
-        <location filename="../forms/overviewpage.ui" line="245"/>
+        <location filename="../forms/overviewpage.ui" line="225"/>
+        <location filename="../forms/overviewpage.ui" line="244"/>
         <source>Your unspendable balance</source>
         <translation>Your unspendable balance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="229"/>
+        <location filename="../forms/overviewpage.ui" line="228"/>
         <source>Unspendable:</source>
         <translation>Unspendable:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
-        <location filename="../forms/overviewpage.ui" line="143"/>
+        <location filename="../forms/overviewpage.ui" line="123"/>
+        <location filename="../forms/overviewpage.ui" line="142"/>
         <source>Total of coins that was staked, and do not yet count toward the current balance</source>
         <translation>Total of coins that was staked, and do not yet count toward the current balance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="40"/>
+        <location filename="../forms/overviewpage.ui" line="39"/>
         <source>Balances</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="89"/>
-        <location filename="../forms/overviewpage.ui" line="108"/>
+        <location filename="../forms/overviewpage.ui" line="88"/>
+        <location filename="../forms/overviewpage.ui" line="107"/>
         <source>Your current available balance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="92"/>
+        <location filename="../forms/overviewpage.ui" line="91"/>
         <source>Available:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="127"/>
+        <location filename="../forms/overviewpage.ui" line="126"/>
         <source>Stake:</source>
         <translation>Stake:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="159"/>
-        <location filename="../forms/overviewpage.ui" line="178"/>
+        <location filename="../forms/overviewpage.ui" line="158"/>
+        <location filename="../forms/overviewpage.ui" line="177"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
         <translation>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="162"/>
+        <location filename="../forms/overviewpage.ui" line="161"/>
         <source>Unconfirmed:</source>
         <translation>Unconfirmed:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="194"/>
-        <location filename="../forms/overviewpage.ui" line="210"/>
+        <location filename="../forms/overviewpage.ui" line="193"/>
+        <location filename="../forms/overviewpage.ui" line="209"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Mined balance that has not yet matured</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="197"/>
+        <location filename="../forms/overviewpage.ui" line="196"/>
         <source>Immature:</source>
         <translation>Immature:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="268"/>
-        <location filename="../forms/overviewpage.ui" line="284"/>
+        <location filename="../forms/overviewpage.ui" line="273"/>
+        <location filename="../forms/overviewpage.ui" line="289"/>
         <source>Your current total balance</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="271"/>
+        <location filename="../forms/overviewpage.ui" line="276"/>
         <source>Total:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="300"/>
-        <location filename="../forms/overviewpage.ui" line="310"/>
+        <location filename="../forms/overviewpage.ui" line="305"/>
+        <location filename="../forms/overviewpage.ui" line="315"/>
         <source>Total number of transactions in wallet</source>
         <translation>Total number of transactions in wallet</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="303"/>
+        <location filename="../forms/overviewpage.ui" line="308"/>
         <source>Number of transactions:</source>
         <translation>Number of transactions:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="353"/>
+        <location filename="../forms/overviewpage.ui" line="358"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Recent transactions&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="118"/>
-        <location filename="../overviewpage.cpp" line="119"/>
+        <location filename="../overviewpage.cpp" line="123"/>
+        <location filename="../overviewpage.cpp" line="124"/>
         <source>out of sync</source>
         <translation>out of sync</translation>
     </message>
@@ -2228,22 +2325,22 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Amount</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="499"/>
+        <location filename="../guiutil.cpp" line="527"/>
         <source>%1 d</source>
         <translation>%1 d</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="501"/>
+        <location filename="../guiutil.cpp" line="529"/>
         <source>%1 h</source>
         <translation>%1 h</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="503"/>
+        <location filename="../guiutil.cpp" line="531"/>
         <source>%1 m</source>
         <translation>%1 m</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="505"/>
+        <location filename="../guiutil.cpp" line="533"/>
         <source>%1 s</source>
         <translation>%1 s</translation>
     </message>
@@ -2251,6 +2348,11 @@ Reduce the number of addresses involved in the address creation.</translation>
         <location filename="../mintingtablemodel.cpp" line="409"/>
         <source>from  %1 to %2</source>
         <translation>from  %1 to %2</translation>
+    </message>
+    <message>
+        <location filename="../bitcoin.cpp" line="188"/>
+        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2339,7 +2441,7 @@ Reduce the number of addresses involved in the address creation.</translation>
         <location filename="../forms/rpcconsole.ui" line="334"/>
         <location filename="../forms/rpcconsole.ui" line="357"/>
         <location filename="../forms/rpcconsole.ui" line="393"/>
-        <location filename="../rpcconsole.cpp" line="366"/>
+        <location filename="../rpcconsole.cpp" line="365"/>
         <source>N/A</source>
         <translation>N/A</translation>
     </message>
@@ -2489,47 +2591,47 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Sent:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="326"/>
+        <location filename="../rpcconsole.cpp" line="325"/>
         <source>Welcome to the NovaCoin RPC console.</source>
         <translation>Welcome to the NovaCoin RPC console.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="327"/>
+        <location filename="../rpcconsole.cpp" line="326"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="328"/>
+        <location filename="../rpcconsole.cpp" line="327"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="353"/>
+        <location filename="../rpcconsole.cpp" line="352"/>
         <source>Inbound:</source>
         <translation>Inbound:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="354"/>
+        <location filename="../rpcconsole.cpp" line="353"/>
         <source>Outbound:</source>
         <translation>Outbound:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="471"/>
+        <location filename="../rpcconsole.cpp" line="470"/>
         <source>%1 B</source>
         <translation>%1 B</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="473"/>
+        <location filename="../rpcconsole.cpp" line="472"/>
         <source>%1 KB</source>
         <translation>%1 KB</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="475"/>
+        <location filename="../rpcconsole.cpp" line="474"/>
         <source>%1 MB</source>
         <translation>%1 MB</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="477"/>
+        <location filename="../rpcconsole.cpp" line="476"/>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
@@ -2574,10 +2676,8 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Quantity:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="235"/>
-        <location filename="../forms/sendcoinsdialog.ui" line="270"/>
         <source>0</source>
-        <translation>0</translation>
+        <translation type="vanished">0</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="251"/>
@@ -2590,12 +2690,8 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Amount:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="324"/>
-        <location filename="../forms/sendcoinsdialog.ui" line="410"/>
-        <location filename="../forms/sendcoinsdialog.ui" line="496"/>
-        <location filename="../forms/sendcoinsdialog.ui" line="528"/>
         <source>0.00 NVC</source>
-        <translation>0.00 NVC</translation>
+        <translation type="vanished">0.00 NVC</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="337"/>
@@ -2683,9 +2779,8 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Balance:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
         <source>123.456 NVC</source>
-        <translation>123.456 NVC</translation>
+        <translation type="vanished">123.456 NVC</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
@@ -3340,32 +3435,32 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>Mined</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="421"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>(n/a)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="624"/>
+        <location filename="../transactiontablemodel.cpp" line="623"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Transaction status. Hover over this field to show number of confirmations.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="626"/>
+        <location filename="../transactiontablemodel.cpp" line="625"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Date and time that the transaction was received.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="628"/>
+        <location filename="../transactiontablemodel.cpp" line="627"/>
         <source>Type of transaction.</source>
         <translation>Type of transaction.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="630"/>
+        <location filename="../transactiontablemodel.cpp" line="629"/>
         <source>Destination address of transaction.</source>
         <translation>Destination address of transaction.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="632"/>
+        <location filename="../transactiontablemodel.cpp" line="631"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Amount removed from or added to balance.</translation>
     </message>

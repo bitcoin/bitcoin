@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS language="uk_UA" version="2.1">
+<TS version="2.1" language="uk_UA">
 <context>
     <name>AboutDialog</name>
     <message>
@@ -28,8 +28,8 @@ Copyright © 2012-2015 The NovaCoin developers</source>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="114"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;This is experimental software.&lt;/p&gt;&lt;p&gt;Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;br/&gt;&lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;) and cryptographic software written by Eric Young (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;) and UPnP software written by Thomas Bernard(&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;Це програмне забезпечення є експериментальним.&lt;/p&gt;&lt;p&gt;Поширюється за ліцензією MIT/X11, додаткова інформація міститься у файлі COPYING та за адресою &lt;br/&gt;&lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Цей продукт включає в себе програмне забезпечення, розроблене в рамках проекту OpenSSL (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;), криптографічне програмне забезпечення, написане Еріком Янгом (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;), та функції для роботи з UPnP, написані Томасом Бернардом (&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;This is experimental software.&lt;/p&gt;&lt;p&gt;Distributed under the MIT/X11 software license, see the accompanying file COPYING or &lt;br/&gt;&lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Main icon was designed by VisualPharm.com (&lt;a href=&quot;mailto:team@visualpharm.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;team@visualpharm.com&lt;/span&gt;&lt;/a&gt;). This product also includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;) and cryptographic software written by Eric Young (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;) and UPnP software written by Thomas Bernard(&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;Це програмне забезпечення є експериментальним.&lt;/p&gt;&lt;p&gt;Поширюється за ліцензією MIT/X11, додаткова інформація міститься у файлі COPYING та за адресою &lt;br/&gt;&lt;a href=&quot;http://www.opensource.org/licenses/mit-license.php&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.opensource.org/licenses/mit-license.php&lt;/span&gt;&lt;/a&gt;.&lt;/p&gt;&lt;p&gt;Піктограму програми розробили VisualPharm.com (&lt;a href=&quot;mailto:team@visualpharm.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;team@visualpharm.com&lt;/span&gt;&lt;/a&gt;). Крім того, цей продукт також включає в себе програмне забезпечення, розроблене в рамках проекту OpenSSL (&lt;a href=&quot;http://www.openssl.org/&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;http://www.openssl.org/&lt;/span&gt;&lt;/a&gt;), криптографічне програмне забезпечення, написане Еріком Янгом (&lt;a href=&quot;mailto:eay@cryptsoft.com&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;eay@cryptsoft.com&lt;/span&gt;&lt;/a&gt;), та функції для роботи з UPnP, написані Томасом Бернардом (&lt;a href=&quot;mailto:miniupnp@free.fr&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;miniupnp@free.fr&lt;/span&gt;&lt;/a&gt;).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
 </context>
 <context>
@@ -115,22 +115,22 @@ Copyright © 2012-2015 The NovaCoin developers</source>
         <translation>&amp;Редагувати</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="321"/>
+        <location filename="../addressbookpage.cpp" line="327"/>
         <source>Export Address Book Data</source>
         <translation>Експортувати адресну книгу</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="322"/>
+        <location filename="../addressbookpage.cpp" line="328"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Файли відділені комами (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="335"/>
+        <location filename="../addressbookpage.cpp" line="341"/>
         <source>Error exporting</source>
         <translation>Помилка при експортуванні</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="335"/>
+        <location filename="../addressbookpage.cpp" line="341"/>
         <source>Could not write to file %1.</source>
         <translation>Неможливо записати у файл %1.</translation>
     </message>
@@ -310,421 +310,459 @@ Copyright © 2012-2015 The NovaCoin developers</source>
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <location filename="../bitcoin.cpp" line="111"/>
+        <location filename="../bitcoin.cpp" line="146"/>
         <source>A fatal error occurred. NovaCoin can no longer continue safely and will quit.</source>
         <translation>Сталася фатальна помилка. Програма зараз закриється, оскільки NovaCoin не може продовжувати роботу безпечно.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="93"/>
-        <location filename="../bitcoingui.cpp" line="740"/>
+        <location filename="../bitcoingui.cpp" line="94"/>
+        <location filename="../bitcoingui.cpp" line="725"/>
         <source>NovaCoin</source>
         <translation>NovaCoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="93"/>
+        <location filename="../bitcoingui.cpp" line="94"/>
         <source>Wallet</source>
         <translation>Гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="237"/>
+        <location filename="../bitcoingui.cpp" line="239"/>
         <source>&amp;Overview</source>
         <translation>&amp;Огляд</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="238"/>
+        <location filename="../bitcoingui.cpp" line="240"/>
         <source>Show general overview of wallet</source>
         <translation>Показати загальний огляд гаманця</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="243"/>
+        <location filename="../bitcoingui.cpp" line="245"/>
         <source>&amp;Send coins</source>
         <translation>В&amp;ідправити</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="244"/>
+        <location filename="../bitcoingui.cpp" line="246"/>
         <source>Send coins to a NovaCoin address</source>
         <translation>Відправити монети на вказану адресу</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="249"/>
+        <location filename="../bitcoingui.cpp" line="251"/>
         <source>&amp;Receive coins</source>
         <translation>О&amp;тримати</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="250"/>
+        <location filename="../bitcoingui.cpp" line="252"/>
         <source>Show the list of addresses for receiving payments</source>
         <translation>Показати список адрес для отримання платежів</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="255"/>
+        <location filename="../bitcoingui.cpp" line="257"/>
         <source>&amp;Transactions</source>
         <translation>&amp;Транзакції</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="256"/>
+        <location filename="../bitcoingui.cpp" line="258"/>
         <source>Browse transaction history</source>
         <translation>Переглянути історію транзакцій</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="261"/>
+        <location filename="../bitcoingui.cpp" line="263"/>
         <source>&amp;Minting</source>
         <translation>&amp;PoS</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="262"/>
+        <location filename="../bitcoingui.cpp" line="264"/>
         <source>Show your minting capacity</source>
         <translation>Показати ваш PoS потенціал</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="267"/>
+        <location filename="../bitcoingui.cpp" line="269"/>
         <source>&amp;Address Book</source>
         <translation>&amp;Адресна книга</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="268"/>
+        <location filename="../bitcoingui.cpp" line="270"/>
         <source>Edit the list of stored addresses and labels</source>
         <translation>Редагувати список збережених адрес та міток</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="273"/>
+        <location filename="../bitcoingui.cpp" line="275"/>
         <source>Multisig</source>
         <translation>Мультипідпис</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="274"/>
+        <location filename="../bitcoingui.cpp" line="276"/>
         <source>Open window for working with multisig addresses</source>
         <translation>Відкрити вікно для роботи з мультипідпис-адресом</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="292"/>
+        <location filename="../bitcoingui.cpp" line="294"/>
         <source>E&amp;xit</source>
         <translation>&amp;Вихід</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="293"/>
+        <location filename="../bitcoingui.cpp" line="295"/>
         <source>Quit application</source>
         <translation>Вийти</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="296"/>
+        <location filename="../bitcoingui.cpp" line="298"/>
         <source>&amp;About NovaCoin</source>
         <translation>П&amp;ро NovaCoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="297"/>
+        <location filename="../bitcoingui.cpp" line="299"/>
         <source>Show information about NovaCoin</source>
         <translation>Показати інформацію про NovaCoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="300"/>
         <location filename="../bitcoingui.cpp" line="302"/>
+        <location filename="../bitcoingui.cpp" line="304"/>
         <source>About &amp;Qt</source>
         <translation>&amp;Про Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="304"/>
+        <location filename="../bitcoingui.cpp" line="306"/>
         <source>Show information about Qt</source>
         <translation>Показати інформацію про Qt</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="306"/>
+        <location filename="../bitcoingui.cpp" line="308"/>
         <source>&amp;Options...</source>
         <translation>&amp;Параметри...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="307"/>
+        <location filename="../bitcoingui.cpp" line="309"/>
         <source>Modify configuration options for NovaCoin</source>
         <translation>Редагувати параметри NovaCoin</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="309"/>
+        <location filename="../bitcoingui.cpp" line="311"/>
         <source>&amp;Show / Hide</source>
         <translation>Показати / Приховати</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="310"/>
+        <location filename="../bitcoingui.cpp" line="312"/>
         <source>&amp;Encrypt Wallet...</source>
         <translation>&amp;Шифрування гаманця...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="311"/>
+        <location filename="../bitcoingui.cpp" line="313"/>
         <source>Encrypt or decrypt wallet</source>
         <translation>Зашифрувати чи розшифрувати гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="313"/>
+        <location filename="../bitcoingui.cpp" line="315"/>
         <source>&amp;Backup Wallet...</source>
         <translation>&amp;Резервне копіювання гаманця...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="314"/>
+        <location filename="../bitcoingui.cpp" line="316"/>
         <source>Backup wallet to another location</source>
         <translation>Резервне копіювання гаманця в інше місце</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="315"/>
+        <location filename="../bitcoingui.cpp" line="317"/>
         <source>&amp;Dump Wallet...</source>
         <translation>&amp;Вивантаження гаманця...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="316"/>
+        <location filename="../bitcoingui.cpp" line="318"/>
         <source>Dump keys to a text file</source>
         <translation>Вивантажити ключі у текстовий файл</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="317"/>
+        <location filename="../bitcoingui.cpp" line="319"/>
         <source>&amp;Import Wallet...</source>
         <translation>&amp;Імпорт гаманця...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="318"/>
+        <location filename="../bitcoingui.cpp" line="320"/>
         <source>Import keys into a wallet</source>
         <translation>Імпортувати ключі до гаманця</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="319"/>
+        <location filename="../bitcoingui.cpp" line="321"/>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Змінити пароль...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="320"/>
+        <location filename="../bitcoingui.cpp" line="322"/>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Змінити пароль, який використовується для шифрування гаманця</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="321"/>
+        <location filename="../bitcoingui.cpp" line="323"/>
         <source>Sign &amp;message...</source>
         <translation>Підписати п&amp;овідомлення...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="322"/>
+        <location filename="../bitcoingui.cpp" line="324"/>
         <source>Sign messages with your Novacoin addresses to prove you own them</source>
         <translation>Підтвердіть, що Ви є власником повідомлення підписавши його Вашою Novacoin-адресою</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="323"/>
+        <location filename="../bitcoingui.cpp" line="325"/>
         <source>&amp;Verify message...</source>
         <translation>П&amp;еревірити повідомлення...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="324"/>
+        <location filename="../bitcoingui.cpp" line="326"/>
         <source>Verify messages to ensure they were signed with specified Novacoin addresses</source>
         <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною Novacoin-адресою</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="326"/>
+        <location filename="../bitcoingui.cpp" line="328"/>
         <source>&amp;Lock wallet</source>
         <translation>Заблокувати гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="327"/>
+        <location filename="../bitcoingui.cpp" line="329"/>
         <source>Lock wallet</source>
         <translation>Розблокувати гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="330"/>
+        <location filename="../bitcoingui.cpp" line="332"/>
         <source>Unlo&amp;ck wallet</source>
         <translation>Розбло&amp;кувати гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="331"/>
+        <location filename="../bitcoingui.cpp" line="333"/>
         <source>Unlock wallet</source>
         <translation>Розблокувати гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="334"/>
+        <location filename="../bitcoingui.cpp" line="336"/>
         <source>Unlo&amp;ck wallet for mining</source>
         <translation>Розбло&amp;кувати гаманець для майнігу</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="335"/>
+        <location filename="../bitcoingui.cpp" line="337"/>
         <source>Unlock wallet for mining</source>
         <translation>Розблокувати гаманець для майнігу</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="338"/>
+        <location filename="../bitcoingui.cpp" line="340"/>
         <source>&amp;Export...</source>
         <translation>&amp;Експорт...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="339"/>
+        <location filename="../bitcoingui.cpp" line="341"/>
         <source>Export the data in the current tab to a file</source>
         <translation>Експортувати дані з поточної вкладки в файл</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="340"/>
+        <location filename="../bitcoingui.cpp" line="342"/>
         <source>&amp;Debug window</source>
         <translation>&amp;Вікно відладки</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="341"/>
+        <location filename="../bitcoingui.cpp" line="343"/>
         <source>Open debugging and diagnostic console</source>
         <translation>Відкрити консоль відладки і діагностики</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="371"/>
+        <location filename="../bitcoingui.cpp" line="373"/>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="383"/>
+        <location filename="../bitcoingui.cpp" line="385"/>
         <source>&amp;Settings</source>
         <translation>&amp;Налаштування</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="384"/>
+        <location filename="../bitcoingui.cpp" line="386"/>
         <source>&amp;Wallet security</source>
         <translation>&amp;Безпека гаманця</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="392"/>
+        <location filename="../bitcoingui.cpp" line="394"/>
         <source>&amp;Help</source>
         <translation>&amp;Довідка</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="401"/>
+        <location filename="../bitcoingui.cpp" line="403"/>
         <source>Tabs toolbar</source>
         <translation>Панель вкладок</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="410"/>
+        <location filename="../bitcoingui.cpp" line="412"/>
         <source>Actions toolbar</source>
         <translation>Панель дій</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="425"/>
-        <location filename="../bitcoingui.cpp" line="434"/>
+        <location filename="../bitcoingui.cpp" line="427"/>
+        <location filename="../bitcoingui.cpp" line="436"/>
         <source>[testnet]</source>
         <translation>[тестова мережа]</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="434"/>
-        <location filename="../bitcoingui.cpp" line="501"/>
+        <location filename="../bitcoingui.cpp" line="436"/>
+        <location filename="../bitcoingui.cpp" line="503"/>
         <source>NovaCoin client</source>
         <translation>NovaCoin клієнт</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="573"/>
+        <location filename="../bitcoingui.cpp" line="575"/>
         <source>%n active connection(s) to NovaCoin network</source>
-        <translation><numerusform>%n активне з&apos;єднання з мережею NovaCoin</numerusform><numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform><numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform></translation>
+        <translation>
+            <numerusform>%n активне з&apos;єднання з мережею NovaCoin</numerusform>
+            <numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform>
+            <numerusform>%n активних з&apos;єднань з мережею NovaCoin</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="597"/>
+        <location filename="../bitcoingui.cpp" line="599"/>
         <source>Synchronizing with network...</source>
         <translation>Синхронізація з мережею...</translation>
     </message>
     <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="599"/>
+        <location filename="../bitcoingui.cpp" line="601"/>
         <source>~%n block(s) remaining</source>
-        <translation><numerusform>~%n блок залишився</numerusform><numerusform>блоків залишилося</numerusform><numerusform>~%n блоків залишилося</numerusform></translation>
+        <translation>
+            <numerusform>~%n блок залишився</numerusform>
+            <numerusform>блоків залишилося</numerusform>
+            <numerusform>~%n блоків залишилося</numerusform>
+        </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="605"/>
+        <location filename="../bitcoingui.cpp" line="607"/>
         <source>Downloaded %1 of %2 blocks of transaction history (%3% done).</source>
         <translation>Завантажено %1 з %2 блоків історії транзакцій (%3% виконано).</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="613"/>
+        <location filename="../bitcoingui.cpp" line="615"/>
         <source>Downloaded %1 blocks of transaction history.</source>
         <translation>Завантажено %1 блоків історії транзакцій.</translation>
     </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="635"/>
-        <source>%n second(s) ago</source>
-        <translation><numerusform>%n секунду тому</numerusform><numerusform>%n секунди тому</numerusform><numerusform>%n секунд тому</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="639"/>
-        <source>%n minute(s) ago</source>
-        <translation><numerusform>%n хвилину тому</numerusform><numerusform>%n хвилини тому</numerusform><numerusform>%n хвилин тому</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="643"/>
-        <source>%n hour(s) ago</source>
-        <translation><numerusform>%n годину тому</numerusform><numerusform>%n години тому</numerusform><numerusform>%n годин тому</numerusform></translation>
-    </message>
-    <message numerus="yes">
-        <location filename="../bitcoingui.cpp" line="647"/>
-        <source>%n day(s) ago</source>
-        <translation><numerusform>%n день тому</numerusform><numerusform>%n дня тому</numerusform><numerusform>%n днів тому</numerusform></translation>
+    <message>
+        <location filename="../bitcoingui.cpp" line="626"/>
+        <source>Current PoW difficulty is %1.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="653"/>
+        <location filename="../bitcoingui.cpp" line="627"/>
+        <source>Current PoS difficulty is %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="640"/>
+        <source>%n second(s) ago</source>
+        <translation>
+            <numerusform>%n секунду тому</numerusform>
+            <numerusform>%n секунди тому</numerusform>
+            <numerusform>%n секунд тому</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="644"/>
+        <source>%n minute(s) ago</source>
+        <translation>
+            <numerusform>%n хвилину тому</numerusform>
+            <numerusform>%n хвилини тому</numerusform>
+            <numerusform>%n хвилин тому</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="648"/>
+        <source>%n hour(s) ago</source>
+        <translation>
+            <numerusform>%n годину тому</numerusform>
+            <numerusform>%n години тому</numerusform>
+            <numerusform>%n годин тому</numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../bitcoingui.cpp" line="652"/>
+        <source>%n day(s) ago</source>
+        <translation>
+            <numerusform>%n день тому</numerusform>
+            <numerusform>%n дня тому</numerusform>
+            <numerusform>%n днів тому</numerusform>
+        </translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="658"/>
         <source>Up to date</source>
         <translation>Синхронізовано</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="660"/>
+        <location filename="../bitcoingui.cpp" line="665"/>
         <source>Catching up...</source>
         <translation>Синхронізується...</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="670"/>
+        <location filename="../bitcoingui.cpp" line="675"/>
         <source>Last received block was generated %1.</source>
         <translation>Останній отриманий блок було згенеровано %1.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="690"/>
+        <location filename="../bitcoingui.cpp" line="695"/>
         <source>Wallet is offline</source>
         <translation>Гаманець офф-лайн</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="696"/>
+        <location filename="../bitcoingui.cpp" line="701"/>
         <source>Wallet is locked</source>
         <translation>Гаманець заблокованний</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="702"/>
+        <location filename="../bitcoingui.cpp" line="707"/>
         <source>Blockchain download is in progress</source>
         <translation>Відбувається завантаження ланцюжка блоків</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="732"/>
-        <source>Stake miner is active&lt;br&gt;Kernel rate is %1 k/s&lt;br&gt;CD rate is %2 CD/s&lt;br&gt;Network weight is %3</source>
-        <translation>PoS майнер активний&lt;br&gt;Спроб генерації %1 в сек&lt;br&gt;Вага спроб %2 монетодень/с&lt;br&gt;Вага мережі %3 монетоднів</translation>
+        <location filename="../bitcoingui.cpp" line="717"/>
+        <source>Stake miner is active&lt;br&gt;%1 inputs being used for mining&lt;br&gt;Network weight is %3</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="735"/>
+        <source>Stake miner is active&lt;br&gt;Kernel rate is %1 k/s&lt;br&gt;CD rate is %2 CD/s&lt;br&gt;Network weight is %3</source>
+        <translation type="vanished">PoS майнер активний&lt;br&gt;Спроб генерації %1 в сек&lt;br&gt;Вага спроб %2 монетодень/с&lt;br&gt;Вага мережі %3 монетоднів</translation>
+    </message>
+    <message>
+        <location filename="../bitcoingui.cpp" line="720"/>
         <source>No suitable inputs were found</source>
         <translation>Було знайдено непридатний вхід</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="749"/>
+        <location filename="../bitcoingui.cpp" line="734"/>
         <source>Error</source>
         <translation>Помилка</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="752"/>
+        <location filename="../bitcoingui.cpp" line="737"/>
         <source>Warning</source>
         <translation>Попередження</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="755"/>
+        <location filename="../bitcoingui.cpp" line="740"/>
         <source>Information</source>
         <translation>Інформація</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="827"/>
+        <location filename="../bitcoingui.cpp" line="812"/>
         <source>This transaction is over the size limit.  You can still send it for a fee of %1, which goes to the nodes that process your transaction and helps to support the network.  Do you want to pay the fee?</source>
         <translation>Ця транзакція перевищує максимально допустимий розмір. Проте ви можете здійснити її, додавши комісію в %1, яка відправиться тим вузлам, які її оброблять, це допоможе підтримати мережу. Ви бажаєте додати комісію?</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="832"/>
+        <location filename="../bitcoingui.cpp" line="817"/>
         <source>Confirm transaction fee</source>
         <translation>Підтвердіть комісію транзакції</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="859"/>
+        <location filename="../bitcoingui.cpp" line="844"/>
         <source>Sent transaction</source>
         <translation>Вихідна транзакція</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="860"/>
+        <location filename="../bitcoingui.cpp" line="845"/>
         <source>Incoming transaction</source>
         <translation>Вхідна транзакція</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="861"/>
+        <location filename="../bitcoingui.cpp" line="846"/>
         <source>Date: %1
 Amount: %2
 Type: %3
@@ -737,94 +775,94 @@ Address: %4
 </translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="978"/>
-        <location filename="../bitcoingui.cpp" line="993"/>
+        <location filename="../bitcoingui.cpp" line="964"/>
+        <location filename="../bitcoingui.cpp" line="979"/>
         <source>URI handling</source>
         <translation>Обробка URI</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="978"/>
-        <location filename="../bitcoingui.cpp" line="993"/>
+        <location filename="../bitcoingui.cpp" line="964"/>
+        <location filename="../bitcoingui.cpp" line="979"/>
         <source>URI can not be parsed! This can be caused by an invalid NovaCoin address or malformed URI parameters.</source>
         <translation>Неможливо обробити URI! Це може бути викликано неправильною NovaCoin-адресою, чи невірними параметрами URI.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1012"/>
+        <location filename="../bitcoingui.cpp" line="998"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;unlocked&lt;/b&gt;</source>
         <translation>&lt;b&gt;Зашифрований&lt;/b&gt; гаманець &lt;b&gt;розблоковано&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1031"/>
+        <location filename="../bitcoingui.cpp" line="1017"/>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>&lt;b&gt;Зашифрований&lt;/b&gt; гаманець &lt;b&gt;заблоковано&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1080"/>
+        <location filename="../bitcoingui.cpp" line="1066"/>
         <source>Backup Wallet</source>
         <translation>Бекап гаманця</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1080"/>
+        <location filename="../bitcoingui.cpp" line="1066"/>
         <source>Wallet Data (*.dat)</source>
         <translation>Данi гаманця (*.dat)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1083"/>
+        <location filename="../bitcoingui.cpp" line="1069"/>
         <source>Backup Failed</source>
         <translation>Помилка резервного копіювання</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1083"/>
+        <location filename="../bitcoingui.cpp" line="1069"/>
         <source>There was an error trying to save the wallet data to the new location.</source>
         <translation>Виникла помилка при спробі зберегти гаманець на нове місце.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1105"/>
+        <location filename="../bitcoingui.cpp" line="1091"/>
         <source>Dump Wallet</source>
         <translation>Вивантажити гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1105"/>
-        <location filename="../bitcoingui.cpp" line="1138"/>
+        <location filename="../bitcoingui.cpp" line="1091"/>
+        <location filename="../bitcoingui.cpp" line="1124"/>
         <source>Wallet dump (*.txt)</source>
         <translation>Дамп гаманця (*.txt)</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1108"/>
+        <location filename="../bitcoingui.cpp" line="1094"/>
         <source>Dump failed</source>
         <translation>Вивантаження не вдалося</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1109"/>
+        <location filename="../bitcoingui.cpp" line="1095"/>
         <source>An error happened while trying to save the keys to your location.
 Keys were not saved.</source>
         <translation>Відбулася помилка під час спроби зберегти ключі до місця призначення.
 Ключі не були збережені.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1114"/>
+        <location filename="../bitcoingui.cpp" line="1100"/>
         <source>Dump successful</source>
         <translation>Вивантаження успішне</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1115"/>
+        <location filename="../bitcoingui.cpp" line="1101"/>
         <source>Keys were saved to this file:
 %2</source>
         <translation>Ключі були збережені у цей фаіл:
 %2</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1138"/>
+        <location filename="../bitcoingui.cpp" line="1124"/>
         <source>Import Wallet</source>
         <translation>Імпортувати гаманець</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1141"/>
+        <location filename="../bitcoingui.cpp" line="1127"/>
         <source>Import Failed</source>
         <translation>Імпорт не вдався</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1142"/>
+        <location filename="../bitcoingui.cpp" line="1128"/>
         <source>An error happened while trying to import the keys.
 Some or all keys from:
  %1,
@@ -835,12 +873,12 @@ Some or all keys from:
 не були імпортовані до вашого гаманця.</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1148"/>
+        <location filename="../bitcoingui.cpp" line="1134"/>
         <source>Import Successful</source>
         <translation>Імпорт успішний</translation>
     </message>
     <message>
-        <location filename="../bitcoingui.cpp" line="1149"/>
+        <location filename="../bitcoingui.cpp" line="1135"/>
         <source>All keys from:
  %1,
  were imported into your wallet.</source>
@@ -870,10 +908,8 @@ Some or all keys from:
         <translation>Кількість:</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="64"/>
-        <location filename="../forms/coincontroldialog.ui" line="96"/>
         <source>0</source>
-        <translation>0</translation>
+        <translation type="vanished">0</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="77"/>
@@ -886,12 +922,8 @@ Some or all keys from:
         <translation>Сума:</translation>
     </message>
     <message>
-        <location filename="../forms/coincontroldialog.ui" line="144"/>
-        <location filename="../forms/coincontroldialog.ui" line="224"/>
-        <location filename="../forms/coincontroldialog.ui" line="310"/>
-        <location filename="../forms/coincontroldialog.ui" line="348"/>
         <source>0.00 NVC</source>
-        <translation>0.00 NVC</translation>
+        <translation type="vanished">0.00 NVC</translation>
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="157"/>
@@ -1214,47 +1246,141 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
     </message>
 </context>
 <context>
+    <name>FreespaceChecker</name>
+    <message>
+        <location filename="../intro.cpp" line="68"/>
+        <source>A new data directory will be created.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="90"/>
+        <source>name</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="92"/>
+        <source>Directory already exists. Add %1 if you intend to create a new directory here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="95"/>
+        <source>Path already exists, and is not a directory.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="102"/>
+        <source>Cannot create data directory here.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>GUIUtil::HelpMessageBox</name>
     <message>
-        <location filename="../guiutil.cpp" line="448"/>
-        <location filename="../guiutil.cpp" line="460"/>
+        <location filename="../guiutil.cpp" line="476"/>
+        <location filename="../guiutil.cpp" line="488"/>
         <source>NovaCoin-Qt</source>
         <translation>NovaCoin-Qt</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="448"/>
+        <location filename="../guiutil.cpp" line="476"/>
         <source>version</source>
         <translation>версії</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="450"/>
+        <location filename="../guiutil.cpp" line="478"/>
         <source>Usage:</source>
         <translation>Використання:</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="451"/>
+        <location filename="../guiutil.cpp" line="479"/>
         <source>command-line options</source>
         <translation>параметри командного рядка</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="455"/>
+        <location filename="../guiutil.cpp" line="483"/>
         <source>UI options</source>
         <translation>Параметри інтерфейсу</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="456"/>
+        <location filename="../guiutil.cpp" line="484"/>
         <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
         <translation>Встановлення мови, наприклад &quot;de_DE&quot; (типово: системна)</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="457"/>
+        <location filename="../guiutil.cpp" line="485"/>
         <source>Start minimized</source>
         <translation>Запускати згорнутим</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="458"/>
+        <location filename="../guiutil.cpp" line="486"/>
         <source>Show splash screen on startup (default: 1)</source>
         <translation>Показувати заставку під час запуску (типово: 1)</translation>
+    </message>
+</context>
+<context>
+    <name>Intro</name>
+    <message>
+        <location filename="../forms/intro.ui" line="14"/>
+        <source>Welcome</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="23"/>
+        <source>Welcome to novacoin-qt.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="49"/>
+        <source>As this is the first time the program is launched, you can choose where novacoin-qt will store its data.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="59"/>
+        <source>novacoin-qt will download and store a copy of the Novacoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="69"/>
+        <source>Use the default data directory</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/intro.ui" line="76"/>
+        <source>Use a custom data directory:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="184"/>
+        <source>Novacoin-qt</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="185"/>
+        <source>Error: Specified data directory &quot;%1&quot; cannot be created.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../intro.cpp" line="209"/>
+        <source>Error</source>
+        <translation type="unfinished">Помилка</translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../intro.cpp" line="218"/>
+        <source>%n GB of free space available</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
+    </message>
+    <message numerus="yes">
+        <location filename="../intro.cpp" line="221"/>
+        <source>(of %n GB needed)</source>
+        <translation type="unfinished">
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+            <numerusform></numerusform>
+        </translation>
     </message>
 </context>
 <context>
@@ -1589,9 +1715,8 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Введіть номер</translation>
     </message>
     <message>
-        <location filename="../forms/multisigdialog.ui" line="159"/>
         <source>/ 1</source>
-        <translation>/ 1</translation>
+        <translation type="vanished">/ 1</translation>
     </message>
     <message>
         <location filename="../forms/multisigdialog.ui" line="183"/>
@@ -1654,18 +1779,12 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
         <translation>Сума входів:</translation>
     </message>
     <message>
-        <location filename="../forms/multisigdialog.ui" line="392"/>
-        <location filename="../forms/multisigdialog.ui" line="511"/>
-        <location filename="../forms/multisigdialog.ui" line="552"/>
         <source>123.456</source>
-        <translation>123.456</translation>
+        <translation type="vanished">123.456</translation>
     </message>
     <message>
-        <location filename="../forms/multisigdialog.ui" line="402"/>
-        <location filename="../forms/multisigdialog.ui" line="521"/>
-        <location filename="../forms/multisigdialog.ui" line="559"/>
         <source>NVC</source>
-        <translation>NVC</translation>
+        <translation type="vanished">NVC</translation>
     </message>
     <message>
         <location filename="../forms/multisigdialog.ui" line="413"/>
@@ -2089,101 +2208,101 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Форма</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="47"/>
-        <location filename="../forms/overviewpage.ui" line="360"/>
+        <location filename="../forms/overviewpage.ui" line="46"/>
+        <location filename="../forms/overviewpage.ui" line="365"/>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the NovaCoin network after a connection is established, but this process has not completed yet.</source>
         <translation>Інформація, що відображається може бути застарілою. Ваш гаманець автоматично синхронізується з мережею NovaCoin після встановлення з&apos;єднання, але цей процес ще не завершений.</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="226"/>
-        <location filename="../forms/overviewpage.ui" line="245"/>
+        <location filename="../forms/overviewpage.ui" line="225"/>
+        <location filename="../forms/overviewpage.ui" line="244"/>
         <source>Your unspendable balance</source>
         <translation>Недоступний баланс</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="229"/>
+        <location filename="../forms/overviewpage.ui" line="228"/>
         <source>Unspendable:</source>
         <translation>Недоступно:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="124"/>
-        <location filename="../forms/overviewpage.ui" line="143"/>
+        <location filename="../forms/overviewpage.ui" line="123"/>
+        <location filename="../forms/overviewpage.ui" line="142"/>
         <source>Total of coins that was staked, and do not yet count toward the current balance</source>
         <translation>Загальна сума всіх монет, використаних для PoS, які не враховуються в поточному балансі</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="40"/>
+        <location filename="../forms/overviewpage.ui" line="39"/>
         <source>Balances</source>
         <translation>Залишки</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="89"/>
-        <location filename="../forms/overviewpage.ui" line="108"/>
+        <location filename="../forms/overviewpage.ui" line="88"/>
+        <location filename="../forms/overviewpage.ui" line="107"/>
         <source>Your current available balance</source>
         <translation>Ваш поточний доступний баланс</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="92"/>
+        <location filename="../forms/overviewpage.ui" line="91"/>
         <source>Available:</source>
         <translation>Доступно:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="127"/>
+        <location filename="../forms/overviewpage.ui" line="126"/>
         <source>Stake:</source>
         <translation>Доля:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="159"/>
-        <location filename="../forms/overviewpage.ui" line="178"/>
+        <location filename="../forms/overviewpage.ui" line="158"/>
+        <location filename="../forms/overviewpage.ui" line="177"/>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the current balance</source>
         <translation>Загальна сума усіх транзакцій, які ще не підтверджені, та до сих пір не враховуються в загальному балансі</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="162"/>
+        <location filename="../forms/overviewpage.ui" line="161"/>
         <source>Unconfirmed:</source>
         <translation>Непідтверджені:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="194"/>
-        <location filename="../forms/overviewpage.ui" line="210"/>
+        <location filename="../forms/overviewpage.ui" line="193"/>
+        <location filename="../forms/overviewpage.ui" line="209"/>
         <source>Mined balance that has not yet matured</source>
         <translation>Баланс видобутих та ще недозрілих монет</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="197"/>
+        <location filename="../forms/overviewpage.ui" line="196"/>
         <source>Immature:</source>
         <translation>Незрілі:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="268"/>
-        <location filename="../forms/overviewpage.ui" line="284"/>
+        <location filename="../forms/overviewpage.ui" line="273"/>
+        <location filename="../forms/overviewpage.ui" line="289"/>
         <source>Your current total balance</source>
         <translation>Ваш поточний загальний баланс</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="271"/>
+        <location filename="../forms/overviewpage.ui" line="276"/>
         <source>Total:</source>
         <translation>Всього:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="300"/>
-        <location filename="../forms/overviewpage.ui" line="310"/>
+        <location filename="../forms/overviewpage.ui" line="305"/>
+        <location filename="../forms/overviewpage.ui" line="315"/>
         <source>Total number of transactions in wallet</source>
         <translation>Загальна кількість транзакцій в гаманці</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="303"/>
+        <location filename="../forms/overviewpage.ui" line="308"/>
         <source>Number of transactions:</source>
         <translation>Кількість транзакцій:</translation>
     </message>
     <message>
-        <location filename="../forms/overviewpage.ui" line="353"/>
+        <location filename="../forms/overviewpage.ui" line="358"/>
         <source>&lt;b&gt;Recent transactions&lt;/b&gt;</source>
         <translation>&lt;b&gt;Останні  транзакції&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../overviewpage.cpp" line="118"/>
-        <location filename="../overviewpage.cpp" line="119"/>
+        <location filename="../overviewpage.cpp" line="123"/>
+        <location filename="../overviewpage.cpp" line="124"/>
         <source>out of sync</source>
         <translation>не синхронізовано</translation>
     </message>
@@ -2211,22 +2330,22 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Сума</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="499"/>
+        <location filename="../guiutil.cpp" line="527"/>
         <source>%1 d</source>
         <translation>%1 дн.</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="501"/>
+        <location filename="../guiutil.cpp" line="529"/>
         <source>%1 h</source>
         <translation>%1 год.</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="503"/>
+        <location filename="../guiutil.cpp" line="531"/>
         <source>%1 m</source>
         <translation>%1 хв.</translation>
     </message>
     <message>
-        <location filename="../guiutil.cpp" line="505"/>
+        <location filename="../guiutil.cpp" line="533"/>
         <source>%1 s</source>
         <translation>%1 сек.</translation>
     </message>
@@ -2234,6 +2353,11 @@ Reduce the number of addresses involved in the address creation.</source>
         <location filename="../mintingtablemodel.cpp" line="409"/>
         <source>from  %1 to %2</source>
         <translation>з %1 до %2</translation>
+    </message>
+    <message>
+        <location filename="../bitcoin.cpp" line="188"/>
+        <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2322,7 +2446,7 @@ Reduce the number of addresses involved in the address creation.</source>
         <location filename="../forms/rpcconsole.ui" line="334"/>
         <location filename="../forms/rpcconsole.ui" line="357"/>
         <location filename="../forms/rpcconsole.ui" line="393"/>
-        <location filename="../rpcconsole.cpp" line="366"/>
+        <location filename="../rpcconsole.cpp" line="365"/>
         <source>N/A</source>
         <translation>Н/Д</translation>
     </message>
@@ -2472,47 +2596,47 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Відправлено:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="326"/>
+        <location filename="../rpcconsole.cpp" line="325"/>
         <source>Welcome to the NovaCoin RPC console.</source>
         <translation>Вітаємо у консолі NovaCoin RPC.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="327"/>
+        <location filename="../rpcconsole.cpp" line="326"/>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Використовуйте стрілки вгору вниз для навігації по історії, і &lt;b&gt;Ctrl-L&lt;/b&gt; для очищення екрана.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="328"/>
+        <location filename="../rpcconsole.cpp" line="327"/>
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>Наберіть &lt;b&gt;help&lt;/b&gt; для перегляду доступних команд.</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="353"/>
+        <location filename="../rpcconsole.cpp" line="352"/>
         <source>Inbound:</source>
         <translation>Вхідний:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="354"/>
+        <location filename="../rpcconsole.cpp" line="353"/>
         <source>Outbound:</source>
         <translation>Вихідний:</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="471"/>
+        <location filename="../rpcconsole.cpp" line="470"/>
         <source>%1 B</source>
         <translation>%1 Б</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="473"/>
+        <location filename="../rpcconsole.cpp" line="472"/>
         <source>%1 KB</source>
         <translation>%1 КБ</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="475"/>
+        <location filename="../rpcconsole.cpp" line="474"/>
         <source>%1 MB</source>
         <translation>%1 МБ</translation>
     </message>
     <message>
-        <location filename="../rpcconsole.cpp" line="477"/>
+        <location filename="../rpcconsole.cpp" line="476"/>
         <source>%1 GB</source>
         <translation>%1 ГБ</translation>
     </message>
@@ -2557,10 +2681,8 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Кількість:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="235"/>
-        <location filename="../forms/sendcoinsdialog.ui" line="270"/>
         <source>0</source>
-        <translation>0</translation>
+        <translation type="vanished">0</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="251"/>
@@ -2573,12 +2695,8 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Сума:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="324"/>
-        <location filename="../forms/sendcoinsdialog.ui" line="410"/>
-        <location filename="../forms/sendcoinsdialog.ui" line="496"/>
-        <location filename="../forms/sendcoinsdialog.ui" line="528"/>
         <source>0.00 NVC</source>
-        <translation>0.00 NVC</translation>
+        <translation type="vanished">0.00 NVC</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="337"/>
@@ -2666,9 +2784,8 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Баланс:</translation>
     </message>
     <message>
-        <location filename="../forms/sendcoinsdialog.ui" line="741"/>
         <source>123.456 NVC</source>
-        <translation>123.456 NVC</translation>
+        <translation type="vanished">123.456 NVC</translation>
     </message>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="772"/>
@@ -3039,7 +3156,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="20"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Відкрито на %n блок</numerusform><numerusform>Відкрито на %n блоки</numerusform><numerusform>Відкрито на %n блоків</numerusform></translation>
+        <translation>
+            <numerusform>Відкрито на %n блок</numerusform>
+            <numerusform>Відкрито на %n блоки</numerusform>
+            <numerusform>Відкрито на %n блоків</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="22"/>
@@ -3074,7 +3195,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="57"/>
         <source>, broadcast through %n node(s)</source>
-        <translation><numerusform>, розіслано через %n вузол</numerusform><numerusform>, розіслано через %n вузли</numerusform><numerusform>, розіслано через %n вузлів</numerusform></translation>
+        <translation>
+            <numerusform>, розіслано через %n вузол</numerusform>
+            <numerusform>, розіслано через %n вузли</numerusform>
+            <numerusform>, розіслано через %n вузлів</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="61"/>
@@ -3136,7 +3261,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiondesc.cpp" line="164"/>
         <source>matures in %n more block(s)</source>
-        <translation><numerusform>&quot;дозріє&quot; через %n блок</numerusform><numerusform>&quot;дозріє&quot; через %n блоки</numerusform><numerusform>&quot;дозріє&quot; через %n блоків</numerusform></translation>
+        <translation>
+            <numerusform>&quot;дозріє&quot; через %n блок</numerusform>
+            <numerusform>&quot;дозріє&quot; через %n блоки</numerusform>
+            <numerusform>&quot;дозріє&quot; через %n блоків</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiondesc.cpp" line="166"/>
@@ -3245,7 +3374,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="302"/>
         <source>Open for %n block(s)</source>
-        <translation><numerusform>Відкрити для %n блоку</numerusform><numerusform>Відкрити для %n блоків</numerusform><numerusform>Відкрити для %n блоків</numerusform></translation>
+        <translation>
+            <numerusform>Відкрити для %n блоку</numerusform>
+            <numerusform>Відкрити для %n блоків</numerusform>
+            <numerusform>Відкрити для %n блоків</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="305"/>
@@ -3270,7 +3403,11 @@ Reduce the number of addresses involved in the address creation.</source>
     <message numerus="yes">
         <location filename="../transactiontablemodel.cpp" line="323"/>
         <source>Mined balance will be available when it matures in %n more block(s)</source>
-        <translation><numerusform>Здобуті монети можуть бути використані через %n блок</numerusform><numerusform>Здобуті монети можуть бути використані через %n блока</numerusform><numerusform>Здобуті монети можуть бути використані через %n блоків</numerusform></translation>
+        <translation>
+            <numerusform>Здобуті монети можуть бути використані через %n блок</numerusform>
+            <numerusform>Здобуті монети можуть бути використані через %n блока</numerusform>
+            <numerusform>Здобуті монети можуть бути використані через %n блоків</numerusform>
+        </translation>
     </message>
     <message>
         <location filename="../transactiontablemodel.cpp" line="328"/>
@@ -3308,32 +3445,32 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>Добуто</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="421"/>
+        <location filename="../transactiontablemodel.cpp" line="420"/>
         <source>(n/a)</source>
         <translation>(недоступно)</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="624"/>
+        <location filename="../transactiontablemodel.cpp" line="623"/>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
         <translation>Статус транзакції. Наведіть вказівник на це поле, щоб показати кількість підтверджень.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="626"/>
+        <location filename="../transactiontablemodel.cpp" line="625"/>
         <source>Date and time that the transaction was received.</source>
         <translation>Дата і час, коли транзакцію було отримано.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="628"/>
+        <location filename="../transactiontablemodel.cpp" line="627"/>
         <source>Type of transaction.</source>
         <translation>Тип транзакції.</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="630"/>
+        <location filename="../transactiontablemodel.cpp" line="629"/>
         <source>Destination address of transaction.</source>
         <translation>Адреса отримувача</translation>
     </message>
     <message>
-        <location filename="../transactiontablemodel.cpp" line="632"/>
+        <location filename="../transactiontablemodel.cpp" line="631"/>
         <source>Amount removed from or added to balance.</source>
         <translation>Сума, додана чи знята з балансу.</translation>
     </message>
