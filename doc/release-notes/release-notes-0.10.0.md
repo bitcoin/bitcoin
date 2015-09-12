@@ -69,7 +69,7 @@ the number of validated blocks.
 common with each peer. While synchronizing, the heights of the blocks that we
 have requested from peers (but haven't received yet) are also listed as
 'inflight'.
-- A new RPC `getchaintips` lists all known branches of the block chain,
+- A new RPC `getchaintips` lists all known branches of the blockchain,
 including those we only have headers for.
 
 Transaction fee changes
@@ -216,7 +216,7 @@ RPC documentation for those methods for more information.
 
 Compared to using `getrawtransaction`, this mechanism does not require
 `-txindex`, scales better, integrates better with the wallet, and is compatible
-with future block chain pruning functionality. It does mean that all relevant
+with future blockchain pruning functionality. It does mean that all relevant
 addresses need to added to the wallet before the payment, though.
 
 Consensus library

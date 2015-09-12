@@ -5,7 +5,7 @@ https://github.com/bitcoin/bitcoin
 ... and help test.  The new features that need testing are:
 
 * -nolisten : https://github.com/bitcoin/bitcoin/pull/11
-* -rescan : scan block chain for missing wallet transactions
+* -rescan : scan blockchain for missing wallet transactions
 * -printtoconsole : https://github.com/bitcoin/bitcoin/pull/37
 * RPC gettransaction details : https://github.com/bitcoin/bitcoin/pull/24
 * listtransactions new features : https://github.com/bitcoin/bitcoin/pull/10

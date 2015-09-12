@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@ namespace Ui {
 
 /** Introduction screen (pre-GUI startup).
   Allows the user to choose a data directory,
-  in which the wallet and block chain will be stored.
+  in which the wallet and blockchain will be stored.
  */
 class Intro : public QDialog
 {

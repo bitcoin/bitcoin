@@ -5,7 +5,7 @@ This is another bug fix release.  We had hoped to have wallet encryption ready f
 
 Notable fixes in v0.3.24, and the main reasons for this release:
 
-F1) Block downloads were failing or taking unreasonable amounts of time to complete, because the increased size of the block chain was bumping up against some earlier buffer-size DoS limits.
+F1) Block downloads were failing or taking unreasonable amounts of time to complete, because the increased size of the blockchain was bumping up against some earlier buffer-size DoS limits.
 
 F2) Fix crash caused by loss/lack of network connection.
 

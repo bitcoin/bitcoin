@@ -64,7 +64,7 @@ Block (database) and transaction handling:
 - `1d2cdd2` Fix InvalidateBlock to add chainActive.Tip to setBlockIndexCandidates
 - `c91c660` fix InvalidateBlock to repopulate setBlockIndexCandidates
 - `002c8a2` fix possible block db breakage during re-index
-- `a1f425b` Add (optional) consistency check for the block chain data structures
+- `a1f425b` Add (optional) consistency check for the blockchain data structures
 - `1c62e84` Keep mempool consistent during block-reorgs
 - `57d1f46` Fix CheckBlockIndex for reindex
 - `bac6fca` Set nSequenceId when a block is fully linked

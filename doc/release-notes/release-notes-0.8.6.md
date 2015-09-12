@@ -35,7 +35,7 @@ your machine.
 - Lower maximum size for free transaction creation
   (see https://gist.github.com/gavinandresen/7670433#086-wallet)
 
-- OSX block chain database corruption fixes
+- OSX blockchain database corruption fixes
   - Update leveldb to 1.13
   - Use fcntl with `F_FULLSYNC` instead of fsync on OSX
   - Use native Darwin memory barriers

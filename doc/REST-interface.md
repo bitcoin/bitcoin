@@ -31,7 +31,7 @@ Given a block hash: returns <COUNT> amount of blockheaders in upward direction.
 ####Chaininfos
 `GET /rest/chaininfo.json`
 
-Returns various state info regarding block chain processing.
+Returns various state info regarding blockchain processing.
 Only supports JSON as output format.
 * chain : (string) current network name as defined in BIP70 (main, test, regtest)
 * blocks : (numeric) the current number of blocks processed in the server

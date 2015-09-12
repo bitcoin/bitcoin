@@ -1128,7 +1128,7 @@
     </message>
     <message>
         <location line="+10"/>
-        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <source>Bitcoin Core will download and store a copy of the Bitcoin blockchain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1852,8 +1852,8 @@
     </message>
     <message>
         <location line="+29"/>
-        <source>Block chain</source>
-        <translation>Block chain</translation>
+        <source>Blockchain</source>
+        <translation>Blockchain</translation>
     </message>
     <message>
         <location line="+7"/>
@@ -3126,7 +3126,7 @@
     </message>
     <message>
         <location line="+7"/>
-        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
+        <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the blockchain. If it fails to get into the chain, its state will change to &quot;not accepted&quot; and it won&apos;t be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4189,7 +4189,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+1"/>
-        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <source>Rebuild blockchain index from current blk000??.dat files on startup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -4339,8 +4339,8 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="-41"/>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Rescan the block chain for missing wallet transactions</translation>
+        <source>Rescan the blockchain for missing wallet transactions</source>
+        <translation>Rescan the blockchain for missing wallet transactions</translation>
     </message>
     <message>
         <location line="+42"/>
@@ -4494,7 +4494,7 @@ for example: alertnotify=echo %%s | mail -s &quot;Bitcoin Alert&quot; admin@foo.
     </message>
     <message>
         <location line="+4"/>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
+        <source>Only accept blockchain matching built-in checkpoints (default: %u)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

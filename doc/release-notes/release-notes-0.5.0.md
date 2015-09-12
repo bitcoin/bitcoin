@@ -47,7 +47,7 @@ MAJOR GUI CHANGES
 
 "Splash" graphics at startup that show address/wallet/blockchain loading progress.
 
-"Synchronizing with network" progress bar to show block-chain download progress.
+"Synchronizing with network" progress bar to show blockchain download progress.
 
 Icons at the bottom of the window that show how well connected you are to the network, with tooltips to display details.
 

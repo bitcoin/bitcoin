@@ -1,4 +1,4 @@
-The maxsendbuffer bug (0.3.20.1 clients not being able to download the block chain from other 0.3.20.1 clients) was only going to get
+The maxsendbuffer bug (0.3.20.1 clients not being able to download the blockchain from other 0.3.20.1 clients) was only going to get
 worse as people upgraded, so I cherry-picked the bug fix and created a minor release yesterday.
 
 The Amazon Machine Images I used to do the builds are available:
