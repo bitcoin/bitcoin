@@ -204,6 +204,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
 
     rpcConsole = new RPCConsole(0);
     connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(show()));
+    connect(openRPCConsoleAction, SIGNAL(triggered()), rpcConsole, SLOT(raise()));
 
     aboutDialog = new AboutDialog(0);
     optionsDialog = new OptionsDialog(0);
@@ -933,7 +934,8 @@ void BitcoinGUI::gotoVerifyMessageTab(QString addr)
 void BitcoinGUI::gotoMultisigPage()
 {
     multisigPage->show();
-    multisigPage->setFocus();
+    multisigPage->raise();
+    multisigPage->activateWindow();
 }
 
 void BitcoinGUI::dragEnterEvent(QDragEnterEvent *event)
