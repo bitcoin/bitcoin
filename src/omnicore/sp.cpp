@@ -760,39 +760,19 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
     }
 
     // if we still haven't found txid, check non active crowdsales to this address
-    uint32_t nextSPID = _my_sps->peekNextSPID(1);
-    uint32_t nextTestSPID = _my_sps->peekNextSPID(2);
-
-    for (uint32_t tmpPropertyId = 1; tmpPropertyId < nextSPID; tmpPropertyId++) {
-        CMPSPInfo::Entry sp;
-        if (!_my_sps->getSP(tmpPropertyId, sp)) continue;
-        if (sp.issuer != address) continue;
-
-        std::map<uint256, std::vector<int64_t> >::const_iterator it;
-        for (it = sp.historicalData.begin(); it != sp.historicalData.end(); it++) {
-            const uint256& tmpTxid = it->first;
-            if (tmpTxid == txid) {
-                *propertyId = tmpPropertyId;
-                *userTokens = it->second.at(2);
-                *issuerTokens = it->second.at(3);
-                return true;
-            }
-        }
-    }
-
-    for (uint32_t tmpPropertyId = TEST_ECO_PROPERTY_1; tmpPropertyId < nextTestSPID; tmpPropertyId++) {
-        CMPSPInfo::Entry sp;
-        if (!_my_sps->getSP(tmpPropertyId, sp)) continue;
-        if (sp.issuer == address) continue;
-
-        std::map<uint256, std::vector<int64_t> >::const_iterator it;
-        for (it = sp.historicalData.begin(); it != sp.historicalData.end(); it++) {
-            const uint256& tmpTxid = it->first;
-            if (tmpTxid == txid) {
-                *propertyId = tmpPropertyId;
-                *userTokens = it->second.at(2);
-                *issuerTokens = it->second.at(3);
-                return true;
+    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
+        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
+        for (uint32_t loopPropertyId = startPropertyId; loopPropertyId < _my_sps->peekNextSPID(ecosystem); loopPropertyId++) {
+            CMPSPInfo::Entry sp;
+            if (!_my_sps->getSP(loopPropertyId, sp)) continue;
+            if (sp.issuer != address) continue;
+            for (std::map<uint256, std::vector<int64_t> >::const_iterator it = sp.historicalData.begin(); it != sp.historicalData.end(); it++) {
+                if (it->first == txid) {
+                    *propertyId = loopPropertyId;
+                    *userTokens = it->second.at(2);
+                    *issuerTokens = it->second.at(3);
+                    return true;
+                }
             }
         }
     }
