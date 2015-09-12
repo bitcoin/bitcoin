@@ -27,17 +27,18 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget *parent) :
     model(0)
 {
     ui->setupUi(this);
-
+    QString theme = GUIUtil::getThemeName();
+    
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->clearButton->setIcon(QIcon());
     ui->receiveButton->setIcon(QIcon());
     ui->showRequestButton->setIcon(QIcon());
     ui->removeRequestButton->setIcon(QIcon());
 #else
-    ui->clearButton->setIcon(QIcon(":/icons/remove"));
-    ui->receiveButton->setIcon(QIcon(":/icons/receiving_addresses"));
-    ui->showRequestButton->setIcon(QIcon(":/icons/edit"));
-    ui->removeRequestButton->setIcon(QIcon(":/icons/remove"));
+    ui->clearButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
+    ui->receiveButton->setIcon(QIcon(":/icons/" + theme + "/receiving_addresses"));
+    ui->showRequestButton->setIcon(QIcon(":/icons/" + theme + "/edit"));
+    ui->removeRequestButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
 #endif
 
     // context menu actions

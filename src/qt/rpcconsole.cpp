@@ -54,10 +54,10 @@ const struct {
     const char *url;
     const char *source;
 } ICON_MAPPING[] = {
-    {"cmd-request", ":/icons/tx_input"},
-    {"cmd-reply", ":/icons/tx_output"},
-    {"cmd-error", ":/icons/tx_output"},
-    {"misc", ":/icons/tx_inout"},
+    {"cmd-request", ":/icons/drkblue/tx_input"},
+    {"cmd-reply", ":/icons/drkblue/tx_output"},
+    {"cmd-error", ":/icons/drkblue/tx_output"},
+    {"misc", ":/icons/drkblue/tx_inout"},
     {NULL, NULL}
 };
 
@@ -217,13 +217,13 @@ RPCConsole::RPCConsole(QWidget *parent) :
 {
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
-
+    QString theme = GUIUtil::getThemeName();
 #ifndef Q_OS_MAC
-    ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
+    ui->openDebugLogfileButton->setIcon(QIcon(":/icons/" + theme + "/export"));
 #endif
 
     // Needed on Mac also
-    ui->clearButton->setIcon(QIcon(":/icons/remove"));
+    ui->clearButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);

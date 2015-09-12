@@ -34,15 +34,16 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     fFeeMinimized(true)
 {
     ui->setupUi(this);
-
+    QString theme = GUIUtil::getThemeName();
+    
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->addButton->setIcon(QIcon());
     ui->clearButton->setIcon(QIcon());
     ui->sendButton->setIcon(QIcon());
 #else
-    ui->addButton->setIcon(QIcon(":/icons/add"));
-    ui->clearButton->setIcon(QIcon(":/icons/remove"));
-    ui->sendButton->setIcon(QIcon(":/icons/send"));
+    ui->addButton->setIcon(QIcon(":/icons/" + theme + "/add"));
+    ui->clearButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
+    ui->sendButton->setIcon(QIcon(":/icons/" + theme + "/send"));
 #endif
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
