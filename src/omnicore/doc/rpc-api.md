@@ -95,7 +95,8 @@ Create and broadcast an accept offer for the specified token and amount.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_senddexaccept", "35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "15.0"
+$ omnicore-cli "omni_senddexaccept" \
+    "35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "15.0"
 ```
 
 ---
@@ -131,7 +132,9 @@ Create new tokens as crowdsale.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_sendissuancecrowdsale", "3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" "" 2 "100" 1483228800 30 2
+$ omnicore-cli "omni_sendissuancecrowdsale" \
+    "3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo" 2 1 0 "Companies" "Bitcoin Mining" \
+    "Quantum Miner" "" "" 2 "100" 1483228800 30 2
 ```
 
 ---
@@ -167,7 +170,9 @@ Create new tokens with fixed supply.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_sendissuancefixed", "3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" "" "1000000"
+$ omnicore-cli "omni_sendissuancefixed" \
+    "3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3" 2 1 0 "Companies" "Bitcoin Mining" \
+    "Quantum Miner" "" "" "1000000"
 ```
 
 ---
@@ -198,7 +203,8 @@ Create new tokens with manageable supply.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_sendissuancemanaged" "3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" ""
+$ omnicore-cli "omni_sendissuancemanaged" \
+    "3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" ""
 ```
 
 ---
@@ -224,7 +230,8 @@ Create and broadcast a send-to-owners transaction.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_sendsto" "32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 3 "5000"
+$ omnicore-cli "omni_sendsto" \
+    "32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 3 "5000"
 ```
 
 ---
@@ -429,7 +436,8 @@ Change the issuer on record of the given tokens.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_sendchangeissuer" "1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 3
+$ omnicore-cli "omni_sendchangeissuer" \
+    "1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 3
 ```
 
 ---
@@ -483,7 +491,9 @@ Broadcasts a raw Omni Layer transaction.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_sendrawtx" "1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8" "000000000000000100000000017d7840" "1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV"
+$ omnicore-cli "omni_sendrawtx" \
+    "1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8" "000000000000000100000000017d7840" \
+    "1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV"
 ```
 
 ---
@@ -1013,7 +1023,7 @@ Get information and recipients of a send-to-owners transaction.
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `txid`              | string  | required | the hash of the transaction to lookup                                                        |
-| `recipientfilter`   | string  | optional | a filter for recipients (wallet by default, `"*"` for all)                                  |
+| `recipientfilter`   | string  | optional | a filter for recipients (wallet by default, `"*"` for all)                                   |
 
 **Result:**
 ```js
