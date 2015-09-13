@@ -105,7 +105,7 @@ Value omni_sendall(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
             "2. toaddress            (string, required) the address of the receiver\n"
-            "3. ecosystem            (number, required) the ecosystem of the tokens to send: (1) \"main\", (2) \"test\"\n"
+            "3. ecosystem            (number, required) the ecosystem of the tokens to send (use 1 for main ecosystem, 2 for test ecosystem)\n"
             "4. redeemaddress        (string, optional) an address that can spend the transaction dust (sender by default)\n"
             "5. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
 
@@ -160,12 +160,12 @@ Value omni_senddexsell(const Array& params, bool fHelp)
             "\nArguments:\n"
 
             "1. fromaddress          (string, required) the address to send from\n"
-            "2. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be OMNI or TOMNI)\n"
+            "2. propertyidforsale    (number, required) the identifier of the tokens to list for sale (must be 1 for OMNI or 2 for TOMNI)\n"
             "3. amountforsale        (string, required) the amount of tokens to list for sale\n"
             "4. amountdesired        (string, required) the amount of bitcoins desired\n"
-            "5. paymentwindow        (number, required) a time limit in blocks a buyer has to pay following a successful accept\n"
+            "5. paymentwindow        (number, required) a time limit in blocks a buyer has to pay following a successful accepting order\n"
             "6. minacceptfee         (string, required) a minimum mining fee a buyer has to pay to accept the offer\n"
-            "7. action               (number, required) the action to take: (1) \"new\", (2) \"update\", (3) \"cancel\"\n"
+            "7. action               (number, required) the action to take: (use 1 for \"new\", 2 for \"update\", 3 for \"cancel\")\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
@@ -259,7 +259,7 @@ Value omni_senddexaccept(const Array& params, bool fHelp)
 
             "\nExamples:\n"
             + HelpExampleCli("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\" \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\" 1 \"15.0\"")
-            + HelpExampleRpc("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"15.0\"")    
+            + HelpExampleRpc("omni_senddexaccept", "\"35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8\", \"37FaKponF7zqoMLUjEiko25pDiuVH5YLEa\", 1, \"15.0\"")
         );
 
     // obtain parameters & info
@@ -334,9 +334,9 @@ Value omni_sendissuancecrowdsale(const Array& params, bool fHelp)
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
-            "2. ecosystem            (string, required) the ecosystem to create the tokens in: (1) \"main\", (2) \"test\"\n"
-            "3. type                 (number, required) the type of the tokens to create: (1) \"indivisible\", (2) \"divisible\"\n"
-            "4. previousid           (number, optional) an identifier of a predecessor token (0 for new crowdsales)\n"
+            "2. ecosystem            (string, required) the ecosystem to create the tokens in (use 1 for main ecosystem, 2 for test ecosystem)\n"
+            "3. type                 (number, required) the type of the tokens to create: (use 1 for indivisible tokens, 2 for divisible tokens)\n"
+            "4. previousid           (number, optional) an identifier of a predecessor token (use 0 for new crowdsales)\n"
             "5. category             (string, optional) a category for the new tokens (can be \"\")\n"
             "6. subcategory          (string, optional) a subcategory for the new tokens  (can be \"\")\n"
             "7. name                 (string, required) the name of the new tokens to create\n"
@@ -345,15 +345,15 @@ Value omni_sendissuancecrowdsale(const Array& params, bool fHelp)
             "10. propertyiddesired   (number, required) the identifier of a token eligible to participate in the crowdsale\n"
             "11. tokensperunit       (string, required) the amount of tokens granted per unit invested in the crowdsale\n"
             "12. deadline            (number, required) the deadline of the crowdsale as Unix timestamp\n"
-            "13. earlybonus          (number, required) an early bird bonus for participants in percent per week (default: 0)\n"
-            "14. issuerpercentage    (number, required) a percentage of tokens that will be granted to the issuer (default: 0)\n"
+            "13. earlybonus          (number, required) an early bird bonus for participants in percent per week\n"
+            "14. issuerpercentage    (number, required) a percentage of tokens that will be granted to the issuer\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 1 \"100\" 1483228800 30 2")
-            + HelpExampleRpc("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 1, \"100\", 1483228800, 30, 2")
+            + HelpExampleCli("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\" 2 1 0 \"Companies\" \"Bitcoin Mining\" \"Quantum Miner\" \"\" \"\" 2 \"100\" 1483228800 30 2")
+            + HelpExampleRpc("omni_sendissuancecrowdsale", "\"3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo\", 2, 1, 0, \"Companies\", \"Bitcoin Mining\", \"Quantum Miner\", \"\", \"\", 2, \"100\", 1483228800, 30, 2")
         );
 
     // obtain parameters & info
@@ -407,9 +407,9 @@ Value omni_sendissuancefixed(const Array& params, bool fHelp)
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
-            "2. ecosystem            (string, required) the ecosystem to create the tokens in: (1) \"main\", (2) \"test\"\n"
-            "3. type                 (number, required) the type of the tokens to create: (1) \"indivisible\", (2) \"divisible\"\n"
-            "4. previousid           (number, optional) an identifier of a predecessor token (0 for new tokens)\n"
+            "2. ecosystem            (string, required) the ecosystem to create the tokens in (use 1 for main ecosystem, 2 for test ecosystem)\n"
+            "3. type                 (number, required) the type of the tokens to create: (use 1 for indivisible tokens, 2 for divisible tokens)\n"
+            "4. previousid           (number, optional) an identifier of a predecessor token (use 0 for new tokens)\n"
             "5. category             (string, optional) a category for the new tokens (can be \"\")\n"
             "6. subcategory          (string, optional) a subcategory for the new tokens  (can be \"\")\n"
             "7. name                 (string, required) the name of the new tokens to create\n"
@@ -471,9 +471,9 @@ Value omni_sendissuancemanaged(const Array& params, bool fHelp)
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
-            "2. ecosystem            (string, required) the ecosystem to create the tokens in: (1) \"main\", (2) \"test\"\n"
-            "3. type                 (number, required) the type of the tokens to create: (1) \"indivisible\", (2) \"divisible\"\n"
-            "4. previousid           (number, optional) an identifier of a predecessor token (0 for new tokens)\n"
+            "2. ecosystem            (string, required) the ecosystem to create the tokens in (use 1 for main ecosystem, 2 for test ecosystem)\n"
+            "3. type                 (number, required) the type of the tokens to create: (use 1 for indivisible tokens, 2 for divisible tokens)\n"
+            "4. previousid           (number, optional) an identifier of a predecessor token (use 0 for new tokens)\n"
             "5. category             (string, optional) a category for the new tokens (can be \"\")\n"
             "6. subcategory          (string, optional) a subcategory for the new tokens  (can be \"\")\n"
             "7. name                 (string, required) the name of the new tokens to create\n"
@@ -984,7 +984,7 @@ Value omni_sendcancelalltrades(const Array& params, bool fHelp)
 
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to trade with\n"
-            "2. ecosystem            (number, required) the ecosystem of the offers to cancel: (1) \"main\", (2) \"test\"\n"
+            "2. ecosystem            (number, required) the ecosystem of the offers to cancel (use 1 for main ecosystem, 2 for test ecosystem)\n"
 
             "\nResult:\n"
             "\"hash\"                  (string) the hex-encoded transaction hash\n"
@@ -1165,4 +1165,3 @@ Value omni_sendalert(const Array& params, bool fHelp)
         }
     }
 }
-

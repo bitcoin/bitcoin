@@ -103,7 +103,7 @@ void MetaDexObjectToJSON(const CMPMetaDEx& obj, Object& metadex_obj)
 void MetaDexObjectsToJSON(std::vector<CMPMetaDEx>& vMetaDexObjs, Array& response)
 {
     MetaDEx_compare compareByHeight;
-    
+
     // sorts metadex objects based on block height and position in block
     std::sort (vMetaDexObjs.begin(), vMetaDexObjs.end(), compareByHeight);
 
@@ -335,7 +335,7 @@ Value omni_sendrawtx(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. fromaddress          (string, required) the address to send from\n"
             "2. rawtransaction       (string, required) the hex-encoded raw transaction\n"
-            "3. referenceaddress     (string, optional) a reference address (empty by default)\n"
+            "3. referenceaddress     (string, optional) a reference address (none by default)\n"
             "4. redeemaddress        (string, optional) an address that can spent the transaction dust (sender by default)\n"
             "5. referenceamount      (string, optional) a bitcoin amount that is sent to the receiver (minimal by default)\n"
             "\nResult:\n"
