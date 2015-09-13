@@ -31,39 +31,56 @@ omnidebug=pending
 
 ## Optional settings
 
-The following Omni Core specific settings are available:
+To run and use Omni Core, no explicit configuration is necessary.
 
-##### General options:
+More information about the general configuration and Bitcoin Core specific options are available in the [Bitcoin wiki](https://en.bitcoin.it/wiki/Running_Bitcoin).
 
-- `-startclean` (boolean, clear persistence files, disabled by default)
-- `-omnitxcache=n` (number, max. size of input transaction cache, `500000` transactions by default)
-- `-omniprogressfrequency` (number, time in seconds after which the initial scanning progress is reported, 30 seconds by default)
+#### General options:
 
-##### Log options:
+| Name                         | Type         | Default        | Description                                                                     |
+|------------------------------|--------------|----------------|---------------------------------------------------------------------------------|
+| `startclean`                 | boolean      | `0`            | clear all persistence files on startup; triggers reparsing of Omni transactions |
+| `omnitxcache`                | number       | `500000`       | the maximum number of transactions in the input transaction cache               |
+| `omniprogressfrequency`      | number       | `30`           | time in seconds after which the initial scanning progress is reported           |
 
-- `-omnilogfile=file` (string, log file, `omnicore.log` by default)
-- `-omnidebug=category` (multi string, enable log categories, can be `all`, `none`)
+#### Log options:
 
-##### Transaction options:
+| Name                         | Type         | Default        | Description                                                                     |
+|------------------------------|--------------|----------------|---------------------------------------------------------------------------------|
+| `omnilogfile`                | string       | `omnicore.log` | the path of the log file (in the data directory per default)                    |
+| `omnidebug`                  | multi string | `""`           | enable or disable log categories, can be `"all"`, `"none"`                      |
 
-- `-autocommit` (boolean, create or broadcast transactions, enabled by default)
-- `-datacarrier` and `-datacarriersize` determine whether to use class B (multisig) or class C encoding
+#### Transaction options:
 
-##### RPC server options:
+| Name                         | Type         | Default        | Description                                                                     |
+|------------------------------|--------------|----------------|---------------------------------------------------------------------------------|
+| `autocommit`                 | boolean      | `1`            | enable or disable broadcasting of transactions, when creating transactions      |
+| `datacarrier`                | boolean      | `1`            | if disabled, payloads are embedded multisig, and not in `OP_RETURN` scripts     |
+| `datacarriersize`            | number       | `40`           | the maximum size in byte of payloads embedded in `OP_RETURN` scripts            |
 
-- `-rpcforceutf8` (boolean, replace invalid UTF-8 encoded characters with question marks in RPC response, enabled by default)
+**Note:** the options `-datacarrier` and `datacarriersize` affect the global relay policies of transactions with `OP_RETURN` scripts.
 
-##### Alert and activation options:
+#### RPC server options:
 
-- `-overrideforcedshutdown` (boolean, overwrite shutdown, triggered by an alert, disabled by default)
-- `-omnialertallowsender=source` (multi string, authorize alert senders, can be `any`)
-- `-omnialertignoresender=source` (multi string, ignore alert senders)
-- `-omniactivationallowsender=source` (multi string, authorize activation senders, can be `any`)
-- `-omniactivationignoresender=source` (multi string, ignore activation senders)
+| Name                         | Type         | Default        | Description                                                                     |
+|------------------------------|--------------|----------------|---------------------------------------------------------------------------------|
+| `rpcforceutf8`               | boolean      | `1`            | replace invalid UTF-8 encoded characters with question marks in RPC responses   |
 
-##### User interface options:
+#### User interface options:
 
- - `-disclaimer` (boolean, explicitly show QT disclaimer on startup, disabled by default)
- - `-omniuiwalletscope=n` (number, max. transactions to show in history, `65535` by default)
+| Name                         | Type         | Default        | Description                                                                     |
+|------------------------------|--------------|----------------|---------------------------------------------------------------------------------|
+| `disclaimer`                 | boolean      | `0`            | explicitly show QT disclaimer on startup                                        |
+| `omniuiwalletscope`          | number       | `65535`        | max. transactions to show in trade and transaction history                      |
 
-More information about the configuration and Bitcoin Core specific options are available in the [Bitcoin wiki](https://en.bitcoin.it/wiki/Running_Bitcoin).
+#### Alert and activation options:
+
+| Name                         | Type         | Default        | Description                                                                     |
+|------------------------------|--------------|----------------|---------------------------------------------------------------------------------|
+| `overrideforcedshutdown`     | boolean      | `0`            | overwrite shutdown, triggered by an alert                                       |
+| `omnialertallowsender`       | multi string | `""`           | whitelist senders of alerts, can be `"any"`                                     |
+| `omnialertignoresender`      | multi string | `""`           | ignore senders of alerts                                                        |
+| `omniactivationallowsender`  | multi string | `""`           | whitelist senders of activations                                                |
+| `omniactivationignoresender` | multi string | `""`           | ignore senders of activations                                                   |
+
+**Note:** alert and activation related options are consensus affecting and should only be used for tests or under exceptional circumstances!
