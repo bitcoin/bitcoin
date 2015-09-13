@@ -22,10 +22,14 @@ Create and broadcast a simple send transaction.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***toaddress            (string, required):*** the address of the receiver
-3. ***propertyid           (number, required):*** the identifier of the tokens to send
-4. ***amount               (string, required):*** the amount to send
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `toaddress`         | string  | required | the address of the receiver                                                                  |
+| `propertyid`        | number  | required | the identifier of the tokens to send                                                         |
+| `amount`            | string  | required | the amount to send                                                                           |
+| `redeemaddress`     | string  | optional | an address that can spend the transaction dust (sender by default)                           |
+| `referenceamount`   | string  | optional | a bitcoin amount that is sent to the receiver (minimal by default)                           |
 
 **Result:**
 ```js
@@ -44,13 +48,15 @@ Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exc
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***propertyidforsale    (number, required):*** the identifier of the tokens to list for sale (must be OMNI or TOMNI)
-3. ***amountforsale        (string, required):*** the amount of tokens to list for sale
-4. ***amountdesired        (string, required):*** the amount of bitcoins desired
-5. ***paymentwindow        (number, required):*** a time limit in blocks a buyer has to pay following a successful accept
-6. ***minacceptfee         (string, required):*** a minimum mining fee a buyer has to pay to accept the offer
-7. ***action               (number, required):*** the action to take: (1) "new", (2) "update", (3) "cancel"
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale (must be `1` for `OMNI` or `2`for `TOMNI`)     |
+| `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
+| `amountdesired`     | string  | required | the amount of bitcoins desired                                                               |
+| `paymentwindow`     | number  | required | a time limit in blocks a buyer has to pay following a successful accepting order             |
+| `minacceptfee`      | string  | required | a minimum mining fee a buyer has to pay to accept the offer                                  |
+| `action`            | number  | required | the action to take: (use `1` for new, `2` for update, `3` for cancel)                        |
 
 **Result:**
 ```js
@@ -69,11 +75,13 @@ Create and broadcast an accept offer for the specified token and amount.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***toaddress            (string, required):*** the address of the seller
-3. ***propertyid           (number, required):*** the identifier of the token to purchase
-4. ***amount               (string, required):*** the amount to accept
-5. ***override             (boolean, optional):*** override minimum accept fee and payment window checks (use with caution!)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `toaddress`         | string  | required | the address of the seller                                                                    |
+| `propertyid`        | number  | required | the identifier of the token to purchase                                                      |
+| `amount`            | string  | required | the amount to accept                                                                         |
+| `override`          | boolean | required | override minimum accept fee and payment window checks (use with caution!)                    |
 
 **Result:**
 ```js
@@ -92,20 +100,22 @@ Create new tokens as crowdsale.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) "main", (2) "test"
-3. ***type                 (number, required):*** the type of the tokens to create: (1) "indivisible", (2) "divisible"
-4. ***previousid           (number, optional):*** an identifier of a predecessor token (0 for new crowdsales)
-5. ***category             (string, optional):*** a category for the new tokens (can be "")
-6. ***subcategory          (string, optional):*** a subcategory for the new tokens  (can be "")
-7. ***name                 (string, required):*** the name of the new tokens to create
-8. ***url                  (string, optional):*** an URL for further information about the new tokens (can be "")
-9. ***data                 (string, optional):*** a description for the new tokens (can be "")
-10. ***propertyiddesired   (number, required):*** the identifier of a token eligible to participate in the crowdsale
-11. ***tokensperunit       (string, required):*** the amount of tokens granted per unit invested in the crowdsale
-12. ***deadline            (number, required):*** the deadline of the crowdsale as Unix timestamp
-13. ***earlybonus          (number, required):*** an early bird bonus for participants in percent per week (default: 0)
-14. ***issuerpercentage    (number, required):*** a percentage of tokens that will be granted to the issuer (default: 0)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (use `1` for main ecosystem, `2` for test ecosystem)   |
+| `type`              | number  | required | the type of the tokens to create: (use `1` for indivisible tokens, `2` for divisible tokens) |
+| `previousid`        | number  | optional | an identifier of a predecessor token (use `0` for new crowdsales)                            |
+| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `name`              | string  | required | the name of the new tokens to create                                                         |
+| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
+| `propertyiddesired` | number  | required | the identifier of a token eligible to participate in the crowdsale                           |
+| `tokensperunit`     | string  | required | the amount of tokens granted per unit invested in the crowdsale                              |
+| `deadline`          | number  | required | the deadline of the crowdsale as Unix timestamp                                              |
+| `earlybonus`        | number  | required | an early bird bonus for participants in percent per week                                     |
+| `issuerpercentage`  | number  | required | a percentage of tokens that will be granted to the issuer                                    |
 
 **Result:**
 ```js
@@ -115,7 +125,7 @@ Create new tokens as crowdsale.
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_sendissuancecrowdsale", "3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" "" 1 "100" 1483228800 30 2
+$ omnicore-cli "omni_sendissuancecrowdsale", "3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" "" 2 "100" 1483228800 30 2
 ```
 
 ### omni_sendissuancefixed
@@ -124,16 +134,22 @@ Create new tokens with fixed supply.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) "main", (2) "test"
-3. ***type                 (number, required):*** the type of the tokens to create: (1) "indivisible", (2) "divisible"
-4. ***previousid           (number, optional):*** an identifier of a predecessor token (0 for new tokens)
-5. ***category             (string, optional):*** a category for the new tokens (can be "")
-6. ***subcategory          (string, optional):*** a subcategory for the new tokens  (can be "")
-7. ***name                 (string, required):*** the name of the new tokens to create
-8. ***url                  (string, optional):*** an URL for further information about the new tokens (can be "")
-9. ***data                 (string, optional):*** a description for the new tokens (can be "")
-10. ***amount              (string, required):*** the number of tokens to create
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (use `1` for main ecosystem, `2` for test ecosystem)   |
+| `type`              | number  | required | the type of the tokens to create: (use `1` for indivisible tokens, `2` for divisible tokens) |
+| `previousid`        | number  | optional | an identifier of a predecessor token (use `0` for new tokens)                                |
+| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `name`              | string  | required | the name of the new tokens to create                                                         |
+| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
+| `amount`            | string  | required | the number of tokens to create                                                               |
+| `tokensperunit`     | string  | required | the amount of tokens granted per unit invested in the crowdsale                              |
+| `deadline`          | number  | required | the deadline of the crowdsale as Unix timestamp                                              |
+| `earlybonus`        | number  | required | an early bird bonus for participants in percent per week                                     |
+| `issuerpercentage`  | number  | required | a percentage of tokens that will be granted to the issuer                                    |
 
 **Result:**
 ```js
@@ -152,15 +168,17 @@ Create new tokens with manageable supply.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***ecosystem            (string, required):*** the ecosystem to create the tokens in: (1) "main", (2) "test"
-3. ***type                 (number, required):*** the type of the tokens to create: (1) "indivisible", (2) "divisible"
-4. ***previousid           (number, optional):*** an identifier of a predecessor token (0 for new tokens)
-5. ***category             (string, optional):*** a category for the new tokens (can be "")
-6. ***subcategory          (string, optional):*** a subcategory for the new tokens  (can be "")
-7. ***name                 (string, required):*** the name of the new tokens to create
-8. ***url                  (string, optional):*** an URL for further information about the new tokens (can be "")
-9. ***data                 (string, optional):*** a description for the new tokens (can be "")
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (use `1` for main ecosystem, `2` for test ecosystem)   |
+| `type`              | number  | required | the type of the tokens to create: (use `1` for indivisible tokens, `2` for divisible tokens) |
+| `previousid`        | number  | optional | an identifier of a predecessor token (use `0` for new tokens)                                |
+| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `name`              | string  | required | the name of the new tokens to create                                                         |
+| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
 
 **Result:**
 ```js
@@ -175,14 +193,16 @@ $ omnicore-cli "omni_sendissuancemanaged" "3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH" 2
 
 ### omni_sendsto
 
-Create new tokens with manageable supply.
+Create and broadcast a send-to-owners transaction.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***propertyid           (number, required):*** the identifier of the tokens to distribute
-3. ***amount               (string, required):*** the amount to distribute
-4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyid`        | number  | required | the identifier of the tokens to distribute                                                   |
+| `amount`            | string  | required | the amount to distribute                                                                     |
+| `redeemaddress`     | string  | optional | an address that can spend the transaction dust (sender by default)                           |
 
 **Result:**
 ```js
@@ -201,11 +221,13 @@ Issue or grant new units of managed tokens.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***toaddress            (string, optional):*** the receiver of the tokens (sender by default)
-3. ***propertyid           (number, required):*** the identifier of the tokens to grant
-4. ***amount               (string, required):*** the amount of tokens to create
-5. ***memo                 (string, optional):*** a text note attached to this transaction (none by default)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `toaddress`         | string  | optional | the receiver of the tokens (sender by default)                                               |
+| `propertyid`        | number  | required | the identifier of the tokens to grant                                                        |
+| `amount`            | string  | required | the amount of tokens to create                                                               |
+| `memo`              | string  | optional | a text note attached to this transaction (none by default)                                   |
 
 **Result:**
 ```js
@@ -224,10 +246,12 @@ Revoke units of managed tokens.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to revoke the tokens from
-2. ***propertyid           (number, required):*** the identifier of the tokens to revoke
-3. ***amount               (string, required):*** the amount of tokens to revoke
-4. ***memo                 (string, optional):*** a text note attached to this transaction (none by default)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `propertyid`        | number  | required | the identifier of the tokens to revoke                                                       |
+| `amount`            | string  | required | the amount of tokens to revoke                                                               |
+| `memo`              | string  | optional | a text note attached to this transaction (none by default)                                   |
 
 **Result:**
 ```js
@@ -246,8 +270,10 @@ Manually close a crowdsale.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address associated with the crowdsale to close
-2. ***propertyid           (number, required):*** the identifier of the crowdsale to close
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address associated with the crowdsale to close                                           |
+| `propertyid`        | number  | required | the identifier of the crowdsale to close                                                     |
 
 **Result:**
 ```js
@@ -266,11 +292,13 @@ Place a trade offer on the distributed token exchange.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to trade with
-2. ***propertyidforsale    (number, required):*** the identifier of the tokens to list for sale
-3. ***amountforsale        (string, required):*** the amount of tokens to list for sale
-4. ***propertiddesired     (number, required):*** the identifier of the tokens desired in exchange
-5. ***amountdesired        (string, required):*** the amount of tokens desired in exchange
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to trade with                                                                    |
+| `propertyidforsale` | number  | required | the identifier of the tokens to list for sale                                                |
+| `amountforsale`     | string  | required | the amount of tokens to list for sale                                                        |
+| `propertiddesired`  | number  | required | the identifier of the tokens desired in exchange                                             |
+| `amountdesired`     | string  | required | the amount of tokens desired in exchange                                                     |
 
 **Result:**
 ```js
@@ -289,11 +317,13 @@ Cancel offers on the distributed token exchange with the specified price.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to trade with
-2. ***propertyidforsale    (number, required):*** the identifier of the tokens listed for sale
-3. ***amountforsale        (string, required):*** the amount of tokens to listed for sale
-4. ***propertiddesired     (number, required):*** the identifier of the tokens desired in exchange
-5. ***amountdesired        (string, required):*** the amount of tokens desired in exchange
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to trade with                                                                    |
+| `propertyidforsale` | number  | required | the identifier of the tokens listed for sale                                                 |
+| `amountforsale`     | string  | required | the amount of tokens to listed for sale                                                      |
+| `propertiddesired`  | number  | required | the identifier of the tokens desired in exchange                                             |
+| `amountdesired`     | string  | required | the amount of tokens desired in exchange                                                     |
 
 **Result:**
 ```js
@@ -312,9 +342,11 @@ Cancel all offers on the distributed token exchange with the given currency pair
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to trade with
-2. ***propertyidforsale    (number, required):*** the identifier of the tokens listed for sale
-3. ***propertiddesired     (number, required):*** the identifier of the tokens desired in exchange
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to trade with                                                                    |
+| `propertyidforsale` | number  | required | the identifier of the tokens listed for sale                                                 |
+| `propertiddesired`  | number  | required | the identifier of the tokens desired in exchange                                             |
 
 **Result:**
 ```js
@@ -333,8 +365,10 @@ Cancel all offers on the distributed token exchange.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to trade with
-2. ***ecosystem            (number, required):*** the ecosystem of the offers to cancel: (1) "main", (2) "test"
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to trade with                                                                    |
+| `ecosystem`         | number  | required | the ecosystem of the offers to cancel (use `1` for main ecosystem, `2` for test ecosystem)   |
 
 **Result:**
 ```js
@@ -353,9 +387,11 @@ Change the issuer on record of the given tokens.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address associated with the tokens
-2. ***toaddress            (string, required):*** the address to transfer administrative control to
-3. ***propertyid           (number, required):*** the identifier of the tokens
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address associated with the tokens                                                       |
+| `toaddress  `       | string  | required | the address to transfer administrative control to                                            |
+| `propertyid`        | number  | required | the identifier of the tokens                                                                 |
 
 **Result:**
 ```js
@@ -374,11 +410,13 @@ Transfers all available tokens in the given ecosystem to the recipient.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***toaddress            (string, required):*** the address of the receiver
-3. ***ecosystem            (number, required):*** the ecosystem of the tokens to send: (1) "main", (2) "test"
-4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
-5. ***referenceamount      (string, optional):*** a bitcoin amount that is sent to the receiver (minimal by default)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `toaddress  `       | string  | required | the address of the receiver                                                                  |
+| `ecosystem`         | number  | required | the ecosystem of the tokens to send (use `1` for main ecosystem, `2` for test ecosystem)     |
+| `redeemaddress`     | string  | optional | an address that can spend the transaction dust (sender by default)                           |
+| `referenceamount`   | string  | optional | a bitcoin amount that is sent to the receiver (minimal by default)                           |
 
 **Result:**
 ```js
@@ -397,11 +435,13 @@ Broadcasts a raw Omni Layer transaction.
 
 **Arguments:**
 
-1. ***fromaddress          (string, required):*** the address to send from
-2. ***rawtransaction       (string, required):*** the hex-encoded raw transaction
-3. ***referenceaddress     (string, optional):*** a reference address (empty by default)
-4. ***redeemaddress        (string, optional):*** an address that can spend the transaction dust (sender by default)
-5. ***referenceamount      (string, optional):*** a bitcoin amount that is sent to the receiver (minimal by default)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `fromaddress`       | string  | required | the address to send from                                                                     |
+| `rawtransaction`    | string  | required | the hex-encoded raw transaction                                                              |
+| `referenceaddress`  | string  | optional | a reference address (none by default)                                                        |
+| `redeemaddress`     | string  | optional | an address that can spend the transaction dust (sender by default)                           |
+| `referenceamount`   | string  | optional | a bitcoin amount that is sent to the receiver (minimal by default)                           |
 
 **Result:**
 ```js
@@ -422,6 +462,10 @@ The RPCs for data retrieval can be used to get information about the state of th
 ### omni_getinfo
 
 Returns various state information of the client and protocol.
+
+**Arguments:**
+
+*None*
 
 **Result:**
 ```js
@@ -458,8 +502,10 @@ Returns the token balance for a given address and property.
 
 **Arguments:**
 
-1. ***address              (string, required):*** the address
-2. ***propertyid           (number, required):*** the property identifier
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `address`           | string  | required | the address                                                                                  |
+| `propertyid`        | number  | required | the property identifier                                                                      |
 
 **Result:**
 ```js
@@ -481,7 +527,9 @@ Returns a list of token balances for a given currency or property identifier.
 
 **Arguments:**
 
-1. ***propertyid           (number, required):*** the property identifier
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the property identifier                                                                      |
 
 **Result:**
 ```js
@@ -507,7 +555,9 @@ Returns a list of all token balances for a given address.
 
 **Arguments:**
 
-1. ***address              (string, required):*** the address
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `address`           | string  | required | the address                                                                                  |
 
 **Result:**
 ```js
@@ -533,7 +583,9 @@ Get detailed information about an Omni transaction.
 
 **Arguments:**
 
-1. txid                 (string, required):*** the hash of the transaction to lookup
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `txid`              | string  | required | the hash of the transaction to lookup                                                        |
 
 **Result:**
 ```js
@@ -565,11 +617,13 @@ List wallet transactions, optionally filtered by an address and block boundaries
 
 **Arguments:**
 
-1. ***address              (string, optional):*** address filter (default: "\*")
-2. ***count                (number, optional):*** show at most n transactions (default: 10)
-3. ***skip                 (number, optional):*** skip the first n transactions (default: 0)
-4. ***startblock           (number, optional):*** first block to begin the search (default: 0)
-5. ***endblock             (number, optional):*** last block to include in the search (default: 999999)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `txid`              | string  | optional | address filter (default: `"*"`)                                                             |
+| `count`             | number  | optional | show at most n transactions (default: `10`)                                                  |
+| `skip`              | number  | optional | skip the first n transactions (default: `0`)                                                 |
+| `startblock`        | number  | optional | first block to begin the search (default: `0`)                                               |
+| `endblock`          | number  | optional | last block to include in the search (default: `999999`)                                      |
 
 **Result:**
 ```js
@@ -604,7 +658,9 @@ Lists all Omni transactions in a block.
 
 **Arguments:**
 
-1. ***index                (number, required):*** the block height or block index
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `index`             | number  | required | the block height or block index                                                              |
 
 **Result:**
 ```js
@@ -624,13 +680,13 @@ $ omnicore-cli "omni_listblocktransactions" 279007
 
 Returns a list of unconfirmed Omni transactions, pending in the memory pool.
 
-An optional filter can be provided to only include transactions which involve the given address.
-
 Note: the validity of pending transactions is uncertain, and the state of the memory pool may change at any moment. It is recommended to check transactions after confirmation, and pending transactions should be considered as invalid.
 
 **Arguments:**
 
-1. ***address              (string, optional):*** filter results by address (default: "" for no filter)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `address`           | string  | optional | filter results by address (default: `""` for no filter)                                      |
 
 **Result:**
 ```js
@@ -662,7 +718,9 @@ Returns currently active offers on the distributed exchange.
 
 **Arguments:**
 
-1. ***address              (string, optional):*** address filter (default: include any)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `address`           | string  | optional | address filter (default: include any)                                                        |
 
 **Result:**
 ```js
@@ -702,6 +760,10 @@ $ omnicore-cli "omni_getactivedexsells"
 
 Lists all tokens or smart properties.
 
+**Arguments:**
+
+*None*
+
 **Result:**
 ```js
 [                                (array of JSON objects)
@@ -730,7 +792,9 @@ Returns details for about the tokens or smart property to lookup.
 
 **Arguments:**
 
-1. ***propertyid           (number, required):*** the identifier of the tokens or property
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens or property                                                     |
 
 **Result:**
 ```js
@@ -758,6 +822,10 @@ $ omnicore-cli "omni_getproperty" 3
 ### omni_getactivecrowdsales
 
 Lists currently active crowdsales.
+
+**Arguments:**
+
+*None*
 
 **Result:**
 ```js
@@ -787,10 +855,12 @@ $ omnicore-cli "omni_getactivecrowdsales"
 
 Returns information about a crowdsale.
 
-**Arguments:**
+**Arguments:**,
 
-1. ***propertyid           (number, required):*** the identifier of the crowdsale
-2. ***verbose              (boolean, optional):*** list crowdsale participants (default: false)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the crowdsale                                                              |
+| `verbose`           | boolean | optional | list crowdsale participants (default: `false`)                                               |
 
 **Result:**
 ```js
@@ -834,6 +904,10 @@ $ omnicore-cli "omni_getcrowdsale" 3 true
 
 Returns information about granted and revoked units of managed tokens.
 
+**Arguments:**
+
+*None*
+
 **Result:**
 ```js
 {
@@ -858,7 +932,9 @@ Returns information about granted and revoked units of managed tokens.
 
 **Arguments:**
 
-1. ***propertyid           (number, required):*** the identifier of the managed tokens to lookup
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the managed tokens to lookup                                               |
 
 **Example:**
 
@@ -872,8 +948,10 @@ Get information and recipients of a send-to-owners transaction.
 
 **Arguments:**
 
-1. ***txid                 (string, required):*** the hash of the transaction to lookup
-2. ***recipientfilter      (string, optional):*** a filter for recipients (wallet by default, "\*" for all)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `txid`              | string  | required | the hash of the transaction to lookup                                                        |
+| `recipientfilter`   | string  | optional | a filter for recipients (wallet by default, `"*"` for all)                                  |
 
 **Result:**
 ```js
@@ -914,7 +992,9 @@ Get detailed information and trade matches for orders on the distributed token e
 
 **Arguments:**
 
-1. ***txid                 (string, required):*** the hash of the order to lookup
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `txid`              | string  | required | the hash of the order to lookup                                                              |
 
 **Result:**
 ```js
@@ -963,8 +1043,10 @@ List active offers on the distributed token exchange.
 
 **Arguments:**
 
-1. ***propertyid           (number, required):*** filter orders by propertyid for sale
-2. ***propertyid           (number, optional):*** filter orders by propertyid desired
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | filter orders by `propertyid` for sale                                                       |
+| `propertyid`        | number  | optional | filter orders by `propertyid` desired                                                        |
 
 **Result:**
 ```js
@@ -1001,9 +1083,11 @@ Retrieves the history of trades on the distributed token exchange for the specif
 
 **Arguments:**
 
-1. ***propertyid           (number, required):*** the first side of the traded pair
-2. ***propertyid           (number, required):*** the second side of the traded pair
-3. ***count                (number, optional):*** number of trades to retrieve (default: 10)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the first side of the traded pair                                                            |
+| `propertyid`        | number  | required | the second side of the traded pair                                                           |
+| `count`             | number  | optional | number of trades to retrieve (default: `10`)                                                 |
 
 **Result:**
 ```js
@@ -1035,9 +1119,11 @@ Retrieves the history of orders on the distributed exchange for the supplied add
 
 **Arguments:**
 
-1. ***address              (string, required):*** address to retrieve history for
-2. ***count                (number, optional):*** number of orders to retrieve (default: 10)
-3. ***propertyid           (number, optional):*** filter by propertyid transacted (default: no filter)
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `address`           | string  | required | address to retrieve history for                                                              |
+| `count`             | number  | optional | number of orders to retrieve (default: `10`)                                                 |
+| `propertyid`        | number  | optional | filter by propertyid transacted (default: no filter)                                         |
 
 **Result:**
 ```js
