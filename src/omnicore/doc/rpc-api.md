@@ -58,7 +58,7 @@ Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exc
 | `amountdesired`     | string  | required | the amount of bitcoins desired                                                               |
 | `paymentwindow`     | number  | required | a time limit in blocks a buyer has to pay following a successful accepting order             |
 | `minacceptfee`      | string  | required | a minimum mining fee a buyer has to pay to accept the offer                                  |
-| `action`            | number  | required | the action to take: (use `1` for new, `2` for update, `3` for cancel)                        |
+| `action`            | number  | required | the action to take (`1` for new offers, `2` to update, `3` to cancel)                        |
 
 **Result:**
 ```js
@@ -110,9 +110,9 @@ Create new tokens as crowdsale.
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
-| `ecosystem`         | number  | required | the ecosystem to create the tokens in (use `1` for main ecosystem, `2` for test ecosystem)   |
-| `type`              | number  | required | the type of the tokens to create: (use `1` for indivisible tokens, `2` for divisible tokens) |
-| `previousid`        | number  | optional | an identifier of a predecessor token (use `0` for new crowdsales)                            |
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
+| `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
+| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new crowdsales)                                |
 | `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
 | `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
@@ -148,9 +148,9 @@ Create new tokens with fixed supply.
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
-| `ecosystem`         | number  | required | the ecosystem to create the tokens in (use `1` for main ecosystem, `2` for test ecosystem)   |
-| `type`              | number  | required | the type of the tokens to create: (use `1` for indivisible tokens, `2` for divisible tokens) |
-| `previousid`        | number  | optional | an identifier of a predecessor token (use `0` for new tokens)                                |
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
+| `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
+| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new tokens)                                    |
 | `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
 | `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
@@ -186,9 +186,9 @@ Create new tokens with manageable supply.
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
-| `ecosystem`         | number  | required | the ecosystem to create the tokens in (use `1` for main ecosystem, `2` for test ecosystem)   |
-| `type`              | number  | required | the type of the tokens to create: (use `1` for indivisible tokens, `2` for divisible tokens) |
-| `previousid`        | number  | optional | an identifier of a predecessor token (use `0` for new tokens)                                |
+| `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
+| `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
+| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new tokens)                                    |
 | `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
 | `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
@@ -401,7 +401,7 @@ Cancel all offers on the distributed token exchange.
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to trade with                                                                    |
-| `ecosystem`         | number  | required | the ecosystem of the offers to cancel (use `1` for main ecosystem, `2` for test ecosystem)   |
+| `ecosystem`         | number  | required | the ecosystem of the offers to cancel (`1` for main ecosystem, `2` for test ecosystem)       |
 
 **Result:**
 ```js
@@ -452,7 +452,7 @@ Transfers all available tokens in the given ecosystem to the recipient.
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `toaddress  `       | string  | required | the address of the receiver                                                                  |
-| `ecosystem`         | number  | required | the ecosystem of the tokens to send (use `1` for main ecosystem, `2` for test ecosystem)     |
+| `ecosystem`         | number  | required | the ecosystem of the tokens to send (`1` for main ecosystem, `2` for test ecosystem)         |
 | `redeemaddress`     | string  | optional | an address that can spend the transaction dust (sender by default)                           |
 | `referenceamount`   | string  | optional | a bitcoin amount that is sent to the receiver (minimal by default)                           |
 
