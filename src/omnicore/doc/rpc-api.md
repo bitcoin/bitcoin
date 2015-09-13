@@ -42,6 +42,8 @@ Create and broadcast a simple send transaction.
 $ omnicore-cli "omni_send" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "100.0"
 ```
 
+---
+
 ### omni_senddexsell
 
 Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exchange.
@@ -69,6 +71,8 @@ Place, update or cancel a sell offer on the traditional distributed OMNI/BTC exc
 $ omnicore-cli "omni_senddexsell" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "1.5" "0.75" 25 "0.0005" 1
 ```
 
+---
+
 ### omni_senddexaccept
 
 Create and broadcast an accept offer for the specified token and amount.
@@ -93,6 +97,8 @@ Create and broadcast an accept offer for the specified token and amount.
 ```bash
 $ omnicore-cli "omni_senddexaccept", "35URq1NN3xL6GeRKUP6vzaQVcxoJiiJKd8" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "15.0"
 ```
+
+---
 
 ### omni_sendissuancecrowdsale
 
@@ -128,6 +134,8 @@ Create new tokens as crowdsale.
 $ omnicore-cli "omni_sendissuancecrowdsale", "3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" "" 2 "100" 1483228800 30 2
 ```
 
+---
+
 ### omni_sendissuancefixed
 
 Create new tokens with fixed supply.
@@ -162,6 +170,8 @@ Create new tokens with fixed supply.
 $ omnicore-cli "omni_sendissuancefixed", "3Ck2kEGLJtZw9ENj2tameMCtS3HB7uRar3" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" "" "1000000"
 ```
 
+---
+
 ### omni_sendissuancemanaged
 
 Create new tokens with manageable supply.
@@ -191,6 +201,8 @@ Create new tokens with manageable supply.
 $ omnicore-cli "omni_sendissuancemanaged" "3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH" 2 1 0 "Companies" "Bitcoin Mining" "Quantum Miner" "" ""
 ```
 
+---
+
 ### omni_sendsto
 
 Create and broadcast a send-to-owners transaction.
@@ -214,6 +226,8 @@ Create and broadcast a send-to-owners transaction.
 ```bash
 $ omnicore-cli "omni_sendsto" "32Z3tJccZuqQZ4PhJR2hxHC3tjgjA8cbqz" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 3 "5000"
 ```
+
+---
 
 ### omni_sendgrant
 
@@ -240,6 +254,8 @@ Issue or grant new units of managed tokens.
 $ omnicore-cli "omni_sendgrant" "3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH" "" 51 "7000"
 ```
 
+---
+
 ### omni_sendrevoke
 
 Revoke units of managed tokens.
@@ -264,6 +280,8 @@ Revoke units of managed tokens.
 $ omnicore-cli "omni_sendrevoke" "3HsJvhr9qzgRe3ss97b1QHs38rmaLExLcH" "" 51 "100"
 ```
 
+---
+
 ### omni_sendclosecrowdsale
 
 Manually close a crowdsale.
@@ -285,6 +303,8 @@ Manually close a crowdsale.
 ```bash
 $ omnicore-cli "omni_sendclosecrowdsale" "3JYd75REX3HXn1vAU83YuGfmiPXW7BpYXo" 70
 ```
+
+---
 
 ### omni_sendtrade
 
@@ -311,6 +331,8 @@ Place a trade offer on the distributed token exchange.
 $ omnicore-cli "omni_sendtrade" "3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR" 31 "250.0" 1 "10.0"
 ```
 
+---
+
 ### omni_sendcanceltradesbyprice
 
 Cancel offers on the distributed token exchange with the specified price.
@@ -336,6 +358,8 @@ Cancel offers on the distributed token exchange with the specified price.
 $ omnicore-cli "omni_sendcanceltradesbyprice" "3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR" 31 "100.0" 1 "5.0"
 ```
 
+---
+
 ### omni_sendcanceltradesbypair
 
 Cancel all offers on the distributed token exchange with the given currency pair.
@@ -359,6 +383,8 @@ Cancel all offers on the distributed token exchange with the given currency pair
 $ omnicore-cli "omni_sendcanceltradesbypair" "3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR" 1 31
 ```
 
+---
+
 ### omni_sendcancelalltrades
 
 Cancel all offers on the distributed token exchange.
@@ -380,6 +406,8 @@ Cancel all offers on the distributed token exchange.
 ```bash
 $ omnicore-cli "omni_sendcancelalltrades" "3BydPiSLPP3DR5cf726hDQ89fpqWLxPKLR" 1
 ```
+
+---
 
 ### omni_sendchangeissuer
 
@@ -403,6 +431,8 @@ Change the issuer on record of the given tokens.
 ```bash
 $ omnicore-cli "omni_sendchangeissuer" "1ARjWDkZ7kT9fwjPrjcQyvbXDkEySzKHwu" "3HTHRxu3aSDV4deakjC7VmsiUp7c6dfbvs" 3
 ```
+
+---
 
 ### omni_sendall
 
@@ -429,6 +459,8 @@ Transfers all available tokens in the given ecosystem to the recipient.
 $ omnicore-cli "omni_sendall" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 2
 ```
 
+---
+
 ### omni_sendrawtx
 
 Broadcasts a raw Omni Layer transaction.
@@ -453,6 +485,8 @@ Broadcasts a raw Omni Layer transaction.
 ```bash
 $ omnicore-cli "omni_sendrawtx" "1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8" "000000000000000100000000017d7840" "1EqTta1Rt8ixAA32DuC29oukbsSWU62qAV"
 ```
+
+---
 
 
 ## Data retrieval
@@ -496,6 +530,8 @@ Result:
 $ omnicore-cli "omni_getinfo"
 ```
 
+---
+
 ### omni_getbalance
 
 Returns the token balance for a given address and property.
@@ -520,6 +556,8 @@ Returns the token balance for a given address and property.
 ```bash
 $ omnicore-cli "omni_getbalance", "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P" 1
 ```
+
+---
 
 ### omni_getallbalancesforid
 
@@ -549,6 +587,8 @@ Returns a list of token balances for a given currency or property identifier.
 $ omnicore-cli "omni_getallbalancesforid" 1
 ```
 
+---
+
 ### omni_getallbalancesforaddress
 
 Returns a list of all token balances for a given address.
@@ -576,6 +616,8 @@ Returns a list of all token balances for a given address.
 ```bash
 $ omnicore-cli "omni_getallbalancesforaddress" "1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P"
 ```
+
+---
 
 ### omni_gettransaction
 
@@ -610,6 +652,8 @@ Get detailed information about an Omni transaction.
 ```bash
 $ omnicore-cli "omni_gettransaction" "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d"
 ```
+
+---
 
 ### omni_listtransactions
 
@@ -652,6 +696,8 @@ List wallet transactions, optionally filtered by an address and block boundaries
 $ omnicore-cli "omni_listtransactions"
 ```
 
+---
+
 ### omni_listblocktransactions
 
 Lists all Omni transactions in a block.
@@ -675,6 +721,8 @@ Lists all Omni transactions in a block.
 ```bash
 $ omnicore-cli "omni_listblocktransactions" 279007
 ```
+
+---
 
 ### omni_listpendingtransactions
 
@@ -711,6 +759,8 @@ Note: the validity of pending transactions is uncertain, and the state of the me
 ```bash
 $ omnicore-cli "omni_listpendingtransactions"
 ```
+
+---
 
 ### omni_getactivedexsells
 
@@ -756,6 +806,8 @@ Returns currently active offers on the distributed exchange.
 $ omnicore-cli "omni_getactivedexsells"
 ```
 
+---
+
 ### omni_listproperties
 
 Lists all tokens or smart properties.
@@ -785,6 +837,8 @@ Lists all tokens or smart properties.
 ```bash
 $ omnicore-cli "omni_listproperties"
 ```
+
+---
 
 ### omni_getproperty
 
@@ -819,6 +873,8 @@ Returns details for about the tokens or smart property to lookup.
 $ omnicore-cli "omni_getproperty" 3
 ```
 
+---
+
 ### omni_getactivecrowdsales
 
 Lists currently active crowdsales.
@@ -850,6 +906,8 @@ Lists currently active crowdsales.
 ```bash
 $ omnicore-cli "omni_getactivecrowdsales"
 ```
+
+---
 
 ### omni_getcrowdsale
 
@@ -900,6 +958,8 @@ Returns information about a crowdsale.
 $ omnicore-cli "omni_getcrowdsale" 3 true
 ```
 
+---
+
 ### omni_getgrants
 
 Returns information about granted and revoked units of managed tokens.
@@ -941,6 +1001,8 @@ Returns information about granted and revoked units of managed tokens.
 ```bash
 $ omnicore-cli "omni_getgrants" 31
 ```
+
+---
 
 ### omni_getsto
 
@@ -985,6 +1047,8 @@ Get information and recipients of a send-to-owners transaction.
 ```bash
 $ omnicore-cli "omni_getsto" "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d" "*"
 ```
+
+---
 
 ### omni_gettrade
 
@@ -1037,6 +1101,8 @@ Get detailed information and trade matches for orders on the distributed token e
 $ omnicore-cli "omni_gettrade" "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d"
 ```
 
+---
+
 ### omni_getorderbook
 
 List active offers on the distributed token exchange.
@@ -1077,6 +1143,8 @@ List active offers on the distributed token exchange.
 $ omnicore-cli "omni_getorderbook" 2
 ```
 
+---
+
 ### omni_gettradehistoryforpair
 
 Retrieves the history of trades on the distributed token exchange for the specified market.
@@ -1112,6 +1180,8 @@ Retrieves the history of trades on the distributed token exchange for the specif
 ```bash
 $ omnicore-cli "omni_gettradehistoryforpair" 1 12 500
 ```
+
+---
 
 ### omni_gettradehistoryforaddress
 
@@ -1169,6 +1239,7 @@ Retrieves the history of orders on the distributed exchange for the supplied add
 $ omnicore-cli "omni_gettradehistoryforaddress" "1MCHESTptvd2LnNp7wmr2sGTpRomteAkq8"
 ```
 
+---
 
 ## Depreciated API calls
 
