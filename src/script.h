@@ -71,9 +71,6 @@ static const unsigned int MANDATORY_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH;
 // blocks and we must accept those blocks.
 static const unsigned int STRICT_FLAGS = MANDATORY_SCRIPT_VERIFY_FLAGS | STRICT_FORMAT_FLAGS;
 
-// Soft verifications, no extended signature format checkings
-static const unsigned int SOFT_FLAGS = STRICT_FLAGS & ~STRICT_FORMAT_FLAGS;
-
 enum txnouttype
 {
     TX_NONSTANDARD,
