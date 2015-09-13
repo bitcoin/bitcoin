@@ -139,7 +139,7 @@ void SyncWithWallets(const CTransaction& tx, const CBlock* pblock, bool fUpdate,
 {
     if (!fConnect)
     {
-        // ppcoin: wallets need to refund inputs when disconnecting coinstake
+        // wallets need to refund inputs when disconnecting coinstake
         if (tx.IsCoinStake())
         {
             BOOST_FOREACH(CWallet* pwallet, setpwalletRegistered)
@@ -557,7 +557,7 @@ int64_t CTransaction::GetMinFee(unsigned int nBlockSize, bool fAllowFree, enum G
 
     if(IsCoinStake())
     {
-        // Enforce 0.01 as minimum fee for old approach or coinstake
+        // Enforce 0.01 as minimum fee for coinstake
         nMinTxFee = CENT;
         nMinRelayTxFee = CENT;
     }
@@ -1061,85 +1061,61 @@ int64_t GetProofOfStakeReward(int64_t nCoinAge, unsigned int nBits, int64_t nTim
 {
     int64_t nRewardCoinYear, nSubsidy, nSubsidyLimit = 10 * COIN;
 
-    if(fTestNet || nTime > STAKE_SWITCH_TIME)
+    // Stage 2 of emission process is mostly PoS-based.
+
+    CBigNum bnRewardCoinYearLimit = MAX_MINT_PROOF_OF_STAKE; // Base stake mint rate, 100% year interest
+    CBigNum bnTarget;
+    bnTarget.SetCompact(nBits);
+    CBigNum bnTargetLimit = GetProofOfStakeLimit(0, nTime);
+    bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
+
+    // A reasonably continuous curve is used to avoid shock to market
+
+    CBigNum bnLowerBound = 1 * CENT, // Lower interest bound is 1% per year
+        bnUpperBound = bnRewardCoinYearLimit, // Upper interest bound is 100% per year
+        bnMidPart, bnRewardPart;
+
+    while (bnLowerBound + CENT <= bnUpperBound)
     {
-        // Stage 2 of emission process is PoS-based. It will be active on mainNet since 20 Jun 2013.
+        CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
 
-        CBigNum bnRewardCoinYearLimit = MAX_MINT_PROOF_OF_STAKE; // Base stake mint rate, 100% year interest
-        CBigNum bnTarget;
-        bnTarget.SetCompact(nBits);
-        CBigNum bnTargetLimit = GetProofOfStakeLimit(0, nTime);
-        bnTargetLimit.SetCompact(bnTargetLimit.GetCompact());
+        //
+        // Reward for coin-year is cut in half every 8x multiply of PoS difficulty
+        //
+        // (nRewardCoinYearLimit / nRewardCoinYear) ** 3 == bnProofOfStakeLimit / bnTarget
+        //
+        // Human readable form: nRewardCoinYear = 1 / (posdiff ^ 1/3)
+        //
 
-        // NovaCoin: A reasonably continuous curve is used to avoid shock to market
+        bnMidPart = bnMidValue * bnMidValue * bnMidValue;
+        bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit;
 
-        CBigNum bnLowerBound = 1 * CENT, // Lower interest bound is 1% per year
-            bnUpperBound = bnRewardCoinYearLimit, // Upper interest bound is 100% per year
-            bnMidPart, bnRewardPart;
-
-        while (bnLowerBound + CENT <= bnUpperBound)
-        {
-            CBigNum bnMidValue = (bnLowerBound + bnUpperBound) / 2;
-            if(!fTestNet && nTime < STAKECURVE_SWITCH_TIME)
-            {
-                //
-                // Until 20 Oct 2013: reward for coin-year is cut in half every 64x multiply of PoS difficulty
-                //
-                // (nRewardCoinYearLimit / nRewardCoinYear) ** 6 == bnProofOfStakeLimit / bnTarget
-                //
-                // Human readable form: nRewardCoinYear = 1 / (posdiff ^ 1/6)
-                //
-
-                bnMidPart = bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue * bnMidValue;
-                bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit;
-            }
-            else
-            {
-                //
-                // Since 20 Oct 2013: reward for coin-year is cut in half every 8x multiply of PoS difficulty
-                //
-                // (nRewardCoinYearLimit / nRewardCoinYear) ** 3 == bnProofOfStakeLimit / bnTarget
-                //
-                // Human readable form: nRewardCoinYear = 1 / (posdiff ^ 1/3)
-                //
-
-                bnMidPart = bnMidValue * bnMidValue * bnMidValue;
-                bnRewardPart = bnRewardCoinYearLimit * bnRewardCoinYearLimit * bnRewardCoinYearLimit;
-            }
-
-            if (bnMidPart * bnTargetLimit > bnRewardPart * bnTarget)
-                bnUpperBound = bnMidValue;
-            else
-                bnLowerBound = bnMidValue;
-        }
-
-        nRewardCoinYear = bnUpperBound.getuint64();
-        nRewardCoinYear = min((nRewardCoinYear / CENT) * CENT, MAX_MINT_PROOF_OF_STAKE);
+        if (bnMidPart * bnTargetLimit > bnRewardPart * bnTarget)
+            bnUpperBound = bnMidValue;
+        else
+            bnLowerBound = bnMidValue;
     }
-    else
-    {
-        // Old creation amount per coin-year, 5% fixed stake mint rate
-        nRewardCoinYear = 5 * CENT;
-    }
+
+    nRewardCoinYear = bnUpperBound.getuint64();
+    nRewardCoinYear = min((nRewardCoinYear / CENT) * CENT, MAX_MINT_PROOF_OF_STAKE);
 
     if(bCoinYearOnly)
         return nRewardCoinYear;
 
     nSubsidy = nCoinAge * nRewardCoinYear * 33 / (365 * 33 + 8);
 
-    // Set reasonable reward limit for large inputs since 20 Oct 2013
+    // Set reasonable reward limit for large inputs
     //
     // This will stimulate large holders to use smaller inputs, that's good for the network protection
-    if(fTestNet || STAKECURVE_SWITCH_TIME < nTime)
-    {
-        if (fDebug && GetBoolArg("-printcreation") && nSubsidyLimit < nSubsidy)
-            printf("GetProofOfStakeReward(): %s is greater than %s, coinstake reward will be truncated\n", FormatMoney(nSubsidy).c_str(), FormatMoney(nSubsidyLimit).c_str());
 
-        nSubsidy = min(nSubsidy, nSubsidyLimit);
-    }
+    if (fDebug && GetBoolArg("-printcreation") && nSubsidyLimit < nSubsidy)
+        printf("GetProofOfStakeReward(): %s is greater than %s, coinstake reward will be truncated\n", FormatMoney(nSubsidy).c_str(), FormatMoney(nSubsidyLimit).c_str());
+
+    nSubsidy = min(nSubsidy, nSubsidyLimit);
 
     if (fDebug && GetBoolArg("-printcreation"))
         printf("GetProofOfStakeReward(): create=%s nCoinAge=%" PRId64 " nBits=%d\n", FormatMoney(nSubsidy).c_str(), nCoinAge, nBits);
+
     return nSubsidy;
 }
 
@@ -1571,18 +1547,21 @@ bool CTransaction::ConnectInputs(CTxDB& txdb, MapPrevTx inputs, map<uint256, CTx
 
         if (IsCoinStake())
         {
-            // ppcoin: coin stake tx earns reward instead of paying fee
-            uint64_t nCoinAge;
-            if (!GetCoinAge(txdb, nCoinAge))
-                return error("ConnectInputs() : %s unable to get coin age for coinstake", GetHash().ToString().substr(0,10).c_str());
+            if (nTime >  Checkpoints::GetLastCheckpointTime())
+            {
+                unsigned int nTxSize = GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION);
 
-            unsigned int nTxSize = (nTime > VALIDATION_SWITCH_TIME || fTestNet) ? GetSerializeSize(SER_NETWORK, PROTOCOL_VERSION) : 0;
+                // coin stake tx earns reward instead of paying fee
+                uint64_t nCoinAge;
+                if (!GetCoinAge(txdb, nCoinAge))
+                    return error("ConnectInputs() : %s unable to get coin age for coinstake", GetHash().ToString().substr(0,10).c_str());
 
-            int64_t nReward = GetValueOut() - nValueIn;
-            int64_t nCalculatedReward = GetProofOfStakeReward(nCoinAge, pindexBlock->nBits, nTime) - GetMinFee(1, false, GMF_BLOCK, nTxSize) + CENT;
+                int64_t nReward = GetValueOut() - nValueIn;
+                int64_t nCalculatedReward = GetProofOfStakeReward(nCoinAge, pindexBlock->nBits, nTime) - GetMinFee(1, false, GMF_BLOCK, nTxSize) + CENT;
 
-            if (nReward > nCalculatedReward)
-                return DoS(100, error("ConnectInputs() : coinstake pays too much(actual=%" PRId64 " vs calculated=%" PRId64 ")", nReward, nCalculatedReward));
+                if (nReward > nCalculatedReward)
+                    return DoS(100, error("ConnectInputs() : coinstake pays too much(actual=%" PRId64 " vs calculated=%" PRId64 ")", nReward, nCalculatedReward));
+            }
         }
         else
         {

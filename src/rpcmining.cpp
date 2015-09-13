@@ -57,13 +57,13 @@ Value getmininginfo(const Array& params, bool fHelp)
     obj.push_back(Pair("difficulty",    diff));
 
     obj.push_back(Pair("blockvalue",    (uint64_t)GetProofOfWorkReward(GetLastBlockIndex(pindexBest, false)->nBits)));
-    obj.push_back(Pair("netmhashps",     GetPoWMHashPS()));
-    obj.push_back(Pair("netstakeweight", GetPoSKernelPS()));
+    obj.push_back(Pair("netmhashps",    GetPoWMHashPS()));
+    obj.push_back(Pair("netstakeweight",GetPoSKernelPS()));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     obj.push_back(Pair("pooledtx",      (uint64_t)mempool.size()));
 
-    obj.push_back(Pair("stakeinputs", (uint64_t)nStakeInputsMapSize));
-    obj.push_back(Pair("stakeinterest",    (int64_t)GetProofOfStakeReward(0, GetLastBlockIndex(pindexBest, true)->nBits, GetLastBlockIndex(pindexBest, true)->nTime, true)));
+    obj.push_back(Pair("stakeinputs",   (uint64_t)nStakeInputsMapSize));
+    obj.push_back(Pair("stakeinterest", GetProofOfStakeReward(0, GetLastBlockIndex(pindexBest, true)->nBits, GetLastBlockIndex(pindexBest, true)->nTime, true)));
 
     obj.push_back(Pair("testnet",       fTestNet));
     return obj;
