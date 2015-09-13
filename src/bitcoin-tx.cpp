@@ -176,6 +176,7 @@ static void MutateTxLocktime(CMutableTransaction& tx, const string& cmdVal)
 
 static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     // separate TXID:VOUT in string
     size_t pos = strInput.find(':');
     if ((pos == string::npos) ||
@@ -190,7 +191,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
     uint256 txid(uint256S(strTxid));
 
     static const unsigned int minTxOutSz = 9;
-    static const unsigned int maxVout = MAX_BLOCK_SIZE / minTxOutSz;
+    const unsigned int maxVout = consensusParams.nMaxTxSize / minTxOutSz;
 
     // extract and validate vout
     string strVout = strInput.substr(pos + 1, string::npos);
