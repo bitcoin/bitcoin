@@ -260,7 +260,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
     QActionGroup *tabGroup = new QActionGroup(this);
 
     QString theme = GUIUtil::getThemeName();
-    overviewAction = new QAction(QIcon(":/icons/" + theme + "/" + theme + "/overview"), tr("&Overview"), this);
+    overviewAction = new QAction(QIcon(":/icons/" + theme + "/overview"), tr("&Overview"), this);
     overviewAction->setStatusTip(tr("Show general overview of wallet"));
     overviewAction->setToolTip(overviewAction->statusTip());
     overviewAction->setCheckable(true);
@@ -271,7 +271,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(overviewAction);
 
-    sendCoinsAction = new QAction(QIcon(":/icons/" + theme + "/" + theme + "/send"), tr("&Send"), this);
+    sendCoinsAction = new QAction(QIcon(":/icons/" + theme + "/send"), tr("&Send"), this);
     sendCoinsAction->setStatusTip(tr("Send coins to a Dash address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
@@ -282,7 +282,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(sendCoinsAction);
 
-    receiveCoinsAction = new QAction(QIcon(":/icons/" + theme + "/" + theme + "/receiving_addresses"), tr("&Receive"), this);
+    receiveCoinsAction = new QAction(QIcon(":/icons/" + theme + "/receiving_addresses"), tr("&Receive"), this);
     receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and dash: URIs)"));
     receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
     receiveCoinsAction->setCheckable(true);
@@ -293,7 +293,7 @@ void BitcoinGUI::createActions(const NetworkStyle *networkStyle)
 #endif
     tabGroup->addAction(receiveCoinsAction);
 
-    historyAction = new QAction(QIcon(":/icons/" + theme + "/" + theme + "/history"), tr("&Transactions"), this);
+    historyAction = new QAction(QIcon(":/icons/" + theme + "/history"), tr("&Transactions"), this);
     historyAction->setStatusTip(tr("Browse transaction history"));
     historyAction->setToolTip(historyAction->statusTip());
     historyAction->setCheckable(true);
