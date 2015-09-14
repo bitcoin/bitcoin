@@ -1555,7 +1555,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
     CMPSPInfo::Entry sp;
     assert(_my_sps->getSP(property, sp));
 
-    double missedTokens = calculateFractional(sp.prop_type,
+    int64_t missedTokens = calculateFractional(sp.prop_type,
             sp.early_bird,
             sp.deadline,
             sp.num_tokens,
@@ -1568,7 +1568,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
     sp.close_early = true;
     sp.timeclosed = blockTime;
     sp.txid_close = txid;
-    sp.missedTokens = (int64_t) missedTokens;
+    sp.missedTokens = missedTokens;
 
     assert(_my_sps->updateSP(property, sp));
     if (missedTokens > 0) {

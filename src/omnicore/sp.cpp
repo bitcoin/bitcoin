@@ -651,7 +651,7 @@ int64_t mastercore::calculateFractional(uint16_t propType, uint8_t bonusPerc, in
         missedTokens = (int64_t) (totalPremined - amountPremined);
     }
 
-    return missedTokens;
+    return static_cast<int64_t>(missedTokens);
 }
 
 // calculateFundraiser does token calculations per transaction
@@ -842,7 +842,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
             assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
 
             // find missing tokens
-            double missedTokens = calculateFractional(sp.prop_type,
+            int64_t missedTokens = calculateFractional(sp.prop_type,
                     sp.early_bird,
                     sp.deadline,
                     sp.num_tokens,
@@ -852,14 +852,16 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 
             // get txdata
             sp.historicalData = crowdsale.getDatabase();
-            sp.missedTokens = (int64_t) missedTokens;
+            sp.missedTokens = missedTokens;
 
             // update SP with this data
             sp.update_block = pBlockIndex->GetBlockHash();
             assert(_my_sps->updateSP(crowdsale.getPropertyId(), sp));
 
             // update values
-            update_tally_map(sp.issuer, crowdsale.getPropertyId(), missedTokens, BALANCE);
+            if (missedTokens > 0) {
+                assert(update_tally_map(sp.issuer, crowdsale.getPropertyId(), missedTokens, BALANCE));
+            }
 
             my_crowds.erase(my_it++);
 
