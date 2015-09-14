@@ -230,6 +230,8 @@ public:
         min_fee = 0;
         subaction = 0;
         memset(&alertString, 0, sizeof(alertString));
+        feature_id = 0;
+        activation_block = 999999;
         rpcOnly = true;
     }
 
