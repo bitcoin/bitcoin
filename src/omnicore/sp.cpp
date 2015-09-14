@@ -798,7 +798,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
         // get sp from data struct
         CMPSPInfo::Entry sp;
-        _my_sps->getSP(crowdsale.getPropertyId(), sp);
+        assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
 
         // get txdata
         sp.historicalData = crowdsale.getDatabase();
@@ -808,7 +808,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
         // update SP with this data
         sp.update_block = chainActive[block]->GetBlockHash();
-        _my_sps->updateSP(crowdsale.getPropertyId(), sp);
+        assert(_my_sps->updateSP(crowdsale.getPropertyId(), sp));
 
         // no calculate fractional calls here, no more tokens (at MAX)
         my_crowds.erase(it);
@@ -839,7 +839,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 
             // get sp from data struct
             CMPSPInfo::Entry sp;
-            _my_sps->getSP(crowdsale.getPropertyId(), sp);
+            assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
 
             // find missing tokens
             double missedTokens = calculateFractional(sp.prop_type,
@@ -856,7 +856,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 
             // update SP with this data
             sp.update_block = pBlockIndex->GetBlockHash();
-            _my_sps->updateSP(crowdsale.getPropertyId(), sp);
+            assert(_my_sps->updateSP(crowdsale.getPropertyId(), sp));
 
             // update values
             update_tally_map(sp.issuer, crowdsale.getPropertyId(), missedTokens, BALANCE);
