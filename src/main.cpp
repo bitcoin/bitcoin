@@ -2397,21 +2397,9 @@ uint256 CBlockIndex::GetBlockTrust() const
     if (bnTarget <= 0)
         return 0;
 
-    /* Old protocol */
-    if (!fTestNet && GetBlockTime() < CHAINCHECKS_SWITCH_TIME)
-        return (IsProofOfStake()? ((CBigNum(1)<<256) / (bnTarget+1)).getuint256() : 1);
-
-    /* New protocol */
-
-    // Calculate work amount for block
-    uint256 nPoWTrust = (CBigNum(nPoWBase) / (bnTarget+1)).getuint256();
-
-    // Set nPowTrust to 1 if we are checking PoS block or PoW difficulty is too low
-    nPoWTrust = (IsProofOfStake() || nPoWTrust < 1) ? 1 : nPoWTrust;
-
-    // Return nPoWTrust for the first 12 blocks
+    // Return 1 for the first 12 blocks
     if (pprev == NULL || pprev->nHeight < 12)
-        return nPoWTrust;
+        return 1;
 
     const CBlockIndex* currentIndex = pprev;
 
@@ -2441,11 +2429,18 @@ uint256 CBlockIndex::GetBlockTrust() const
     }
     else
     {
+        // Calculate work amount for block
+        CBigNum bnPoWTrust = CBigNum(nPoWBase) / (bnTarget+1);
+
+        // Set nPowTrust to 1 if PoW difficulty is too low
+        if (bnPoWTrust < 1)
+            bnPoWTrust = 1;
+
         CBigNum bnLastBlockTrust = CBigNum(pprev->nChainTrust - pprev->pprev->nChainTrust);
 
         // Return nPoWTrust + 2/3 of previous block score if two parent blocks are not PoS blocks
         if (!(pprev->IsProofOfStake() && pprev->pprev->IsProofOfStake()))
-            return nPoWTrust + (2 * bnLastBlockTrust / 3).getuint256();
+            return (bnPoWTrust + 2 * bnLastBlockTrust / 3).getuint256();
 
         int nPoSCount = 0;
 
@@ -2459,7 +2454,7 @@ uint256 CBlockIndex::GetBlockTrust() const
 
         // Return nPoWTrust + 2/3 of previous block score if less than 7 PoS blocks found
         if (nPoSCount < 7)
-            return nPoWTrust + (2 * bnLastBlockTrust / 3).getuint256();
+            return (bnPoWTrust + 2 * bnLastBlockTrust / 3).getuint256();
 
         bnTarget.SetCompact(pprev->nBits);
 
@@ -2469,7 +2464,7 @@ uint256 CBlockIndex::GetBlockTrust() const
         CBigNum bnNewTrust = (CBigNum(1)<<256) / (bnTarget+1);
 
         // Return nPoWTrust + full trust score for previous block nBits
-        return nPoWTrust + bnNewTrust.getuint256();
+        return (bnPoWTrust + bnNewTrust).getuint256();
     }
 }
 
