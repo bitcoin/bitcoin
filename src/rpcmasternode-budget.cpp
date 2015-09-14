@@ -376,9 +376,8 @@ Value mnbudget(const Array& params, bool fHelp)
     if(strCommand == "show")
     {
         std::string strShow = "valid";
-        if (params.size() == 2)
-            std::string strProposalName = params[1].get_str();
-
+        std::string strProposalName = "";
+        
         Object resultObj;
         int64_t nTotalAllotted = 0;
 
@@ -387,6 +386,12 @@ Value mnbudget(const Array& params, bool fHelp)
         {
             if(strShow == "valid" && !pbudgetProposal->fValid) continue;
 
+            // if a proposal name is submitted only show that one
+            if (params.size() == 2){
+                strProposalName = SanitizeString(params[1].get_str());
+                if (strProposalName != pbudgetProposal->GetName()) continue;
+            }
+            
             nTotalAllotted += pbudgetProposal->GetAllotted();
 
             CTxDestination address1;
@@ -428,7 +433,7 @@ Value mnbudget(const Array& params, bool fHelp)
         if (params.size() != 2)
             throw runtime_error("Correct usage is 'mnbudget getinfo profilename'");
 
-        std::string strProposalName = params[1].get_str();
+        std::string strProposalName = SanitizeString(params[1].get_str());
 
         CBudgetProposal* pbudgetProposal = budget.FindProposal(strProposalName);
 
@@ -469,7 +474,7 @@ Value mnbudget(const Array& params, bool fHelp)
         if (params.size() != 2)
             throw runtime_error("Correct usage is 'mnbudget getvotes profilename'");
 
-        std::string strProposalName = params[1].get_str();
+        std::string strProposalName = SanitizeString(params[1].get_str());
 
         Object obj;
 
