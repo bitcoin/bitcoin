@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_SUITE(omnicore_marker_tests)
 BOOST_AUTO_TEST_CASE(class_no_marker)
 {
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         CMutableTransaction mutableTx;
         CTransaction tx(mutableTx);
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(class_no_marker)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), NO_MARKER);
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(PayToPubKeyHash_Unrelated());
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(class_no_marker)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), NO_MARKER);
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(PayToPubKey_Unrelated());
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(class_class_a)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_A);
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(NonStandardOutput());
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(class_class_b)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_B);
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(PayToPubKeyHash_ExodusCrowdsale(nBlock));
@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_C);
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(OpReturn_SimpleSend());
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_C);
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(NonStandardOutput());
@@ -273,7 +273,7 @@ BOOST_AUTO_TEST_CASE(class_class_c)
         BOOST_CHECK_EQUAL(GetEncodingClass(tx, nBlock), OMNI_CLASS_C);
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         CMutableTransaction mutableTx;
         mutableTx.vout.push_back(OpReturn_UnrelatedShort());

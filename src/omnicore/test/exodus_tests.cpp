@@ -31,11 +31,11 @@ BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_mainnet)
     BOOST_CHECK(CBitcoinAddress("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P") ==
                 ExodusCrowdsaleAddress(0));
     BOOST_CHECK(CBitcoinAddress("1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P") ==
-                ExodusCrowdsaleAddress(std::numeric_limits<int>().max()));
+                ExodusCrowdsaleAddress(std::numeric_limits<int>::max()));
     BOOST_CHECK(!(CBitcoinAddress("1rDQWR9yZLJY7ciyghAaF7XKD9tGzQuP6") ==
                 ExodusCrowdsaleAddress(0)));
     BOOST_CHECK(!(CBitcoinAddress("1rDQWR9yZLJY7ciyghAaF7XKD9tGzQuP6") ==
-                ExodusCrowdsaleAddress(std::numeric_limits<int>().max())));
+                ExodusCrowdsaleAddress(std::numeric_limits<int>::max())));
 
     SelectParams(CBaseChainParams::UNITTEST);
 }
@@ -79,11 +79,11 @@ BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_testnet)
     BOOST_CHECK(CBitcoinAddress("moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP") ==
                 ExodusCrowdsaleAddress(MONEYMAN_TESTNET_BLOCK));
     BOOST_CHECK(CBitcoinAddress("moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP") ==
-                ExodusCrowdsaleAddress(std::numeric_limits<int>().max()));
+                ExodusCrowdsaleAddress(std::numeric_limits<int>::max()));
     BOOST_CHECK(!(CBitcoinAddress("mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv") ==
                 ExodusCrowdsaleAddress(MONEYMAN_TESTNET_BLOCK)));
     BOOST_CHECK(!(CBitcoinAddress("mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv") ==
-                ExodusCrowdsaleAddress(std::numeric_limits<int>().max())));
+                ExodusCrowdsaleAddress(std::numeric_limits<int>::max())));
 
     SelectParams(CBaseChainParams::UNITTEST);
 }
@@ -103,11 +103,11 @@ BOOST_AUTO_TEST_CASE(exodus_crowdsale_address_regtest)
     BOOST_CHECK(CBitcoinAddress("moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP") ==
                 ExodusCrowdsaleAddress(MONEYMAN_REGTEST_BLOCK));
     BOOST_CHECK(CBitcoinAddress("moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP") ==
-                ExodusCrowdsaleAddress(std::numeric_limits<int>().max()));
+                ExodusCrowdsaleAddress(std::numeric_limits<int>::max()));
     BOOST_CHECK(!(CBitcoinAddress("mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv") ==
                 ExodusCrowdsaleAddress(MONEYMAN_REGTEST_BLOCK)));
     BOOST_CHECK(!(CBitcoinAddress("mpexoDuSkGGqvqrkrjiFng38QPkJQVFyqv") ==
-                ExodusCrowdsaleAddress(std::numeric_limits<int>().max())));
+                ExodusCrowdsaleAddress(std::numeric_limits<int>::max())));
 
     SelectParams(CBaseChainParams::UNITTEST);
 }

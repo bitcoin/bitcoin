@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(reference_identification)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "00000000000000070000000006dac2c0");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(80000, "1M773vkrQDtBpkorfHTdctRo6kHxb4fXuT"));
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(reference_identification)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "00000000000000070000000006dac2c0");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(80000, "19NNUnwsKZK5dCnDCZ7pqeruL2syA8hSVh"));
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(reference_identification)
         BOOST_CHECK_EQUAL(metaTx.getReceiver(), "37pwWHk1oFaWxVsnYKfGs7Lyt5yJEVomTH");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(55550, "35iqJySouevicrYzMhjKSsqokSGwGovGov"));
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(reference_identification)
 BOOST_AUTO_TEST_CASE(empty_op_return)
 {
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(900000, "35iqJySouevicrYzMhjKSsqokSGwGovGov"));
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
 BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
 {
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(100000, "3LzuqJs1deHYeFyJz5JXqrZXpuMk3GBEX2"));

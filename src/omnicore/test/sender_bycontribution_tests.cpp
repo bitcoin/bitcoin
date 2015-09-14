@@ -365,7 +365,7 @@ static CTransaction TxClassB(const std::vector<CTxOut>& txInputs)
 /** Extracts the sender "by contribution". */
 static bool GetSenderByContribution(const std::vector<CTxOut>& vouts, std::string& strSender)
 {
-    int nBlock = std::numeric_limits<int>().max();
+    int nBlock = std::numeric_limits<int>::max();
 
     CMPTransaction metaTx;
     CTransaction dummyTx = TxClassB(vouts);
