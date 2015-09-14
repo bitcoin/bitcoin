@@ -241,7 +241,8 @@ bool CMPTransaction::interpret_SendAll()
 /** Tx 20 */
 bool CMPTransaction::interpret_TradeOffer()
 {
-    if (pkt_size < 34) {
+    int expectedSize = (version == MP_TX_PKT_V0) ? 33 : 34;
+    if (pkt_size < expectedSize) {
         return false;
     }
     memcpy(&property, &pkt[4], 4);
@@ -252,7 +253,9 @@ bool CMPTransaction::interpret_TradeOffer()
     memcpy(&amount_desired, &pkt[16], 8);
     memcpy(&blocktimelimit, &pkt[24], 1);
     memcpy(&min_fee, &pkt[25], 8);
-    memcpy(&subaction, &pkt[33], 1);
+    if (version > MP_TX_PKT_V0) {
+        memcpy(&subaction, &pkt[33], 1);
+    }
     swapByteOrder64(amount_desired);
     swapByteOrder64(min_fee);
 
@@ -262,7 +265,9 @@ bool CMPTransaction::interpret_TradeOffer()
         PrintToLog("\t  amount desired: %s\n", FormatDivisibleMP(amount_desired));
         PrintToLog("\tblock time limit: %d\n", blocktimelimit);
         PrintToLog("\t         min fee: %s\n", FormatDivisibleMP(min_fee));
-        PrintToLog("\t      sub-action: %d\n", subaction);
+        if (version > MP_TX_PKT_V0) {
+            PrintToLog("\t      sub-action: %d\n", subaction);
+        }
     }
 
     return true;
