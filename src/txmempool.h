@@ -117,11 +117,11 @@ public:
     void setSanityCheck(bool _fSanityCheck) { fSanityCheck = _fSanityCheck; }
 
     bool addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry, bool fCurrentEstimate = true);
-    void remove(const CTransaction &tx, std::list<CTransaction>& removed, bool fRecursive = false);
+    void remove(const CTransaction &tx, std::list<uint256>& removed, bool fRecursive = false);
     void removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight);
-    void removeConflicts(const CTransaction &tx, std::list<CTransaction>& removed);
+    void removeConflicts(const CTransaction &tx, std::list<uint256>& removed);
     void removeForBlock(const std::vector<CTransaction>& vtx, unsigned int nBlockHeight,
-                        std::list<CTransaction>& conflicts, bool fCurrentEstimate = true);
+                        std::list<uint256>& conflicts, bool fCurrentEstimate = true);
     void clear();
     void queryHashes(std::vector<uint256>& vtxid);
     void pruneSpent(const uint256& hash, CCoins &coins);

@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
 
 
     CTxMemPool testPool(CFeeRate(0));
-    std::list<CTransaction> removed;
+    std::list<uint256> removed;
 
     // Nothing in pool, remove should do nothing:
     testPool.remove(txParent, removed, true);
