@@ -1382,7 +1382,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         return false;
     }
 
-    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
+    if(!fDarksendMultiSession && chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
         LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
         strAutoDenomResult = _("Last successful Darksend action was too recent.");
         return false;
@@ -1475,7 +1475,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         int nUseQueue = rand()%100;
         UpdateState(POOL_STATUS_ACCEPTING_ENTRIES);
 
-        if(pwalletMain->GetDenominatedBalance(true) > 0){ //get denominated unconfirmed inputs
+        if(!fDarksendMultiSession && pwalletMain->GetDenominatedBalance(true) > 0) { //get denominated unconfirmed inputs
             LogPrintf("DoAutomaticDenominating -- Found unconfirmed denominated outputs, will wait till they confirm to continue.\n");
             strAutoDenomResult = _("Found unconfirmed denominated outputs, will wait till they confirm to continue.");
             return false;
