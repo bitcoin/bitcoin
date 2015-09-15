@@ -243,7 +243,7 @@ git merge commit are mentioned.
 
 ### Configuration and command-line options
 - #5636 `a353ad4` Add option `-allowselfsignedrootcertificate` to allow self signed root certs (for testing payment requests)
-- #5900 `3e8a1f2` Add a consistency check `-checkblockindex` for the block chain data structures
+- #5900 `3e8a1f2` Add a consistency check `-checkblockindex` for the blockchain data structures
 - #5951 `7efc9cf` Make it possible to disable wallet transaction broadcast (using `-walletbroadcast=0`)
 - #5911 `b6ea3bc` privacy: Stream isolation for Tor (on by default, use `-proxyrandomize=0` to disable)
 - #5863 `c271304` Add autoprune functionality (`-prune=<size>`)

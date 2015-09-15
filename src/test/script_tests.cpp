@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -721,7 +721,7 @@ sign_multisig(CScript scriptPubKey, std::vector<CKey> keys, CTransaction transac
     // NOTE: CHECKMULTISIG has an unfortunate bug; it requires
     // one extra item on the stack, before the signatures.
     // Putting OP_0 on the stack is the workaround;
-    // fixing the bug would mean splitting the block chain (old
+    // fixing the bug would mean splitting the blockchain (old
     // clients would not accept new CHECKMULTISIG transactions,
     // and vice-versa)
     //

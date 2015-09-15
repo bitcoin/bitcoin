@@ -12,7 +12,7 @@ http://gitorious.org/bitcoin/bitcoind-stable/archive-tarball/v0.5.3#.tar.gz
 
 PROTOCOL UPDATES
 
-BIP 30: Introduce a new network rule: "a block is not valid if it contains a transaction whose hash already exists in the block chain, unless all that transaction's outputs were already spent before said block" beginning on March 15, 2012, 00:00 UTC.
+BIP 30: Introduce a new network rule: "a block is not valid if it contains a transaction whose hash already exists in the blockchain, unless all that transaction's outputs were already spent before said block" beginning on March 15, 2012, 00:00 UTC.
 On testnet, allow mining of min-difficulty blocks if 20 minutes have gone by without mining a regular-difficulty block. This is to make testing Bitcoin easier, and will not affect normal mode.
 
 BUG FIXES

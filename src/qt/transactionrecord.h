@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -119,7 +119,7 @@ public:
     /** Subtransaction index, for sort key */
     int idx;
 
-    /** Status: can change with block chain update */
+    /** Status: can change with blockchain update */
     TransactionStatus status;
 
     /** Whether the transaction was sent/received with a watch-only address */

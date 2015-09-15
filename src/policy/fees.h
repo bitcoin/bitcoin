@@ -47,7 +47,7 @@ class CTxMemPoolEntry;
  *
  * Here is a brief description of the implementation for fee estimation.
  * When a transaction that counts for fee estimation enters the mempool, we
- * track the height of the block chain at entry.  Whenever a block comes in,
+ * track the height of the blockchain at entry.  Whenever a block comes in,
  * we count the number of transactions in each bucket and the total amount of fee
  * paid in each bucket. Then we calculate how many blocks Y it took each
  * transaction to be mined and we track an array of counters in each bucket

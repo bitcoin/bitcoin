@@ -6,4 +6,4 @@ As Gavin and I have said clearly before, the software is not at all resistant to
 I'm leaving the -limitfreerelay part as a switch for now and it's there if you need it.
 
 - Removed "safe mode" alerts
-"safe mode" alerts was a temporary measure after the 0.3.9 overflow bug.  We can say all we want that users can just run with "-disablesafemode", but it's better just not to have it for the sake of appearances.  It was never intended as a long term feature.  Safe mode can still be triggered by seeing a longer (greater total PoW) invalid block chain.
+"safe mode" alerts was a temporary measure after the 0.3.9 overflow bug.  We can say all we want that users can just run with "-disablesafemode", but it's better just not to have it for the sake of appearances.  It was never intended as a long term feature.  Safe mode can still be triggered by seeing a longer (greater total PoW) invalid blockchain.

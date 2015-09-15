@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -143,7 +143,7 @@ struct COutputEntry
     int vout;
 };
 
-/** A transaction with a merkle branch linking it to the block chain. */
+/** A transaction with a merkle branch linking it to the blockchain. */
 class CMerkleTx : public CTransaction
 {
 private:
@@ -204,7 +204,7 @@ public:
 
 /** 
  * A transaction with a bunch of additional info that only the owner cares about.
- * It includes any unrecorded transactions needed to link it back to the block chain.
+ * It includes any unrecorded transactions needed to link it back to the blockchain.
  */
 class CWalletTx : public CMerkleTx
 {

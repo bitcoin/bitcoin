@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -129,7 +129,7 @@ UniValue getblockcount(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getblockcount\n"
-            "\nReturns the number of blocks in the longest block chain.\n"
+            "\nReturns the number of blocks in the longest blockchain.\n"
             "\nResult:\n"
             "n    (numeric) The current block count\n"
             "\nExamples:\n"
@@ -146,7 +146,7 @@ UniValue getbestblockhash(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getbestblockhash\n"
-            "\nReturns the hash of the best (tip) block in the longest block chain.\n"
+            "\nReturns the hash of the best (tip) block in the longest blockchain.\n"
             "\nResult\n"
             "\"hex\"      (string) the block hash hex encoded\n"
             "\nExamples\n"
@@ -270,7 +270,7 @@ UniValue getblockhash(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getblockhash index\n"
-            "\nReturns hash of block in best-block-chain at index provided.\n"
+            "\nReturns hash of block in best-blockchain at index provided.\n"
             "\nArguments:\n"
             "1. index         (numeric, required) The block index\n"
             "\nResult:\n"
@@ -595,7 +595,7 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getblockchaininfo\n"
-            "Returns an object containing various state info regarding block chain processing.\n"
+            "Returns an object containing various state info regarding blockchain processing.\n"
             "\nResult:\n"
             "{\n"
             "  \"chain\": \"xxxx\",        (string) current network name as defined in BIP70 (main, test, regtest)\n"

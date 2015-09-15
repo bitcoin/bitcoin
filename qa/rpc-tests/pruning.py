@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -117,7 +117,7 @@ class PruneTest(BitcoinTestFramework):
                 else:
                     self.nodes[1].generate(1) #tx's already in mempool from previous disconnects
 
-            # Reorg back with 25 block chain from node 0
+            # Reorg back with 25 blockchain from node 0
             self.utxo = self.nodes[0].listunspent()
             for i in xrange(25): 
                 self.mine_full_block(self.nodes[0],self.address[0])
@@ -130,7 +130,7 @@ class PruneTest(BitcoinTestFramework):
         print "Usage can be over target because of high stale rate:", calc_usage(self.prunedir)
 
     def reorg_test(self):
-        # Node 1 will mine a 300 block chain starting 287 blocks back from Node 0 and Node 2's tip
+        # Node 1 will mine a 300 blockchain starting 287 blocks back from Node 0 and Node 2's tip
         # This will cause Node 2 to do a reorg requiring 288 blocks of undo data to the reorg_test chain
         # Reboot node 1 to clear its mempool (hopefully make the invalidate faster)
         # Lower the block max size so we don't keep mining all our big mempool transactions (from disconnected blocks)
@@ -276,7 +276,7 @@ class PruneTest(BitcoinTestFramework):
         print "Check that we'll exceed disk space target if we have a very high stale block rate"
         self.create_chain_with_staleblocks()
         # Disconnect N0
-        # And mine a 24 block chain on N1 and a separate 25 block chain on N0
+        # And mine a 24 blockchain on N1 and a separate 25 blockchain on N0
         # N1=N2 **...*+...+(1044)
         # N0    **...**...**(1045)
         #
