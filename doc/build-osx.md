@@ -70,7 +70,7 @@ Download Qt Creator from http://www.qt.io/download/. Download the "community edi
 6. Confirm the "summary page"
 7. In the "Projects" tab select "Manage Kits..."
 8. Select the default "Desktop" kit and select "Clang (x86 64bit in /usr/bin)" as compiler
-9. Select LLDB as debugger (you might need to set the path to your installtion)
+9. Select LLDB as debugger (you might need to set the path to your installation)
 10. Start debugging with Qt Creator
 
 Creating a release build
