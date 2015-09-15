@@ -37,6 +37,7 @@ extern int nDarksendRounds;
 extern int nAnonymizeDarkcoinAmount;
 extern int nLiquidityProvider;
 extern bool fEnableDarksend;
+extern bool fDarksendMultiSession;
 extern int64_t enforceMasternodePaymentsTime;
 extern std::string strMasterNodeAddr;
 extern int keysLoaded;
