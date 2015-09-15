@@ -425,7 +425,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
     strUsage += "\n" + _("InstantX options:") + "\n";
     strUsage += "  -enableinstantx=<n>    " + strprintf(_("Enable instantx, show confirmations for locked transactions (bool, default: %s)"), "true") + "\n";
-    strUsage += "  -instantxdepth=<n>     " + strprintf(_("Show N confirmations for a successfully locked transaction (0-9999, default: %u)"), 1) + "\n";
+    strUsage += "  -instantxdepth=<n>     " + strprintf(_("Show N confirmations for a successfully locked transaction (0-9999, default: %u)"), nInstantXDepth) + "\n";
 
     strUsage += "\n" + _("Node relay options:") + "\n";
     strUsage += "  -datacarrier           " + strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1) + "\n";
@@ -696,6 +696,11 @@ bool AppInit2(boost::thread_group& threadGroup)
     if (GetBoolArg("-zapwallettxes", false)) {
         if (SoftSetBoolArg("-rescan", true))
             LogPrintf("AppInit2 : parameter interaction: -zapwallettxes=<mode> -> setting -rescan=1\n");
+    }
+
+    if(!GetBoolArg("-enableinstantx", fEnableInstantX)){
+        if (SoftSetArg("-instantxdepth", 0))
+            LogPrintf("AppInit2 : parameter interaction: -enableinstantx=false -> setting -nInstantXDepth=0\n");
     }
 
     // Make sure enough file descriptors are available
@@ -1532,14 +1537,9 @@ bool AppInit2(boost::thread_group& threadGroup)
     if(nAnonymizeDarkcoinAmount > 999999) nAnonymizeDarkcoinAmount = 999999;
     if(nAnonymizeDarkcoinAmount < 2) nAnonymizeDarkcoinAmount = 2;
 
-    bool fEnableInstantX = GetBoolArg("-enableinstantx", true);
-    if(fEnableInstantX){
-        nInstantXDepth = GetArg("-instantxdepth", 5);
-        if(nInstantXDepth > 60) nInstantXDepth = 60;
-        if(nInstantXDepth < 0) nAnonymizeDarkcoinAmount = 0;
-    } else {
-        nInstantXDepth = 0;
-    }
+    fEnableInstantX = GetBoolArg("-enableinstantx", fEnableInstantX);
+    nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
+    nInstantXDepth = std::min(std::max(nInstantXDepth, 0), 60);
 
     //lite mode disables all Masternode and Darksend related functionality
     fLiteMode = GetBoolArg("-litemode", false);
