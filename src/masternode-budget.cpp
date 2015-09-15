@@ -1265,18 +1265,6 @@ CBudgetProposal::CBudgetProposal()
     fValid = true;
 }
 
-CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nBlockStartIn, int nBlockEndIn, CScript addressIn, CAmount nAmountIn, uint256 nFeeTXHashIn)
-{
-    strProposalName = strProposalNameIn;
-    strURL = strURLIn;
-    nBlockStart = nBlockStartIn;
-    nBlockEnd = nBlockEndIn;
-    address = addressIn;
-    nAmount = nAmountIn;
-    nFeeTXHash = nFeeTXHashIn;
-    fValid = true;
-}
-
 CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
 {
     strProposalName = other.strProposalName;
@@ -1291,6 +1279,23 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
     fValid = true;
 }
 
+CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn)
+{
+    strProposalName = strProposalNameIn;
+    strURL = strURLIn;
+
+    nBlockStart = nBlockStartIn;
+
+    int nPaymentsStart = nBlockStart - nBlockStart % GetBudgetPaymentCycleBlocks();
+    //calculate the end of the cycle for this vote, add half a cycle (vote will be deleted after that block)
+    nBlockEnd = nPaymentsStart + GetBudgetPaymentCycleBlocks() * nPaymentCount + GetBudgetPaymentCycleBlocks()/2;
+
+    address = addressIn;
+    nAmount = nAmountIn;
+
+    nFeeTXHash = nFeeTXHashIn;
+}
+
 bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
 {
     if(GetNays() - GetYeas() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
@@ -1303,18 +1308,52 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
         return false;
     }
 
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(pindexPrev == NULL) {strError = "Tip is NULL"; return true;}
+
+    if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
+        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        strError = strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nNext);
+        return false;
+    }
+
+    if(nBlockEnd % GetBudgetPaymentCycleBlocks() != GetBudgetPaymentCycleBlocks()/2){
+        strError = "Invalid block end";
+        return false;
+    }
+
     if(nBlockEnd < nBlockStart) {
-        strError = "Invalid nBlockEnd";
+        strError = "Invalid block end - must be greater then block start.";
         return false;
     }
 
     if(nAmount < 1*COIN) {
-        strError = "Invalid nAmount";
+        strError = "Invalid proposal amount";
+        return false;
+    }
+
+    if(strProposalName.size() > 20) {
+        strError = "Invalid proposal name, limit of 20 characters.";
+        return false;
+    }
+
+    if(strProposalName != SanitizeString(strProposalName)) {
+        strError = "Invalid proposal name, unsafe characters found.";
+        return false;
+    }
+
+    if(strURL.size() > 64) {
+        strError = "Invalid proposal url, limit of 64 characters.";
+        return false;
+    }
+
+    if(strURL != SanitizeString(strURL)) {
+        strError = "Invalid proposal url, unsafe characters found.";
         return false;
     }
 
     if(address == CScript()) {
-        strError = "Invalid Payment Address";
+        strError = "Invalid proposal Payment Address";
         return false;
     }
 
@@ -1348,9 +1387,6 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
         strError = "Payment more than max";
         return false;
     }
-
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) {strError = "Tip is NULL"; return true;}
 
     if(GetBlockEnd() < pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()/2 ) return false;
 
@@ -1491,23 +1527,6 @@ int CBudgetProposal::GetRemainingPaymentCount()
     int nTotal = (GetBlockEndCycle() - GetBlockStartCycle()) / GetBudgetPaymentCycleBlocks();
     // Take the lowest value
     return (nPayments <= nTotal ? nPayments : nTotal);
-}
-
-CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn)
-{
-    strProposalName = strProposalNameIn;
-    strURL = strURLIn;
-
-    nBlockStart = nBlockStartIn;
-
-    int nCycleStart = nBlockStart - nBlockStart % GetBudgetPaymentCycleBlocks();
-    //calculate the end of the cycle for this vote, add half a cycle (vote will be deleted after that block)
-    nBlockEnd = nCycleStart + GetBudgetPaymentCycleBlocks() * nPaymentCount + GetBudgetPaymentCycleBlocks()/2;
-
-    address = addressIn;
-    nAmount = nAmountIn;
-
-    nFeeTXHash = nFeeTXHashIn;
 }
 
 void CBudgetProposalBroadcast::Relay()
