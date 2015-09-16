@@ -56,6 +56,63 @@
         <file alias="drkblue_remove">res/icons/drkblue/drkblue_remove.png</file>
         <file alias="browse">res/icons/drkblue/browse.png</file>
     </qresource>
+    <qresource prefix="/icons/crownium">
+        <file alias="bitcoin">res/icons/crownium/bitcoin.png</file>
+        <file alias="address-book">res/icons/crownium/address-book.png</file>
+        <file alias="quit">res/icons/crownium/quit.png</file>
+        <file alias="send">res/icons/crownium/send.png</file>
+        <file alias="connect_0">res/icons/crownium/connect0_16.png</file>
+        <file alias="connect_1">res/icons/crownium/connect1_16.png</file>
+        <file alias="connect_2">res/icons/crownium/connect2_16.png</file>
+        <file alias="connect_3">res/icons/crownium/connect3_16.png</file>
+        <file alias="connect_4">res/icons/crownium/connect4_16.png</file>
+        <file alias="transaction_0">res/icons/crownium/transaction0.png</file>
+        <file alias="transaction_confirmed">res/icons/crownium/transaction2.png</file>
+        <file alias="transaction_conflicted">res/icons/crownium/transaction_conflicted.png</file>
+        <file alias="transaction_1">res/icons/crownium/clock1.png</file>
+        <file alias="transaction_2">res/icons/crownium/clock2.png</file>
+        <file alias="transaction_3">res/icons/crownium/clock3.png</file>
+        <file alias="transaction_4">res/icons/crownium/clock4.png</file>
+        <file alias="transaction_5">res/icons/crownium/clock5.png</file>
+        <file alias="eye">res/icons/crownium/eye.png</file>
+        <file alias="eye_minus">res/icons/crownium/eye_minus.png</file>
+        <file alias="eye_plus">res/icons/crownium/eye_plus.png</file>
+        <file alias="options">res/icons/crownium/configure.png</file>
+        <file alias="receiving_addresses">res/icons/crownium/receive.png</file>
+        <file alias="editpaste">res/icons/crownium/editpaste.png</file>
+        <file alias="editcopy">res/icons/crownium/editcopy.png</file>
+        <file alias="add">res/icons/crownium/add.png</file>
+        <file alias="bitcoin_testnet">res/icons/crownium/bitcoin_testnet.png</file>
+        <file alias="edit">res/icons/crownium/edit.png</file>
+        <file alias="history">res/icons/crownium/history.png</file>
+        <file alias="overview">res/icons/crownium/overview.png</file>
+        <file alias="export">res/icons/crownium/export.png</file>
+        <file alias="synced">res/icons/crownium/synced.png</file>
+        <file alias="remove">res/icons/crownium/remove.png</file>
+        <file alias="tx_mined">res/icons/crownium/tx_mined.png</file>
+        <file alias="tx_input">res/icons/crownium/tx_input.png</file>
+        <file alias="tx_output">res/icons/crownium/tx_output.png</file>
+        <file alias="tx_inout">res/icons/crownium/tx_inout.png</file>
+        <file alias="unit_dash">res/icons/crownium/unit_dash.png</file>
+        <file alias="unit_mdash">res/icons/crownium/unit_mdash.png</file>
+        <file alias="unit_udash">res/icons/crownium/unit_udash.png</file>
+        <file alias="unit_duffs">res/icons/crownium/unit_duffs.png</file>
+        <file alias="unit_tdash">res/icons/crownium/unit_tdash.png</file>
+        <file alias="unit_tmdash">res/icons/crownium/unit_tmdash.png</file>
+        <file alias="unit_tudash">res/icons/crownium/unit_tudash.png</file>
+        <file alias="unit_tduffs">res/icons/crownium/unit_tduffs.png</file>
+        <file alias="lock_closed">res/icons/crownium/lock_closed.png</file>
+        <file alias="lock_open">res/icons/crownium/lock_open.png</file>
+        <file alias="key">res/icons/crownium/key.png</file>
+        <file alias="filesave">res/icons/crownium/filesave.png</file>
+        <file alias="qrcode">res/icons/crownium/qrcode.png</file>
+        <file alias="debugwindow">res/icons/crownium/debugwindow.png</file>
+        <file alias="drkblue_editpaste">res/icons/crownium/drkblue_editpaste.png</file>
+        <file alias="drkblue_address-book">res/icons/crownium/drkblue_address-book.png</file>
+        <file alias="drkblue_editcopy">res/icons/crownium/drkblue_editcopy.png</file>
+        <file alias="drkblue_remove">res/icons/crownium/drkblue_remove.png</file>
+        <file alias="browse">res/icons/crownium/browse.png</file>
+    </qresource>
     <qresource prefix="/icons/trad">
         <file alias="bitcoin">res/icons/trad/bitcoin.png</file>
         <file alias="address-book">res/icons/trad/address-book.png</file>
@@ -115,6 +172,7 @@
     </qresource>
     <qresource prefix="/css">
         <file alias="drkblue">res/css/drkblue.css</file>
+        <file alias="crownium">res/css/crownium.css</file>
     </qresource>	    
     <qresource prefix="/images/drkblue">
         <file alias="about">res/images/drkblue/about.png</file>
@@ -129,6 +187,20 @@
         <file alias="drkblue_walletFrame">res/images/drkblue/drkblue_walletFrame.png</file>
         <file alias="splash">res/images/drkblue/splash.png</file>
         <file alias="splash_testnet">res/images/drkblue/splash_testnet.png</file>
+    </qresource>
+    <qresource prefix="/images/crownium">
+        <file alias="about">res/images/crownium/about.png</file>
+        <file alias="dash_logo_horizontal">res/images/crownium/dash_logo_horizontal.png</file>
+        <file alias="drkblue_downArrow">res/images/crownium/drkblue_downArrow.png</file>
+        <file alias="drkblue_downArrow_small">res/images/crownium/drkblue_downArrow_small.png</file>
+        <file alias="drkblue_upArrow_small">res/images/crownium/drkblue_upArrow_small.png</file>
+        <file alias="drkblue_leftArrow_small">res/images/crownium/drkblue_leftArrow_small.png</file>
+        <file alias="drkblue_rightArrow_small">res/images/crownium/drkblue_rightArrow_small.png</file>
+        <file alias="drkblue_qtreeview_selected">res/images/crownium/drkblue_qtreeview_selected.png</file>
+        <file alias="drkblue_walletFrame_bg">res/images/crownium/drkblue_walletFrame_bg.png</file>
+        <file alias="drkblue_walletFrame">res/images/crownium/drkblue_walletFrame.png</file>
+        <file alias="splash">res/images/crownium/splash.png</file>
+        <file alias="splash_testnet">res/images/crownium/splash_testnet.png</file>
     </qresource>
     <qresource prefix="/images/trad">
         <file alias="about">res/images/trad/about.png</file>
