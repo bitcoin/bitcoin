@@ -169,11 +169,7 @@ std::string NtpServers[65] = {
     // ... To be continued
 };
 
-#ifdef WIN32
-bool InitWithRandom(SOCKET &sockfd, int &servlen, struct sockaddr *pcliaddr)
-#else
-bool InitWithRandom(int &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
-#endif
+bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
 {
     int nAttempt = 0;
 
@@ -207,7 +203,7 @@ bool InitWithRandom(int &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
 
         sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-        if (sockfd == -1)
+        if (sockfd == INVALID_SOCKET)
             continue; // socket initialization error
 
         if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1 )
@@ -223,11 +219,7 @@ bool InitWithRandom(int &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
     return false;
 }
 
-#ifdef WIN32
-bool InitWithHost(std::string &strHostName, SOCKET &sockfd, int &servlen, struct sockaddr *pcliaddr)
-#else
-bool InitWithHost(std::string &strHostName, int &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
-#endif
+bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
 {
     sockfd = -1;
 
@@ -254,7 +246,7 @@ bool InitWithHost(std::string &strHostName, int &sockfd, socklen_t &servlen, str
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-    if (sockfd == -1)
+    if (sockfd == INVALID_SOCKET)
         return false; // socket initialization error
 
     if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1 )
@@ -269,11 +261,7 @@ bool InitWithHost(std::string &strHostName, int &sockfd, socklen_t &servlen, str
 }
 
 
-#ifdef WIN32
-int64_t DoReq(SOCKET sockfd, int servlen, struct sockaddr cliaddr)
-#else
-int64_t DoReq(int sockfd, socklen_t servlen, struct sockaddr cliaddr)
-#endif
+int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr)
 {
     struct pkt *msg = new pkt;
     struct pkt *prt  = new pkt;
@@ -317,24 +305,15 @@ int64_t NtpGetTime()
 {
     struct sockaddr cliaddr;
 
-#ifdef WIN32
     SOCKET sockfd;
-    int servlen;
-#else
-    int sockfd;
     socklen_t servlen;
-#endif
 
     if (!InitWithRandom(sockfd, servlen, &cliaddr))
         return -1;
 
     int64_t nTime = DoReq(sockfd, servlen, cliaddr);
 
-#ifdef WIN32
     closesocket(sockfd);
-#else
-    close(sockfd);
-#endif
 
     return nTime;
 }
@@ -343,24 +322,15 @@ int64_t NtpGetTime(std::string &strHostName)
 {
     struct sockaddr cliaddr;
 
-#ifdef WIN32
     SOCKET sockfd;
-    int servlen;
-#else
-    int sockfd;
     socklen_t servlen;
-#endif
 
     if (!InitWithHost(strHostName, sockfd, servlen, &cliaddr))
         return -1;
 
     int64_t nTime = DoReq(sockfd, servlen, cliaddr);
 
-#ifdef WIN32
     closesocket(sockfd);
-#else
-    close(sockfd);
-#endif
 
     return nTime;
 }
