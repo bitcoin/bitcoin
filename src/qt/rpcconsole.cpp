@@ -54,10 +54,10 @@ const struct {
     const char *url;
     const char *source;
 } ICON_MAPPING[] = {
-    {"cmd-request", ":/icons/drkblue/tx_input"},
-    {"cmd-reply", ":/icons/drkblue/tx_output"},
-    {"cmd-error", ":/icons/drkblue/tx_output"},
-    {"misc", ":/icons/drkblue/tx_inout"},
+    {"cmd-request", "tx_input"},
+    {"cmd-reply", "tx_output"},
+    {"cmd-error", "tx_output"},
+    {"misc", "tx_inout"},
     {NULL, NULL}
 };
 
@@ -423,12 +423,16 @@ void RPCConsole::clear()
 
     // Add smoothly scaled icon images.
     // (when using width/height on an img, Qt uses nearest instead of linear interpolation)
+    QString iconPath = ":/icons/" + GUIUtil::getThemeName() + "/";
+    QString iconName = "";
+    
     for(int i=0; ICON_MAPPING[i].url; ++i)
     {
+        iconName = ICON_MAPPING[i].source;
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    QImage(ICON_MAPPING[i].source).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    QImage(iconPath + iconName).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     // Set default style sheet
