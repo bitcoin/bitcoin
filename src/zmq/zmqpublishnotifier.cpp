@@ -116,8 +116,9 @@ void CZMQAbstractPublishNotifier::Shutdown()
     psocket = 0;
 }
 
-bool CZMQPublishHashBlockNotifier::NotifyBlock(const uint256 &hash)
+bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
+    uint256 hash = pindex->GetBlockHash();
     LogPrint("zmq", "Publish hash block %s\n", hash.GetHex());
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
@@ -137,18 +138,15 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
     return rc == 0;
 }
 
-bool CZMQPublishRawBlockNotifier::NotifyBlock(const uint256 &hash)
+bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
-    LogPrint("zmq", "Publish raw block %s\n", hash.GetHex());
+    LogPrint("zmq", "Publish raw block %s\n", pindex->GetBlockHash().GetHex());
 
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     {
         LOCK(cs_main);
-
         CBlock block;
-        CBlockIndex* pblockindex = mapBlockIndex[hash];
-
-        if(!ReadBlockFromDisk(block, pblockindex))
+        if(!ReadBlockFromDisk(block, pindex))
         {
             zmqError("Can't read block from disk");
             return false;
