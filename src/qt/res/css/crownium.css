@@ -51,15 +51,21 @@ QToolBar > QToolButton {
 background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .05 #222222, stop: .4 #EEEEEE, stop: .6 #EEEEEE, stop: 1 #222222);
 min-height:2.5em;
 padding: 0em 1em;
-font-weight:bold;
 color:#000000;
 }
 
 QToolBar > QToolButton:checked {
-background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .05 #222222, stop: .4 #FFFFFF, stop: .6 #FFFFFF, stop: 1 #222222);
+background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .05 #000000, stop: .4 #EEEEEE, stop: .6 #EEEEEE, stop: 1 #000000);
 font-weight:bold;
-border:2px outset #888888;
-border-radius:2px;
+color:#000000;
+border:none;
+}
+
+QToolBar > QToolButton:hover {
+background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: .05 #222222, stop: .4 #EEEEEE, stop: .6 #EEEEEE, stop: 1 #222222);
+font-weight:bold;
+color:#000000;
+border:none;
 }
 
 QMessageBox {
