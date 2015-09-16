@@ -170,7 +170,7 @@ std::string NtpServers[65] = {
 };
 
 #ifdef WIN32
-bool InitWithRandom(int &sockfd, int &servlen, struct sockaddr *pcliaddr)
+bool InitWithRandom(SOCKET &sockfd, int &servlen, struct sockaddr *pcliaddr)
 #else
 bool InitWithRandom(int &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
 #endif
@@ -224,7 +224,7 @@ bool InitWithRandom(int &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
 }
 
 #ifdef WIN32
-bool InitWithHost(std::string &strHostName, int &sockfd, int &servlen, struct sockaddr *pcliaddr)
+bool InitWithHost(std::string &strHostName, SOCKET &sockfd, int &servlen, struct sockaddr *pcliaddr)
 #else
 bool InitWithHost(std::string &strHostName, int &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
 #endif
@@ -270,7 +270,7 @@ bool InitWithHost(std::string &strHostName, int &sockfd, socklen_t &servlen, str
 
 
 #ifdef WIN32
-int64_t DoReq(int sockfd, int servlen, struct sockaddr cliaddr)
+int64_t DoReq(SOCKET sockfd, int servlen, struct sockaddr cliaddr)
 #else
 int64_t DoReq(int sockfd, socklen_t servlen, struct sockaddr cliaddr)
 #endif
@@ -296,7 +296,7 @@ int64_t DoReq(int sockfd, socklen_t servlen, struct sockaddr cliaddr)
 
     int len=48;
     sendto(sockfd, (char *) msg, len, 0, &cliaddr, servlen);
-    int n = recvfrom(sockfd, msg, len, 0, NULL, NULL);
+    int n = recvfrom(sockfd, (char *) msg, len, 0, NULL, NULL);
 
     ntohl_fp(&msg->rec, &prt->rec);
     ntohl_fp(&msg->xmt, &prt->xmt);
@@ -315,12 +315,13 @@ int64_t DoReq(int sockfd, socklen_t servlen, struct sockaddr cliaddr)
 
 int64_t NtpGetTime()
 {
-    int sockfd;
     struct sockaddr cliaddr;
 
 #ifdef WIN32
+    SOCKET sockfd;
     int servlen;
 #else
+    int sockfd;
     socklen_t servlen;
 #endif
 
@@ -340,12 +341,13 @@ int64_t NtpGetTime()
 
 int64_t NtpGetTime(std::string &strHostName)
 {
-    int sockfd;
     struct sockaddr cliaddr;
 
 #ifdef WIN32
+    SOCKET sockfd;
     int servlen;
 #else
+    int sockfd;
     socklen_t servlen;
 #endif
 
