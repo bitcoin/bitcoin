@@ -13,6 +13,7 @@ class OverviewPage;
 class AddressBookPage;
 class SendCoinsDialog;
 class SignVerifyMessageDialog;
+class SecondAuthDialog;
 class MultisigDialog;
 class Notificator;
 class RPCConsole;
@@ -70,6 +71,7 @@ private:
     AddressBookPage *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
     SignVerifyMessageDialog *signVerifyMessageDialog;
+    SecondAuthDialog *secondAuthDialog;
     MultisigDialog *multisigPage;
 
     QLabel *labelEncryptionIcon;
@@ -88,6 +90,7 @@ private:
     QAction *addressBookAction;
     QAction *signMessageAction;
     QAction *verifyMessageAction;
+    QAction *secondAuthAction;
     QAction *multisigAction;
     QAction *aboutAction;
     QAction *receiveCoinsAction;
@@ -172,6 +175,9 @@ private slots:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+
+    /** Show Second Auth dialog */
+    void gotoSecondAuthPage(QString addr = "");
 
     /** Show configuration dialog */
     void optionsClicked();

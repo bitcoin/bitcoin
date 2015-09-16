@@ -9,6 +9,7 @@
 #include "addressbookpage.h"
 #include "sendcoinsdialog.h"
 #include "signverifymessagedialog.h"
+#include "secondauthdialog.h"
 #include "multisigdialog.h"
 #include "optionsdialog.h"
 #include "aboutdialog.h"
@@ -77,6 +78,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     clientModel(0),
     walletModel(0),
     signVerifyMessageDialog(0),
+    secondAuthDialog(0),
     multisigPage(0),
     encryptWalletAction(0),
     lockWalletAction(0),
@@ -136,6 +138,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     sendCoinsPage = new SendCoinsDialog(this);
 
     signVerifyMessageDialog = new SignVerifyMessageDialog(0);
+
+    secondAuthDialog = new SecondAuthDialog(0);
 
     multisigPage = new MultisigDialog(0);
 
@@ -229,6 +233,7 @@ BitcoinGUI::~BitcoinGUI()
     delete aboutDialog;
     delete optionsDialog;
     delete multisigPage;
+    delete secondAuthDialog;
     delete signVerifyMessageDialog;
 }
 
@@ -324,6 +329,8 @@ void BitcoinGUI::createActions()
     signMessageAction->setStatusTip(tr("Sign messages with your Novacoin addresses to prove you own them"));
     verifyMessageAction = new QAction(QIcon(":/icons/transaction_0"), tr("&Verify message..."), this);
     verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Novacoin addresses"));
+    secondAuthAction = new QAction(QIcon(":/icons/key"), tr("Second &auth..."), this);
+    secondAuthAction->setStatusTip(tr("Second auth with your Novacoin addresses"));
 
     lockWalletAction = new QAction(QIcon(":/icons/lock_closed"), tr("&Lock wallet"), this);
     lockWalletAction->setStatusTip(tr("Lock wallet"));
@@ -357,6 +364,7 @@ void BitcoinGUI::createActions()
     connect(changePassphraseAction, SIGNAL(triggered()), this, SLOT(changePassphrase()));
     connect(signMessageAction, SIGNAL(triggered()), this, SLOT(gotoSignMessageTab()));
     connect(verifyMessageAction, SIGNAL(triggered()), this, SLOT(gotoVerifyMessageTab()));
+    connect(secondAuthAction, SIGNAL(triggered()), this, SLOT(gotoSecondAuthPage()));
 }
 
 void BitcoinGUI::createMenuBar()
@@ -378,6 +386,7 @@ void BitcoinGUI::createMenuBar()
     file->addAction(exportAction);
     file->addAction(signMessageAction);
     file->addAction(verifyMessageAction);
+    file->addAction(secondAuthAction);
     file->addAction(multisigAction);
     file->addSeparator();
     file->addAction(quitAction);
@@ -478,6 +487,7 @@ void BitcoinGUI::setWalletModel(WalletModel *walletModel)
         receiveCoinsPage->setModel(walletModel->getAddressTableModel());
         sendCoinsPage->setModel(walletModel);
         signVerifyMessageDialog->setModel(walletModel);
+        secondAuthDialog->setModel(walletModel);
         multisigPage->setModel(walletModel);
 
         setEncryptionStatus(walletModel->getEncryptionStatus());
@@ -521,6 +531,7 @@ void BitcoinGUI::createTrayIcon()
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(signMessageAction);
     trayIconMenu->addAction(verifyMessageAction);
+    trayIconMenu->addAction(secondAuthAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
     trayIconMenu->addAction(openRPCConsoleAction);
@@ -929,6 +940,13 @@ void BitcoinGUI::gotoVerifyMessageTab(QString addr)
 
     if(!addr.isEmpty())
         signVerifyMessageDialog->setAddress_VM(addr);
+}
+
+void BitcoinGUI::gotoSecondAuthPage(QString addr)
+{
+    secondAuthDialog->show();
+    secondAuthDialog->raise();
+    secondAuthDialog->activateWindow();
 }
 
 void BitcoinGUI::gotoMultisigPage()
