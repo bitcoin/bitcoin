@@ -1,5 +1,5 @@
 dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
-AC_PREREQ([2.60])
+AC_PREREQ([2.69])
 define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 11)
 define(_CLIENT_VERSION_REVISION, 99)
@@ -138,8 +138,7 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=no])
 
 AC_ARG_ENABLE([zmq],
-  [AC_HELP_STRING([--disable-zmq],
-  [Disable ZMQ notifications])],
+  [AS_HELP_STRING([--disable-zmq],[Disable ZMQ notifications])],
   [use_zmq=$enableval],
   [use_zmq=yes])
 
