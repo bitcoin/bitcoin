@@ -137,6 +137,12 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
 
+AC_ARG_ENABLE([zmq],
+  [AC_HELP_STRING([--disable-zmq],
+  [Disable ZMQ notifications])],
+  [use_zmq=$enableval],
+  [use_zmq=yes])
+
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
 # Enable debug 
@@ -832,6 +838,22 @@ if test x$bitcoin_enable_qt != xno; then
     AC_MSG_RESULT([no])
   fi
 fi
+
+# conditional search for and use libzmq
+AC_MSG_CHECKING([whether to build ZMQ support])
+if test "x$use_zmq" = "xyes"; then
+  AC_MSG_RESULT([yes])
+  PKG_CHECK_MODULES([ZMQ],[libzmq],
+    [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
+    [AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
+     AC_MSG_WARN([libzmq not found, disabling])
+     use_zmq=no])
+else
+  AC_MSG_RESULT([no, --disable-zmq used])
+  AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
+fi
+
+AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
 
 AC_MSG_CHECKING([whether to build test_bitcoin])
 if test x$use_tests = xyes; then

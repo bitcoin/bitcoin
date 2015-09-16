@@ -1,4 +1,6 @@
 packages:=boost openssl libevent
+packages_darwin:=zeromq
+packages_linux:=zeromq
 native_packages := native_ccache native_comparisontool
 
 qt_native_packages = native_protobuf
