@@ -253,6 +253,7 @@ static const CRPCCommand vRPCCommands[] =
     { "scaninput",              &scaninput,              true,   true },
     { "getnewaddress",          &getnewaddress,          true,   false },
     { "getnettotals",           &getnettotals,           true,   true  },
+    { "ntptime",                &ntptime,                true,   true  },
     { "getaccountaddress",      &getaccountaddress,      true,   false },
     { "setaccount",             &setaccount,             true,   false },
     { "getaccount",             &getaccount,             false,  false },

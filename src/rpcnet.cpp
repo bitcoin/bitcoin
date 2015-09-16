@@ -8,6 +8,7 @@
 #include "db.h"
 #include "walletdb.h"
 #include "net.h"
+#include "ntp.h"
 
 using namespace json_spirit;
 using namespace std;
@@ -343,5 +344,30 @@ Value getnettotals(const Array& params, bool fHelp)
     obj.push_back(Pair("totalbytesrecv", static_cast<uint64_t>(CNode::GetTotalBytesRecv())));
     obj.push_back(Pair("totalbytessent", static_cast<uint64_t>(CNode::GetTotalBytesSent())));
     obj.push_back(Pair("timemillis", static_cast<int64_t>(GetTimeMillis())));
+    return obj;
+}
+
+Value ntptime(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "ntptime [ntpserver]\n"
+            "Returns current time from specific or random NTP server.");
+
+    int64_t nTime;
+    if (params.size() > 0)
+    {
+        string strHostName = params[0].get_str();
+        nTime = NtpGetTime(strHostName);
+    }
+    else
+        nTime = NtpGetTime();
+
+    if (nTime < 0)
+        throw runtime_error("Request error");
+
+    Object obj;
+    obj.push_back(Pair("epoch", nTime));
+    obj.push_back(Pair("time", DateTimeStrFormat(nTime)));
     return obj;
 }

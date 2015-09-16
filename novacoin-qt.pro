@@ -264,6 +264,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/ui_interface.h \
     src/qt/rpcconsole.h \
     src/version.h \
+    src/ntp.h \
     src/netbase.h \
     src/clientversion.h \
     src/qt/multisigaddressentry.h \
@@ -294,6 +295,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/sync.cpp \
     src/util.cpp \
     src/netbase.cpp \
+    src/ntp.cpp \
     src/key.cpp \
     src/script.cpp \
     src/main.cpp \
