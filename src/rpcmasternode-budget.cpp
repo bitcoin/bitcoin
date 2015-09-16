@@ -24,22 +24,24 @@ Value mnbudget(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-many" && strCommand != "prepare" && strCommand != "submit" && strCommand != "vote" && strCommand != "getvotes" && strCommand != "getinfo" && strCommand != "show" && strCommand != "projection" && strCommand != "check" && strCommand != "nextblock"))
+        (strCommand != "vote-many" && strCommand != "prepare" && strCommand != "submit" &&
+         strCommand != "vote" && strCommand != "getvotes" && strCommand != "getproposal" && strCommand != "getproposalhash" &&
+         strCommand != "list" && strCommand != "projection" && strCommand != "check" && strCommand != "nextblock"))
         throw runtime_error(
-                "mnbudget \"command\"... ( \"passphrase\" )\n"
-                "Vote or show current budgets\n"
+                "mnbudget \"command\"...\n"
+                "Manage proposals\n"
                 "\nAvailable commands:\n"
-                "  prepare            - Prepare proposal for network by signing and creating tx\n"
-                "  submit             - Submit proposal for network\n"
-                "  vote-many          - Vote on a Dash initiative\n"
-                "  vote-alias         - Vote on a Dash initiative\n"
-                "  vote               - Vote on a Dash initiative/budget\n"
-                "  getvotes           - Show current masternode budgets\n"
-                "  getinfo            - Show current masternode budgets\n"
-                "  show               - Show all budgets\n"
+                "  check              - Scan proposals and remove invalid from proposals list\n"
+                "  prepare            - Prepare proposal by signing and creating tx\n"
+                "  submit             - Submit proposal to network\n"
+                "  getproposalhash    - Get proposal hash(es) by proposal name\n"
+                "  getproposal        - Show proposal\n"
+                "  getvotes           - Show detailed votes list for proposal\n"
+                "  list               - List all proposals\n"
+                "  nextblock          - Get info about next superblock for budget system\n"
                 "  projection         - Show the projection of which proposals will be paid the next cycle\n"
-                "  check              - Scan proposals and remove invalid\n"
-                "  nextblock          - Get next superblock for budget system\n"
+                "  vote               - Vote on a proposal by single masternode (using dash.conf setup)\n"
+                "  vote-many          - Vote on a proposal by all masternodes (using masternode.conf setup)\n"
                 );
 
     if(strCommand == "nextblock")
@@ -53,43 +55,25 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "prepare")
     {
+        if (params.size() != 7)
+            throw runtime_error("Correct usage is 'mnbudget prepare <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash>'");
+
         int nBlockMin = 0;
         CBlockIndex* pindexPrev = chainActive.Tip();
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        if (params.size() != 7)
-            throw runtime_error("Correct usage is 'mnbudget prepare proposal-name url payment_count block_start dash_address monthly_payment_dash'");
-
         std::string strProposalName = SanitizeString(params[1].get_str());
-        if(strProposalName.size() > 20)
-            return "Invalid proposal name, limit of 20 characters.";
-
         std::string strURL = SanitizeString(params[2].get_str());
-        if(strURL.size() > 64)
-            return "Invalid url, limit of 64 characters.";
-
         int nPaymentCount = params[3].get_int();
-        if(nPaymentCount < 1)
-            return "Invalid payment count, must be more than zero.";
+        int nBlockStart = params[4].get_int();
 
         //set block min
-        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks() * (nPaymentCount + 1);
-
-        int nBlockStart = params[4].get_int();
-        if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
-            int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-            return strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nNext);
-        }
-
-        int nBlockEnd = nBlockStart + GetBudgetPaymentCycleBlocks() * nPaymentCount;
+        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight;
 
         if(nBlockStart < nBlockMin)
             return "Invalid block start, must be more than current height.";
-
-        if(nBlockEnd < pindexPrev->nHeight)
-            return "Invalid ending block, starting block + (payment_cycle*payments) must be more than current height.";
 
         CBitcoinAddress address(params[5].get_str());
         if (!address.IsValid())
@@ -130,46 +114,29 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "submit")
     {
+        if (params.size() != 8)
+            throw runtime_error("Correct usage is 'mnbudget submit <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash> <fee-tx>'");
+
+        if(!masternodeSync.IsBlockchainSynced()){
+            return "Must wait for client to sync with masternode network. Try again in a minute or so.";
+        }
+
         int nBlockMin = 0;
         CBlockIndex* pindexPrev = chainActive.Tip();
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        if (params.size() != 8)
-            throw runtime_error("Correct usage is 'mnbudget submit proposal-name url payment_count block_start dash_address monthly_payment_dash fee_tx'");
-
-        // Check these inputs the same way we check the vote commands:
-        // **********************************************************
-
         std::string strProposalName = SanitizeString(params[1].get_str());
-        if(strProposalName.size() > 20)
-            return "Invalid proposal name, limit of 20 characters.";
-
         std::string strURL = SanitizeString(params[2].get_str());
-        if(strURL.size() > 64)
-            return "Invalid url, limit of 64 characters.";
-
         int nPaymentCount = params[3].get_int();
-        if(nPaymentCount < 1)
-            return "Invalid payment count, must be more than zero.";
+        int nBlockStart = params[4].get_int();
 
         //set block min
-        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight - GetBudgetPaymentCycleBlocks() * (nPaymentCount + 1);
-
-        int nBlockStart = params[4].get_int();
-        if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
-            int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-            return strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nNext);
-        }
-
-        int nBlockEnd = nBlockStart + (GetBudgetPaymentCycleBlocks()*nPaymentCount);
+        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight;
 
         if(nBlockStart < nBlockMin)
             return "Invalid payment count, must be more than current height.";
-
-        if(nBlockEnd < pindexPrev->nHeight)
-            return "Invalid ending block, starting block + (payment_cycle*payments) must be more than current height.";
 
         CBitcoinAddress address(params[5].get_str());
         if (!address.IsValid())
@@ -178,24 +145,21 @@ Value mnbudget(const Array& params, bool fHelp)
         // Parse Dash address
         CScript scriptPubKey = GetScriptForDestination(address.Get());
         CAmount nAmount = AmountFromValue(params[6]);
-        uint256 hash = ParseHashV(params[7], "parameter 1");
+        uint256 hash = ParseHashV(params[7], "Proposal hash");
 
         //create the proposal incase we're the first to make it
         CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
 
         std::string strError = "";
+
+        if(!budgetProposalBroadcast.IsValid(strError)){
+            return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
+        }
+
         int nConf = 0;
         if(!IsBudgetCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf)){
             return "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError;
         }
-
-        if(!masternodeSync.IsBlockchainSynced()){
-            return "Must wait for client to sync with masternode network. Try again in a minute or so.";            
-        }
-
-        // if(!budgetProposalBroadcast.IsValid(strError)){
-        //     return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
-        // }
 
         budget.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
@@ -207,14 +171,14 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "vote-many")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
+        if(params.size() != 3)
+            throw runtime_error("Correct usage is 'mnbudget vote-many <proposal-hash> <yes|no>'");
 
-        if (params.size() != 3)
-            throw runtime_error("Correct usage is 'mnbudget vote-many proposal-hash yes|no'");
+        uint256 hash;
+        std::string strVote;
 
-        uint256 hash = ParseHashV(params[1], "parameter 1");
-        std::string strVote = params[2].get_str();
+        hash = ParseHashV(params[1], "Proposal hash");
+        strVote = params[2].get_str();
 
         if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
         int nVote = VOTE_ABSTAIN;
@@ -223,6 +187,9 @@ Value mnbudget(const Array& params, bool fHelp)
 
         int success = 0;
         int failed = 0;
+
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        mnEntries = masternodeConfig.getEntries();
 
         Object resultsObj;
 
@@ -289,13 +256,10 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "vote")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         if (params.size() != 3)
-            throw runtime_error("Correct usage is 'mnbudget vote proposal-hash yes|no'");
+            throw runtime_error("Correct usage is 'mnbudget vote <proposal-hash> <yes|no>'");
 
-        uint256 hash = ParseHashV(params[1], "parameter 1");
+        uint256 hash = ParseHashV(params[1], "Proposal hash");
         std::string strVote = params[2].get_str();
 
         if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
@@ -360,7 +324,6 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
             bObj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
             bObj.push_back(Pair("Alloted",  ValueFromAmount(pbudgetProposal->GetAllotted())));
-            bObj.push_back(Pair("TotalBudgetAlloted",  ValueFromAmount(nTotalAllotted)));
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
@@ -369,15 +332,18 @@ Value mnbudget(const Array& params, bool fHelp)
 
             resultObj.push_back(Pair(pbudgetProposal->GetName(), bObj));
         }
+        resultObj.push_back(Pair("TotalBudgetAlloted",  ValueFromAmount(nTotalAllotted)));
 
         return resultObj;
     }
 
-    if(strCommand == "show")
+    if(strCommand == "list")
     {
+        if (params.size() > 2)
+            throw runtime_error("Correct usage is 'mnbudget list [valid]'");
+
         std::string strShow = "valid";
-        if (params.size() == 2)
-            std::string strProposalName = params[1].get_str();
+        if (params.size() == 2) strShow = params[1].get_str();
 
         Object resultObj;
         int64_t nTotalAllotted = 0;
@@ -423,16 +389,62 @@ Value mnbudget(const Array& params, bool fHelp)
         return resultObj;
     }
 
-    if(strCommand == "getinfo")
+    if(strCommand == "getproposalhash")
     {
         if (params.size() != 2)
-            throw runtime_error("Correct usage is 'mnbudget getinfo profilename'");
+            throw runtime_error("Correct usage is 'mnbudget getproposalhash <proposal-name>'");
 
-        std::string strProposalName = params[1].get_str();
+        std::string strProposalName = SanitizeString(params[1].get_str());
 
         CBudgetProposal* pbudgetProposal = budget.FindProposal(strProposalName);
 
-        if(pbudgetProposal == NULL) return "Unknown proposal name";
+        if(pbudgetProposal == NULL) return "Unknown proposal";
+
+        Object resultObj;
+
+        std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
+        BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
+        {
+            if(pbudgetProposal->GetName() != strProposalName) continue;
+            if(!pbudgetProposal->fValid) continue;
+
+            CTxDestination address1;
+            ExtractDestination(pbudgetProposal->GetPayee(), address1);
+            CBitcoinAddress address2(address1);
+
+            Object bObj;
+            bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
+            bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
+            bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
+            bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
+            bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
+            bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
+
+            bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
+
+            std::string strError = "";
+            bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+            bObj.push_back(Pair("IsValidReason",  strError.c_str()));
+            bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
+
+            resultObj.push_back(Pair(pbudgetProposal->GetHash().ToString(), bObj));
+        }
+
+        if(resultObj.size() > 1) return resultObj;
+
+        return pbudgetProposal->GetHash().ToString();
+    }
+
+    if(strCommand == "getproposal")
+    {
+        if (params.size() != 2)
+            throw runtime_error("Correct usage is 'mnbudget getproposal <proposal-hash>'");
+
+        uint256 hash = ParseHashV(params[1], "Proposal hash");
+
+        CBudgetProposal* pbudgetProposal = budget.FindProposal(hash);
+
+        if(pbudgetProposal == NULL) return "Unknown proposal";
 
         CTxDestination address1;
         ExtractDestination(pbudgetProposal->GetPayee(), address1);
@@ -467,15 +479,15 @@ Value mnbudget(const Array& params, bool fHelp)
     if(strCommand == "getvotes")
     {
         if (params.size() != 2)
-            throw runtime_error("Correct usage is 'mnbudget getvotes profilename'");
+            throw runtime_error("Correct usage is 'mnbudget getvotes <proposal-hash>'");
 
-        std::string strProposalName = params[1].get_str();
+        uint256 hash = ParseHashV(params[1], "Proposal hash");
 
         Object obj;
 
-        CBudgetProposal* pbudgetProposal = budget.FindProposal(strProposalName);
+        CBudgetProposal* pbudgetProposal = budget.FindProposal(hash);
 
-        if(pbudgetProposal == NULL) return "Unknown proposal name";
+        if(pbudgetProposal == NULL) return "Unknown proposal";
 
         std::map<uint256, CBudgetVote>::iterator it = pbudgetProposal->mapVotes.begin();
         while(it != pbudgetProposal->mapVotes.end()){
@@ -512,30 +524,30 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "suggest" && strCommand != "vote-many" && strCommand != "vote" && strCommand != "show" && strCommand != "getvotes"))
+        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "list" && strCommand != "getvotes"))
         throw runtime_error(
-                "mnfinalbudget \"command\"... ( \"passphrase\" )\n"
-                "Vote or show current budgets\n"
+                "mnfinalbudget \"command\"...\n"
+                "Manage current budgets\n"
                 "\nAvailable commands:\n"
-                "  vote-many   - Vote on a finalized budget\n"
-                "  vote        - Vote on a finalized budget\n"
-                "  show        - Show existing finalized budgets\n"
-                "  getvotes     - Get vote information for each finalized budget\n"
+                "  list        - List existing finalized budgets\n"
+                "  vote        - Vote on a finalized budget by single masternode (using dash.conf setup)\n"
+                "  vote-many   - Vote on a finalized budget by all masternodes (using masternode.conf setup)\n"
+                "  getvotes    - Get vote information for each finalized budget\n"
                 );
 
     if(strCommand == "vote-many")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         if (params.size() != 2)
-            throw runtime_error("Correct usage is 'mnfinalbudget vote-many BUDGET_HASH'");
+            throw runtime_error("Correct usage is 'mnfinalbudget vote-many <budget-hash>'");
 
         std::string strHash = params[1].get_str();
         uint256 hash(strHash);
 
         int success = 0;
         int failed = 0;
+
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        mnEntries = masternodeConfig.getEntries();
 
         Object resultsObj;
 
@@ -602,11 +614,8 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
     if(strCommand == "vote")
     {
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
         if (params.size() != 2)
-            throw runtime_error("Correct usage is 'mnfinalbudget vote BUDGET_HASH'");
+            throw runtime_error("Correct usage is 'mnfinalbudget vote <budget-hash>'");
 
         std::string strHash = params[1].get_str();
         uint256 hash(strHash);
@@ -640,7 +649,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
     }
 
-    if(strCommand == "show")
+    if(strCommand == "list")
     {
         Object resultObj;
 
@@ -670,7 +679,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
     if(strCommand == "getvotes")
     {
         if (params.size() != 2)
-            throw runtime_error("Correct usage is 'mnbudget getvotes budget-hash'");
+            throw runtime_error("Correct usage is 'mnbudget getvotes <budget-hash>'");
 
         std::string strHash = params[1].get_str();
         uint256 hash(strHash);

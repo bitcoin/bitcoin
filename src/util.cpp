@@ -116,6 +116,7 @@ int nLiquidityProvider = 0;
 int64_t enforceMasternodePaymentsTime = 4085657524;
 bool fSucessfullyLoaded = false;
 bool fEnableDarksend = false;
+bool fDarksendMultiSession = false;
 /** All denominations used by darksend */
 std::vector<int64_t> darkSendDenominations;
 string strBudgetMode = "";
