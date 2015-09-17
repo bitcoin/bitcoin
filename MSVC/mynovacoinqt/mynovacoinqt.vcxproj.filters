@@ -147,6 +147,9 @@
     <ClCompile Include="..\..\src\script.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\qt\secondauthdialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\qt\sendcoinsdialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -404,6 +407,9 @@
     <ClInclude Include="..\..\src\scrypt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <CustomBuild Include="..\..\src\qt\secondauthdialog.h">
+      <Filter>Header Files</Filter>
+    </CustomBuild>
     <CustomBuild Include="..\..\src\qt\sendcoinsdialog.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
@@ -571,6 +577,9 @@
     <ClCompile Include="build\moc_rpcconsole.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="build\moc_secondauthdialog.cpp">
+      <Filter>Generated Files</Filter>
+    </ClCompile>
     <ClCompile Include="build\moc_sendcoinsdialog.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
@@ -631,6 +640,9 @@
     <ClInclude Include="build\ui_rpcconsole.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="build\ui_secondauthdialog.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
     <ClInclude Include="build\ui_sendcoinsdialog.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
@@ -684,6 +696,9 @@
       <Filter>Form Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\forms\rpcconsole.ui">
+      <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\secondauthdialog.ui">
       <Filter>Form Files</Filter>
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\forms\sendcoinsdialog.ui">

@@ -34,6 +34,7 @@
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\miner.cpp" />
     <ClCompile Include="..\..\src\net.cpp" />
+    <ClCompile Include="..\..\src\ntp.cpp" />
     <ClCompile Include="..\..\src\protocol.cpp" />
     <ClCompile Include="..\..\src\bitcoinrpc.cpp" />
     <ClCompile Include="..\..\src\rpcdump.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="..\..\src\mruset.h" />
     <ClInclude Include="..\..\src\net.h" />
     <ClInclude Include="..\..\src\netbase.h" />
+    <ClInclude Include="..\..\src\ntp.h "/>
     <ClInclude Include="..\..\src\protocol.h" />
     <ClInclude Include="..\..\src\script.h" />
     <ClInclude Include="..\..\src\scrypt.h" />
