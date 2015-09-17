@@ -350,6 +350,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe C:\M
     <ClCompile Include="..\..\src\qt\qvaluecombobox.cpp" />
     <ClCompile Include="..\..\src\qt\rpcconsole.cpp" />
     <ClCompile Include="..\..\src\script.cpp" />
+    <ClCompile Include="..\..\src\qt\secondauthdialog.cpp"/>
     <ClCompile Include="..\..\src\qt\sendcoinsdialog.cpp" />
     <ClCompile Include="..\..\src\qt\sendcoinsentry.cpp" />
     <ClCompile Include="..\..\src\qt\signverifymessagedialog.cpp" />
@@ -942,6 +943,24 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe C:\M
     </CustomBuild>
     <ClInclude Include="..\..\src\script.h" />
     <ClInclude Include="..\..\src\scrypt.h" />
+    <CustomBuild Include="..\..\src\qt\secondauthdialog.h">
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\secondauthdialog.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\secondauthdialog.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\moc_secondauthdialog.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\moc_secondauthdialog.cpp;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">MOC ..\..\src\qt\secondauthdialog.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MOC ..\..\src\qt\secondauthdialog.h</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\secondauthdialog.h -o build\moc_secondauthdialog.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\secondauthdialog.h -o build\moc_secondauthdialog.cpp</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\secondauthdialog.h;%(AdditionalInputs)</AdditionalInputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\secondauthdialog.h;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\moc_secondauthdialog.cpp;%(Outputs)</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\moc_secondauthdialog.cpp;%(Outputs)</Outputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MOC ..\..\src\qt\secondauthdialog.h</Message>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MOC ..\..\src\qt\secondauthdialog.h</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2-64/qtbase/include/QtCore ..\..\src\qt\secondauthdialog.h -o build\moc_secondauthdialog.cpp</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\moc.exe  -DUNICODE -DWIN32 -DQT_GUI -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -DQT_NO_DEBUG -DQT_WIDGETS_LIB -DQT_NETWORK_LIB -DQT_GUI_LIB -DQT_CORE_LIB -D_MSC_VER=1700 -D_WIN32 -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/mkspecs/win32-msvc2012 -IC:/MyProjects/Novacoin/MSVC/mynovacoinqt -IC:/MyProjects/Novacoin/src -IC:/MyProjects/Novacoin/src/json -IC:/MyProjects/Novacoin/src/qt -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtWidgets -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtNetwork -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtGui -IC:/MyProjects/Deps/qt-everywhere-opensource-src-5.3.2/qtbase/include/QtCore ..\..\src\qt\secondauthdialog.h -o build\moc_secondauthdialog.cpp</Command>
+    </CustomBuild>
     <CustomBuild Include="..\..\src\qt\sendcoinsdialog.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\sendcoinsdialog.h;%(AdditionalInputs)</AdditionalInputs>
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\sendcoinsdialog.h;%(AdditionalInputs)</AdditionalInputs>
@@ -1142,6 +1161,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe C:\M
     <ClCompile Include="build\moc_qvalidatedlineedit.cpp" />
     <ClCompile Include="build\moc_qvaluecombobox.cpp" />
     <ClCompile Include="build\moc_rpcconsole.cpp" />
+    <ClCompile Include="build\moc_secondauthdialog.cpp"/>
     <ClCompile Include="build\moc_sendcoinsdialog.cpp" />
     <ClCompile Include="build\moc_sendcoinsentry.cpp" />
     <ClCompile Include="build\moc_signverifymessagedialog.cpp" />
@@ -1175,6 +1195,7 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe C:\M
     <ClInclude Include="build\ui_overviewpage.h" />
     <ClInclude Include="build\ui_qrcodedialog.h" />
     <ClInclude Include="build\ui_rpcconsole.h" />
+    <ClInclude Include="build\ui_secondauthdialog.h"/>
     <ClInclude Include="build\ui_sendcoinsdialog.h" />
     <ClInclude Include="build\ui_sendcoinsentry.h" />
     <ClInclude Include="build\ui_signverifymessagedialog.h" />
@@ -1432,6 +1453,25 @@ C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\moc.exe C:\M
       <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">UIC ..\..\src\qt\forms\rpcconsole.ui</Message>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\ui_rpcconsole.h;%(Outputs)</Outputs>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\ui_rpcconsole.h;%(Outputs)</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="..\..\src\qt\forms\secondauthdialog.ui">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\uic.exe ..\..\src\qt\forms\secondauthdialog.ui -o build\ui_secondauthdialog.h</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">build\ui_secondauthdialog.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">..\..\src\qt\forms\secondauthdialog.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">UIC ..\..\src\qt\forms\secondauthdialog.ui</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\uic.exe ..\..\src\qt\forms\secondauthdialog.ui -o build\ui_secondauthdialog.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">UIC ..\..\src\qt\forms\secondauthdialog.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">build\ui_secondauthdialog.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\src\qt\forms\secondauthdialog.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2\qtbase\bin\uic.exe ..\..\src\qt\forms\secondauthdialog.ui -o build\ui_secondauthdialog.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">UIC ..\..\src\qt\forms\secondauthdialog.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">build\ui_secondauthdialog.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\src\qt\forms\secondauthdialog.ui;%(AdditionalInputs)</AdditionalInputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">(set QT_PLUGIN_PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\plugins) &amp; (set PATH=C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\lib;%PATH:)=^)%) &amp; C:\MyProjects\Deps\qt-everywhere-opensource-src-5.3.2-64\qtbase\bin\uic.exe ..\..\src\qt\forms\secondauthdialog.ui -o build\ui_secondauthdialog.h</Command>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">UIC ..\..\src\qt\forms\secondauthdialog.ui</Message>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">build\ui_secondauthdialog.h;%(Outputs)</Outputs>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">..\..\src\qt\forms\secondauthdialog.ui;%(AdditionalInputs)</AdditionalInputs>
     </CustomBuild>
     <CustomBuild Include="..\..\src\qt\forms\sendcoinsdialog.ui">
       <FileType>Document</FileType>
