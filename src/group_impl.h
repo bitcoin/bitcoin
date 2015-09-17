@@ -11,6 +11,18 @@
 #include "field.h"
 #include "group.h"
 
+#if defined(EXHAUSTIVE_TEST_ORDER)
+#  if EXHAUSTIVE_TEST_ORDER == 199
+const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
+    0xFA7CC9A7, 0x0737F2DB, 0xA749DD39, 0x2B4FB069,
+    0x3B017A7D, 0xA808C2F1, 0xFB12940C, 0x9EA66C18,
+    0x78AC123A, 0x5ED8AEF3, 0x8732BC91, 0x1F3A2868,
+    0x48DF246C, 0x808DAE72, 0xCFE52572, 0x7F0501ED
+);
+#  else
+#    error No known generator for the specified exhaustive test group order.
+#  endif
+#else
 /** Generator for secp256k1, value 'g' defined in
  *  "Standards for Efficient Cryptography" (SEC2) 2.7.1.
  */
@@ -20,6 +32,7 @@ static const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
     0x483ADA77UL, 0x26A3C465UL, 0x5DA4FBFCUL, 0x0E1108A8UL,
     0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL
 );
+#endif
 
 static void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi) {
     secp256k1_fe zi2;
@@ -145,9 +158,15 @@ static void secp256k1_ge_globalz_set_table_gej(size_t len, secp256k1_ge *r, secp
 
 static void secp256k1_gej_set_infinity(secp256k1_gej *r) {
     r->infinity = 1;
-    secp256k1_fe_set_int(&r->x, 0);
-    secp256k1_fe_set_int(&r->y, 0);
-    secp256k1_fe_set_int(&r->z, 0);
+    secp256k1_fe_clear(&r->x);
+    secp256k1_fe_clear(&r->y);
+    secp256k1_fe_clear(&r->z);
+}
+
+static void secp256k1_ge_set_infinity(secp256k1_ge *r) {
+    r->infinity = 1;
+    secp256k1_fe_clear(&r->x);
+    secp256k1_fe_clear(&r->y);
 }
 
 static void secp256k1_gej_clear(secp256k1_gej *r) {
