@@ -1363,6 +1363,57 @@ Value omni_listtransactions(const Array& params, bool fHelp)
     return response;
 }
 
+Value omni_listpendingtransactions(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "omni_listpendingtransactions ( \"address\" )\n"
+            "\nReturns a list of unconfirmed Omni transactions, pending in the memory pool.\n"
+            "\nAn optional filter can be provided to only include transactions which involve the given address.\n"
+            "\nNote: the validity of pending transactions is uncertain, and the state of the memory pool may "
+            "change at any moment. It is recommended to check transactions after confirmation, and pending "
+            "transactions should be considered as invalid.\n"
+            "\nArguments:\n"
+            "1. address              (string, optional) address filter (default: \"\" for no filter)\n"
+            "\nResult:\n"
+            "[                                 (array of JSON objects)\n"
+            "  {\n"
+            "    \"txid\" : \"hash\",                  (string) the hex-encoded hash of the transaction\n"
+            "    \"sendingaddress\" : \"address\",     (string) the Bitcoin address of the sender\n"
+            "    \"referenceaddress\" : \"address\",   (string) a Bitcoin address used as reference (if any)\n"
+            "    \"ismine\" : true|false,            (boolean) whether the transaction involes an address in the wallet\n"
+            "    \"fee\" : \"n.nnnnnnnn\",             (string) the transaction fee in bitcoins\n"
+            "    \"version\" : n,                    (number) the transaction version\n"
+            "    \"type_int\" : n,                   (number) the transaction type as number\n"
+            "    \"type\" : \"type\",                  (string) the transaction type as string\n"
+            "    [...]                             (mixed) other transaction type specific properties\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_listpendingtransactions", "")
+            + HelpExampleRpc("omni_listpendingtransactions", "")
+        );
+
+    std::string filterAddress;
+    if (params.size() > 0) {
+        filterAddress = ParseAddressOrEmpty(params[0]);
+    }
+
+    std::vector<uint256> vTxid;
+    mempool.queryHashes(vTxid);
+
+    Array result;
+    BOOST_FOREACH(const uint256& hash, vTxid) {
+        Object txObj;
+        if (populateRPCTransactionObject(hash, txObj, filterAddress) == 0) {
+            result.push_back(txObj);
+        }
+    }
+
+    return result;
+}
+
 Value omni_getinfo(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)

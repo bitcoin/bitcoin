@@ -371,6 +371,7 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (data retrieval)",         "omni_gettrade",                   &omni_gettrade,                   false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getsto",                     &omni_getsto,                     false,      true,       false },
     { "omni layer (data retrieval)",         "omni_listblocktransactions",      &omni_listblocktransactions,      false,      true,       false },
+    { "omni layer (data retrieval)",         "omni_listpendingtransactions",    &omni_listpendingtransactions,    false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getallbalancesforaddress",   &omni_getallbalancesforaddress,   false,      true,       false },
     { "omni layer (data retrieval)",         "omni_gettradehistoryforaddress",  &omni_gettradehistoryforaddress,  false,      true,       false },
     { "omni layer (data retrieval)",         "omni_gettradehistoryforpair",     &omni_gettradehistoryforpair,     false,      true,       false },

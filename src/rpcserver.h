@@ -242,6 +242,7 @@ extern json_spirit::Value omni_getorderbook(const json_spirit::Array& params, bo
 extern json_spirit::Value omni_gettrade(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getsto(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_listblocktransactions(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_listpendingtransactions(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getallbalancesforaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_gettradehistoryforaddress(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_gettradehistoryforpair(const json_spirit::Array& params, bool fHelp);

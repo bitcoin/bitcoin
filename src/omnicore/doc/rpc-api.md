@@ -28,7 +28,7 @@ Create and broadcast a simple send transaction.
 4. ***amount               (string, required):*** the amount to send
 
 **Example:**
- 
+
 ```bash
 $ omnicore-cli "omni_send" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 1 "100.0"
 ```
@@ -433,6 +433,24 @@ Lists all Omni transactions in a block.
 $ omnicore-cli "omni_listblocktransactions" 279007
 ```
 
+### omni_listpendingtransactions
+
+Returns a list of unconfirmed Omni transactions, pending in the memory pool.
+
+An optional filter can be provided to only include transactions which involve the given address.
+
+Note: the validity of pending transactions is uncertain, and the state of the memory pool may change at any moment. It is recommended to check transactions after confirmation, and pending transactions should be considered as invalid.
+
+**Arguments:**
+
+1. ***address              (string, optional):*** filter results by address (default: "" for no filter)
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_listpendingtransactions"
+```
+
 ### omni_getactivedexsells
 
 Returns currently active offers on the distributed exchange.
@@ -589,7 +607,7 @@ $ omnicore-cli "omni_gettradehistoryforaddress" "1MCHESTptvd2LnNp7wmr2sGTpRomteA
 
 ## Depreciated RPC Calls
 
-To ensure compability, depreciated RPC calls are kept for at least one major version.
+To ensure compatibility, depreciated RPC calls are kept for at least one major version.
 
 The following calls are replaced in Omni Core 0.0.10, and queries with the old command are forwarded.
 
