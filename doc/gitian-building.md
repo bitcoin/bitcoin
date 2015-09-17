@@ -330,10 +330,11 @@ There will be a lot of warnings printed during the build of the image. These can
 Getting and building the inputs
 --------------------------------
 
-Follow the instructions in [doc/release-process.md](release-process.md#fetch-and-build-inputs-first-time-or-when-dependency-versions-change) 
-in the bitcoin repository to install sources which require manual intervention. Also follow
-the next step: 'Seed the Gitian sources cache', which will fetch all the necessary source 
-files to allow gitian to work offline.
+Follow the instructions in [doc/release-process.md](release-process.md#fetch-and-build-inputs-first-time-or-when-dependency-versions-change)
+in the bitcoin repository under 'Fetch and build inputs' to install sources which require
+manual intervention. Also optionally follow the next step: 'Seed the Gitian sources cache
+and offline git repositories' which will fetch the remaining files required for building 
+offline.
 
 Building Bitcoin
 ----------------
@@ -389,6 +390,57 @@ COMMIT=2014_03_windows_unicode_path
 ./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 ./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
 ./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+```
+
+Building fully offline
+-----------------------
+
+For building fully offline including attaching signatures to unsigned builds, the detached-sigs repository 
+and the bitcoin git repository with the desired tag must both be available locally, and then gbuild must be
+told where to find them. It also requires an apt-cacher-ng which is fully-populated but set to offline mode, or 
+manually disabling gitian-builder's use of apt-get to update the VM build environment.
+
+To configure apt-cacher-ng as an offline cacher, you will need to first populate its cache with the relevant
+files. You must additionally patch target-bin/bootstrap-fixup to set its apt sources to something other than
+plain archive.ubuntu.com: us.archive.ubuntu.com works.
+
+So, if you use LXC:
+
+```bash
+export PATH="$PATH":/path/to/gitian-builder/libexec
+export USE_LXC=1
+cd /path/to/gitian-builder
+./libexec/make-clean-vm --suite precise --arch amd64
+
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root apt-get update
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root \
+  -e DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends -y install \
+  $( sed -ne '/^packages:/,/[^-] .*/ {/^- .*/{s/"//g;s/- //;p}}' ../bitcoin/contrib/gitian-descriptors/*|sort|uniq )
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root apt-get -q -y purge grub
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root -e DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade 
+```
+
+And then set offline mode for apt-cacher-ng:
+
+```
+/etc/apt-cacher-ng/acng.conf
+[...]
+Offlinemode: 1
+[...]
+
+service apt-cacher-ng restart
+```
+
+Then when building, override the remote URLs that gbuild would otherwise pull from the gitian descriptors::
+```bash
+
+cd /some/root/path/
+git clone https://github.com/bitcoin/bitcoin-detached-sigs.git
+
+BTCPATH=/some/root/path/bitcoin.git
+SIGPATH=/some/root/path/bitcoin-detached-sigs.git
+
+./bin/gbuild --url bitcoin=${BTCPATH},signature=${SIGPATH} ../bitcoin/contrib/gitian-descriptors/gitian-win-signer.yml
 ```
 
 Signing externally
