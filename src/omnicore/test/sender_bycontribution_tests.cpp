@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(sender_selection_mixed_test)
         std::vector<CTxOut> vouts;
         for (unsigned n = 0; n < nOutputs; ++n) {
             CScript scriptPubKey;
-            if (std::rand() % 2 == 0) {
+            if (GetRandInt(2) == 0) {
                 scriptPubKey = GetScriptForDestination(createRandomKeyId());
             } else {
                 scriptPubKey = GetScriptForDestination(createRandomScriptId());
@@ -365,7 +365,7 @@ static CTransaction TxClassB(const std::vector<CTxOut>& txInputs)
 /** Extracts the sender "by contribution". */
 static bool GetSenderByContribution(const std::vector<CTxOut>& vouts, std::string& strSender)
 {
-    int nBlock = std::numeric_limits<int>().max();
+    int nBlock = std::numeric_limits<int>::max();
 
     CMPTransaction metaTx;
     CTransaction dummyTx = TxClassB(vouts);
@@ -390,7 +390,7 @@ static CKeyID createRandomKeyId()
     std::vector<unsigned char> vch;
     vch.reserve(20);
     for (int i = 0; i < 20; ++i) {
-        vch.push_back(static_cast<unsigned char>(std::rand() % 256));
+        vch.push_back(static_cast<unsigned char>(GetRandInt(256)));
     }
     return CKeyID(uint160(vch));
 }
@@ -401,7 +401,7 @@ static CScriptID createRandomScriptId()
     std::vector<unsigned char> vch;
     vch.reserve(20);
     for (int i = 0; i < 20; ++i) {
-        vch.push_back(static_cast<unsigned char>(std::rand() % 256));
+        vch.push_back(static_cast<unsigned char>(GetRandInt(256)));
     }
     return CScriptID(uint160(vch));
 }

@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(valid_class_a)
         BOOST_CHECK_EQUAL(metaTx.getPayload(), "000000000000000200000002540be400000000");
     }
     {
-        int nBlock = std::numeric_limits<int>().max();
+        int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
         txInputs.push_back(createTxOut(1815000, "1HRE7U9XNPD8kJBCwm5Q1VAepz25GBXnVk"));

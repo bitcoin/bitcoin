@@ -10,8 +10,8 @@ using namespace mastercore;
 
 BOOST_AUTO_TEST_SUITE(omnicore_rules_txs_tests)
 
-const int MAX_BLOCK = std::numeric_limits<int>().max();
-const int MAX_VERSION = std::numeric_limits<uint16_t>().max();
+const int MAX_BLOCK = std::numeric_limits<int>::max();
+const int MAX_VERSION = std::numeric_limits<uint16_t>::max();
 
 BOOST_AUTO_TEST_CASE(simple_send_restrictions)
 {

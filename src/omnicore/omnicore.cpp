@@ -3692,15 +3692,11 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
     if(needsUpdate)
     {
         ++n_found;
-        const string key = address;
+        const std::string& key = address;
         // write updated record
-        Status status;
-        if (pdb)
-        {
-            status = pdb->Put(writeoptions, key, newValue);
-            PrintToLog("DEBUG STO - rewriting STO data after reorg\n");
-            PrintToLog("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
-        }
+        leveldb::Status status = pdb->Put(writeoptions, key, newValue);
+        PrintToLog("DEBUG STO - rewriting STO data after reorg\n");
+        PrintToLog("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
     }
   }
 

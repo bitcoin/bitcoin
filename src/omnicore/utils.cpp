@@ -14,12 +14,15 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <assert.h>
 #include <string.h>
 #include <string>
 #include <vector>
 
 /**
  * Generates hashes used for obfuscation via ToUpper(HexStr(SHA256(x))).
+ *
+ * It is expected that the seed has a length of less than 128 characters.
  *
  * @see The class B transaction encoding specification:
  * https://github.com/mastercoin-MSC/spec#class-b-transactions-also-known-as-the-multisig-method
@@ -32,7 +35,10 @@ void PrepareObfuscatedHashes(const std::string& strSeed, std::string(&vstrHashes
     unsigned char sha_input[128];
     unsigned char sha_result[128];
     std::vector<unsigned char> vec_chars;
+
+    assert(strSeed.size() < sizeof(sha_input));
     strcpy((char *)sha_input, strSeed.c_str());
+
     // Do only as many re-hashes as there are data packets, 255 per specification
     for (unsigned int j = 1; j <= MAX_SHA256_OBFUSCATION_TIMES; ++j)
     {
@@ -41,6 +47,8 @@ void PrepareObfuscatedHashes(const std::string& strSeed, std::string(&vstrHashes
         memcpy(&vec_chars[0], &sha_result[0], 32);
         vstrHashes[j] = HexStr(vec_chars);
         boost::to_upper(vstrHashes[j]); // Convert to upper case characters
+
+        assert(vstrHashes[j].size() < sizeof(sha_input));
         strcpy((char *)sha_input, vstrHashes[j].c_str());
     }
 }

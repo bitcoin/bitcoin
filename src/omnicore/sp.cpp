@@ -651,7 +651,7 @@ int64_t mastercore::calculateFractional(uint16_t propType, uint8_t bonusPerc, in
         missedTokens = (int64_t) (totalPremined - amountPremined);
     }
 
-    return missedTokens;
+    return static_cast<int64_t>(missedTokens);
 }
 
 // calculateFundraiser does token calculations per transaction
@@ -798,7 +798,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
         // get sp from data struct
         CMPSPInfo::Entry sp;
-        _my_sps->getSP(crowdsale.getPropertyId(), sp);
+        assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
 
         // get txdata
         sp.historicalData = crowdsale.getDatabase();
@@ -808,7 +808,7 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 
         // update SP with this data
         sp.update_block = chainActive[block]->GetBlockHash();
-        _my_sps->updateSP(crowdsale.getPropertyId(), sp);
+        assert(_my_sps->updateSP(crowdsale.getPropertyId(), sp));
 
         // no calculate fractional calls here, no more tokens (at MAX)
         my_crowds.erase(it);
@@ -839,10 +839,10 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 
             // get sp from data struct
             CMPSPInfo::Entry sp;
-            _my_sps->getSP(crowdsale.getPropertyId(), sp);
+            assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
 
             // find missing tokens
-            double missedTokens = calculateFractional(sp.prop_type,
+            int64_t missedTokens = calculateFractional(sp.prop_type,
                     sp.early_bird,
                     sp.deadline,
                     sp.num_tokens,
@@ -852,14 +852,16 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 
             // get txdata
             sp.historicalData = crowdsale.getDatabase();
-            sp.missedTokens = (int64_t) missedTokens;
+            sp.missedTokens = missedTokens;
 
             // update SP with this data
             sp.update_block = pBlockIndex->GetBlockHash();
-            _my_sps->updateSP(crowdsale.getPropertyId(), sp);
+            assert(_my_sps->updateSP(crowdsale.getPropertyId(), sp));
 
             // update values
-            update_tally_map(sp.issuer, crowdsale.getPropertyId(), missedTokens, BALANCE);
+            if (missedTokens > 0) {
+                assert(update_tally_map(sp.issuer, crowdsale.getPropertyId(), missedTokens, BALANCE));
+            }
 
             my_crowds.erase(my_it++);
 

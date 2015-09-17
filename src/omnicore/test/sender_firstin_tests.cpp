@@ -75,7 +75,7 @@ static CTxOut createTxOut(int64_t amount, const std::string& dest)
 /** Extracts the "first" sender. */
 static bool GetFirstSender(const std::vector<CTxOut>& txInputs, std::string& strSender)
 {
-    int nBlock = std::numeric_limits<int>().max();
+    int nBlock = std::numeric_limits<int>::max();
 
     CMPTransaction metaTx;
     CTransaction dummyTx = TxClassC(txInputs);

@@ -5,6 +5,9 @@
 
 #include <boost/filesystem/path.hpp>
 
+#include <assert.h>
+#include <stddef.h>
+
 /** Base class for LevelDB based storage.
  */
 class CDBBase
@@ -35,7 +38,7 @@ protected:
     //! Number of entries written
     unsigned int nWritten;
 
-    CDBBase() : nRead(0), nWritten(0)
+    CDBBase() : pdb(NULL), nRead(0), nWritten(0)
     {
         options.paranoid_checks = true;
         options.create_if_missing = true;
@@ -52,8 +55,17 @@ protected:
         Close();
     }
 
+    /**
+     * Creates and returns a new LevelDB iterator.
+     *
+     * It is expected that the database is not closed. The iterator is owned by the
+     * caller, and the object has to be deleted explicitly.
+     *
+     * @return A new LevelDB iterator
+     */
     leveldb::Iterator* NewIterator() const
     {
+        assert(pdb != NULL);
         return pdb->NewIterator(iteroptions);
     }
 
@@ -69,16 +81,16 @@ protected:
      */
     leveldb::Status Open(const boost::filesystem::path& path, bool fWipe = false);
 
+    /**
+     * Deinitializes and closes the database.
+     */
+    void Close();
+
 public:
     /**
      * Deletes all entries of the database, and resets the counters.
      */
     void Clear();
-
-    /**
-     * Deinitializes and closes the database.
-     */
-    void Close();
 };
 
 
