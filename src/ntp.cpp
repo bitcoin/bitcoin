@@ -13,6 +13,7 @@
 #endif
 
 #include "netbase.h"
+#include "util.h"
 
 extern int GetRandInt(int nMax);
 
@@ -248,6 +249,7 @@ bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, 
         return false; // "connection" error
     }
 
+
     *pcliaddr = *((struct sockaddr *) &servaddr);
     servlen = sizeof(servaddr);
 
@@ -257,6 +259,20 @@ bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, 
 
 int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr)
 {
+
+#ifdef WIN32
+    u_long nOne = 1;
+    if (ioctlsocket(sockfd, FIONBIO, &nOne) == SOCKET_ERROR)
+    {
+        printf("ConnectSocket() : ioctlsocket non-blocking setting failed, error %d\n", WSAGetLastError());
+#else
+    if (fcntl(sockfd, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
+    {
+        printf("ConnectSocket() : fcntl non-blocking setting failed, error %d\n", errno);
+#endif
+        return -2;
+    }
+
     struct pkt *msg = new pkt;
     struct pkt *prt  = new pkt;
 
@@ -277,8 +293,26 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr)
     msg->xmt.Ul_f.Xl_f=0;
 
     int len=48;
-    sendto(sockfd, (char *) msg, len, 0, &cliaddr, servlen);
-    int n = recvfrom(sockfd, (char *) msg, len, 0, NULL, NULL);
+    int retcode = sendto(sockfd, (char *) msg, len, 0, &cliaddr, servlen);
+    if (retcode < 0) {
+        printf("sendto() failed: %d", retcode);
+        return -3;
+    }
+
+    retcode = 0;
+    int nWait = 0;
+
+    while(retcode <= 0) {
+        Sleep(1000);
+        retcode = recvfrom(sockfd, (char *) msg, len, 0, NULL, NULL);
+
+        if (nWait > 4) {
+            printf("recvfrom() timeout");
+            return -4;
+        }
+
+        nWait++;
+    }
 
     ntohl_fp(&msg->rec, &prt->rec);
     ntohl_fp(&msg->xmt, &prt->xmt);

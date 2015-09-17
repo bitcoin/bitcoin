@@ -363,11 +363,21 @@ Value ntptime(const Array& params, bool fHelp)
     else
         nTime = NtpGetTime();
 
-    if (nTime < 0)
-        throw runtime_error("Request error");
-
     Object obj;
-    obj.push_back(Pair("epoch", nTime));
-    obj.push_back(Pair("time", DateTimeStrFormat(nTime)));
+    switch (nTime)
+    {
+    case -1:
+        throw runtime_error("Socket initialization error");
+    case -2:
+        throw runtime_error("Switching socket mode to non-blocking failed");
+    case -3:
+        throw runtime_error("Unable to send data");
+    case -4:
+        throw runtime_error("Receive timed out");
+    default:
+        obj.push_back(Pair("epoch", nTime));
+        obj.push_back(Pair("time", DateTimeStrFormat(nTime)));
+    }
+
     return obj;
 }
