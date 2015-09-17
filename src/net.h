@@ -60,6 +60,8 @@ static const bool DEFAULT_UPNP = false;
 static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
 /** The maximum number of peer connections to maintain. */
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
+/** The maximum TCP send or receive buffer size */
+static const unsigned int MAX_WINDOWS_TCP_BUFFER_SIZE = 65535;   
 
 unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
