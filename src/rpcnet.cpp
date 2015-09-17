@@ -347,6 +347,35 @@ Value getnettotals(const Array& params, bool fHelp)
     return obj;
 }
 
+/*
+05:53:45 ntptime
+05:53:48
+{
+"epoch" : 1442494427,
+"time" : "2015-09-17 12:53:47 UTC"
+}
+
+05:53:56 ntptime time.windows.com
+05:53:57
+{
+"epoch" : 1442494436,
+"time" : "2015-09-17 12:53:56 UTC"
+}
+
+05:53:59 ntptime time.windows.com
+05:54:00
+{
+"epoch" : 1442494439,
+"time" : "2015-09-17 12:53:59 UTC"
+}
+
+05:54:33 ntptime time-a.nist.gov
+05:54:34
+{
+"epoch" : 1442494473,
+"time" : "2015-09-17 12:54:33 UTC"
+}*/
+
 Value ntptime(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
