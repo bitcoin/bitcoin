@@ -57,12 +57,6 @@ inline void Ntp2Unix(uint32_t &n, time_t &u)
     u = n - 0x83aa7e80; // 2208988800 1970 - 1900 in seconds
 }
 
-inline void HTONL_FP(l_fp *h, l_fp *n)
-{
-    (n)->Ul_i.Xl_ui = htonl((h)->Ul_i.Xl_ui);
-    (n)->Ul_f.Xl_uf = htonl((h)->Ul_f.Xl_uf);
-}
-
 inline void ntohl_fp(l_fp *n, l_fp *h)
 {
     (h)->Ul_i.Xl_ui = ntohl((n)->Ul_i.Xl_ui);
