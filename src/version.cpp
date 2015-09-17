@@ -33,7 +33,7 @@ const std::string CLIENT_NAME("Satoshi");
 #define CL_NAME   "-mingw"
 #else
 #define CL_NAME   "-genericcl"
-/*overs*/
+/*others*/
 #endif
 
 // The following part of the code determines the CLIENT_BUILD variable.

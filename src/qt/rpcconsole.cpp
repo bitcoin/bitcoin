@@ -270,7 +270,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
         connect(model, SIGNAL(numBlocksChanged(int,int)), this, SLOT(setNumBlocks(int,int)));
 
-	updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
+        updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
         // Provide initial values
         ui->clientVersion->setText(model->formatFullVersion());
