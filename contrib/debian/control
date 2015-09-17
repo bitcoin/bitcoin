@@ -68,6 +68,5 @@ Description: peer-to-peer digital currency - standalone transaction tool
  check for double-spending.
  .
  This package provides bitcoin-tx, a command-line transaction creation
- tool with minimal dependencies which can be used without a bitcoin
- daemon.  Some means of exchanging minimal transaction data with peers
- is still required.
+ tool which can be used without a bitcoin daemon.  Some means of
+ exchanging minimal transaction data with peers is still required.
