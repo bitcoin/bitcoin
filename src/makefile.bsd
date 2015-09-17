@@ -112,6 +112,7 @@ OBJS= \
     obj/main.o \
     obj/miner.o \
     obj/net.o \
+    obj/ntp.o \
     obj/stun.o \
     obj/protocol.o \
     obj/bitcoinrpc.o \
