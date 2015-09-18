@@ -50,7 +50,7 @@ testScriptsExt=(
     'invalidateblock.py'
     'keypool.py'
     'receivedby.py'
-    'rpcbind_test.py'
+#    'rpcbind_test.py'
 #   'script_test.py'
     'smartfees.py'
     'maxblocksinflight.py'

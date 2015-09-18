@@ -43,6 +43,16 @@ struct CNodeStateStats;
 static const bool DEFAULT_ALERTS = true;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 500;
+/** Default for -limitancestorcount, max number of in-mempool ancestors */
+static const unsigned int DEFAULT_ANCESTOR_LIMIT = 100;
+/** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
+static const unsigned int DEFAULT_ANCESTOR_SIZE_LIMIT = 1000;
+/** Default for -limitdescendantcount, max number of in-mempool descendants */
+static const unsigned int DEFAULT_DESCENDANT_LIMIT = 1000;
+/** Default for -limitdescendantsize, maximum kilobytes of in-mempool descendants */
+static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 2500;
 /** The maximum size of a blk?????.dat file (since 0.8) */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** The pre-allocation chunk size for blk?????.dat files (since 0.8) */
@@ -466,5 +476,7 @@ static const unsigned int REJECT_HIGHFEE = 0x100;
 static const unsigned int REJECT_ALREADY_KNOWN = 0x101;
 /** Transaction conflicts with a transaction already known */
 static const unsigned int REJECT_CONFLICT = 0x102;
+/** Transaction would result in too long in-mempool chain */
+static const unsigned int REJECT_LONGCHAIN = 0x103;
 
 #endif // BITCOIN_MAIN_H

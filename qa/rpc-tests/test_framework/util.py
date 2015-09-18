@@ -177,7 +177,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
         binary = os.getenv("BITCOIND", "bitcoind")
-    args = [ binary, "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest" ]
+    args = [ binary, "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest", "-rpctimeout=1500" ]
     if extra_args is not None: args.extend(extra_args)
     bitcoind_processes[i] = subprocess.Popen(args)
     devnull = open(os.devnull, "w")
