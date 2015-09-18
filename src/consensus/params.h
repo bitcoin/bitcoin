@@ -14,6 +14,11 @@ namespace Consensus {
  */
 struct Params {
     uint256 hashGenesisBlock;
+    uint32_t nMinTxSize;
+    uint64_t nMaxBlockSize;
+    uint32_t nMaxTxSize;
+    uint64_t nMaxBlockSigops;
+    int32_t nCoinbaseMaturity;
     int nSubsidyHalvingInterval;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;

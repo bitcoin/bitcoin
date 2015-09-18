@@ -6,7 +6,6 @@
 #ifndef BITCOIN_POLICY_H
 #define BITCOIN_POLICY_H
 
-#include "consensus/consensus.h"
 #include "script/interpreter.h"
 #include "script/standard.h"
 
@@ -24,7 +23,7 @@ static const unsigned int MAX_STANDARD_TX_SIZE = 100000;
 /** Maximum number of signature check operations in an IsStandard() P2SH script */
 static const unsigned int MAX_P2SH_SIGOPS = 15;
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
-static const unsigned int MAX_STANDARD_TX_SIGOPS = MAX_BLOCK_SIGOPS/5;
+static const unsigned int MAX_STANDARD_TX_SIGOPS = MAX_STANDARD_TX_SIZE/25; // one sigop per 25 bytes
 /**
  * Standard script verification flags that standard transactions will comply
  * with. However scripts violating these flags may still be present in valid

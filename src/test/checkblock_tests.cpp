@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "clientversion.h"
 #include "consensus/validation.h"
 #include "main.h" // For CheckBlock
@@ -43,6 +44,7 @@ bool read_block(const std::string& filename, CBlock& block)
 
 BOOST_AUTO_TEST_CASE(May15)
 {
+    const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
     // Putting a 1MB binary file in the git repository is not a great
     // idea, so this test is only run if you manually download
     // test/data/Mar12Fork.dat from
@@ -57,7 +59,7 @@ BOOST_AUTO_TEST_CASE(May15)
 
         // After May 15'th, big blocks are OK:
         forkingBlock.nTime = tMay15; // Invalidates PoW
-        BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
+        BOOST_CHECK(CheckBlock(forkingBlock, state, consensusParams, false, false));
     }
 
     SetMockTime(0);

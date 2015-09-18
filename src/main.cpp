@@ -11,7 +11,6 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
-#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "hash.h"
 #include "init.h"
@@ -692,7 +691,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& in
 
 
 
-bool CheckTransaction(const CTransaction& tx, CValidationState &state)
+bool CheckTransaction(const CTransaction& tx, CValidationState &state, uint64_t nMaxTxSize)
 {
     // Basic checks that don't depend on any context
     if (tx.vin.empty())
@@ -700,7 +699,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > nMaxTxSize)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
@@ -782,10 +781,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
     AssertLockHeld(cs_main);
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state))
+    if (!CheckTransaction(tx, state, consensusParams.nMaxTxSize))
         return false;
 
     // Coinbase is only valid in a block, not as a loose transaction
@@ -867,7 +867,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction
         // itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
-        // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
+        // nMaxBlockSigops; we still consider this an invalid rather than
         // merely non-standard transaction.
         unsigned int nSigOps = GetLegacySigOpCount(tx);
         nSigOps += GetP2SHSigOpCount(tx, view);
@@ -1293,7 +1293,7 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
 }
 
 namespace Consensus {
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight)
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const Consensus::Params& consensusParams, const CCoinsViewCache& inputs, int nSpendHeight)
 {
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
@@ -1310,7 +1310,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
             // If prev is coinbase, check that it's matured
             if (coins->IsCoinBase()) {
-                if (nSpendHeight - coins->nHeight < COINBASE_MATURITY)
+                if (nSpendHeight - coins->nHeight < consensusParams.nCoinbaseMaturity)
                     return state.Invalid(false,
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                         strprintf("tried to spend coinbase at depth %d", nSpendHeight - coins->nHeight));
@@ -1340,9 +1340,10 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     if (!tx.IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
+        if (!Consensus::CheckTxInputs(tx, state, consensusParams, inputs, GetSpendHeight(inputs)))
             return false;
 
         if (pvChecks)
@@ -1675,9 +1676,10 @@ static int64_t nTimeTotal = 0;
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& view, bool fJustCheck)
 {
     const CChainParams& chainparams = Params();
+    const Consensus::Params& consensusParams = chainparams.GetConsensus();
     AssertLockHeld(cs_main);
     // Check it again in case a previous version let a bad block in
-    if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
+    if (!CheckBlock(block, state, consensusParams, !fJustCheck, !fJustCheck))
         return false;
 
     // verify that the view's current state corresponds to the previous block
@@ -1748,13 +1750,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(block.vtx.size());
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
+    uint64_t nMaxBlockSigops = consensusParams.nMaxBlockSigops;
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
 
         nInputs += tx.vin.size();
         nSigOps += GetLegacySigOpCount(tx);
-        if (nSigOps > MAX_BLOCK_SIGOPS)
+        if (nSigOps > nMaxBlockSigops)
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
@@ -1770,7 +1773,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 // this is to prevent a "rogue miner" from creating
                 // an incredibly-expensive-to-validate block.
                 nSigOps += GetP2SHSigOpCount(tx, view);
-                if (nSigOps > MAX_BLOCK_SIGOPS)
+                if (nSigOps > nMaxBlockSigops)
                     return state.DoS(100, error("ConnectBlock(): too many sigops"),
                                      REJECT_INVALID, "bad-blk-sigops");
             }
@@ -2562,7 +2565,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
     return true;
 }
 
-bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot)
+bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     // These are checks that are independent of context.
 
@@ -2592,7 +2595,10 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // because we receive the wrong transactions for it.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    uint64_t nMaxBlockSize = consensusParams.nMaxBlockSize;
+    uint64_t nMaxBlockSigops = consensusParams.nMaxBlockSigops;
+    uint64_t nMaxTxSize = consensusParams.nMaxTxSize;
+    if (block.vtx.empty() || block.vtx.size() > nMaxBlockSize || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nMaxBlockSize)
         return state.DoS(100, error("CheckBlock(): size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
@@ -2607,7 +2613,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
-        if (!CheckTransaction(tx, state))
+        if (!CheckTransaction(tx, state, nMaxTxSize))
             return error("CheckBlock(): CheckTransaction of %s failed with %s",
                 tx.GetHash().ToString(),
                 FormatStateMessage(state));
@@ -2617,7 +2623,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     {
         nSigOps += GetLegacySigOpCount(tx);
     }
-    if (nSigOps > MAX_BLOCK_SIGOPS)
+    if (nSigOps > nMaxBlockSigops)
         return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
                          REJECT_INVALID, "bad-blk-sigops", true);
 
@@ -2740,6 +2746,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
 bool AcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex** ppindex, bool fRequested, CDiskBlockPos* dbp)
 {
     const CChainParams& chainparams = Params();
+    const Consensus::Params& consensusParams = chainparams.GetConsensus();
     AssertLockHeld(cs_main);
 
     CBlockIndex *&pindex = *ppindex;
@@ -2767,8 +2774,7 @@ bool AcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex** ppi
         if (!fHasMoreWork) return true;     // Don't process less-work chains
         if (fTooFarAhead) return true;      // Block height is too high
     }
-
-    if ((!CheckBlock(block, state)) || !ContextualCheckBlock(block, state, pindex->pprev)) {
+    if ((!CheckBlock(block, state, consensusParams)) || !ContextualCheckBlock(block, state, pindex->pprev)) {
         if (state.IsInvalid() && !state.CorruptionPossible()) {
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
@@ -2817,7 +2823,8 @@ static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned 
 bool ProcessNewBlock(CValidationState &state, const CNode* pfrom, const CBlock* pblock, bool fForceProcessing, CDiskBlockPos *dbp)
 {
     // Preliminary checks
-    bool checked = CheckBlock(*pblock, state);
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    bool checked = CheckBlock(*pblock, state, consensusParams);
 
     {
         LOCK(cs_main);
@@ -2860,7 +2867,7 @@ bool TestBlockValidity(CValidationState &state, const CBlock& block, CBlockIndex
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
         return false;
-    if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
+    if (!CheckBlock(block, state, chainparams.GetConsensus(), fCheckPOW, fCheckMerkleRoot))
         return false;
     if (!ContextualCheckBlock(block, state, pindexPrev))
         return false;
@@ -3165,6 +3172,7 @@ CVerifyDB::~CVerifyDB()
 
 bool CVerifyDB::VerifyDB(CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     LOCK(cs_main);
     if (chainActive.Tip() == NULL || chainActive.Tip()->pprev == NULL)
         return true;
@@ -3192,7 +3200,7 @@ bool CVerifyDB::VerifyDB(CCoinsView *coinsview, int nCheckLevel, int nCheckDepth
         if (!ReadBlockFromDisk(block, pindex))
             return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 1: verify block validity
-        if (nCheckLevel >= 1 && !CheckBlock(block, state))
+        if (nCheckLevel >= 1 && !CheckBlock(block, state, consensusParams))
             return error("VerifyDB(): *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
@@ -3329,14 +3337,16 @@ bool InitBlockIndex() {
 bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
 {
     const CChainParams& chainparams = Params();
+    const Consensus::Params& consensusParams = chainparams.GetConsensus();
     // Map of disk positions for blocks with unknown parent (only used for reindex)
     static std::multimap<uint256, CDiskBlockPos> mapBlocksUnknownParent;
     int64_t nStart = GetTimeMillis();
+    uint64_t nMaxBlockSize = consensusParams.nMaxBlockSize;
 
     int nLoaded = 0;
     try {
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
-        CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SIZE, MAX_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
+        CBufferedFile blkdat(fileIn, 2*nMaxBlockSize, nMaxBlockSize+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             boost::this_thread::interruption_point();
@@ -3355,7 +3365,7 @@ bool LoadExternalBlockFile(FILE* fileIn, CDiskBlockPos *dbp)
                     continue;
                 // read size
                 blkdat >> nSize;
-                if (nSize < 80 || nSize > MAX_BLOCK_SIZE)
+                if (nSize < 80 || nSize > nMaxBlockSize)
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain

@@ -7,7 +7,6 @@
 #include "test_bitcoin.h"
 
 #include "chainparams.h"
-#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "key.h"
 #include "main.h"
@@ -95,10 +94,11 @@ TestingSetup::~TestingSetup()
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
+    const Consensus::Params& consensusParams = Params(CBaseChainParams::REGTEST).GetConsensus();
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < COINBASE_MATURITY; i++)
+    for (int i = 0; i < consensusParams.nCoinbaseMaturity; i++)
     {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
