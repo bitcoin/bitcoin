@@ -96,15 +96,15 @@ class CService : public CNetAddr
 
     public:
         CService();
-        CService(const CNetAddr& ip, unsigned short port);
-        CService(const struct in_addr& ipv4Addr, unsigned short port);
+        CService(const CNetAddr& ip, uint16_t port);
+        CService(const struct in_addr& ipv4Addr, uint16_t port);
         CService(const struct sockaddr_in& addr);
-        explicit CService(const char *pszIpPort, int portDefault, bool fAllowLookup = false);
+        explicit CService(const char *pszIpPort, uint16_t portDefault, bool fAllowLookup = false);
         explicit CService(const char *pszIpPort, bool fAllowLookup = false);
-        explicit CService(const std::string& strIpPort, int portDefault, bool fAllowLookup = false);
+        explicit CService(const std::string& strIpPort, uint16_t portDefault, bool fAllowLookup = false);
         explicit CService(const std::string& strIpPort, bool fAllowLookup = false);
         void Init();
-        void SetPort(unsigned short portIn);
+        void SetPort(uint16_t portIn);
         unsigned short GetPort() const;
         bool GetSockAddr(struct sockaddr* paddr, socklen_t *addrlen) const;
         bool SetSockAddr(const struct sockaddr* paddr);
@@ -118,7 +118,7 @@ class CService : public CNetAddr
         void print() const;
 
 #ifdef USE_IPV6
-        CService(const struct in6_addr& ipv6Addr, unsigned short port);
+        CService(const struct in6_addr& ipv6Addr, uint16_t port);
         CService(const struct sockaddr_in6& addr);
 #endif
 
@@ -136,7 +136,7 @@ class CService : public CNetAddr
 typedef std::pair<CService, int> proxyType;
 
 enum Network ParseNetwork(std::string net);
-void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
+void SplitHostPort(std::string in, uint16_t &portOut, std::string &hostOut);
 bool SetProxy(enum Network net, CService addrProxy, int nSocksVersion = 5);
 bool GetProxy(enum Network net, proxyType &proxyInfoOut);
 bool IsProxy(const CNetAddr &addr);
@@ -144,10 +144,10 @@ bool SetNameProxy(CService addrProxy, int nSocksVersion = 5);
 bool HaveNameProxy();
 bool LookupHost(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0, bool fAllowLookup = true);
 bool LookupHostNumeric(const char *pszName, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions = 0);
-bool Lookup(const char *pszName, CService& addr, int portDefault = 0, bool fAllowLookup = true);
-bool Lookup(const char *pszName, std::vector<CService>& vAddr, int portDefault = 0, bool fAllowLookup = true, unsigned int nMaxSolutions = 0);
-bool LookupNumeric(const char *pszName, CService& addr, int portDefault = 0);
+bool Lookup(const char *pszName, CService& addr, uint16_t portDefault = 0, bool fAllowLookup = true);
+bool Lookup(const char *pszName, std::vector<CService>& vAddr, uint16_t portDefault = 0, bool fAllowLookup = true, unsigned int nMaxSolutions = 0);
+bool LookupNumeric(const char *pszName, CService& addr, uint16_t portDefault = 0);
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout = nConnectTimeout);
-bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, int portDefault = 0, int nTimeout = nConnectTimeout);
+bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, uint16_t portDefault = 0, int nTimeout = nConnectTimeout);
 
 #endif

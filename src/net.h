@@ -28,6 +28,7 @@ class CNode;
 class CBlockIndex;
 extern int nBestHeight;
 
+const uint16_t nSocksDefault = 9050;
 
 
 inline uint64_t ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }

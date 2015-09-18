@@ -141,7 +141,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             if (GetProxy(NET_IPV4, proxy))
                 return QVariant(proxy.first.GetPort());
             else
-                return QVariant(9050);
+                return QVariant(nSocksDefault);
         }
         case ProxySocksVersion:
             return settings.value("nSocksVersion", 5);
@@ -159,7 +159,7 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             if (GetProxy(NET_TOR, proxy))
                 return QVariant(proxy.first.GetPort());
             else
-                return QVariant(9050);
+                return QVariant(nSocksDefault);
         }
         case TorOnly:
             return settings.value("fTorOnly", false);
@@ -216,7 +216,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             break;
         case ProxyIP: {
             proxyType proxy;
-            proxy.first = CService("127.0.0.1", 9050);
+            proxy.first = CService("127.0.0.1", nSocksDefault);
             GetProxy(NET_IPV4, proxy);
 
             CNetAddr addr(value.toString().toStdString());
@@ -227,7 +227,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         break;
         case ProxyPort: {
             proxyType proxy;
-            proxy.first = CService("127.0.0.1", 9050);
+            proxy.first = CService("127.0.0.1", nSocksDefault);
             GetProxy(NET_IPV4, proxy);
 
             proxy.first.SetPort(value.toInt());
@@ -252,7 +252,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         break;
         case TorIP: {
             proxyType proxy;
-            proxy.first = CService("127.0.0.1", 9050);
+            proxy.first = CService("127.0.0.1", nSocksDefault);
             GetProxy(NET_TOR, proxy);
 
             CNetAddr addr(value.toString().toStdString());
@@ -263,10 +263,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         break;
         case TorPort: {
             proxyType proxy;
-            proxy.first = CService("127.0.0.1", 9050);
+            proxy.first = CService("127.0.0.1", nSocksDefault);
             GetProxy(NET_TOR, proxy);
 
-            proxy.first.SetPort(value.toInt());
+            proxy.first.SetPort((uint16_t)value.toUInt());
             settings.setValue("addrTor", proxy.first.ToStringIPPort().c_str());
             successful = ApplyTorSettings();
         }
