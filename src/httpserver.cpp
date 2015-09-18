@@ -320,6 +320,15 @@ static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue)
     queue->Run();
 }
 
+/** libevent event log callback */
+static void libevent_log_cb(int severity, const char *msg)
+{
+    if (severity >= EVENT_LOG_WARN) // Log warn messages and higher without debug category
+        LogPrintf("libevent: %s\n", msg);
+    else
+        LogPrint("libevent", "libevent: %s\n", msg);
+}
+
 bool InitHTTPServer()
 {
     struct evhttp* http = 0;
@@ -335,6 +344,16 @@ bool InitHTTPServer()
         return false;
     }
 
+    // Redirect libevent's logging to our own log
+    event_set_log_callback(&libevent_log_cb);
+#if LIBEVENT_VERSION_NUMBER >= 0x02010100
+    // If -debug=libevent, set full libevent debugging.
+    // Otherwise, disable all libevent debugging.
+    if (LogAcceptCategory("libevent"))
+        event_enable_debug_logging(EVENT_DBG_ALL);
+    else
+        event_enable_debug_logging(EVENT_DBG_NONE);
+#endif
 #ifdef WIN32
     evthread_use_windows_threads();
 #else
