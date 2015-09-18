@@ -3661,14 +3661,20 @@ void CMPSTOList::printStats()
   PrintToLog("CMPSTOList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
-// delete any STO receipts after blockNum
+/**
+ * This function deletes records of STO receivers above a specific block from the STO database.
+ *
+ * Returns the number of records changed.
+ *
+ * NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
+ */
 int CMPSTOList::deleteAboveBlock(int blockNum)
 {
   unsigned int n_found = 0;
   std::vector<std::string> vecSTORecords;
   leveldb::Iterator* it = NewIterator();
   for (it->SeekToFirst(); it->Valid(); it->Next()) {
-      std::string newValue = "";
+      std::string newValue;
       std::string oldValue = it->value().ToString();
       bool needsUpdate = false;
       boost::split(vecSTORecords, oldValue, boost::is_any_of(","), boost::token_compress_on);
