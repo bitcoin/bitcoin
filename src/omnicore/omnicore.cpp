@@ -3661,46 +3661,42 @@ void CMPSTOList::printStats()
   PrintToLog("CMPSTOList stats: tWritten= %d , tRead= %d\n", nWritten, nRead);
 }
 
-// delete any STO receipts after blockNum
+/**
+ * This function deletes records of STO receivers above a specific block from the STO database.
+ *
+ * Returns the number of records changed.
+ *
+ * NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
+ */
 int CMPSTOList::deleteAboveBlock(int blockNum)
 {
-  leveldb::Slice skey, svalue;
-  unsigned int count = 0;
-  std::vector<std::string> vstr;
   unsigned int n_found = 0;
+  std::vector<std::string> vecSTORecords;
   leveldb::Iterator* it = NewIterator();
-  for(it->SeekToFirst(); it->Valid(); it->Next())
-  {
-    skey = it->key();
-    string address = skey.ToString();
-    svalue = it->value();
-    ++count;
-    string strvalue = it->value().ToString();
-    boost::split(vstr, strvalue, boost::is_any_of(","), token_compress_on);
-    string newValue = "";
-    bool needsUpdate = false;
-    for(uint32_t i = 0; i<vstr.size(); i++)
-    {
-        std::vector<std::string> svstr;
-        boost::split(svstr, vstr[i], boost::is_any_of(":"), token_compress_on);
-        if(4 == svstr.size())
-        {
-            if(atoi(svstr[1]) <= blockNum) { newValue += vstr[i]; } else { needsUpdate = true; } // add back to new key
-        }
-    }
-
-    if(needsUpdate)
-    {
-        ++n_found;
-        const std::string& key = address;
-        // write updated record
-        leveldb::Status status = pdb->Put(writeoptions, key, newValue);
-        PrintToLog("DEBUG STO - rewriting STO data after reorg\n");
-        PrintToLog("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
-    }
+  for (it->SeekToFirst(); it->Valid(); it->Next()) {
+      std::string newValue;
+      std::string oldValue = it->value().ToString();
+      bool needsUpdate = false;
+      boost::split(vecSTORecords, oldValue, boost::is_any_of(","), boost::token_compress_on);
+      for (uint32_t i = 0; i<vecSTORecords.size(); i++) {
+          std::vector<std::string> vecSTORecordFields;
+          boost::split(vecSTORecordFields, vecSTORecords[i], boost::is_any_of(":"), boost::token_compress_on);
+          if (4 != vecSTORecordFields.size()) continue;
+          if (atoi(vecSTORecordFields[1]) <= blockNum) {
+              newValue += vecSTORecords[i].append(","); // STO before the reorg, add data back to new value string
+          } else {
+              needsUpdate = true;
+          }
+      }
+      if (needsUpdate) { // rewrite record with existing key and new value
+          ++n_found;
+          leveldb::Status status = pdb->Put(writeoptions, it->key().ToString(), newValue);
+          PrintToLog("DEBUG STO - rewriting STO data after reorg\n");
+          PrintToLog("STODBDEBUG : %s(): %s, line %d, file: %s\n", __FUNCTION__, status.ToString(), __LINE__, __FILE__);
+      }
   }
 
-  PrintToLog("%s(%d); stodb n_found= %d\n", __FUNCTION__, blockNum, n_found);
+  PrintToLog("%s(%d); stodb updated records= %d\n", __FUNCTION__, blockNum, n_found);
 
   delete it;
 
