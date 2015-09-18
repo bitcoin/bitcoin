@@ -2011,11 +2011,10 @@ void static UpdateTip(CBlockIndex *pindexNew) {
     }
 }
 
-/** Disconnect chainActive's tip. */
+/** Disconnect chainActive's tip. You probably want to call mempool.removeForReorg after this, with cs_main held. */
 bool static DisconnectTip(CValidationState &state) {
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);
-    mempool.check(pcoinsTip);
     // Read block from disk.
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexDelete))
@@ -2040,8 +2039,6 @@ bool static DisconnectTip(CValidationState &state) {
         if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
             mempool.remove(tx, removed, true);
     }
-    mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
-    mempool.check(pcoinsTip);
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
@@ -2064,7 +2061,6 @@ static int64_t nTimePostConnect = 0;
  */
 bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CBlock *pblock) {
     assert(pindexNew->pprev == chainActive.Tip());
-    mempool.check(pcoinsTip);
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
     CBlock block;
@@ -2101,7 +2097,6 @@ bool static ConnectTip(CValidationState &state, CBlockIndex *pindexNew, const CB
     // Remove conflicting transactions from the mempool.
     list<CTransaction> txConflicted;
     mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted, !IsInitialBlockDownload());
-    mempool.check(pcoinsTip);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);
     // Tell wallet about transactions that went from mempool
@@ -2200,10 +2195,15 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     const CBlockIndex *pindexOldTip = chainActive.Tip();
     const CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
 
+    bool blocksDisconnected = false;
     // Disconnect active blocks which are no longer in the best chain.
     while (chainActive.Tip() && chainActive.Tip() != pindexFork) {
-        if (!DisconnectTip(state))
+        if (!DisconnectTip(state)) {
+            // Probably an AbortNode() error, but try to keep mempool consistent anyway
+            mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1);
             return false;
+        }
+        blocksDisconnected = true;
     }
 
     // Build list of new blocks to connect.
@@ -2211,43 +2211,50 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     bool fContinue = true;
     int nHeight = pindexFork ? pindexFork->nHeight : -1;
     while (fContinue && nHeight != pindexMostWork->nHeight) {
-    // Don't iterate the entire list of potential improvements toward the best tip, as we likely only need
-    // a few blocks along the way.
-    int nTargetHeight = std::min(nHeight + 32, pindexMostWork->nHeight);
-    vpindexToConnect.clear();
-    vpindexToConnect.reserve(nTargetHeight - nHeight);
-    CBlockIndex *pindexIter = pindexMostWork->GetAncestor(nTargetHeight);
-    while (pindexIter && pindexIter->nHeight != nHeight) {
-        vpindexToConnect.push_back(pindexIter);
-        pindexIter = pindexIter->pprev;
-    }
-    nHeight = nTargetHeight;
+        // Don't iterate the entire list of potential improvements toward the best tip, as we likely only need
+        // a few blocks along the way.
+        int nTargetHeight = std::min(nHeight + 32, pindexMostWork->nHeight);
+        vpindexToConnect.clear();
+        vpindexToConnect.reserve(nTargetHeight - nHeight);
+        CBlockIndex *pindexIter = pindexMostWork->GetAncestor(nTargetHeight);
+        while (pindexIter && pindexIter->nHeight != nHeight) {
+            vpindexToConnect.push_back(pindexIter);
+            pindexIter = pindexIter->pprev;
+        }
+        nHeight = nTargetHeight;
 
-    // Connect new blocks.
-    BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
-        if (!ConnectTip(state, pindexConnect, pindexConnect == pindexMostWork ? pblock : NULL)) {
-            if (state.IsInvalid()) {
-                // The block violates a consensus rule.
-                if (!state.CorruptionPossible())
-                    InvalidChainFound(vpindexToConnect.back());
-                state = CValidationState();
-                fInvalidFound = true;
-                fContinue = false;
-                break;
+        // Connect new blocks.
+        BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
+            if (!ConnectTip(state, pindexConnect, pindexConnect == pindexMostWork ? pblock : NULL)) {
+                if (state.IsInvalid()) {
+                    // The block violates a consensus rule.
+                    if (!state.CorruptionPossible())
+                        InvalidChainFound(vpindexToConnect.back());
+                    state = CValidationState();
+                    fInvalidFound = true;
+                    fContinue = false;
+                    break;
+                } else {
+                    // A system error occurred (disk space, database error, ...).
+                    // Probably gonna shut down ASAP, but try to keep mempool consistent anyway
+                    if (blocksDisconnected)
+                        mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1);
+                    return false;
+                }
             } else {
-                // A system error occurred (disk space, database error, ...).
-                return false;
-            }
-        } else {
-            PruneBlockIndexCandidates();
-            if (!pindexOldTip || chainActive.Tip()->nChainWork > pindexOldTip->nChainWork) {
-                // We're in a better position than we were. Return temporarily to release the lock.
-                fContinue = false;
-                break;
+                PruneBlockIndexCandidates();
+                if (!pindexOldTip || chainActive.Tip()->nChainWork > pindexOldTip->nChainWork) {
+                    // We're in a better position than we were. Return temporarily to release the lock.
+                    fContinue = false;
+                    break;
+                }
             }
         }
     }
-    }
+
+    if (blocksDisconnected)
+        mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1);
+    mempool.check(pcoinsTip);
 
     // Callbacks/notifications for a new best chain.
     if (fInvalidFound)
@@ -2333,6 +2340,7 @@ bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
         // ActivateBestChain considers blocks already in chainActive
         // unconditionally valid already, so force disconnect away from it.
         if (!DisconnectTip(state)) {
+            mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1);
             return false;
         }
     }
@@ -2348,6 +2356,7 @@ bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
     }
 
     InvalidChainFound(pindex);
+    mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1);
     return true;
 }
 
