@@ -11,6 +11,7 @@
 #include "main.h"
 #include "policy/fees.h"
 #include "streams.h"
+#include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
 #include "version.h"
@@ -156,22 +157,26 @@ void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& rem
     }
 }
 
-void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight)
+void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMemPoolHeight)
 {
-    // Remove transactions spending a coinbase which are now immature
+    // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     LOCK(cs);
     list<CTransaction> transactionsToRemove;
     for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->second.GetTx();
-        BOOST_FOREACH(const CTxIn& txin, tx.vin) {
-            std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
-            if (it2 != mapTx.end())
-                continue;
-            const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
-            if (fSanityCheck) assert(coins);
-            if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
-                transactionsToRemove.push_back(tx);
-                break;
+        if (!IsFinalTx(tx, nMemPoolHeight, GetAdjustedTime()))
+            transactionsToRemove.push_back(tx);
+        else {
+            BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+                std::map<uint256, CTxMemPoolEntry>::const_iterator it2 = mapTx.find(txin.prevout.hash);
+                if (it2 != mapTx.end())
+                    continue;
+                const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
+                if (fSanityCheck) assert(coins);
+                if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
+                    transactionsToRemove.push_back(tx);
+                    break;
+                }
             }
         }
     }
