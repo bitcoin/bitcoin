@@ -49,11 +49,13 @@ License: MIT/Expat
 Comment: Site: https://github.com/stephenhutchings/typicons.font
 
 Files: src/qt/res/icons/connect*.png
+       src/qt/res/src/connect-*.svg
 Copyright: Marco Falke
 License: MIT/Expat
 Comment: Inspired by Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/tx_mined.png
+       src/qt/res/src/mine.svg
 Copyright: Jonas Schnelli
 License: MIT/Expat
 Comment:
@@ -62,13 +64,17 @@ Files: src/qt/res/icons/clock*.png
        src/qt/res/icons/eye_*.png
        src/qt/res/icons/verify.png
        src/qt/res/icons/tx_in*.png
+       src/qt/res/src/clock_*.svg
+       src/qt/res/src/tx_*.svg
+       src/qt/res/src/verify.svg
 Copyright: Stephan Hutching, Jonas Schnelli
 License: MIT/Expat
 Comment: Modifications of Stephan Hutchings Typicons
 
-Files: src/qt/res/icons/bitcoin.*
-       src/qt/res/icons/about.png
+Files: src/qt/res/icons/about.png
+       src/qt/res/icons/bitcoin.*
        share/pixmaps/bitcoin*
+       src/qt/res/src/bitcoin.svg
 Copyright: Bitboy, Jonas Schnelli
 License: PUB-DOM
 Comment: Site: https://bitcointalk.org/?topic=1756.0
