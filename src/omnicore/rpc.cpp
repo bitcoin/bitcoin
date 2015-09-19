@@ -675,6 +675,23 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
         startTime = GetBlockIndex(hashBlock)->nTime;
     }
 
+    // note the database is already deserialized here and there is minimal performance penalty to iterate recipients to calculate amountRaised
+    int64_t amountRaised = 0;
+    uint16_t propertyIdType = isPropertyDivisible(propertyId) ? MSC_PROPERTY_TYPE_DIVISIBLE : MSC_PROPERTY_TYPE_INDIVISIBLE;
+    uint16_t desiredIdType = isPropertyDivisible(sp.property_desired) ? MSC_PROPERTY_TYPE_DIVISIBLE : MSC_PROPERTY_TYPE_INDIVISIBLE;
+    std::map<std::string, Object> sortMap;
+    for (std::map<uint256, std::vector<int64_t> >::const_iterator it = database.begin(); it != database.end(); it++) {
+        Object participanttx;
+        std::string txid = it->first.GetHex();
+        amountRaised += it->second.at(0);
+        participanttx.push_back(Pair("txid", txid));
+        participanttx.push_back(Pair("amountsent", FormatByType(it->second.at(0), desiredIdType)));
+        participanttx.push_back(Pair("participanttokens", FormatByType(it->second.at(2), propertyIdType)));
+        participanttx.push_back(Pair("issuertokens", FormatByType(it->second.at(3), propertyIdType)));
+        std::string sortKey = strprintf("%d-%s", it->second.at(1), txid);
+        sortMap.insert(std::make_pair(sortKey, participanttx));
+    }
+
     response.push_back(Pair("propertyid", (uint64_t) propertyId));
     response.push_back(Pair("name", sp.name));
     response.push_back(Pair("active", active));
@@ -685,6 +702,7 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
     response.push_back(Pair("percenttoissuer", sp.percentage));
     response.push_back(Pair("starttime", startTime));
     response.push_back(Pair("deadline", sp.deadline));
+    response.push_back(Pair("amountraised", FormatMP(sp.property_desired, amountRaised)));
     response.push_back(Pair("tokensissued", FormatMP(propertyId, tokensIssued)));
     response.push_back(Pair("addedissuertokens", FormatMP(propertyId, sp.missedTokens)));
 
@@ -695,23 +713,10 @@ Value omni_getcrowdsale(const Array& params, bool fHelp)
     if (sp.close_early && !sp.max_tokens) response.push_back(Pair("closetx", txidClosed));
 
     if (showVerbose) {
-        int64_t amountRaised = 0;
-        std::map<int64_t, Object> sortMap;
-        for (std::map<uint256, std::vector<int64_t> >::const_iterator it = database.begin(); it != database.end(); it++) {
-            Object participanttx;
-            std::string txid = it->first.GetHex();
-            amountRaised += it->second.at(0);
-            participanttx.push_back(Pair("txid", txid));
-            participanttx.push_back(Pair("amountsent", FormatMP(sp.property_desired, (int64_t)it->second.at(0))));
-            participanttx.push_back(Pair("participanttokens", FormatMP(propertyId, (int64_t)it->second.at(2))));
-            participanttx.push_back(Pair("issuertokens", FormatMP(propertyId, (int64_t)it->second.at(3))));
-            sortMap.insert(make_pair((int64_t)it->second.at(1), participanttx));
-        }
         Array participanttxs;
-        for (std::map<int64_t, Object>::iterator it = sortMap.begin(); it != sortMap.end(); ++it) {
+        for (std::map<std::string, Object>::iterator it = sortMap.begin(); it != sortMap.end(); ++it) {
             participanttxs.push_back(it->second);
         }
-        response.push_back(Pair("amountraised", FormatMP(sp.property_desired, amountRaised)));
         response.push_back(Pair("participanttransactions", participanttxs));
     }
 
