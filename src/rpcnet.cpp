@@ -404,8 +404,12 @@ Value ntptime(const Array& params, bool fHelp)
     case -4:
         throw runtime_error("Receive timed out");
     default:
-        obj.push_back(Pair("epoch", nTime));
-        obj.push_back(Pair("time", DateTimeStrFormat(nTime)));
+        if (nTime > 0 && nTime != 2085978496)
+        {
+            obj.push_back(Pair("epoch", nTime));
+            obj.push_back(Pair("time", DateTimeStrFormat(nTime)));
+        }
+        else throw runtime_error("Unexpected response");
     }
 
     return obj;

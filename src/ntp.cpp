@@ -299,20 +299,19 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr)
         return -3;
     }
 
-    retcode = 0;
-    int nWait = 0;
+    fd_set fdset;
+    struct timeval timeout = {5, 0};
+    FD_ZERO(&fdset);
+    FD_SET(sockfd, &fdset);
 
-    while(retcode <= 0) {
-        Sleep(1000);
-        retcode = recvfrom(sockfd, (char *) msg, len, 0, NULL, NULL);
-
-        if (nWait > 4) {
-            printf("recvfrom() timeout");
-            return -4;
-        }
-
-        nWait++;
+    retcode = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
+    if (retcode <= 0)
+    {
+        printf("recvfrom() error");
+        return -4;
     }
+
+    recvfrom(sockfd, (char *) msg, len, 0, NULL, NULL);
 
     ntohl_fp(&msg->rec, &prt->rec);
     ntohl_fp(&msg->xmt, &prt->xmt);
