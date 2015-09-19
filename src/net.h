@@ -29,6 +29,7 @@ class CBlockIndex;
 extern int nBestHeight;
 
 const uint16_t nSocksDefault = 9050;
+const uint16_t nPortZero = 0;
 
 
 inline uint64_t ReceiveBufferSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
