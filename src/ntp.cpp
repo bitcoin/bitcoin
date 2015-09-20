@@ -389,6 +389,24 @@ int64_t NtpGetTime()
     return nTime;
 }
 
+int64_t NtpGetTime(CNetAddr& ip)
+{
+    struct sockaddr cliaddr;
+
+    SOCKET sockfd;
+    socklen_t servlen;
+
+    if (!InitWithRandom(sockfd, servlen, &cliaddr))
+        return -1;
+
+    ip = CNetAddr(((sockaddr_in *)&cliaddr)->sin_addr);
+    int64_t nTime = DoReq(sockfd, servlen, cliaddr);
+
+    closesocket(sockfd);
+
+    return nTime;
+}
+
 int64_t NtpGetTime(std::string &strHostName)
 {
     struct sockaddr cliaddr;
