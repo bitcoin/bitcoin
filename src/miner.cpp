@@ -289,9 +289,6 @@ CBlock* CreateNewBlock(CWallet* pwallet, CTransaction *txCoinStake)
             if (tx.nTime > GetAdjustedTime() || (fProofOfStake && tx.nTime > txCoinStake->nTime))
                 continue;
 
-            // Simplify transaction fee - allow free = false
-            int64_t nMinFee = tx.GetMinFee(nBlockSize, true, GMF_BLOCK, nTxSize);
-
             // Skip free transactions if we're past the minimum block size:
             if (fSortedByFee && (dFeePerKb < nMinTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
                 continue;
@@ -314,10 +311,13 @@ CBlock* CreateNewBlock(CWallet* pwallet, CTransaction *txCoinStake)
             if (!tx.FetchInputs(txdb, mapTestPoolTmp, false, true, mapInputs, fInvalid))
                 continue;
 
+            // Transaction fee
             int64_t nTxFees = tx.GetValueIn(mapInputs)-tx.GetValueOut();
+            int64_t nMinFee = tx.GetMinFee(nBlockSize, true, GMF_BLOCK, nTxSize);
             if (nTxFees < nMinFee)
                 continue;
 
+            // Sigops accumulation
             nTxSigOps += tx.GetP2SHSigOpCount(mapInputs);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
