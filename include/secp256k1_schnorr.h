@@ -94,7 +94,7 @@ int secp256k1_schnorr_generate_nonce_pair(
   const unsigned char *sec32,
   secp256k1_nonce_function noncefp,
   const void* noncedata
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(6) SECP256K1_ARG_NONNULL(7);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Produce a partial Schnorr signature, which can be combined using
  *  secp256k1_schnorr_partial_combine, to end up with a full signature that is
