@@ -14,6 +14,7 @@
 
 #include "netbase.h"
 #include "util.h"
+#include "net.h"
 
 extern int GetRandInt(int nMax);
 
@@ -51,15 +52,13 @@ typedef struct {
 } l_fp;
 
 
-inline void Ntp2Unix(uint32_t &n, time_t &u)
-{
+inline void Ntp2Unix(uint32_t &n, time_t &u) {
     // Ntp's time scale starts in 1900, Unix in 1970.
 
     u = n - 0x83aa7e80; // 2208988800 1970 - 1900 in seconds
 }
 
-inline void ntohl_fp(l_fp *n, l_fp *h)
-{
+inline void ntohl_fp(l_fp *n, l_fp *h) {
     (h)->Ul_i.Xl_ui = ntohl((n)->Ul_i.Xl_ui);
     (h)->Ul_f.Xl_uf = ntohl((n)->Ul_f.Xl_uf);
 }
@@ -212,12 +211,10 @@ std::string NtpServers[107] = {
     // ... To be continued
 };
 
-bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
-{
+bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
     int nAttempt = 0;
 
-    while(nAttempt < 100)
-    {
+    while(nAttempt < 100) {
         sockfd = -1;
         nAttempt++;
 
@@ -233,10 +230,8 @@ bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliadd
         servaddr.sin_port = htons(123);
 
         bool found = false;
-        for(unsigned int i = 0; i < vIP.size(); i++)
-        {
-            if ((found = vIP[i].GetInAddr(&servaddr.sin_addr)))
-            {
+        for(unsigned int i = 0; i < vIP.size(); i++) {
+            if ((found = vIP[i].GetInAddr(&servaddr.sin_addr))) {
                 break;
             }
         }
@@ -249,8 +244,7 @@ bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliadd
         if (sockfd == INVALID_SOCKET)
             continue; // socket initialization error
 
-        if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1 )
-        {
+        if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1 ) {
             continue; // "connection" error
         }
 
@@ -262,38 +256,36 @@ bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliadd
     return false;
 }
 
-bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr)
-{
+bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
     sockfd = -1;
 
     std::vector<CNetAddr> vIP;
     bool fRet = LookupHost(strHostName.c_str(), vIP, 10, true);
-    if (!fRet)
+    if (!fRet) {
         return false;
+    }
 
     struct sockaddr_in servaddr;
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(123);
 
     bool found = false;
-    for(unsigned int i = 0; i < vIP.size(); i++)
-    {
-        if ((found = vIP[i].GetInAddr(&servaddr.sin_addr)))
-        {
+    for(unsigned int i = 0; i < vIP.size(); i++) {
+        if ((found = vIP[i].GetInAddr(&servaddr.sin_addr))) {
             break;
         }
     }
 
-    if (!found)
+    if (!found) {
         return false;
+    }
 
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
     if (sockfd == INVALID_SOCKET)
         return false; // socket initialization error
 
-    if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1 )
-    {
+    if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1 ) {
         return false; // "connection" error
     }
 
@@ -305,17 +297,13 @@ bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, 
 }
 
 
-int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr)
-{
-
+int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
 #ifdef WIN32
     u_long nOne = 1;
-    if (ioctlsocket(sockfd, FIONBIO, &nOne) == SOCKET_ERROR)
-    {
+    if (ioctlsocket(sockfd, FIONBIO, &nOne) == SOCKET_ERROR) {
         printf("ConnectSocket() : ioctlsocket non-blocking setting failed, error %d\n", WSAGetLastError());
 #else
-    if (fcntl(sockfd, F_SETFL, O_NONBLOCK) == SOCKET_ERROR)
-    {
+    if (fcntl(sockfd, F_SETFL, O_NONBLOCK) == SOCKET_ERROR) {
         printf("ConnectSocket() : fcntl non-blocking setting failed, error %d\n", errno);
 #endif
         return -2;
@@ -353,8 +341,7 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr)
     FD_SET(sockfd, &fdset);
 
     retcode = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
-    if (retcode <= 0)
-    {
+    if (retcode <= 0) {
         printf("recvfrom() error");
         return -4;
     }
@@ -376,8 +363,7 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr)
     return (seconds_receive + seconds_transmit) / 2;
 }
 
-int64_t NtpGetTime()
-{
+int64_t NtpGetTime() {
     struct sockaddr cliaddr;
 
     SOCKET sockfd;
@@ -393,8 +379,7 @@ int64_t NtpGetTime()
     return nTime;
 }
 
-int64_t NtpGetTime(CNetAddr& ip)
-{
+int64_t NtpGetTime(CNetAddr& ip) {
     struct sockaddr cliaddr;
 
     SOCKET sockfd;
@@ -426,4 +411,31 @@ int64_t NtpGetTime(std::string &strHostName)
     closesocket(sockfd);
 
     return nTime;
+}
+
+void ThreadNtpSamples(void* parg)
+{
+    printf("ThreadNtpSamples started\n");
+    vnThreadsRunning[THREAD_NTP]++;
+
+    // Make this thread recognisable as time synchronization thread
+    RenameThread("novacoin-ntp-samples");
+
+    while (!fShutdown) {
+        CNetAddr ip;
+        int64_t nTime = NtpGetTime(ip);
+
+        if (nTime > 0 && nTime != 2085978496) { // Skip the deliberately wrong timestamps
+            AddTimeData(ip, nTime);
+        }
+        else {
+            Sleep(600000); // In case of failure wait 600 seconds and then try again
+            continue;
+        }
+
+        Sleep(43200000); // Sleep for 12 hours
+    }
+
+    vnThreadsRunning[THREAD_NTP]--;
+    printf("ThreadNtpSamples exited\n");
 }
