@@ -348,7 +348,7 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr)
     }
 
     fd_set fdset;
-    struct timeval timeout = {5, 0};
+    struct timeval timeout = {10, 0};
     FD_ZERO(&fdset);
     FD_SET(sockfd, &fdset);
 
