@@ -81,22 +81,20 @@ struct pkt {
   uint8_t  mac[5 * sizeof(uint32_t)]; /* mac */
 };
 
-int nServersCount = 65;
+int nServersCount = 103;
 
-std::string NtpServers[65] = {
+std::string NtpServers[103] = {
     // Microsoft
     "time.windows.com",
 
     // Google
     "time1.google.com",
     "time2.google.com",
+    "time3.google.com",
+    "time4.google.com",
 
     // Russian Federation
     "ntp.ix.ru",
-    "0.ru.pool.ntp.org",
-    "1.ru.pool.ntp.org",
-    "2.ru.pool.ntp.org",
-    "3.ru.pool.ntp.org",
     "ntp1.stratum2.ru",
     "ntp2.stratum2.ru",
     "ntp3.stratum2.ru",
@@ -117,6 +115,12 @@ std::string NtpServers[65] = {
     "ntp2.niiftri.irkutsk.ru",
     "vniiftri.khv.ru",
     "vniiftri2.khv.ru",
+    "ntp0.zenon.net",
+    "ntp.mobatime.ru",
+    "0.ru.pool.ntp.org",
+    "1.ru.pool.ntp.org",
+    "2.ru.pool.ntp.org",
+    "3.ru.pool.ntp.org",
 
     // United States
     "nist1-pa.ustiming.org",
@@ -143,6 +147,10 @@ std::string NtpServers[65] = {
     "ntp1.bu.edu",
     "ntp2.bu.edu",
     "ntp3.bu.edu",
+    "0.us.pool.ntp.org",
+    "1.us.pool.ntp.org",
+    "2.us.pool.ntp.org",
+    "3.us.pool.ntp.org",
 
     // South Africa
     "ntp1.meraka.csir.co.za",
@@ -156,10 +164,46 @@ std::string NtpServers[65] = {
     "ntp.time.org.za",
     "ntp1.meraka.csir.co.za",
     "ntp2.meraka.csir.co.za",
+    "0.za.pool.ntp.org",
+    "1.za.pool.ntp.org",
+    "2.za.pool.ntp.org",
+    "3.za.pool.ntp.org",
 
     // Italy
     "ntp1.inrim.it",
     "ntp2.inrim.it",
+    "0.it.pool.ntp.org",
+    "1.it.pool.ntp.org",
+    "2.it.pool.ntp.org",
+    "3.it.pool.ntp.org",
+
+    // Netherlands
+    "ntp0.nl.net",
+    "ntp1.nl.net",
+    "ntp2.nl.net",
+    "ntp.utwente.nl",
+    "0.nl.pool.ntp.org",
+    "1.nl.pool.ntp.org",
+    "2.nl.pool.ntp.org",
+    "3.nl.pool.ntp.org",
+
+    // United Kingdom
+    "ntp2d.mcc.ac.uk",
+    "ntp2c.mcc.ac.uk",
+    "ntp.exnet.com",
+    "ntp.cis.strath.ac.uk",
+    "ntppub.le.ac.uk",
+    "0.uk.pool.ntp.org",
+    "1.uk.pool.ntp.org",
+    "2.uk.pool.ntp.org",
+    "3.uk.pool.ntp.org",
+
+    // Japan
+    "ntp.nict.jp",
+    "0.jp.pool.ntp.org",
+    "1.jp.pool.ntp.org",
+    "2.jp.pool.ntp.org",
+    "3.jp.pool.ntp.org",
 
     // ... To be continued
 };
