@@ -589,80 +589,53 @@ bool mastercore::isCrowdsaleActive(uint32_t propertyId)
     return false;
 }
 
-int64_t mastercore::calculateFractional(const CMPSPInfo::Entry& sp, const CMPCrowd& crowdsale)
+/**
+ * Calculates missing bonus tokens, which are credited to the crowdsale issuer.
+ *
+ * Due to rounding effects, a crowdsale issuer may not receive the full
+ * bonus immediatly. The missing amount is calculated based on the total
+ * tokens created and already credited.
+ *
+ * @param sp        The crowdsale property
+ * @param crowdsale The crowdsale
+ * @return The number of missed tokens
+ */
+int64_t mastercore::GetMissedIssuerBonus(const CMPSPInfo::Entry& sp, const CMPCrowd& crowdsale)
 {
-    return calculateFractional(sp.prop_type,
-            sp.early_bird,
-            sp.deadline,
-            sp.num_tokens,
-            sp.percentage,
-            crowdsale.getDatabase(),
-            crowdsale.getIssuerCreated());
-}
+    // consistency check
+    assert(getTotalTokens(crowdsale.getPropertyId())
+            == (crowdsale.getIssuerCreated() + crowdsale.getUserCreated()));
 
-// calculates and returns fundraiser bonus, issuer premine, and total tokens
-// propType : divisible/indiv
-// bonusPerc: bonus percentage
-// currentSecs: number of seconds of current tx
-// numProps: number of properties
-// issuerPerc: percentage of tokens to issuer
-int64_t mastercore::calculateFractional(uint16_t propType, uint8_t bonusPerc, int64_t fundraiserSecs,
-        int64_t numProps, uint8_t issuerPerc, const std::map<uint256, std::vector<int64_t> >& txFundraiserData,
-        const int64_t amountPremined)
-{
-    // initialize variables
-    double totalCreated = 0;
-    double issuerPercentage = (double) (issuerPerc * 0.01);
+    uint256 amountMissing = 0;
+    uint256 bonusPercentForIssuer = ConvertTo256(sp.percentage);
+    uint256 amountAlreadyCreditedToIssuer = ConvertTo256(crowdsale.getIssuerCreated());
+    uint256 amountCreditedToUsers = ConvertTo256(crowdsale.getUserCreated());
+    uint256 amountTotal = amountCreditedToUsers + amountAlreadyCreditedToIssuer;
 
-    std::map<uint256, std::vector<int64_t> >::const_iterator it;
+    // calculate theoretical bonus for issuer based on the amount of
+    // tokens credited to users
+    uint256 exactBonus = amountCreditedToUsers * bonusPercentForIssuer;
+    exactBonus /= ConvertTo256(100); // 100 %
 
-    // iterate through fundraiser data
-    for (it = txFundraiserData.begin(); it != txFundraiserData.end(); it++) {
-
-        // grab the seconds and amt transferred from this tx
-        int64_t currentSecs = it->second.at(1);
-        double amtTransfer = it->second.at(0);
-
-        // make calc for bonus given in sec
-        int64_t bonusSeconds = fundraiserSecs - currentSecs;
-
-        // turn it into weeks
-        double weeks = bonusSeconds / (double) 604800;
-
-        // make it a %
-        double ebPercentage = weeks * bonusPerc;
-        double bonusPercentage = (ebPercentage / 100) + 1;
-
-        // init var
-        double createdTokens;
-
-        // if indiv or div, do different truncation
-        if (MSC_PROPERTY_TYPE_DIVISIBLE == propType) {
-            // calculate tokens
-            createdTokens = (amtTransfer / 1e8) * (double) numProps * bonusPercentage;
-
-            // add totals up
-            totalCreated += createdTokens;
-        } else {
-            // same here
-            createdTokens = (int64_t) ((amtTransfer / 1e8) * (double) numProps * bonusPercentage);
-
-            totalCreated += createdTokens;
-        }
-    };
-
-    // calculate premine
-    double totalPremined = totalCreated * issuerPercentage;
-    double missedTokens;
-
-    // calculate based on div/indiv, truncation/not
-    if (2 == propType) {
-        missedTokens = totalPremined - amountPremined;
-    } else {
-        missedTokens = (int64_t) (totalPremined - amountPremined);
+    // there shall be no negative missing amount
+    if (exactBonus < amountAlreadyCreditedToIssuer) {
+        return 0;
     }
 
-    return static_cast<int64_t>(missedTokens);
+    // subtract the amount already credited to the issuer
+    if (exactBonus > amountAlreadyCreditedToIssuer) {
+        amountMissing = exactBonus - amountAlreadyCreditedToIssuer;
+    }
+
+    // calculate theoretical total amount of all tokens
+    uint256 newTotal = amountTotal + amountMissing;
+
+    // reduce to max. possible amount
+    if (newTotal > uint256_const::max_int64) {
+        amountMissing = uint256_const::max_int64 - amountTotal;
+    }
+
+    return ConvertTo64(amountMissing);
 }
 
 // calculateFundraiser does token calculations per transaction
@@ -725,8 +698,8 @@ void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, ui
 
     uint256 newTotalCreated = ConvertTo256(totalTokens) + createdTokens_int + issuerTokens_int;
 
-    if (newTotalCreated > ConvertTo256(MAX_INT_8_BYTES)) {
-        uint256 maxCreatable = ConvertTo256(MAX_INT_8_BYTES) - ConvertTo256(totalTokens);
+    if (newTotalCreated > uint256_const::max_int64) {
+        uint256 maxCreatable = uint256_const::max_int64 - ConvertTo256(totalTokens);
         uint256 created = createdTokens_int + issuerTokens_int;
 
         // Calcluate the ratio of tokens for what we can create and apply it
@@ -739,8 +712,11 @@ void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, ui
         issuerTokens_int *= satoshi_precision_;
         issuerTokens_int /= ratio;
 
+        assert(issuerTokens_int <= maxCreatable);
+
         // The tokens for the user
-        createdTokens_int = ConvertTo256(MAX_INT_8_BYTES) - issuerTokens_int;
+        //createdTokens_int = ConvertTo256(MAX_INT_8_BYTES) - issuerTokens_int;
+        createdTokens_int = maxCreatable - issuerTokens_int;
 
         // Close the crowdsale after assigning all tokens
         close_crowdsale = true;
@@ -856,7 +832,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
             assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
 
             // find missing tokens
-            int64_t missedTokens = calculateFractional(sp, crowdsale);
+            int64_t missedTokens = GetMissedIssuerBonus(sp, crowdsale);
 
             // get txdata
             sp.historicalData = crowdsale.getDatabase();

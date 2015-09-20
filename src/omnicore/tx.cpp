@@ -1558,13 +1558,7 @@ int CMPTransaction::logicMath_CloseCrowdsale()
     CMPSPInfo::Entry sp;
     assert(_my_sps->getSP(property, sp));
 
-    int64_t missedTokens = calculateFractional(sp.prop_type,
-            sp.early_bird,
-            sp.deadline,
-            sp.num_tokens,
-            sp.percentage,
-            crowd.getDatabase(),
-            crowd.getIssuerCreated());
+    int64_t missedTokens = GetMissedIssuerBonus(sp, crowd);
 
     sp.historicalData = crowd.getDatabase();
     sp.update_block = blockHash;
