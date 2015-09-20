@@ -362,13 +362,6 @@ Value getnettotals(const Array& params, bool fHelp)
 "time" : "2015-09-17 12:53:56 UTC"
 }
 
-05:53:59 ntptime time.windows.com
-05:54:00
-{
-"epoch" : 1442494439,
-"time" : "2015-09-17 12:53:59 UTC"
-}
-
 05:54:33 ntptime time-a.nist.gov
 05:54:34
 {
@@ -384,17 +377,17 @@ Value ntptime(const Array& params, bool fHelp)
             "Returns current time from specific or random NTP server.");
 
     int64_t nTime;
-    if (params.size() > 0)
-    {
+    if (params.size() > 0) {
         string strHostName = params[0].get_str();
         nTime = NtpGetTime(strHostName);
     }
-    else
-        nTime = NtpGetTime();
+    else {
+        CNetAddr ip;
+        nTime = NtpGetTime(ip);
+    }
 
     Object obj;
-    switch (nTime)
-    {
+    switch (nTime) {
     case -1:
         throw runtime_error("Socket initialization error");
     case -2:
@@ -404,8 +397,7 @@ Value ntptime(const Array& params, bool fHelp)
     case -4:
         throw runtime_error("Receive timed out");
     default:
-        if (nTime > 0 && nTime != 2085978496)
-        {
+        if (nTime > 0 && nTime != 2085978496) {
             obj.push_back(Pair("epoch", nTime));
             obj.push_back(Pair("time", DateTimeStrFormat(nTime)));
         }

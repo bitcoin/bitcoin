@@ -226,51 +226,6 @@ std::string NtpServers[118] = {
     // ... To be continued
 };
 
-bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
-    int nAttempt = 0;
-
-    while(nAttempt < 100) {
-        sockfd = -1;
-        nAttempt++;
-
-        int nServerNum = GetRandInt(nServersCount);
-
-        std::vector<CNetAddr> vIP;
-        bool fRet = LookupHost(NtpServers[nServerNum].c_str(), vIP, 10, true);
-        if (!fRet)
-            continue;
-
-        struct sockaddr_in servaddr;
-        servaddr.sin_family = AF_INET;
-        servaddr.sin_port = htons(123);
-
-        bool found = false;
-        for(unsigned int i = 0; i < vIP.size(); i++) {
-            if ((found = vIP[i].GetInAddr(&servaddr.sin_addr))) {
-                break;
-            }
-        }
-
-        if (!found)
-            continue;
-
-        sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-
-        if (sockfd == INVALID_SOCKET)
-            continue; // socket initialization error
-
-        if (connect(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1 ) {
-            continue; // "connection" error
-        }
-
-        *pcliaddr = *((struct sockaddr *) &servaddr);
-        servlen = sizeof(servaddr);
-        return true;
-    }
-
-    return false;
-}
-
 bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
     sockfd = -1;
 
@@ -311,6 +266,17 @@ bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, 
     return true;
 }
 
+bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
+
+    for (int nAttempt = 0; nAttempt < nServersCount; nAttempt++) {
+        int nServerNum = GetRandInt(nServersCount);
+        if (InitWithHost(NtpServers[nServerNum], sockfd, servlen, pcliaddr)) {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
 #ifdef WIN32
@@ -376,22 +342,6 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
     delete prt;
 
     return (seconds_receive + seconds_transmit) / 2;
-}
-
-int64_t NtpGetTime() {
-    struct sockaddr cliaddr;
-
-    SOCKET sockfd;
-    socklen_t servlen;
-
-    if (!InitWithRandom(sockfd, servlen, &cliaddr))
-        return -1;
-
-    int64_t nTime = DoReq(sockfd, servlen, cliaddr);
-
-    closesocket(sockfd);
-
-    return nTime;
 }
 
 int64_t NtpGetTime(CNetAddr& ip) {
