@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(overpayment_close)
     std::pair<int64_t, int64_t> tokensCreated;
     bool fClosed = false;
 
-    mastercore::calculateFundraiser(amountInvested, earlyBirdBonus, deadline,
+    mastercore::calculateFundraiser(true, amountInvested, earlyBirdBonus, deadline,
             timestamp, amountPerUnitInvested, issuerBonus, totalTokens,
             tokensCreated, fClosed);
 

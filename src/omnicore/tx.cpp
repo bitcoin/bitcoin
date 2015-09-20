@@ -757,7 +757,7 @@ int CMPTransaction::logicHelper_CrowdsaleParticipation()
     assert(_my_sps->getSP(pcrowdsale->getPropertyId(), sp));
     PrintToLog("INVESTMENT SEND to Crowdsale Issuer: %s\n", receiver);
 
-    // Holds the tokens to be credited to the sender and receiver
+    // Holds the tokens to be credited to the sender and issuer
     std::pair<int64_t, int64_t> tokens;
 
     // Passed by reference to determine, if max_tokens has been reached
@@ -765,16 +765,14 @@ int CMPTransaction::logicHelper_CrowdsaleParticipation()
 
     // Units going into the calculateFundraiser function must match the unit of
     // the fundraiser's property_type. By default this means satoshis in and
-    // satoshis out. In the condition that the fundraiser is divisible, but 
+    // satoshis out. In the condition that the fundraiser is divisible, but
     // indivisible tokens are accepted, it must account for .0 Div != 1 Indiv,
     // but actually 1.0 Div == 100000000 Indiv. The unit must be shifted or the
     // values will be incorrect, which is what is checked below.
-    if (!isPropertyDivisible(property)) {
-        nValue = nValue * 1e8;
-    }
- 
+    bool inflateAmount = isPropertyDivisible(property) ? false : true;
+
     // Calculate the amounts to credit for this fundraiser
-    calculateFundraiser(nValue, sp.early_bird, sp.deadline, blockTime,
+    calculateFundraiser(inflateAmount, nValue, sp.early_bird, sp.deadline, blockTime,
             sp.num_tokens, sp.percentage, getTotalTokens(pcrowdsale->getPropertyId()),
             tokens, close_crowdsale);
 

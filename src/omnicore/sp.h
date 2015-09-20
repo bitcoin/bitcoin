@@ -228,7 +228,7 @@ int64_t calculateFractional(uint16_t propType, uint8_t bonusPerc, int64_t fundra
         int64_t numProps, uint8_t issuerPerc, const std::map<uint256, std::vector<int64_t> >& txFundraiserData,
         const int64_t amountPremined);
 
-void calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
+void calculateFundraiser(bool inflateAmount, int64_t amtTransfer, uint8_t bonusPerc,
         int64_t fundraiserSecs, int64_t currentSecs, int64_t numProps, uint8_t issuerPerc, int64_t totalTokens,
         std::pair<int64_t, int64_t>& tokens, bool& close_crowdsale);
 
