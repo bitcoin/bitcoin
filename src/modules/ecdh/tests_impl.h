@@ -20,7 +20,7 @@ void test_ecdh_generator_basepoint(void) {
         unsigned char output_ecdh[32];
         unsigned char output_ser[32];
         unsigned char point_ser[33];
-        int point_ser_len = sizeof(point_ser);
+        size_t point_ser_len = sizeof(point_ser);
         secp256k1_scalar_t s;
 
         random_scalar_order(&s);
@@ -31,7 +31,7 @@ void test_ecdh_generator_basepoint(void) {
         CHECK(secp256k1_ecdh(ctx, output_ecdh, &point[0], s_b32) == 1);
         /* compute "explicitly" */
         CHECK(secp256k1_ec_pubkey_create(ctx, &point[1], s_b32) == 1);
-        CHECK(secp256k1_ec_pubkey_serialize(ctx, point_ser, &point_ser_len, &point[1], 1) == 1);
+        CHECK(secp256k1_ec_pubkey_serialize(ctx, point_ser, &point_ser_len, &point[1], SECP256K1_EC_COMPRESSED) == 1);
         CHECK(point_ser_len == sizeof(point_ser));
         secp256k1_sha256_initialize(&sha);
         secp256k1_sha256_write(&sha, point_ser, point_ser_len);

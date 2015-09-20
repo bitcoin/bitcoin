@@ -1378,7 +1378,7 @@ void test_point_times_order(const secp256k1_gej_t *point) {
     secp256k1_gej_t res1, res2;
     secp256k1_ge_t res3;
     unsigned char pub[65];
-    int psize = 65;
+    size_t psize = 65;
     random_scalar_order_test(&x);
     secp256k1_scalar_negate(&nx, &x);
     secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &x, &x); /* calc res1 = x * point + x * G; */
@@ -1787,7 +1787,7 @@ void run_ecdsa_sign_verify(void) {
 }
 
 /** Dummy nonce generation function that just uses a precomputed nonce, and fails if it is not accepted. Use only for testing. */
-static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
+static int precomputed_nonce_function(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
     (void)msg32;
     (void)key32;
     (void)algo16;
@@ -1795,7 +1795,7 @@ static int precomputed_nonce_function(unsigned char *nonce32, const unsigned cha
     return (counter == 0);
 }
 
-static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
+static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
    /* Dummy nonce generator that has a fatal error on the first counter value. */
    if (counter == 0) {
        return 0;
@@ -1803,7 +1803,7 @@ static int nonce_function_test_fail(unsigned char *nonce32, const unsigned char 
    return nonce_function_rfc6979(nonce32, msg32, key32, algo16, data, counter - 1);
 }
 
-static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, const void *data, unsigned int counter) {
+static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char *msg32, const unsigned char *key32, const unsigned char *algo16, void *data, unsigned int counter) {
    /* Dummy nonce generator that produces unacceptable nonces for the first several counter values. */
    if (counter < 3) {
        memset(nonce32, counter==0 ? 0 : 255, 32);
@@ -1845,12 +1845,12 @@ void test_ecdsa_end_to_end(void) {
     unsigned char privkey2[32];
     secp256k1_ecdsa_signature_t signature[5];
     unsigned char sig[74];
-    int siglen = 74;
+    size_t siglen = 74;
     unsigned char pubkeyc[65];
-    int pubkeyclen = 65;
+    size_t pubkeyclen = 65;
     secp256k1_pubkey_t pubkey;
     unsigned char seckey[300];
-    int seckeylen = 300;
+    size_t seckeylen = 300;
 
     /* Generate a random key and message. */
     {
@@ -1871,7 +1871,7 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
 
     /* Verify private key import and export. */
-    CHECK(secp256k1_ec_privkey_export(ctx, seckey, &seckeylen, privkey, secp256k1_rand32() % 2) == 1);
+    CHECK(secp256k1_ec_privkey_export(ctx, seckey, &seckeylen, privkey, (secp256k1_rand32() % 2) == 1) ? SECP256K1_EC_COMPRESSED : 0);
     CHECK(secp256k1_ec_privkey_import(ctx, privkey2, seckey, seckeylen) == 1);
     CHECK(memcmp(privkey, privkey2, 32) == 0);
 
@@ -1937,6 +1937,7 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 1);
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[0], message, &pubkey) == 1);
     /* Serialize/destroy/parse DER and verify again. */
+    siglen = 74;
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
     sig[secp256k1_rand32() % siglen] += 1 + (secp256k1_rand32() % 255);
     CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &signature[0], sig, siglen) == 0 ||
@@ -1949,7 +1950,7 @@ void test_random_pubkeys(void) {
     unsigned char in[65];
     /* Generate some randomly sized pubkeys. */
     uint32_t r = secp256k1_rand32();
-    int len = (r & 3) == 0 ? 65 : 33;
+    size_t len = (r & 3) == 0 ? 65 : 33;
     r>>=2;
     if ((r & 3) == 0) {
         len = (r & 252) >> 3;
@@ -1975,10 +1976,10 @@ void test_random_pubkeys(void) {
         unsigned char out[65];
         unsigned char firstb;
         int res;
-        int size = len;
+        size_t size = len;
         firstb = in[0];
         /* If the pubkey can be parsed, it should round-trip... */
-        CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, len == 33));
+        CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, (len == 33) ? SECP256K1_EC_COMPRESSED : 0));
         CHECK(size == len);
         CHECK(memcmp(&in[1], &out[1], len-1) == 0);
         /* ... except for the type of hybrid inputs. */
@@ -2046,7 +2047,7 @@ void test_ecdsa_edge_cases(void) {
     /*Signature where s would be zero.*/
     {
         unsigned char signature[72];
-        int siglen;
+        size_t siglen;
         const unsigned char nonce[32] = {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -2152,9 +2153,10 @@ void test_ecdsa_edge_cases(void) {
             0xba, 0xae, 0xdc, 0xe6, 0xaf, 0x48, 0xa0, 0x3b,
             0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41,
         };
-        int outlen = 300;
+        size_t outlen = 300;
         CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 0));
-        CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 1));
+        outlen = 300;
+        CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, SECP256K1_EC_COMPRESSED));
     }
 }
 
@@ -2165,11 +2167,11 @@ void run_ecdsa_edge_cases(void) {
 #ifdef ENABLE_OPENSSL_TESTS
 EC_KEY *get_openssl_key(const secp256k1_scalar_t *key) {
     unsigned char privkey[300];
-    int privkeylen;
+    size_t privkeylen;
     const unsigned char* pbegin = privkey;
     int compr = secp256k1_rand32() & 1;
     EC_KEY *ec_key = EC_KEY_new_by_curve_name(NID_secp256k1);
-    CHECK(secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, &privkeylen, key, compr));
+    CHECK(secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, &privkeylen, key, compr ? SECP256K1_EC_COMPRESSED : 0));
     CHECK(d2i_ECPrivateKey(&ec_key, &pbegin, privkeylen));
     CHECK(EC_KEY_check_key(ec_key));
     return ec_key;
@@ -2184,7 +2186,7 @@ void test_ecdsa_openssl(void) {
     secp256k1_scalar_t key, msg;
     EC_KEY *ec_key;
     unsigned int sigsize = 80;
-    int secp_sigsize = 80;
+    size_t secp_sigsize = 80;
     unsigned char message[32];
     unsigned char signature[80];
     secp256k1_rand256_test(message);

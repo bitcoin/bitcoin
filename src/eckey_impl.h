@@ -14,7 +14,7 @@
 #include "group.h"
 #include "ecmult_gen.h"
 
-static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, int size) {
+static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, size_t size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
         secp256k1_fe_t x;
         return secp256k1_fe_set_b32(&x, pub+1) && secp256k1_ge_set_xo_var(elem, &x, pub[0] == 0x03);
@@ -33,14 +33,14 @@ static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned cha
     }
 }
 
-static int secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, int *size, int compressed) {
+static int secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, size_t *size, unsigned int flags) {
     if (secp256k1_ge_is_infinity(elem)) {
         return 0;
     }
     secp256k1_fe_normalize_var(&elem->x);
     secp256k1_fe_normalize_var(&elem->y);
     secp256k1_fe_get_b32(&pub[1], &elem->x);
-    if (compressed) {
+    if (flags & SECP256K1_EC_COMPRESSED) {
         *size = 33;
         pub[0] = 0x02 | (secp256k1_fe_is_odd(&elem->y) ? 0x01 : 0x00);
     } else {
@@ -51,7 +51,7 @@ static int secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char 
     return 1;
 }
 
-static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned char *privkey, int privkeylen) {
+static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned char *privkey, size_t privkeylen) {
     unsigned char c[32] = {0};
     const unsigned char *end = privkey + privkeylen;
     int lenb = 0;
@@ -94,13 +94,13 @@ static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned
     return !overflow;
 }
 
-static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context_t *ctx, unsigned char *privkey, int *privkeylen, const secp256k1_scalar_t *key, int compressed) {
+static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context_t *ctx, unsigned char *privkey, size_t *privkeylen, const secp256k1_scalar_t *key, unsigned int flags) {
     secp256k1_gej_t rp;
     secp256k1_ge_t r;
-    int pubkeylen = 0;
+    size_t pubkeylen = 0;
     secp256k1_ecmult_gen(ctx, &rp, key);
     secp256k1_ge_set_gej(&r, &rp);
-    if (compressed) {
+    if (flags & SECP256K1_EC_COMPRESSED) {
         static const unsigned char begin[] = {
             0x30,0x81,0xD3,0x02,0x01,0x01,0x04,0x20
         };

@@ -17,8 +17,12 @@
 
 typedef struct {
     void (*fn)(const char *text, void* data);
-    void* data;
+    const void* data;
 } callback_t;
+
+static SECP256K1_INLINE void secp256k1_callback(const callback_t * const cb, const char * const text) {
+    cb->fn(text, (void*)cb->data);
+}
 
 #ifdef DETERMINISTIC
 #define TEST_FAILURE(msg) do { \
@@ -64,7 +68,7 @@ typedef struct {
 static SECP256K1_INLINE void *checked_malloc(const callback_t* cb, size_t size) {
     void *ret = malloc(size);
     if (ret == NULL) {
-        cb->fn("Out of memory", cb->data);
+        secp256k1_callback(cb, "Out of memory");
     }
     return ret;
 }

@@ -5,6 +5,8 @@
 extern "C" {
 # endif
 
+#include <stddef.h>
+
 /* These rules specify the order of arguments in API calls:
  *
  * 1. Context pointers go first, followed by output arguments, combined
@@ -92,7 +94,7 @@ typedef int (*secp256k1_nonce_function_t)(
     const unsigned char *msg32,
     const unsigned char *key32,
     const unsigned char *algo16,
-    const void *data,
+    void *data,
     unsigned int attempt
 );
 
@@ -135,13 +137,16 @@ typedef int (*secp256k1_nonce_function_t)(
 # define SECP256K1_CONTEXT_VERIFY (1 << 0)
 # define SECP256K1_CONTEXT_SIGN   (1 << 1)
 
+/** Flag to pass to secp256k1_ec_pubkey_serialize and secp256k1_ec_privkey_export. */
+# define SECP256K1_EC_COMPRESSED  (1 << 0)
+
 /** Create a secp256k1 context object.
  *
  *  Returns: a newly created context object.
  *  In:      flags: which parts of the context to initialize.
  */
 secp256k1_context_t* secp256k1_context_create(
-    int flags
+    unsigned int flags
 ) SECP256K1_WARN_UNUSED_RESULT;
 
 /** Copies a secp256k1 context object.
@@ -160,7 +165,7 @@ secp256k1_context_t* secp256k1_context_clone(
  */
 void secp256k1_context_destroy(
     secp256k1_context_t* ctx
-) SECP256K1_ARG_NONNULL(1);
+);
 
 /** Set a callback function to be called when an illegal argument is passed to
  *  an API call. It will only trigger for violations that are mentioned
@@ -179,14 +184,14 @@ void secp256k1_context_destroy(
  *  Args: ctx:  an existing context object (cannot be NULL)
  *  In:   fun:  a pointer to a function to call when an illegal argument is
  *              passed to the API, taking a message and an opaque pointer
- *              (cannot be NULL).
+ *              (NULL restores a default handler that calls abort).
  *        data: the opaque pointer to pass to fun above.
  */
 void secp256k1_context_set_illegal_callback(
     secp256k1_context_t* ctx,
     void (*fun)(const char* message, void* data),
-    void* data
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+    const void* data
+) SECP256K1_ARG_NONNULL(1);
 
 /** Set a callback function to be called when an internal consistency check
  *  fails. The default is crashing.
@@ -200,14 +205,15 @@ void secp256k1_context_set_illegal_callback(
  *
  *  Args: ctx:  an existing context object (cannot be NULL)
  *  In:   fun:  a pointer to a function to call when an interal error occurs,
- *              taking a message and an opaque pointer (cannot be NULL).
+ *              taking a message and an opaque pointer (NULL restores a default
+ *              handler that calls abort).
  *        data: the opaque pointer to pass to fun above.
  */
 void secp256k1_context_set_error_callback(
     secp256k1_context_t* ctx,
     void (*fun)(const char* message, void* data),
-    void* data
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2);
+    const void* data
+) SECP256K1_ARG_NONNULL(1);
 
 /** Parse a variable-length public key into the pubkey object.
  *
@@ -227,7 +233,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
     const secp256k1_context_t* ctx,
     secp256k1_pubkey_t* pubkey,
     const unsigned char *input,
-    int inputlen
+    size_t inputlen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize a pubkey object into a serialized byte sequence.
@@ -240,14 +246,15 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
  *                    size.
  *  In:   pubkey:     a pointer to a secp256k1_pubkey_t containing an initialized
  *                    public key.
- *        compressed: whether to serialize in compressed format.
+ *        flags:      SECP256K1_EC_COMPRESSED if serialization should be in
+ *                    compressed format.
  */
 int secp256k1_ec_pubkey_serialize(
     const secp256k1_context_t* ctx,
     unsigned char *output,
-    int *outputlen,
+    size_t *outputlen,
     const secp256k1_pubkey_t* pubkey,
-    int compressed
+    unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Parse a DER ECDSA signature.
@@ -264,7 +271,7 @@ int secp256k1_ecdsa_signature_parse_der(
     const secp256k1_context_t* ctx,
     secp256k1_ecdsa_signature_t* sig,
     const unsigned char *input,
-    int inputlen
+    size_t inputlen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Serialize an ECDSA signature in DER format.
@@ -281,7 +288,7 @@ int secp256k1_ecdsa_signature_parse_der(
 int secp256k1_ecdsa_signature_serialize_der(
     const secp256k1_context_t* ctx,
     unsigned char *output,
-    int *outputlen,
+    size_t *outputlen,
     const secp256k1_ecdsa_signature_t* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
@@ -393,7 +400,8 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
  *       privkeylen:  Pointer to an int where the length of the private key in
  *                    privkey will be stored.
  *  In:  seckey:      pointer to a 32-byte secret key to export.
- *       compressed:  whether the key should be exported in compressed format.
+ *       flags:       SECP256K1_EC_COMPRESSED if the key should be exported in
+ *                    compressed format.
  *
  *  This function is purely meant for compatibility with applications that
  *  require BER encoded keys. When working with secp256k1-specific code, the
@@ -405,9 +413,9 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_export(
     const secp256k1_context_t* ctx,
     unsigned char *privkey,
-    int *privkeylen,
+    size_t *privkeylen,
     const unsigned char *seckey,
-    int compressed
+    unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Import a private key in DER format.
@@ -428,7 +436,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_import(
     const secp256k1_context_t* ctx,
     unsigned char *seckey,
     const unsigned char *privkey,
-    int privkeylen
+    size_t privkeylen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Tweak a private key by adding tweak to it.
