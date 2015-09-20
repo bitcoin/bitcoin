@@ -62,6 +62,8 @@ private Q_SLOTS:
     void hideEvent(QHideEvent *event);
     /** Show custom context menu on Peers tab */
     void showMenu(const QPoint& point);
+    /** Show window if hidden, unminimize when minimized, rise when obscured */
+    void showNormalIfMinimized();
 
 public Q_SLOTS:
     void clear();
