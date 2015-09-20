@@ -81,9 +81,9 @@ struct pkt {
   uint8_t  mac[5 * sizeof(uint32_t)]; /* mac */
 };
 
-int nServersCount = 103;
+int nServersCount = 107;
 
-std::string NtpServers[103] = {
+std::string NtpServers[107] = {
     // Microsoft
     "time.windows.com",
 
@@ -123,6 +123,10 @@ std::string NtpServers[103] = {
     "3.ru.pool.ntp.org",
 
     // United States
+    "ntp-01.caltech.edu",
+    "ntp-02.caltech.edu",
+    "ntp-03.caltech.edu",
+    "ntp-04.caltech.edu",
     "nist1-pa.ustiming.org",
     "time-a.nist.gov ",
     "time-b.nist.gov ",
