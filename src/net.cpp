@@ -478,8 +478,7 @@ void CNode::Cleanup()
 
 void CNode::PushVersion()
 {
-    /// when NTP implemented, change to just nTime = GetAdjustedTime()
-    int64_t nTime = (fInbound ? GetAdjustedTime() : GetTime());
+    int64_t nTime = GetAdjustedTime();
     CAddress addrYou, addrMe;
 
     bool fHidden = false;
