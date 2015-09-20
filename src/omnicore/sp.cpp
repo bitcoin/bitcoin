@@ -589,6 +589,17 @@ bool mastercore::isCrowdsaleActive(uint32_t propertyId)
     return false;
 }
 
+int64_t mastercore::calculateFractional(const CMPSPInfo::Entry& sp, const CMPCrowd& crowdsale)
+{
+    return calculateFractional(sp.prop_type,
+            sp.early_bird,
+            sp.deadline,
+            sp.num_tokens,
+            sp.percentage,
+            crowdsale.getDatabase(),
+            crowdsale.getIssuerCreated());
+}
+
 // calculates and returns fundraiser bonus, issuer premine, and total tokens
 // propType : divisible/indiv
 // bonusPerc: bonus percentage
@@ -845,13 +856,7 @@ unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
             assert(_my_sps->getSP(crowdsale.getPropertyId(), sp));
 
             // find missing tokens
-            int64_t missedTokens = calculateFractional(sp.prop_type,
-                    sp.early_bird,
-                    sp.deadline,
-                    sp.num_tokens,
-                    sp.percentage,
-                    crowdsale.getDatabase(),
-                    crowdsale.getIssuerCreated());
+            int64_t missedTokens = calculateFractional(sp, crowdsale);
 
             // get txdata
             sp.historicalData = crowdsale.getDatabase();
