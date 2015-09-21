@@ -40,8 +40,12 @@ void bench_recover_setup(void* arg) {
     int i;
     bench_recover_t *data = (bench_recover_t*)arg;
 
-    for (i = 0; i < 32; i++) data->msg[i] = 1 + i;
-    for (i = 0; i < 64; i++) data->sig[i] = 65 + i;
+    for (i = 0; i < 32; i++) {
+        data->msg[i] = 1 + i;
+    }
+    for (i = 0; i < 64; i++) {
+        data->sig[i] = 65 + i;
+    }
 }
 
 int main(void) {

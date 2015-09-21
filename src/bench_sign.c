@@ -18,8 +18,12 @@ static void bench_sign_setup(void* arg) {
     int i;
     bench_sign_t *data = (bench_sign_t*)arg;
 
-    for (i = 0; i < 32; i++) data->msg[i] = i + 1;
-    for (i = 0; i < 32; i++) data->key[i] = i + 65;
+    for (i = 0; i < 32; i++) {
+        data->msg[i] = i + 1;
+    }
+    for (i = 0; i < 32; i++) {
+        data->key[i] = i + 65;
+    }
 }
 
 static void bench_sign(void* arg) {

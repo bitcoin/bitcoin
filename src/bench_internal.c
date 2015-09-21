@@ -307,7 +307,9 @@ int have_flag(int argc, char** argv, char *flag) {
         return 1;
     }
     while (argv != NULL && argv != argm) {
-        if (strcmp(*argv, flag) == 0) return 1;
+        if (strcmp(*argv, flag) == 0) {
+            return 1;
+        }
         argv++;
     }
     return 0;

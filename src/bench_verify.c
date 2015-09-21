@@ -48,8 +48,12 @@ int main(void) {
 
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
-    for (i = 0; i < 32; i++) data.msg[i] = 1 + i;
-    for (i = 0; i < 32; i++) data.key[i] = 33 + i;
+    for (i = 0; i < 32; i++) {
+        data.msg[i] = 1 + i;
+    }
+    for (i = 0; i < 32; i++) {
+        data.key[i] = 33 + i;
+    }
     data.siglen = 72;
     CHECK(secp256k1_ecdsa_sign(data.ctx, &sig, data.msg, data.key, NULL, NULL));
     CHECK(secp256k1_ecdsa_signature_serialize_der(data.ctx, data.sig, &data.siglen, &sig));
