@@ -30,10 +30,14 @@ static void benchmark_schnorr_init(void* arg) {
     int i, k;
     benchmark_schnorr_verify_t* data = (benchmark_schnorr_verify_t*)arg;
 
-    for (i = 0; i < 32; i++) data->msg[i] = 1 + i;
+    for (i = 0; i < 32; i++) {
+        data->msg[i] = 1 + i;
+    }
     for (k = 0; k < data->numsigs; k++) {
         secp256k1_pubkey_t pubkey;
-        for (i = 0; i < 32; i++) data->sigs[k].key[i] = 33 + i + k;
+        for (i = 0; i < 32; i++) {
+            data->sigs[k].key[i] = 33 + i + k;
+        }
         secp256k1_schnorr_sign(data->ctx, data->sigs[k].sig, data->msg, data->sigs[k].key, NULL, NULL);
         data->sigs[k].pubkeylen = 33;
         CHECK(secp256k1_ec_pubkey_create(data->ctx, &pubkey, data->sigs[k].key));

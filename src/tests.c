@@ -1591,8 +1591,9 @@ void test_constant_wnaf(const secp256k1_scalar_t *number, int w) {
     secp256k1_scalar_set_int(&shift, 1 << w);
     /* With USE_ENDOMORPHISM on we only consider 128-bit numbers */
 #ifdef USE_ENDOMORPHISM
-    for (i = 0; i < 16; ++i)
+    for (i = 0; i < 16; ++i) {
         secp256k1_scalar_shr_int(&num, 8);
+    }
     skew = secp256k1_wnaf_const(wnaf, num, w);
 #else
     secp256k1_wnaf_const(wnaf, num, w);
@@ -1733,10 +1734,12 @@ void test_scalar_split(void) {
     secp256k1_scalar_split_lambda(&s1, &slam, &full);
 
     /* check that both are <= 128 bits in size */
-    if (secp256k1_scalar_is_high(&s1))
+    if (secp256k1_scalar_is_high(&s1)) {
         secp256k1_scalar_negate(&s1, &s1);
-    if (secp256k1_scalar_is_high(&slam))
+    }
+    if (secp256k1_scalar_is_high(&slam)) {
         secp256k1_scalar_negate(&slam, &slam);
+    }
 
     secp256k1_scalar_get_b32(tmp, &s1);
     CHECK(memcmp(zero, tmp, 16) == 0);

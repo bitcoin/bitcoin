@@ -112,18 +112,17 @@ static void secp256k1_ge_set_table_gej_var(size_t len, secp256k1_ge_t *r, const 
     size_t i = len - 1;
     secp256k1_fe_t zi;
 
-    if (len < 1)
-        return;
-
-    /* Compute the inverse of the last z coordinate, and use it to compute the last affine output. */
-    secp256k1_fe_inv(&zi, &a[i].z);
-    secp256k1_ge_set_gej_zinv(&r[i], &a[i], &zi);
-
-    /* Work out way backwards, using the z-ratios to scale the x/y values. */
-    while (i > 0) {
-        secp256k1_fe_mul(&zi, &zi, &zr[i]);
-        i--;
+    if (len > 0) {
+        /* Compute the inverse of the last z coordinate, and use it to compute the last affine output. */
+        secp256k1_fe_inv(&zi, &a[i].z);
         secp256k1_ge_set_gej_zinv(&r[i], &a[i], &zi);
+
+        /* Work out way backwards, using the z-ratios to scale the x/y values. */
+        while (i > 0) {
+            secp256k1_fe_mul(&zi, &zi, &zr[i]);
+            i--;
+            secp256k1_ge_set_gej_zinv(&r[i], &a[i], &zi);
+        }
     }
 }
 
@@ -131,23 +130,22 @@ static void secp256k1_ge_globalz_set_table_gej(size_t len, secp256k1_ge_t *r, se
     size_t i = len - 1;
     secp256k1_fe_t zs;
 
-    if (len < 1)
-        return;
+    if (len > 0) {
+        /* The z of the final point gives us the "global Z" for the table. */
+        r[i].x = a[i].x;
+        r[i].y = a[i].y;
+        *globalz = a[i].z;
+        r[i].infinity = 0;
+        zs = zr[i];
 
-    /* The z of the final point gives us the "global Z" for the table. */
-    r[i].x = a[i].x;
-    r[i].y = a[i].y;
-    *globalz = a[i].z;
-    r[i].infinity = 0;
-    zs = zr[i];
-
-    /* Work our way backwards, using the z-ratios to scale the x/y values. */
-    while (i > 0) {
-        if (i != len - 1) {
-            secp256k1_fe_mul(&zs, &zs, &zr[i]);
+        /* Work our way backwards, using the z-ratios to scale the x/y values. */
+        while (i > 0) {
+            if (i != len - 1) {
+                secp256k1_fe_mul(&zs, &zs, &zr[i]);
+            }
+            i--;
+            secp256k1_ge_set_gej_zinv(&r[i], &a[i], &zs);
         }
-        i--;
-        secp256k1_ge_set_gej_zinv(&r[i], &a[i], &zs);
     }
 }
 
