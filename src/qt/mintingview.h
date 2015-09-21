@@ -10,6 +10,7 @@ class WalletModel;
 
 QT_BEGIN_NAMESPACE
 class QTableView;
+class QMenu;
 QT_END_NAMESPACE
 
 class MintingView : public QWidget
@@ -30,10 +31,14 @@ public:
 private:
     WalletModel *model;
     QTableView *mintingView;
-
     QComboBox *mintingCombo;
-
     MintingFilterProxy *mintingProxyModel;
+    QMenu *contextMenu;
+
+private slots:
+    void contextualMenu(const QPoint &);
+    void copyAddress();
+    void copyTransactionId();
 
 signals:
 
