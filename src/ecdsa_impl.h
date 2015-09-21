@@ -28,7 +28,7 @@
  *  sage: '%x' % (EllipticCurve ([F (a), F (b)]).order())
  *   'fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141'
  */
-static const secp256k1_fe_t secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST(
+static const secp256k1_fe secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CONST(
     0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFFUL, 0xFFFFFFFEUL,
     0xBAAEDCE6UL, 0xAF48A03BUL, 0xBFD25E8CUL, 0xD0364141UL
 );
@@ -42,11 +42,11 @@ static const secp256k1_fe_t secp256k1_ecdsa_const_order_as_fe = SECP256K1_FE_CON
  *  sage: '%x' % (p - EllipticCurve ([F (a), F (b)]).order())
  *   '14551231950b75fc4402da1722fc9baee'
  */
-static const secp256k1_fe_t secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CONST(
+static const secp256k1_fe secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CONST(
     0, 0, 0, 1, 0x45512319UL, 0x50B75FC4UL, 0x402DA172UL, 0x2FC9BAEEUL
 );
 
-static int secp256k1_ecdsa_sig_parse(secp256k1_scalar_t *rr, secp256k1_scalar_t *rs, const unsigned char *sig, size_t size) {
+static int secp256k1_ecdsa_sig_parse(secp256k1_scalar *rr, secp256k1_scalar *rs, const unsigned char *sig, size_t size) {
     unsigned char ra[32] = {0}, sa[32] = {0};
     const unsigned char *rp;
     const unsigned char *sp;
@@ -109,7 +109,7 @@ static int secp256k1_ecdsa_sig_parse(secp256k1_scalar_t *rr, secp256k1_scalar_t 
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const secp256k1_scalar_t* ar, const secp256k1_scalar_t* as) {
+static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const secp256k1_scalar* ar, const secp256k1_scalar* as) {
     unsigned char r[33] = {0}, s[33] = {0};
     unsigned char *rp = r, *sp = s;
     size_t lenR = 33, lenS = 33;
@@ -133,12 +133,12 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
     return 1;
 }
 
-static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context_t *ctx, const secp256k1_scalar_t *sigr, const secp256k1_scalar_t *sigs, const secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message) {
+static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const secp256k1_scalar *sigr, const secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const secp256k1_scalar *message) {
     unsigned char c[32];
-    secp256k1_scalar_t sn, u1, u2;
-    secp256k1_fe_t xr;
-    secp256k1_gej_t pubkeyj;
-    secp256k1_gej_t pr;
+    secp256k1_scalar sn, u1, u2;
+    secp256k1_fe xr;
+    secp256k1_gej pubkeyj;
+    secp256k1_gej pr;
 
     if (secp256k1_scalar_is_zero(sigr) || secp256k1_scalar_is_zero(sigs)) {
         return 0;
@@ -187,13 +187,13 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context_t *ctx, con
     return 0;
 }
 
-static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context_t *ctx, const secp256k1_scalar_t *sigr, const secp256k1_scalar_t* sigs, secp256k1_ge_t *pubkey, const secp256k1_scalar_t *message, int recid) {
+static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context *ctx, const secp256k1_scalar *sigr, const secp256k1_scalar* sigs, secp256k1_ge *pubkey, const secp256k1_scalar *message, int recid) {
     unsigned char brx[32];
-    secp256k1_fe_t fx;
-    secp256k1_ge_t x;
-    secp256k1_gej_t xj;
-    secp256k1_scalar_t rn, u1, u2;
-    secp256k1_gej_t qj;
+    secp256k1_fe fx;
+    secp256k1_ge x;
+    secp256k1_gej xj;
+    secp256k1_scalar rn, u1, u2;
+    secp256k1_gej qj;
 
     if (secp256k1_scalar_is_zero(sigr) || secp256k1_scalar_is_zero(sigs)) {
         return 0;
@@ -220,11 +220,11 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context_t *ctx, co
     return !secp256k1_gej_is_infinity(&qj);
 }
 
-static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context_t *ctx, secp256k1_scalar_t *sigr, secp256k1_scalar_t *sigs, const secp256k1_scalar_t *seckey, const secp256k1_scalar_t *message, const secp256k1_scalar_t *nonce, int *recid) {
+static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid) {
     unsigned char b[32];
-    secp256k1_gej_t rp;
-    secp256k1_ge_t r;
-    secp256k1_scalar_t n;
+    secp256k1_gej rp;
+    secp256k1_ge r;
+    secp256k1_scalar n;
     int overflow = 0;
 
     secp256k1_ecmult_gen(ctx, &rp, nonce);

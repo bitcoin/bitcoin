@@ -25,11 +25,11 @@ extern "C" {
  *                   function (can be NULL)
  */
 int secp256k1_schnorr_sign(
-  const secp256k1_context_t* ctx,
+  const secp256k1_context* ctx,
   unsigned char *sig64,
   const unsigned char *msg32,
   const unsigned char *seckey,
-  secp256k1_nonce_function_t noncefp,
+  secp256k1_nonce_function noncefp,
   const void *ndata
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
@@ -42,10 +42,10 @@ int secp256k1_schnorr_sign(
  *           pubkey:    the public key to verify with (cannot be NULL)
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_schnorr_verify(
-  const secp256k1_context_t* ctx,
+  const secp256k1_context* ctx,
   const unsigned char *sig64,
   const unsigned char *msg32,
-  const secp256k1_pubkey_t *pubkey
+  const secp256k1_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Recover an EC public key from a Schnorr signature created using
@@ -62,8 +62,8 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_schnorr_verify(
  *                       be NULL)
  */
 int secp256k1_schnorr_recover(
-  const secp256k1_context_t* ctx,
-  secp256k1_pubkey_t *pubkey,
+  const secp256k1_context* ctx,
+  secp256k1_pubkey *pubkey,
   const unsigned char *sig64,
   const unsigned char *msg32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
@@ -87,12 +87,12 @@ int secp256k1_schnorr_recover(
  *  Do not use the output as a private/public key pair for signing/validation.
  */
 int secp256k1_schnorr_generate_nonce_pair(
-  const secp256k1_context_t* ctx,
-  secp256k1_pubkey_t *pubnonce,
+  const secp256k1_context* ctx,
+  secp256k1_pubkey *pubnonce,
   unsigned char *privnonce32,
   const unsigned char *msg32,
   const unsigned char *sec32,
-  secp256k1_nonce_function_t noncefp,
+  secp256k1_nonce_function noncefp,
   const void* noncedata
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(6) SECP256K1_ARG_NONNULL(7);
 
@@ -139,11 +139,11 @@ int secp256k1_schnorr_generate_nonce_pair(
  *  by calling the function again (they are commutative and associative).
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_schnorr_partial_sign(
-  const secp256k1_context_t* ctx,
+  const secp256k1_context* ctx,
   unsigned char *sig64,
   const unsigned char *msg32,
   const unsigned char *sec32,
-  const secp256k1_pubkey_t *pubnonce_others,
+  const secp256k1_pubkey *pubnonce_others,
   const unsigned char *secnonce32
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5) SECP256K1_ARG_NONNULL(6);
 
@@ -160,7 +160,7 @@ SECP256K1_WARN_UNUSED_RESULT int secp256k1_schnorr_partial_sign(
  *         n:        the number of signatures to combine (at least 1)
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_schnorr_partial_combine(
-  const secp256k1_context_t* ctx,
+  const secp256k1_context* ctx,
   unsigned char *sig64,
   const unsigned char * const * sig64sin,
   int n

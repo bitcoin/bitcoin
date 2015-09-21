@@ -12,8 +12,8 @@
 #include "bench.h"
 
 typedef struct {
-    secp256k1_context_t *ctx;
-    secp256k1_pubkey_t point;
+    secp256k1_context *ctx;
+    secp256k1_pubkey point;
     unsigned char scalar[32];
 } bench_ecdh_t;
 

@@ -9,12 +9,12 @@
 
 #include "ecmult_const_impl.h"
 
-int secp256k1_ecdh(const secp256k1_context_t* ctx, unsigned char *result, const secp256k1_pubkey_t *point, const unsigned char *scalar) {
+int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *result, const secp256k1_pubkey *point, const unsigned char *scalar) {
     int ret = 0;
     int overflow = 0;
-    secp256k1_gej_t res;
-    secp256k1_ge_t pt;
-    secp256k1_scalar_t s;
+    secp256k1_gej res;
+    secp256k1_ge pt;
+    secp256k1_scalar s;
     ARG_CHECK(result != NULL);
     ARG_CHECK(point != NULL);
     ARG_CHECK(scalar != NULL);

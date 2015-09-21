@@ -24,7 +24,7 @@
     int m; \
     int abs_n = (n) * (((n) > 0) * 2 - 1); \
     int idx_n = abs_n / 2; \
-    secp256k1_fe_t neg_y; \
+    secp256k1_fe neg_y; \
     VERIFY_CHECK(((n) & 1) == 1); \
     VERIFY_CHECK((n) >= -((1 << ((w)-1)) - 1)); \
     VERIFY_CHECK((n) <=  ((1 << ((w)-1)) - 1)); \
@@ -54,7 +54,7 @@
  *
  *  Numbers reference steps of `Algorithm SPA-resistant Width-w NAF with Odd Scalar` on pp. 335
  */
-static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar_t s, int w) {
+static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar s, int w) {
     int global_sign = 1;
     int skew = 0;
     int word = 0;
@@ -74,7 +74,7 @@ static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar_t s, int w) {
     /* We add 1 to even numbers, 2 to odd ones, noting that negation flips parity */
     int bit = flip ^ (s.d[0] & 1);
     /* We check for negative one, since adding 2 to it will cause an overflow */
-    secp256k1_scalar_t neg_s;
+    secp256k1_scalar neg_s;
     int not_neg_one;
     secp256k1_scalar_negate(&neg_s, &s);
     not_neg_one = !secp256k1_scalar_is_one(&neg_s);
@@ -120,24 +120,24 @@ static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar_t s, int w) {
 }
 
 
-static void secp256k1_ecmult_const(secp256k1_gej_t *r, const secp256k1_ge_t *a, const secp256k1_scalar_t *scalar) {
-    secp256k1_ge_t pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
-    secp256k1_ge_t tmpa;
-    secp256k1_fe_t Z;
+static void secp256k1_ecmult_const(secp256k1_gej *r, const secp256k1_ge *a, const secp256k1_scalar *scalar) {
+    secp256k1_ge pre_a[ECMULT_TABLE_SIZE(WINDOW_A)];
+    secp256k1_ge tmpa;
+    secp256k1_fe Z;
 
 #ifdef USE_ENDOMORPHISM
-    secp256k1_ge_t pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
+    secp256k1_ge pre_a_lam[ECMULT_TABLE_SIZE(WINDOW_A)];
     int wnaf_1[1 + WNAF_SIZE(WINDOW_A - 1)];
     int wnaf_lam[1 + WNAF_SIZE(WINDOW_A - 1)];
     int skew_1;
     int skew_lam;
-    secp256k1_scalar_t q_1, q_lam;
+    secp256k1_scalar q_1, q_lam;
 #else
     int wnaf[1 + WNAF_SIZE(WINDOW_A - 1)];
 #endif
 
     int i;
-    secp256k1_scalar_t sc = *scalar;
+    secp256k1_scalar sc = *scalar;
 
     /* build wnaf representation for q. */
 #ifdef USE_ENDOMORPHISM
@@ -223,11 +223,11 @@ static void secp256k1_ecmult_const(secp256k1_gej_t *r, const secp256k1_ge_t *a, 
 #ifdef USE_ENDOMORPHISM
     {
         /* Correct for wNAF skew */
-        secp256k1_ge_t correction = *a;
-        secp256k1_ge_storage_t correction_1_stor;
-        secp256k1_ge_storage_t correction_lam_stor;
-        secp256k1_ge_storage_t a2_stor;
-        secp256k1_gej_t tmpj;
+        secp256k1_ge correction = *a;
+        secp256k1_ge_storage correction_1_stor;
+        secp256k1_ge_storage correction_lam_stor;
+        secp256k1_ge_storage a2_stor;
+        secp256k1_gej tmpj;
         secp256k1_gej_set_ge(&tmpj, &correction);
         secp256k1_gej_double_var(&tmpj, &tmpj, NULL);
         secp256k1_ge_set_gej(&correction, &tmpj);

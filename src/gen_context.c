@@ -19,13 +19,13 @@ static void default_error_callback_fn(const char* str, void* data) {
     abort();
 }
 
-static const callback_t default_error_callback = {
+static const secp256k1_callback default_error_callback = {
     default_error_callback_fn,
     NULL
 };
 
 int main(int argc, char **argv) {
-    secp256k1_ecmult_gen_context_t ctx;
+    secp256k1_ecmult_gen_context ctx;
     int inner;
     int outer;
     FILE* fp;
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
     fprintf(fp, "#define _SECP256K1_ECMULT_STATIC_CONTEXT_\n");
     fprintf(fp, "#include \"group.h\"\n");
     fprintf(fp, "#define SC SECP256K1_GE_STORAGE_CONST\n");
-    fprintf(fp, "static const secp256k1_ge_storage_t secp256k1_ecmult_static_context[64][16] = {\n");
+    fprintf(fp, "static const secp256k1_ge_storage secp256k1_ecmult_static_context[64][16] = {\n");
 
     secp256k1_ecmult_gen_context_init(&ctx);
     secp256k1_ecmult_gen_context_build(&ctx, &default_error_callback);

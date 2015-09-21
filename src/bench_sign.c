@@ -9,7 +9,7 @@
 #include "bench.h"
 
 typedef struct {
-    secp256k1_context_t* ctx;
+    secp256k1_context* ctx;
     unsigned char msg[32];
     unsigned char key[32];
 } bench_sign_t;
@@ -34,7 +34,7 @@ static void bench_sign(void* arg) {
     for (i = 0; i < 20000; i++) {
         size_t siglen = 74;
         int j;
-        secp256k1_ecdsa_signature_t signature;
+        secp256k1_ecdsa_signature signature;
         CHECK(secp256k1_ecdsa_sign(data->ctx, &signature, data->msg, data->key, NULL, NULL));
         CHECK(secp256k1_ecdsa_signature_serialize_der(data->ctx, sig, &siglen, &signature));
         for (j = 0; j < 32; j++) {
