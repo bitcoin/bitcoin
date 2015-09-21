@@ -22,6 +22,8 @@
 
 using namespace std;
 
+static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
+
 std::string HelpMessageCli()
 {
     string strUsage;
@@ -37,6 +39,7 @@ std::string HelpMessageCli()
     strUsage += HelpMessageOpt("-rpcwait", _("Wait for RPC server to start"));
     strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-rpcpassword=<pw>", _("Password for JSON-RPC connections"));
+    strUsage += HelpMessageOpt("-rpcclienttimeout=<n>", strprintf(_("Timeout during HTTP requests (default: %d)"), DEFAULT_HTTP_CLIENT_TIMEOUT));
 
     return strUsage;
 }
@@ -150,7 +153,7 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     struct evhttp_connection *evcon = evhttp_connection_base_new(base, NULL, host.c_str(), port); // TODO RAII
     if (evcon == NULL)
         throw runtime_error("create connection failed");
-    evhttp_connection_set_timeout(evcon, GetArg("-rpctimeout", 30));
+    evhttp_connection_set_timeout(evcon, GetArg("-rpcclienttimeout", DEFAULT_HTTP_CLIENT_TIMEOUT));
 
     HTTPReply response;
     struct evhttp_request *req = evhttp_request_new(http_request_done, (void*)&response); // TODO RAII
