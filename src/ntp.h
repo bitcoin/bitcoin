@@ -4,5 +4,10 @@ int64_t NtpGetTime(CNetAddr& ip);
 // Get time from provided server.
 int64_t NtpGetTime(std::string &strHostName);
 
+extern std::string strTrustedUpstream;
+
 // NTP time samples thread.
 void ThreadNtpSamples(void* parg);
+
+// NTP offset
+int64_t GetNtpOffset();

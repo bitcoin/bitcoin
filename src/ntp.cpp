@@ -1,4 +1,3 @@
-
 #ifdef WIN32
 #include <winsock2.h>
 #else
@@ -13,8 +12,8 @@
 #endif
 
 #include "netbase.h"
-#include "util.h"
 #include "net.h"
+#include "util.h"
 
 extern int GetRandInt(int nMax);
 
@@ -365,20 +364,14 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
     }
 
     recvfrom(sockfd, (char *) msg, len, 0, NULL, NULL);
-
-    ntohl_fp(&msg->rec, &prt->rec);
     ntohl_fp(&msg->xmt, &prt->xmt);
-
-    time_t seconds_receive;
     time_t seconds_transmit;
-
-    Ntp2Unix(prt->rec.Ul_i.Xl_ui, seconds_receive);
     Ntp2Unix(prt->xmt.Ul_i.Xl_ui, seconds_transmit);
 
     delete msg;
     delete prt;
 
-    return (seconds_receive + seconds_transmit) / 2;
+    return seconds_transmit;
 }
 
 int64_t NtpGetTime(CNetAddr& ip) {
@@ -415,27 +408,79 @@ int64_t NtpGetTime(std::string &strHostName)
     return nTime;
 }
 
-void ThreadNtpSamples(void* parg)
-{
+// NTP server, which we unconditionally trust. This may be your own installation of ntpd somewhere, for example. 
+// "localhost" means "trust no one"
+std::string strTrustedUpstream = "localhost";
+
+// Current offset
+int64_t nNtpOffset = INT64_MAX;
+
+int64_t GetNtpOffset() {
+    return nNtpOffset;
+}
+
+void ThreadNtpSamples(void* parg) {
+
+    // Maximum offset is 2 hours.
+    const int64_t nMaxOffset = 7200;
+
     printf("ThreadNtpSamples started\n");
     vnThreadsRunning[THREAD_NTP]++;
 
     // Make this thread recognisable as time synchronization thread
     RenameThread("novacoin-ntp-samples");
 
-    while (!fShutdown) {
-        CNetAddr ip;
-        int64_t nTime = NtpGetTime(ip);
+    CMedianFilter<int64_t> vTimeOffsets(200,0);
 
-        if (nTime > 0 && nTime != 2085978496) { // Skip the deliberately wrong timestamps
-            AddTimeData(ip, nTime);
+    while (!fShutdown) {
+        if (strTrustedUpstream != "localhost") {
+            // Trying to get new offset sample from trusted NTP server.
+            int64_t nClockOffset = NtpGetTime(strTrustedUpstream) - GetTime();
+
+            if (abs64(nClockOffset) < nMaxOffset) {
+                // Everything seems right, remember new trusted offset.
+                nNtpOffset = nClockOffset;
+            }
+            else {
+                // Something went wrong. Disable trusted offset sampling and wait 600 seconds.
+                nNtpOffset = INT64_MAX;
+                strTrustedUpstream = "localhost";
+
+                for (int i = 0; i < 600 && !fShutdown; i++) // Sleep for 5 minutes
+                    Sleep(1000);
+
+                continue;
+            }
         }
         else {
-            Sleep(600000); // In case of failure wait 600 seconds and then try again
-            continue;
+            // Now, trying to get 2-4 samples from random NTP servers.
+            int nSamplesCount = 2 + GetRandInt(2);
+
+            for (int i = 0; i < nSamplesCount; i++) {
+                CNetAddr ip;
+                int64_t nClockOffset = NtpGetTime(ip) - GetTime();
+
+                if (abs64(nClockOffset) < nMaxOffset) { // Skip the deliberately wrong timestamps
+                    vTimeOffsets.input(nClockOffset);
+                }
+            }
+
+            if (vTimeOffsets.size() > 2) {
+                nNtpOffset = vTimeOffsets.median();
+            }
+            else {
+                // Not enough offsets yet, try again 300 seconds later.
+                nNtpOffset = INT64_MAX;
+                for (int i = 0; i < 300 && !fShutdown; i++) 
+                    Sleep(1000);
+                continue;
+            }
         }
 
-        Sleep(43200000); // Sleep for 12 hours
+        printf("nNtpOffset = %+" PRId64 "  (%+" PRId64 " minutes)\n", nNtpOffset, nNtpOffset/60);
+
+        for (int i = 0; i < 43200 && !fShutdown; i++) // Sleep for 12 hours
+            Sleep(1000);
     }
 
     vnThreadsRunning[THREAD_NTP]--;

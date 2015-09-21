@@ -1298,25 +1298,32 @@ void ShrinkDebugFile()
 //  - Median of other nodes clocks
 //  - The user (asking the user to fix the system clock if the first two disagree)
 //
-static int64_t nMockTime = 0;  // For unit testing
 
+// System clock
 int64_t GetTime()
 {
-    if (nMockTime) return nMockTime;
-
     return time(NULL);
 }
 
-void SetMockTime(int64_t nMockTimeIn)
-{
-    nMockTime = nMockTimeIn;
-}
+// Trusted NTP offset or median of NTP samples.
+extern int64_t nNtpOffset;
 
-static int64_t nTimeOffset = 0;
+// Median of time samples given by other nodes.
+static int64_t nNodesOffset = INT64_MAX;
 
+// Select time offset:
+//
+// * If NTP and system clock are in agreement within 40 minutes, then use NTP.
+// * If not, then choose between median peer time and system clock using the same condition.
 int64_t GetTimeOffset()
 {
-    return nTimeOffset;
+    if (abs64(nNtpOffset) < 40 * 60)
+        return nNtpOffset;
+
+    if (abs64(nNodesOffset) < 40 * 60)
+        return nNodesOffset;
+
+    return 0;
 }
 
 int64_t GetAdjustedTime()
@@ -1343,17 +1350,18 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime)
         // Only let other nodes change our time by so much
         if (abs64(nMedian) < 70 * 60)
         {
-            nTimeOffset = nMedian;
+            nNodesOffset = nMedian;
         }
         else
         {
-            nTimeOffset = 0;
+            nNodesOffset = INT64_MAX;
 
             static bool fDone;
             if (!fDone)
             {
-                // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 bool fMatch = false;
+
+                // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 BOOST_FOREACH(int64_t nOffset, vSorted)
                     if (nOffset != 0 && abs64(nOffset) < 5 * 60)
                         fMatch = true;
@@ -1373,16 +1381,10 @@ void AddTimeData(const CNetAddr& ip, int64_t nTime)
                 printf("%+" PRId64 "  ", n);
             printf("|  ");
         }
-        printf("nTimeOffset = %+" PRId64 "  (%+" PRId64 " minutes)\n", nTimeOffset, nTimeOffset/60);
+        if (nNodesOffset != INT64_MAX)
+            printf("nNodesOffset = %+" PRId64 "  (%+" PRId64 " minutes)\n", nNodesOffset, nNodesOffset/60);
     }
 }
-
-
-
-
-
-
-
 
 string FormatVersion(int nVersion)
 {

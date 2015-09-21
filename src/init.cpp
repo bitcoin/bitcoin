@@ -998,31 +998,12 @@ bool AppInit2()
 
     // ********************************************************* Step 12: NTP synchronization
 
-    // First, do a simple check whether there is a local ntp server.
-    string strLocalHost = "127.0.0.1";
-    int64_t nTime = NtpGetTime(strLocalHost);
+    // Trusted NTP server, it's localhost by default.
+    strTrustedUpstream = GetArg("-ntp", "localhost");
 
-    if (nTime < 0 || nTime != GetTime()) {
-        // If not, then request current timestamp from three random NTP servers.
-        uiInterface.InitMessage(_("Synchronizing time through NTP..."));
-        printf("Synchronizing time through NTP...\n");
+    // Start periodical NTP sampling thread
+    NewThread(ThreadNtpSamples, NULL);
 
-        for(int i = 0; i < 2; i++) {
-            CNetAddr ip;
-            int64_t nTime = NtpGetTime(ip);
-
-            if (nTime > 0 && nTime != 2085978496) { // Skip the deliberately wrong timestamps
-                AddTimeData(ip, nTime);
-                printf("AddTimeData(%s, %" PRId64 ")\n", ip.ToString().c_str(), nTime);
-            }
-        }
-
-        // When done, start a periodical sampling thread
-        NewThread(ThreadNtpSamples, NULL);
-
-        uiInterface.InitMessage(_("Done"));
-        printf("Done\n");
-    }
     // ********************************************************* Step 12: finished
 
     uiInterface.InitMessage(_("Done loading"));
