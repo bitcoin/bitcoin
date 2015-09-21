@@ -80,9 +80,9 @@ struct pkt {
   uint8_t  mac[5 * sizeof(uint32_t)]; /* mac */
 };
 
-int nServersCount = 118;
+const int nServersCount = 147;
 
-std::string NtpServers[118] = {
+std::string NtpServers[147] = {
     // Microsoft
     "time.windows.com",
 
@@ -137,6 +137,15 @@ std::string NtpServers[118] = {
     "3.ru.pool.ntp.org",
 
     // United States
+    "tock.cs.unlv.edu",
+    "timex.cs.columbia.edu",
+    "tick.cs.unlv.edu",
+    "sundial.columbia.edu",
+    "ntp-1.ece.cmu.edu",
+    "ntp-2.ece.cmu.edu",
+    "ntp1.cs.wisc.edu",
+    "ntp2.cs.wisc.edu",
+    "ntp3.cs.wisc.edu",
     "ntp-01.caltech.edu",
     "ntp-02.caltech.edu",
     "ntp-03.caltech.edu",
@@ -208,6 +217,7 @@ std::string NtpServers[118] = {
     // United Kingdom
     "ntp2d.mcc.ac.uk",
     "ntp2c.mcc.ac.uk",
+    "ntp2b.mcc.ac.uk",
     "ntp.exnet.com",
     "ntp.cis.strath.ac.uk",
     "ntppub.le.ac.uk",
@@ -216,12 +226,39 @@ std::string NtpServers[118] = {
     "2.uk.pool.ntp.org",
     "3.uk.pool.ntp.org",
 
+    // Canada
+    "chime.utoronto.ca",
+    "tick.utoronto.ca",
+    "time.nrc.ca",
+    "timelord.uregina.ca",
+    "tock.utoronto.ca",
+    "www1.cmc.ec.gc.ca",
+    "www2.cmc.ec.gc.ca",
+    "0.ca.pool.ntp.org",
+    "1.ca.pool.ntp.org",
+    "2.ca.pool.ntp.org",
+    "3.ca.pool.ntp.org",
+
     // Japan
     "ntp.nict.jp",
     "0.jp.pool.ntp.org",
     "1.jp.pool.ntp.org",
     "2.jp.pool.ntp.org",
     "3.jp.pool.ntp.org",
+
+    // Australia
+    "ntp.cs.mu.oz.au",
+    "augean.eleceng.adelaide.edu.au",
+    "0.au.pool.ntp.org",
+    "1.au.pool.ntp.org",
+    "2.au.pool.ntp.org",
+    "3.au.pool.ntp.org",
+
+    // Slovenia
+    "time.ijs.si",
+
+    // ???
+    "clepsydra.dec.com",
 
     // ... To be continued
 };
