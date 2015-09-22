@@ -81,7 +81,7 @@ struct pkt {
 
 const int nServersCount = 147;
 
-std::string NtpServers[147] = {
+const std::string NtpServers[147] = {
     // Microsoft
     "time.windows.com",
 
@@ -262,7 +262,7 @@ std::string NtpServers[147] = {
     // ... To be continued
 };
 
-bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
+bool InitWithHost(const std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
     sockfd = -1;
 
     std::vector<CNetAddr> vIP;
@@ -391,7 +391,7 @@ int64_t NtpGetTime(CNetAddr& ip) {
     return nTime;
 }
 
-int64_t NtpGetTime(std::string &strHostName)
+int64_t NtpGetTime(const std::string &strHostName)
 {
     struct sockaddr cliaddr;
 
@@ -426,7 +426,7 @@ void ThreadNtpSamples(void* parg) {
 
     printf("Trying to find NTP server at localhost...\n");
 
-    std::string strLocalHost = "127.0.0.1";
+    const std::string strLocalHost = "127.0.0.1";
     if (NtpGetTime(strLocalHost) == GetTime()) {
         printf("There is NTP server active at localhost,  we don't need NTP thread.\n");
 
@@ -443,7 +443,7 @@ void ThreadNtpSamples(void* parg) {
     CMedianFilter<int64_t> vTimeOffsets(200,0);
 
     while (!fShutdown) {
-        if (strTrustedUpstream != "localhost") {
+        if (strTrustedUpstream != strLocalHost) {
             // Trying to get new offset sample from trusted NTP server.
             int64_t nClockOffset = NtpGetTime(strTrustedUpstream) - GetTime();
 
@@ -454,7 +454,7 @@ void ThreadNtpSamples(void* parg) {
             else {
                 // Something went wrong, disable trusted offset sampling.
                 nNtpOffset = INT64_MAX;
-                strTrustedUpstream = "localhost";
+                strTrustedUpstream = strLocalHost;
 
                 int nSleepMinutes = 1 + GetRandInt(9); // Sleep for 1-10 minutes.
                 for (int i = 0; i < nSleepMinutes * 60 && !fShutdown; i++)
