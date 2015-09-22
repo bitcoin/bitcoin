@@ -2234,10 +2234,14 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second));
 
+                // BIP69 https://github.com/kristovatlas/bips/blob/master/bip-0069.mediawiki
+                sort(txNew.vin.begin(), txNew.vin.end());
+                sort(txNew.vout.begin(), txNew.vout.end());
+
                 // Sign
                 int nIn = 0;
-                BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, setCoins)
-                    if (!SignSignature(*this, *coin.first, txNew, nIn++))
+                BOOST_FOREACH(const CTxIn& vin, txNew.vin)
+                    if (!SignSignature(*this, mapWallet[vin.prevout.hash], txNew, nIn++))
                     {
                         strFailReason = _("Signing transaction failed");
                         return false;
@@ -2504,9 +2508,6 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
             UnlockCoin(v.prevout);
         return "Error: can't make current denominated outputs";
     }
-
-    // randomize the output order
-    std::random_shuffle (vOut.begin(), vOut.end());
 
     // We also do not care about full amount as long as we have right denominations, just pass what we found
     darkSendPool.SendDarksendDenominate(vCoinsResult, vOut, nValueIn - nValueLeft);
