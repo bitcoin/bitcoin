@@ -59,13 +59,13 @@
  *     Signature is valid if R + h * Q + s * G == 0.
  */
 
-static int secp256k1_schnorr_sig_sign(const secp256k1_ecmult_gen_context_t* ctx, unsigned char *sig64, const secp256k1_scalar_t *key, const secp256k1_scalar_t *nonce, const secp256k1_ge_t *pubnonce, secp256k1_schnorr_msghash_t hash, const unsigned char *msg32) {
-    secp256k1_gej_t Rj;
-    secp256k1_ge_t Ra;
+static int secp256k1_schnorr_sig_sign(const secp256k1_ecmult_gen_context* ctx, unsigned char *sig64, const secp256k1_scalar *key, const secp256k1_scalar *nonce, const secp256k1_ge *pubnonce, secp256k1_schnorr_msghash hash, const unsigned char *msg32) {
+    secp256k1_gej Rj;
+    secp256k1_ge Ra;
     unsigned char h32[32];
-    secp256k1_scalar_t h, s;
+    secp256k1_scalar h, s;
     int overflow;
-    secp256k1_scalar_t n;
+    secp256k1_scalar n;
 
     if (secp256k1_scalar_is_zero(key) || secp256k1_scalar_is_zero(nonce)) {
         return 0;
@@ -103,11 +103,11 @@ static int secp256k1_schnorr_sig_sign(const secp256k1_ecmult_gen_context_t* ctx,
     return 1;
 }
 
-static int secp256k1_schnorr_sig_verify(const secp256k1_ecmult_context_t* ctx, const unsigned char *sig64, const secp256k1_ge_t *pubkey, secp256k1_schnorr_msghash_t hash, const unsigned char *msg32) {
-    secp256k1_gej_t Qj, Rj;
-    secp256k1_ge_t Ra;
-    secp256k1_fe_t Rx;
-    secp256k1_scalar_t h, s;
+static int secp256k1_schnorr_sig_verify(const secp256k1_ecmult_context* ctx, const unsigned char *sig64, const secp256k1_ge *pubkey, secp256k1_schnorr_msghash hash, const unsigned char *msg32) {
+    secp256k1_gej Qj, Rj;
+    secp256k1_ge Ra;
+    secp256k1_fe Rx;
+    secp256k1_scalar h, s;
     unsigned char hh[32];
     int overflow;
 
@@ -141,11 +141,11 @@ static int secp256k1_schnorr_sig_verify(const secp256k1_ecmult_context_t* ctx, c
     return secp256k1_fe_equal_var(&Rx, &Ra.x);
 }
 
-static int secp256k1_schnorr_sig_recover(const secp256k1_ecmult_context_t* ctx, const unsigned char *sig64, secp256k1_ge_t *pubkey, secp256k1_schnorr_msghash_t hash, const unsigned char *msg32) {
-    secp256k1_gej_t Qj, Rj;
-    secp256k1_ge_t Ra;
-    secp256k1_fe_t Rx;
-    secp256k1_scalar_t h, s;
+static int secp256k1_schnorr_sig_recover(const secp256k1_ecmult_context* ctx, const unsigned char *sig64, secp256k1_ge *pubkey, secp256k1_schnorr_msghash hash, const unsigned char *msg32) {
+    secp256k1_gej Qj, Rj;
+    secp256k1_ge Ra;
+    secp256k1_fe Rx;
+    secp256k1_scalar h, s;
     unsigned char hh[32];
     int overflow;
 
@@ -179,10 +179,10 @@ static int secp256k1_schnorr_sig_recover(const secp256k1_ecmult_context_t* ctx, 
 }
 
 static int secp256k1_schnorr_sig_combine(unsigned char *sig64, int n, const unsigned char * const *sig64ins) {
-    secp256k1_scalar_t s = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
+    secp256k1_scalar s = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
     int i;
     for (i = 0; i < n; i++) {
-        secp256k1_scalar_t si;
+        secp256k1_scalar si;
         int overflow;
         secp256k1_scalar_set_b32(&si, sig64ins[i] + 32, &overflow);
         if (overflow) {

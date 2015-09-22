@@ -17,9 +17,9 @@ extern "C" {
  *           scalar:   a 32-byte scalar with which to multiply the point
  */
 SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdh(
-  const secp256k1_context_t* ctx,
+  const secp256k1_context* ctx,
   unsigned char *result,
-  const secp256k1_pubkey_t *point,
+  const secp256k1_pubkey *point,
   const unsigned char *scalar
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 

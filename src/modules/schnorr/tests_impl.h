@@ -11,11 +11,11 @@ void test_schnorr_end_to_end(void) {
     unsigned char privkey[32];
     unsigned char message[32];
     unsigned char schnorr_signature[64];
-    secp256k1_pubkey_t pubkey, recpubkey;
+    secp256k1_pubkey pubkey, recpubkey;
 
     /* Generate a random key and message. */
     {
-        secp256k1_scalar_t key;
+        secp256k1_scalar key;
         random_scalar_order_test(&key);
         secp256k1_scalar_get_b32(privkey, &key);
         secp256k1_rand256_test(message);
@@ -48,9 +48,9 @@ void test_schnorr_hash(unsigned char *h32, const unsigned char *r32, const unsig
 void test_schnorr_sign_verify(void) {
     unsigned char msg32[32];
     unsigned char sig64[3][64];
-    secp256k1_gej_t pubkeyj[3];
-    secp256k1_ge_t pubkey[3];
-    secp256k1_scalar_t nonce[3], key[3];
+    secp256k1_gej pubkeyj[3];
+    secp256k1_ge pubkey[3];
+    secp256k1_scalar nonce[3], key[3];
     int i = 0;
     int k;
 
@@ -83,14 +83,14 @@ void test_schnorr_sign_verify(void) {
 void test_schnorr_threshold(void) {
     unsigned char msg[32];
     unsigned char sec[5][32];
-    secp256k1_pubkey_t pub[5];
+    secp256k1_pubkey pub[5];
     unsigned char nonce[5][32];
-    secp256k1_pubkey_t pubnonce[5];
+    secp256k1_pubkey pubnonce[5];
     unsigned char sig[5][64];
     const unsigned char* sigs[5];
     unsigned char allsig[64];
-    const secp256k1_pubkey_t* pubs[5];
-    secp256k1_pubkey_t allpub;
+    const secp256k1_pubkey* pubs[5];
+    secp256k1_pubkey allpub;
     int n, i;
     int damage;
     int ret = 0;
@@ -112,8 +112,8 @@ void test_schnorr_threshold(void) {
         sec[secp256k1_rand32() % n][secp256k1_rand32() % 32] ^= 1 + (secp256k1_rand32() % 255);
     }
     for (i = 0; i < n; i++) {
-        secp256k1_pubkey_t allpubnonce;
-        const secp256k1_pubkey_t *pubnonces[4];
+        secp256k1_pubkey allpubnonce;
+        const secp256k1_pubkey *pubnonces[4];
         int j;
         for (j = 0; j < i; j++) {
             pubnonces[j] = &pubnonce[j];
@@ -144,7 +144,7 @@ void test_schnorr_threshold(void) {
 void test_schnorr_recovery(void) {
     unsigned char msg32[32];
     unsigned char sig64[64];
-    secp256k1_ge_t Q;
+    secp256k1_ge Q;
 
     secp256k1_rand256_test(msg32);
     secp256k1_rand256_test(sig64);

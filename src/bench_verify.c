@@ -12,7 +12,7 @@
 #include "bench.h"
 
 typedef struct {
-    secp256k1_context_t *ctx;
+    secp256k1_context *ctx;
     unsigned char msg[32];
     unsigned char key[32];
     unsigned char sig[72];
@@ -26,8 +26,8 @@ static void benchmark_verify(void* arg) {
     benchmark_verify_t* data = (benchmark_verify_t*)arg;
 
     for (i = 0; i < 20000; i++) {
-        secp256k1_pubkey_t pubkey;
-        secp256k1_ecdsa_signature_t sig;
+        secp256k1_pubkey pubkey;
+        secp256k1_ecdsa_signature sig;
         data->sig[data->siglen - 1] ^= (i & 0xFF);
         data->sig[data->siglen - 2] ^= ((i >> 8) & 0xFF);
         data->sig[data->siglen - 3] ^= ((i >> 16) & 0xFF);
@@ -42,8 +42,8 @@ static void benchmark_verify(void* arg) {
 
 int main(void) {
     int i;
-    secp256k1_pubkey_t pubkey;
-    secp256k1_ecdsa_signature_t sig;
+    secp256k1_pubkey pubkey;
+    secp256k1_ecdsa_signature sig;
     benchmark_verify_t data;
 
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);

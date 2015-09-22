@@ -11,16 +11,16 @@ void test_ecdsa_recovery_end_to_end(void) {
     unsigned char extra[32] = {0x00};
     unsigned char privkey[32];
     unsigned char message[32];
-    secp256k1_ecdsa_signature_t signature[5];
-    secp256k1_ecdsa_recoverable_signature_t rsignature[5];
+    secp256k1_ecdsa_signature signature[5];
+    secp256k1_ecdsa_recoverable_signature rsignature[5];
     unsigned char sig[74];
-    secp256k1_pubkey_t pubkey;
-    secp256k1_pubkey_t recpubkey;
+    secp256k1_pubkey pubkey;
+    secp256k1_pubkey recpubkey;
     int recid = 0;
 
     /* Generate a random key and message. */
     {
-        secp256k1_scalar_t msg, key;
+        secp256k1_scalar msg, key;
         random_scalar_order_test(&msg);
         random_scalar_order_test(&key);
         secp256k1_scalar_get_b32(privkey, &key);
@@ -83,7 +83,7 @@ void test_ecdsa_recovery_edge_cases(void) {
         0x7D, 0xD7, 0x3E, 0x38, 0x7E, 0xE4, 0xFC, 0x86,
         0x6E, 0x1B, 0xE8, 0xEC, 0xC7, 0xDD, 0x95, 0x57
     };
-    secp256k1_pubkey_t pubkey;
+    secp256k1_pubkey pubkey;
     /* signature (r,s) = (4,4), which can be recovered with all 4 recids. */
     const unsigned char sigb64[64] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -95,9 +95,9 @@ void test_ecdsa_recovery_edge_cases(void) {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04,
     };
-    secp256k1_pubkey_t pubkeyb;
-    secp256k1_ecdsa_recoverable_signature_t rsig;
-    secp256k1_ecdsa_signature_t sig;
+    secp256k1_pubkey pubkeyb;
+    secp256k1_ecdsa_recoverable_signature rsig;
+    secp256k1_ecdsa_signature sig;
     int recid;
 
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sig64, 0));
@@ -157,7 +157,7 @@ void test_ecdsa_recovery_edge_cases(void) {
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigbder, sizeof(sigbder)) == 1);
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg32, &pubkeyb) == 1);
         for (recid2 = 0; recid2 < 4; recid2++) {
-            secp256k1_pubkey_t pubkey2b;
+            secp256k1_pubkey pubkey2b;
             CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigb64, recid2) == 1);
             CHECK(secp256k1_ecdsa_recover(ctx, &pubkey2b, &rsig, msg32) == 1);
             /* Verifying with (order + r,4) should always fail. */
@@ -216,7 +216,7 @@ void test_ecdsa_recovery_edge_cases(void) {
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
         };
-        secp256k1_pubkey_t pubkeyc;
+        secp256k1_pubkey pubkeyc;
         CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsig, sigc64, 0) == 1);
         CHECK(secp256k1_ecdsa_recover(ctx, &pubkeyc, &rsig, msg32) == 1);
         CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, sigcder, sizeof(sigcder)) == 1);

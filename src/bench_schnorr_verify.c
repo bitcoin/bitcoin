@@ -20,7 +20,7 @@ typedef struct {
 } benchmark_schnorr_sig_t;
 
 typedef struct {
-    secp256k1_context_t *ctx;
+    secp256k1_context *ctx;
     unsigned char msg[32];
     benchmark_schnorr_sig_t sigs[64];
     int numsigs;
@@ -34,7 +34,7 @@ static void benchmark_schnorr_init(void* arg) {
         data->msg[i] = 1 + i;
     }
     for (k = 0; k < data->numsigs; k++) {
-        secp256k1_pubkey_t pubkey;
+        secp256k1_pubkey pubkey;
         for (i = 0; i < 32; i++) {
             data->sigs[k].key[i] = 33 + i + k;
         }
@@ -50,7 +50,7 @@ static void benchmark_schnorr_verify(void* arg) {
     benchmark_schnorr_verify_t* data = (benchmark_schnorr_verify_t*)arg;
 
     for (i = 0; i < 20000 / data->numsigs; i++) {
-        secp256k1_pubkey_t pubkey;
+        secp256k1_pubkey pubkey;
         data->sigs[0].sig[(i >> 8) % 64] ^= (i & 0xFF);
         CHECK(secp256k1_ec_pubkey_parse(data->ctx, &pubkey, data->sigs[0].pubkey, data->sigs[0].pubkeylen));
         CHECK(secp256k1_schnorr_verify(data->ctx, data->sigs[0].sig, data->msg, &pubkey) == ((i & 0xFF) == 0));

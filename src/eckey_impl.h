@@ -14,12 +14,12 @@
 #include "group.h"
 #include "ecmult_gen.h"
 
-static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned char *pub, size_t size) {
+static int secp256k1_eckey_pubkey_parse(secp256k1_ge *elem, const unsigned char *pub, size_t size) {
     if (size == 33 && (pub[0] == 0x02 || pub[0] == 0x03)) {
-        secp256k1_fe_t x;
+        secp256k1_fe x;
         return secp256k1_fe_set_b32(&x, pub+1) && secp256k1_ge_set_xo_var(elem, &x, pub[0] == 0x03);
     } else if (size == 65 && (pub[0] == 0x04 || pub[0] == 0x06 || pub[0] == 0x07)) {
-        secp256k1_fe_t x, y;
+        secp256k1_fe x, y;
         if (!secp256k1_fe_set_b32(&x, pub+1) || !secp256k1_fe_set_b32(&y, pub+33)) {
             return 0;
         }
@@ -33,7 +33,7 @@ static int secp256k1_eckey_pubkey_parse(secp256k1_ge_t *elem, const unsigned cha
     }
 }
 
-static int secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char *pub, size_t *size, unsigned int flags) {
+static int secp256k1_eckey_pubkey_serialize(secp256k1_ge *elem, unsigned char *pub, size_t *size, unsigned int flags) {
     if (secp256k1_ge_is_infinity(elem)) {
         return 0;
     }
@@ -51,7 +51,7 @@ static int secp256k1_eckey_pubkey_serialize(secp256k1_ge_t *elem, unsigned char 
     return 1;
 }
 
-static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned char *privkey, size_t privkeylen) {
+static int secp256k1_eckey_privkey_parse(secp256k1_scalar *key, const unsigned char *privkey, size_t privkeylen) {
     unsigned char c[32] = {0};
     const unsigned char *end = privkey + privkeylen;
     int lenb = 0;
@@ -94,9 +94,9 @@ static int secp256k1_eckey_privkey_parse(secp256k1_scalar_t *key, const unsigned
     return !overflow;
 }
 
-static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context_t *ctx, unsigned char *privkey, size_t *privkeylen, const secp256k1_scalar_t *key, unsigned int flags) {
-    secp256k1_gej_t rp;
-    secp256k1_ge_t r;
+static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context *ctx, unsigned char *privkey, size_t *privkeylen, const secp256k1_scalar *key, unsigned int flags) {
+    secp256k1_gej rp;
+    secp256k1_ge r;
     size_t pubkeylen = 0;
     secp256k1_ecmult_gen(ctx, &rp, key);
     secp256k1_ge_set_gej(&r, &rp);
@@ -154,7 +154,7 @@ static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context_
     return 1;
 }
 
-static int secp256k1_eckey_privkey_tweak_add(secp256k1_scalar_t *key, const secp256k1_scalar_t *tweak) {
+static int secp256k1_eckey_privkey_tweak_add(secp256k1_scalar *key, const secp256k1_scalar *tweak) {
     secp256k1_scalar_add(key, key, tweak);
     if (secp256k1_scalar_is_zero(key)) {
         return 0;
@@ -162,9 +162,9 @@ static int secp256k1_eckey_privkey_tweak_add(secp256k1_scalar_t *key, const secp
     return 1;
 }
 
-static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context_t *ctx, secp256k1_ge_t *key, const secp256k1_scalar_t *tweak) {
-    secp256k1_gej_t pt;
-    secp256k1_scalar_t one;
+static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context *ctx, secp256k1_ge *key, const secp256k1_scalar *tweak) {
+    secp256k1_gej pt;
+    secp256k1_scalar one;
     secp256k1_gej_set_ge(&pt, key);
     secp256k1_scalar_set_int(&one, 1);
     secp256k1_ecmult(ctx, &pt, &pt, &one, tweak);
@@ -176,7 +176,7 @@ static int secp256k1_eckey_pubkey_tweak_add(const secp256k1_ecmult_context_t *ct
     return 1;
 }
 
-static int secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar_t *key, const secp256k1_scalar_t *tweak) {
+static int secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar *key, const secp256k1_scalar *tweak) {
     if (secp256k1_scalar_is_zero(tweak)) {
         return 0;
     }
@@ -185,9 +185,9 @@ static int secp256k1_eckey_privkey_tweak_mul(secp256k1_scalar_t *key, const secp
     return 1;
 }
 
-static int secp256k1_eckey_pubkey_tweak_mul(const secp256k1_ecmult_context_t *ctx, secp256k1_ge_t *key, const secp256k1_scalar_t *tweak) {
-    secp256k1_scalar_t zero;
-    secp256k1_gej_t pt;
+static int secp256k1_eckey_pubkey_tweak_mul(const secp256k1_ecmult_context *ctx, secp256k1_ge *key, const secp256k1_scalar *tweak) {
+    secp256k1_scalar zero;
+    secp256k1_gej pt;
     if (secp256k1_scalar_is_zero(tweak)) {
         return 0;
     }
