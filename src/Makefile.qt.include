@@ -97,6 +97,7 @@ QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
   qt/moc_addresstablemodel.cpp \
   qt/moc_askpassphrasedialog.cpp \
+  qt/moc_bantablemodel.cpp \
   qt/moc_bitcoinaddressvalidator.cpp \
   qt/moc_bitcoinamountfield.cpp \
   qt/moc_bitcoingui.cpp \
@@ -162,6 +163,7 @@ BITCOIN_QT_H = \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
+  qt/bantablemodel.h \
   qt/bitcoinaddressvalidator.h \
   qt/bitcoinamountfield.h \
   qt/bitcoingui.h \
@@ -260,6 +262,7 @@ RES_ICONS = \
   qt/res/icons/verify.png
 
 BITCOIN_QT_CPP = \
+  qt/bantablemodel.cpp \
   qt/bitcoinaddressvalidator.cpp \
   qt/bitcoinamountfield.cpp \
   qt/bitcoingui.cpp \
