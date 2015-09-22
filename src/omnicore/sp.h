@@ -223,12 +223,11 @@ CMPCrowd* getCrowd(const std::string& address);
 bool isCrowdsaleActive(uint32_t propertyId);
 bool isCrowdsalePurchase(const uint256& txid, const std::string& address, int64_t* propertyId, int64_t* userTokens, int64_t* issuerTokens);
 
-// TODO: check, if this could be combined with the other calculate* functions
-int64_t calculateFractional(uint16_t propType, uint8_t bonusPerc, int64_t fundraiserSecs,
-        int64_t numProps, uint8_t issuerPerc, const std::map<uint256, std::vector<int64_t> >& txFundraiserData,
-        const int64_t amountPremined);
+/** Calculates missing bonus tokens, which are credited to the crowdsale issuer. */
+int64_t GetMissedIssuerBonus(const CMPSPInfo::Entry& sp, const CMPCrowd& crowdsale);
 
-void calculateFundraiser(int64_t amtTransfer, uint8_t bonusPerc,
+/** Calculates amounts credited for a crowdsale purchase. */
+void calculateFundraiser(bool inflateAmount, int64_t amtTransfer, uint8_t bonusPerc,
         int64_t fundraiserSecs, int64_t currentSecs, int64_t numProps, uint8_t issuerPerc, int64_t totalTokens,
         std::pair<int64_t, int64_t>& tokens, bool& close_crowdsale);
 
