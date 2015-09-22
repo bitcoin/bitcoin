@@ -424,6 +424,16 @@ void ThreadNtpSamples(void* parg) {
     // Maximum offset is 2 hours.
     const int64_t nMaxOffset = 7200;
 
+    printf("Trying to find NTP server at localhost...\n");
+
+    std::string strLocalHost = "127.0.0.1";
+    if (NtpGetTime(strLocalHost) == GetTime()) {
+        printf("There is NTP server active at localhost,  we don't need NTP thread.\n");
+
+        nNtpOffset = 0;
+        return;
+    }
+
     printf("ThreadNtpSamples started\n");
     vnThreadsRunning[THREAD_NTP]++;
 
