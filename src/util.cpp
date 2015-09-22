@@ -1326,6 +1326,11 @@ int64_t GetTimeOffset()
     return 0;
 }
 
+int64_t GetNodesOffset()
+{
+        return nNodesOffset;
+}
+
 int64_t GetAdjustedTime()
 {
     return GetTime() + GetTimeOffset();

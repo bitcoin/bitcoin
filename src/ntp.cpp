@@ -442,11 +442,12 @@ void ThreadNtpSamples(void* parg) {
                 nNtpOffset = nClockOffset;
             }
             else {
-                // Something went wrong. Disable trusted offset sampling and wait 600 seconds.
+                // Something went wrong, disable trusted offset sampling.
                 nNtpOffset = INT64_MAX;
                 strTrustedUpstream = "localhost";
 
-                for (int i = 0; i < 600 && !fShutdown; i++) // Sleep for 5 minutes
+                int nSleepMinutes = 1 + GetRandInt(9); // Sleep for 1-10 minutes.
+                for (int i = 0; i < nSleepMinutes * 60 && !fShutdown; i++)
                     Sleep(1000);
 
                 continue;
@@ -469,9 +470,10 @@ void ThreadNtpSamples(void* parg) {
                 nNtpOffset = vTimeOffsets.median();
             }
             else {
-                // Not enough offsets yet, try again 300 seconds later.
+                // Not enough offsets yet, try again later.
                 nNtpOffset = INT64_MAX;
-                for (int i = 0; i < 300 && !fShutdown; i++) 
+                int nSleepMinutes = 1 + GetRandInt(4); // Sleep for 1-5 minutes.
+                for (int i = 0; i < nSleepMinutes * 60 && !fShutdown; i++) 
                     Sleep(1000);
                 continue;
             }
@@ -479,7 +481,8 @@ void ThreadNtpSamples(void* parg) {
 
         printf("nNtpOffset = %+" PRId64 "  (%+" PRId64 " minutes)\n", nNtpOffset, nNtpOffset/60);
 
-        for (int i = 0; i < 43200 && !fShutdown; i++) // Sleep for 12 hours
+        int nSleepHours = 1 + GetRandInt(5); // Sleep for 1-6 hours.
+        for (int i = 0; i < nSleepHours * 3600 && !fShutdown; i++)
             Sleep(1000);
     }
 
