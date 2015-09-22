@@ -778,6 +778,31 @@ static std::string FormatStateMessage(const CValidationState &state)
         state.GetRejectCode());
 }
 
+static unsigned int TxSearchForLongChain(const CTransaction& tx, const CTxMemPool& pool, unsigned int nDepthLimit, unsigned int nDepth = 0)
+{
+    unsigned int nMaxDepth = nDepth;
+    for (size_t i = 0; i < tx.vin.size(); ++i)
+    {
+        COutPoint outpoint = tx.vin[i].prevout;
+        std::map<uint256, CTxMemPoolEntry>::const_iterator it = pool.mapTx.find(outpoint.hash);
+        if (it == pool.mapTx.end())
+            // Already confirmed
+            continue;
+
+        const unsigned int nParentDepth = nDepth + 1;
+        if (nParentDepth == nDepthLimit)
+            return nParentDepth;
+
+        const CTransaction& txParent = it->second.GetTx();
+        const unsigned int nMaxParentDepth = TxSearchForLongChain(txParent, pool, nDepthLimit, nParentDepth);
+        if (nMaxParentDepth == nDepthLimit)
+            return nMaxParentDepth;
+        if (nMaxParentDepth > nMaxDepth)
+            nMaxDepth = nMaxParentDepth;
+    }
+    return nMaxDepth;
+}
+
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee)
 {
@@ -829,6 +854,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CAmount nValueIn = 0;
         {
         LOCK(pool.cs);
+
+        const int nDepthLimit = GetArg("-limitunconfdepth", DEFAULT_LIMIT_UNCONF_DEPTH);
+        if (nDepthLimit > 0) {
+            const unsigned int nMaxDepth = TxSearchForLongChain(tx, pool, nDepthLimit);
+            if (nMaxDepth >= (unsigned int)nDepthLimit) {
+                return error("AcceptToMemoryPool : rejecting transaction with long unconfirmed chain: %s", tx.GetHash().ToString());
+            }
+        }
+
         CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
         view.SetBackend(viewMemPool);
 
