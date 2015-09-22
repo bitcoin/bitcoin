@@ -13,7 +13,8 @@
 
 #include "netbase.h"
 #include "net.h"
-#include "util.h"
+//#include "util.h"
+#include "ui_interface.h"
 
 extern int GetRandInt(int nMax);
 
@@ -420,9 +421,7 @@ int64_t GetNtpOffset() {
 }
 
 void ThreadNtpSamples(void* parg) {
-
-    // Maximum offset is 2 hours.
-    const int64_t nMaxOffset = 7200;
+    const int64_t nMaxOffset = 86400; // Not a real limit, just sanity threshold.
 
     printf("Trying to find NTP server at localhost...\n");
 
@@ -489,6 +488,15 @@ void ThreadNtpSamples(void* parg) {
                     Sleep(1000);
                 continue;
             }
+        }
+
+        if (GetNodesOffset() == INT_MAX && abs64(nNtpOffset) > 40 * 60)
+        {
+            // If there is not enough node offsets data and NTP time offset is greater than 40 minutes then give a warning.
+            std::string strMessage = _("Warning: Please check that your computer's date and time are correct! If your clock is wrong NovaCoin will not work properly.");
+            strMiscWarning = strMessage;
+            printf("*** %s\n", strMessage.c_str());
+            uiInterface.ThreadSafeMessageBox(strMessage+" ", std::string("NovaCoin"), CClientUIInterface::OK | CClientUIInterface::ICON_EXCLAMATION);
         }
 
         printf("nNtpOffset = %+" PRId64 "  (%+" PRId64 " minutes)\n", nNtpOffset, nNtpOffset/60);

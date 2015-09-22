@@ -1312,15 +1312,14 @@ extern int64_t nNtpOffset;
 static int64_t nNodesOffset = INT64_MAX;
 
 // Select time offset:
-//
-// * If NTP and system clock are in agreement within 40 minutes, then use NTP.
-// * If not, then choose between median peer time and system clock using the same condition.
 int64_t GetTimeOffset()
 {
+    // If NTP and system clock are in agreement within 40 minutes, then use NTP.
     if (abs64(nNtpOffset) < 40 * 60)
         return nNtpOffset;
 
-    if (abs64(nNodesOffset) < 40 * 60)
+    // If not, then choose between median peer time and system clock.
+    if (abs64(nNodesOffset) < 70 * 60)
         return nNodesOffset;
 
     return 0;
