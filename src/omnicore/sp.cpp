@@ -654,7 +654,10 @@ void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, ui
     uint256 percentage_precision = ConvertTo256(100);
 
     // Calculate the bonus seconds
-    uint256 bonusSeconds_ = ConvertTo256(fundraiserSecs) - ConvertTo256(currentSecs);
+    uint256 bonusSeconds_ = 0;
+    if (currentSecs < fundraiserSecs) {
+        bonusSeconds_ = ConvertTo256(fundraiserSecs) - ConvertTo256(currentSecs);
+    }
 
     // Calculate the whole number of weeks to apply bonus
     uint256 weeks_ = (bonusSeconds_ / weeks_sec_) * precision_;
@@ -715,7 +718,6 @@ void mastercore::calculateFundraiser(bool inflateAmount, int64_t amtTransfer, ui
         assert(issuerTokens_int <= maxCreatable);
 
         // The tokens for the user
-        //createdTokens_int = ConvertTo256(MAX_INT_8_BYTES) - issuerTokens_int;
         createdTokens_int = maxCreatable - issuerTokens_int;
 
         // Close the crowdsale after assigning all tokens
