@@ -217,6 +217,7 @@ void CoinControlDialog::buttonSelectAllClicked()
 void CoinControlDialog::buttonToggleLockClicked()
 {
     QTreeWidgetItem *item;
+    QString theme = GUIUtil::getThemeName();
     // Works in list-mode only
     if(ui->radioListMode->isChecked()){
         ui->treeWidget->setEnabled(false);
@@ -231,7 +232,7 @@ void CoinControlDialog::buttonToggleLockClicked()
             else{
                 model->lockCoin(outpt);
                 item->setDisabled(true);
-                item->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
+                item->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/" + theme + "/lock_closed"));
             }
             updateLabelLocked();
         }
@@ -315,13 +316,14 @@ void CoinControlDialog::copyTransactionHash()
 // context menu action: lock coin
 void CoinControlDialog::lockCoin()
 {
+    QString theme = GUIUtil::getThemeName();
     if (contextMenuItem->checkState(COLUMN_CHECKBOX) == Qt::Checked)
         contextMenuItem->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
 
     COutPoint outpt(uint256(contextMenuItem->text(COLUMN_TXHASH).toStdString()), contextMenuItem->text(COLUMN_VOUT_INDEX).toUInt());
     model->lockCoin(outpt);
     contextMenuItem->setDisabled(true);
-    contextMenuItem->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
+    contextMenuItem->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/" + theme + "/lock_closed"));
     updateLabelLocked();
 }
 
@@ -724,7 +726,8 @@ void CoinControlDialog::updateView()
         return;
 
     bool treeMode = ui->radioTreeMode->isChecked();
-
+    QString theme = GUIUtil::getThemeName();
+    
     ui->treeWidget->clear();
     ui->treeWidget->setEnabled(false); // performance, otherwise updateLabels would be called for every checked checkbox
     ui->treeWidget->setAlternatingRowColors(!treeMode);
@@ -855,7 +858,7 @@ void CoinControlDialog::updateView()
                 COutPoint outpt(txhash, out.i);
                 coinControl->UnSelect(outpt); // just to be sure
                 itemOutput->setDisabled(true);
-                itemOutput->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/lock_closed"));
+                itemOutput->setIcon(COLUMN_CHECKBOX, QIcon(":/icons/" + theme + "/lock_closed"));
             }
 
             // set checkbox

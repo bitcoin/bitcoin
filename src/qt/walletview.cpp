@@ -45,7 +45,8 @@ WalletView::WalletView(QWidget *parent):
     QPushButton *exportButton = new QPushButton(tr("&Export"), this);
     exportButton->setToolTip(tr("Export the data in the current tab to a file"));
 #ifndef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
-    exportButton->setIcon(QIcon(":/icons/export"));
+    QString theme = GUIUtil::getThemeName();
+    exportButton->setIcon(QIcon(":/icons/" + theme + "/export"));
 #endif
     hbox_buttons->addStretch();
 

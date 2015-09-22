@@ -54,10 +54,10 @@ const struct {
     const char *url;
     const char *source;
 } ICON_MAPPING[] = {
-    {"cmd-request", ":/icons/tx_input"},
-    {"cmd-reply", ":/icons/tx_output"},
-    {"cmd-error", ":/icons/tx_output"},
-    {"misc", ":/icons/tx_inout"},
+    {"cmd-request", "tx_input"},
+    {"cmd-reply", "tx_output"},
+    {"cmd-error", "tx_output"},
+    {"misc", "tx_inout"},
     {NULL, NULL}
 };
 
@@ -217,13 +217,13 @@ RPCConsole::RPCConsole(QWidget *parent) :
 {
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
-
+    QString theme = GUIUtil::getThemeName();
 #ifndef Q_OS_MAC
-    ui->openDebugLogfileButton->setIcon(QIcon(":/icons/export"));
+    ui->openDebugLogfileButton->setIcon(QIcon(":/icons/" + theme + "/export"));
 #endif
 
     // Needed on Mac also
-    ui->clearButton->setIcon(QIcon(":/icons/remove"));
+    ui->clearButton->setIcon(QIcon(":/icons/" + theme + "/remove"));
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
@@ -423,12 +423,16 @@ void RPCConsole::clear()
 
     // Add smoothly scaled icon images.
     // (when using width/height on an img, Qt uses nearest instead of linear interpolation)
+    QString iconPath = ":/icons/" + GUIUtil::getThemeName() + "/";
+    QString iconName = "";
+    
     for(int i=0; ICON_MAPPING[i].url; ++i)
     {
+        iconName = ICON_MAPPING[i].source;
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    QImage(ICON_MAPPING[i].source).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    QImage(iconPath + iconName).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     // Set default style sheet

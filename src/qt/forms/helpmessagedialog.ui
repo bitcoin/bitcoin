@@ -28,7 +28,7 @@
       </sizepolicy>
      </property>
      <property name="pixmap">
-      <pixmap resource="../dash.qrc">:/images/about</pixmap>
+      <pixmap resource="../dash.qrc">:/images/drkblue/about</pixmap>
      </property>
     </widget>
    </item>
@@ -47,8 +47,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>659</width>
-          <height>348</height>
+          <width>658</width>
+          <height>342</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">

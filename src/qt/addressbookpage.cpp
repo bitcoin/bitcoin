@@ -29,17 +29,18 @@ AddressBookPage::AddressBookPage(Mode mode, Tabs tab, QWidget *parent) :
     tab(tab)
 {
     ui->setupUi(this);
-
+    QString theme = GUIUtil::getThemeName();
+    
 #ifdef Q_OS_MAC // Icons on push buttons are very uncommon on Mac
     ui->newAddress->setIcon(QIcon());
     ui->copyAddress->setIcon(QIcon());
     ui->deleteAddress->setIcon(QIcon());
     ui->exportButton->setIcon(QIcon());
 #else
-    ui->newAddress->setIcon(QIcon(":/icons/add"));
-    ui->copyAddress->setIcon(QIcon(":/icons/editcopy"));
-    ui->deleteAddress->setIcon(QIcon(":/icons/remove"));
-    ui->exportButton->setIcon(QIcon(":/icons/export"));
+    ui->newAddress->setIcon(QIcon(":/icons/" + theme + "/add"));
+    ui->copyAddress->setIcon(QIcon(":/icons/" + theme + "/editcopy"));
+    ui->deleteAddress->setIcon(QIcon(":/icons/" + theme + "/remove"));
+    ui->exportButton->setIcon(QIcon(":/icons/" + theme + "/export"));
 #endif
 
     switch(mode)

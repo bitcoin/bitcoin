@@ -77,6 +77,10 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         text = version + "\n" + header + "\n" + coreOptions + "\n" + uiOptions;
         ui->helpMessageLabel->setText(text);
     }
+    // Theme dependent Gfx in About popup
+    QString helpMessageGfx = ":/images/" + GUIUtil::getThemeName() + "/about";
+    QPixmap pixmap = QPixmap(helpMessageGfx);
+    ui->graphic->setPixmap(pixmap);
 }
 
 HelpMessageDialog::~HelpMessageDialog()
