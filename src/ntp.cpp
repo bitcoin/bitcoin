@@ -478,11 +478,11 @@ void ThreadNtpSamples(void* parg) {
                 }
             }
 
-            if (vTimeOffsets.size() > 2) {
+            if (vTimeOffsets.size() > 1) {
                 nNtpOffset = vTimeOffsets.median();
             }
             else {
-                // Not enough offsets yet, try again later.
+                // Not enough offsets yet, try to collect additional samples later.
                 nNtpOffset = INT64_MAX;
                 int nSleepMinutes = 1 + GetRandInt(4); // Sleep for 1-5 minutes.
                 for (int i = 0; i < nSleepMinutes * 60 && !fShutdown; i++) 
