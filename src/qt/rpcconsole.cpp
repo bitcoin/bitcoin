@@ -809,10 +809,8 @@ void RPCConsole::banSelectedNode(int bantime)
 
         CNode::Ban(CNetAddr(addr), BanReasonManuallyAdded, bantime);
         bannedNode->fDisconnect = true;
-        DumpBanlist();
-
         clearSelectedNode();
-        clientModel->getBanTableModel()->refresh();
+        DumpBanlist(); // store banlist to disk
     }
 }
 
@@ -828,8 +826,7 @@ void RPCConsole::unbanSelectedNode()
     if (possibleSubnet.IsValid())
     {
         CNode::Unban(possibleSubnet);
-        DumpBanlist();
-        clientModel->getBanTableModel()->refresh();
+        DumpBanlist(); // store banlist to disk
     }
 }
 
