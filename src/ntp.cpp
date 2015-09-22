@@ -449,6 +449,7 @@ void ThreadNtpSamples(void* parg) {
 
             if (abs64(nClockOffset) < nMaxOffset) {
                 // Everything seems right, remember new trusted offset.
+                printf("ThreadNtpSamples: new offset sample from %s, offset=%" PRId64 ".\n", strTrustedUpstream.c_str(), nClockOffset);
                 nNtpOffset = nClockOffset;
             }
             else {
@@ -472,6 +473,7 @@ void ThreadNtpSamples(void* parg) {
                 int64_t nClockOffset = NtpGetTime(ip) - GetTime();
 
                 if (abs64(nClockOffset) < nMaxOffset) { // Skip the deliberately wrong timestamps
+                    printf("ThreadNtpSamples: new offset sample from %s, offset=%" PRId64 ".\n", ip.ToString().c_str(), nClockOffset);
                     vTimeOffsets.input(nClockOffset);
                 }
             }
