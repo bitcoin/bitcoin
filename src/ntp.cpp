@@ -348,7 +348,7 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
     int len=48;
     int retcode = sendto(sockfd, (char *) msg, len, 0, &cliaddr, servlen);
     if (retcode < 0) {
-        printf("sendto() failed: %d", retcode);
+        printf("sendto() failed: %d\n", retcode);
         return -3;
     }
 
@@ -359,7 +359,7 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
 
     retcode = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
     if (retcode <= 0) {
-        printf("recvfrom() error");
+        printf("recvfrom() error\n");
         return -4;
     }
 
