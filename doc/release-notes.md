@@ -105,6 +105,15 @@ In this version, it is only enforced for peers that send protocol versions
 removed. It is recommended to update SPV clients to check for the `NODE_BLOOM`
 service bit for nodes that report versions newer than 70011.
 
+Merkle branches removed from wallet
+-----------------------------------
+
+Previously, every wallet transaction stored a Merkle branch to prove its
+presence in blocks. This wasn't being used for more than an expensive
+sanity check. Since 0.12, these are no longer stored. When loading a
+0.12 wallet into an older version, it will automatically rescan to avoid
+failed checks.
+
 0.12.0 Change log
 =================
 
