@@ -73,7 +73,7 @@ static int secp256k1_schnorr_sig_sign(const secp256k1_ecmult_gen_context* ctx, u
     n = *nonce;
 
     secp256k1_ecmult_gen(ctx, &Rj, &n);
-    if (pubnonce) {
+    if (pubnonce != NULL) {
         secp256k1_gej_add_ge(&Rj, &Rj, pubnonce);
     }
     secp256k1_ge_set_gej(&Ra, &Rj);
