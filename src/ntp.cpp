@@ -80,9 +80,9 @@ struct pkt {
   uint8_t  mac[5 * sizeof(uint32_t)]; /* mac */
 };
 
-const int nServersCount = 147;
+const int nServersCount = 162;
 
-std::string NtpServers[147] = {
+std::string NtpServers[162] = {
     // Microsoft
     "time.windows.com",
 
@@ -151,10 +151,12 @@ std::string NtpServers[147] = {
     "ntp-03.caltech.edu",
     "ntp-04.caltech.edu",
     "nist1-pa.ustiming.org",
-    "time-a.nist.gov ",
-    "time-b.nist.gov ",
-    "time-c.nist.gov ",
-    "time-d.nist.gov ",
+    "time.nist.gov",
+    "time-a.nist.gov",
+    "time-b.nist.gov",
+    "time-c.nist.gov",
+    "time-d.nist.gov",
+    "time-nw.nist.gov",
     "nist1-macon.macon.ga.us",
     "nist.netservicesgroup.com",
     "nisttime.carsoncity.k12.mi.us",
@@ -163,7 +165,6 @@ std::string NtpServers[147] = {
     "time-a.timefreq.bldrdoc.gov",
     "time-b.timefreq.bldrdoc.gov",
     "time-c.timefreq.bldrdoc.gov",
-    "time.nist.gov",
     "utcnist.colorado.edu",
     "utcnist2.colorado.edu",
     "ntp-nist.ldsbc.net",
@@ -178,6 +179,13 @@ std::string NtpServers[147] = {
     "1.us.pool.ntp.org",
     "2.us.pool.ntp.org",
     "3.us.pool.ntp.org",
+    "wwv.otc.psu.edu",
+    "otc1.psu.edu",
+    "otc2.psu.edu",
+    "now.okstate.edu",
+    "ntp.colby.edu",
+    "bonehed.lcs.mit.edu",
+    "ntp-s1.cise.ufl.edu",
 
     // South Africa
     "ntp1.meraka.csir.co.za",
@@ -197,6 +205,9 @@ std::string NtpServers[147] = {
     "3.za.pool.ntp.org",
 
     // Italy
+    "ntp0.ien.it",
+    "ntp1.ien.it",
+    "ntp2.ien.it",
     "ntp1.inrim.it",
     "ntp2.inrim.it",
     "0.it.pool.ntp.org",
@@ -256,6 +267,12 @@ std::string NtpServers[147] = {
 
     // Slovenia
     "time.ijs.si",
+
+    // Austria
+    "0.at.pool.ntp.org",
+    "1.at.pool.ntp.org",
+    "2.at.pool.ntp.org",
+    "3.at.pool.ntp.org",
 
     // ???
     "clepsydra.dec.com",
