@@ -58,6 +58,13 @@ const CBlockIndex *CChain::FindFork(const CBlockIndex *pindex) const {
     return pindex;
 }
 
+CBlockIndex *CChain::FindLatestBefore(int64_t nTime) const {
+    CBlockIndex *pindex = Tip();
+    while (pindex && pindex->pprev && pindex->GetBlockTime() > nTime)
+        pindex = pindex->pprev;
+    return pindex;
+}
+
 /** Turn the lowest '1' bit in the binary representation of a number into a '0'. */
 int static inline InvertLowestOne(int n) { return n & (n - 1); }
 
