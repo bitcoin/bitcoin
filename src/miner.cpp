@@ -649,13 +649,14 @@ bool ScanMap(const MidstateMap &inputsMap, uint32_t nBits, MidstateMap::key_type
     return false;
 }
 
-// TODO: Get rid of nested loops
-void StakeMiner(CWallet* pwallet)
+// Stake miner thread
+void ThreadStakeMiner(void* parg)
 {
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
     // Make this thread recognisable as the mining thread
     RenameThread("novacoin-miner");
+    CWallet* pwallet = (CWallet*)parg;
 
     MidstateMap inputsMap;
     if (!FillMap(pwallet, GetAdjustedTime(), inputsMap))
@@ -666,120 +667,120 @@ void StakeMiner(CWallet* pwallet)
     CBlockIndex* pindexPrev = pindexBest;
     uint32_t nBits = GetNextTargetRequired(pindexPrev, true);
 
-    while (true)
+    printf("ThreadStakeMinter started\n");
+
+    try
     {
-        if (fShutdown)
-            return;
-
-        while (pwallet->IsLocked())
-        {
-            Sleep(1000);
-            if (fShutdown)
-                return;
-        }
-
-        while (vNodes.empty() || IsInitialBlockDownload())
-        {
-            fTrySync = true;
-
-            Sleep(1000);
-            if (fShutdown)
-                return;
-        }
-
-        if (fTrySync)
-        {
-            fTrySync = false;
-            if (vNodes.size() < 3 || nBestHeight < GetNumBlocksOfPeers())
-            {
-                Sleep(1000);
-                continue;
-            }
-        }
+        vnThreadsRunning[THREAD_MINTER]++;
 
         MidstateMap::key_type LuckyInput;
         std::pair<uint256, uint32_t> solution;
 
-        if (ScanMap(inputsMap, nBits, LuckyInput, solution))
+        // Main miner loop
+        do
         {
-            SetThreadPriority(THREAD_PRIORITY_NORMAL);
+            if (fShutdown)
+                goto _endloop;
 
-            // Remove lucky input from the map
-            inputsMap.erase(inputsMap.find(LuckyInput));
-
-            CKey key;
-            CTransaction txCoinStake;
-
-            // Create new coinstake transaction
-            if (!pwallet->CreateCoinStake(LuckyInput.first, LuckyInput.second, solution.second, nBits, txCoinStake, key))
+            while (pwallet->IsLocked())
             {
-                string strMessage = _("Warning: Unable to create coinstake transaction, see debug.log for the details. Mining thread has been stopped.");
-                strMiscWarning = strMessage;
-                printf("*** %s\n", strMessage.c_str());
-
-                return;
+                Sleep(1000);
+                if (fShutdown)
+                    goto _endloop; // Don't be afraid to use a goto if that's the best option.
             }
 
-            // Now we have new coinstake, it's time to create the block ...
-            CBlock* pblock;
-            pblock = CreateNewBlock(pwallet, &txCoinStake);
-            if (!pblock)
+            while (vNodes.empty() || IsInitialBlockDownload())
             {
-                string strMessage = _("Warning: Unable to allocate memory for the new block object. Mining thread has been stopped.");
-                strMiscWarning = strMessage;
-                printf("*** %s\n", strMessage.c_str());
+                fTrySync = true;
 
-                return;
+                Sleep(1000);
+                if (fShutdown)
+                    goto _endloop;
             }
 
-            unsigned int nExtraNonce = 0;
-            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
-
-            // ... and sign it
-            if (!key.Sign(pblock->GetHash(), pblock->vchBlockSig))
+            if (fTrySync)
             {
-                string strMessage = _("Warning: Proof-of-Stake miner is unable to sign the block (locked wallet?). Mining thread has been stopped.");
-                strMiscWarning = strMessage;
-                printf("*** %s\n", strMessage.c_str());
-
-                return;
+                // Don't try mine blocks unless we're at the top of chain and have at least three p2p connections.
+                fTrySync = false;
+                if (vNodes.size() < 3 || nBestHeight < GetNumBlocksOfPeers())
+                {
+                    Sleep(1000);
+                    continue;
+                }
             }
 
-            CheckStake(pblock, *pwallet);
-            SetThreadPriority(THREAD_PRIORITY_LOWEST);
+            if (ScanMap(inputsMap, nBits, LuckyInput, solution))
+            {
+                SetThreadPriority(THREAD_PRIORITY_NORMAL);
+
+                // Remove lucky input from the map
+                inputsMap.erase(inputsMap.find(LuckyInput));
+
+                CKey key;
+                CTransaction txCoinStake;
+
+                // Create new coinstake transaction
+                if (!pwallet->CreateCoinStake(LuckyInput.first, LuckyInput.second, solution.second, nBits, txCoinStake, key))
+                {
+                    string strMessage = _("Warning: Unable to create coinstake transaction, see debug.log for the details. Mining thread has been stopped.");
+                    strMiscWarning = strMessage;
+                    printf("*** %s\n", strMessage.c_str());
+
+                    break;
+                }
+
+                // Now we have new coinstake, it's time to create the block ...
+                CBlock* pblock;
+                pblock = CreateNewBlock(pwallet, &txCoinStake);
+                if (!pblock)
+                {
+                    string strMessage = _("Warning: Unable to allocate memory for the new block object. Mining thread has been stopped.");
+                    strMiscWarning = strMessage;
+                    printf("*** %s\n", strMessage.c_str());
+
+                    break;
+                }
+
+                unsigned int nExtraNonce = 0;
+                IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+
+                // ... and sign it
+                if (!key.Sign(pblock->GetHash(), pblock->vchBlockSig))
+                {
+                    string strMessage = _("Warning: Proof-of-Stake miner is unable to sign the block (locked wallet?). Mining thread has been stopped.");
+                    strMiscWarning = strMessage;
+                    printf("*** %s\n", strMessage.c_str());
+
+                    break;
+                }
+
+                CheckStake(pblock, *pwallet);
+                SetThreadPriority(THREAD_PRIORITY_LOWEST);
+                Sleep(500);
+            }
+
+            if (pindexPrev != pindexBest)
+            {
+                // The best block has been changed, we need to refill the map
+                if (FillMap(pwallet, GetAdjustedTime(), inputsMap))
+                {
+                    pindexPrev = pindexBest;
+                    nBits = GetNextTargetRequired(pindexPrev, true);
+                }
+                else
+                {
+                    // Clear existent data if FillMap failed
+                    inputsMap.clear();
+                }
+            }
+
             Sleep(500);
+
+            _endloop:
+                (void)0; // do nothing
         }
+        while(!fShutdown);
 
-        if (pindexPrev != pindexBest)
-        {
-            // The best block has been changed, we need to refill the map
-            if (FillMap(pwallet, GetAdjustedTime(), inputsMap))
-            {
-                pindexPrev = pindexBest;
-                nBits = GetNextTargetRequired(pindexPrev, true);
-            }
-            else
-            {
-                // Clear existent data if FillMap failed
-                inputsMap.clear();
-            }
-        }
-
-        Sleep(500);
-
-        continue;
-    }
-}
-
-// Stake minter thread
-void ThreadStakeMinter(void* parg)
-{
-    printf("ThreadStakeMinter started\n");
-    CWallet* pwallet = (CWallet*)parg;
-    try
-    {
-        vnThreadsRunning[THREAD_MINTER]++;
-        StakeMiner(pwallet);
         vnThreadsRunning[THREAD_MINTER]--;
     }
     catch (std::exception& e) {
