@@ -663,11 +663,37 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRE
 
 bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
 {
+    // Will be set to the equivalent height- and time-based nLockTime
+    // values that would be necessary to satisfy all relative lock-
+    // time constraints given our view of block chain history.
+    int nMinHeight = 0;
+    int64_t nMinTime = 0;
+    // Will remain equal to true if all inputs are finalized
+    // (CTxIn::SEQUENCE_FINAL).
     bool fFinalized = true;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        fFinalized = fFinalized && (txin.nSequence == CTxIn::SEQUENCE_FINAL);
 
-    if (!fFinalized && (int64_t)tx.nLockTime >= ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD ? (int64_t)nBlockHeight : nBlockTime))
+    BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+        // Set a flag if we witness an input that isn't finalized.
+        if (txin.nSequence == CTxIn::SEQUENCE_FINAL)
+            continue;
+        else
+            fFinalized = false;
+    }
+
+    // If all sequence numbers are CTxIn::SEQUENCE_FINAL, the
+    // transaction is considered final and nLockTime constraints
+    // are not enforced.
+    if (fFinalized)
+        return true;
+
+    if ((int64_t)tx.nLockTime < LOCKTIME_THRESHOLD)
+        nMinHeight = std::max(nMinHeight, (int)tx.nLockTime);
+    else
+        nMinTime = std::max(nMinTime, (int64_t)tx.nLockTime);
+
+    if (nMinHeight >= nBlockHeight)
+        return false;
+    if (nMinTime >= nBlockTime)
         return false;
 
     return true;
