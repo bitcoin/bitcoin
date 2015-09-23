@@ -312,6 +312,7 @@ static const CRPCCommand vRPCCommands[] =
     { "dash",               "masternode",             &masternode,             true,      true,       false },
     { "dash",               "masternodelist",         &masternodelist,         true,      true,       false },
     { "dash",               "mnbudget",               &mnbudget,               true,      true,       false },
+    { "dash",               "mnbudgetvoteraw",        &mnbudgetvoteraw,        true,      true,       false },
     { "dash",               "mnfinalbudget",          &mnfinalbudget,          true,      true,       false },
     { "dash",               "mnsync",                 &mnsync,                 true,      true,       false },
     { "dash",               "spork",                  &spork,                  true,      true,       false },
