@@ -118,7 +118,7 @@ public:
     /**
      * Initialize the data structures.  This is called by BlockPolicyEstimator's
      * constructor with default values.
-     * @param defaultBuckets contains the upper limits for the bucket boundries
+     * @param defaultBuckets contains the upper limits for the bucket boundaries
      * @param maxConfirms max number of confirms to track
      * @param decay how much to decay the historical moving average per block
      * @param dataTypeString for logging purposes
