@@ -649,7 +649,8 @@ bool ScanMap(const MidstateMap &inputsMap, uint32_t nBits, MidstateMap::key_type
     return false;
 }
 
-void StakeMiner(CWallet *pwallet)
+// TODO: Get rid of nested loops
+void StakeMiner(CWallet* pwallet)
 {
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
@@ -768,4 +769,25 @@ void StakeMiner(CWallet *pwallet)
 
         continue;
     }
+}
+
+// Stake minter thread
+void ThreadStakeMinter(void* parg)
+{
+    printf("ThreadStakeMinter started\n");
+    CWallet* pwallet = (CWallet*)parg;
+    try
+    {
+        vnThreadsRunning[THREAD_MINTER]++;
+        StakeMiner(pwallet);
+        vnThreadsRunning[THREAD_MINTER]--;
+    }
+    catch (std::exception& e) {
+        vnThreadsRunning[THREAD_MINTER]--;
+        PrintException(&e, "ThreadStakeMinter()");
+    } catch (...) {
+        vnThreadsRunning[THREAD_MINTER]--;
+        PrintException(NULL, "ThreadStakeMinter()");
+    }
+    printf("ThreadStakeMinter exiting, %d threads remaining\n", vnThreadsRunning[THREAD_MINTER]);
 }

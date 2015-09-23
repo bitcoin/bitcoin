@@ -27,4 +27,7 @@ bool CheckStake(CBlock* pblock, CWallet& wallet);
 /** Base sha256 mining transform */
 void SHA256Transform(void* pstate, void* pinput, const void* pinit);
 
+/** Stake miner thread */
+void ThreadStakeMinter(void* parg);
+
 #endif // NOVACOIN_MINER_H

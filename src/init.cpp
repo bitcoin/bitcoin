@@ -8,7 +8,6 @@
 #include "net.h"
 #include "init.h"
 #include "util.h"
-#include "ntp.h"
 #include "ui_interface.h"
 #include "checkpoints.h"
 #include <boost/format.hpp>
@@ -995,14 +994,6 @@ bool AppInit2()
 
     if (fServer)
         NewThread(ThreadRPCServer, NULL);
-
-    // ********************************************************* Step 12: NTP synchronization
-
-    // Trusted NTP server, it's localhost by default.
-    strTrustedUpstream = GetArg("-ntp", "localhost");
-
-    // Start periodical NTP sampling thread
-    NewThread(ThreadNtpSamples, NULL);
 
     // ********************************************************* Step 12: finished
 

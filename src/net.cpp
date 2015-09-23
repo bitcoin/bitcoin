@@ -9,6 +9,8 @@
 #include "init.h"
 #include "addrman.h"
 #include "ui_interface.h"
+#include "miner.h"
+#include "ntp.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -1295,27 +1297,6 @@ void static ProcessOneShot()
     }
 }
 
-// ppcoin: stake minter thread
-void static ThreadStakeMinter(void* parg)
-{
-    printf("ThreadStakeMinter started\n");
-    CWallet* pwallet = (CWallet*)parg;
-    try
-    {
-        vnThreadsRunning[THREAD_MINTER]++;
-        StakeMiner(pwallet);
-        vnThreadsRunning[THREAD_MINTER]--;
-    }
-    catch (std::exception& e) {
-        vnThreadsRunning[THREAD_MINTER]--;
-        PrintException(&e, "ThreadStakeMinter()");
-    } catch (...) {
-        vnThreadsRunning[THREAD_MINTER]--;
-        PrintException(NULL, "ThreadStakeMinter()");
-    }
-    printf("ThreadStakeMinter exiting, %d threads remaining\n", vnThreadsRunning[THREAD_MINTER]);
-}
-
 void ThreadOpenConnections2(void* parg)
 {
     printf("ThreadOpenConnections started\n");
@@ -1944,9 +1925,16 @@ void StartNode(void* parg)
     if (!NewThread(ThreadDumpAddress, NULL))
         printf("Error; NewThread(ThreadDumpAddress) failed\n");
 
-    // ppcoin: mint proof-of-stake blocks in the background
+    // Mint proof-of-stake blocks in the background
     if (!NewThread(ThreadStakeMinter, pwalletMain))
         printf("Error: NewThread(ThreadStakeMinter) failed\n");
+
+    // Trusted NTP server, it's localhost by default.
+    strTrustedUpstream = GetArg("-ntp", "localhost");
+
+    // Start periodical NTP sampling thread
+    NewThread(ThreadNtpSamples, NULL);
+
 }
 
 bool StopNode()
