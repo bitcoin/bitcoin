@@ -2198,7 +2198,7 @@ void test_ecdsa_openssl(void) {
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &qj, &key);
     secp256k1_ge_set_gej(&q, &qj);
     ec_key = get_openssl_key(&key);
-    CHECK(ec_key);
+    CHECK(ec_key != NULL);
     CHECK(ECDSA_sign(0, message, sizeof(message), signature, &sigsize, ec_key));
     CHECK(secp256k1_ecdsa_sig_parse(&sigr, &sigs, signature, sigsize));
     CHECK(secp256k1_ecdsa_sig_verify(&ctx->ecmult_ctx, &sigr, &sigs, &q, &msg));
@@ -2257,7 +2257,7 @@ int main(int argc, char **argv) {
         }
     } else {
         FILE *frand = fopen("/dev/urandom", "r");
-        if (!frand || !fread(&seed16, sizeof(seed16), 1, frand)) {
+        if ((frand == NULL) || !fread(&seed16, sizeof(seed16), 1, frand)) {
             uint64_t t = time(NULL) * (uint64_t)1337;
             seed16[0] ^= t;
             seed16[1] ^= t >> 8;

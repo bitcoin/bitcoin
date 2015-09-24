@@ -85,7 +85,7 @@ secp256k1_context* secp256k1_context_clone(const secp256k1_context* ctx) {
 }
 
 void secp256k1_context_destroy(secp256k1_context* ctx) {
-    if (ctx) {
+    if (ctx != NULL) {
         secp256k1_ecmult_context_clear(&ctx->ecmult_ctx);
         secp256k1_ecmult_gen_context_clear(&ctx->ecmult_gen_ctx);
 
@@ -94,7 +94,7 @@ void secp256k1_context_destroy(secp256k1_context* ctx) {
 }
 
 void secp256k1_context_set_illegal_callback(secp256k1_context* ctx, void (*fun)(const char* message, void* data), const void* data) {
-    if (!fun) {
+    if (fun == NULL) {
         fun = default_illegal_callback_fn;
     }
     ctx->illegal_callback.fn = fun;
@@ -102,7 +102,7 @@ void secp256k1_context_set_illegal_callback(secp256k1_context* ctx, void (*fun)(
 }
 
 void secp256k1_context_set_error_callback(secp256k1_context* ctx, void (*fun)(const char* message, void* data), const void* data) {
-    if (!fun) {
+    if (fun == NULL) {
         fun = default_error_callback_fn;
     }
     ctx->error_callback.fn = fun;

@@ -37,13 +37,13 @@ void run_benchmark(char *name, void (*benchmark)(void*), void (*setup)(void*), v
     double max = 0.0;
     for (i = 0; i < count; i++) {
         double begin, total;
-        if (setup) {
+        if (setup != NULL) {
             setup(data);
         }
         begin = gettimedouble();
         benchmark(data);
         total = gettimedouble() - begin;
-        if (teardown) {
+        if (teardown != NULL) {
             teardown(data);
         }
         if (total < min) {
