@@ -1418,7 +1418,7 @@ public:
 
     // search for a given byte in the stream, and remain positioned on it
     void FindByte(char ch) {
-        while (true) {
+        for ( ; ; ) {
             if (nReadPos == nSrcPos)
                 Fill();
             if (vchBuf[nReadPos % vchBuf.size()] == ch)
