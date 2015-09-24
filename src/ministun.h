@@ -27,13 +27,11 @@
         unsigned short msgtype;
         unsigned short msglen;
         stun_trans_id id;
-        unsigned char ies[0];
     } __attribute__((packed));
 
     struct stun_attr {
         unsigned short attr;
         unsigned short len;
-        unsigned char value[0];
     } __attribute__((packed));
 
     /*
@@ -54,7 +52,6 @@
         unsigned short msgtype;
         unsigned short msglen;
         stun_trans_id id;
-        unsigned char ies[0];
     };
 #pragma pack(pop)
 
@@ -62,7 +59,6 @@
     struct stun_attr {
         unsigned short attr;
         unsigned short len;
-        unsigned char value[0];
     };
 #pragma pack(pop)
 
