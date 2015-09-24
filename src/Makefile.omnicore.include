@@ -14,6 +14,7 @@ OMNICORE_H = \
   omnicore/pending.h \
   omnicore/persistence.h \
   omnicore/rpc.h \
+  omnicore/rpcrawtx.h \
   omnicore/rpcrequirements.h \
   omnicore/rpctx.h \
   omnicore/rpctxobject.h \
@@ -47,6 +48,7 @@ OMNICORE_CPP = \
   omnicore/pending.cpp \
   omnicore/persistence.cpp \
   omnicore/rpc.cpp \
+  omnicore/rpcrawtx.cpp \
   omnicore/rpcrequirements.cpp \
   omnicore/rpctx.cpp \
   omnicore/rpctxobject.cpp \

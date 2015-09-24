@@ -275,6 +275,9 @@ extern json_spirit::Value mscrpc(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendactivation(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendalert(const json_spirit::Array& params, bool fHelp);
 
+/* Omni Core raw transaction calls */
+extern json_spirit::Value omni_decodetransaction(const json_spirit::Array& params, bool fHelp);
+
 /* Omni Core hidden calls - aliased calls for backwards compatibiltiy - to be depreciated (not shown in help) */
 extern json_spirit::Value trade_MP(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value getinfo_MP(const json_spirit::Array& params, bool fHelp);
