@@ -153,11 +153,11 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     std::vector<std::string> sortedOrder;
     sortedOrder.resize(5);
-    sortedOrder[0] = tx2.GetHash().ToString(); // 20000
-    sortedOrder[1] = tx4.GetHash().ToString(); // 15000
+    sortedOrder[0] = tx3.GetHash().ToString(); // 0
+    sortedOrder[1] = tx5.GetHash().ToString(); // 10000
     sortedOrder[2] = tx1.GetHash().ToString(); // 10000
-    sortedOrder[3] = tx5.GetHash().ToString(); // 10000
-    sortedOrder[4] = tx3.GetHash().ToString(); // 0
+    sortedOrder[3] = tx4.GetHash().ToString(); // 15000
+    sortedOrder[4] = tx2.GetHash().ToString(); // 20000
     CheckSort(pool, sortedOrder);
 
     /* low fee but with high fee child */
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     pool.addUnchecked(tx6.GetHash(), CTxMemPoolEntry(tx6, 0LL, 1, 10.0, 1, true));
     BOOST_CHECK_EQUAL(pool.size(), 6);
     // Check that at this point, tx6 is sorted low
-    sortedOrder.push_back(tx6.GetHash().ToString());
+    sortedOrder.insert(sortedOrder.begin(), tx6.GetHash().ToString());
     CheckSort(pool, sortedOrder);
 
     CTxMemPool::setEntries setAncestors;
@@ -194,9 +194,9 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     BOOST_CHECK_EQUAL(pool.size(), 7);
 
     // Now tx6 should be sorted higher (high fee child): tx7, tx6, tx2, ...
-    sortedOrder.erase(sortedOrder.end()-1);
-    sortedOrder.insert(sortedOrder.begin(), tx6.GetHash().ToString());
-    sortedOrder.insert(sortedOrder.begin(), tx7.GetHash().ToString());
+    sortedOrder.erase(sortedOrder.begin());
+    sortedOrder.push_back(tx6.GetHash().ToString());
+    sortedOrder.push_back(tx7.GetHash().ToString());
     CheckSort(pool, sortedOrder);
 
     /* low fee child of tx7 */
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     pool.addUnchecked(tx8.GetHash(), CTxMemPoolEntry(tx8, 0LL, 2, 10.0, 1, true), setAncestors);
 
     // Now tx8 should be sorted low, but tx6/tx both high
-    sortedOrder.push_back(tx8.GetHash().ToString());
+    sortedOrder.insert(sortedOrder.begin(), tx8.GetHash().ToString());
     CheckSort(pool, sortedOrder);
 
     /* low fee child of tx7 */
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     // tx9 should be sorted low
     BOOST_CHECK_EQUAL(pool.size(), 9);
-    sortedOrder.push_back(tx9.GetHash().ToString());
+    sortedOrder.insert(sortedOrder.begin(), tx9.GetHash().ToString());
     CheckSort(pool, sortedOrder);
 
     std::vector<std::string> snapshotOrder = sortedOrder;
@@ -255,21 +255,21 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
      *  tx8 and tx9 should both now be sorted higher
      *  Final order after tx10 is added:
      *
-     *  tx7 = 2.2M (4 txs)
-     *  tx6 = 2.2M (5 txs)
-     *  tx10 = 200k (1 tx)
-     *  tx8 = 200k (2 txs)
-     *  tx9 = 200k (2 txs)
-     *  tx2 = 20000 (1)
-     *  tx4 = 15000 (1)
-     *  tx1 = 10000 (1)
-     *  tx5 = 10000 (1)
      *  tx3 = 0 (1)
+     *  tx5 = 10000 (1)
+     *  tx1 = 10000 (1)
+     *  tx4 = 15000 (1)
+     *  tx2 = 20000 (1)
+     *  tx9 = 200k (2 txs)
+     *  tx8 = 200k (2 txs)
+     *  tx10 = 200k (1 tx)
+     *  tx6 = 2.2M (5 txs)
+     *  tx7 = 2.2M (4 txs)
      */
-    sortedOrder.erase(sortedOrder.end()-2, sortedOrder.end()); // take out tx8, tx9 from the end
-    sortedOrder.insert(sortedOrder.begin()+2, tx10.GetHash().ToString()); // tx10 is after tx6
-    sortedOrder.insert(sortedOrder.begin()+3, tx9.GetHash().ToString());
-    sortedOrder.insert(sortedOrder.begin()+3, tx8.GetHash().ToString());
+    sortedOrder.erase(sortedOrder.begin(), sortedOrder.begin()+2); // take out tx9, tx8 from the beginning
+    sortedOrder.insert(sortedOrder.begin()+5, tx9.GetHash().ToString());
+    sortedOrder.insert(sortedOrder.begin()+6, tx8.GetHash().ToString());
+    sortedOrder.insert(sortedOrder.begin()+7, tx10.GetHash().ToString()); // tx10 is just before tx6
     CheckSort(pool, sortedOrder);
 
     // there should be 10 transactions in the mempool
