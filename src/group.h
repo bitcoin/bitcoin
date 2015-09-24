@@ -127,10 +127,10 @@ static void secp256k1_gej_clear(secp256k1_gej *r);
 static void secp256k1_ge_clear(secp256k1_ge *r);
 
 /** Convert a group element to the storage type. */
-static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const secp256k1_ge*);
+static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const secp256k1_ge *a);
 
 /** Convert a group element back from the storage type. */
-static void secp256k1_ge_from_storage(secp256k1_ge *r, const secp256k1_ge_storage*);
+static void secp256k1_ge_from_storage(secp256k1_ge *r, const secp256k1_ge_storage *a);
 
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
 static void secp256k1_ge_storage_cmov(secp256k1_ge_storage *r, const secp256k1_ge_storage *a, int flag);

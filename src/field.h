@@ -105,10 +105,10 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a);
 static void secp256k1_fe_inv_all_var(size_t len, secp256k1_fe *r, const secp256k1_fe *a);
 
 /** Convert a field element to the storage type. */
-static void secp256k1_fe_to_storage(secp256k1_fe_storage *r, const secp256k1_fe*);
+static void secp256k1_fe_to_storage(secp256k1_fe_storage *r, const secp256k1_fe *a);
 
 /** Convert a field element back from the storage type. */
-static void secp256k1_fe_from_storage(secp256k1_fe *r, const secp256k1_fe_storage*);
+static void secp256k1_fe_from_storage(secp256k1_fe *r, const secp256k1_fe_storage *a);
 
 /** If flag is true, set *r equal to *a; otherwise leave it. Constant-time. */
 static void secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, const secp256k1_fe_storage *a, int flag);

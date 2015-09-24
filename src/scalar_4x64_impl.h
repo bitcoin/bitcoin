@@ -738,7 +738,7 @@ static void secp256k1_scalar_mul_512(uint64_t l[8], const secp256k1_scalar *a, c
     extract(l[5]);
     muladd_fast(a->d[3], b->d[3]);
     extract_fast(l[6]);
-    VERIFY_CHECK(c1 <= 0);
+    VERIFY_CHECK(c1 == 0);
     l[7] = c0;
 #endif
 }

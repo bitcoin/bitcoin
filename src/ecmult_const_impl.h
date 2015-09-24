@@ -55,7 +55,7 @@
  *  Numbers reference steps of `Algorithm SPA-resistant Width-w NAF with Odd Scalar` on pp. 335
  */
 static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar s, int w) {
-    int global_sign = 1;
+    int global_sign;
     int skew = 0;
     int word = 0;
     /* 1 2 3 */
@@ -63,6 +63,10 @@ static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar s, int w) {
     int u;
 
 #ifdef USE_ENDOMORPHISM
+    int flip;
+    int bit;
+    secp256k1_scalar neg_s;
+    int not_neg_one;
     /* If we are using the endomorphism, we cannot handle even numbers by negating
      * them, since we are working with 128-bit numbers whose negations would be 256
      * bits, eliminating the performance advantage. Instead we use a technique from
@@ -70,12 +74,10 @@ static int secp256k1_wnaf_const(int *wnaf, secp256k1_scalar s, int w) {
      * or 2 (for odd) to the number we are encoding, then compensating after the
      * multiplication. */
     /* Negative 128-bit numbers will be negated, since otherwise they are 256-bit */
-    int flip = secp256k1_scalar_is_high(&s);
+    flip = secp256k1_scalar_is_high(&s);
     /* We add 1 to even numbers, 2 to odd ones, noting that negation flips parity */
-    int bit = flip ^ (s.d[0] & 1);
+    bit = flip ^ (s.d[0] & 1);
     /* We check for negative one, since adding 2 to it will cause an overflow */
-    secp256k1_scalar neg_s;
-    int not_neg_one;
     secp256k1_scalar_negate(&neg_s, &s);
     not_neg_one = !secp256k1_scalar_is_one(&neg_s);
     secp256k1_scalar_cadd_bit(&s, bit, not_neg_one);
