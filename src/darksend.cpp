@@ -1571,6 +1571,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             }
         }
 
+        // do not initiate queue if we are a liquidity proveder to avoid useless inter-mixing
+        if(nLiquidityProvider) return false;
+
         int i = 0;
 
         // otherwise, try one randomly
