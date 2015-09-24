@@ -392,8 +392,10 @@ public:
      *  limitDescendantCount = max number of descendants any ancestor can have
      *  limitDescendantSize = max size of descendants any ancestor can have
      *  errString = populated with error reason if any limits are hit
+     *  fSearchForParents = whether to search a tx's vin for in-mempool parents, or
+     *    look up parents from mapLinks. Must be true for entries not in the mempool
      */
-    bool CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString);
+    bool CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents = true);
 
     unsigned long size()
     {
