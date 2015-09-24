@@ -17,7 +17,7 @@ static void secp256k1_schnorr_msghash_sha256(unsigned char *h32, const unsigned 
     secp256k1_sha256_finalize(&sha, h32);
 }
 
-static const unsigned char secp256k1_schnorr_algo16[16] = "Schnorr+SHA256  ";
+static const unsigned char secp256k1_schnorr_algo16[17] = "Schnorr+SHA256  ";
 
 int secp256k1_schnorr_sign(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char *msg32, const unsigned char *seckey, secp256k1_nonce_function noncefp, const void* noncedata) {
     secp256k1_scalar sec, non;

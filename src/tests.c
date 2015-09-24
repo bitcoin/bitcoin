@@ -501,9 +501,9 @@ void scalar_test(void) {
         /* test secp256k1_scalar_shr_int */
         secp256k1_scalar r;
         int i;
-        int low;
         random_scalar_order_test(&r);
         for (i = 0; i < 100; ++i) {
+            int low;
             int shift = 1 + (secp256k1_rand32() % 15);
             int expected = r.d[0] % (1 << shift);
             low = secp256k1_scalar_shr_int(&r, shift);
@@ -1329,7 +1329,7 @@ void run_ecmult_chain(void) {
     secp256k1_scalar ae = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 1);
     secp256k1_scalar ge = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
     /* actual points */
-    secp256k1_gej x = a;
+    secp256k1_gej x;
     secp256k1_gej x2;
     int i;
 
@@ -1960,7 +1960,7 @@ void test_random_pubkeys(void) {
     }
     r>>=8;
     if (len == 65) {
-      in[0] = (r & 2) ? 4 : (r & 1? 6 : 7);
+      in[0] = (r & 2) ? 4 : ((r & 1)? 6 : 7);
     } else {
       in[0] = (r & 1) ? 2 : 3;
     }
@@ -2281,7 +2281,7 @@ int main(int argc, char **argv) {
 
     if (secp256k1_rand32() & 1) {
         secp256k1_rand256(run32);
-        CHECK(secp256k1_context_randomize(ctx, secp256k1_rand32() & 1 ? run32 : NULL));
+        CHECK(secp256k1_context_randomize(ctx, (secp256k1_rand32() & 1) ? run32 : NULL));
     }
 
     run_sha256_tests();
