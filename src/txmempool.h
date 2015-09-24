@@ -160,9 +160,9 @@ public:
         double f2 = aSize * bFees;
 
         if (f1 == f2) {
-            return a.GetTime() < b.GetTime();
+            return a.GetTime() >= b.GetTime();
         }
-        return f1 > f2;
+        return f1 < f2;
     }
 
     // Calculate which feerate to use for an entry (avoiding division).
