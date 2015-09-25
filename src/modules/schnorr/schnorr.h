@@ -4,8 +4,8 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php. *
  ***********************************************************************/
 
-#ifndef _SECP256K1_SCHNORR_
-#define _SECP256K1_SCHNORR_
+#ifndef _SECP256K1_MODULE_SCHNORR_H_
+#define _SECP256K1_MODULE_SCHNORR_H_
 
 #include "scalar.h"
 #include "group.h"

@@ -7,6 +7,7 @@
 #ifndef SECP256K1_MODULE_SCHNORR_MAIN
 #define SECP256K1_MODULE_SCHNORR_MAIN
 
+#include "include/secp256k1_schnorr.h"
 #include "modules/schnorr/schnorr_impl.h"
 
 static void secp256k1_schnorr_msghash_sha256(unsigned char *h32, const unsigned char *r32, const unsigned char *msg32) {
