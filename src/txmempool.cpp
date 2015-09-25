@@ -410,7 +410,9 @@ void CTxMemPool::removeUnchecked(txiter it)
 // Also assumes that if an entry is in setDescendants already, then all
 // in-mempool descendants of it are already in setDescendants as well, so that we
 // can save time by not iterating over those entries.
-void CTxMemPool::CalculateDescendants(txiter entryit, setEntries &setDescendants)
+// If maxDescendantCount is passed in with a positive value, stop the calculation if we
+// would exceed that number of descendants, and return false.
+bool CTxMemPool::CalculateDescendants(txiter entryit, setEntries &setDescendants, uint64_t maxDescendantCount /* = 0 */)
 {
     setEntries stage;
     if (setDescendants.count(entryit) == 0) {
@@ -429,8 +431,12 @@ void CTxMemPool::CalculateDescendants(txiter entryit, setEntries &setDescendants
             if (!setDescendants.count(childiter)) {
                 stage.insert(childiter);
             }
+            if (maxDescendantCount && stage.size() + setDescendants.size() > maxDescendantCount) {
+                return false;
+            }
         }
     }
+    return true;
 }
 
 void CTxMemPool::remove(const CTransaction &origTx, std::list<CTransaction>& removed, bool fRecursive)

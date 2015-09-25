@@ -458,8 +458,13 @@ private:
     void UpdateChildrenForRemoval(txiter entry);
     /** Populate setDescendants with all in-mempool descendants of hash.
      *  Assumes that setDescendants includes all in-mempool descendants of anything
-     *  already in it.  */
-    void CalculateDescendants(txiter it, setEntries &setDescendants);
+     *  already in it.
+     *  Can specify maximum number of descendants to follow before aborting
+     *  calculation by passing in a non-zero value for maxDescendantCount.
+     *  Returns true if setDescendants is properly updated, false if the
+     *  maxDescendantCount  is reached before finishing the calculation.
+     */
+    bool CalculateDescendants(txiter it, setEntries &setDescendants, uint64_t maxDescendantCount = 0);
 
     /** Before calling removeUnchecked for a given transaction,
      *  UpdateForRemoveFromMempool must be called on the entire (dependent) set
