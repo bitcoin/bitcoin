@@ -72,13 +72,35 @@ private:
     std::deque<WorkItem*> queue;
     bool running;
     size_t maxDepth;
+    int numThreads;
+
+    /** RAII object to keep track of number of running worker threads */
+    class ThreadCounter
+    {
+    public:
+        WorkQueue &wq;
+        ThreadCounter(WorkQueue &w): wq(w)
+        {
+            boost::lock_guard<boost::mutex> lock(wq.cs);
+            wq.numThreads += 1;
+        }
+        ~ThreadCounter()
+        {
+            boost::lock_guard<boost::mutex> lock(wq.cs);
+            wq.numThreads -= 1;
+            wq.cond.notify_all();
+        }
+    };
 
 public:
     WorkQueue(size_t maxDepth) : running(true),
-                                 maxDepth(maxDepth)
+                                 maxDepth(maxDepth),
+                                 numThreads(0)
     {
     }
-    /* Precondition: worker threads have all stopped */
+    /*( Precondition: worker threads have all stopped
+     * (call WaitExit)
+     */
     ~WorkQueue()
     {
         while (!queue.empty()) {
@@ -100,6 +122,7 @@ public:
     /** Thread function */
     void Run()
     {
+        ThreadCounter count(*this);
         while (running) {
             WorkItem* i = 0;
             {
@@ -121,6 +144,13 @@ public:
         boost::unique_lock<boost::mutex> lock(cs);
         running = false;
         cond.notify_all();
+    }
+    /** Wait for worker threads to exit */
+    void WaitExit()
+    {
+        boost::unique_lock<boost::mutex> lock(cs);
+        while (numThreads > 0)
+            cond.wait(lock);
     }
 
     /** Return current depth of queue */
@@ -434,7 +464,11 @@ void InterruptHTTPServer()
 void StopHTTPServer()
 {
     LogPrint("http", "Stopping HTTP server\n");
-    delete workQueue;
+    if (workQueue) {
+        LogPrint("http", "Waiting for HTTP worker threads to exit\n");
+        workQueue->WaitExit();
+        delete workQueue;
+    }
     if (eventHTTP) {
         evhttp_free(eventHTTP);
         eventHTTP = 0;
