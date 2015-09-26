@@ -1215,6 +1215,7 @@ const char* pchTorSeed[] =
     "seed24u5dwph3qw4.onion",
     "mj26ulzbs2oskgym.onion",
     "eqon4usunavt76m7.onion",
+    "seedd3aldwpslzl3.onion"
 };
 
 void DumpAddresses()
