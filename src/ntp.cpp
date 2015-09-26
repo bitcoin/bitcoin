@@ -333,6 +333,8 @@ bool InitWithRandom(SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliadd
 }
 
 int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
+
+
 #ifdef WIN32
     u_long nOne = 1;
     if (ioctlsocket(sockfd, FIONBIO, &nOne) == SOCKET_ERROR) {
@@ -344,8 +346,11 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
         return -2;
     }
 
+    struct timeval timeout = {10, 0};
     struct pkt *msg = new pkt;
     struct pkt *prt  = new pkt;
+    time_t seconds_transmit;
+    int len = 48;
 
     msg->li_vn_mode=227;
     msg->stratum=0;
@@ -363,28 +368,29 @@ int64_t DoReq(SOCKET sockfd, socklen_t servlen, struct sockaddr cliaddr) {
     msg->xmt.Ul_i.Xl_i=0;
     msg->xmt.Ul_f.Xl_f=0;
 
-    int len=48;
     int retcode = sendto(sockfd, (char *) msg, len, 0, &cliaddr, servlen);
     if (retcode < 0) {
         printf("sendto() failed: %d\n", retcode);
-        return -3;
+        seconds_transmit = -3;
+        goto _end;
     }
 
     fd_set fdset;
-    struct timeval timeout = {10, 0};
     FD_ZERO(&fdset);
     FD_SET(sockfd, &fdset);
 
     retcode = select(sockfd + 1, &fdset, NULL, NULL, &timeout);
     if (retcode <= 0) {
         printf("recvfrom() error\n");
-        return -4;
+        seconds_transmit = -4;
+        goto _end;
     }
 
     recvfrom(sockfd, (char *) msg, len, 0, NULL, NULL);
     ntohl_fp(&msg->xmt, &prt->xmt);
-    time_t seconds_transmit;
     Ntp2Unix(prt->xmt.Ul_i.Xl_ui, seconds_transmit);
+
+    _end:
 
     delete msg;
     delete prt;
