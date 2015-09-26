@@ -1,4 +1,4 @@
-Format: http://svn.debian.org/wsvn/dep/web/deps/dep5.mdwn?rev=174
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Bitcoin
 Upstream-Contact: Satoshi Nakamoto <satoshin@gmx.com>
  irc://#bitcoin@freenode.net
@@ -6,7 +6,7 @@ Source: https://github.com/bitcoin/bitcoin
 
 Files: *
 Copyright: 2009-2015, Bitcoin Core Developers
-License: MIT/Expat
+License: Expat
 Comment: The Bitcoin Core Developers encompasses the current developers listed on bitcoin.org,
          as well as the numerous contributors to the project.
 
@@ -19,45 +19,45 @@ Files: debian/manpages/*
 Copyright: Micah Anderson <micah@debian.org>
 License: GPL-3+
 
-Files: src/qt/res/icons/add.png,
-       src/qt/res/icons/address-book.png,
-       src/qt/res/icons/configure.png,
-       src/qt/res/icons/debugwindow.png,
-       src/qt/res/icons/edit.png,
-       src/qt/res/icons/editcopy.png,
-       src/qt/res/icons/editpaste.png,
-       src/qt/res/icons/export.png,
-       src/qt/res/icons/eye.png,
-       src/qt/res/icons/filesave.png,
-       src/qt/res/icons/history.png,
-       src/qt/res/icons/info.png,
-       src/qt/res/icons/key.png,
-       src/qt/res/icons/lock_*.png,
-       src/qt/res/icons/open.png,
-       src/qt/res/icons/overview.png,
-       src/qt/res/icons/quit.png,
-       src/qt/res/icons/receive.png,
-       src/qt/res/icons/remove.png,
-       src/qt/res/icons/send.png,
-       src/qt/res/icons/synced.png,
-       src/qt/res/icons/transaction*.png,
-       src/qt/res/icons/tx_output.png,
+Files: src/qt/res/icons/add.png
+       src/qt/res/icons/address-book.png
+       src/qt/res/icons/configure.png
+       src/qt/res/icons/debugwindow.png
+       src/qt/res/icons/edit.png
+       src/qt/res/icons/editcopy.png
+       src/qt/res/icons/editpaste.png
+       src/qt/res/icons/export.png
+       src/qt/res/icons/eye.png
+       src/qt/res/icons/filesave.png
+       src/qt/res/icons/history.png
+       src/qt/res/icons/info.png
+       src/qt/res/icons/key.png
+       src/qt/res/icons/lock_*.png
+       src/qt/res/icons/open.png
+       src/qt/res/icons/overview.png
+       src/qt/res/icons/quit.png
+       src/qt/res/icons/receive.png
+       src/qt/res/icons/remove.png
+       src/qt/res/icons/send.png
+       src/qt/res/icons/synced.png
+       src/qt/res/icons/transaction*.png
+       src/qt/res/icons/tx_output.png
        src/qt/res/icons/warning.png
 Copyright: Stephen Hutchings (and more)
            http://typicons.com
-License: MIT/Expat
+License: Expat
 Comment: Site: https://github.com/stephenhutchings/typicons.font
 
 Files: src/qt/res/icons/connect*.png
        src/qt/res/src/connect-*.svg
 Copyright: Marco Falke
-License: MIT/Expat
+License: Expat
 Comment: Inspired by Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/tx_mined.png
        src/qt/res/src/mine.svg
 Copyright: Jonas Schnelli
-License: MIT/Expat
+License: Expat
 Comment:
 
 Files: src/qt/res/icons/clock*.png
@@ -68,7 +68,7 @@ Files: src/qt/res/icons/clock*.png
        src/qt/res/src/tx_*.svg
        src/qt/res/src/verify.svg
 Copyright: Stephan Hutching, Jonas Schnelli
-License: MIT/Expat
+License: Expat
 Comment: Modifications of Stephan Hutchings Typicons
 
 Files: src/qt/res/icons/about.png
@@ -76,11 +76,11 @@ Files: src/qt/res/icons/about.png
        share/pixmaps/bitcoin*
        src/qt/res/src/bitcoin.svg
 Copyright: Bitboy, Jonas Schnelli
-License: PUB-DOM
+License: public-domain
 Comment: Site: https://bitcointalk.org/?topic=1756.0
 
 
-License: MIT/Expat
+License: Expat
  Permission is hereby granted, free of charge, to any person obtaining a
  copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
@@ -128,5 +128,5 @@ Comment:
  You should have received a copy of the GNU General Public License along
  with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-License: PUB-DOM
+License: public-domain
  This work is in the public domain.
