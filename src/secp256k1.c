@@ -146,8 +146,11 @@ int secp256k1_ec_pubkey_parse(const secp256k1_context* ctx, secp256k1_pubkey* pu
     secp256k1_ge Q;
 
     (void)ctx;
+    VERIFY_CHECK(ctx != NULL);
+    ARG_CHECK(pubkey != NULL);
+    memset(pubkey, 0, sizeof(*pubkey));
+    ARG_CHECK(input != NULL);
     if (!secp256k1_eckey_pubkey_parse(&Q, input, inputlen)) {
-        memset(pubkey, 0, sizeof(*pubkey));
         return 0;
     }
     secp256k1_pubkey_save(pubkey, &Q);
@@ -159,6 +162,10 @@ int secp256k1_ec_pubkey_serialize(const secp256k1_context* ctx, unsigned char *o
     secp256k1_ge Q;
 
     (void)ctx;
+    VERIFY_CHECK(ctx != NULL);
+    ARG_CHECK(output != NULL);
+    ARG_CHECK(outputlen != NULL);
+    ARG_CHECK(pubkey != NULL);
     return (secp256k1_pubkey_load(ctx, &Q, pubkey) &&
             secp256k1_eckey_pubkey_serialize(&Q, output, outputlen, flags));
 }
