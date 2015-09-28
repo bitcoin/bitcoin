@@ -33,10 +33,6 @@ static void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, c
     r->infinity = a->infinity;
 }
 
-static void secp256k1_ge_set_infinity(secp256k1_ge *r) {
-    r->infinity = 1;
-}
-
 static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const secp256k1_fe *y) {
     r->infinity = 0;
     r->x = *x;
@@ -154,13 +150,6 @@ static void secp256k1_gej_set_infinity(secp256k1_gej *r) {
     secp256k1_fe_set_int(&r->x, 0);
     secp256k1_fe_set_int(&r->y, 0);
     secp256k1_fe_set_int(&r->z, 0);
-}
-
-static void secp256k1_gej_set_xy(secp256k1_gej *r, const secp256k1_fe *x, const secp256k1_fe *y) {
-    r->infinity = 0;
-    r->x = *x;
-    r->y = *y;
-    secp256k1_fe_set_int(&r->z, 1);
 }
 
 static void secp256k1_gej_clear(secp256k1_gej *r) {

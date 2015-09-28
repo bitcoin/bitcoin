@@ -40,9 +40,6 @@ typedef struct {
 
 #define SECP256K1_GE_STORAGE_CONST_GET(t) SECP256K1_FE_STORAGE_CONST_GET(t.x), SECP256K1_FE_STORAGE_CONST_GET(t.y)
 
-/** Set a group element equal to the point at infinity */
-static void secp256k1_ge_set_infinity(secp256k1_ge *r);
-
 /** Set a group element equal to the point with given X and Y coordinates */
 static void secp256k1_ge_set_xy(secp256k1_ge *r, const secp256k1_fe *x, const secp256k1_fe *y);
 
@@ -78,9 +75,6 @@ static void secp256k1_ge_globalz_set_table_gej(size_t len, secp256k1_ge *r, secp
 
 /** Set a group element (jacobian) equal to the point at infinity. */
 static void secp256k1_gej_set_infinity(secp256k1_gej *r);
-
-/** Set a group element (jacobian) equal to the point with given X and Y coordinates. */
-static void secp256k1_gej_set_xy(secp256k1_gej *r, const secp256k1_fe *x, const secp256k1_fe *y);
 
 /** Set a group element (jacobian) equal to another which is given in affine coordinates. */
 static void secp256k1_gej_set_ge(secp256k1_gej *r, const secp256k1_ge *a);
