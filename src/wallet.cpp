@@ -3254,7 +3254,7 @@ int CMerkleTx::GetTransactionLockSignatures() const
 {
     if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
     if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
-    if(nInstantXDepth == 0) return -1;
+    if(!fEnableInstantX) return -1;
 
     //compile consessus vote
     std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());
@@ -3267,7 +3267,7 @@ int CMerkleTx::GetTransactionLockSignatures() const
 
 bool CMerkleTx::IsTransactionLockTimedOut() const
 {
-    if(nInstantXDepth == 0) return 0;
+    if(!fEnableInstantX) return 0;
 
     //compile consessus vote
     std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(GetHash());

@@ -1487,10 +1487,9 @@ int CBudgetProposal::GetTotalPaymentCount()
 int CBudgetProposal::GetRemainingPaymentCount()
 {
     // If this budget starts in the future, this value will be wrong
-    int nPayments = (GetBlockEndCycle() - GetBlockCurrentCycle()) / GetBudgetPaymentCycleBlocks();
-    int nTotal = (GetBlockEndCycle() - GetBlockStartCycle()) / GetBudgetPaymentCycleBlocks();
+    int nPayments = (GetBlockEndCycle() - GetBlockCurrentCycle()) / GetBudgetPaymentCycleBlocks() - 1;
     // Take the lowest value
-    return (nPayments <= nTotal ? nPayments : nTotal);
+    return std::min(nPayments, GetTotalPaymentCount());
 }
 
 CBudgetProposalBroadcast::CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn)

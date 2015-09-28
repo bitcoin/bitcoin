@@ -1571,6 +1571,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             }
         }
 
+        // do not initiate queue if we are a liquidity proveder to avoid useless inter-mixing
+        if(nLiquidityProvider) return false;
+
         int i = 0;
 
         // otherwise, try one randomly
@@ -1625,12 +1628,21 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 
 bool CDarksendPool::PrepareDarksendDenominate()
 {
-    // Submit transaction to the pool if we get here, use sessionDenom so we use the same amount of money
-    std::string strError = pwalletMain->PrepareDarksendDenominate(0, nDarksendRounds);
-    LogPrintf("DoAutomaticDenominating : Running Darksend denominate. Return '%s'\n", strError);
+    std::string strError = "";
+    // Submit transaction to the pool if we get here
+    // Try to use only inputs with the same number of rounds starting from lowest number of rounds possible
+    for(int i = 0; i < nDarksendRounds; i++) {
+        strError = pwalletMain->PrepareDarksendDenominate(i, i+1);
+        LogPrintf("DoAutomaticDenominating : Running Darksend denominate for %d rounds. Return '%s'\n", i, strError);
+        if(strError == "") return true;
+    }
 
+    // We failed? That's strange but let's just make final attempt and try to mix everything
+    strError = pwalletMain->PrepareDarksendDenominate(0, nDarksendRounds);
+    LogPrintf("DoAutomaticDenominating : Running Darksend denominate for all rounds. Return '%s'\n", strError);
     if(strError == "") return true;
 
+    // Should never actually get here but just in case
     strAutoDenomResult = strError;
     LogPrintf("DoAutomaticDenominating : Error running denominate, %s\n", strError);
     return false;

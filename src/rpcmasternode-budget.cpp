@@ -505,6 +505,58 @@ Value mnbudget(const Array& params, bool fHelp)
     return Value::null;
 }
 
+Value mnbudgetvoteraw(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 6)
+        throw runtime_error(
+                "mnbudgetvoteraw <masternode-tx-hash> <masternode-tx-index> <proposal-hash> <yes|no> <time> <vote-sig>\n"
+                "Compile and relay a proposal vote with provided external signature instead of signing vote internally\n"
+                );
+
+    uint256 hashMnTx = ParseHashV(params[0], "mn tx hash");
+    int nMnTxIndex = params[1].get_int();
+    CTxIn vin = CTxIn(hashMnTx, nMnTxIndex);
+
+    uint256 hashProposal = ParseHashV(params[2], "Proposal hash");
+    std::string strVote = params[3].get_str();
+
+    if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
+    int nVote = VOTE_ABSTAIN;
+    if(strVote == "yes") nVote = VOTE_YES;
+    if(strVote == "no") nVote = VOTE_NO;
+
+    int64_t nTime = params[4].get_int64();
+    std::string strSig = params[5].get_str();
+    bool fInvalid = false;
+    vector<unsigned char> vchSig = DecodeBase64(strSig.c_str(), &fInvalid);
+
+    if (fInvalid)
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+
+    CMasternode* pmn = mnodeman.Find(vin);
+    if(pmn == NULL)
+    {
+        return "Failure to find masternode in list : " + vin.ToString();
+    }
+
+    CBudgetVote vote(vin, hashProposal, nVote);
+    vote.nTime = nTime;
+    vote.vchSig = vchSig;
+
+    if(!vote.SignatureValid(true)){
+        return "Failure to verify signature.";
+    }
+
+    std::string strError = "";
+    if(budget.UpdateProposal(vote, NULL, strError)){
+        budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        vote.Relay();
+        return "Voted successfully";
+    } else {
+        return "Error voting : " + strError;
+    }
+}
+
 Value mnfinalbudget(const Array& params, bool fHelp)
 {
     string strCommand;
