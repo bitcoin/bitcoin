@@ -4392,6 +4392,10 @@ Pour exemple: alertnotify=echo %%s | mail -s "Alerte Dash" admin@foo.com
         <translation>Spécifier votre propre adresse publique</translation>
     </message>
     <message>
+        <source>Synchronization pending...</source>
+        <translation>Synchronisation en suspens...</translation>
+    </message>
+    <message>
         <source>This help message</source>
         <translation>Ce message d'aide</translation>
     </message>

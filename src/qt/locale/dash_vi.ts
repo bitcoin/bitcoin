@@ -741,6 +741,10 @@ Kiểu: %3
         <translation>Sao chép tiền trả lại</translation>
     </message>
     <message>
+        <source>Non-anonymized input selected. &lt;b&gt;Darksend will be disabled.&lt;/b&gt;&lt;br&gt;&lt;br&gt;If you still want to use Darksend, please deselect all non-nonymized inputs first and then check Darksend checkbox again.</source>
+        <translation>Đầu vào không ẩn danh được chọn. &lt;b&gt;Darksend sẽ bị tắt.&lt;/b&gt;&lt;br&gt;&lt;br&gt;Nếu bạn vẫn muốn sử dụng Darksend, hãy bỏ chọn tata cả các đầu vào không ẩn danh trước và đánh dấu vào hộp Darksend lần nữa.</translation>
+    </message>
+    <message>
         <source>highest</source>
         <translation>cao nhất</translation>
     </message>
@@ -1158,6 +1162,10 @@ Kiểu: %3
         <translation>&amp;Ví</translation>
     </message>
     <message>
+        <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
+        <translation>Nếu bạn vô hiệu hóa các chi tiêu của phần tiền lẻ chưa được xác nhận, phần tiền lẻ từ một giao dịch &lt;br/&gt;không thể được sử dụng đến khi giao dịch đó nhận được ít nhất một xác nhận. &lt;br/&gt;Điều này ảnh hưởng đến cách tính số dư của bạn.</translation>
+    </message>
+    <message>
         <source>Accept connections from outside</source>
         <translation>Chấp nhận kết nối từ bên ngoài</translation>
     </message>
@@ -1493,6 +1501,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n Vòng</numerusform></translation>
+    </message>
+    <message>
+        <source>Not enough compatible inputs to anonymize &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;will anonymize &lt;span style='color:red;'&gt;%2&lt;/span&gt; instead</source>
+        <translation>Không đủ đầu vào tương ứng để ẩn danh &lt;span style='color:red;'&gt;%1&lt;/span&gt;,&lt;br&gt;sẽ ẩn danh &lt;span style='color:red;'&gt;%2&lt;/span&gt; thay vào đó</translation>
     </message>
     <message>
         <source>Overall progress</source>
@@ -1916,6 +1928,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nâng cấp định dạng ví</translation>
     </message>
     <message>
+        <source>The buttons below will restart the wallet with command-line options to repair the wallet, fix issues with corrupt blockhain files or missing/obsolete transactions.</source>
+        <translation>Nút dưới đây sẽ khởi động lại ví với tuỳ chọn dòng lệnh để sửa lại ví, sửa lại những vấn đề với các tệp blockchain bị lỗi hoặc các giao dịch bị thiếu/cũ.</translation>
+    </message>
+    <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
         <translation>-salvagewallet: Thử phục hồi khoá riêng từ tệp wallet.dat bị lỗi.</translation>
     </message>
@@ -2268,6 +2284,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tối thiểu hoá</translation>
     </message>
     <message>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Nếu mức phí tuỳ chỉnh được đặt là 1000 duff và giao dịch chỉ có 250 byte, thì "theo kilobyte" chỉ trả 250 duff cho phí,&lt;br /&gt;trong khi "ít nhất" phải trả 1000 duff. Cho các giao dịch lớn hơn 1 kilobyte thì cả hai đều trả theo kilobyte.</translation>
+    </message>
+    <message>
+        <source>If the custom fee is set to 1000 duffs and the transaction is only 250 bytes, then "per kilobyte" only pays 250 duffs in fee,&lt;br /&gt;while "total at least" pays 1000 duffs. For transactions bigger than a kilobyte both pay by kilobyte.</source>
+        <translation>Nếu phí giao dịch tuỳ chỉnh được đặt là 1000 duff và giao dịch chỉ có 250 bytes, thì "theo kilobyte" chỉ trả 250 duff phí,&lt;br /&gt;trong khi "tổng ít nhất" trả 1000 duff. Với các giao dịch lớn hơn 1 kilobyte thì cả hai đều trả theo kilobyte.</translation>
+    </message>
+    <message>
+        <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks.&lt;br /&gt;But be aware that this can end up in a never confirming transaction once there is more demand for dash transactions than the network can process.</source>
+        <translation>Chỉ trả phí tối thiểu cũng được chỉ khi mà có lượng giao dịch ít hơn không gian trong khối.&lt;br /&gt;Nhưng cần lưu ý là nó có thể xảy ra hiện tượng giao dịch không bao giờ được xác nhận một khi có nhiều nhu cầu giao dash hơn khả năng mà mạng lưới có thể xử lý được.</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>mỗi kilobyte</translation>
     </message>
@@ -2286,6 +2314,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Custom:</source>
         <translation>Tuỳ chỉnh:</translation>
+    </message>
+    <message>
+        <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
+        <translation>(Phí khởi tạo thông minh chưa được khởi tạo. Thường thì sẽ mất vài block...)</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
@@ -3044,6 +3076,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Kiểu giao dịch.</translation>
     </message>
     <message>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Cho dù có hay không thì một địa chỉ chỉ theo dõi cũng liên quan đến giao dịch này.</translation>
+    </message>
+    <message>
         <source>Destination address of transaction.</source>
         <translation>Địa chỉ đích của giao dịch.</translation>
     </message>
@@ -3542,8 +3578,28 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Nếu &lt;category&gt; không được cung cấp, đưa ra tất cả các thông tin gỡ rối.</translation>
     </message>
     <message>
+        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
+        <translation>(1 = giữ lại dữ liệu tx, ví dụ chủ tài khoản và thông tin yêu cầu thanh toán, 2 = bỏ dữ liệu tx)</translation>
+    </message>
+    <message>
+        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
+        <translation>Cho phép các kết nối JSON-RPC từ các nguồn nhất định. Các địa chỉ &lt;ip&gt; hợp lệ là các địa chỉ IP đơn (ví dụ: 1.2.3.4), một mạng/netmask (ví dụ: 1.2.3.4/255.255.255.0) hoặc một mạng/CIDR (ví dụ: 1.2.3.4/24). Tuỳ chọn này có thể chỉ ra nhiều lần.</translation>
+    </message>
+    <message>
         <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
         <translation>Có một lỗi xảy ra trong khi thiết lập địa chỉ RPC %s cổng %u để lắng nghe: %s</translation>
+    </message>
+    <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>Liên kết với địa chỉ cụ thể và đưa nó vào danh sách chấp nhận của các đối tác kết nối vào nó. Sử dụng cách viết [địa chỉ máy]:cổng cho IPv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>Liên kết với địa chỉ cụ thể để lắng nghe các kết nối JSON-RPC. Sử dụng cách viết [địa chỉ máy]:cổng cho IPv6. Tùy chọn này có thể được chỉ định nhiều lần (ngầm định: bind cho tất cả các giao diện)</translation>
+    </message>
+    <message>
+        <source>Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)</source>
+        <translation>Thay đổi hành vi bỏ phiếu ngân sách cuối cùng tự động. mode = auto: Chỉ bỏ phiếu cho ngân sách cuối cùng tương ứng chính xác với ngân sách được cấp phát của tôi. (string, ngầm định: auto)</translation>
     </message>
     <message>
         <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default:%u)</source>
@@ -3574,6 +3630,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cho phép sử dụng tự động darksend cho những ngân sách được lưu trong ví (0-1, ngầm định: %u)</translation>
     </message>
     <message>
+        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Lỗi: Thấy tham số không được hỗ trợ -socks. Thiết lập phiên bản SOCKS là không thể được nữa, chỉ hỗ trợ proxy SOCKS5.</translation>
+    </message>
+    <message>
         <source>Fees (in DASH/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
         <translation>Phí (tính theo DASH/Kb) nhỏ hơn số này được coi là không mất phí cho việc chuyển tiền (ngầm định: %s)</translation>
     </message>
@@ -3594,8 +3654,28 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cách kiểm tra khối triệt để -checkblocks là (0-4, ngầm định: %u)</translation>
     </message>
     <message>
+        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
+        <translation>Nếu paytxfee không được thiết lập, bao gồm đầy đủ phí để giao dịch bắt đầu xác nhận bình quân trong n khối (ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Số lượng không phù hợp cho -maxtxfee=&lt;số lượng&gt;: '%s' (phải bằng ít nhất mức phí chuyển tiếp tối thiểu %s để tránh tình trạng tắc các giao dịch)</translation>
+    </message>
+    <message>
         <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
         <translation>Lưu nhật ký các ưu tiên và phí giao dịch cho mỗi kB khi đào các khối (ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
+        <translation>Duy trì một chỉ mục giao dịch đầy đủ, sử dụng bởi lệnh gọi rpc getrawtransaction (ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
+        <translation>Kích thước tối đa của dữ liệu trong các giao dịch cung cấp dữ liệu, chúng tôi chuyển tiếp và đào (ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
+        <translation>Tổng số tối đa phí để sử dụng cho một giao dịch trên ví, đặt số này quá nhỏ có thể làm bỏ lỡ các giao dịch lớn (ngầm định: %s)</translation>
     </message>
     <message>
         <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
@@ -3608,6 +3688,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)</source>
         <translation>Cung cấp thanh khoản cho Darksend bằng việc thường xuyên trộn tiền một cách liên tục (0-100, ngầm định: %u, 1=rất thường xuyên, phí cao, 100=rất ít thường xuyên, phí thấp)</translation>
+    </message>
+    <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Yêu cầu ưu tiên cao cho việc chuyển tiếp các giao dịch miễn phí hoặc giao dịch phí thấp (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file (default: %u)</source>
@@ -3624,6 +3708,30 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>Sản phẩm này có kèm theo phần mềm được phát triển bởi dự án OpenSSL để sử dụng các công cụ OpenSSL &lt;https://www.openssl.org/&gt; và phần mềm mã hoá được viết bởi Eric Young và phần mềm UPnP được viết bởi Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>To use dashd, or the -server option to dash-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=dashrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
+</source>
+        <translation>Để sử dụng dashd, hoặc tuỳ chọn -server với dash-qt, bạn phải đặt một mật khẩu rpcpassword trong tệp cấu hình:
+%s
+Gợi ý rằng bạn nên sử dụng những mật khẩu ngẫu nhiên sau:
+rpcuser=dashrpc
+rpcpassword=%s
+(bạn không cần thiết phải nhớ mật khẩu này)
+Username và mật khẩu KHÔNG ĐƯỢC giống nhau.
+Nếu tệp chưa có, thì hãy tạo ra với quyền chỉ đọc.
+Gợi ý bạn rằng cần đặt alertnotify để bạn nhận được thông báo về các vấn đề;
+ví dụ: alertnotify=echo %%s | mail -s "Dash Alert" admin@foo.com
+</translation>
     </message>
     <message>
         <source>Unable to locate enough funds for this transaction that are not equal 1000 DASH.</source>
@@ -3644,6 +3752,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>Các đối tác ngang hàng cho phép đang kết nối từ địa chỉ IP và netmask. Nó có thể được chỉ rõ nhiều lần.</translation>
+    </message>
+    <message>
+        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
+        <translation>Cái điểm ngang hàng trong danh sách trắng không thể bị cấm DoS và các giao dịch của nó luôn được chuyển tiếp, thậm chí cả khi nó đã có trong mempool, hữu ích ví dụ như cho một cửa ngõ</translation>
     </message>
     <message>
         <source>(9999 could be used only on mainnet)</source>
@@ -3691,6 +3803,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bản quyền (C) 2014-%i bởi Nhóm phát triển Dash Core</translation>
     </message>
     <message>
+        <source>Could not parse -rpcbind value %s as network address</source>
+        <translation>Không thể phân tích giá trị -rpcbind %s như là địa chỉ mạng</translation>
+    </message>
+    <message>
         <source>Darksend is idle.</source>
         <translation>Darksend đang nghỉ.</translation>
     </message>
@@ -3721,6 +3837,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Error: A fatal internal error occured, see debug.log for details</source>
         <translation>Lỗi: Một lỗi nghiêm trọng đã xuất hiện, xem debug.log để biết thêm chi tiết</translation>
+    </message>
+    <message>
+        <source>Error: Can't select current denominated inputs</source>
+        <translation>Lỗi: Không thể chọn đầu vào gốc hiện tại</translation>
     </message>
     <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
@@ -3879,6 +3999,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Đang trong quá trình trộn...</translation>
     </message>
     <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>Cần chỉ rõ một cổng với -whitebind: '%s'</translation>
+    </message>
+    <message>
         <source>No Masternodes detected.</source>
         <translation>Không tìm thấy các Master node.</translation>
     </message>
@@ -3909,6 +4033,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Run a thread to flush wallet periodically (default: %u)</source>
         <translation>Chạy một luồng để làm sạch ví một cách thường xuyên (ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Send trace/debug info to debug.log file (default: %u)</source>
+        <translation>Gửi thông tin trace/debug vào file debug.log (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Send transactions as zero-fee transactions if possible (default: %u)</source>
@@ -4175,6 +4303,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Tuỳ chọn cho RPC server</translation>
     </message>
     <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC hỗ trợ cho các kết nối HTTP cố định (ngầm định: %d)</translation>
+    </message>
+    <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
         <translation>Bỏ ngẫu nhiên 1 mỗi &lt;n&gt; thông điệp mạng</translation>
     </message>
@@ -4185,6 +4317,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
         <translation>Tái tạo lại chỉ mục chuỗi khối từ tệp blk000??.dat</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Nhận và hiển thị các cảnh báo mạng P2P (ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Relay and mine data carrier transactions (default: %u)</source>
+        <translation>Chuyển tiếp và đào các giao dịch mang dữ liệu (ngầm định: %u)</translation>
+    </message>
+    <message>
+        <source>Relay non-P2SH multisig (default: %u)</source>
+        <translation>Chuyển tiếp các khoá đa chữ ký không phải P2SH (ngầm định: %u)</translation>
     </message>
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
@@ -4245,6 +4389,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Specify your own public address</source>
         <translation>Hãy xác định địa chỉ công khai của bạn</translation>
+    </message>
+    <message>
+        <source>Synchronization pending...</source>
+        <translation>Đang chuẩn bị đồng bộ...</translation>
     </message>
     <message>
         <source>This help message</source>

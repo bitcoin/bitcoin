@@ -32,6 +32,7 @@
 
 extern bool fMasterNode;
 extern bool fLiteMode;
+extern bool fEnableInstantX;
 extern int nInstantXDepth;
 extern int nDarksendRounds;
 extern int nAnonymizeDarkcoinAmount;
