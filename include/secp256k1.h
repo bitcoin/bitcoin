@@ -271,6 +271,27 @@ SECP256K1_API int secp256k1_ec_pubkey_serialize(
     unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
+/** Parse an ECDSA signature in compact (64 bytes) format.
+ *
+ *  Returns: 1 when the signature could be parsed, 0 otherwise.
+ *  Args: ctx:      a secp256k1 context object
+ *  Out:  sig:      a pointer to a signature object
+ *  In:   input64:  a pointer to the 64-byte array to parse
+ *
+ *  The signature must consist of a 32-byte big endian R value, followed by a
+ *  32-byte big endian S value. If R or S fall outside of [0..order-1], the
+ *  encoding is invalid. R and S with value 0 are allowed in the encoding.
+ *
+ *  After the call, sig will always be initialized. If parsing failed or R or
+ *  S are zero, the resulting sig value is guaranteed to fail validation for any
+ *  message and public key.
+ */
+SECP256K1_API int secp256k1_ecdsa_signature_parse_compact(
+    const secp256k1_context* ctx,
+    secp256k1_ecdsa_signature* sig,
+    const unsigned char *input64
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
 /** Parse a DER ECDSA signature.
  *
  *  Returns: 1 when the signature could be parsed, 0 otherwise.
@@ -279,7 +300,12 @@ SECP256K1_API int secp256k1_ec_pubkey_serialize(
  *  In:   input:    a pointer to the signature to be parsed
  *        inputlen: the length of the array pointed to be input
  *
- *  Note that this function also supports some violations of DER and even BER.
+ *  This function will accept any valid DER encoded signature, even if the
+ *  encoded numbers are out of range.
+ *
+ *  After the call, sig will always be initialized. If parsing failed or the
+ *  encoded numbers are out of range, signature validation with it is
+ *  guaranteed to fail for every message and public key.
  */
 SECP256K1_API int secp256k1_ecdsa_signature_parse_der(
     const secp256k1_context* ctx,
@@ -305,6 +331,21 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
     size_t *outputlen,
     const secp256k1_ecdsa_signature* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
+/** Serialize an ECDSA signature in compact (64 byte) format.
+ *
+ *  Returns: 1
+ *  Args:   ctx:       a secp256k1 context object
+ *  Out:    output64:  a pointer to a 64-byte array to store the compact serialization
+ *  In:     sig:       a pointer to an initialized signature object
+ *
+ *  See secp256k1_ecdsa_signature_parse_compact for details about the encoding.
+ */
+SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
+    const secp256k1_context* ctx,
+    unsigned char *output64,
+    const secp256k1_ecdsa_signature* sig
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 /** Verify an ECDSA signature.
  *
