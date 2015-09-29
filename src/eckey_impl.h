@@ -40,7 +40,7 @@ static int secp256k1_eckey_pubkey_serialize(secp256k1_ge *elem, unsigned char *p
     secp256k1_fe_normalize_var(&elem->x);
     secp256k1_fe_normalize_var(&elem->y);
     secp256k1_fe_get_b32(&pub[1], &elem->x);
-    if (flags & SECP256K1_EC_COMPRESSED) {
+    if (flags & SECP256K1_EC_COMPRESSED_BIT) {
         *size = 33;
         pub[0] = 0x02 | (secp256k1_fe_is_odd(&elem->y) ? 0x01 : 0x00);
     } else {

@@ -148,12 +148,21 @@ typedef int (*secp256k1_nonce_function)(
 # endif
 
 /** Flags to pass to secp256k1_context_create. */
-# define SECP256K1_CONTEXT_VERIFY (1 << 0)
-# define SECP256K1_CONTEXT_SIGN   (1 << 1)
+# define SECP256K1_CONTEXT_VERIFY (SECP256K1_CONTEXT_VERIFY_BIT|SECP256K1_CONTEXT_CHECK_BIT)
+# define SECP256K1_CONTEXT_SIGN   (SECP256K1_CONTEXT_SIGN_BIT|SECP256K1_CONTEXT_CHECK_BIT)
+# define SECP256K1_CONTEXT_NONE   (SECP256K1_CONTEXT_CHECK_BIT)
 
+#  define SECP256K1_CONTEXT_VERIFY_BIT     (1 << 2)    
+#  define SECP256K1_CONTEXT_SIGN_BIT       (2 << 2)    
+#  define SECP256K1_CONTEXT_CHECK_BIT      (1)
+       
 /** Flag to pass to secp256k1_ec_pubkey_serialize and secp256k1_ec_privkey_export. */
-# define SECP256K1_EC_COMPRESSED  (1 << 0)
+# define SECP256K1_EC_COMPRESSED  (SECP256K1_EC_COMPRESSED_BIT|SECP256K1_EC_CHECK_BIT)
+# define SECP256K1_EC_UNCOMPRESSED  (SECP256K1_EC_CHECK_BIT)
 
+#  define SECP256K1_EC_COMPRESSED_BIT     (1 << 2)    
+#  define SECP256K1_EC_CHECK_BIT          (2)    
+        
 /** Create a secp256k1 context object.
  *
  *  Returns: a newly created context object.
@@ -261,7 +270,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
  *  In:   pubkey:     a pointer to a secp256k1_pubkey containing an initialized
  *                    public key.
  *        flags:      SECP256K1_EC_COMPRESSED if serialization should be in
- *                    compressed format.
+ *                    compressed format, otherwise SECP256K1_EC_UNCOMPRESSED.
  */
 SECP256K1_API int secp256k1_ec_pubkey_serialize(
     const secp256k1_context* ctx,
