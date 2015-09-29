@@ -39,8 +39,6 @@ class ZMQTest (BitcoinTestFramework):
             []
             ])
 
-        return nodes
-
     def run_test(self):
         self.sync_all()
 
