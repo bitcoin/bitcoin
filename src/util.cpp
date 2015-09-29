@@ -588,6 +588,13 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault)
     return nDefault;
 }
 
+int32_t GetArgInt(const std::string& strArg, int32_t nDefault)
+{
+    if (mapArgs.count(strArg))
+        return strtol(mapArgs[strArg]);
+    return nDefault;
+}
+
 bool GetBoolArg(const std::string& strArg, bool fDefault)
 {
     if (mapArgs.count(strArg))
