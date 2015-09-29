@@ -3249,6 +3249,10 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
         <translation>Reconstruire au démarrage l'index de la chaîne de blocs à partir des fichiers blk000??.dat actuels</translation>
     </message>
     <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Recevoir et afficher les alertes du réseau poste à poste (%u par défaut)</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Envoyer les informations de débogage/trace à la console au lieu du fichier debug.log</translation>
     </message>

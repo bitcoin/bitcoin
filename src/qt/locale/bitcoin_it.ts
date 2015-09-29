@@ -3241,6 +3241,10 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
         <translation>Ricostruzione dell'indice della block chain dai file blk000??.dat correnti all'avvio</translation>
     </message>
     <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Ricevi e visualizza gli alerts della rete P2P (default: %u)</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Invia le informazioni di trace/debug alla console invece che al file debug.log</translation>
     </message>

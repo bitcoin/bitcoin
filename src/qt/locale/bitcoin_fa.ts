@@ -89,7 +89,11 @@
         <source>Exporting Failed</source>
         <translation>استخراج انجام نشد</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>خطایی هنگام تلاش برای ذخیرهٔ لیست آدرس ها در %1 رخ داد.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -176,6 +180,14 @@
         <translation>کیف پول رمزنگاری شد</translation>
     </message>
     <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>رمز جدید کیف پول خود را وارد کنید.&lt;br/&gt;از رمز عبوری استفاده کنید که&lt;b&gt; حداقل 10  کاراکتر تصادفی &lt;/b&gt; و یا &lt;b&gt; حداقل 8 حرف داشته باشد.&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>رمز عبور قدیمی و رمز عبور جدید کیف پول خود را وارد گنید.</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>رمزنگاری کیف پول با شکست مواجه شد</translation>
     </message>
@@ -217,6 +229,10 @@
     <message>
         <source>&amp;Overview</source>
         <translation>&amp;بررسی اجمالی</translation>
+    </message>
+    <message>
+        <source>Node</source>
+        <translation>گره</translation>
     </message>
     <message>
         <source>Show general overview of wallet</source>
@@ -261,6 +277,18 @@
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;تغییر گذرواژه...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;در حال ارسال آدرس ها...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;در حال دریافت آدرس ها...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>باز کردن &amp;آدرس</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -311,6 +339,10 @@
         <translation>&amp;دریافت</translation>
     </message>
     <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>نمایش اطلاعات در مورد بیت‌کوین</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;نمایش/ عدم نمایش</translation>
     </message>
@@ -353,6 +385,14 @@
     <message>
         <source>&amp;About Bitcoin Core</source>
         <translation>درباره هسته ی بیت کوین</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>نمایش لیست آدرس های ارسال و لیبل ها</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -489,6 +529,10 @@
         <translation>تاریخ</translation>
     </message>
     <message>
+        <source>Confirmations</source>
+        <translation>تاییدیه ها</translation>
+    </message>
+    <message>
         <source>Confirmed</source>
         <translation>تأیید شده</translation>
     </message>
@@ -511,6 +555,30 @@
     <message>
         <source>Copy transaction ID</source>
         <translation>کپی شناسهٔ تراکنش</translation>
+    </message>
+    <message>
+        <source>highest</source>
+        <translation>بیشترین</translation>
+    </message>
+    <message>
+        <source>higher</source>
+        <translation>بیشتر</translation>
+    </message>
+    <message>
+        <source>high</source>
+        <translation>زیاد</translation>
+    </message>
+    <message>
+        <source>medium-high</source>
+        <translation>متوسط متمایل به زیاد</translation>
+    </message>
+    <message>
+        <source>medium</source>
+        <translation>متوسط</translation>
+    </message>
+    <message>
+        <source>low-medium</source>
+        <translation>متوسط متمایل به کم</translation>
     </message>
     <message>
         <source>low</source>
@@ -540,7 +608,11 @@
         <source>(no label)</source>
         <translation>(بدون برچسب)</translation>
     </message>
-    </context>
+    <message>
+        <source>(change)</source>
+        <translation>(تغییر)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -622,6 +694,10 @@
         <translation>نسخه</translation>
     </message>
     <message>
+        <source>About Bitcoin Core</source>
+        <translation>درباره هسته ی بیت کوین</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>گزینه‌های خط‌فرمان</translation>
     </message>
@@ -639,6 +715,14 @@
     <message>
         <source>Welcome</source>
         <translation>خوش‌آمدید</translation>
+    </message>
+    <message>
+        <source>Welcome to Bitcoin Core.</source>
+        <translation>به هسته بیت کوین خوش آمدید.</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
+        <translation>از آنجایی که این اولین اجرای برنامه است، شما می‌توانید مسیر ذخیرهٔ داده‌ها را انتخاب کنید.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -798,6 +882,10 @@
         <translation>تراز استخراج شده از معدن که هنوز بالغ نشده است</translation>
     </message>
     <message>
+        <source>Balances</source>
+        <translation>تراز ها</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>جمع کل:</translation>
     </message>
@@ -805,12 +893,24 @@
         <source>Your current total balance</source>
         <translation>تراز کل فعلی شما</translation>
     </message>
+    <message>
+        <source>Spendable:</source>
+        <translation>:قابل خرج کردن</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>تراکنش های اخیر</translation>
+    </message>
     </context>
 <context>
     <name>PaymentServer</name>
     <message>
         <source>URI handling</source>
         <translation>مدیریت URI</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>درخواست پرداخت رد شد.</translation>
     </message>
     <message>
         <source>Payment request error</source>
@@ -837,6 +937,10 @@
     <message>
         <source>Amount</source>
         <translation>مبلغ</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>هیچکدام</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -897,6 +1001,22 @@
         <translation>تعداد فعلی بلوک‌ها</translation>
     </message>
     <message>
+        <source>Received</source>
+        <translation>دریافتی</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>ارسال شده</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>نسخه</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>سرویس ها</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>زمان آخرین بلوک</translation>
     </message>
@@ -925,6 +1045,10 @@
         <translation>پاکسازی کنسول</translation>
     </message>
     <message>
+        <source>Welcome to the Bitcoin Core RPC console.</source>
+        <translation>به کنسول RPC هسته بیت کوین خوش آمدید.</translation>
+    </message>
+    <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>دکمه‌های بالا و پایین برای پیمایش تاریخچه و &lt;b&gt;Ctrl-L&lt;/b&gt; برای پاک کردن صفحه.</translation>
     </message>
@@ -942,6 +1066,14 @@
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;برچسب:</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>نمایش</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>حذف کردن</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1041,6 +1173,10 @@
         <translation>پول خورد:</translation>
     </message>
     <message>
+        <source>fast</source>
+        <translation>سریع</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>ارسال به چند دریافت‌کنندهٔ به‌طور همزمان</translation>
     </message>
@@ -1095,6 +1231,10 @@
     <message>
         <source>(no label)</source>
         <translation>(بدون برچسب)</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to send?</source>
+        <translation>آیا مطمئن هستید که می خواهید ارسال کنید؟</translation>
     </message>
     </context>
 <context>

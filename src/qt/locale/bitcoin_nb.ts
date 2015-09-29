@@ -3257,6 +3257,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Gjenopprett blokkjedeindeks fra gjeldende blk000??.dat filer ved oppstart</translation>
     </message>
     <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Motta og vis P2P nettverksvarsler (standardvalg: %u)</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Send spor-/feilsøkingsinformasjon til konsollen istedenfor filen debug.log</translation>
     </message>

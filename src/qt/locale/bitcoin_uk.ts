@@ -3257,6 +3257,10 @@ rpcpassword=%s
         <translation>При запуску перебудувати індекс ланцюжка блоків з поточних файлів blk000??.dat</translation>
     </message>
     <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Отримувати та відображати попередження з мережі (типово: %u)</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Відсилати налагоджувальну інформацію на консоль, а не у файл debug.log</translation>
     </message>

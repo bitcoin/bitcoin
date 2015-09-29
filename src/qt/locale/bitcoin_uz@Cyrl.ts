@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Манзил ёки ёрлиқни таҳрирлаш учун икки марта босинг</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Янги манзил яратинг</translation>
     </message>

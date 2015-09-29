@@ -2216,6 +2216,10 @@
         <translation>&amp;Verifica el missatge</translation>
     </message>
     <message>
+        <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
+        <translation>Introduïu l'adreça del receptor, el missatge (assegureu-vos de copiar els salts de línia, espais, tabuladors, etc. exactament) i signatura de sota per verificar el missatge. Tingueu cura de no llegir més en la signatura del que està al missatge signat, per evitar ser enganyat per un atac d'home-en-el-mig. Tingueu en compte que això només demostra que la part que signa rep amb l'adreça, i no es pot provar l'enviament de qualsevol transacció!</translation>
+    </message>
+    <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>L'adreça Bitcoin amb què va ser signat el missatge</translation>
     </message>
@@ -2829,6 +2833,10 @@
         <translation>Comissions totals màximes que s'utilitzaran en una única transacció de moneder; si s'estableix un valor massa baix es poden interrompre transaccions grans (per defecte: %s)</translation>
     </message>
     <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Redueix els requeriments d'emmagatzemament podant (suprimint) els blocs antics. Aquest mode inhabilita l'ús de moneders i és incompatible amb -tindex. Avís: Revertir aquesta configuració comporta tornar a baixar la cadena de blocs sencera. (per defecte: 0 = inhabilita la poda de blocs, &gt;%u = mida objectiu en MiB per utilitzar els fitxers de blocs)</translation>
+    </message>
+    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Defineix el nombre de fils de verificació d'scripts (%u a %d, 0 = auto, &lt;0 = deixa tants nuclis lliures, per defecte: %d)</translation>
     </message>
@@ -2839,6 +2847,14 @@
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>No es pot enllaçar %s a aquest ordinador. El Bitcoin Core probablement ja estigui executant-s'hi.</translation>
+    </message>
+    <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>AVÍS: s'ha generat un nombre anòmalament alt de blocs, %d blocs rebuts en les darreres %d hores (se n'esperaven %d)</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>AVÍS: comproveu la vostra connexió a la xarxa, %d blocs rebuts en les darreres %d hores (se n'esperaven %d)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2957,6 +2973,14 @@
         <translation>Només connecta als nodes de la xarxa &lt;net&gt; (ipv4, ipv6 o onion)</translation>
     </message>
     <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>La poda no es pot configurar amb un valor negatiu.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>El mode de poda és incompatible amb -txindex.</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Defineix la mida de la memòria cau de la base de dades en megabytes (%d a %d, per defecte: %d)</translation>
     </message>
@@ -3053,8 +3077,16 @@
         <translation>Mida màxima de les dades en les transaccions de l'operador en què confiem i en les meves (per defecte: %u)</translation>
     </message>
     <message>
+        <source>Prune configured below the minimum of %d MB.  Please use a higher number.</source>
+        <translation>Poda configurada per sota el mínim de %d MB. Feu servir un nombre superior.</translation>
+    </message>
+    <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Consulta a adreces d'iguals a través de DNS, si es troba baix en adreces (per defecte: 1 a menys que -connect)</translation>
+    </message>
+    <message>
+        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
+        <translation>Genera a l'atzar credencials per a cada connexió proxy. Això habilita l'aïllament del flux de Tor (per defecte: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3063,6 +3095,10 @@
     <message>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation>Defineix el nombre de fils per a la generació de moneda si està habilitat (-1 = tots els nuclis, per defecte: %d)</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>L'import de la transacció és massa petit per enviar-la després que se'n dedueixi la comissió</translation>
     </message>
     <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
@@ -3104,8 +3140,24 @@ per exemple: alertnotify=echo %%s | mail -s "Avís de Bitcoin" admin@foo.com</tr
         <translation>Els iguals en la llista blanca no poden ser bandejats per DoS i es transmetran sempre llurs transaccions, fins i tot si ja són a la mempool. Això és útil, p. ex., per a una passarel·la</translation>
     </message>
     <message>
+        <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
+        <translation>Cal que torneu a construir la base de dades fent servir -reindex per tornar al mode no podat. Això tornarà a baixar la cadena de blocs sencera</translation>
+    </message>
+    <message>
+        <source>(default: %u)</source>
+        <translation>(per defecte: %u)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Accepta sol·licituds REST públiques (per defecte: %u)</translation>
+    </message>
+    <message>
+        <source>Activating best chain...</source>
+        <translation>S'està activant la millor cadena...</translation>
+    </message>
+    <message>
+        <source>Can't run with a wallet in prune mode.</source>
+        <translation>No es pot executar amb un moneder en mode poda.</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3194,6 +3246,14 @@ per exemple: alertnotify=echo %%s | mail -s "Avís de Bitcoin" admin@foo.com</tr
     <message>
         <source>RPC support for HTTP persistent connections (default: %d)</source>
         <translation>Suport RPC per a connexions HTTP persistents (per defecte: %d)</translation>
+    </message>
+    <message>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>Reconstrueix l'índex de la cadena de blocs dels fitxers blk000??.dat actuals a l'inici.</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Rep i mostra avisos de la xarxa P2P (per defecte: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

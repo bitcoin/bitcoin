@@ -67,11 +67,11 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Bunlar ödeme yapmak için kullanacağınız Bitcoin adreslerinizdir. Bitcoin yollamadan önce meblağı ve alıcı adresini daima kontrol ediniz.</translation>
+        <translation>Bunlar ödemeleri göndermek için kullanacağınız Bitcoin adreslerinizdir. Bitcoin yollamadan önce miktarı ve alıcının alım adresini daima kontrol ediniz.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Bunlar ödeme almak için kullanacağınız Bitcoin adreslerinizdir. Her muamele için yeni bir alım adresi kullanmanız tavsiye edilir.</translation>
+        <translation>Bunlar ödemeleri almak için kullanacağınız Bitcoin adreslerinizdir. Her işlem için yeni bir alım adresi kullanmanız tavsiye edilir.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -110,7 +110,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(boş etiket)</translation>
+        <translation>(etiket yok)</translation>
     </message>
 </context>
 <context>
@@ -145,11 +145,11 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Bu işlem, cüzdan şifresini açmak için cüzdan parolasını gerektirir.</translation>
+        <translation>Bu işlem cüzdanın şifrelemesini açmak için cüzdan parolasını gerektirir.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Cüzdan şifresini aç</translation>
+        <translation>Cüzdanın şifrelemesini aç</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -157,7 +157,7 @@
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>Cüzdan şifrelenmesini teyit eder</translation>
+        <translation>Cüzdanın şifrelemesini teyit eder</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
@@ -3251,6 +3251,10 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>Başlangıçta blok zinciri indeksini güncel blk000??.dat dosyalarından tekrar inşa et</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>P2P ağından gelen önemli uyarıları alın ve gösterin (önseçili değer: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

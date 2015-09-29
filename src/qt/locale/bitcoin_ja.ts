@@ -3258,6 +3258,10 @@ rpcpassword=%s
         <translation>起動時に現在の blk000??.dat ファイルからブロック チェーンのインデックスを再構築</translation>
     </message>
     <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>P2Pネットワークのアラートの受け取りと表示を行う (デフォルト: %u)</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>トレース/デバッグ情報を debug.log ファイルの代わりにコンソールへ送る</translation>
     </message>

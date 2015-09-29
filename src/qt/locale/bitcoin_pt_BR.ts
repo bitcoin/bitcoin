@@ -1831,6 +1831,10 @@
         <translation>Escolher</translation>
     </message>
     <message>
+        <source>collapse fee-settings</source>
+        <translation>colapso Taxa de definições</translation>
+    </message>
+    <message>
         <source>per kilobyte</source>
         <translation>por kilobyte</translation>
     </message>
@@ -2078,12 +2082,24 @@
         <translation>Remover esta entrada</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>A taxa será deduzida da quantia sendo enviada. O beneficiario receberá menos bitcoins do que você colocou no campo de quantidade. Se varios beneficiarios estão selecionados, a taxa é dividida igualmente.</translation>
+    </message>
+    <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>&amp;Retirar taxa da quantia</translation>
     </message>
     <message>
         <source>Message:</source>
         <translation>Mensagem:</translation>
+    </message>
+    <message>
+        <source>This is an unauthenticated payment request.</source>
+        <translation>Esta é uma cobrança não autenticada.</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation>Esta é uma cobrança autenticada.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2523,6 +2539,10 @@
         <translation>Tipo de transação.</translation>
     </message>
     <message>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Mostrar ou não endereços Bitcoin na lista de transações.</translation>
+    </message>
+    <message>
         <source>Amount removed from or added to balance.</source>
         <translation>Quantidade debitada ou creditada ao saldo.</translation>
     </message>
@@ -2813,6 +2833,10 @@
         <translation>Atenção: wallet.dat corrompido, dados recuperados! Arquivo wallet.dat original salvo como wallet.{timestamp}.bak em %s; se seu saldo ou transações estiverem incorretos, você deve restaurar o backup.</translation>
     </message>
     <message>
+        <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
+        <translation>Lista Branca pares de ligação da máscara de rede dado ou o endereço IP . Pode ser especificado várias vezes.</translation>
+    </message>
+    <message>
         <source>(default: 1)</source>
         <translation>(padrão: 1)</translation>
     </message>
@@ -2905,6 +2929,14 @@
         <translation>Somente conectar a clientes na rede &lt;net&gt; (ipv4, ipv6 ou onion)</translation>
     </message>
     <message>
+        <source>Prune cannot be configured with a negative value.</source>
+        <translation>O modo Prune não pode ser configurado com um valor negativo.</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>O modo Prune é incompatível com -txindex.</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Define o tamanho do cache do banco de dados em megabytes (%d para %d, padrão: %d)</translation>
     </message>
@@ -2955,6 +2987,10 @@
     <message>
         <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
         <translation>Um erro ocorreu enquanto configurando o endereço RPC %s porta %u para escuta: %s</translation>
+    </message>
+    <message>
+        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
+        <translation>Vincular ao endereço fornecido e sempre escutar nele. Use a notação [host]:port para IPv6</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
@@ -3015,6 +3051,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     <message>
         <source>(default: %u)</source>
         <translation>(padrão: %u)</translation>
+    </message>
+    <message>
+        <source>Activating best chain...</source>
+        <translation>Ativando a melhor sequência...</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3079,6 +3119,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Necessário informar uma porta com -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>Node relay options:</source>
+        <translation>Opções de relé nó :</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3247,6 +3291,14 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     <message>
         <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Aguardar por conexões na porta &lt;port&gt; (padrão: %u ou testnet: %u)</translation>
+    </message>
+    <message>
+        <source>Prepend debug output with timestamp (default: %u)</source>
+        <translation>Adiciona timestamp como prefixo no debug (default: %u)</translation>
+    </message>
+    <message>
+        <source>Relay non-P2SH multisig (default: %u)</source>
+        <translation>Retransmitir P2SH não multisig (default: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>

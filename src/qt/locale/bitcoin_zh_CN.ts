@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>这是您用来付款的比特币地址。在付款前，请总是核实付款金额和收款地址。</translation>
+        <translation>这是您用来付款的比特币地址。在付款前，请仔细核实付款金额和收款地址。</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
@@ -3257,6 +3257,10 @@ rpcpassword=%s
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>启动时重新为当前的 blk000??.dat 文件建立索引</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>收到并且显示P2P网络的告警(默认:%u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

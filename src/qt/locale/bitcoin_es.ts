@@ -47,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Elije la dirección para enviar monedas a</translation>
+        <translation>Elija la dirección para enviar monedas a</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Elije la dirección para recibir monedas con</translation>
+        <translation>Elija la dirección para recibir monedas con</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -75,7 +75,7 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Copiar &amp;etiqueta</translation>
+        <translation>Copiar &amp;Etiqueta</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -3247,6 +3247,10 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>Reconstruir el índice de la cadena de bloques en el arranque desde los actuales ficheros blk000??.dat</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Recibir y mostrar alertas de red P2P (default: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

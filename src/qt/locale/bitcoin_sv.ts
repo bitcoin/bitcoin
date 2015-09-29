@@ -67,11 +67,11 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Detta är dina Bitcoin adresser för att skicka betalningar. Kolla alltid summan och den mottagande adressen innan du skickar Bitcoins.</translation>
+        <translation>Detta är dina Bitcoin-adresser för att skicka betalningar. Kolla alltid summan och den mottagande adressen innan du skickar Bitcoins.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Detta är dina Bitcoin adresser för att ta emot betalningar. Det rekommenderas att använda en ny mottagningsadress för varje transaktion.</translation>
+        <translation>Detta är dina Bitcoin-adresser för att ta emot betalningar. Det rekommenderas att använda en ny mottagningsadress för varje transaktion.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -111,14 +111,14 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(Ingen etikett)</translation>
+        <translation>(ingen etikett)</translation>
     </message>
 </context>
 <context>
     <name>AskPassphraseDialog</name>
     <message>
         <source>Passphrase Dialog</source>
-        <translation>Lösenords Dialog</translation>
+        <translation>Lösenordsdialog</translation>
     </message>
     <message>
         <source>Enter passphrase</source>
@@ -281,7 +281,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Byt Lösenord...</translation>
+        <translation>&amp;Byt lösenord...</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
@@ -297,7 +297,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Bitcoin Core client</source>
-        <translation>Bitcoin Core klient</translation>
+        <translation>Bitcoin Core-klient</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -321,7 +321,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation>&amp;Debug fönster</translation>
+        <translation>&amp;Debug-fönster</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
@@ -385,11 +385,11 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
-        <translation>Verktygsfält för Tabbar</translation>
+        <translation>Verktygsfält för tabbar</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Bitcoin Kärna</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -421,7 +421,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>Visa Bitcoin Core hjälpmeddelande för att få en lista med möjliga Bitcoin kommandoradsalternativ.</translation>
+        <translation>Visa Bitcoin Cores hjälpmeddelande för att få en lista med möjliga Bitcoin-kommandoradsalternativ.</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
@@ -461,7 +461,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Senast mottagna block genererades %1 sen.</translation>
+        <translation>Senast mottagna block genererades för %1 sen.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -553,7 +553,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Bytes:</source>
-        <translation>Antal Byte:</translation>
+        <translation>Antal byte:</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -581,15 +581,15 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>(av)välj allt</translation>
+        <translation>(av)markera allt</translation>
     </message>
     <message>
         <source>Tree mode</source>
-        <translation>Trädmetod</translation>
+        <translation>Trädvy</translation>
     </message>
     <message>
         <source>List mode</source>
-        <translation>Listmetod</translation>
+        <translation>Listvy</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -609,7 +609,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Confirmations</source>
-        <translation>Konfirmationer</translation>
+        <translation>Bekräftelser</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -764,7 +764,7 @@ Var vänlig och försök igen.</translation>
     <name>EditAddressDialog</name>
     <message>
         <source>Edit Address</source>
-        <translation>Redigera Adress</translation>
+        <translation>Redigera adress</translation>
     </message>
     <message>
         <source>&amp;Label</source>
@@ -842,7 +842,7 @@ Var vänlig och försök igen.</translation>
     <name>HelpMessageDialog</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Bitcoin Kärna</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>version</source>
@@ -881,11 +881,11 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>Eftersom detta är första gången programmet startas får du välja var Bitcoin Core skall lagra sitt data.</translation>
+        <translation>Eftersom detta är första gången programmet startas får du välja var Bitcoin Core skall lagra sina data.</translation>
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>Bitcoin Core kommer att ladda ner och spara en kopia av Bitcoin blockkedjan. Åtminstone %1GB av data kommer att sparas i denna katalog, och den kommer att växa över tiden. Plånboken kommer också att sparas i denna katalog.</translation>
+        <translation>Bitcoin Core kommer att ladda ner och spara en kopia av Bitcoin-blockkedjan. Åtminstone %1GB av data kommer att sparas i denna katalog, och den kommer att växa över tiden. Plånboken kommer också att sparas i denna katalog.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -897,7 +897,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>Bitcoin Kärna</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -959,7 +959,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Antalet skript &amp; verifikationstrådar</translation>
+        <translation>Antalet skript&amp;verifikationstrådar</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
@@ -983,7 +983,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>Tredjeparts URL:er (t.ex. en block utforskare) som finns i transaktionstabben som ett menyval i sammanhanget. %s i URL:en ersätts med tansaktionshashen. Flera URL:er är separerade med vertikala streck |.</translation>
+        <translation>Tredjeparts URL:er (t.ex. en blockutforskare) som finns i transaktionstabben som ett menyval i sammanhanget. %s i URL:en ersätts med tansaktionshashen. Flera URL:er är separerade med vertikala streck |.</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
@@ -991,15 +991,15 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
-        <translation>Aktiva kommandoradsalternativ som överrider alternativen ovan:</translation>
+        <translation>Aktiva kommandoradsalternativ som ersätter alternativen ovan:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
-        <translation>Återställ alla klient inställningar till förvalen.</translation>
+        <translation>Återställ alla klientinställningar till förvalen.</translation>
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>&amp;Återställ Alternativ</translation>
+        <translation>&amp;Återställ alternativ</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1027,15 +1027,15 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Enable coin &amp;control features</source>
-        <translation>Aktivera mynt och kontrollfunktioner</translation>
+        <translation>Aktivera mynt&amp;kontrollfunktioner</translation>
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>Om du avaktiverar betalning med okonfirmerade växel, kan inte växeln från en transaktion användas förrän den transaktionen har minst en konfirmation.</translation>
+        <translation>Om du avaktiverar betalning med obekräftad växel, kan inte växeln från en transaktion användas förrän den transaktionen har minst en bekräftelse.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>&amp;Spendera okonfirmerad växel</translation>
+        <translation>&amp;Spendera obekräftad växel</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1095,7 +1095,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Välj en måttenhet att visa när du skickar mynt.</translation>
+        <translation>Välj en måttenhet att visa i gränssnittet och när du skickar mynt.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1135,7 +1135,7 @@ Var vänlig och försök igen.</translation>
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Den medföljande proxy adressen är ogiltig.</translation>
+        <translation>Den angivna proxy-adressen är ogiltig.</translation>
     </message>
 </context>
 <context>
@@ -3240,6 +3240,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>Återskapa blockkedjans index från nuvarande blk000??.dat filer under uppstarten</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Mottag och visa P2P nätverksvarningar (förvalt: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
