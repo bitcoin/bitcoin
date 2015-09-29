@@ -326,10 +326,10 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
  * If a data pointer is passed, it is assumed to be a pointer to 32 bytes of
  * extra entropy.
  */
-extern const secp256k1_nonce_function secp256k1_nonce_function_rfc6979;
+SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_rfc6979;
 
 /** A default safe nonce generation function (currently equal to secp256k1_nonce_function_rfc6979). */
-extern const secp256k1_nonce_function secp256k1_nonce_function_default;
+SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_default;
 
 /** Create an ECDSA signature.
  *
