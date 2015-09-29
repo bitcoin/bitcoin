@@ -799,8 +799,8 @@ size_t CTxMemPool::GuessDynamicMemoryUsage(const CTxMemPoolEntry& entry) const {
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) + entry.DynamicMemoryUsage() + (memusage::IncrementalDynamicUsage(mapNextTx) + memusage::IncrementalDynamicUsage(s)) * entry.GetTx().vin.size() + memusage::IncrementalDynamicUsage(mapLinks);
 }
 
-bool CTxMemPool::TrimMempool(size_t usageToTrim, const setEntries &setAncestors, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
-                             uint64_t maxPackageCount, setEntries& stage) {
+bool CTxMemPool::TrimMempool(size_t usageToTrim, const setEntries &setAncestors, CAmount feeToUse,
+                             CFeeRate feeRateToUse, uint64_t maxPackageCount, setEntries& stage) {
     size_t usageRemoved = 0;
     CAmount nFeesRemoved = 0;
     int fails = 0; // Number of packages explored that were not included in the stage.
@@ -841,12 +841,12 @@ bool CTxMemPool::TrimMempool(size_t usageToTrim, const setEntries &setAncestors,
         }
         CAmount sortedFee = it->UseDescendantFeeRate() ? it->GetFeesWithDescendants() : it->GetFee();
         size_t sortedSize = it->UseDescendantFeeRate() ? it->GetSizeWithDescendants() : it->GetTxSize();
-        if ((double)sortedFee * sizeToUse > (double)feeToUse * sortedSize) {
+        if (CFeeRate(sortedFee, sortedSize) > feeRateToUse) {
             // If we've already iterated past all transactions with lower feeRate and lower package feeRate
             // then we can't add anything else to evict.  Bail out.
             break;
         }
-        if (nFeesReserved + it->GetFeesWithDescendants() > feeToUse) {
+        if (it->GetFeesWithDescendants() > feeToUse) {
             // We know that even using our original available fees we couldn't evict this tx and its descendents
             // so we can shortcut following the descendant trail.
             // We can only test using our starting available fees, because although we may have already used
@@ -889,7 +889,7 @@ bool CTxMemPool::TrimMempool(size_t usageToTrim, const setEntries &setAncestors,
             if (stage.count(descendant))
                 continue;
             nowfee += descendant->GetFee();
-            if (nFeesReserved + nFeesRemoved + nowfee > feeToUse) {
+            if (nFeesRemoved + nowfee > feeToUse) {
                 // This pushes up to the total fees deleted too high
                 evictPackage = false;
                 break;
@@ -898,7 +898,7 @@ bool CTxMemPool::TrimMempool(size_t usageToTrim, const setEntries &setAncestors,
             nowsize += descendant->GetTxSize();
         }
 
-        if (evictPackage && (double)nowfee * sizeToUse <= (double)feeToUse * nowsize) {
+        if (evictPackage && CFeeRate(nowfee, nowsize) <= feeRateToUse) {
             // Ensure the new transaction's feerate is above that of the set
             // we're removing.  This might not be the case even though we're
             // iterating a mempool sorted by full package feerate.

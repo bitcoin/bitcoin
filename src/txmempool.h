@@ -394,8 +394,8 @@ public:
      *  - The list returned in stage is consistent (if a parent is included, all its descendants are included as well).
      *  - Returns true if it was able to remove enough txs to cover usageToTrim
      */
-    bool TrimMempool(size_t usageToTrim, const setEntries &setAncestors, CAmount nFeesReserved, size_t sizeToUse, CAmount feeToUse,
-		     uint64_t maxPackageCount, setEntries& stage);
+    bool TrimMempool(size_t usageToTrim, const setEntries &setAncestors, CAmount feeToUse,
+		     CFeeRate feeRateToUse, uint64_t maxPackageCount, setEntries& stage);
     /** Remove a set of transactions from the mempool.
      *  If a transaction is in this set, then all in-mempool descendants must
      *  also be in the set.*/

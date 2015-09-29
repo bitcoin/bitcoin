@@ -1009,7 +1009,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 size_t sizeToTrim = trimGoal / USAGE_TO_SIZE_RATIO;
                 CTxMemPool::setEntries noancestors;
                 CTxMemPool::setEntries txsToDelete;
-                pool.TrimMempool(trimGoal, noancestors, 0, sizeToTrim, excessRate.GetFee(sizeToTrim), nLimitDescendants, txsToDelete);
+                pool.TrimMempool(trimGoal, noancestors, excessRate.GetFee(sizeToTrim), excessRate, nLimitDescendants, txsToDelete);
                 if (!txsToDelete.empty()) {
                     size_t oldUsage = curUsage;
                     size_t numDeleted = txsToDelete.size();
@@ -1043,7 +1043,16 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             }
             size_t trimGoal = std::min(expectedUsage - mempoolSoftCap, incrementalUsage);
             uint64_t maxPackageCount = 50 + nSize/200;  // Be willing to explore longer chains for bigger replacement txs
-            if (!pool.TrimMempool(trimGoal, setAncestors, ::minRelayTxFee.GetFee(nSize), nSize, nFees, maxPackageCount, stagedelete)) {
+            // Use min(feerate, feerate with ancestors)
+            CAmount totalFeeWithAncestors = nFees;
+            size_t totalSizeWithAncestors = nSize;
+            BOOST_FOREACH(CTxMemPool::txiter it, setAncestors) {
+                totalFeeWithAncestors += it->GetFee();
+                totalSizeWithAncestors += it->GetTxSize();
+            }
+            CFeeRate ancestorFeeRate(totalFeeWithAncestors, totalSizeWithAncestors);
+            CFeeRate feeRateToUse = std::min(ancestorFeeRate, CFeeRate(nFees, nSize));
+            if (!pool.TrimMempool(trimGoal, setAncestors, nFees - ::minRelayTxFee.GetFee(nSize), feeRateToUse, maxPackageCount, stagedelete)) {
                 if (expectedUsage > mempoolHardCap) {
                     return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full hard cap", false,
                                      strprintf("%u > %u", expectedUsage, mempoolHardCap));
@@ -1052,6 +1061,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                     if (nFees < relayMultiplier * ::minRelayTxFee.GetFee(nSize)) {
                         return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full soft cap", false,
                                          strprintf("Mult: %.1f - %ld < %ld", relayMultiplier, nFees, relayMultiplier * ::minRelayTxFee.GetFee(nSize)));
+                    }
+                    else if (ancestorFeeRate.GetFeePerK() < relayMultiplier * ::minRelayTxFee.GetFeePerK()) { //ancestor fee rate is too low
+                        return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full soft cap", false,
+                                         strprintf("Mult: %.1f - Ancestor feerate %ld < %ld", relayMultiplier,
+                                                   ancestorFeeRate.GetFeePerK(), relayMultiplier * ::minRelayTxFee.GetFeePerK()));
                     } else {
                         // The fee rate of this transaction is high enough to enter into the reserve space
                         // If stagedelete is non-empty at this point, it has only been populated with sets of transactions
