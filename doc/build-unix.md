@@ -44,6 +44,7 @@ Optional dependencies:
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
  protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
+ libzmq-dev  | [ZeroMQ](zmq.md)           | Optional for block and transaction broadcasting (only needed when zmq is enabled)
 
 For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
 
@@ -79,7 +80,7 @@ For other Debian & Ubuntu (with ppa):
 
 Optional:
 
-	sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
+	sudo apt-get install libminiupnpc-dev libzmq3-dev (see --with-miniupnpc, --enable-upnp-default and --enable-zmq)
 
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
