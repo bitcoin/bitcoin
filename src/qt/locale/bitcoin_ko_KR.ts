@@ -1,6 +1,10 @@
-<TS language="ko_KR" version="2.1">
+<TS language="ko_KR" version="2.0">
 <context>
     <name>AddressBookPage</name>
+    <message>
+        <source>Right-click to edit address or label</source>
+        <translation>지갑 주소나 이름을 수정하려면 우클릭하세요.</translation>
+    </message>
     <message>
         <source>Create a new address</source>
         <translation>새 주소 만들기</translation>
@@ -89,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>내보내기 실패</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>%1으로 주소 리스트를 저장하는 동안 오류가 발생했습니다. 다시 시도해주세요.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -476,6 +484,10 @@
 </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Coin Selection</source>
+        <translation>코인 선택</translation>
+    </message>
     <message>
         <source>Quantity:</source>
         <translation>수량:</translation>
@@ -895,6 +907,14 @@
         <translation>사용중인 UPnP 포트 매핑(&amp;U)</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>SOCKS5 프록시를 통해 비트코인 네트워크 연결</translation>
+    </message>
+    <message>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation>SOCKS5 프록시를 거쳐 연결합니다 (기본값 프록시):</translation>
+    </message>
+    <message>
         <source>Proxy &amp;IP:</source>
         <translation>프록시 IP(&amp;I):</translation>
     </message>
@@ -1089,6 +1109,10 @@
     <message>
         <source>Amount</source>
         <translation>거래량</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>비트코인 주소를 입력하기 (예. %1)</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -2401,10 +2425,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>RPC 서버 설정</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>모든 네트워크 메시지 마다 무작위로 1이 떨어진다</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

@@ -1,6 +1,10 @@
-<TS language="lt" version="2.1">
+<TS language="lt" version="2.0">
 <context>
     <name>AddressBookPage</name>
+    <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Spustelėkite dešinįjį klaviša norint keisti adresą arba etiketę</translation>
+    </message>
     <message>
         <source>Create a new address</source>
         <translation>Sukurti naują adresą</translation>
@@ -26,12 +30,20 @@
         <translation>&amp;Kopijuoti adresą</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Ištrinti pasirinktą adresą iš sąrašo</translation>
+    </message>
+    <message>
         <source>&amp;Export</source>
         <translation>&amp;Eksportuoti</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
         <translation>&amp;Trinti</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Pasirinkite adresą kuriam siūsite monetas</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -247,6 +259,10 @@
         <translation>&amp;Gaunami adresai...</translation>
     </message>
     <message>
+        <source>Open &amp;URI...</source>
+        <translation>Atidaryti &amp;URI...</translation>
+    </message>
+    <message>
         <source>Bitcoin Core client</source>
         <translation>Bitcoin Core klientas</translation>
     </message>
@@ -384,6 +400,10 @@
 </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Coin Selection</source>
+        <translation>Monetų pasirinkimas</translation>
+    </message>
     <message>
         <source>Quantity:</source>
         <translation>Kiekis:</translation>
@@ -715,6 +735,10 @@
         <translation>niekas</translation>
     </message>
     <message>
+        <source>Confirm options reset</source>
+        <translation>Patvirtinti nustatymų atstatymą</translation>
+    </message>
+    <message>
         <source>The supplied proxy address is invalid.</source>
         <translation>Nurodytas tarpinio serverio adresas negalioja.</translation>
     </message>
@@ -724,6 +748,14 @@
     <message>
         <source>Form</source>
         <translation>Forma</translation>
+    </message>
+    <message>
+        <source>Available:</source>
+        <translation>Galimi:</translation>
+    </message>
+    <message>
+        <source>Pending:</source>
+        <translation>Laukiantys:</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -743,6 +775,10 @@
     <message>
         <source>URI handling</source>
         <translation>URI apdorojimas</translation>
+    </message>
+    <message>
+        <source>Payment request rejected</source>
+        <translation>Mokėjimo siuntimas atmestas</translation>
     </message>
     <message>
         <source>Network request error</source>
@@ -821,6 +857,26 @@
         <translation>Dabartinis blokų skaičius</translation>
     </message>
     <message>
+        <source>Received</source>
+        <translation>Gauta</translation>
+    </message>
+    <message>
+        <source>Direction</source>
+        <translation>Kryptis</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Versija</translation>
+    </message>
+    <message>
+        <source>Bytes Sent</source>
+        <translation>Nusiųsti baitai</translation>
+    </message>
+    <message>
+        <source>Bytes Received</source>
+        <translation>Gauti baitai</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Paskutinio bloko laikas</translation>
     </message>
@@ -864,12 +920,20 @@
         <source>%1 GB</source>
         <translation>%1 GB</translation>
     </message>
+    <message>
+        <source>never</source>
+        <translation>Niekada</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Label:</source>
         <translation>Ž&amp;ymė:</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>Išvalyti</translation>
     </message>
     <message>
         <source>Copy label</source>
