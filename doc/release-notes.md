@@ -46,7 +46,7 @@ caching. A sample config for apache2 could look like:
         # optional enable digest auth
         # AuthType Digest
         # ...
-        
+
         # optional bypass bitcoind rpc basic auth
         # RequestHeader set Authorization "Basic <hash>"
         # get the <hash> from the shell with: base64 <<< bitcoinrpc:<password>
@@ -171,3 +171,11 @@ configured specifically to process scriptPubKey and not scriptSig scripts.
 
 - Removed bitrpc.py from contrib
 
+Addition of ZMQ-based Notifcations
+==================================
+
+Bitcoind can now (optionally) asynchronously notify clients through a
+ZMQ-based PUB socket of the arrival of new transactions and blocks.
+This feature requires installation of the ZMQ C API library 4.x and
+configuring its use through the command line or configuration file.
+Please see docs/zmq.md for details of operation.
