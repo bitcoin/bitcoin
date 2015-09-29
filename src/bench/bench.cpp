@@ -36,14 +36,22 @@ BenchRunner::RunAll(double elapsedTimeForOne)
 
 bool State::KeepRunning()
 {
-    double now = gettimedouble();
+    double now;
     if (count == 0) {
-        beginTime = now;
+        beginTime = now = gettimedouble();
     }
     else {
-        double elapsedOne = now - lastTime;
+        // timeCheckCount is used to avoid calling gettime most of the time,
+        // so benchmarks that run very quickly get consistent results.
+        if ((count+1)%timeCheckCount != 0) {
+            ++count;
+            return true; // keep going
+        }
+        now = gettimedouble();
+        double elapsedOne = (now - lastTime)/timeCheckCount;
         if (elapsedOne < minTime) minTime = elapsedOne;
         if (elapsedOne > maxTime) maxTime = elapsedOne;
+        if (elapsedOne*timeCheckCount < maxElapsed/16) timeCheckCount *= 2;
     }
     lastTime = now;
     ++count;
