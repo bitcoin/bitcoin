@@ -1,4 +1,4 @@
-<TS language="mn" version="2.1">
+<TS language="mn" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -6,16 +6,64 @@
         <translation>Шинэ хаяг нээх</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;Шинэ</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Одоогоор сонгогдсон байгаа хаягуудыг сануулах</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Хуулах</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>&amp;Хаах</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
         <translation>Хаягийг &amp;Хуулбарлах</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Одоо сонгогдсон байгаа хаягуудыг жагсаалтаас устгах</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Экспортдлох</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Устгах</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Зооснуудыг илгээх хаягийг сонгоно уу</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Зооснуудыг хүлээн авах хаягийг сонгоно уу</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Илгээх хаягууд</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Хүлээн авах хаяг</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Эдгээр Биткойн хаягууд нь илгээх хаягууд. Хүлээн авах хаяг болон тоо хэмжээг илгээхээсээ өмнө сайн нягталж үзэж байна уу</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Эдгээр Биткойн хаягууд нь хүлээн авах хаягууд. Гүйлгээ болгонд шинээр хаяг үүсгэхийг бид санал болгож байна.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -24,6 +72,10 @@
     <message>
         <source>&amp;Edit</source>
         <translation>&amp;Ѳѳрчлѳх</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Экспорт хийх хаягуудын жагсаалт</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -959,6 +1011,14 @@
 </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Экспортдлох</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

@@ -1,6 +1,10 @@
-<TS language="eo" version="2.1">
+<TS language="eo" version="2.0">
 <context>
     <name>AddressBookPage</name>
+    <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Dekstre-klaku por redakti adreson aŭ etikedon</translation>
+    </message>
     <message>
         <source>Create a new address</source>
         <translation>Krei novan adreson</translation>
@@ -89,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>ekspotado malsukcesinta</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Okazis eraron dum konservo de adreslisto al %1. Bonvolu provi denove.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -327,6 +335,10 @@
         <translation>&amp;Ricevi</translation>
     </message>
     <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>Vidigi informon pri Bitmona Kerno</translation>
+    </message>
+    <message>
         <source>&amp;Show / Hide</source>
         <translation>&amp;Montri / Kaŝi</translation>
     </message>
@@ -477,6 +489,10 @@
         <translation>Krompago:</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>Polvo:</translation>
+    </message>
+    <message>
         <source>After Fee:</source>
         <translation>Post krompago:</translation>
     </message>
@@ -499,6 +515,14 @@
     <message>
         <source>Amount</source>
         <translation>Sumo</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Ricevita kun etikedo</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Ricevita kun adreso</translation>
     </message>
     <message>
         <source>Date</source>
@@ -559,6 +583,10 @@
     <message>
         <source>Copy priority</source>
         <translation>Kopii prioritaton</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopii polvon</translation>
     </message>
     <message>
         <source>Copy change</source>
@@ -835,6 +863,10 @@
         <translation>&amp;Reto</translation>
     </message>
     <message>
+        <source>Expert</source>
+        <translation>Fakulo</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>Aŭtomate malfermi la kursilan pordon por Bitmono. Tio funkcias nur se via kursilo havas la UPnP-funkcion, kaj se tiu ĉi estas ŝaltita.</translation>
     </message>
@@ -1087,6 +1119,10 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Aktuala nombro de blokoj</translation>
+    </message>
+    <message>
+        <source>Bytes Sent</source>
+        <translation>Bajtoj Senditaj:</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1353,6 +1389,10 @@
         <translation>Malplenigi ĉiujn kampojn de la formularo.</translation>
     </message>
     <message>
+        <source>Dust:</source>
+        <translation>Polvo:</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>&amp;Forigi Ĉion</translation>
     </message>
@@ -1435,6 +1475,10 @@
     <message>
         <source>(no label)</source>
         <translation>(neniu etikedo)</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>Kopii polvon</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
