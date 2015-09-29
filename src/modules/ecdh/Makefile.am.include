@@ -5,5 +5,4 @@ if USE_BENCHMARK
 noinst_PROGRAMS += bench_ecdh
 bench_ecdh_SOURCES = src/bench_ecdh.c
 bench_ecdh_LDADD = libsecp256k1.la $(SECP_LIBS)
-bench_ecdh_LDFLAGS = -static
 endif
