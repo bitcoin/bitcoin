@@ -212,7 +212,7 @@
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Mostrar Información sobre QT</translation>
+        <translation>Mostrar Información sobre Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>

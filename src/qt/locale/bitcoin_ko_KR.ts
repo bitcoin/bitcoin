@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>지갑 주소나 이름을 수정하려면 우클릭하세요.</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>새 주소 만들기</translation>
     </message>
@@ -89,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>내보내기 실패</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>%1으로 주소 리스트를 저장하는 동안 오류가 발생했습니다. 다시 시도해주세요.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -410,6 +418,10 @@
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
         <translation>사용할 수 있는 비트코인 명령어 옵션 목록을 가져오기 위해 Bitcoin-Qt 도움말 메시지를 표시합니다.</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>비트코인 네트워크와 %n 개의 활성연결</numerusform></translation>
+    </message>
     <message>
         <source>No block source available...</source>
         <translation>사용 가능한 블록이 없습니다...</translation>
@@ -429,6 +441,10 @@
     <message>
         <source>%1 and %2</source>
         <translation>%1 그리고 %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n 년</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -457,6 +473,10 @@
     <message>
         <source>Up to date</source>
         <translation>현재까지</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n blocks of transaction history.</source>
+        <translation><numerusform>%n 블록의 거래 기록들이 처리됨.</numerusform></translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -500,6 +520,10 @@ Address: %4
 </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Coin Selection</source>
+        <translation>코인 선택</translation>
+    </message>
     <message>
         <source>Quantity:</source>
         <translation>수량:</translation>
@@ -848,7 +872,15 @@ Address: %4
         <source>Error</source>
         <translation>오류</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n GB가 사용가능</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(%n GB가 필요)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -957,6 +989,14 @@ Address: %4
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>사용중인 UPnP 포트 매핑(&amp;U)</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>SOCKS5 프록시를 통해 비트코인 네트워크 연결</translation>
+    </message>
+    <message>
+        <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
+        <translation>SOCKS5 프록시를 거쳐 연결합니다 (기본값 프록시):</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1169,6 +1209,10 @@ Address: %4
     <message>
         <source>Amount</source>
         <translation>거래량</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>비트코인 주소를 입력하기 (예. %1)</translation>
     </message>
     <message>
         <source>N/A</source>

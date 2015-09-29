@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Клік правою кнопкою для редагування адреси або мітки</translation>
+        <translation>Клікніть правою кнопкою для редагування адреси або мітки</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Це ваша нова Bitcoin адреса для отримування платежів. Рекомендовано використовувати нову адресу для кожної транзакції.</translation>
+        <translation>Це ваша нова Bitcoin адреса для отримання платежів. Рекомендовано використовувати нову адресу для кожної транзакції.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -173,7 +173,7 @@
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>ВАЖЛИВО: Всі попередні резервні копії, які ви зробили з вашого файлу гаманця повинні бути замінені новоствореним, зашифрованим файлом гаманця. З міркувань безпеки, попередні резервні копії незашифрованого файла гаманця стануть марними одразу ж, як тільки ви почнете використовувати новий, зашифрований гаманець.</translation>
+        <translation>ВАЖЛИВО: Всі попередні резервні копії, які ви зробили з вашого файлу гаманця повинні бути замінені новоствореним, зашифрованим файлом гаманця. З міркувань безпеки, попередні резервні копії незашифрованого файла гаманця стануть непридатними одразу ж, як тільки ви почнете використовувати новий, зашифрований гаманець.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
@@ -185,7 +185,7 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Введіть нову кодову фразу для гаманця.&lt;br/&gt;Будь ласка, використовуйте кодові фрази що містять &lt;b&gt; як мінімум десять випадкових символів &lt;/b&gt; або &lt;b&gt; як мінімум вісім слів &lt;/b&gt;.</translation>
+        <translation>Введіть нову кодову фразу для гаманця.&lt;br/&gt;Будь ласка, використовуйте кодові фрази що містять &lt;b&gt; щонайменше десять випадкових символів &lt;/b&gt; або &lt;b&gt; щонайменше вісім слів &lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Bitcoin will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
@@ -240,11 +240,11 @@
     </message>
     <message>
         <source>Show general overview of wallet</source>
-        <translation>Показати загальний огляд гаманця</translation>
+        <translation>Показати стан гаманця</translation>
     </message>
     <message>
         <source>&amp;Transactions</source>
-        <translation>Транзакції</translation>
+        <translation>&amp;Транзакції</translation>
     </message>
     <message>
         <source>Browse transaction history</source>
@@ -324,7 +324,7 @@
     </message>
     <message>
         <source>&amp;Debug window</source>
-        <translation>Вікно зневадження</translation>
+        <translation>В&amp;ікно зневадження</translation>
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
@@ -356,7 +356,7 @@
     </message>
     <message>
         <source>&amp;Show / Hide</source>
-        <translation>Показати / Приховати</translation>
+        <translation>Показа&amp;ти / Приховати</translation>
     </message>
     <message>
         <source>Show or hide the main Window</source>
@@ -364,7 +364,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Шифрування закритих ключів, які належать вашому гаманці</translation>
+        <translation>Зашифрувати закриті ключі, що знаходяться у вашому гаманці</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -400,7 +400,7 @@
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation>&amp;Про Bitcoin Core</translation>
+        <translation>П&amp;ро Bitcoin Core</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -416,7 +416,7 @@
     </message>
     <message>
         <source>&amp;Command-line options</source>
-        <translation>Параметри командного рядка</translation>
+        <translation>П&amp;араметри командного рядка</translation>
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
@@ -424,7 +424,7 @@
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n активне з'єднання з мережею</numerusform><numerusform>%n активні з'єднання з мережею</numerusform><numerusform>%n активних з'єднань з мережею Bitcoin</numerusform></translation>
+        <translation><numerusform>%n активне з'єднання з мережею Bitcoin</numerusform><numerusform>%n активні з'єднання з мережею Bitcoin</numerusform><numerusform>%n активних з'єднань з мережею Bitcoin</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -452,7 +452,7 @@
     </message>
     <message>
         <source>%1 behind</source>
-        <translation>%1 позаду</translation>
+        <translation>%1 тому</translation>
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
@@ -538,7 +538,7 @@ Address: %4
     </message>
     <message>
         <source>Amount:</source>
-        <translation>Кількість:</translation>
+        <translation>Сума:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -610,11 +610,11 @@ Address: %4
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Скопіювати суму</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Копіювати ID транзакції </translation>
+        <translation>Скопіювати ID транзакції </translation>
     </message>
     <message>
         <source>Lock unspent</source>
@@ -626,31 +626,31 @@ Address: %4
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Скопіювати кількість</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>Копіювати комісію</translation>
+        <translation>Скопіювати комісію</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>Копіювати після комісії</translation>
+        <translation>Скопіювати після комісії</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>Копіювати байти</translation>
+        <translation>Скопіювати байти</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation>Копіювати пріорітет</translation>
+        <translation>Скопіювати пріорітет</translation>
     </message>
     <message>
         <source>Copy dust</source>
-        <translation>Копіювати пил</translation>
+        <translation>Скопіювати пил</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>Копіювати решту</translation>
+        <translation>Скопіювати решту</translation>
     </message>
     <message>
         <source>highest</source>
@@ -710,7 +710,7 @@ Address: %4
     </message>
     <message>
         <source>This label turns red, if the transaction size is greater than 1000 bytes.</source>
-        <translation>Ця позначка буде червоною, якщо розмір транзакції вищий за 1000 байт.</translation>
+        <translation>Ця позначка буде червоною, якщо розмір транзакції вищий за 1000 байтів.</translation>
     </message>
     <message>
         <source>This means a fee of at least %1 per kB is required.</source>
@@ -804,7 +804,7 @@ Address: %4
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>Буде створена новий каталог даних.</translation>
+        <translation>Буде створено новий каталог даних.</translation>
     </message>
     <message>
         <source>name</source>
@@ -976,7 +976,7 @@ Address: %4
     </message>
     <message>
         <source>Number of script &amp;verification threads</source>
-        <translation>Кількість потоків сценарію перевірки</translation>
+        <translation>Кількість потоків &amp;сценарію перевірки</translation>
     </message>
     <message>
         <source>Accept connections from outside</source>
@@ -1008,7 +1008,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Reset Options</source>
-        <translation>Скинути параметри</translation>
+        <translation>С&amp;кинути параметри</translation>
     </message>
     <message>
         <source>&amp;Network</source>
@@ -1289,6 +1289,10 @@ Address: %4
         <translation>Відшкодування з %1</translation>
     </message>
     <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Запит платежу %1 занадто великий (%2 байт, дозволено %3 байт).</translation>
+    </message>
+    <message>
         <source>Payment request DoS protection</source>
         <translation>Оплата потребує захисту DoS</translation>
     </message>
@@ -1526,11 +1530,11 @@ Address: %4
     </message>
     <message>
         <source>&amp;Open</source>
-        <translation>Відкрити</translation>
+        <translation>&amp;Відкрити</translation>
     </message>
     <message>
         <source>&amp;Console</source>
-        <translation>Консоль</translation>
+        <translation>&amp;Консоль</translation>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
@@ -1712,11 +1716,11 @@ Address: %4
     </message>
     <message>
         <source>Copy &amp;URI</source>
-        <translation>Скопіювати URI</translation>
+        <translation>&amp;Скопіювати URI</translation>
     </message>
     <message>
         <source>Copy &amp;Address</source>
-        <translation>Скопіювати адресу</translation>
+        <translation>Скопіювати &amp;адресу</translation>
     </message>
     <message>
         <source>&amp;Save Image...</source>
@@ -1866,7 +1870,7 @@ Address: %4
     </message>
     <message>
         <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Якщо оплата користувача встановлюється в 1000 Satoshi і розмір передачі всього 250 байт, то "за кілобайт" платить тільки 250 Satoshi, в той час як "щонайменше" платить 1000 satoshis. Для передач більших, ніж кілобайт обоє платять за кілобайт.</translation>
+        <translation>Якщо комісія встановлюється в 1000 сатоші і розмір транзакції лише 250 байтів, то опція "за кілобайт" встановлює комісію в 250 сатоші, в той час, як "щонайменше" - в 1000 сатоші. Для транзакцій більших за кілобайт в обох випадках буде знято комісію за кілобайт.</translation>
     </message>
     <message>
         <source>per kilobyte</source>
@@ -1874,7 +1878,7 @@ Address: %4
     </message>
     <message>
         <source>If the custom fee is set to 1000 satoshis and the transaction is only 250 bytes, then "per kilobyte" only pays 250 satoshis in fee, while "total at least" pays 1000 satoshis. For transactions bigger than a kilobyte both pay by kilobyte.</source>
-        <translation>Якщо оплата користувача встановлюється в 1000 Satoshi і розмір передачі всього 250 байт, то "за кілобайт" платить тільки 250 Satoshi, в той час як "всього щонайменше" платить 1000 satoshis. Для передач більших, ніж кілобайт обоє платять за кілобайт.</translation>
+        <translation>Якщо комісія встановлюється в 1000 сатоші і розмір транзакції лише 250 байтів, то опція "за кілобайт" встановлює комісію в 250 сатоші, в той час, як "всього щонайменше" - в 1000 сатоші. Для транзакцій більших за кілобайт в обох випадках буде знято комісію за кілобайт.</translation>
     </message>
     <message>
         <source>total at least</source>
@@ -1882,7 +1886,7 @@ Address: %4
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>Оплата тільки мінімальних зборів є прийнятною до тих пір, як обсяг транзакцій там є меншим аніж простору в блоках. Але майте на увазі, що це може анулювати транзакцію, якщо попит на Bitcoin транзакції стане значно більшим, ніж мережа зможе обробити.</translation>
+        <translation>Оплата тільки мінімальної комісії є прийнятною, допоки обсяг транзакцій є меншим простору в блоках. Але майте на увазі, що це може анулювати транзакцію, якщо попит на Bitcoin транзакції стане більшим, ніж мережа зможе обробити.</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -1898,7 +1902,7 @@ Address: %4
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Розумна оплата ще не ініціалізована. Це звичайно займає кілька блоків...)</translation>
+        <translation>(Розумну оплату ще не ініціалізовано. Це, зазвичай, триває кілька блоків...)</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
@@ -1966,7 +1970,7 @@ Address: %4
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Копіювати суму</translation>
     </message>
     <message>
         <source>Copy fee</source>
@@ -1998,7 +2002,7 @@ Address: %4
     </message>
     <message>
         <source>The recipient address is not valid, please recheck.</source>
-        <translation>Адреса отримувача невірна, будь ласка перепровірте.</translation>
+        <translation>Адреса отримувача неправильна; будь ласка, перевірте її.</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -2030,7 +2034,7 @@ Address: %4
     </message>
     <message>
         <source>Pay only the minimum fee of %1</source>
-        <translation>Платити тільки мінімальний збір у розмірі %1</translation>
+        <translation>Платити тільки мінімальну комісію у розмірі %1</translation>
     </message>
     <message>
         <source>Estimated to begin confirmation within %1 block(s).</source>
@@ -2211,7 +2215,7 @@ Address: %4
     </message>
     <message>
         <source>&amp;Verify Message</source>
-        <translation>Перевірити повідомлення</translation>
+        <translation>П&amp;еревірити повідомлення</translation>
     </message>
     <message>
         <source>Enter the signing address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack.</source>
@@ -2227,7 +2231,7 @@ Address: %4
     </message>
     <message>
         <source>Verify &amp;Message</source>
-        <translation>Перевірити повідомлення</translation>
+        <translation>Пере&amp;вірити повідомлення</translation>
     </message>
     <message>
         <source>Reset all verify message fields</source>
@@ -2432,7 +2436,7 @@ Address: %4
     </message>
     <message>
         <source>Inputs</source>
-        <translation>витрати</translation>
+        <translation>Входи</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -2645,11 +2649,11 @@ Address: %4
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>Копіювати кількість</translation>
+        <translation>Скопіювати суму</translation>
     </message>
     <message>
         <source>Copy transaction ID</source>
-        <translation>Копіювати ID транзакції </translation>
+        <translation>Скопіювати ID транзакції </translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -2888,7 +2892,7 @@ Address: %4
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>
-        <translation>Підключитись лише до вказаного вузла</translation>
+        <translation>Підключитись лише до вказаного вузла/вузлів</translation>
     </message>
     <message>
         <source>Connection options:</source>
@@ -2964,7 +2968,7 @@ Address: %4
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>Підключити тільки до вузлів в мережі &lt;net&gt; (ipv4, ipv6 або onion)</translation>
+        <translation>Підключатися тільки до вузлів в мережі &lt;net&gt; (ipv4, ipv6 або onion)</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
@@ -3067,16 +3071,24 @@ Address: %4
         <translation>Якщо параметр paytxfee не встановлено, включити комісію для отримання перших підтверджень транзакцій протягом n блоків (типово: %u)</translation>
     </message>
     <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: «%s» ( плата повинна бути, принаймні %s, щоб запобігти зависанню транзакцій)</translation>
+    </message>
+    <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>Максимальний розмір даних в транзакціях носіїв даних, що ми передаємо і добуваємо (за замовчуванням: %u)</translation>
+        <translation>Максимальний розмір даних в транзакціях носіїв даних, що ми передаємо і добуваємо (типово: %u)</translation>
     </message>
     <message>
         <source>Maximum total fees to use in a single wallet transaction, setting too low may abort large transactions (default: %s)</source>
-        <translation>Максимальна загальна плата для використання в одній транзакції, установка занадто низької може перервати великі транзакції(стандартно: %s)</translation>
+        <translation>Максимальна загальна комісія для використання в одній транзакції, установка занадто низької може скасувати великі транзакції (типово: %s)</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
         <translation>Дізнаватися адреси учасників через DNS при замалій кількості відомих адрес (типово: 1 за відсутності -connect)</translation>
+    </message>
+    <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Вимагати високий пріоритет для ретрансляції транзакцій з низькою або нульовою комісією (типово: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3151,6 +3163,10 @@ rpcpassword=%s
         <translation>Помилка при завантаженні wallet.dat: Гаманець потребує новішої версії Bitcoin Core</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Помилка читання бази даних, припиняю роботу.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Помилка: Параметр -tor не підтримується, використовуйте -onion</translation>
     </message>
@@ -3168,7 +3184,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
-        <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: '%s'</translation>
+        <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: «%s»</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -3205,6 +3221,10 @@ rpcpassword=%s
     <message>
         <source>RPC server options:</source>
         <translation>Параметри сервера RPC:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>Підтримка RPC для постійних HTTP-з'єднань (типово: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>

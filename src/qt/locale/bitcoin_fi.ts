@@ -264,7 +264,7 @@
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Näytä tietoja QT:ta</translation>
+        <translation>Näytä tietoja Qt:ta</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
@@ -1276,6 +1276,10 @@ Osoite: %4</translation>
         <translation>Maksupyynnön tiedoston käsittely</translation>
     </message>
     <message>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation>Maksupyynnön tiedostoa ei voida lukea! Tämä voi aiheutua sopimattomasta maksupyyntötiedostosta.</translation>
+    </message>
+    <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>Varmistamattomia maksupyyntöjä kustomoituun maksupalveluun ei tueta.</translation>
     </message>
@@ -1284,12 +1288,20 @@ Osoite: %4</translation>
         <translation>Maksupalautus %1:sta</translation>
     </message>
     <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Maksupyyntö %1 on liian suuri (%2 tavua, sallittu %3 tavua).</translation>
+    </message>
+    <message>
         <source>Payment request DoS protection</source>
         <translation>Maksupyynnön DoS-suojaus</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
         <translation>Virhe kommunikoidessa %1n kanssa: %2</translation>
+    </message>
+    <message>
+        <source>Payment request cannot be parsed!</source>
+        <translation>Maksupyyntöä ei voida jäsentää!</translation>
     </message>
     <message>
         <source>Bad response from server %1</source>
@@ -2000,8 +2012,16 @@ Osoite: %4</translation>
         <translation>Rahansiirto hylättiin! Tämä saattaa tapahtua jos lompakossa olevat kolikot on jo kulutettu, kuten jos käytät kopioita wallet.dat tiedostosta ja kolikot oli jos käytetty mutta ei merkattu täällä.</translation>
     </message>
     <message>
+        <source>A fee higher than %1 is considered an insanely high fee.</source>
+        <translation>Rahansiirtokulua %1 ja sitä suurempia määriä pidetään järjettöminä.</translation>
+    </message>
+    <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Maksa vain vähimmäiskulu %1</translation>
+    </message>
+    <message>
+        <source>Estimated to begin confirmation within %1 block(s).</source>
+        <translation>Vahvistuminen alkaa arviolta %1 lohkon päästä.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2532,6 +2552,10 @@ Osoite: %4</translation>
         <translation>Rahansiirron laatu.</translation>
     </message>
     <message>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Onko rahansiirrossa mukana ainoastaan katseltava osoite vai ei.</translation>
+    </message>
+    <message>
         <source>Destination address of transaction.</source>
         <translation>Rahansiirron kohteen Bitcoin-osoite</translation>
     </message>
@@ -2882,6 +2906,10 @@ Osoite: %4</translation>
         <translation>Virhe avattaessa lohkoindeksiä</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occured, see debug.log for details</source>
+        <translation>Virhe: Sisäinen kriittinen virhe kohdattiin, katso debug.log:sta lisätietoja</translation>
+    </message>
+    <message>
         <source>Error: Disk space is low!</source>
         <translation>Varoitus: Levytila on vähissä!</translation>
     </message>
@@ -2908,6 +2936,10 @@ Osoite: %4</translation>
     <message>
         <source>Not enough file descriptors available.</source>
         <translation>Ei tarpeeksi tiedostomerkintöjä vapaana.</translation>
+    </message>
+    <message>
+        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
+        <translation>Yhdistä vain solmukohtiin &lt;net&gt;-verkossa (ipv4, ipv6 tai onion)</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files</source>
@@ -2974,6 +3006,14 @@ Osoite: %4</translation>
         <translation>Aseta kolikoiden luomiseen tarkoitettujen säikeiden lukumäärä (-1 = kaikki ytimet, oletus: %d)</translation>
     </message>
     <message>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Hyväksy julkisia REST-pyyntöjä (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>-whitebind -osoitetta '%s' ei voida jäsentää</translation>
+    </message>
+    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Yhdistä SOCKS5 proxin kautta</translation>
     </message>
@@ -2984,6 +3024,10 @@ Osoite: %4</translation>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version Bitcoinista</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Virheitä tietokantaa luettaessa, ohjelma pysäytetään.</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3008,6 +3052,10 @@ Osoite: %4</translation>
     <message>
         <source>RPC server options:</source>
         <translation>RPC-palvelimen valinnat:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC-tuki pysyville HTTP-yhteyksille (oletus: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
@@ -3118,6 +3166,10 @@ Osoite: %4</translation>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Lompakko vioittunut</translation>
     </message>
     <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
+        <translation>Käytä erillistä SOCKS5-proxyä tavoittaaksesi vertaisia Tor-piilopalveluiden kautta (oletus: %s)</translation>
+    </message>
+    <message>
         <source>(default: %s)</source>
         <translation>(oletus: %s)</translation>
     </message>
@@ -3150,6 +3202,10 @@ Osoite: %4</translation>
         <translation>Virheellinen proxy-osoite '%s'</translation>
     </message>
     <message>
+        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>Kuuntele yhteyksiä portissa &lt;port&gt; (oletus: %u tai testnet: %u)</translation>
+    </message>
+    <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Välitä ei-P2SH-multisig (oletus: %u)</translation>
     </message>
@@ -3180,6 +3236,10 @@ Osoite: %4</translation>
     <message>
         <source>Specify pid file (default: %s)</source>
         <translation>Määritä pid-tiedosto (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
+        <translation>Käytä vahvistamattomia vaihtorahoja lähetettäessä rahansiirtoja (oletus: %u)</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

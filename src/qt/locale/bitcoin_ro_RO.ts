@@ -1253,6 +1253,10 @@ Adresa: %4
         <translation>URL-ul cererii de plată preluat nu este valid: %1</translation>
     </message>
     <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation>URI nu poate fi analizat! Acest lucru poate fi cauzat de o adresă Bitcoin nevalidă sau parametri URI deformaţi.</translation>
+    </message>
+    <message>
         <source>Payment request file handling</source>
         <translation>Manipulare fişier cerere de plată</translation>
     </message>
