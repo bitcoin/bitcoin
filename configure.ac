@@ -145,7 +145,7 @@ AC_ARG_ENABLE([zmq],
 
 AC_ARG_WITH([protoc-bindir],[AS_HELP_STRING([--with-protoc-bindir=BIN_DIR],[specify protoc bin path])], [protoc_bin_path=$withval], [])
 
-# Enable debug 
+# Enable debug
 AC_ARG_ENABLE([debug],
     [AS_HELP_STRING([--enable-debug],
                     [use debug compiler flags and macros (default is no)])],
@@ -157,11 +157,11 @@ if test "x$enable_debug" = xyes; then
     if test "x$GCC" = xyes; then
         CFLAGS="$CFLAGS -g3 -O0"
     fi
-    
+
     if test "x$GXX" = xyes; then
         CXXFLAGS="$CXXFLAGS -g3 -O0"
     fi
-fi 
+fi
 
 ## TODO: Remove these hard-coded paths and flags. They are here for the sake of
 ##       compatibility with the legacy buildsystem.
@@ -843,10 +843,10 @@ fi
 AC_MSG_CHECKING([whether to build ZMQ support])
 if test "x$use_zmq" = "xyes"; then
   AC_MSG_RESULT([yes])
-  PKG_CHECK_MODULES([ZMQ],[libzmq],
+  PKG_CHECK_MODULES([ZMQ],[libzmq >= 4],
     [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
     [AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
-     AC_MSG_WARN([libzmq not found, disabling])
+     AC_MSG_WARN([libzmq version 4.x or greater not found, disabling])
      use_zmq=no])
 else
   AC_MSG_RESULT([no, --disable-zmq used])
