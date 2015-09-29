@@ -809,10 +809,8 @@ static std::string FormatStateMessage(const CValidationState &state)
  *
  * If a new transaction arrives when usage is above the softcap but is unable
  * to enter by evicting existing transactions, then it has another chance to enter
- * the mempool if its feerate is sufficiently high.  We take the usage between the
- * soft cap and the hard cap, and divide it up into 75 bands.  Within
- * a band, we accept transactions without evicting existing transactions if the
- * feerate is above minrelayfee * 1.1^(n), where n is the band number.
+ * the mempool if its feerate is sufficiently high.  The effective min feerate required
+ * increases exponentially between the soft cap and the hard cap based on the the usage.
  *
  * Once we're above the soft cap, we can use the existence of higher fee rate
  * transactions in the aggregate to try to evict transactions as well.  The idea
@@ -944,14 +942,14 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
 
         // Set an absolute cap on the size of the mempool (0 turns off mempool limiting) and reserve
-        // 50% of it to operate with the default minimum fee.  Divide the remaining 50% up into
-        // 75 bands of increasing required fee.  10% increase per band leads to over 1000x greater effective
-        // fee before the mempool hits the hard cap, which should be sufficiently future proof.
-        static const double bandIncrease = 1.1;
-        static const int numBands = 75;
+        // 50% of it to operate with the default minimum fee.  The effective fee rate increases
+        // exponentially over the remaining 50% doubling up to 10 times.
         size_t mempoolHardCap = std::max((int64_t)0, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
         size_t mempoolSoftCap = mempoolHardCap / 2;
-        size_t mempoolBandSize = (mempoolHardCap - mempoolSoftCap) / numBands;
+        static const int maxDoubles = 10;
+        // Fee Multiplier = 2^(usage/doubleSize)
+        static const unsigned int doubleSize = (mempoolHardCap - mempoolSoftCap)/maxDoubles;
+
         size_t nLimitDescendants = GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
         size_t nLimitAncestors = GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT);
         size_t nLimitAncestorSize = GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000;
@@ -967,9 +965,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         size_t curUsage = pool.DynamicMemoryUsage();
 
         // Try to use excess relay fees paid by txs above the soft cap to trim in aggregate
-        // Assume trimGoal worth of transactions entered the mempool while the required
-        // fee was at least the fee rate of the band at the beginning of that size, and thus
-        // we can use that multiplier (-1 to pay for current relay) to evict transactions
+        // Calculate the cumulative feereate multiplier that must have been paid by the transactions
+        // in a certain range (trimGoal) above the soft cap because of the exponentially increased
+        // relay fee and use that multiplier (-1 if accounting for current relay) to evict transactions
         if (mempoolHardCap && fLimitFree && curUsage > mempoolSoftCap) {
             size_t excessUsage = curUsage - mempoolSoftCap;
             int64_t timeNow = GetTime();
@@ -990,20 +988,24 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 // any growth.  We're not worried about free relay in this case, so there is no exact restriction on
                 // what fee rate we can use for eviction, so just use the highest logical choice which is the fee rate
                 // of the current band.
-                trimGoal = std::min(pool.bypassedUsage, excessUsage);
+                trimGoal = pool.bypassedUsage;
             }
-            else if (timeNow > lastReserveTrimTime && excessUsage > trimGoal) {
-                excessUsage -= trimGoal; // Calculate surplus fee at the beginning of the set of txs
-                payForOwnRelay = 1; // Use all but 1x multiple of min relay fee to try to evict
+            else if (timeNow > lastReserveTrimTime) {
+                payForOwnRelay = 1; // Reserve 1x multiple of min relay fee to pay for own Fee.
                 lastReserveTrimTime = timeNow;
             }
             else {
                 trimGoal = 0;
             }
             if (trimGoal) {
-                int bandNumber = excessUsage/mempoolBandSize + 1;
-                double relayMultiplier = pow(bandIncrease, bandNumber) - payForOwnRelay;
-                CFeeRate excessRate(relayMultiplier * ::minRelayTxFee.GetFeePerK());
+                trimGoal = std::min(trimGoal, excessUsage);
+                // Cumulative fee rate multiple paid from x bytes of excess usage to y bytes is the integral of the current fee
+                // rate multiplier evaluated at y minus the integral evaluated at x all divided by (y-x) to get a fee rate.
+                // integral = doubleSize/LN2 * 2^(usage/doubleSize)
+                // CumulativeFeeRateMultiple = (integral(y) - integral(x))/(y -x)
+                static const double LN2 = 0.69314718056;
+                double cumulativeFeeRateMultiple = doubleSize/LN2 * (pow(2, (double)excessUsage/doubleSize) - pow(2, (double)(excessUsage-trimGoal)/doubleSize))/trimGoal;
+                CFeeRate excessRate((cumulativeFeeRateMultiple - payForOwnRelay) * ::minRelayTxFee.GetFeePerK());
                 size_t sizeToTrim = trimGoal / USAGE_TO_SIZE_RATIO;
                 CTxMemPool::setEntries noancestors;
                 CTxMemPool::setEntries txsToDelete;
@@ -1046,8 +1048,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                     return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full hard cap", false,
                                      strprintf("%u > %u", expectedUsage, mempoolHardCap));
                 } else {
-                    int bandNumber = (expectedUsage - mempoolSoftCap)/mempoolBandSize + 1;
-                    double relayMultiplier = pow(bandIncrease, bandNumber);
+                    double relayMultiplier = pow(2, (double)(expectedUsage - mempoolSoftCap)/doubleSize);
                     if (nFees < relayMultiplier * ::minRelayTxFee.GetFee(nSize)) {
                         return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full soft cap", false,
                                          strprintf("Mult: %.1f - %ld < %ld", relayMultiplier, nFees, relayMultiplier * ::minRelayTxFee.GetFee(nSize)));
