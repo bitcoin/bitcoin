@@ -1,4 +1,4 @@
-<TS language="zh_CN" version="2.1">
+<TS language="zh_CN" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>这是您用来付款的比特币地址。在付款前，请总是核实付款金额和收款地址。</translation>
+        <translation>这是您用来付款的比特币地址。在付款前，请仔细核实付款金额和收款地址。</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
@@ -2102,6 +2102,10 @@
         <translation>移除此项</translation>
     </message>
     <message>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>交易费将从发送总额中扣除。接收人将收到比您在金额框中输入的更少的比特币。如果选中了多个收件人，交易费平分。</translation>
+    </message>
+    <message>
         <source>S&amp;ubtract fee from amount</source>
         <translation>从金额中减去交易费(&amp;U)</translation>
     </message>
@@ -2154,6 +2158,10 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>签名消息(&amp;S)</translation>
+    </message>
+    <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>您可以用你的地址对消息/协议进行签名，以证明您可以接收发送到该地址的比特币。注意不要对任何模棱两可或者随机的消息进行签名，以免遭受钓鱼式攻击。请确保消息内容准确的表达了您的真实意愿。</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2815,10 +2823,6 @@
         <translation>绑定指定的IP地址开始监听。IPv6地址请使用[host]:port 格式</translation>
     </message>
     <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default: %u)</source>
-        <translation>自由交易不断的速率限制为&lt;n&gt;*1000 字节每分钟(默认值: %u)</translation>
-    </message>
-    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>删除钱包的所有交易记录，且只有用 -rescan参数启动客户端才能重新取回交易记录 </translation>
     </message>
@@ -2827,16 +2831,8 @@
         <translation>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>进入回归测试模式，它采用一种特殊的可立即解决的区块链模拟情况。</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>当最佳区块变化时执行命令 (命令行中的 %s 会被替换成区块哈希值)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>在-genproclimit这种模式下控制产出多少区块</translation>
     </message>
     <message>
         <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
@@ -2857,6 +2853,14 @@
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>无法 %s的绑定到电脑上，比特币核心钱包可能已经在运行。</translation>
+    </message>
+    <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>警告：数据块生成数量异常，最近 %d 小时收到了 %d 个数据块（预期为 %d 个）</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>警告：请检查您的网络连接，最近 %d 小时收到了 %d 个数据块（预期为 %d 个）</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2995,10 +2999,6 @@
         <translation>指定钱包文件（数据目录内）</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>这是用于回归测试和应用开发目的。</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>使用UPnp映射监听端口 (默认: %u) </translation>
     </message>
@@ -3075,10 +3075,6 @@
         <translation>交易费(BTC/kb)比这更小的交易在转发时将被视为零费交易 (默认: %s) </translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>交易费(BTC/kb)比这更小的交易在生成交易时将被视为零费交易 (默认: %s) </translation>
-    </message>
-    <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>如果未设置交易费用，自动添加足够的交易费以确保交易在平均n个数据块内被确认 (默认: %u) </translation>
     </message>
@@ -3101,10 +3097,6 @@
     <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>为每个代理连接随机化凭据。这将启用 Tor 流隔离 (默认: %u)</translation>
-    </message>
-    <message>
-        <source>Require high priority for relaying free or low-fee transactions (default: %u)</source>
-        <translation>免费中继和低费率交易需要高优先级 (默认: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3173,10 +3165,6 @@ rpcpassword=%s
     <message>
         <source>Activating best chain...</source>
         <translation>正在激活最佳数据链...</translation>
-    </message>
-    <message>
-        <source>Allow self signed root certificates (default: 0)</source>
-        <translation>允许自签名根证书 (默认: 0)</translation>
     </message>
     <message>
         <source>Can't run with a wallet in prune mode.</source>
@@ -3267,16 +3255,12 @@ rpcpassword=%s
         <translation>RPC 支持 HTTP 持久连接 (默认: %d)</translation>
     </message>
     <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>随机每1个丢失测试&lt;n&gt;网络信息</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>随机每1个模拟测试&lt;n&gt;网络信息</translation>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>启动时重新为当前的 blk000??.dat 文件建立索引</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>收到并且显示P2P网络的告警(默认:%u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3426,16 +3410,8 @@ rpcpassword=%s
         <translation>(1 = 保留 tx meta data , 如 account owner 和 payment request information, 2 = 不保留 tx meta data) </translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>数据块验证 严密级别  -checkblocks (0-4, 默认: %u) </translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>挖矿时，记录交易优先级 和 每kb交易费 (默认: %u) </translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3462,16 +3438,8 @@ rpcpassword=%s
         <translation>可接受的密码算法 (默认: %s) </translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>禁止使用安全模式，重新写入一个真正的安全模式日志(默认: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>wallet.dat 钱包文件加载出错</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>强制安全模式 (默认: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3488,10 +3456,6 @@ rpcpassword=%s
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>无效的代理地址：%s</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>签名缓冲区大小限制最多 &lt;n&gt; 条 (默认: %u) </translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3518,10 +3482,6 @@ rpcpassword=%s
         <translation>每个连接的最大发送缓存，&lt;n&gt;*1000 字节 (默认: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>仅接受符合客户端检查点设置 的数据块链 (默认: %u) </translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>输出调试信息时，前面加上时间戳 (默认: %u)</translation>
     </message>
@@ -3532,10 +3492,6 @@ rpcpassword=%s
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>是否转发 非P2SH格式的多签名交易 (默认: %u) </translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>运行一个线程，定时清理钱包 (默认: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3558,10 +3514,6 @@ rpcpassword=%s
         <translation>设置RPC服务线程数 (默认: %d) </translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>指定配置文件 (默认: %s) </translation>
     </message>
@@ -3576,10 +3528,6 @@ rpcpassword=%s
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>付款时允许使用未确认的零钱 (默认: %u) </translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>从磁盘导入数据块后退出 (默认: %u) </translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

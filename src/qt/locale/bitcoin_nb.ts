@@ -1,4 +1,4 @@
-<TS language="nb" version="2.1">
+<TS language="nb" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2817,10 +2817,6 @@
         <translation>Bind til angitt adresse. Bruk [vertsmaskin]:port notasjon for IPv6</translation>
     </message>
     <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default: %u)</source>
-        <translation>Ratebegrens gratistransaksjoner kontinuerlig til &lt;n&gt;*1000 bytes per minutt (standardverdi: %u)</translation>
-    </message>
-    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Slett alle transaksjoner i lommeboken og gjenopprett kun de delene av blokkjeden gjennom -rescan ved oppstart</translation>
     </message>
@@ -2829,16 +2825,8 @@
         <translation>Distribuert under MIT programvarelisensen, se medfølgende fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Gå til modus for regresjonstesting, som bruker en spesiell blokkjede der blokker kan bli løst momentant.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Kjør kommando når en lommeboktransaksjon endres (%s i kommando er erstattet med TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>I denne modusen kontrollerer -genproclimit hvor mange blokker som genereres øyeblikkelig.</translation>
     </message>
     <message>
         <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
@@ -2859,6 +2847,14 @@
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Ute av stand til å binde til %s på denne datamaskinen. Bitcoin Core kjører sannsynligvis allerede.</translation>
+    </message>
+    <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>ADVARSEL: unormalt høyt antall blokker generert, %d blokker mottatt de siste %d timene (%d forventet)</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>ADVARSEL: kontroller nettverkstilkoblingen, mottok %d blokker i de siste %d timene (%d forventet)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2997,10 +2993,6 @@
         <translation>Angi lommebokfil (inne i datamappe)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Dette er tiltenkt verktøy for regresjonstesting og apputvikling.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Bruk UPnP for å sette opp lytteport (standardverdi: %u)</translation>
     </message>
@@ -3077,10 +3069,6 @@
         <translation>Gebyrer (i BTC/Kb) mindre enn dette anses som null gebyr for videresending (standardverdi: %s)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Gebyrer (i BTC/Kb) mindre enn dette anses som null gebyr for laging av transaksjoner (standardverdi: %s)</translation>
-    </message>
-    <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>Hvis paytxfee ikke er angitt, inkluderer da nok i gebyr til at transaksjoner gjennomsnittligt bekreftes innen n blokker (standardverdi: %u)</translation>
     </message>
@@ -3103,10 +3091,6 @@
     <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Bruk tilfeldig identitet for hver proxytilkobling. Dette muliggjør TOR stream isolasjon (standardverdi: %u)</translation>
-    </message>
-    <message>
-        <source>Require high priority for relaying free or low-fee transactions (default: %u)</source>
-        <translation>Krev høy prioritet for videresending av gratistransaksjoner eller transaksjoner med lavt gebyr (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3175,10 +3159,6 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Activating best chain...</source>
         <translation>Aktiverer beste kjede...</translation>
-    </message>
-    <message>
-        <source>Allow self signed root certificates (default: 0)</source>
-        <translation>Tillat selvsignerte rotsertifikater (standardverdi: 0)</translation>
     </message>
     <message>
         <source>Can't run with a wallet in prune mode.</source>
@@ -3273,16 +3253,12 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>RPC-støtte for persistente HTTP-forbindelser (standardverdi: %d)</translation>
     </message>
     <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Slumpvis dropp 1 av hver &lt;n&gt; nettverksmeldinger</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Slumpvis bland 1 av hver &lt;n&gt; nettverksmeldinger</translation>
-    </message>
-    <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>Gjenopprett blokkjedeindeks fra gjeldende blk000??.dat filer ved oppstart</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Motta og vis P2P nettverksvarsler (standardvalg: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3429,16 +3405,8 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>(1 = behold metadata for transaksjon som f. eks. kontoeier og informasjon om betalingsanmodning, 2 = dropp metadata for transaksjon)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Overfør aktiviteten i databasen fra minnelageret til loggen på harddisken for hver &lt;n&gt; megabytes (standardverdi: %u)</translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Hvor grundig blokkverifiseringen til -checkblocks er (0-4, standardverdi: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Logg transaksjonsprioritet og gebyr per kB under blokkutvinning (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3469,16 +3437,8 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Alltid søk etter nodeadresser via DNS-oppslag (standardverdi: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Slå av sikkerhetsmodus, overstyr en virkelig sikkerhetsmodushendelse (standardverdi: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Feil ved lasting av wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Tving sikkerhetsmodus (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3495,10 +3455,6 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Ugyldig -proxy adresse: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Begrens størrelsen på hurtigbufferen for signaturer til &lt;n&gt; oppføringer (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3525,10 +3481,6 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Maks sendebuffer per forbindelse, &lt;n&gt;*1000 bytes (standardverdi: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Aksepter kun blokkjeden som stemmer med innebygde sjekkpunkter (standardvalg: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Sett inn tidsstempel i front av feilsøkingsdata (standardverdi: %u)</translation>
     </message>
@@ -3539,10 +3491,6 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Videresend ikke-P2SH multisig (standardverdi: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Kjør en tråd som skriver lommeboken til disk periodisk (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3565,10 +3513,6 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Sett antall tråder til betjening av RPC-kall (standardverdi: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Setter flagget DB_PRIVATE i miljøet til lommebokdatabasen (standardverdi: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Angi konfigurasjonsfil (standardverdi: %s)</translation>
     </message>
@@ -3583,10 +3527,6 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Bruk ubekreftet veksel ved sending av transaksjoner (standardverdi: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Avslutt etter import av blokker fra disk (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

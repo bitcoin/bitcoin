@@ -1,4 +1,4 @@
-<TS language="vi" version="2.1">
+<TS language="vi" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -6,8 +6,20 @@
         <translation>Tạo một địa chỉ mới</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>Tạo mới</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Sao chép các địa chỉ đã được chọn vào bộ nhớ tạm thời của hệ thống</translation>
+    </message>
+    <message>
+        <source>&amp;Copy</source>
+        <translation>Sao chép</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>Sao chép địa chỉ</translation>
     </message>
     <message>
         <source>&amp;Delete</source>

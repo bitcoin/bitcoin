@@ -1,4 +1,4 @@
-<TS language="it" version="2.1">
+<TS language="it" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2806,10 +2806,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Associa all'indirizzo indicato e resta permanentemente in ascolto su di esso. Usa la notazione [host]:porta per l'IPv6</translation>
     </message>
     <message>
-        <source>Continuously rate-limit free transactions to &lt;n&gt;*1000 bytes per minute (default: %u)</source>
-        <translation>Limita la quantità di transazioni gratuite ad &lt;n&gt;*1000 byte al minuto (predefinito: %u)</translation>
-    </message>
-    <message>
         <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
         <translation>Elimina tutte le transazioni dal portamonete e recupera solo quelle che fanno parte della blockchain attraverso il comando -rescan all'avvio.</translation>
     </message>
@@ -2818,16 +2814,8 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Distribuito secondo la licenza software MIT, vedi il file COPYING incluso oppure &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Entra in modalità test di regressione. Questa utilizza una speciale catena in cui i blocchi possono essere risolti istantaneamente.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Esegue un comando quando lo stato di una transazione del portamonete cambia (%s in cmd è sostituito da TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>In questa modalità -genproclimit determina quanti blocchi saranno generati immediatamente.</translation>
     </message>
     <message>
         <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
@@ -2848,6 +2836,14 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Impossibile associarsi a %s su questo computer. Probabilmente Bitcoin Core è già in esecuzione.</translation>
+    </message>
+    <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>ATTENZIONE, il numero di blocchi generati è insolitamente elevato: %d blocchi ricevuti nelle ultime %d ore (%d previsti)</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>ATTENZIONE, si consiglia di verificare la connessione di rete: %d blocchi ricevuti nelle ultime %d ore (%d previsti)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2986,10 +2982,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Specifica il file del portamonete (all'interno della cartella dati)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Questa impostazione è destinata all'uso con i test di regressione e per lo sviluppo di applicazioni.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Usa UPnP per mappare la porta di ascolto (predefinito: %u)</translation>
     </message>
@@ -3062,10 +3054,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Le commissioni (in BTC/kB) inferiori a questo valore sono considerate pari a zero relativamente alla trasmissione (predefinito: %s)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Le commissioni (in BTC/kB) inferiori a questo valore sono considerate pari a zero relativamente alla creazione della transazione (predefinito: %s)</translation>
-    </message>
-    <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>Nel caso in cui paytxfee non sia impostato, include una commissione tale da ottenere un avvio delle conferme entro una media di n blocchi (predefinito: %u)</translation>
     </message>
@@ -3088,10 +3076,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
         <translation>Randomizza le credenziali per ogni connessione proxy. Permette la Tor stream isolation (predefinito: %u)</translation>
-    </message>
-    <message>
-        <source>Require high priority for relaying free or low-fee transactions (default: %u)</source>
-        <translation>Richiedi alta priorità per la trasmissione di transazioni a zero o basse commissioni (predefinito: %u)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
@@ -3159,10 +3143,6 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
     <message>
         <source>Activating best chain...</source>
         <translation>Attivazione della blockchain migliore...</translation>
-    </message>
-    <message>
-        <source>Allow self signed root certificates (default: 0)</source>
-        <translation>Permette certificati radice auto-firmati (predefinito: 0)</translation>
     </message>
     <message>
         <source>Can't run with a wallet in prune mode.</source>
@@ -3257,12 +3237,12 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
         <translation>Supporto RPC per le connessioni HTTP persistenti (predefinito: %d)</translation>
     </message>
     <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Scarta casualmente 1 ogni &lt;n&gt; messaggi di rete</translation>
+        <source>Rebuild block chain index from current blk000??.dat files on startup</source>
+        <translation>Ricostruzione dell'indice della block chain dai file blk000??.dat correnti all'avvio</translation>
     </message>
     <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Altera casualmente 1 ogni &lt;n&gt; messaggi di rete</translation>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Ricevi e visualizza gli alerts della rete P2P (default: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3409,16 +3389,8 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
         <translation>(1 = mantiene metadati tx, ad es. proprietario account ed informazioni di richiesta di pagamento, 2 = scarta metadati tx)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Scarica l'attività del database dal pool in memoria al log su disco ogni &lt;n&gt; megabyte (predefinito: %u)</translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Determina quanto sarà approfondita la verifica da parte di -checkblocks (0-4, predefinito: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Abilita il log della priorità di transazione e della commissione per kB quando si generano blocchi (predefinito: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3449,16 +3421,8 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
         <translation>Interroga sempre i DNS per ottenere gli indirizzi dei peer (predefinito: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Disabilita la modalità sicura ignorando gli eventi che porterebbero alla sua attivazione (predefinito: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Errore caricamento wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Forza modalità sicura (predefinito: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3475,10 +3439,6 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Indirizzo -proxy non valido: '%s'</translation>
-    </message>
-    <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Limita la dimensione della cache delle firme a &lt;n&gt; voci (predefinito: %u)</translation>
     </message>
     <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
@@ -3505,10 +3465,6 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
         <translation>Buffer di invio massimo per connessione, &lt;n&gt;*1000 byte (predefinito: %u)</translation>
     </message>
     <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Accetta solo block chain corrispondenti ai checkpoint integrati nel codice (predefinito: %u)</translation>
-    </message>
-    <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
         <translation>Antepone un timestamp all'output del debug (predefinito: %u)</translation>
     </message>
@@ -3519,10 +3475,6 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Trasmette transazioni non-P2SH multisig (predefinito: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Mantieni in esecuzione un thread per scaricare periodicamente il portamonete (predefinito: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3545,10 +3497,6 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
         <translation>Imposta il numero di thread destinati a rispondere alle chiamate RPC (predefinito %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Imposta il flag DB_PRIVATE nell'ambiente di database del portamonete (predefinito: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Specifica il file di configurazione (predefinito: %s)</translation>
     </message>
@@ -3563,10 +3511,6 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Abilita la spesa di resto non confermato quando si inviano transazioni (predefinito: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Interrompi l'esecuzione dopo aver importato i blocchi dal disco (predefinito: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>

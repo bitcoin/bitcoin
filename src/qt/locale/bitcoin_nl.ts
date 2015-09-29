@@ -1,4 +1,4 @@
-<TS language="nl" version="2.1">
+<TS language="nl" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -397,6 +397,10 @@
     <message>
         <source>&amp;About Bitcoin Core</source>
         <translation>&amp;Over Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for Bitcoin Core</source>
+        <translation>Wijzig configuratieopties voor Bitcoin Core</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -973,6 +977,10 @@
         <translation>IP-adres van de proxy (bijv. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
+        <translation>Minimaliseren in plaats van de applicatie af te sluiten wanneer het venster is afgesloten. Als deze optie is ingeschakeld, zal de toepassing pas worden afgesloten na het selecteren van Exit in het menu.</translation>
+    </message>
+    <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Bitcoin Core.</source>
         <translation>Stel hier de taal van de applicatie in. Deze instelling zal van kracht worden na het herstarten van de applicatie.</translation>
     </message>
@@ -1259,8 +1267,16 @@
         <translation>Betalingsverzoek-bestand kan niet gelezen of verwerkt worden! Dit kan veroorzaakt worden door een ongeldig betalingsverzoek-bestand.</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>Betalingsverzoek verlopen.</translation>
+    </message>
+    <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>Niet-geverifieerde betalingsverzoeken naar aangepaste betaling scripts worden niet ondersteund.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>Ongeldig betalingsverzoek.</translation>
     </message>
     <message>
         <source>Refund from %1</source>
@@ -1423,6 +1439,10 @@
         <translation>Huidig aantal blokken</translation>
     </message>
     <message>
+        <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
+        <translation>Open het Bitcoin Core debug logbestand van de huidige gegevens directory. Dit kan enkele seconden duren voor grote logbestanden.</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>Ontvangen</translation>
     </message>
@@ -1533,6 +1553,10 @@
     <message>
         <source>Clear console</source>
         <translation>Maak console leeg</translation>
+    </message>
+    <message>
+        <source>Welcome to the Bitcoin Core RPC console.</source>
+        <translation>Welkom op de Bitcoin Core RPC console.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1831,6 +1855,10 @@
         <translation>Als de aangepaste toeslag is ingesteld op 1000 satoshis en de transactie is maar 250 bytes, dan wordt bij "per kilobyte" 250 satoshis aan toeslag berekend, terwijl er bij "totaal tenminste" 1000 satoshis worden berekend. Voor transacties die groter zijn dan een kilobyte, wordt in beide gevallen per kilobyte de toeslag berekend.</translation>
     </message>
     <message>
+        <source>Hide</source>
+        <translation>Verbergen</translation>
+    </message>
+    <message>
         <source>total at least</source>
         <translation>totaal ten minste</translation>
     </message>
@@ -1971,8 +1999,20 @@
         <translation>De transactie was afgewezen. Dit kan gebeuren als u eerder uitgegeven munten opnieuw wilt versturen, zoals wanneer u een kopie van uw wallet.dat heeft gebruikt en in de kopie deze munten zijn gemarkeerd als uitgegeven, maar in de huidige nog niet.</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>Betalingsverzoek verlopen.</translation>
+    </message>
+    <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Betaal alleen de minimale transactiekosten van %1</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>Het adres van de ontvanger is niet geldig. Gelieve opnieuw te controleren..</translation>
+    </message>
+    <message>
+        <source>Duplicate address found: addresses should only be used once each.</source>
+        <translation>Dubbel adres gevonden: adressen mogen maar één keer worden gebruikt worden.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2050,6 +2090,14 @@
         <translation>Bericht:</translation>
     </message>
     <message>
+        <source>This is an unauthenticated payment request.</source>
+        <translation>Dit is een niet-geverifieerd betalingsverzoek.</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation>Dit is een geverifieerd betalingsverzoek.</translation>
+    </message>
+    <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
         <translation>Vul een label voor dit adres in om het aan de lijst met gebruikte adressen toe te voegen</translation>
     </message>
@@ -2086,6 +2134,10 @@
     <message>
         <source>&amp;Sign Message</source>
         <translation>O&amp;nderteken Bericht</translation>
+    </message>
+    <message>
+        <source>You can sign messages/agreements with your addresses to prove you can receive bitcoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>U kunt berichten/overeenkomsten ondertekenen met uw adres om te bewijzen dat u Bitcoins kunt versturen. Wees voorzichtig met het ondertekenen van iets vaags of willekeurigs, omdat phishing-aanvallen u kunnen proberen te misleiden tot het ondertekenen van overeenkomsten om uw identiteit aan hen toe te vertrouwen. Onderteken alleen volledig gedetailleerde verklaringen voordat u akkoord gaat.</translation>
     </message>
     <message>
         <source>The Bitcoin address to sign the message with</source>
@@ -2741,16 +2793,8 @@
         <translation>Uitgegeven onder de MIT software licentie, zie het bijgevoegde bestand COPYING of &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Schakel regressietest-modus in, die een speciale blokketen gebruikt waarin blokken onmiddellijk opgelost kunnen worden.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Voer opdracht uit zodra een portemonneetransactie verandert (%s in cmd wordt vervangen door TxID)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>In deze modus, -genproclimit controleert hoeveel blokken er onmiddellijk worden gegenereerd.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2763,6 +2807,10 @@
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Niet in staat om %s te verbinden op deze computer. Bitcoin Core draait waarschijnlijk al.</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>WAARSCHUWING: controleer uw netwerkverbinding, %d blokken ontvangen in de laatste %d uren (%d verwacht)</translation>
     </message>
     <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
@@ -2893,10 +2941,6 @@
         <translation>Specificeer het portemonnee bestand (vanuit de gegevensmap)</translation>
     </message>
     <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Dit is bedoeld voor regressie test toepassingen en applicatie onwikkeling.</translation>
-    </message>
-    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Gebruik UPnP om de luisterende poort te mappen (standaard: %u)</translation>
     </message>
@@ -2915,6 +2959,10 @@
     <message>
         <source>Wallet options:</source>
         <translation>Portemonnee instellingen:</translation>
+    </message>
+    <message>
+        <source>Warning: This version is obsolete; upgrade required!</source>
+        <translation>Waarschuwing: Deze versie is verouderd; upgraden verplicht!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -2965,10 +3013,6 @@
         <translation>Toeslagen (in BTC/Kb) kleiner dan dit worden beschouwd als geen vergoeding (voor doorgeven) (standaard: %s)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Toeslagen (in BTC/Kb) kleiner dan dit worden beschouwd als geen vergoeding transactieaanmaak (standaard: %s)</translation>
-    </message>
-    <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>Als paytxfee niet is ingesteld, het pakket voldoende vergoeding zodat transacties beginnen bevestiging gemiddeld binnen in blokken (default: %u)</translation>
     </message>
@@ -2994,8 +3038,35 @@
         <translation>Stel het aantal threads in voor het genereren van coins indien ingesteld (-1 = alle kernen, standaard: %d)</translation>
     </message>
     <message>
+        <source>The transaction amount is too small to send after the fee has been deducted</source>
+        <translation>Het transactiebedrag is te klein om te versturen nadat de vergoeding in mindering is gebracht</translation>
+    </message>
+    <message>
         <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
         <translation>Dit product bevat software dat ontwikkeld is door het OpenSSL Project voor gebruik in de OpenSSL Toolkit &lt;https://www.openssl.org/&gt; en cryptografische software geschreven door Eric Young en UPnP software geschreven door Thomas Bernard.</translation>
+    </message>
+    <message>
+        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
+%s
+It is recommended you use the following random password:
+rpcuser=bitcoinrpc
+rpcpassword=%s
+(you do not need to remember this password)
+The username and password MUST NOT be the same.
+If the file does not exist, create it with owner-readable-only file permissions.
+It is also recommended to set alertnotify so you are notified of problems;
+for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
+</source>
+        <translation>Om bitcoind of de -server optie naar bitcoin-gt te gebruiken, dient u een rpcwachtwoord in te stellen in het configuratiebestand:
+ %s
+Wij raden u aan om het volgende wachtwoord willekeurig te gebruiken: 
+rpcuser=bitcoinrpc 
+rpcpassword=%s 
+(u hoeft dit wachtwoord niet te onthouden)
+De gebruikersnaam en het wachtwoorden moeten NIET hetzelfde zijn. 
+Indien het bestand niet bestaat, maak het bestand aan met bestandsrechten: alleen lezen voor eigenaar.
+Het is ook aan te raden om een alarmnotificatie in te stellen, zodat u op de hoogte bent van de problemen;
+Voorbeeld: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com</translation>
     </message>
     <message>
         <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -3010,8 +3081,16 @@
         <translation>Goedgekeurde peers kunnen niet ge-DoS-banned worden en hun transacties worden altijd doorgestuurd, zelfs als ze reeds in de mempool aanwezig zijn, nuttig voor bijv. een gateway</translation>
     </message>
     <message>
+        <source>(default: %u)</source>
+        <translation>(standaard: %u)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Accepteer publieke REST-requests (standaard: %u)</translation>
+    </message>
+    <message>
+        <source>Activating best chain...</source>
+        <translation>Beste reeks activeren...</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3102,14 +3181,6 @@
         <translation>RPC ondersteuning voor HTTP persisten verbindingen (default: %d)</translation>
     </message>
     <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Laat willekeurig 1 elke &lt;n&gt; netwerkberichten vallen</translation>
-    </message>
-    <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Fuzz willekeurig 1 van elke &lt;n&gt; netwerkberichten</translation>
-    </message>
-    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Stuur trace/debug-info naar de console in plaats van het debug.log bestand</translation>
     </message>
@@ -3146,6 +3217,10 @@
         <translation>Geminimaliseerd starten</translation>
     </message>
     <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation>Het transactiebedrag is te klein om de vergoeding te betalen</translation>
+    </message>
+    <message>
         <source>This is experimental software.</source>
         <translation>Dit is experimentele software.</translation>
     </message>
@@ -3164,6 +3239,10 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transactie te groot</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>UI Opties:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -3246,16 +3325,8 @@
         <translation>(1 = behoudt tx meta data bijv. account eigenaar en betalingsverzoek informatie, 2. sla tx meta data niet op)</translation>
     </message>
     <message>
-        <source>Flush database activity from memory pool to disk log every &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Leeg database-activiteit uit de geheugen pool naar schijf log elke &lt;n&gt; megabytes (standaard: %u) </translation>
-    </message>
-    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Hoe grondig de blokverificatie van -checkblocks is (0-4, standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Log transaction priority and fee per kB when mining blocks (default: %u)</source>
-        <translation>Log transactieprioriteit en -kosten per kB bij het mijnen van blokken (standaard: %u)</translation>
     </message>
     <message>
         <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
@@ -3282,16 +3353,8 @@
         <translation>Vind anderen door middel van een DNS-naslag (standaard: %u)</translation>
     </message>
     <message>
-        <source>Disable safemode, override a real safe mode event (default: %u)</source>
-        <translation>Veilige modus uitschakelen, hef een echte veilige modus gebeurtenis uit (default: %u)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat</source>
         <translation>Fout bij laden wallet.dat</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Forceer veilige modus (default: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3310,10 +3373,6 @@
         <translation>Ongeldig -proxy adres: '%s'</translation>
     </message>
     <message>
-        <source>Limit size of signature cache to &lt;n&gt; entries (default: %u)</source>
-        <translation>Limiteer grootte van de handtekening cache tot &lt;n&gt; entries (default: %u)</translation>
-    </message>
-    <message>
         <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
         <translation>Luister naar JSON-RPC-verbindingen op poort &lt;port&gt; (standaard: %u of testnet: %u)</translation>
     </message>
@@ -3326,16 +3385,16 @@
         <translation>Onderhoud maximaal &lt;n&gt; verbindingen naar peers (standaard: %u)</translation>
     </message>
     <message>
+        <source>Make the wallet broadcast transactions</source>
+        <translation>Laat de portemonnee transacties uitsturen</translation>
+    </message>
+    <message>
         <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
         <translation>Maximum per-connectie ontvangstbuffer, &lt;n&gt;*1000 bytes (standaard: %u)</translation>
     </message>
     <message>
         <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
         <translation>Maximum per-connectie zendbuffer, &lt;n&gt;*1000 bytes (standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Only accept block chain matching built-in checkpoints (default: %u)</source>
-        <translation>Accepteer alleen blokkenketen die overeenkomt met de ingebouwde checkpoints (standaard: %u)</translation>
     </message>
     <message>
         <source>Prepend debug output with timestamp (default: %u)</source>
@@ -3348,10 +3407,6 @@
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Relay non-P2SH multisig (default: %u)</translation>
-    </message>
-    <message>
-        <source>Run a thread to flush wallet periodically (default: %u)</source>
-        <translation>Draai een proces om de wallet periodiek te flushen (default: %u)</translation>
     </message>
     <message>
         <source>Server certificate file (default: %s)</source>
@@ -3374,10 +3429,6 @@
         <translation>Stel het aantal threads in om RPC-aanvragen mee te bedienen (standaard: %d)</translation>
     </message>
     <message>
-        <source>Sets the DB_PRIVATE flag in the wallet db environment (default: %u)</source>
-        <translation>Plaatst de DB_PRIVATE vlag in de wallet db omgeving (default: %u)</translation>
-    </message>
-    <message>
         <source>Specify configuration file (default: %s)</source>
         <translation>Specificeer configuratie bestand (standaard: %s)</translation>
     </message>
@@ -3392,10 +3443,6 @@
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>
         <translation>Besteed onbevestigd wisselgeld bij het versturen van transacties (standaard: %u)</translation>
-    </message>
-    <message>
-        <source>Stop running after importing blocks from disk (default: %u)</source>
-        <translation>Stop uitvoeren na het importeren van blokken van de schijf (standaard: %u)</translation>
     </message>
     <message>
         <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
