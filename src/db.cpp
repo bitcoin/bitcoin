@@ -335,7 +335,7 @@ void CDB::Close()
     if (IsChainFile(strFile) && IsInitialBlockDownload())
         nMinutes = 5;
 
-    bitdb.dbenv.txn_checkpoint(nMinutes ? GetArg("-dblogsize", 100)*1024 : 0, nMinutes, 0);
+    bitdb.dbenv.txn_checkpoint(nMinutes ? GetArgUInt("-dblogsize", 100)*1024 : 0, nMinutes, 0);
 
     {
         LOCK(bitdb.cs_db);

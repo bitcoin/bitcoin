@@ -278,6 +278,16 @@ inline int32_t strtol(const std::string& str)
     return strtol(str.c_str(), NULL, 10);
 }
 
+inline uint32_t strtoul(const char* psz)
+{
+    return strtoul(psz, NULL, 10);
+}
+
+inline uint32_t strtoul(const std::string& str)
+{
+    return strtoul(str.c_str(), NULL, 10);
+}
+
 inline int atoi(const std::string& str)
 {
     return atoi(str.c_str());
@@ -413,6 +423,15 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault);
  * @return command-line argument (0 if invalid number) or default value
  */
 int32_t GetArgInt(const std::string& strArg, int32_t nDefault);
+
+/**
+ * Return 32-bit unsigned integer argument or default value
+ *
+ * @param strArg Argument to get (e.g. "-foo")
+ * @param default (e.g. 1)
+ * @return command-line argument (0 if invalid number) or default value
+ */
+uint32_t GetArgUInt(const std::string& strArg, uint32_t nDefault);
 
 /**
  * Return boolean argument or default value
