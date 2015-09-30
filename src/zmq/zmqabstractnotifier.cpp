@@ -11,7 +11,7 @@ CZMQAbstractNotifier::~CZMQAbstractNotifier()
     assert(!psocket);
 }
 
-bool CZMQAbstractNotifier::NotifyBlock(const uint256 &/*hash*/)
+bool CZMQAbstractNotifier::NotifyBlock(const CBlockIndex * /*CBlockIndex*/)
 {
     return true;
 }
