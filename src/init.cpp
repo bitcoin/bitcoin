@@ -445,7 +445,7 @@ bool AppInit2()
     // ********************************************************* Step 3: parameter-to-internal-flags
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
-    nScriptCheckThreads = (int)(GetArg("-par", 0));
+    nScriptCheckThreads = GetArgInt("-par", 0);
     if (nScriptCheckThreads == 0)
         nScriptCheckThreads = boost::thread::hardware_concurrency();
     if (nScriptCheckThreads <= 1) 
@@ -484,7 +484,7 @@ bool AppInit2()
 
     if (mapArgs.count("-timeout"))
     {
-        int nNewTimeout = (int)(GetArg("-timeout", 5000));
+        int nNewTimeout = GetArgInt("-timeout", 5000);
         if (nNewTimeout > 0 && nNewTimeout < 600000)
             nConnectTimeout = nNewTimeout;
     }
@@ -605,7 +605,7 @@ bool AppInit2()
 
     // ********************************************************* Step 6: network initialization
 
-    int nSocksVersion = (int)(GetArg("-socks", 5));
+    int nSocksVersion = GetArgInt("-socks", 5);
 
     if (nSocksVersion != 4 && nSocksVersion != 5)
         return InitError(strprintf(_("Unknown -socks proxy version requested: %i"), nSocksVersion));
@@ -882,7 +882,7 @@ bool AppInit2()
 
     if (GetBoolArg("-upgradewallet", fFirstRun))
     {
-        int nMaxVersion = (int)(GetArg("-upgradewallet", 0));
+        int nMaxVersion = GetArgInt("-upgradewallet", 0);
         if (nMaxVersion == 0) // the -upgradewallet without argument case
         {
             printf("Performing wallet upgrade to %i\n", FEATURE_LATEST);

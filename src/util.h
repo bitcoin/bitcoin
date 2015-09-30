@@ -268,6 +268,16 @@ inline int64_t atoi64(const std::string& str)
 #endif
 }
 
+inline int32_t strtol(const char* psz)
+{
+    return strtol(psz, NULL, 10);
+}
+
+inline int32_t strtol(const std::string& str)
+{
+    return strtol(str.c_str(), NULL, 10);
+}
+
 inline int atoi(const std::string& str)
 {
     return atoi(str.c_str());
@@ -387,13 +397,22 @@ inline bool IsSwitchChar(char c)
 std::string GetArg(const std::string& strArg, const std::string& strDefault);
 
 /**
- * Return integer argument or default value
+ * Return 64-bit integer argument or default value
  *
  * @param strArg Argument to get (e.g. "-foo")
  * @param default (e.g. 1)
  * @return command-line argument (0 if invalid number) or default value
  */
 int64_t GetArg(const std::string& strArg, int64_t nDefault);
+
+/**
+ * Return 32-bit integer argument or default value
+ *
+ * @param strArg Argument to get (e.g. "-foo")
+ * @param default (e.g. 1)
+ * @return command-line argument (0 if invalid number) or default value
+ */
+int32_t GetArgInt(const std::string& strArg, int32_t nDefault);
 
 /**
  * Return boolean argument or default value
