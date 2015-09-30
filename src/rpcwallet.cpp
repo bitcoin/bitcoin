@@ -1429,7 +1429,7 @@ Value keypoolrefill(const Array& params, bool fHelp)
             "should be replaced with the newly generated one."
             + HelpRequiringPassphrase());
 
-    unsigned int nSize = max<unsigned int>(GetArg("-keypool", 100), 0);
+    unsigned int nSize = max<unsigned int>(GetArgUInt("-keypool", 100), 0);
     if (params.size() > 0) {
         if (params[0].get_int() < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size");
@@ -1456,7 +1456,7 @@ Value keypoolreset(const Array& params, bool fHelp)
             "should be replaced with the newly generated one."
             + HelpRequiringPassphrase());
 
-    unsigned int nSize = max<unsigned int>(GetArg("-keypool", 100), 0);
+    unsigned int nSize = max<unsigned int>(GetArgUInt("-keypool", 100), 0);
     if (params.size() > 0) {
         if (params[0].get_int() < 0)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected valid size");
