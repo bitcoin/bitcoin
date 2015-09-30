@@ -35,6 +35,7 @@ The title of the pull request should be prefixed by the component or area that t
     Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
     Net: Automatically create hidden service, listen on Tor
     Qt: Add feed bump button
+    Trivial: fix typo
 
 If a pull request is specifically not to be considered for merging (yet) please prefix the title with [WIP] or use [Tasks Lists](https://github.com/blog/1375-task-lists-in-gfm-issues-pulls-comments) in the body of the pull request to indicate tasks are pending.
 
