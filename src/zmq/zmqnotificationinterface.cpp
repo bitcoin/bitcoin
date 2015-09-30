@@ -120,12 +120,12 @@ void CZMQNotificationInterface::Shutdown()
     }
 }
 
-void CZMQNotificationInterface::UpdatedBlockTip(const uint256 &hash)
+void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
     {
         CZMQAbstractNotifier *notifier = *i;
-        if (notifier->NotifyBlock(hash))
+        if (notifier->NotifyBlock(pindex))
         {
             i++;
         }
