@@ -1,11 +1,13 @@
 // Copyright 2014 BitPay Inc.
+// Copyright 2015 Bitcoin Core Developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UNIVALUE_UNIVALUE_H
-#define BITCOIN_UNIVALUE_UNIVALUE_H
+#ifndef __UNIVALUE_H__
+#define __UNIVALUE_H__
 
 #include <stdint.h>
+
 #include <string>
 #include <vector>
 #include <map>
@@ -245,4 +247,4 @@ extern const UniValue NullUniValue;
 
 const UniValue& find_value( const UniValue& obj, const std::string& name);
 
-#endif // BITCOIN_UNIVALUE_UNIVALUE_H
+#endif // __UNIVALUE_H__

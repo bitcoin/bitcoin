@@ -18,7 +18,7 @@
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "univalue/univalue.h"
+#include <univalue.h>
 
 extern UniValue read_json(const std::string& jsondata);
 
