@@ -32,8 +32,6 @@ class ZMQTest (BitcoinTestFramework):
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, "hashblock")
         self.zmqSubSocket.setsockopt(zmq.SUBSCRIBE, "hashtx")
         self.zmqSubSocket.connect("tcp://127.0.0.1:%i" % self.port)
-        # Note: proxies are not used to connect to local nodes
-        # this is because the proxy to use is based on CService.GetNetwork(), which return NET_UNROUTABLE for localhost
         return start_nodes(4, self.options.tmpdir, extra_args=[
             ['-zmqpubhashtx=tcp://127.0.0.1:'+str(self.port), '-zmqpubhashblock=tcp://127.0.0.1:'+str(self.port)],
             [],
