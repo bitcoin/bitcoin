@@ -16,7 +16,7 @@ override_dh_auto_clean:
 	cd src; $(MAKE) -f makefile.unix clean
 
 override_dh_auto_configure:
-	qmake novacoin-qt.pro USE_QRCODE=1 USE_ASM=1 USE_LEVELDB=1
+	qmake novacoin-qt.pro USE_ASM=1 USE_LEVELDB=1
 
 # Ensure wrapper is set executable
 binary-post-install/novacoind:

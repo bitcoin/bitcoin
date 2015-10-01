@@ -131,35 +131,33 @@ endif
 
 ifeq (${USE_ASM}, 1)
 # Assembler implementation
-OBJS += scrypt-asm/obj/scrypt-arm.o scrypt-asm/obj/scrypt-x86.o scrypt-asm/obj/scrypt-x86_64.o scrypt-asm/obj/asm-wrapper.o
+OBJS += crypto/scrypt/asm/obj/scrypt-arm.o crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
 
-scrypt-asm/obj/scrypt-x86.o: scrypt-asm/scrypt-x86.S
+crypto/scrypt/asm/obj/scrypt-x86.o: crypto/scrypt/asm/scrypt-x86.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
-scrypt-asm/obj/scrypt-x86_64.o: scrypt-asm/scrypt-x86_64.S
+crypto/scrypt/asm/obj/scrypt-x86_64.o: crypto/scrypt/asm/scrypt-x86_64.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
-scrypt-asm/obj/scrypt-arm.o: scrypt-asm/scrypt-arm.S
+crypto/scrypt/asm/obj/scrypt-arm.o: crypto/scrypt/asm/scrypt-arm.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
-scrypt-asm/obj/asm-wrapper.o: scrypt-asm/asm-wrapper.cpp
+crypto/scrypt/asm/obj/asm-wrapper.o: crypto/scrypt/asm/asm-wrapper.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 else
 ifeq  (${USE_SSE2}, 1)
 # Intrinsic implementation
 DEFS += -DUSE_SSE2
-OBJS += scrypt-intrin/obj/scrypt-sse2.o
+OBJS += crypto/scrypt/intrin/obj/scrypt-sse2.o
 
-scrypt-intrin/obj/scrypt-sse2.o: scrypt-intrin/scrypt-sse2.cpp
+crypto/scrypt/intrin/obj/scrypt-sse2.o: crypto/scrypt/intrin/scrypt-sse2.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 else
-ifneq (${USE_ASM}, 1)
 # Generic implementation
-OBJS += obj/scrypt-generic.o
+OBJS += crypto/scrypt/generic/obj/scrypt-generic.o
 
-obj/scrypt-generic.o: scrypt-generic.cpp
+crypto/scrypt/generic/obj/scrypt-generic.o: crypto/scrypt/generic/scrypt-generic.cpp
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
-endif
 endif
 endif
 
@@ -187,12 +185,15 @@ clean:
 	-rm -f obj/*.o
 	-rm -f obj/*.P
 	-rm -f obj/*.d
-	-rm -f scrypt-asm/obj/*.o
-	-rm -f scrypt-asm/obj/*.P
-	-rm -f scrypt-asm/obj/*.d
-	-rm -f scrypt-intrin/obj/*.o
-	-rm -f scrypt-intrin/obj/*.P
-	-rm -f scrypt-intrin/obj/*.d
+	-rm -f crypto/scrypt/asm/obj/*.o
+	-rm -f crypto/scrypt/asm/obj/*.P
+	-rm -f crypto/scrypt/asm/obj/*.d
+	-rm -f crypto/scrypt/intrin/obj/*.o
+	-rm -f crypto/scrypt/intrin/obj/*.P
+	-rm -f crypto/scrypt/intrin/obj/*.d
+	-rm -f crypto/scrypt/generic/obj/*.o
+	-rm -f crypto/scrypt/generic/obj/*.P
+	-rm -f crypto/scrypt/generic/obj/*.d
 	-rm -f obj/build.h
 
 FORCE:

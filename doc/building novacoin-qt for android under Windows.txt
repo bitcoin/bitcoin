@@ -160,7 +160,6 @@ TARGET_OS=OS_ANDROID_CROSSCOMPILE make libleveldb.a libmemenv.a
 вставьте 
 
 USE_UPNP=-
-USE_QRCODE=0
 USE_IPV6=0
 USE_LEVELDB=1
 USE_ASM=1

@@ -344,28 +344,28 @@ Qt4 + транзакционный индекс LevelDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt4 "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+i686-w64-mingw32.static-qmake-qt4 "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt4 + транзакционный индекс BDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt4 "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+i686-w64-mingw32.static-qmake-qt4 "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt5 + транзакционный индекс LevelDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt5 "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+i686-w64-mingw32.static-qmake-qt5 "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt5 + транзакционный индекс BDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt5 "USE_QRCODE=1" "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+i686-w64-mingw32.static-qmake-qt5 "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 

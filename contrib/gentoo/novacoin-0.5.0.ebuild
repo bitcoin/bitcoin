@@ -76,7 +76,6 @@ src_configure() {
 		OPTS+=("USE_UPNP=-")
 	fi
 
-	use qrcode && OPTS+=("USE_QRCODE=1")
 	use ipv6 || OPTS+=("USE_IPV6=-")
 
 	OPTS+=("BDB_INCLUDE_PATH=$(db_includedir "${DB_VER}")")

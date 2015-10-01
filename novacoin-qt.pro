@@ -55,14 +55,6 @@ QMAKE_LFLAGS *= -fstack-protector-all --param ssp-buffer-size=1
 win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat
 win32:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
 
-# use: qmake "USE_QRCODE=1"
-# libqrencode (http://fukuchi.org/works/qrencode/index.en.html) must be installed for support
-contains(USE_QRCODE, 1) {
-    message(Building with QRCode support)
-    DEFINES += USE_QRCODE
-    LIBS += -lqrencode
-}
-
 # use: qmake "USE_UPNP=1" ( enabled by default; default)
 #  or: qmake "USE_UPNP=0" (disabled by default)
 #  or: qmake "USE_UPNP=-" (not supported)
@@ -136,18 +128,18 @@ contains(USE_LEVELDB, 1) {
 # use: qmake "USE_ASM=1"
 contains(USE_ASM, 1) {
     message(Using assembler scrypt implementation)
-    SOURCES += src/scrypt-asm/scrypt-arm.S src/scrypt-asm/scrypt-x86.S src/scrypt-asm/scrypt-x86_64.S src/scrypt-asm/asm-wrapper.cpp
+    SOURCES += src/crypto/scrypt/asm/scrypt-arm.S src/crypto/scrypt/asm/scrypt-x86.S src/crypto/scrypt/asm/scrypt-x86_64.S src/crypto/scrypt/asm/asm-wrapper.cpp
 } else {
     # use: qmake "USE_SSE2=1"
     contains(USE_SSE2, 1) {
         message(Using SSE2 intrinsic scrypt implementation)
-        SOURCES += src/scrypt-intrin/scrypt-sse2.cpp
+        SOURCES += src/crypto/scrypt/intrin/scrypt-sse2.cpp
         DEFINES += USE_SSE2
         QMAKE_CXXFLAGS += -msse2
         QMAKE_CFLAGS += -msse2
     } else {
         message(Using generic scrypt implementation)
-        SOURCES += src/scrypt-generic.cpp
+        SOURCES += src/crypto/scrypt/generic/scrypt-generic.cpp
     }
 }
 
@@ -270,7 +262,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/multisigaddressentry.h \
     src/qt/multisiginputentry.h \
     src/qt/multisigdialog.h \
-    src/qt/secondauthdialog.h
+    src/qt/secondauthdialog.h \
+    src/qt/qrcodedialog.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/intro.cpp \
@@ -346,7 +339,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/multisigaddressentry.cpp \
     src/qt/multisiginputentry.cpp \
     src/qt/multisigdialog.cpp \
-    src/qt/secondauthdialog.cpp
+    src/qt/secondauthdialog.cpp \
+    src/qt/qrcodedialog.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc
@@ -368,13 +362,8 @@ FORMS += \
     src/qt/forms/multisigaddressentry.ui \
     src/qt/forms/multisiginputentry.ui \
     src/qt/forms/multisigdialog.ui \
-    src/qt/forms/secondauthdialog.ui
-
-contains(USE_QRCODE, 1) {
-HEADERS += src/qt/qrcodedialog.h
-SOURCES += src/qt/qrcodedialog.cpp
-FORMS += src/qt/forms/qrcodedialog.ui
-}
+    src/qt/forms/secondauthdialog.ui \
+    src/qt/forms/qrcodedialog.ui
 
 CODECFORTR = UTF-8
 
@@ -463,7 +452,7 @@ macx:QMAKE_CXXFLAGS_THREAD += -pthread
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
 LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
-LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
+LIBS += -lqrencode -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
 windows:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX
