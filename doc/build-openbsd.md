@@ -70,24 +70,6 @@ config_opts="runtime-link=shared threadapi=pthread threading=multi link=static v
 ./b2 -d0 -j4 ${config_opts} --prefix=${BOOST_PREFIX} install
 ```
 
-### OpenSSL
-
-OpenBSD uses a replacement of OpenSSL: LibreSSL. This can cause compatibility issues, hence `./configure` will bark if you try to compile with this library:
-
-    Detected LibreSSL: This is NOT supported, and may break consensus compatibility!
-
-To install a 'real' OpenSSL use:
-
-    pkg_add openssl
-   
-Any program linked against this library can only be used after setting the dynamic library path:
-    
-    export LD_LIBRARY_PATH="/usr/local/lib/eopenssl"
-
-(otherwise there will be an error about not being able to find `libcrypto.so.1.0`)
-
-Alternatively, pass `--with-libressl` to `./configure`, however as the warning says, this is NOT supported, and may cause problems syncing the chain, or the node to fork off the network in unexpected circumstances.
-
 ### Building BerkeleyDB
 
 BerkeleyDB is only necessary for the wallet functionality. To skip this, pass `--disable-wallet` to `./configure`.
@@ -124,28 +106,24 @@ export AUTOCONF_VERSION=2.69 # replace this with the autoconf version that you i
 export AUTOMAKE_VERSION=1.15 # replace this with the automake version that you installed
 ./autogen.sh
 ```
+Make sure `BDB_PREFIX` and `BOOST_PREFIX` are set to the appropriate paths from the above steps.
 
 To configure with wallet:
 ```bash
 ./configure --with-gui=no --with-boost=$BOOST_PREFIX \
     CC=egcc CXX=eg++ CPP=ecpp \
-    SSL_CFLAGS="-I/usr/local/include/eopenssl" SSL_LIBS="-L/usr/local/lib/eopenssl -lssl" \
-    CRYPTO_CFLAGS="-I/usr/local/include/eopenssl" CRYPTO_LIBS="-L/usr/local/lib/eopenssl -lcrypto" \
     LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/"
 ```
 
 To configure without wallet:
 ```bash
 ./configure --disable-wallet --with-gui=no --with-boost=$BOOST_PREFIX \
-    CC=egcc CXX=eg++ CPP=ecpp \
-    SSL_CFLAGS="-I/usr/local/include/eopenssl" SSL_LIBS="-L/usr/local/lib/eopenssl -lssl" \
-    CRYPTO_CFLAGS="-I/usr/local/include/eopenssl" CRYPTO_LIBS="-L/usr/local/lib/eopenssl -lcrypto"
+    CC=egcc CXX=eg++ CPP=ecpp
 ```
 
 Build and run the tests:
 ```bash
 gmake
-export LD_LIBRARY_PATH="/usr/local/lib/eopenssl"
 gmake check
 ```
 
@@ -164,9 +142,7 @@ pkg_add llvm boost
 ```
 
 ```bash
-./configure --disable-wallet --with-gui=no CC=clang CXX=clang++ \
-    SSL_CFLAGS="-I/usr/local/include/eopenssl" SSL_LIBS="-L/usr/local/lib/eopenssl -lssl" \
-    CRYPTO_CFLAGS="-I/usr/local/include/eopenssl" CRYPTO_LIBS="-L/usr/local/lib/eopenssl -lcrypto"
+./configure --disable-wallet --with-gui=no CC=clang CXX=clang++
 gmake
 ```
 
