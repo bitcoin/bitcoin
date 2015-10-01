@@ -39,7 +39,7 @@ enum Network ParseNetwork(std::string net) {
     boost::to_lower(net);
     if (net == "ipv4") return NET_IPV4;
     if (net == "ipv6") return NET_IPV6;
-    if (net == "tor")  return NET_TOR;
+    if (net == "tor" || net == "onoin")  return NET_TOR;
     if (net == "i2p")  return NET_I2P;
     return NET_UNROUTABLE;
 }
