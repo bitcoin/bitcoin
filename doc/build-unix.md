@@ -2,6 +2,8 @@ UNIX BUILD NOTES
 ====================
 Some notes on how to build Bitcoin in Unix.
 
+(for OpenBSD specific instructions, see [build-openbsd.md](build-openbsd.md))
+
 Note
 ---------------------
 Always use absolute paths to configure and compile bitcoin and the dependencies,
