@@ -60,9 +60,9 @@ testScriptsExt=(
     'mempool_packages.py'
 );
 
-#if [ "x$ENABLE_ZMQ" = "x1" ]; then
-#  testScripts+=('zmq_test.py')
-#fi
+if [ "x$ENABLE_ZMQ" = "x1" ]; then
+  testScripts+=('zmq_test.py')
+fi
 
 extArg="-extended"
 passOn=${@#$extArg}
