@@ -1,0 +1,7 @@
+
+		UniValue
+
+A universal value object, with JSON encoding (output) and decoding (input).
+
+Built as a single dynamic RAII C++ object class, and no templates.
+

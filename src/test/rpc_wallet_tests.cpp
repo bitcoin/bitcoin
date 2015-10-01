@@ -14,7 +14,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "univalue/univalue.h"
+#include <univalue.h>
 
 using namespace std;
 

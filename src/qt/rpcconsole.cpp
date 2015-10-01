@@ -18,7 +18,7 @@
 
 #include <openssl/crypto.h>
 
-#include "univalue/univalue.h"
+#include <univalue.h>
 
 #ifdef ENABLE_WALLET
 #include <db_cxx.h>
