@@ -1,0 +1,7 @@
+
+unitester
+
+*.log
+*.trs
+
+.libs

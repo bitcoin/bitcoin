@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 #include <map>
-#include "univalue/univalue.h"
+#include <univalue.h>
 #include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
