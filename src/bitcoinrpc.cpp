@@ -1181,7 +1181,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     BOOST_FOREACH(const std::string &param, strParams)
         params.push_back(param);
 
-    int n = params.size();
+    size_t n = params.size();
 
     //
     // Special case non-string parameter types

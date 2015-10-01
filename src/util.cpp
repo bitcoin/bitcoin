@@ -293,7 +293,7 @@ inline int OutputDebugStringF(const char* pszFormat, ...)
             buffer += vstrprintf(pszFormat, arg_ptr);
             va_end(arg_ptr);
 
-            int line_start = 0, line_end;
+            size_t line_start = 0, line_end;
             while((line_end = buffer.find('\n', line_start)) != -1)
             {
                 OutputDebugStringA(buffer.substr(line_start, line_end - line_start).c_str());
@@ -401,7 +401,7 @@ string FormatMoney(int64_t n, bool fPlus)
 
     // Right-trim excess zeros before the decimal point:
     int nTrim = 0;
-    for (int i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
+    for (size_t i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
         ++nTrim;
     if (nTrim)
         str.erase(str.size()-nTrim, nTrim);
