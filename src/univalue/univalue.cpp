@@ -164,6 +164,16 @@ int UniValue::findKey(const std::string& key) const
     return -1;
 }
 
+const UniValue UniValue::findValue(const std::string& key) const
+{
+    for (unsigned int i = 0; i < keys.size(); i++) {
+        if (keys[i] == key)
+            return values[i];
+    }
+
+    return NullUniValue;
+}
+
 bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t)
 {
     for (std::map<std::string,UniValue::VType>::const_iterator it = t.begin();
@@ -214,19 +224,6 @@ const char *uvTypeName(UniValue::VType t)
 
     // not reached
     return NULL;
-}
-
-const UniValue& find_value( const UniValue& obj, const std::string& name)
-{
-    for (unsigned int i = 0; i < obj.keys.size(); i++)
-    {
-        if( obj.keys[i] == name )
-        {
-            return obj.values[i];
-        }
-    }
-
-    return NullUniValue;
 }
 
 std::vector<std::string> UniValue::getKeys() const
