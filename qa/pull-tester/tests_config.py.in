@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python2
 # Copyright (c) 2013-2014 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -12,6 +12,4 @@ EXEEXT="@EXEEXT@"
 @BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=1
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=1
 
-REAL_BITCOIND="$BUILDDIR/src/bitcoind${EXEEXT}"
-REAL_BITCOINCLI="$BUILDDIR/src/bitcoin-cli${EXEEXT}"
 
