@@ -494,8 +494,8 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-min", _("Start minimized"));
         strUsage += HelpMessageOpt("-rootcertificates=<file>", _("Set SSL root certificates for payment request (default: -system-)"));
         strUsage += HelpMessageOpt("-splash", strprintf(_("Show splash screen on startup (default: %u)"), DEFAULT_SPLASHSCREEN));
-        if (showDebug) {
-            strUsage += HelpMessageOpt("-uiplatform", "Select platform to customize UI for (one of windows, macosx, other; default: platform compiled on)");
+        if (showDebug && !uiInterface.DefaultUIPlatform.empty()) {
+            strUsage += HelpMessageOpt("-uiplatform", strprintf("Select platform to customize UI for (one of windows, macosx, other; default: %s)", uiInterface.DefaultUIPlatform));
         }
     }
 

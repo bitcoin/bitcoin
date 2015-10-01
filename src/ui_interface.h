@@ -98,6 +98,9 @@ public:
 
     /** Banlist did change. */
     boost::signals2::signal<void (void)> BannedListChanged;
+
+    /** Default UI interface */
+    std::string DefaultUIPlatform;
 };
 
 extern CClientUIInterface uiInterface;
