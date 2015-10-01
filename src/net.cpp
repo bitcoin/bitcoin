@@ -617,7 +617,7 @@ static list<CNode*> vNodesDisconnected;
 void ThreadSocketHandler2(void* parg)
 {
     printf("ThreadSocketHandler started\n");
-    unsigned int nPrevNodeCount = 0;
+    size_t nPrevNodeCount = 0;
     while (true)
     {
         //
