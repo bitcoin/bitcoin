@@ -444,7 +444,7 @@ class ScanMidstateWorker
 public:
     ScanMidstateWorker()
     { }
-    ScanMidstateWorker(SHA256_CTX ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval)
+    ScanMidstateWorker(SHA256_CTX ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, uint32_t nIntervalBegin, uint32_t nIntervalEnd)
     {
         workerSolutions = vector<std::pair<uint256,uint32_t> >();
 
@@ -452,7 +452,8 @@ public:
         this->nBits = nBits;
         this->nInputTxTime = nInputTxTime;
         this->nValueIn = nValueIn;
-        this->SearchInterval = SearchInterval;
+        this->nIntervalBegin = nIntervalBegin;
+        this->nIntervalEnd = nIntervalEnd;
     }
 
     void Do()
@@ -468,7 +469,7 @@ public:
 
         // Search forward in time from the given timestamp
         // Stopping search in case of shutting down
-        for (uint32_t nTimeTx=SearchInterval.first; nTimeTx<SearchInterval.second && !fShutdown; nTimeTx++)
+        for (uint32_t nTimeTx=nIntervalBegin; nTimeTx<nIntervalEnd && !fShutdown; nTimeTx++)
         {
             // Complete first hashing iteration
             uint256 hash1;
@@ -509,7 +510,8 @@ private:
     uint32_t nBits;
     uint32_t nInputTxTime;
     int64_t nValueIn;
-    std::pair<uint32_t, uint32_t> SearchInterval;
+    uint32_t nIntervalBegin;
+    uint32_t nIntervalEnd;
 };
 
 // Scan given midstate for solution
@@ -526,13 +528,10 @@ bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
     boost::thread_group group;
     for(int i = 0; i<4; i++)
     {
-        nBegin += (nPart * i);
+        uint32_t nIntervalBegin = nBegin + nPart * i;
         uint32_t nIntervalEnd = nBegin + nPart * (i + 1);
 
-        std::cout << nBegin << " " << nIntervalEnd << std::endl;
-
-        std::pair<uint32_t, uint32_t> interval(nBegin, nIntervalEnd);
-        workers[i] = ScanMidstateWorker(ctx, nBits, nInputTxTime, nValueIn, interval);
+        workers[i] = ScanMidstateWorker(ctx, nBits, nInputTxTime, nValueIn, nIntervalBegin, nIntervalEnd);
 
         boost::function<void()> workerFnc = boost::bind(&ScanMidstateWorker::Do, &workers[i]);
         group.create_thread(workerFnc);
