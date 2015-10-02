@@ -97,6 +97,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "mnbudget", 4 },
     { "mnbudget", 6 },
     { "mnbudget", 8 },
+    { "mnbudgetvoteraw", 1 },
+    { "mnbudgetvoteraw", 4 },
 };
 
 class CRPCConvertTable
