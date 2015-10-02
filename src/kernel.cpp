@@ -523,7 +523,7 @@ bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
 
     uint32_t nBegin = SearchInterval.first;
     uint32_t nEnd = SearchInterval.second;
-    uint32_t nPart = (nEnd - nBegin) / 4;
+    uint32_t nPart = (nEnd - nBegin) / nThreads;
 
     ScanMidstateWorker *workers = new ScanMidstateWorker[nThreads];
 
