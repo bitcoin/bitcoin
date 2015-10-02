@@ -438,51 +438,122 @@ void GetKernelMidstate(uint64_t nStakeModifier, uint32_t nBlockTime, uint32_t nT
     SHA256_Update(&ctx, (unsigned char*)&it[0], 8 + 16);
 }
 
-// Scan given midstate for solution
-bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution)
+
+class ScanMidstateWorker
 {
-    CBigNum bnTargetPerCoinDay;
-    bnTargetPerCoinDay.SetCompact(nBits);
-
-    // Get maximum possible target to filter out the majority of obviously insufficient hashes
-    CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / (24 * 60 * 60);
-    uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
-
-    SHA256_CTX ctxCopy = ctx;
-
-    // Search forward in time from the given timestamp
-    // Stopping search in case of shutting down
-    for (uint32_t nTimeTx=SearchInterval.first; nTimeTx<SearchInterval.second && !fShutdown; nTimeTx++)
+public:
+    ScanMidstateWorker()
+    { }
+    ScanMidstateWorker(SHA256_CTX ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval)
     {
-        // Complete first hashing iteration
-        uint256 hash1;
-        SHA256_Update(&ctxCopy, (unsigned char*)&nTimeTx, 4);
-        SHA256_Final((unsigned char*)&hash1, &ctxCopy);
+        workerSolutions = vector<std::pair<uint256,uint32_t> >();
 
-        // Restore context
-        ctxCopy = ctx;
+        workerCtx = ctx;
+        this->nBits = nBits;
+        this->nInputTxTime = nInputTxTime;
+        this->nValueIn = nValueIn;
+        this->SearchInterval = SearchInterval;
+    }
 
-        // Finally, calculate kernel hash
-        uint256 hashProofOfStake;
-        SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
+    void Do()
+    {
+        CBigNum bnTargetPerCoinDay;
+        bnTargetPerCoinDay.SetCompact(nBits);
 
-        // Skip if hash doesn't satisfy the maximum target
-        if (hashProofOfStake > maxTarget)
-            continue;
+        // Get maximum possible target to filter out the majority of obviously insufficient hashes
+        CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / (24 * 60 * 60);
+        uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
 
-        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
-        CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+        SHA256_CTX ctx = workerCtx;
 
-        if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
+        // Search forward in time from the given timestamp
+        // Stopping search in case of shutting down
+        for (uint32_t nTimeTx=SearchInterval.first; nTimeTx<SearchInterval.second && !fShutdown; nTimeTx++)
         {
-            solution.first = hashProofOfStake;
-            solution.second = nTimeTx;
+            // Complete first hashing iteration
+            uint256 hash1;
+            SHA256_Update(&ctx, (unsigned char*)&nTimeTx, 4);
+            SHA256_Final((unsigned char*)&hash1, &ctx);
 
-            return true;
+            // Restore context
+            ctx = workerCtx;
+
+            // Finally, calculate kernel hash
+            uint256 hashProofOfStake;
+            SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
+
+
+            // Skip if hash doesn't satisfy the maximum target
+            if (hashProofOfStake > maxTarget)
+                continue;
+
+            CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
+            CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+
+            if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
+            {
+                workerSolutions.push_back(std::pair<uint256,uint32_t>(hashProofOfStake, nTimeTx));
+            }
         }
     }
 
-    return false;
+    vector<std::pair<uint256,uint32_t> > GetSolutions()
+    {
+        return workerSolutions;
+    }
+
+private:
+    SHA256_CTX workerCtx;
+    std::vector<std::pair<uint256,uint32_t> > workerSolutions;
+
+    uint32_t nBits;
+    uint32_t nInputTxTime;
+    int64_t nValueIn;
+    std::pair<uint32_t, uint32_t> SearchInterval;
+};
+
+// Scan given midstate for solution
+bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::vector<std::pair<uint256, uint32_t> > &solutions)
+{
+    // TODO: custom threads amount
+
+    uint32_t nBegin = SearchInterval.first;
+    uint32_t nEnd = SearchInterval.second;
+    uint32_t nPart = (nEnd - nBegin) / 4;
+
+    ScanMidstateWorker workers[4];
+
+    boost::thread_group group;
+    for(int i = 0; i<4; i++)
+    {
+        nBegin += (nPart * i);
+        uint32_t nIntervalEnd = nBegin + nPart * (i + 1);
+
+        std::cout << nBegin << " " << nIntervalEnd << std::endl;
+
+        std::pair<uint32_t, uint32_t> interval(nBegin, nIntervalEnd);
+        workers[i] = ScanMidstateWorker(ctx, nBits, nInputTxTime, nValueIn, interval);
+
+        boost::function<void()> workerFnc = boost::bind(&ScanMidstateWorker::Do, &workers[i]);
+        group.create_thread(workerFnc);
+    }
+
+    group.join_all();
+    solutions.clear();
+
+    for(int i = 0; i<4; i++)
+    {
+        std::vector<std::pair<uint256, uint32_t> > ws = workers[i].GetSolutions();
+        solutions.insert(solutions.end(), ws.begin(), ws.end());
+    }
+
+    if (solutions.size() == 0)
+    {
+        // no solutions
+        return false;
+    }
+
+    return true;
 }
 
 // Scan given midstate for solution

@@ -37,7 +37,7 @@ bool CheckStakeKernelHash(unsigned int nBits, const CBlock& blockFrom, uint32_t 
 void GetKernelMidstate(uint64_t nStakeModifier, uint32_t nBlockTime, uint32_t nTxOffset, uint32_t nInputTxTime, uint32_t nOut, SHA256_CTX &ctx);
 
 // Scan given midstate for kernel solutions
-bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution);
+bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::vector<std::pair<uint256, uint32_t> > &solutions);
 bool ScanMidstateBackward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution);
 
 // Check kernel hash target and coinstake signature

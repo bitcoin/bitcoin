@@ -135,14 +135,22 @@ Value scaninput(const Array& params, bool fHelp)
         SHA256_CTX ctx;
         GetKernelMidstate(nStakeModifier, block.nTime, txindex.pos.nTxPos - txindex.pos.nBlockPos, tx.nTime, nOut, ctx);
 
-        std::pair<uint256, uint32_t> solution;
-        if (ScanMidstateForward(ctx, nBits, tx.nTime, tx.vout[nOut].nValue, interval, solution))
+        std::vector<std::pair<uint256, uint32_t> > solutions;
+        if (ScanMidstateForward(ctx, nBits, tx.nTime, tx.vout[nOut].nValue, interval, solutions))
         {
-            Object r;
-            r.push_back(Pair("hash", solution.first.GetHex()));
-            r.push_back(Pair("time", DateTimeStrFormat(solution.second)));
+            Array sols;
 
-            return r;
+            BOOST_FOREACH(const PAIRTYPE(uint256, uint32_t) solution, solutions)
+            {
+
+                Object r;
+                r.push_back(Pair("hash", solution.first.GetHex()));
+                r.push_back(Pair("time", DateTimeStrFormat(solution.second)));
+
+                sols.push_back(r);
+            }
+
+            return sols;
         }
     }
     else
