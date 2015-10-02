@@ -287,6 +287,13 @@ private:
 
     CFeeRate minReasonableRelayFee;
 
+    mutable int64_t lastRollingFeeUpdate;
+    mutable bool blockSinceLastRollingFeeBump;
+    mutable double rollingMinimumFeeRate; //! minimum fee to get into the pool, decreases exponentially
+    static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12;
+
+    void trackPackageRemoved(const CFeeRate& rate);
+
 public:
     typedef boost::multi_index_container<
         CTxMemPoolEntry,
@@ -409,6 +416,17 @@ public:
      *    look up parents from mapLinks. Must be true for entries not in the mempool
      */
     bool CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents = true);
+
+    /** The minimum fee to get into the mempool, which may itself not be enough
+	 *  for larger-sized transactions.
+	 *  The minReasonableRelayFee constructor arg is used to bound the time it
+     *  takes the fee rate to go back down all the way to 0. When the feerate
+     *  would otherwise be half of this, it is set to 0 instead.
+	 */
+    CFeeRate GetMinFee(size_t sizelimit) const;
+
+    /** Remove transactions from the mempool until its dynamic size is <= sizelimit. */
+    void TrimToSize(size_t sizelimit);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(int64_t time);

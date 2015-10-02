@@ -13,6 +13,7 @@
 #include "streams.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "utiltime.h"
 #include "version.h"
 
 using namespace std;
@@ -308,6 +309,8 @@ void CTxMemPoolEntry::UpdateState(int64_t modifySize, CAmount modifyFee, int64_t
 CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
     nTransactionsUpdated(0)
 {
+    clear();
+
     // Sanity checks off by default for performance, because otherwise
     // accepting transactions becomes O(N^2) where N is the number
     // of transactions in the pool
@@ -539,6 +542,8 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
     }
     // After the txs in the new block have been removed from the mempool, update policy estimates
     minerPolicyEstimator->processBlock(nBlockHeight, entries, fCurrentEstimate);
+    lastRollingFeeUpdate = GetTime();
+    blockSinceLastRollingFeeBump = true;
 }
 
 void CTxMemPool::clear()
@@ -549,6 +554,9 @@ void CTxMemPool::clear()
     mapNextTx.clear();
     totalTxSize = 0;
     cachedInnerUsage = 0;
+    lastRollingFeeUpdate = GetTime();
+    blockSinceLastRollingFeeBump = false;
+    rollingMinimumFeeRate = 0;
     ++nTransactionsUpdated;
 }
 
@@ -853,4 +861,61 @@ const CTxMemPool::setEntries & CTxMemPool::GetMemPoolChildren(txiter entry) cons
     txlinksMap::const_iterator it = mapLinks.find(entry);
     assert(it != mapLinks.end());
     return it->second.children;
+}
+
+CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
+    LOCK(cs);
+    if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)
+        return CFeeRate(rollingMinimumFeeRate);
+
+    int64_t time = GetTime();
+    if (time > lastRollingFeeUpdate + 10) {
+        double halflife = ROLLING_FEE_HALFLIFE;
+        if (DynamicMemoryUsage() < sizelimit / 4)
+            halflife /= 4;
+        else if (DynamicMemoryUsage() < sizelimit / 2)
+            halflife /= 2;
+
+        rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
+        lastRollingFeeUpdate = time;
+
+        if (rollingMinimumFeeRate < minReasonableRelayFee.GetFeePerK() / 2)
+            rollingMinimumFeeRate = 0;
+    }
+    return std::max(CFeeRate(rollingMinimumFeeRate), minReasonableRelayFee);
+}
+
+void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
+    AssertLockHeld(cs);
+    if (rate.GetFeePerK() > rollingMinimumFeeRate) {
+        rollingMinimumFeeRate = rate.GetFeePerK();
+        blockSinceLastRollingFeeBump = false;
+    }
+}
+
+void CTxMemPool::TrimToSize(size_t sizelimit) {
+    LOCK(cs);
+
+    unsigned nTxnRemoved = 0;
+    CFeeRate maxFeeRateRemoved(0);
+    while (DynamicMemoryUsage() > sizelimit) {
+        indexed_transaction_set::nth_index<1>::type::iterator it = mapTx.get<1>().begin();
+
+        // We set the new mempool min fee to either the feerate of the removed set,
+        // or the "minimum reasonable fee rate" (ie some value under which we consider
+        // txn to have 0 fee). This way, if the mempool reaches its full size on free
+        // txn, we will simply disable free txn until there is a block, and some time.
+        CFeeRate removed(it->GetFeesWithDescendants(), it->GetSizeWithDescendants());
+        removed += minReasonableRelayFee;
+        trackPackageRemoved(removed);
+        maxFeeRateRemoved = std::max(maxFeeRateRemoved, removed);
+
+        setEntries stage;
+        CalculateDescendants(mapTx.project<0>(it), stage);
+        RemoveStaged(stage);
+        nTxnRemoved += stage.size();
+    }
+
+    if (maxFeeRateRemoved > CFeeRate(0))
+        LogPrint("mempool", "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
 }

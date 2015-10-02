@@ -885,8 +885,11 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee", false,
                 strprintf("%d < %d", nFees, txMinFee));
 
-        // Require that free transactions have sufficient priority to be mined in the next block.
-        if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
+        CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
+        if (mempoolRejectFee > 0 && nFees < mempoolRejectFee) {
+            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
+        } else if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
+            // Require that free transactions have sufficient priority to be mined in the next block.
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
 
@@ -951,6 +954,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+
+        // trim mempool and check if tx was trimmed
+        int expired = pool.Expire(GetTime() - GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+        if (expired != 0)
+            LogPrint("mempool", "Expired %i transactions from the memory pool\n", expired);
+
+        pool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+        if (!pool.exists(tx.GetHash()))
+            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
     }
 
     SyncWithWallets(tx, NULL);
