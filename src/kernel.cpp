@@ -519,14 +519,16 @@ bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
 {
     // TODO: custom threads amount
 
+    uint32_t nThreads = boost::thread::hardware_concurrency();
+
     uint32_t nBegin = SearchInterval.first;
     uint32_t nEnd = SearchInterval.second;
     uint32_t nPart = (nEnd - nBegin) / 4;
 
-    ScanMidstateWorker workers[4];
+    ScanMidstateWorker *workers = new ScanMidstateWorker[nThreads];
 
     boost::thread_group group;
-    for(int i = 0; i<4; i++)
+    for(size_t i = 0; i < nThreads; i++)
     {
         uint32_t nIntervalBegin = nBegin + nPart * i;
         uint32_t nIntervalEnd = nBegin + nPart * (i + 1);
@@ -540,11 +542,13 @@ bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
     group.join_all();
     solutions.clear();
 
-    for(int i = 0; i<4; i++)
+    for(size_t i = 0; i < nThreads; i++)
     {
         std::vector<std::pair<uint256, uint32_t> > ws = workers[i].GetSolutions();
         solutions.insert(solutions.end(), ws.begin(), ws.end());
     }
+
+    delete [] workers;
 
     if (solutions.size() == 0)
     {
