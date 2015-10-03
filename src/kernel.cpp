@@ -423,37 +423,19 @@ bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxP
     return true;
 }
 
-// Precompute hashing state for static part of kernel
-void GetKernelMidstate(uint64_t nStakeModifier, uint32_t nBlockTime, uint32_t nTxOffset, uint32_t nInputTxTime, uint32_t nOut, SHA256_CTX &ctx)
-{
-    // Build static part of kernel
-    CDataStream ssKernel(SER_GETHASH, 0);
-    ssKernel << nStakeModifier;
-    ssKernel << nBlockTime << nTxOffset << nInputTxTime << nOut;
-    CDataStream::const_iterator it = ssKernel.begin();
-
-    // Init sha256 context and update it 
-    //   with first 24 bytes of kernel
-    SHA256_Init(&ctx);
-    SHA256_Update(&ctx, (unsigned char*)&it[0], 8 + 16);
-}
-
-
 class ScanMidstateWorker
 {
 public:
     ScanMidstateWorker()
     { }
-    ScanMidstateWorker(SHA256_CTX ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, uint32_t nIntervalBegin, uint32_t nIntervalEnd)
+    ScanMidstateWorker(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, uint32_t nIntervalBegin, uint32_t nIntervalEnd) 
+        : nBits(nBits), nInputTxTime(nInputTxTime), nValueIn(nValueIn), nIntervalBegin(nIntervalBegin), nIntervalEnd(nIntervalEnd)
     {
+        // Init new sha256 context and update it
+        //   with first 24 bytes of kernel
+        SHA256_Init(&workerCtx);
+        SHA256_Update(&workerCtx, kernel, 8 + 16);
         workerSolutions = vector<std::pair<uint256,uint32_t> >();
-
-        workerCtx = ctx;
-        this->nBits = nBits;
-        this->nInputTxTime = nInputTxTime;
-        this->nValueIn = nValueIn;
-        this->nIntervalBegin = nIntervalBegin;
-        this->nIntervalEnd = nIntervalEnd;
     }
 
     void Do()
@@ -524,11 +506,6 @@ bool ScanKernelForward(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxT
     uint32_t nThreads = boost::thread::hardware_concurrency();
     uint32_t nPart = (SearchInterval.second - SearchInterval.first) / nThreads;
 
-    // Init new sha256 context and update it
-    //   with first 24 bytes of kernel
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
-    SHA256_Update(&ctx, kernel, 8 + 16);
 
     ScanMidstateWorker *workers = new ScanMidstateWorker[nThreads];
 
@@ -537,9 +514,7 @@ bool ScanKernelForward(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxT
     {
         uint32_t nBegin = SearchInterval.first + nPart * i;
         uint32_t nEnd = SearchInterval.first + nPart * (i + 1);
-
-        workers[i] = ScanMidstateWorker(ctx, nBits, nInputTxTime, nValueIn, nBegin, nEnd);
-
+        workers[i] = ScanMidstateWorker(kernel, nBits, nInputTxTime, nValueIn, nBegin, nEnd);
         boost::function<void()> workerFnc = boost::bind(&ScanMidstateWorker::Do, &workers[i]);
         group.create_thread(workerFnc);
     }
