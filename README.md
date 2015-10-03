@@ -1,4 +1,4 @@
-Bitcoin Core integration/staging tree
+﻿Bitcoin Core integration/staging tree
 =====================================
 
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
@@ -53,7 +53,7 @@ submit new unit tests for old code. Unit tests can be compiled and run (assuming
 
 There are also regression and integration tests of the RPC interface, written
 in Python, that are run automatically on the build server.
-These tests can be run with: `qa/pull-tester/rpc-tests.sh`
+These tests can be run with: `qa/pull-tester/rpc-tests.py`
 
 Every pull request is built for both Windows and Linux on a dedicated server,
 and unit and sanity tests are automatically run. The binaries produced may be
