@@ -458,6 +458,8 @@ public:
 
     void Do()
     {
+        SetThreadPriority(THREAD_PRIORITY_LOWEST);
+
         CBigNum bnTargetPerCoinDay;
         bnTargetPerCoinDay.SetCompact(nBits);
 
@@ -498,7 +500,7 @@ public:
         }
     }
 
-    vector<std::pair<uint256,uint32_t> > GetSolutions()
+    vector<std::pair<uint256,uint32_t> >& GetSolutions()
     {
         return workerSolutions;
     }
@@ -520,20 +522,17 @@ bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
     // TODO: custom threads amount
 
     uint32_t nThreads = boost::thread::hardware_concurrency();
-
-    uint32_t nBegin = SearchInterval.first;
-    uint32_t nEnd = SearchInterval.second;
-    uint32_t nPart = (nEnd - nBegin) / nThreads;
+    uint32_t nPart = (SearchInterval.second - SearchInterval.first) / nThreads;
 
     ScanMidstateWorker *workers = new ScanMidstateWorker[nThreads];
 
     boost::thread_group group;
     for(size_t i = 0; i < nThreads; i++)
     {
-        uint32_t nIntervalBegin = nBegin + nPart * i;
-        uint32_t nIntervalEnd = nBegin + nPart * (i + 1);
+        uint32_t nBegin = SearchInterval.first + nPart * i;
+        uint32_t nEnd = SearchInterval.first + nPart * (i + 1);
 
-        workers[i] = ScanMidstateWorker(ctx, nBits, nInputTxTime, nValueIn, nIntervalBegin, nIntervalEnd);
+        workers[i] = ScanMidstateWorker(ctx, nBits, nInputTxTime, nValueIn, nBegin, nEnd);
 
         boost::function<void()> workerFnc = boost::bind(&ScanMidstateWorker::Do, &workers[i]);
         group.create_thread(workerFnc);
