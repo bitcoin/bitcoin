@@ -377,7 +377,7 @@ bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxP
 
     uint256 hashBlockFrom = blockFrom.GetHash();
 
-    CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)txPrev.nTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
+    CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)txPrev.nTime, (int64_t)nTimeTx) / COIN / nOneDay;
     targetProofOfStake = (bnCoinDayWeight * bnTargetPerCoinDay).getuint256();
 
     // Calculate hash
@@ -429,31 +429,33 @@ public:
     ScanMidstateWorker()
     { }
     ScanMidstateWorker(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, uint32_t nIntervalBegin, uint32_t nIntervalEnd) 
-        : nBits(nBits), nInputTxTime(nInputTxTime), nValueIn(nValueIn), nIntervalBegin(nIntervalBegin), nIntervalEnd(nIntervalEnd)
+        : nBits(nBits), nInputTxTime(nInputTxTime), bnValueIn(nValueIn), nIntervalBegin(nIntervalBegin), nIntervalEnd(nIntervalEnd)
     {
         // Init new sha256 context and update it
         //   with first 24 bytes of kernel
         SHA256_Init(&workerCtx);
         SHA256_Update(&workerCtx, kernel, 8 + 16);
-        workerSolutions = vector<std::pair<uint256,uint32_t> >();
+        solutions = vector<std::pair<uint256,uint32_t> >();
     }
 
     void Do()
     {
         SetThreadPriority(THREAD_PRIORITY_LOWEST);
+        SHA256_CTX ctx = workerCtx;
 
+        // Sha256 result buffer
+        uint32_t hashProofOfStake[8];
+
+        // Compute maximum possible target to filter out majority of obviously insufficient hashes
         CBigNum bnTargetPerCoinDay;
         bnTargetPerCoinDay.SetCompact(nBits);
 
-        // Get maximum possible target to filter out the majority of obviously insufficient hashes
-        CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / (24 * 60 * 60);
-        uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
-
-        SHA256_CTX ctx = workerCtx;
+        uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256(),
+            *pnHashProofOfStake = (uint256 *)&hashProofOfStake;
 
         // Search forward in time from the given timestamp
         // Stopping search in case of shutting down
-        for (uint32_t nTimeTx=nIntervalBegin; nTimeTx<nIntervalEnd && !fShutdown; nTimeTx++)
+        for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; nTimeTx++)
         {
             // Complete first hashing iteration
             uint256 hash1;
@@ -464,36 +466,32 @@ public:
             ctx = workerCtx;
 
             // Finally, calculate kernel hash
-            uint256 hashProofOfStake;
             SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
 
-
             // Skip if hash doesn't satisfy the maximum target
-            if (hashProofOfStake > maxTarget)
+            if (hashProofOfStake[7] > nMaxTarget32)
                 continue;
 
-            CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
+            CBigNum bnCoinDayWeight = bnValueIn * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
             CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
 
-            if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
-            {
-                workerSolutions.push_back(std::pair<uint256,uint32_t>(hashProofOfStake, nTimeTx));
-            }
+            if (bnTargetProofOfStake >= CBigNum(*pnHashProofOfStake))
+                solutions.push_back(std::pair<uint256,uint32_t>(*pnHashProofOfStake, nTimeTx));
         }
     }
 
     vector<std::pair<uint256,uint32_t> >& GetSolutions()
     {
-        return workerSolutions;
+        return solutions;
     }
 
 private:
     SHA256_CTX workerCtx;
-    std::vector<std::pair<uint256,uint32_t> > workerSolutions;
+    std::vector<std::pair<uint256,uint32_t> > solutions;
 
     uint32_t nBits;
     uint32_t nInputTxTime;
-    int64_t nValueIn;
+    CBigNum  bnValueIn;
     uint32_t nIntervalBegin;
     uint32_t nIntervalEnd;
 };
@@ -546,7 +544,7 @@ bool ScanContextBackward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
     bnTargetPerCoinDay.SetCompact(nBits);
 
     // Get maximum possible target to filter out the majority of obviously insufficient hashes
-    CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / (24 * 60 * 60);
+    CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / nOneDay;
     uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
 
     SHA256_CTX ctxCopy = ctx;
@@ -571,7 +569,7 @@ bool ScanContextBackward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
         if (hashProofOfStake > maxTarget)
             continue;
 
-        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / (24 * 60 * 60);
+        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
         CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
 
         if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))

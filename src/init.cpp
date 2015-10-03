@@ -380,8 +380,7 @@ bool AppInit2()
 
     // Ping and address broadcast intervals
     nPingInterval = max<int64_t>(10 * 60, GetArg("-keepalive", 30 * 60));
-
-    nBroadcastInterval = max<int64_t>(6 * 60 * 60, GetArg("-addrsetlifetime", 24 * 60 * 60));
+    nBroadcastInterval = max<int64_t>(6 * 60 * 60, GetArg("-addrsetlifetime", nOneDay));
 
     CheckpointsMode = Checkpoints::STRICT;
     std::string strCpMode = GetArg("-cppolicy", "strict");

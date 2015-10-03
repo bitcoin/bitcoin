@@ -1697,7 +1697,7 @@ void CWallet::GetStakeWeightFromValue(const int64_t& nTime, const int64_t& nValu
         return;
     }
 
-    CBigNum bnCoinDayWeight = CBigNum(nValue) * nTimeWeight / COIN / (24 * 60 * 60);
+    CBigNum bnCoinDayWeight = CBigNum(nValue) * nTimeWeight / COIN / nOneDay;
     nWeight = bnCoinDayWeight.getuint64();
 }
 

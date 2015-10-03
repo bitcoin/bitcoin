@@ -81,7 +81,7 @@ int64_t nMinimumInputValue = MIN_TXOUT_AMOUNT;
 
 // Ping and address broadcast intervals
 int64_t nPingInterval = 30 * 60;
-int64_t nBroadcastInterval = 24 * 60 * 60;
+int64_t nBroadcastInterval = nOneDay;
 
 extern enum Checkpoints::CPMode CheckpointsMode;
 
@@ -1124,7 +1124,7 @@ int64_t GetProofOfStakeReward(int64_t nCoinAge, unsigned int nBits, int64_t nTim
     return nSubsidy;
 }
 
-static const int64_t nTargetTimespan = 7 * 24 * 60 * 60;  // one week
+static const int64_t nTargetTimespan = 7 * nOneDay;  // one week
 
 // get proof of work blocks max spacing according to hard-coded conditions
 int64_t inline GetTargetSpacingWorkMax(int nHeight, unsigned int nTime)
@@ -1150,7 +1150,7 @@ unsigned int ComputeMaxBits(CBigNum bnTargetLimit, unsigned int nBase, int64_t n
     {
         // Maximum 200% adjustment per day...
         bnResult *= 2;
-        nTime -= 24 * 60 * 60;
+        nTime -= nOneDay;
     }
     if (bnResult > bnTargetLimit)
         bnResult = bnTargetLimit;
@@ -1250,7 +1250,7 @@ bool IsInitialBlockDownload()
         nLastUpdate = nCurrentTime;
     }
     return (nCurrentTime - nLastUpdate < 10 &&
-            pindexBest->GetBlockTime() < nCurrentTime - 24 * 60 * 60);
+            pindexBest->GetBlockTime() < nCurrentTime - nOneDay);
 }
 
 void static InvalidChainFound(CBlockIndex* pindexNew)
@@ -2097,7 +2097,7 @@ bool CTransaction::GetCoinAge(CTxDB& txdb, uint64_t& nCoinAge) const
             printf("coin age nValueIn=%" PRId64 " nTimeDiff=%d bnCentSecond=%s\n", nValueIn, nTime - txPrev.nTime, bnCentSecond.ToString().c_str());
     }
 
-    CBigNum bnCoinDay = bnCentSecond * CENT / COIN / (24 * 60 * 60);
+    CBigNum bnCoinDay = bnCentSecond * CENT / COIN / nOneDay;
     if (fDebug && GetBoolArg("-printcoinage"))
         printf("coin age bnCoinDay=%s\n", bnCoinDay.ToString().c_str());
     nCoinAge = bnCoinDay.getuint64();
@@ -3281,7 +3281,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
             if (fShutdown)
                 return true;
             if (addr.nTime <= 100000000 || addr.nTime > nNow + 10 * 60)
-                addr.nTime = nNow - 5 * 24 * 60 * 60;
+                addr.nTime = nNow - 5 * nOneDay;
             pfrom->AddAddressKnown(addr);
             bool fReachable = IsReachable(addr);
             if (addr.nTime > nSince && !pfrom->fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
@@ -3622,7 +3622,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
     else if (strCommand == "getaddr")
     {
         // Don't return addresses older than nCutOff timestamp
-        int64_t nCutOff = GetTime() - (nNodeLifespan * 24 * 60 * 60);
+        int64_t nCutOff = GetTime() - (nNodeLifespan * nOneDay);
         pfrom->vAddrToSend.clear();
         vector<CAddress> vAddr = addrman.GetAddr();
         BOOST_FOREACH(const CAddress &addr, vAddr)
