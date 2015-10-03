@@ -516,13 +516,19 @@ private:
     uint32_t nIntervalEnd;
 };
 
-// Scan given midstate for solution
-bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::vector<std::pair<uint256, uint32_t> > &solutions)
+// Scan given kernel for solution
+bool ScanKernelForward(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::vector<std::pair<uint256, uint32_t> > &solutions)
 {
     // TODO: custom threads amount
 
     uint32_t nThreads = boost::thread::hardware_concurrency();
     uint32_t nPart = (SearchInterval.second - SearchInterval.first) / nThreads;
+
+    // Init new sha256 context and update it
+    //   with first 24 bytes of kernel
+    SHA256_CTX ctx;
+    SHA256_Init(&ctx);
+    SHA256_Update(&ctx, kernel, 8 + 16);
 
     ScanMidstateWorker *workers = new ScanMidstateWorker[nThreads];
 
@@ -559,7 +565,7 @@ bool ScanMidstateForward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime,
 }
 
 // Scan given midstate for solution
-bool ScanMidstateBackward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution)
+bool ScanContextBackward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution)
 {
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);

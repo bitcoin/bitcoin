@@ -533,7 +533,7 @@ bool CheckStake(CBlock* pblock, CWallet& wallet)
 // (txid, vout.n) => (SHA256_CTX, (tx.nTime, nAmount))
 typedef std::map<std::pair<uint256, unsigned int>, std::pair<SHA256_CTX, std::pair<uint32_t, uint64_t> > > MidstateMap;
 
-// Fill the inputs map with precalculated states and metadata
+// Fill the inputs map with precalculated contexts and metadata
 bool FillMap(CWallet *pwallet, uint32_t nUpperTime, MidstateMap &inputsMap)
 {
     // Choose coins to use
@@ -589,13 +589,22 @@ bool FillMap(CWallet *pwallet, uint32_t nUpperTime, MidstateMap &inputsMap)
             if (nStakeMinAge + block.nTime > nTime - nMaxStakeSearchInterval)
                 continue;
 
+            // Get stake modifier
             uint64_t nStakeModifier = 0;
             if (!GetKernelStakeModifier(block.GetHash(), nStakeModifier))
                 continue;
 
+            // Build static part of kernel
+            CDataStream ssKernel(SER_GETHASH, 0);
+            ssKernel << nStakeModifier;
+            ssKernel << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin->first->nTime << pcoin->second;
+            CDataStream::const_iterator itK = ssKernel.begin();
+
+            // Init new sha256 context and update it
+            //   with first 24 bytes of kernel
             SHA256_CTX ctx;
-            // Calculate midstate using (modifier, block time, tx offset, tx time, output number)
-            GetKernelMidstate(nStakeModifier, block.nTime, txindex.pos.nTxPos - txindex.pos.nBlockPos, pcoin->first->nTime, pcoin->second, ctx);
+            SHA256_Init(&ctx);
+            SHA256_Update(&ctx, (unsigned char*)&itK[0], 8 + 16);
 
             // (txid, vout.n) => (SHA256_CTX, (tx.nTime, nAmount))
             inputsMap[key] = make_pair(ctx, make_pair(pcoin->first->nTime, pcoin->first->vout[pcoin->second].nValue));
@@ -604,7 +613,7 @@ bool FillMap(CWallet *pwallet, uint32_t nUpperTime, MidstateMap &inputsMap)
         nStakeInputsMapSize = inputsMap.size();
 
         if (fDebug)
-            printf("Stake miner: map of %" PRIu64 " precalculated contexts has been created\n", nStakeInputsMapSize);
+            printf("FillMap() : Map of %" PRIu64 " precalculated contexts has been created by stake miner\n", nStakeInputsMapSize);
     }
 
     return true;
@@ -630,7 +639,7 @@ bool ScanMap(const MidstateMap &inputsMap, uint32_t nBits, MidstateMap::key_type
             SHA256_CTX ctx = input->second.first;
 
             // scan(State, Bits, Time, Amount, ...)
-            if (ScanMidstateBackward(ctx, nBits, input->second.second.first, input->second.second.second, interval, solution))
+            if (ScanContextBackward(ctx, nBits, input->second.second.first, input->second.second.second, interval, solution))
             {
                 // Solution found
                 LuckyInput = input->first; // (txid, nout)

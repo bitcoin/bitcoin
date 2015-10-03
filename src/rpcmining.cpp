@@ -132,25 +132,28 @@ Value scaninput(const Array& params, bool fHelp)
             interval.first += (nStakeMinAge + block.nTime - interval.first);
         interval.second = interval.first + nDays * 86400;
 
-        SHA256_CTX ctx;
-        GetKernelMidstate(nStakeModifier, block.nTime, txindex.pos.nTxPos - txindex.pos.nBlockPos, tx.nTime, nOut, ctx);
+        // Build static part of kernel
+        CDataStream ssKernel(SER_GETHASH, 0);
+        ssKernel << nStakeModifier;
+        ssKernel << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << tx.nTime << nOut;
+        CDataStream::const_iterator itK = ssKernel.begin();
 
         std::vector<std::pair<uint256, uint32_t> > solutions;
-        if (ScanMidstateForward(ctx, nBits, tx.nTime, tx.vout[nOut].nValue, interval, solutions))
+        if (ScanKernelForward((unsigned char *)&itK[0], nBits, tx.nTime, tx.vout[nOut].nValue, interval, solutions))
         {
-            Array sols;
+            Array results;
 
             BOOST_FOREACH(const PAIRTYPE(uint256, uint32_t) solution, solutions)
             {
 
-                Object r;
-                r.push_back(Pair("hash", solution.first.GetHex()));
-                r.push_back(Pair("time", DateTimeStrFormat(solution.second)));
+                Object item;
+                item.push_back(Pair("hash", solution.first.GetHex()));
+                item.push_back(Pair("time", DateTimeStrFormat(solution.second)));
 
-                sols.push_back(r);
+                results.push_back(item);
             }
 
-            return sols;
+            return results;
         }
     }
     else
