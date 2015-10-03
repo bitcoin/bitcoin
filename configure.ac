@@ -139,7 +139,7 @@ AC_ARG_ENABLE([glibc-back-compat],
 
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
-  [Disable ZMQ notifications])],
+  [disable ZMQ notifications])],
   [use_zmq=$enableval],
   [use_zmq=yes])
 
@@ -676,6 +676,16 @@ if test x$use_pkgconfig = xyes; then
           PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads],, [AC_MSG_ERROR(libevent_pthreads not found.)])
         fi
       fi
+
+      if test "x$use_zmq" = "xyes"; then
+        PKG_CHECK_MODULES([ZMQ],[libzmq >= 4],
+          [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
+          [AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
+           AC_MSG_WARN([libzmq version 4.x or greater not found, disabling])
+           use_zmq=no])
+      else
+          AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
+      fi
     ]
   )
 else
@@ -691,6 +701,20 @@ else
     if test x$TARGET_OS != xwindows; then
       AC_CHECK_LIB([event_pthreads],[main],EVENT_PTHREADS_LIBS=-levent_pthreads,AC_MSG_ERROR(libevent_pthreads missing))
     fi
+  fi
+
+  if test "x$use_zmq" = "xyes"; then
+     AC_CHECK_HEADER([zmq.h],
+       [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
+       [AC_MSG_WARN([zmq.h not found, disabling zmq support])
+        use_zmq=no
+        AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])])
+     AC_CHECK_LIB([zmq],[zmq_ctx_shutdown],ZMQ_LIBS=-lzmq,
+       [AC_MSG_WARN([libzmq >= 4.0 not found, disabling zmq support])
+        use_zmq=no
+        AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])])
+  else
+    AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
   fi
 
   BITCOIN_QT_CHECK(AC_CHECK_LIB([protobuf] ,[main],[PROTOBUF_LIBS=-lprotobuf], BITCOIN_QT_FAIL(libprotobuf not found)))
@@ -837,20 +861,6 @@ if test x$bitcoin_enable_qt != xno; then
   else
     AC_MSG_RESULT([no])
   fi
-fi
-
-# conditional search for and use libzmq
-AC_MSG_CHECKING([whether to build ZMQ support])
-if test "x$use_zmq" = "xyes"; then
-  AC_MSG_RESULT([yes])
-  PKG_CHECK_MODULES([ZMQ],[libzmq >= 4],
-    [AC_DEFINE([ENABLE_ZMQ],[1],[Define to 1 to enable ZMQ functions])],
-    [AC_DEFINE([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
-     AC_MSG_WARN([libzmq version 4.x or greater not found, disabling])
-     use_zmq=no])
-else
-  AC_MSG_RESULT([no, --disable-zmq used])
-  AC_DEFINE_UNQUOTED([ENABLE_ZMQ],[0],[Define to 1 to enable ZMQ functions])
 fi
 
 AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
