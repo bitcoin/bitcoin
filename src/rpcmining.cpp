@@ -10,6 +10,7 @@
 #include "miner.h"
 #include "kernel.h"
 #include "bitcoinrpc.h"
+#include <boost/format.hpp>
 
 using namespace json_spirit;
 using namespace std;
@@ -117,6 +118,15 @@ Value scaninput(const Array& params, bool fHelp)
         // Load transaction index item
         if (!txdb.ReadTxIndex(tx.GetHash(), txindex))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to read block index item");
+
+        // Check for spent flag
+        // It doesn't make sense to scan spent inputs.
+        if (!txindex.vSpent[nOut].IsNull())
+        {
+            stringstream strErrorMsg;
+            strErrorMsg << boost::format("%s prev tx already used at %s") % tx.GetHash().ToString() % txindex.vSpent[nOut].ToString();
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strErrorMsg.str());
+        }
 
         // Read block header
         if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
