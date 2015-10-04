@@ -2,7 +2,7 @@
 int64_t NtpGetTime(CNetAddr& ip);
 
 // Get time from provided server.
-int64_t NtpGetTime(std::string &strHostName);
+int64_t NtpGetTime(const std::string &strHostName);
 
 extern std::string strTrustedUpstream;
 
