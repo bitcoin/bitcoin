@@ -52,7 +52,7 @@ typedef struct {
 } l_fp;
 
 
-inline void Ntp2Unix(uint32_t &n, time_t &u) {
+inline void Ntp2Unix(const uint32_t &n, time_t &u) {
     // Ntp's time scale starts in 1900, Unix in 1970.
 
     u = n - 0x83aa7e80; // 2208988800 1970 - 1900 in seconds
@@ -280,8 +280,9 @@ std::string NtpServers[162] = {
     // ... To be continued
 };
 
-bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
-    sockfd = -1;
+bool InitWithHost(const std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, struct sockaddr *pcliaddr) {
+  
+    sockfd = INVALID_SOCKET;
 
     std::vector<CNetAddr> vIP;
     bool fRet = LookupHost(strHostName.c_str(), vIP, 10, true);
@@ -295,7 +296,7 @@ bool InitWithHost(std::string &strHostName, SOCKET &sockfd, socklen_t &servlen, 
 
     bool found = false;
     for(unsigned int i = 0; i < vIP.size(); i++) {
-        if ((found = vIP[i].GetInAddr(&servaddr.sin_addr))) {
+        if ((found = vIP[i].GetInAddr(&servaddr.sin_addr)) != false) {
             break;
         }
     }
@@ -415,7 +416,7 @@ int64_t NtpGetTime(CNetAddr& ip) {
     return nTime;
 }
 
-int64_t NtpGetTime(std::string &strHostName)
+int64_t NtpGetTime(const std::string &strHostName)
 {
     struct sockaddr cliaddr;
 
