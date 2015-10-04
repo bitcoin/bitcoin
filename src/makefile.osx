@@ -134,16 +134,16 @@ ifeq (${USE_ASM}, 1)
 OBJS += crypto/scrypt/asm/obj/scrypt-arm.o crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
 
 crypto/scrypt/asm/obj/scrypt-x86.o: crypto/scrypt/asm/scrypt-x86.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 crypto/scrypt/asm/obj/scrypt-x86_64.o: crypto/scrypt/asm/scrypt-x86_64.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 crypto/scrypt/asm/obj/scrypt-arm.o: crypto/scrypt/asm/scrypt-arm.S
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 crypto/scrypt/asm/obj/asm-wrapper.o: crypto/scrypt/asm/asm-wrapper.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 else
 ifeq  (${USE_SSE2}, 1)
 # Intrinsic implementation
@@ -151,13 +151,13 @@ DEFS += -DUSE_SSE2
 OBJS += crypto/scrypt/intrin/obj/scrypt-sse2.o
 
 crypto/scrypt/intrin/obj/scrypt-sse2.o: crypto/scrypt/intrin/scrypt-sse2.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 else
 # Generic implementation
 OBJS += crypto/scrypt/generic/obj/scrypt-generic.o
 
 crypto/scrypt/generic/obj/scrypt-generic.o: crypto/scrypt/generic/scrypt-generic.cpp
-	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
+	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 endif
 endif
 

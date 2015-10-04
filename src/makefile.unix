@@ -94,10 +94,14 @@ ifeq (${ARCH}, i686)
     EXT_OPTIONS=-msse2
 endif
 
+xOPT_LEVEL=-O2
+ifeq (${USE_O3}, 1)
+    xOPT_LEVEL=-O3
+endif
 
 # CXXFLAGS can be specified on the make command line, so we use xCXXFLAGS that only
 # adds some defaults in front. Unfortunately, CXXFLAGS=... $(CXXFLAGS) does not work.
-xCXXFLAGS=-O2 $(EXT_OPTIONS) -pthread -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter \
+xCXXFLAGS=$(xOPT_LEVEL) $(EXT_OPTIONS) -pthread -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
 # LDFLAGS can be specified on the make command line, so we use xLDFLAGS that only

@@ -38,9 +38,14 @@ LIBS= \
   -l ssl \
   -l crypto
 
+xOPT_LEVEL=-O2
+ifeq (${USE_O3}, 1)
+    xOPT_LEVEL=-O3
+endif
+
 DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 DEBUGFLAGS=-g
-CFLAGS=-mthreads -O2 -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=-mthreads $(xOPT_LEVEL) -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static
 
 ifndef USE_UPNP
