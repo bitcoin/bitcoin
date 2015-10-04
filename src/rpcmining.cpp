@@ -124,7 +124,7 @@ Value scaninput(const Array& params, bool fHelp)
         if (!txindex.vSpent[nOut].IsNull())
         {
             stringstream strErrorMsg;
-            strErrorMsg << boost::format("%s prev tx already used at %s") % tx.GetHash().ToString() % txindex.vSpent[nOut].ToString();
+            strErrorMsg << boost::format("(%s, %d) is already spent") % tx.GetHash().ToString().substr(0, 10) % nOut;
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strErrorMsg.str());
         }
 
