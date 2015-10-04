@@ -1217,9 +1217,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "getblocktemplate"       && n > 0) ConvertTo<Object>(params[0]);
     if (strMethod == "listsinceblock"         && n > 1) ConvertTo<int64_t>(params[1]);
 
-    if (strMethod == "scaninput"              && n > 1) ConvertTo<int>(params[1]);
-    if (strMethod == "scaninput"              && n > 2) ConvertTo<double>(params[2]);
-    if (strMethod == "scaninput"              && n > 3) ConvertTo<int>(params[3]);
+    if (strMethod == "scaninput"              && n > 0) ConvertTo<Object>(params[0]);
 
     if (strMethod == "sendalert"              && n > 2) ConvertTo<int64_t>(params[2]);
     if (strMethod == "sendalert"              && n > 3) ConvertTo<int64_t>(params[3]);

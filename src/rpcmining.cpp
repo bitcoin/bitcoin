@@ -10,7 +10,10 @@
 #include "miner.h"
 #include "kernel.h"
 #include "bitcoinrpc.h"
+
 #include <boost/format.hpp>
+#include <boost/assign/list_of.hpp>
+#include <boost/iterator/counting_iterator.hpp>
 
 using namespace json_spirit;
 using namespace std;
@@ -70,33 +73,52 @@ Value getmininginfo(const Array& params, bool fHelp)
     return obj;
 }
 
+// scaninput '{"txid":"95d640426fe66de866a8cf2d0601d2c8cf3ec598109b4d4ffa7fd03dad6d35ce","difficulty":0.01, "days":10}'
 Value scaninput(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 4 || params.size() < 2)
+    if (fHelp || params.size() != 1)
         throw runtime_error(
-            "scaninput <txid> <nout> [difficulty] [days]\n"
-            "Scan specified input for suitable kernel solutions.\n"
-            "    [difficulty] - upper limit for difficulty, current difficulty by default;\n"
-            "    [days] - time window, 90 days by default.\n"
+            "scaninput {\"txid\":txid, \"vout\":[vout1, vout2, ..., voutN], \"difficulty\":difficulty, \"days\":days}\n"
+            "Scan specified transaction or input for suitable kernel solutions.\n"
+            "    difficulty - upper limit for difficulty, current difficulty by default;\n"
+            "    days - time window, 90 days by default.\n"
         );
 
+    RPCTypeCheck(params, boost::assign::list_of(obj_type));
 
-    uint256 hash(params[0].get_str());
-    uint32_t nOut = params[1].get_int();
+    Object scanParams = params[0].get_obj();
+
+    const Value& txid_v = find_value(scanParams, "txid");
+    if (txid_v.type() != str_type)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, missing txid key");
+
+    string txid = txid_v.get_str();
+    if (!IsHex(txid))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, expected hex txid");
+
+    uint256 hash(txid);
+    int32_t nDays = 90;
     uint32_t nBits = GetNextTargetRequired(pindexBest, true);
-    uint32_t nDays = 90;
 
-    if (params.size() > 2)
+    const Value& diff_v = find_value(scanParams, "difficulty");
+    if (diff_v.type() == real_type)
     {
+        double dDiff = diff_v.get_real();
+        if (dDiff <= 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, diff must be greater than zero");
+
         CBigNum bnTarget(nPoWBase);
         bnTarget *= 1000;
-        bnTarget /= (int) (params[2].get_real() * 1000);
+        bnTarget /= (int) (dDiff * 1000);
         nBits = bnTarget.GetCompact();
+    }
 
-        if (params.size() > 3)
-        {
-            nDays = params[3].get_int();
-        }
+    const Value& days_v = find_value(scanParams, "days");
+    if (days_v.type() == int_type)
+    {
+        nDays = days_v.get_int();
+        if (nDays <= 0)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid parameter, interval length must be greater than zero");
     }
 
 
@@ -104,11 +126,31 @@ Value scaninput(const Array& params, bool fHelp)
     uint256 hashBlock = 0;
     if (GetTransaction(hash, tx, hashBlock))
     {
-        if (nOut > tx.vout.size() - 1)
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Incorrect output number");
-
         if (hashBlock == 0)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to find transaction in the blockchain");
+
+        vector<int> vInputs(0);
+        const Value& inputs_v = find_value(scanParams, "vout");
+        if (inputs_v.type() == array_type)
+        {
+            Array inputs = inputs_v.get_array();
+            BOOST_FOREACH(const Value &v_out, inputs)
+            {
+                int nOut = v_out.get_int();
+                if (nOut < 0 || nOut > (int)tx.vout.size() - 1)
+                {
+                    stringstream strErrorMsg;
+                    strErrorMsg << boost::format("Invalid parameter, input number %d is out of range") % nOut;
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, strErrorMsg.str());
+                }
+
+                vInputs.push_back(nOut);
+            }
+        }
+        else
+        {
+            vInputs = vector<int>(boost::counting_iterator<int>( 0 ), boost::counting_iterator<int>( tx.vout.size() ));
+        }
 
         CTxDB txdb("r");
 
@@ -118,15 +160,6 @@ Value scaninput(const Array& params, bool fHelp)
         // Load transaction index item
         if (!txdb.ReadTxIndex(tx.GetHash(), txindex))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unable to read block index item");
-
-        // Check for spent flag
-        // It doesn't make sense to scan spent inputs.
-        if (!txindex.vSpent[nOut].IsNull())
-        {
-            stringstream strErrorMsg;
-            strErrorMsg << boost::format("(%s, %d) is already spent") % tx.GetHash().ToString().substr(0, 10) % nOut;
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, strErrorMsg.str());
-        }
 
         // Read block header
         if (!block.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos, false))
@@ -143,34 +176,46 @@ Value scaninput(const Array& params, bool fHelp)
             interval.first += (nStakeMinAge + block.nTime - interval.first);
         interval.second = interval.first + nDays * nOneDay;
 
-        // Build static part of kernel
-        CDataStream ssKernel(SER_GETHASH, 0);
-        ssKernel << nStakeModifier;
-        ssKernel << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << tx.nTime << nOut;
-        CDataStream::const_iterator itK = ssKernel.begin();
-
-        std::vector<std::pair<uint256, uint32_t> > solutions;
-        if (ScanKernelForward((unsigned char *)&itK[0], nBits, tx.nTime, tx.vout[nOut].nValue, interval, solutions))
+        Array results;
+        BOOST_FOREACH(const int &nOut, vInputs)
         {
-            Array results;
+            // Check for spent flag
+            // It doesn't make sense to scan spent inputs.
+            if (!txindex.vSpent[nOut].IsNull())
+                continue;
 
-            BOOST_FOREACH(const PAIRTYPE(uint256, uint32_t) solution, solutions)
+            // Skip zero value outputs
+            if (tx.vout[nOut].nValue == 0)
+                continue;
+
+            // Build static part of kernel
+            CDataStream ssKernel(SER_GETHASH, 0);
+            ssKernel << nStakeModifier;
+            ssKernel << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << tx.nTime << nOut;
+            CDataStream::const_iterator itK = ssKernel.begin();
+
+            std::vector<std::pair<uint256, uint32_t> > result;
+            if (ScanKernelForward((unsigned char *)&itK[0], nBits, tx.nTime, tx.vout[nOut].nValue, interval, result))
             {
+                BOOST_FOREACH(const PAIRTYPE(uint256, uint32_t) solution, result)
+                {
+                    Object item;
+                    item.push_back(Pair("nout", nOut));
+                    item.push_back(Pair("hash", solution.first.GetHex()));
+                    item.push_back(Pair("time", DateTimeStrFormat(solution.second)));
 
-                Object item;
-                item.push_back(Pair("hash", solution.first.GetHex()));
-                item.push_back(Pair("time", DateTimeStrFormat(solution.second)));
-
-                results.push_back(item);
+                    results.push_back(item);
+                }
             }
-
-            return results;
         }
+
+        if (results.size() == 0)
+            return false;
+
+        return results;
     }
     else
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
-
-    return Value::null;
 }
 
 Value getworkex(const Array& params, bool fHelp)
