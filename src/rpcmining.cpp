@@ -76,14 +76,14 @@ Value scaninput(const Array& params, bool fHelp)
             "scaninput <txid> <nout> [difficulty] [days]\n"
             "Scan specified input for suitable kernel solutions.\n"
             "    [difficulty] - upper limit for difficulty, current difficulty by default;\n"
-            "    [days] - time window, 365 days by default.\n"
+            "    [days] - time window, 90 days by default.\n"
         );
 
 
-    uint256 hash;
-    hash.SetHex(params[0].get_str());
-
-    uint32_t nOut = params[1].get_int(), nBits = GetNextTargetRequired(pindexBest, true), nDays = 365;
+    uint256 hash(params[0].get_str());
+    uint32_t nOut = params[1].get_int();
+    uint32_t nBits = GetNextTargetRequired(pindexBest, true);
+    uint32_t nDays = 90;
 
     if (params.size() > 2)
     {
@@ -91,18 +91,19 @@ Value scaninput(const Array& params, bool fHelp)
         bnTarget *= 1000;
         bnTarget /= (int) (params[2].get_real() * 1000);
         nBits = bnTarget.GetCompact();
+
+        if (params.size() > 3)
+        {
+            nDays = params[3].get_int();
+        }
     }
 
-    if (params.size() > 3)
-    {
-        nDays = params[3].get_int();
-    }
 
     CTransaction tx;
     uint256 hashBlock = 0;
     if (GetTransaction(hash, tx, hashBlock))
     {
-        if (nOut > tx.vout.size())
+        if (nOut > tx.vout.size() - 1)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Incorrect output number");
 
         if (hashBlock == 0)
@@ -130,7 +131,7 @@ Value scaninput(const Array& params, bool fHelp)
         // Only count coins meeting min age requirement
         if (nStakeMinAge + block.nTime > interval.first)
             interval.first += (nStakeMinAge + block.nTime - interval.first);
-        interval.second = interval.first + nDays * 86400;
+        interval.second = interval.first + nDays * nOneDay;
 
         // Build static part of kernel
         CDataStream ssKernel(SER_GETHASH, 0);
