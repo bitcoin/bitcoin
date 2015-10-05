@@ -29,7 +29,7 @@ Development process
 Developers work in their own trees, then submit pull requests when they think
 their feature or bug fix is ready.
 
-If it is a simple/trivial/non-controversial change, then one of the Bitcoin
+If it is a simple/trivial/non-controversial change, then one of the Bitcoin Core
 development team members simply pulls it.
 
 If it is a *more complicated or potentially controversial* change, then the patch
@@ -43,7 +43,7 @@ controversial.
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
 completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin.
+regularly to indicate new official, stable release versions of Bitcoin Core.
 
 Testing
 -------
