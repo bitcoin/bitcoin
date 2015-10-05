@@ -22,6 +22,8 @@
 #include <stdexcept>
 #include <string>
 
+extern CCriticalSection cs_main;
+
 using mastercore::GetHeight;
 using mastercore::cs_tx_cache;
 using mastercore::view;
@@ -109,7 +111,7 @@ Value omni_decodetransaction(const Array& params, bool fHelp)
     Object txObj;
     int populateResult = -3331;
     {
-        LOCK(cs_tx_cache);
+        LOCK2(cs_main, cs_tx_cache);
         // temporarily switch global coins view cache for transaction inputs
         std::swap(view, viewTemp);
         // then get the results
