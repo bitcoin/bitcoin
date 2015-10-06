@@ -43,14 +43,14 @@ operation.
 
 ## Enabling
 
-By default, the ZeroMQ port functionality is enabled. Two steps are
-required to enable--compiling in the ZeroMQ code, and configuring
-runtime operation on the command-line or configuration file.
+By default, the ZeroMQ feature is automatically compiled in if the
+necessary prerequisites are found.  To disable, use --disable-zmq
+during the *configure* step of building bitcoind:
 
-    $ ./configure --enable-zmq (other options)
+    $ ./configure --disable-zmq (other options)
 
-This will produce a binary that is capable of providing the ZeroMQ
-facility, but will not do so until also configured properly.
+To actually enable operation, one must set the appropriate options on
+the commandline or in the configuration file.
 
 ## Usage
 
