@@ -41,7 +41,7 @@ static bool noui_ThreadSafeMessageBox(const std::string& message, const std::str
 
 static void noui_InitMessage(const std::string& message)
 {
-    LogPrintf("init message: %s\n", message);
+    LogPrintf("Init message: %s\n", message);
 }
 
 void noui_connect()

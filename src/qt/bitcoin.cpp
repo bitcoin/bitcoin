@@ -83,7 +83,7 @@ Q_DECLARE_METATYPE(CAmount)
 
 static void InitMessage(const std::string &message)
 {
-    LogPrintf("init message: %s\n", message);
+    LogPrintf("Init message: %s\n", message);
 }
 
 /*
