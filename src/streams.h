@@ -296,6 +296,29 @@ public:
         data.insert(data.end(), begin(), end());
         clear();
     }
+
+    /**
+     * XOR the contents of this stream with a certain key.
+     *
+     * @param[in] key    The key used to XOR the data in this stream.
+     */
+    void Xor(const std::vector<unsigned char>& key)
+    {
+        if (key.size() == 0) {
+            return;
+        }
+
+        for (size_type i = 0, j = 0; i != size(); i++) {
+            vch[i] ^= key[j++];
+
+            // This potentially acts on very many bytes of data, so it's
+            // important that we calculate `j`, i.e. the `key` index in this
+            // way instead of doing a %, which would effectively be a division
+            // for each byte Xor'd -- much slower than need be.
+            if (j == key.size())
+                j = 0;
+        }
+    }
 };
 
 
