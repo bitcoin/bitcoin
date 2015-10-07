@@ -136,8 +136,20 @@ bool CheckActivationAuthorization(const std::string& sender)
 {
     std::set<std::string> whitelisted;
 
-    // Mainnet
-    whitelisted.insert("1OmniFoundation1111111111111111111"); // Omni Foundation <????@omni.foundation>
+    // Mainnet - 4 out of 5 signatures required from developers & board members
+    /*
+    "address": "3Fc5gWzEQh1YGeqVXH6E4GDEGgbZJREJQ3",
+    "scriptPubKey": "a91498a2d17e08ac677dc220b92e0b79406f2f441c2487",
+    "sigsrequired": 4,
+    "addresses": [
+      "1883ZMsRJfzKNozUBJBTCxQ7EaiNioNDWz", // Zathras - zathras@omni.foundation - Project maintainer, developer
+      "1HHv91gRxqBzQ3gydMob3LU8hqXcWoLfvd", // dexx - dexx@bitwatch.co - Project maintainer, developer
+      "1oyvGmABkeFRUECn2t8DEZPes6F7Gsc9T", // J.R. Willett - jr@omni.foundation - Founder and Board Member
+      "17xr7sbehYY4YSZX9yuJe6gK9rrdRrZx26", // Craig Sellars - craig@omni.foundation - Technologist and Board Member
+      "16oDZYCspsczfgKXVj3xyvsxH21NpEj94F" // Adam Chamely - adam@omni.foundation - Project maintainer, developer
+    ],
+    */
+    whitelisted.insert("3Fc5gWzEQh1YGeqVXH6E4GDEGgbZJREJQ3");
 
     // Testnet / Regtest
     // use -omniactivationallowsender for testing
