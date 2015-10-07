@@ -169,6 +169,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_sendalert", 2 },
     { "omni_sendalert", 3 },
     { "omni_sendalert", 4 },
+
+    /* Omni Core - raw transaction calls */
+    { "omni_decodetransaction", 1 },
 };
 
 class CRPCConvertTable

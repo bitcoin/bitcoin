@@ -9,6 +9,7 @@ class CMPTransaction;
 class CTransaction;
 
 int populateRPCTransactionObject(const uint256& txid, json_spirit::Object& txobj, std::string filterAddress = "", bool extendedDetails = false, std::string extendedDetailsFilter = "");
+int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHash, json_spirit::Object& txobj, std::string filterAddress = "", bool extendedDetails = false, std::string extendedDetailsFilter = "");
 
 void populateRPCTypeInfo(CMPTransaction& mp_obj, json_spirit::Object& txobj, uint32_t txType, bool extendedDetails, std::string extendedDetailsFilter);
 

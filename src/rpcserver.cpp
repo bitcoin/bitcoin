@@ -410,6 +410,10 @@ static const CRPCCommand vRPCCommands[] =
 #endif
     { "hidden",                              "mscrpc",                          &mscrpc,                          true,       true,       false },
 
+    /* Omni Core raw transaction calls */
+    /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
+    { "omni layer (raw transactions)",       "omni_decodetransaction",          &omni_decodetransaction,          true,       true,       false },
+
     /* Omni Core hidden calls - aliased calls for backwards compatibiltiy - to be depreciated (not shown in help) */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
     { "hidden",                              "getinfo_MP",                      &omni_getinfo,                    true,       true,       false },

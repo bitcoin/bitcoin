@@ -40,10 +40,17 @@ using namespace mastercore;
 int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter)
 {
     // retrieve the transaction from the blockchain and obtain it's height/confs/time
-    CTransaction wtx;
+    CTransaction tx;
     uint256 blockHash;
-    if (!GetTransaction(txid, wtx, blockHash, true)) return MP_TX_NOT_FOUND;
+    if (!GetTransaction(txid, tx, blockHash, true)) {
+        return MP_TX_NOT_FOUND;
+    }
 
+    return populateRPCTransactionObject(tx, blockHash, txobj, filterAddress, extendedDetails, extendedDetailsFilter);
+}
+
+int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHash, Object& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter)
+{
     int confirmations = 0;
     int64_t blockTime = 0;
     int blockHeight = GetHeight();
@@ -59,8 +66,10 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
 
     // attempt to parse the transaction
     CMPTransaction mp_obj;
-    int parseRC = ParseTransaction(wtx, blockHeight, 0, mp_obj, blockTime);
+    int parseRC = ParseTransaction(tx, blockHeight, 0, mp_obj, blockTime);
     if (parseRC < 0) return MP_TX_IS_NOT_MASTER_PROTOCOL;
+
+    const uint256& txid = tx.GetHash();
 
     // DEx BTC payment needs special handling since it's not actually an Omni message - handle and return
     if (parseRC > 0) {
@@ -75,7 +84,7 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
             p_txlistdb->getPurchaseDetails(txid, 1, &tmpBuyer, &tmpSeller, &tmpVout, &tmpPropertyId, &tmpNValue);
         }
         Array purchases;
-        if (populateRPCDExPurchases(wtx, purchases, filterAddress) <= 0) return -1;
+        if (populateRPCDExPurchases(tx, purchases, filterAddress) <= 0) return -1;
         txobj.push_back(Pair("txid", txid.GetHex()));
         txobj.push_back(Pair("type", "DEx Purchase"));
         txobj.push_back(Pair("sendingaddress", tmpBuyer));

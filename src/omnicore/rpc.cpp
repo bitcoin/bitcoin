@@ -49,6 +49,9 @@ using std::runtime_error;
 using namespace json_spirit;
 using namespace mastercore;
 
+/**
+ * Throws a JSONRPCError, depending on error code.
+ */
 void PopulateFailure(int error)
 {
     switch (error) {

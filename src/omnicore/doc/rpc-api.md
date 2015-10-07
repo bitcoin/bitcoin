@@ -1251,6 +1251,66 @@ $ omnicore-cli "omni_gettradehistoryforaddress" "1MCHESTptvd2LnNp7wmr2sGTpRomteA
 
 ---
 
+## Raw transactions
+
+The RPCs for raw transactions can be used to decode or create raw Omni transactions.
+
+### omni_decodetransaction
+
+Decodes an Omni transaction.
+
+If the inputs of the transaction are not in the chain, then they must be provided, because the transaction inputs are used to identify the sender of a transaction.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `txhex`             | string  | required | the raw transaction to decode                                                                |
+| `prevtxs`           | string  | optional | a JSON array of transaction inputs (default: none)                                           |
+
+The format of `prevtxs` is as following:
+
+```js
+[
+  {
+    "txid" : "hash",         // (string, required) the transaction hash
+    "vout" : n,              // (number, required) the output number
+    "scriptPubKey" : "hex",  // (string, required) the output script
+    "value" : n.nnnnnnnn     // (number, required) the output value
+  }
+  ,...
+]
+```
+
+**Result:**
+```js
+Result:
+{
+  "txid" : "hash",                 // (string) the hex-encoded hash of the transaction
+  "fee" : "n.nnnnnnnn",            // (string) the transaction fee in bitcoins
+  "sendingaddress" : "address",    // (string) the Bitcoin address of the sender
+  "referenceaddress" : "address",  // (string) a Bitcoin address used as reference (if any)
+  "ismine" : true|false,           // (boolean) whether the transaction involes an address in the wallet
+  "version" : n,                   // (number) the transaction version
+  "type_int" : n,                  // (number) the transaction type as number
+  "type" : "type",                 // (string) the transaction type as string
+  [...]                            // (mixed) other transaction type specific properties
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_decodetransaction" "010000000163af14ce6d477e1c793507e32a5b7696288fa89705c0d02a3f66beb3c \
+    5b8afee0100000000ffffffff02ac020000000000004751210261ea979f6a06f9dafe00fb1263ea0aca959875a7073556a088cdf \
+    adcd494b3752102a3fd0a8a067e06941e066f78d930bfc47746f097fcd3f7ab27db8ddf37168b6b52ae22020000000000001976a \
+    914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac00000000" \
+    "[{\"txid\":\"eeafb8c5b3be663f2ad0c00597a88f2896765b2ae30735791c7e476dce14af63\",\"vout\":1, \
+    \"scriptPubKey\":\"76a9149084c0bd89289bc025d0264f7f23148fb683d56c88ac\",\"value\":0.0001123}]"
+```
+
+---
+
 ## Depreciated API calls
 
 To ensure backwards compatibility, depreciated RPCs are kept for at least one major version.
