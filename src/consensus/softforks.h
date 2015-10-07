@@ -11,12 +11,6 @@ namespace Consensus {
 struct Params;
 namespace SoftForks {
 
-/**
- * Returns true if there are nRequired or more blocks of minVersion or above
- * in the last Consensus::Params::nMajorityWindow blocks, starting at pstart and going backwards.
- */
-bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
-
 enum Rule
 {
     BIP16,
