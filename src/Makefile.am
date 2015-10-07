@@ -102,6 +102,7 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   consensus/merkle.h \
   consensus/params.h \
+  consensus/softforks.h \
   consensus/validation.h \
   core_io.h \
   core_memusage.h \
@@ -188,6 +189,7 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
+  consensus/softforks.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
