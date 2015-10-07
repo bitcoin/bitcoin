@@ -1,5 +1,6 @@
 #include "omnicore/rpcrawtx.h"
 
+#include "omnicore/createtx.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/rpc.h"
 #include "omnicore/rpctxobject.h"
@@ -8,6 +9,7 @@
 #include "coins.h"
 #include "core_io.h"
 #include "primitives/transaction.h"
+#include "pubkey.h"
 #include "rpcserver.h"
 #include "sync.h"
 #include "uint256.h"
@@ -94,5 +96,214 @@ Value omni_decodetransaction(const Array& params, bool fHelp)
     if (populateResult != 0) PopulateFailure(populateResult);
 
     return txObj;
+}
+
+Value omni_createrawtx_opreturn(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw std::runtime_error(
+            "omni_createrawtx_opreturn \"rawtx\" \"payload\"\n"
+
+            "\nAdds a payload with class C (op-return) encoding to the transaction.\n"
+
+            "\nIf no raw transaction is provided, a new transaction is created.\n"
+
+            "\nIf the data encoding fails, then the transaction is not modified.\n"
+
+            "\nArguments:\n"
+            "1. rawtx                (string, required) the raw transaction to extend (can be null)\n"
+            "2. payload              (string, required) the hex-encoded payload to add\n"
+
+            "\nResult:\n"
+            "\"rawtx\"                 (string) the hex-encoded modified raw transaction\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("omni_createrawtx_opreturn", "\"01000000000000000000\" \"00000000000000020000000006dac2c0\"")
+            + HelpExampleRpc("omni_createrawtx_opreturn", "\"01000000000000000000\", \"00000000000000020000000006dac2c0\"")
+        );
+
+    CMutableTransaction tx = ParseMutableTransaction(params[0]);
+    std::vector<unsigned char> payload = ParseHexV(params[1], "payload");
+
+    // extend the transaction
+    tx = OmniTxBuilder(tx)
+            .addOpReturn(payload)
+            .build();
+
+    return EncodeHexTx(tx);
+}
+
+Value omni_createrawtx_multisig(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 4)
+        throw std::runtime_error(
+            "omni_createrawtx_multisig \"rawtx\" \"payload\" \"seed\" \"redeemkey\"\n"
+
+            "\nAdds a payload with class B (bare-multisig) encoding to the transaction.\n"
+
+            "\nIf no raw transaction is provided, a new transaction is created.\n"
+
+            "\nIf the data encoding fails, then the transaction is not modified.\n"
+
+            "\nArguments:\n"
+            "1. rawtx                (string, required) the raw transaction to extend (can be null)\n"
+            "2. payload              (string, required) the hex-encoded payload to add\n"
+            "3. seed                 (string, required) the seed for obfuscation\n"
+            "4. redeemkey            (string, required) a public key or address for dust redemption\n"
+
+            "\nResult:\n"
+            "\"rawtx\"                 (string) the hex-encoded modified raw transaction\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("omni_createrawtx_multisig", "\"0100000001a7a9402ecd77f3c9f745793c9ec805bfa2e14b89877581c734c774864247e6f50400000000ffffffff01aa0a0000000000001976a9146d18edfe073d53f84dd491dae1379f8fb0dfe5d488ac00000000\" \"00000000000000020000000000989680\" \"1LifmeXYHeUe2qdKWBGVwfbUCMMrwYtoMm\" \"0252ce4bdd3ce38b4ebbc5a6e1343608230da508ff12d23d85b58c964204c4cef3\"")
+            + HelpExampleRpc("omni_createrawtx_multisig", "\"0100000001a7a9402ecd77f3c9f745793c9ec805bfa2e14b89877581c734c774864247e6f50400000000ffffffff01aa0a0000000000001976a9146d18edfe073d53f84dd491dae1379f8fb0dfe5d488ac00000000\", \"00000000000000020000000000989680\", \"1LifmeXYHeUe2qdKWBGVwfbUCMMrwYtoMm\", \"0252ce4bdd3ce38b4ebbc5a6e1343608230da508ff12d23d85b58c964204c4cef3\"")
+        );
+
+    CMutableTransaction tx = ParseMutableTransaction(params[0]);
+    std::vector<unsigned char> payload = ParseHexV(params[1], "payload");
+    std::string obfuscationSeed = ParseAddressOrEmpty(params[2]);
+    CPubKey redeemKey = ParsePubKeyOrAddress(params[3]);
+
+    // extend the transaction
+    tx = OmniTxBuilder(tx)
+            .addMultisig(payload, obfuscationSeed, redeemKey)
+            .build();
+
+    return EncodeHexTx(tx);
+}
+
+Value omni_createrawtx_input(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw std::runtime_error(
+            "omni_createrawtx_input \"rawtx\" \"txid\" n\n"
+
+            "\nAdds a transaction input to the transaction.\n"
+
+            "\nIf no raw transaction is provided, a new transaction is created.\n"
+
+            "\nArguments:\n"
+            "1. rawtx                (string, required) the raw transaction to extend (can be null)\n"
+            "2. txid                 (string, required) the hash of the input transaction\n"
+            "3. n                    (number, required) the index of the transaction output used as input\n"
+
+            "\nResult:\n"
+            "\"rawtx\"                 (string) the hex-encoded modified raw transaction\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("omni_createrawtx_input", "\"01000000000000000000\" \"b006729017df05eda586df9ad3f8ccfee5be340aadf88155b784d1fc0e8342ee\" 0")
+            + HelpExampleRpc("omni_createrawtx_input", "\"01000000000000000000\", \"b006729017df05eda586df9ad3f8ccfee5be340aadf88155b784d1fc0e8342ee\", 0")
+        );
+
+    CMutableTransaction tx = ParseMutableTransaction(params[0]);
+    uint256 txid = ParseHashV(params[1], "txid");
+    uint32_t nOut = ParseOutputIndex(params[2]);
+
+    // extend the transaction
+    tx = OmniTxBuilder(tx)
+            .addInput(txid, nOut)
+            .build();
+
+    return EncodeHexTx(tx);
+}
+
+Value omni_createrawtx_reference(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 3)
+        throw std::runtime_error(
+            "omni_createrawtx_reference \"rawtx\" \"destination\" ( amount )\n"
+
+            "\nAdds a reference output to the transaction.\n"
+
+            "\nIf no raw transaction is provided, a new transaction is created.\n"
+
+            "\nThe output value is set to at least the dust threshold.\n"
+
+            "\nArguments:\n"
+            "1. rawtx                (string, required) the raw transaction to extend (can be null)\n"
+            "2. destination          (string, required) the reference address or destination\n"
+            "3. amount               (number, optional) the optional reference amount (minimal by default)\n"
+
+            "\nResult:\n"
+            "\"rawtx\"                 (string) the hex-encoded modified raw transaction\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("omni_createrawtx_reference", "\"0100000001a7a9402ecd77f3c9f745793c9ec805bfa2e14b89877581c734c774864247e6f50400000000ffffffff03aa0a0000000000001976a9146d18edfe073d53f84dd491dae1379f8fb0dfe5d488ac5c0d0000000000004751210252ce4bdd3ce38b4ebbc5a6e1343608230da508ff12d23d85b58c964204c4cef3210294cc195fc096f87d0f813a337ae7e5f961b1c8a18f1f8604a909b3a5121f065b52aeaa0a0000000000001976a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac00000000\" \"1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB\" 0.005")
+            + HelpExampleRpc("omni_createrawtx_reference", "\"0100000001a7a9402ecd77f3c9f745793c9ec805bfa2e14b89877581c734c774864247e6f50400000000ffffffff03aa0a0000000000001976a9146d18edfe073d53f84dd491dae1379f8fb0dfe5d488ac5c0d0000000000004751210252ce4bdd3ce38b4ebbc5a6e1343608230da508ff12d23d85b58c964204c4cef3210294cc195fc096f87d0f813a337ae7e5f961b1c8a18f1f8604a909b3a5121f065b52aeaa0a0000000000001976a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac00000000\", \"1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB\", 0.005")
+        );
+
+    CMutableTransaction tx = ParseMutableTransaction(params[0]);
+    std::string destination = ParseAddress(params[1]);
+    int64_t amount = (params.size() > 2) ? AmountFromValue(params[2]) : 0;
+
+    // extend the transaction
+    tx = OmniTxBuilder(tx)
+            .addReference(destination, amount)
+            .build();
+
+    return EncodeHexTx(tx);
+}
+
+Value omni_createrawtx_change(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 4 || params.size() > 5)
+        throw std::runtime_error(
+            "omni_createrawtx_change \"rawtx\" \"prevtxs\" \"destination\" fee ( position )\n"
+
+            "\nAdds a change output to the transaction.\n"
+
+            "\nThe provided inputs are not added to the transaction, but only used to "
+            "determine the change. It is assumed that the inputs were previously added, "
+            "for example via \"createrawtransaction\".\n"
+
+            "\nOptionally a position can be provided, where the change output should be "
+            "inserted, starting with 0. If the number of outputs is smaller than the position, "
+            "then the change output is added to the end. Change outputs should be inserted "
+            "before reference outputs, and as per default, the change output is added to the "
+            "first position.\n"
+
+            "\nIf the change amount would be considered as dust, then no change output is added.\n"
+
+            "\nArguments:\n"
+            "1. rawtx                (string, required) the raw transaction to extend\n"
+            "2. prevtxs              (string, required) a JSON array of transaction inputs\n"
+            "     [\n"
+            "       {\n"
+            "         \"txid\":\"hash\",          (string, required) the transaction hash\n"
+            "         \"vout\":n,               (number, required) the output number\n"
+            "         \"scriptPubKey\":\"hex\",   (string, required) the output script\n"
+            "         \"value\":n.nnnnnnnn      (number, required) the output value\n"
+            "       }\n"
+            "       ,...\n"
+            "     ]\n"
+            "3. destination          (string, required) the destination for the change\n"
+            "4. fee                  (number, required) the desired transaction fees\n"
+            "5. position             (number, optional) the position of the change output (default: first position)\n"
+
+            "\nResult:\n"
+            "\"rawtx\"                 (string) the hex-encoded modified raw transaction\n"
+
+            "\nExamples\n"
+            + HelpExampleCli("omni_createrawtx_change", "\"0100000001b15ee60431ef57ec682790dec5a3c0d83a0c360633ea8308fbf6d5fc10a779670400000000ffffffff025c0d00000000000047512102f3e471222bb57a7d416c82bf81c627bfcd2bdc47f36e763ae69935bba4601ece21021580b888ff56feb27f17f08802ebed26258c23697d6a462d43fc13b565fda2dd52aeaa0a0000000000001976a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac00000000\" \"[{\\\"txid\\\":\\\"6779a710fcd5f6fb0883ea3306360c3ad8c0a3c5de902768ec57ef3104e65eb1\\\",\\\"vout\\\":4,\\\"scriptPubKey\\\":\\\"76a9147b25205fd98d462880a3e5b0541235831ae959e588ac\\\",\\\"value\\\":0.00068257}]\" \"1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB\" 0.00003500 1")
+            + HelpExampleRpc("omni_createrawtx_change", "\"0100000001b15ee60431ef57ec682790dec5a3c0d83a0c360633ea8308fbf6d5fc10a779670400000000ffffffff025c0d00000000000047512102f3e471222bb57a7d416c82bf81c627bfcd2bdc47f36e763ae69935bba4601ece21021580b888ff56feb27f17f08802ebed26258c23697d6a462d43fc13b565fda2dd52aeaa0a0000000000001976a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac00000000\", [{\"txid\":\"6779a710fcd5f6fb0883ea3306360c3ad8c0a3c5de902768ec57ef3104e65eb1\",\"vout\":4,\"scriptPubKey\":\"76a9147b25205fd98d462880a3e5b0541235831ae959e588ac\",\"value\":0.00068257}], \"1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB\", 0.00003500, 1")
+        );
+
+    CMutableTransaction tx = ParseMutableTransaction(params[0]);
+    std::vector<PrevTxsEntry> prevTxsParsed = ParsePrevTxs(params[1]);
+    std::string destination = ParseAddress(params[2]);
+    int64_t txFee = AmountFromValue(params[3]);
+    uint32_t nOut = params.size() > 4 ? params[4].get_uint64() : 0;
+
+    // use a dummy coins view to store the user provided transaction inputs
+    CCoinsView viewDummy;
+    CCoinsViewCache viewTemp(&viewDummy);
+    InputsToView(prevTxsParsed, viewTemp);
+
+    // extend the transaction
+    tx = OmniTxBuilder(tx)
+            .addChange(destination, viewTemp, txFee, nOut)
+            .build();
+
+    return EncodeHexTx(tx);
 }
 
