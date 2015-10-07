@@ -1452,7 +1452,7 @@ public:
 
     uint256 GetBlockHash() const
     {
-        if (fUseFastIndex && (nTime < GetAdjustedTime() - 24 * 60 * 60) && blockHash != 0)
+        if (fUseFastIndex && (nTime < GetAdjustedTime() - nOneDay) && blockHash != 0)
             return blockHash;
 
         CBlock block;
