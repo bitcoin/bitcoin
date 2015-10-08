@@ -652,7 +652,17 @@ BOOST_AUTO_TEST_CASE(script_valid)
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
         unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
 
+<<<<<<< HEAD
         DoTest(scriptPubKey, scriptSig, scriptflags, true, strTest);
+=======
+        int flagsNow = flags;
+        if (test.size() > 3 && ("," + test[2].get_str() + ",").find(",DERSIG,") != string::npos) {
+            flagsNow |= SCRIPT_VERIFY_DERSIG;
+        }
+
+        CTransaction tx;
+        BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, tx, 0, flagsNow, SIGHASH_NONE), strTest);
+>>>>>>> bitcoin/0.8
     }
 }
 
@@ -677,7 +687,17 @@ BOOST_AUTO_TEST_CASE(script_invalid)
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
         unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
 
+<<<<<<< HEAD
         DoTest(scriptPubKey, scriptSig, scriptflags, false, strTest);
+=======
+        int flagsNow = flags;
+        if (test.size() > 3 && ("," + test[2].get_str() + ",").find(",DERSIG,") != string::npos) {
+            flagsNow |= SCRIPT_VERIFY_DERSIG;
+        }
+
+        CTransaction tx;
+        BOOST_CHECK_MESSAGE(!VerifyScript(scriptSig, scriptPubKey, tx, 0, flagsNow, SIGHASH_NONE), strTest);
+>>>>>>> bitcoin/0.8
     }
 }
 

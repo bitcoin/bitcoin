@@ -211,7 +211,19 @@ void WalletView::gotoVerifyMessageTab(QString addr)
 
 bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
+<<<<<<< HEAD
     return sendCoinsPage->handlePaymentRequest(recipient);
+=======
+    // URI has to be valid
+    if (sendCoinsPage->handleURI(strURI))
+    {
+        gotoSendCoinsPage();
+        emit showNormalIfMinimized();
+        return true;
+    }
+    else
+        return false;
+>>>>>>> bitcoin/0.8
 }
 
 void WalletView::showOutOfSyncWarning(bool fShow)

@@ -393,6 +393,7 @@ void SendCoinsDialog::updateTabsAndLabels()
 
 void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
 {
+<<<<<<< HEAD
     entry->hide();
 
     // If the last entry is about to be removed add an empty one
@@ -402,6 +403,10 @@ void SendCoinsDialog::removeEntry(SendCoinsEntry* entry)
     entry->deleteLater();
 
     updateTabsAndLabels();
+=======
+    entry->deleteLater();
+    updateRemoveEnabled();
+>>>>>>> bitcoin/0.8
 }
 
 QWidget *SendCoinsDialog::setupTabChain(QWidget *prev)

@@ -4,7 +4,11 @@ Name=Bitcoin
 Comment=Bitcoin P2P Cryptocurrency
 Comment[fr]=Bitcoin, monnaie virtuelle cryptographique pair à pair
 Comment[tr]=Bitcoin, eşten eşe kriptografik sanal para birimi
+<<<<<<< HEAD
 Exec=bitcoin-qt %u
+=======
+Exec=/usr/bin/bitcoin-qt %u
+>>>>>>> bitcoin/0.8
 Terminal=false
 Type=Application
 Icon=bitcoin128

@@ -271,6 +271,7 @@ BOOST_AUTO_TEST_CASE(util_TimingResistantEqual)
     BOOST_CHECK(!TimingResistantEqual(std::string("aa"), std::string("a")));
     BOOST_CHECK(TimingResistantEqual(std::string("abc"), std::string("abc")));
     BOOST_CHECK(!TimingResistantEqual(std::string("abc"), std::string("aba")));
+<<<<<<< HEAD
 }
 
 /* Test strprintf formatting directives.
@@ -482,6 +483,8 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("1.1e", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.1e-", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.", 8, &amount));
+=======
+>>>>>>> bitcoin/0.8
 }
 
 BOOST_AUTO_TEST_SUITE_END()

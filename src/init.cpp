@@ -164,7 +164,11 @@ void Interrupt(boost::thread_group& threadGroup)
 
 void Shutdown()
 {
+<<<<<<< HEAD
     LogPrintf("%s: In progress...\n", __func__);
+=======
+    printf("Shutdown : In progress...\n");
+>>>>>>> bitcoin/0.8
     static CCriticalSection cs_Shutdown;
     TRY_LOCK(cs_Shutdown, lockShutdown);
     if (!lockShutdown)
@@ -187,7 +191,28 @@ void Shutdown()
 #endif
     GenerateBitcoins(false, 0, Params());
     StopNode();
+<<<<<<< HEAD
     UnregisterNodeSignals(GetNodeSignals());
+=======
+    {
+        LOCK(cs_main);
+        if (pwalletMain)
+            pwalletMain->SetBestChain(CBlockLocator(pindexBest));
+        if (pblocktree)
+            pblocktree->Flush();
+        if (pcoinsTip)
+            pcoinsTip->Flush();
+        delete pcoinsTip; pcoinsTip = NULL;
+        delete pcoinsdbview; pcoinsdbview = NULL;
+        delete pblocktree; pblocktree = NULL;
+    }
+    bitdb.Flush(true);
+    boost::filesystem::remove(GetPidFile());
+    UnregisterWallet(pwalletMain);
+    delete pwalletMain;
+    printf("Shutdown : done\n");
+}
+>>>>>>> bitcoin/0.8
 
     if (fFeeEstimatesInitialized)
     {
@@ -391,6 +416,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
         " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
 #endif
+<<<<<<< HEAD
 
 #if ENABLE_ZMQ
     strUsage += HelpMessageGroup(_("ZeroMQ notification options:"));
@@ -398,6 +424,26 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-zmqpubhashtransaction=<address>", _("Enable publish hash transaction in <address>"));
     strUsage += HelpMessageOpt("-zmqpubrawblock=<address>", _("Enable publish raw block in <address>"));
     strUsage += HelpMessageOpt("-zmqpubrawtransaction=<address>", _("Enable publish raw transaction in <address>"));
+=======
+#if !defined(WIN32) && !defined(QT_GUI)
+        "  -daemon                " + _("Run in the background as a daemon and accept commands") + "\n" +
+#endif
+        "  -testnet               " + _("Use the test network") + "\n" +
+        "  -debug                 " + _("Output extra debugging information. Implies all other -debug* options") + "\n" +
+        "  -debugnet              " + _("Output extra network debugging information") + "\n" +
+        "  -logtimestamps         " + _("Prepend debug output with timestamp (default: 1)") + "\n" +
+        "  -shrinkdebugfile       " + _("Shrink debug.log file on client startup (default: 1 when no -debug)") + "\n" +
+        "  -printtoconsole        " + _("Send trace/debug info to console instead of debug.log file") + "\n" +
+#ifdef WIN32
+        "  -printtodebugger       " + _("Send trace/debug info to debugger") + "\n" +
+#endif
+        "  -rpcuser=<user>        " + _("Username for JSON-RPC connections") + "\n" +
+        "  -rpcpassword=<pw>      " + _("Password for JSON-RPC connections") + "\n" +
+        "  -rpcport=<port>        " + _("Listen for JSON-RPC connections on <port> (default: 8332 or testnet: 18332)") + "\n" +
+        "  -rpcallowip=<ip>       " + _("Allow JSON-RPC connections from specified IP address") + "\n" +
+#ifndef QT_GUI
+        "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
+>>>>>>> bitcoin/0.8
 #endif
 
     strUsage += HelpMessageGroup(_("Debugging/Testing options:"));
@@ -801,11 +847,16 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
     
     // Make sure enough file descriptors are available
+<<<<<<< HEAD
     int nBind = std::max((int)mapArgs.count("-bind") + (int)mapArgs.count("-whitebind"), 1);
     int nUserMaxConnections = GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS);
     nMaxConnections = std::max(nUserMaxConnections, 0);
 
     // Trim requested connection counts, to fit into system limitations
+=======
+    int nBind = std::max((int)mapArgs.count("-bind"), 1);
+    nMaxConnections = GetArg("-maxconnections", 125);
+>>>>>>> bitcoin/0.8
     nMaxConnections = std::max(std::min(nMaxConnections, (int)(FD_SETSIZE - nBind - MIN_CORE_FILEDESCRIPTORS)), 0);
     int nFD = RaiseFileDescriptorLimit(nMaxConnections + MIN_CORE_FILEDESCRIPTORS);
     if (nFD < MIN_CORE_FILEDESCRIPTORS)
@@ -869,6 +920,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 #ifdef ENABLE_WALLET
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
 #endif
+<<<<<<< HEAD
+=======
+    fPrintToConsole = GetBoolArg("-printtoconsole");
+    fPrintToDebugger = GetBoolArg("-printtodebugger");
+    fLogTimestamps = GetBoolArg("-logtimestamps", true);
+>>>>>>> bitcoin/0.8
 
     nConnectTimeout = GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0)

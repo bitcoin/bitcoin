@@ -191,10 +191,16 @@ if [ "$CROSS_COMPILE" = "true" ]; then
 else
     CXXOUTPUT="${TMPDIR}/leveldb_build_detect_platform-cxx.$$"
 
+<<<<<<< HEAD
     # If -std=c++0x works, use <atomic> as fallback for when memory barriers
     # are not available.
     $CXX $CXXFLAGS -std=c++0x -x c++ - -o $CXXOUTPUT 2>/dev/null  <<EOF
       #include <atomic>
+=======
+    # If -std=c++0x works, use <cstdatomic>.  Otherwise use port_posix.h.
+    $CXX $CXXFLAGS -std=c++0x -x c++ - -o $CXXOUTPUT 2>/dev/null  <<EOF
+      #include <cstdatomic>
+>>>>>>> bitcoin/0.8
       int main() {}
 EOF
     if [ "$?" = 0 ]; then

@@ -24,6 +24,12 @@
 #include <string>
 #include <vector>
 
+<<<<<<< HEAD
+=======
+#include <boost/version.hpp>
+#include <boost/thread.hpp>
+#include <boost/filesystem.hpp>
+>>>>>>> bitcoin/0.8
 #include <boost/filesystem/path.hpp>
 #include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
@@ -31,10 +37,40 @@
 /** Signals for translation. */
 class CTranslationInterface
 {
+<<<<<<< HEAD
 public:
     /** Translate a message to the native language of the user. */
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
+=======
+// Boost's sleep_for was uninterruptable when backed by nanosleep from 1.50
+// until fixed in 1.52. Use the deprecated sleep method for the broken case.
+// See: https://svn.boost.org/trac/boost/ticket/7238
+
+#if BOOST_VERSION >= 105000 && (!defined(BOOST_HAS_NANOSLEEP) || BOOST_VERSION >= 105200)
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(n));
+#else
+    boost::this_thread::sleep(boost::posix_time::milliseconds(n));
+#endif
+}
+
+/* This GNU C extension enables the compiler to check the format string against the parameters provided.
+ * X is the number of the "format string" parameter, and Y is the number of the first variadic parameter.
+ * Parameters count from 1.
+ */
+#ifdef __GNUC__
+#define ATTR_WARN_PRINTF(X,Y) __attribute__((format(printf,X,Y)))
+#else
+#define ATTR_WARN_PRINTF(X,Y)
+#endif
+
+
+
+
+
+
+
+>>>>>>> bitcoin/0.8
 
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
@@ -105,7 +141,29 @@ static inline bool error(const char* format)
     return false;
 }
 
+<<<<<<< HEAD
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
+=======
+void LogException(std::exception* pex, const char* pszThread);
+void PrintException(std::exception* pex, const char* pszThread);
+void PrintExceptionContinue(std::exception* pex, const char* pszThread);
+void ParseString(const std::string& str, char c, std::vector<std::string>& v);
+std::string FormatMoney(int64 n, bool fPlus=false);
+bool ParseMoney(const std::string& str, int64& nRet);
+bool ParseMoney(const char* pszIn, int64& nRet);
+std::string SanitizeString(const std::string& str);
+std::vector<unsigned char> ParseHex(const char* psz);
+std::vector<unsigned char> ParseHex(const std::string& str);
+bool IsHex(const std::string& str);
+std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid = NULL);
+std::string DecodeBase64(const std::string& str);
+std::string EncodeBase64(const unsigned char* pch, size_t len);
+std::string EncodeBase64(const std::string& str);
+std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid = NULL);
+std::string DecodeBase32(const std::string& str);
+std::string EncodeBase32(const unsigned char* pch, size_t len);
+std::string EncodeBase32(const std::string& str);
+>>>>>>> bitcoin/0.8
 void ParseParameters(int argc, const char*const argv[]);
 void FileCommit(FILE *fileout);
 bool TruncateFile(FILE *file, unsigned int length);
@@ -119,6 +177,7 @@ void ClearDatadirCache();
 boost::filesystem::path GetConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
+#ifndef WIN32
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
 #endif
 void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet);
@@ -202,18 +261,79 @@ std::string HelpMessageGroup(const std::string& message);
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
 /**
+<<<<<<< HEAD
  * Return the number of physical cores available on the current system.
  * @note This does not count virtual cores, such as those provided by HyperThreading
  * when boost is newer than 1.56.
+=======
+ * Timing-attack-resistant comparison.
+ * Takes time proportional to length
+ * of first argument.
+ */
+template <typename T>
+bool TimingResistantEqual(const T& a, const T& b)
+{
+    if (b.size() == 0) return a.size() == 0;
+    size_t accumulator = a.size() ^ b.size();
+    for (size_t i = 0; i < a.size(); i++)
+        accumulator |= a[i] ^ b[i%b.size()];
+    return accumulator == 0;
+}
+
+/** Median filter over a stream of values.
+ * Returns the median of the last N numbers
+>>>>>>> bitcoin/0.8
  */
 int GetNumCores();
 
 void SetThreadPriority(int nPriority);
 void RenameThread(const char* name);
 
+<<<<<<< HEAD
 /**
  * .. and a wrapper that just calls func once
  */
+=======
+inline uint32_t ByteReverse(uint32_t value)
+{
+    value = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
+    return (value<<16) | (value>>16);
+}
+
+// Standard wrapper for do-something-forever thread functions.
+// "Forever" really means until the thread is interrupted.
+// Use it like:
+//   new boost::thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, 900000));
+// or maybe:
+//    boost::function<void()> f = boost::bind(&FunctionWithArg, argument);
+//    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
+template <typename Callable> void LoopForever(const char* name,  Callable func, int64 msecs)
+{
+    std::string s = strprintf("bitcoin-%s", name);
+    RenameThread(s.c_str());
+    printf("%s thread start\n", name);
+    try
+    {
+        while (1)
+        {
+            MilliSleep(msecs);
+            func();
+        }
+    }
+    catch (boost::thread_interrupted)
+    {
+        printf("%s thread stop\n", name);
+        throw;
+    }
+    catch (std::exception& e) {
+        PrintException(&e, name);
+    }
+    catch (...) {
+        PrintException(NULL, name);
+    }
+}
+// .. and a wrapper that just calls func once
+>>>>>>> bitcoin/0.8
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
     std::string s = strprintf("bitcoin-%s", name);

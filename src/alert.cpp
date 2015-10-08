@@ -237,7 +237,26 @@ bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThre
         if(AppliesToMe())
         {
             uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
+<<<<<<< HEAD
             Notify(strStatusBar, fThread);
+=======
+            std::string strCmd = GetArg("-alertnotify", "");
+            if (!strCmd.empty())
+            {
+                // Alert text should be plain ascii coming from a trusted source, but to
+                // be safe we first strip anything not in safeChars, then add single quotes around
+                // the whole string before passing it to the shell:
+                std::string singleQuote("'");
+                std::string safeStatus = SanitizeString(strStatusBar);
+                safeStatus = singleQuote+safeStatus+singleQuote;
+                boost::replace_all(strCmd, "%s", safeStatus);
+
+                if (fThread)
+                    boost::thread t(runCommand, strCmd); // thread runs free
+                else
+                    runCommand(strCmd);
+            }
+>>>>>>> bitcoin/0.8
         }
     }
 

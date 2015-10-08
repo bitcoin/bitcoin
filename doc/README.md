@@ -1,5 +1,17 @@
+<<<<<<< HEAD
 Bitcoin Core 0.11.99
 =====================
+=======
+Bitcoin 0.8.6 BETA
+====================
+
+Copyright (c) 2009-2013 Bitcoin Developers
+
+Distributed under the MIT/X11 software license, see the accompanying
+file COPYING or http://www.opensource.org/licenses/mit-license.php.
+This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](http://www.openssl.org/). This product includes
+cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
+>>>>>>> bitcoin/0.8
 
 Setup
 ---------------------
@@ -57,6 +69,7 @@ The Bitcoin repo's [root README](https://github.com/bitcoin/bitcoin/blob/master/
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
 - [Unit Tests](unit-tests.md)
+<<<<<<< HEAD
 - [Unauthenticated REST Interface](REST-interface.md)
 - [Shared Libraries](shared-libraries.md)
 - [BIPS](bips.md)
@@ -78,3 +91,6 @@ License
 Distributed under the [MIT software license](http://www.opensource.org/licenses/mit-license.php).
 This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes
 cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
+=======
+- [Translation Process](translation_process.md)
+>>>>>>> bitcoin/0.8

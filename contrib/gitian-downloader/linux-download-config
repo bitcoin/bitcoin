@@ -29,6 +29,7 @@ signers:
     name: "Wladimir J. van der Laan"
     key: laanwj
   AEC1884398647C47413C1C3FB1179EB7347DC10D:
+<<<<<<< HEAD
     name: "Warren Togami"
     key: wtogami
   9692B91BBF0E8D34DFD33B1882C5C009628ECF0C:
@@ -43,3 +44,9 @@ signers:
   37EC7D7B0A217CDB4B4E007E7FAB114267E4FA04:
     name: "Peter Todd"
     key: "petertodd"
+=======
+    weight: 40
+    name: "Warren Togami"
+    key: wtogami
+minimum_weight: 120
+>>>>>>> bitcoin/0.8

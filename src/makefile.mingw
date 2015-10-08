@@ -1,0 +1,139 @@
+# Copyright (c) 2009-2010 Satoshi Nakamoto
+# Distributed under the MIT/X11 software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+# Makefile for the MinGW g++ compiler/toolchain
+#
+# Assumes Berkeley DB, Boost, and OpenSSL have all been compiled and installed
+# into /usr/local (/usr/local/include, /usr/local/lib).
+#
+# If dependencies are somewhere else, run 'make DEPSDIR=/path/'
+#
+# Boost libraries are given wacky names that include the particular version of
+# boost you're using; set BOOST_SUFFIX appropriately.
+#
+# 'make clean' assumes it is running inside a MSYS shell, and uses 'rm'
+# to remove files.
+
+CXX ?= g++
+
+USE_UPNP:=-
+USE_IPV6:=1
+
+DEPSDIR?=/usr/local
+BOOST_SUFFIX?=-mgw46-mt-sd-1_52
+
+INCLUDEPATHS= \
+ -I"$(CURDIR)" \
+ -I"$(DEPSDIR)/include"
+
+LIBPATHS= \
+ -L"$(CURDIR)/leveldb" \
+ -L"$(DEPSDIR)/lib"
+
+LIBS= \
+ -l leveldb \
+ -l memenv \
+ -l boost_system$(BOOST_SUFFIX) \
+ -l boost_filesystem$(BOOST_SUFFIX) \
+ -l boost_program_options$(BOOST_SUFFIX) \
+ -l boost_thread$(BOOST_SUFFIX) \
+ -l boost_chrono$(BOOST_SUFFIX) \
+ -l db_cxx \
+ -l ssl \
+ -l crypto
+
+DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE
+DEBUGFLAGS=-g
+CFLAGS=-mthreads -O2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+# enable: ASLR, DEP and large address aware
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware
+
+TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
+
+ifndef USE_UPNP
+	override USE_UPNP = -
+endif
+ifneq (${USE_UPNP}, -)
+ LIBS += -l miniupnpc -l iphlpapi
+ DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
+endif
+
+ifneq (${USE_IPV6}, -)
+	DEFS += -DUSE_IPV6=$(USE_IPV6)
+endif
+
+LIBS += -l mingwthrd -l kernel32 -l user32 -l gdi32 -l comdlg32 -l winspool -l winmm -l shell32 -l comctl32 -l ole32 -l oleaut32 -l uuid -l rpcrt4 -l advapi32 -l ws2_32 -l mswsock -l shlwapi
+
+# TODO: make the mingw builds smarter about dependencies, like the linux/osx builds are
+HEADERS = $(wildcard *.h)
+
+OBJS= \
+    leveldb/libleveldb.a \
+    obj/alert.o \
+    obj/version.o \
+    obj/checkpoints.o \
+    obj/netbase.o \
+    obj/addrman.o \
+    obj/crypter.o \
+    obj/key.o \
+    obj/db.o \
+    obj/init.o \
+    obj/keystore.o \
+    obj/main.o \
+    obj/net.o \
+    obj/protocol.o \
+    obj/bitcoinrpc.o \
+    obj/rpcdump.o \
+    obj/rpcnet.o \
+    obj/rpcmining.o \
+    obj/rpcwallet.o \
+    obj/rpcblockchain.o \
+    obj/rpcrawtransaction.o \
+    obj/script.o \
+    obj/sync.o \
+    obj/util.o \
+    obj/wallet.o \
+    obj/walletdb.o \
+    obj/hash.o \
+    obj/bloom.o \
+    obj/noui.o \
+    obj/leveldb.o \
+    obj/txdb.o
+
+
+all: bitcoind.exe
+
+test check: test_bitcoin.exe FORCE
+	test_bitcoin.exe
+
+#
+# LevelDB support
+#
+DEFS += $(addprefix -I,$(CURDIR)/leveldb/include)
+DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
+
+leveldb/libleveldb.a:
+	cd leveldb && $(MAKE) CC=$(CC) CXX=$(CXX) OPT="$(CFLAGS)" TARGET_OS=NATIVE_WINDOWS libleveldb.a libmemenv.a && cd ..
+
+obj/%.o: %.cpp $(HEADERS)
+	$(CXX) -c $(CFLAGS) -o $@ $<
+
+bitcoind.exe: $(OBJS:obj/%=obj/%)
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+
+TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
+
+obj-test/%.o: test/%.cpp $(HEADERS)
+	$(CXX) -c $(TESTDEFS) $(CFLAGS) -o $@ $<
+
+test_bitcoin.exe: $(TESTOBJS) $(filter-out obj/init.o,$(OBJS:obj/%=obj/%))
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ -lboost_unit_test_framework$(BOOST_SUFFIX) $(LIBS)
+
+clean:
+	rm -f bitcoind.exe test_bitcoin.exe
+	rm -f obj/*
+	rm -f obj-test/*
+	cd leveldb && $(MAKE) TARGET_OS=NATIVE_WINDOWS clean && cd ..
+
+FORCE:

@@ -99,6 +99,7 @@ public Q_SLOTS:
     /** Ask for passphrase to unlock wallet temporarily */
     void unlockWallet();
 
+<<<<<<< HEAD
     /** Show used sending addresses */
     void usedSendingAddresses();
     /** Show used receiving addresses */
@@ -119,6 +120,13 @@ Q_SIGNALS:
     void encryptionStatusChanged(int status);
     /** Notify that a new transaction appeared */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+=======
+    void setEncryptionStatus();
+
+signals:
+    /** Signal that we want to show the main window */
+    void showNormalIfMinimized();
+>>>>>>> bitcoin/0.8
 };
 
 #endif // BITCOIN_QT_WALLETVIEW_H

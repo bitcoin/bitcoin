@@ -242,6 +242,7 @@ TEST(CorruptionTest, TableFile) {
 
   Corrupt(kTableFile, 100, 1);
   Check(90, 99);
+<<<<<<< HEAD
 }
 
 TEST(CorruptionTest, TableFileRepair) {
@@ -258,6 +259,8 @@ TEST(CorruptionTest, TableFileRepair) {
   RepairDB();
   Reopen();
   Check(95, 99);
+=======
+>>>>>>> bitcoin/0.8
 }
 
 TEST(CorruptionTest, TableFileIndexData) {

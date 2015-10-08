@@ -7,8 +7,13 @@
 
 #include <QValidator>
 
+<<<<<<< HEAD
 /** Base58 entry widget validator, checks for valid characters and
  * removes some whitespace.
+=======
+/** Base58 entry widget validator.
+   Corrects near-miss characters and refuses characters that are not part of base58.
+>>>>>>> bitcoin/0.8
  */
 class BitcoinAddressEntryValidator : public QValidator
 {

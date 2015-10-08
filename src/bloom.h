@@ -68,9 +68,13 @@ public:
      * nFlags should be one of the BLOOM_UPDATE_* enums (not _MASK)
      */
     CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweak, unsigned char nFlagsIn);
+<<<<<<< HEAD
     CBloomFilter() : isFull(true), isEmpty(false), nHashFuncs(0), nTweak(0), nFlags(0) {}
 
     ADD_SERIALIZE_METHODS;
+=======
+    CBloomFilter() : isFull(true) {}
+>>>>>>> bitcoin/0.8
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
@@ -95,6 +99,7 @@ public:
     //! (catch a filter which was just deserialized which was too big)
     bool IsWithinSizeConstraints() const;
 
+<<<<<<< HEAD
     //! Also adds any outputs which match the filter to the filter (to match their spending txes)
     bool IsRelevantAndUpdate(const CTransaction& tx);
 
@@ -132,6 +137,13 @@ private:
     unsigned int nBloomSize;
     unsigned int nInsertions;
     CBloomFilter b1, b2;
+=======
+    // Also adds any outputs which match the filter to the filter (to match their spending txes)
+    bool IsRelevantAndUpdate(const CTransaction& tx, const uint256& hash);
+
+    // Checks for empty and full filters to avoid wasting cpu
+    void UpdateEmptyFull();
+>>>>>>> bitcoin/0.8
 };
 
 

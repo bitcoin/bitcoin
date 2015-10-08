@@ -51,9 +51,13 @@ TESTS = \
 	env_test \
 	filename_test \
 	filter_block_test \
+<<<<<<< HEAD
 	hash_test \
 	issue178_test \
 	issue200_test \
+=======
+	issue178_test \
+>>>>>>> bitcoin/0.8
 	log_test \
 	memenv_test \
 	skiplist_test \
@@ -81,7 +85,11 @@ SHARED = $(SHARED1)
 else
 # Update db.h if you change these.
 SHARED_MAJOR = 1
+<<<<<<< HEAD
 SHARED_MINOR = 18
+=======
+SHARED_MINOR = 13
+>>>>>>> bitcoin/0.8
 SHARED1 = libleveldb.$(PLATFORM_SHARED_EXT)
 SHARED2 = $(SHARED1).$(SHARED_MAJOR)
 SHARED3 = $(SHARED1).$(SHARED_MAJOR).$(SHARED_MINOR)
@@ -161,6 +169,7 @@ filename_test: db/filename_test.o $(LIBOBJECTS) $(TESTHARNESS)
 filter_block_test: table/filter_block_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) table/filter_block_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
+<<<<<<< HEAD
 hash_test: util/hash_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) util/hash_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
@@ -170,6 +179,11 @@ issue178_test: issues/issue178_test.o $(LIBOBJECTS) $(TESTHARNESS)
 issue200_test: issues/issue200_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) issues/issue200_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 
+=======
+issue178_test: issues/issue178_test.o $(LIBOBJECTS) $(TESTHARNESS)
+	$(CXX) $(LDFLAGS) issues/issue178_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
+
+>>>>>>> bitcoin/0.8
 log_test: db/log_test.o $(LIBOBJECTS) $(TESTHARNESS)
 	$(CXX) $(LDFLAGS) db/log_test.o $(LIBOBJECTS) $(TESTHARNESS) -o $@ $(LIBS)
 

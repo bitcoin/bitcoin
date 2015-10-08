@@ -32,8 +32,16 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
+<<<<<<< HEAD
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
+=======
+// Dump addresses to peers.dat every 15 minutes (900s)
+#define DUMP_ADDRESSES_INTERVAL 900
+
+using namespace std;
+using namespace boost;
+>>>>>>> bitcoin/0.8
 
 // Dump addresses to peers.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
@@ -1713,7 +1721,11 @@ void ThreadMessageHandler()
                 TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                 if (lockRecv)
                 {
+<<<<<<< HEAD
                     if (!g_signals.ProcessMessages(pnode))
+=======
+                    if (!ProcessMessages(pnode))
+>>>>>>> bitcoin/0.8
                         pnode->CloseSocketDisconnect();
 
                     if (pnode->nSendSize < SendBufferSize())
@@ -1743,7 +1755,11 @@ void ThreadMessageHandler()
         }
 
         if (fSleep)
+<<<<<<< HEAD
             messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(100));
+=======
+            MilliSleep(100);
+>>>>>>> bitcoin/0.8
     }
 }
 
@@ -1959,7 +1975,11 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "msghand", &ThreadMessageHandler));
 
     // Dump network addresses
+<<<<<<< HEAD
     scheduler.scheduleEvery(&DumpData, DUMP_ADDRESSES_INTERVAL);
+=======
+    threadGroup.create_thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, DUMP_ADDRESSES_INTERVAL * 1000));
+>>>>>>> bitcoin/0.8
 }
 
 bool StopNode()

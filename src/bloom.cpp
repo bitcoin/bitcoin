@@ -22,6 +22,7 @@
 using namespace std;
 
 CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int nTweakIn, unsigned char nFlagsIn) :
+<<<<<<< HEAD
     /**
      * The ideal size for a bloom filter with a given number of elements and false positive rate is:
      * - nElements * log(fp rate) / ln(2)^2
@@ -49,6 +50,20 @@ CBloomFilter::CBloomFilter(unsigned int nElements, double nFPRate, unsigned int 
     nHashFuncs((unsigned int)(vData.size() * 8 / nElements * LN2)),
     nTweak(nTweakIn),
     nFlags(BLOOM_UPDATE_NONE)
+=======
+// The ideal size for a bloom filter with a given number of elements and false positive rate is:
+// - nElements * log(fp rate) / ln(2)^2
+// We ignore filter parameters which will create a bloom filter larger than the protocol limits
+vData(min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
+// The ideal number of hash functions is filter size * ln(2) / number of elements
+// Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
+// See http://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
+isFull(false),
+isEmpty(false),
+nHashFuncs(min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
+nTweak(nTweakIn),
+nFlags(nFlagsIn)
+>>>>>>> bitcoin/0.8
 {
 }
 
@@ -142,7 +157,10 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
         return true;
     if (isEmpty)
         return false;
+<<<<<<< HEAD
     const uint256& hash = tx.GetHash();
+=======
+>>>>>>> bitcoin/0.8
     if (contains(hash))
         fFound = true;
 
@@ -215,6 +233,7 @@ void CBloomFilter::UpdateEmptyFull()
     isFull = full;
     isEmpty = empty;
 }
+<<<<<<< HEAD
 
 CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate) :
     b1(nElements * 2, fpRate, 0), b2(nElements * 2, fpRate, 0)
@@ -270,3 +289,5 @@ void CRollingBloomFilter::reset()
     b2.reset(nNewTweak);
     nInsertions = 0;
 }
+=======
+>>>>>>> bitcoin/0.8

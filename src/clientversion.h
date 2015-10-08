@@ -5,9 +5,17 @@
 #ifndef BITCOIN_CLIENTVERSION_H
 #define BITCOIN_CLIENTVERSION_H
 
+<<<<<<< HEAD
 #if defined(HAVE_CONFIG_H)
 #include "config/bitcoin-config.h"
 #else
+=======
+// These need to be macros, as version.cpp's and bitcoin-qt.rc's voodoo requires it
+#define CLIENT_VERSION_MAJOR       0
+#define CLIENT_VERSION_MINOR       8
+#define CLIENT_VERSION_REVISION    6
+#define CLIENT_VERSION_BUILD       0
+>>>>>>> bitcoin/0.8
 
 /**
  * client versioning and copyright year

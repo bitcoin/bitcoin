@@ -15,7 +15,11 @@ out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
+<<<<<<< HEAD
 the Bitcoin Core software, see https://www.bitcoin.org/en/download.
+=======
+the Bitcoin client software, see http://www.bitcoin.org.
+>>>>>>> bitcoin/0.8
 
 License
 -------
@@ -36,7 +40,18 @@ The developer [mailing list](https://lists.linuxfoundation.org/mailman/listinfo/
 should be used to discuss complicated or controversial changes before working
 on a patch set.
 
+<<<<<<< HEAD
 Developer IRC can be found on Freenode at #bitcoin-core-dev.
+=======
+The patch will be accepted if there is broad consensus that it is a good thing.
+Developers should expect to rework and resubmit patches if the code doesn't
+match the project's coding conventions (see `doc/coding.md`) or are
+controversial.
+
+The `master` branch is regularly built and tested, but is not guaranteed to be
+completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
+regularly to indicate new official, stable release versions of Bitcoin.
+>>>>>>> bitcoin/0.8
 
 Testing
 -------

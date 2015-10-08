@@ -324,12 +324,19 @@ public:
     std::string addrName;
     CService addrLocal;
     int nVersion;
+<<<<<<< HEAD
     // strSubVer is whatever byte array we read from the wire. However, this field is intended
+=======
+    // strSubVer is whatever byte array we read from the wire. However, this field is intended 
+>>>>>>> bitcoin/0.8
     // to be printed out, displayed to humans in various forms and so on. So we sanitize it and
     // store the sanitized version in cleanSubVer. The original should be used when dealing with
     // the network or wire types and the cleaned string used when displayed or logged.
     std::string strSubVer, cleanSubVer;
+<<<<<<< HEAD
     bool fWhitelisted; // This peer can bypass DoS banning.
+=======
+>>>>>>> bitcoin/0.8
     bool fOneShot;
     bool fClient;
     bool fInbound;
@@ -376,6 +383,7 @@ public:
     mruset<CInv> setInventoryKnown;
     std::vector<CInv> vInventoryToSend;
     CCriticalSection cs_inventory;
+<<<<<<< HEAD
     std::multimap<int64_t, CInv> mapAskFor;
 
     // Ping time measurement:
@@ -392,6 +400,60 @@ public:
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
+=======
+    std::multimap<int64, CInv> mapAskFor;
+
+    CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn = "", bool fInboundIn=false) : ssSend(SER_NETWORK, MIN_PROTO_VERSION)
+    {
+        nServices = 0;
+        hSocket = hSocketIn;
+        nRecvVersion = MIN_PROTO_VERSION;
+        nLastSend = 0;
+        nLastRecv = 0;
+        nSendBytes = 0;
+        nRecvBytes = 0;
+        nLastSendEmpty = GetTime();
+        nTimeConnected = GetTime();
+        addr = addrIn;
+        addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
+        nVersion = 0;
+        strSubVer = "";
+        fOneShot = false;
+        fClient = false; // set by version message
+        fInbound = fInboundIn;
+        fNetworkNode = false;
+        fSuccessfullyConnected = false;
+        fDisconnect = false;
+        nRefCount = 0;
+        nSendSize = 0;
+        nSendOffset = 0;
+        hashContinue = 0;
+        pindexLastGetBlocksBegin = 0;
+        hashLastGetBlocksEnd = 0;
+        nStartingHeight = -1;
+        fStartSync = false;
+        fGetAddr = false;
+        nMisbehavior = 0;
+        fRelayTxes = false;
+        setInventoryKnown.max_size(SendBufferSize() / 1000);
+        pfilter = new CBloomFilter();
+
+        // Be shy and don't send version until we hear
+        if (hSocket != INVALID_SOCKET && !fInbound)
+            PushVersion();
+    }
+
+    ~CNode()
+    {
+        if (hSocket != INVALID_SOCKET)
+        {
+            closesocket(hSocket);
+            hSocket = INVALID_SOCKET;
+        }
+        if (pfilter)
+            delete pfilter;
+    }
+>>>>>>> bitcoin/0.8
 
 private:
     // Network usage totals

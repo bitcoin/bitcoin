@@ -193,6 +193,45 @@ bool ECC_InitSanityCheck() {
     return key.VerifyPubKey(pubkey);
 }
 
+<<<<<<< HEAD
+=======
+// create a compact signature (65 bytes), which allows reconstructing the used public key
+// The format is one header byte, followed by two times 32 bytes for the serialized r and s values.
+// The header byte: 0x1B = first key with even y, 0x1C = first key with odd y,
+//                  0x1D = second key with even y, 0x1E = second key with odd y
+bool CKey::SignCompact(uint256 hash, std::vector<unsigned char>& vchSig)
+{
+    bool fOk = false;
+    ECDSA_SIG *sig = ECDSA_do_sign((unsigned char*)&hash, sizeof(hash), pkey);
+    if (sig==NULL)
+        return false;
+    vchSig.clear();
+    vchSig.resize(65,0);
+    int nBitsR = BN_num_bits(sig->r);
+    int nBitsS = BN_num_bits(sig->s);
+    if (nBitsR <= 256 && nBitsS <= 256)
+    {
+        int nRecId = -1;
+        for (int i=0; i<4; i++)
+        {
+            CKey keyRec;
+            keyRec.fSet = true;
+            if (fCompressedPubKey)
+                keyRec.SetCompressedPubKey();
+            if (ECDSA_SIG_recover_key_GFp(keyRec.pkey, sig, (unsigned char*)&hash, sizeof(hash), i, 1) == 1)
+                if (keyRec.GetPubKey() == this->GetPubKey())
+                {
+                    nRecId = i;
+                    break;
+                }
+        }
+
+        if (nRecId == -1)
+        {
+            ECDSA_SIG_free(sig);
+            throw key_error("CKey::SignCompact() : unable to construct recoverable key");
+        }
+>>>>>>> bitcoin/0.8
 
 void ECC_Start() {
     assert(secp256k1_context == NULL);
@@ -209,8 +248,51 @@ void ECC_Start() {
         assert(ret);
         UnlockObject(seed);
     }
+<<<<<<< HEAD
 
     secp256k1_context = ctx;
+=======
+    if (ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) == 1)
+    {
+        fSet = true;
+        ECDSA_SIG_free(sig);
+        return true;
+    }
+    ECDSA_SIG_free(sig);
+    return false;
+}
+
+bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
+{
+    if (vchSig.empty())
+        return false;
+
+    // New versions of OpenSSL will reject non-canonical DER signatures. de/re-serialize first.
+    unsigned char *norm_der = NULL;
+    ECDSA_SIG *norm_sig = ECDSA_SIG_new();
+    const unsigned char* sigptr = &vchSig[0];
+    assert(norm_sig);
+    if (d2i_ECDSA_SIG(&norm_sig, &sigptr, vchSig.size()) == NULL)
+    {
+        /* As of OpenSSL 1.0.0p d2i_ECDSA_SIG frees and nulls the pointer on
+         * error. But OpenSSL's own use of this function redundantly frees the
+         * result. As ECDSA_SIG_free(NULL) is a no-op, and in the absence of a
+         * clear contract for the function behaving the same way is more
+         * conservative.
+         */
+        ECDSA_SIG_free(norm_sig);
+        return false;
+    }
+    int derlen = i2d_ECDSA_SIG(norm_sig, &norm_der);
+    ECDSA_SIG_free(norm_sig);
+    if (derlen <= 0)
+        return false;
+
+    // -1 = error, 0 = bad sig, 1 = good
+    bool ret = ECDSA_verify(0, (unsigned char*)&hash, sizeof(hash), norm_der, derlen, pkey) == 1;
+    OPENSSL_free(norm_der);
+    return ret;
+>>>>>>> bitcoin/0.8
 }
 
 void ECC_Stop() {

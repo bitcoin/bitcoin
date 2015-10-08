@@ -133,7 +133,8 @@ DBImpl::DBImpl(const Options& raw_options, const std::string& dbname)
       seed_(0),
       tmp_batch_(new WriteBatch),
       bg_compaction_scheduled_(false),
-      manual_compaction_(NULL) {
+      manual_compaction_(NULL),
+      consecutive_compaction_errors_(0) {
   mem_->Ref();
   has_imm_.Release_Store(NULL);
 
@@ -636,12 +637,39 @@ void DBImpl::BGWork(void* db) {
 void DBImpl::BackgroundCall() {
   MutexLock l(&mutex_);
   assert(bg_compaction_scheduled_);
+<<<<<<< HEAD
   if (shutting_down_.Acquire_Load()) {
     // No more background work when shutting down.
   } else if (!bg_error_.ok()) {
     // No more background work after a background error.
   } else {
     BackgroundCompaction();
+=======
+  if (!shutting_down_.Acquire_Load()) {
+    Status s = BackgroundCompaction();
+    if (s.ok()) {
+      // Success
+      consecutive_compaction_errors_ = 0;
+    } else if (shutting_down_.Acquire_Load()) {
+      // Error most likely due to shutdown; do not wait
+    } else {
+      // Wait a little bit before retrying background compaction in
+      // case this is an environmental problem and we do not want to
+      // chew up resources for failed compactions for the duration of
+      // the problem.
+      bg_cv_.SignalAll();  // In case a waiter can proceed despite the error
+      Log(options_.info_log, "Waiting after background compaction error: %s",
+          s.ToString().c_str());
+      mutex_.Unlock();
+      ++consecutive_compaction_errors_;
+      int seconds_to_sleep = 1;
+      for (int i = 0; i < 3 && i < consecutive_compaction_errors_ - 1; ++i) {
+        seconds_to_sleep *= 2;
+      }
+      env_->SleepForMicroseconds(seconds_to_sleep * 1000000);
+      mutex_.Lock();
+    }
+>>>>>>> bitcoin/0.8
   }
 
   bg_compaction_scheduled_ = false;
