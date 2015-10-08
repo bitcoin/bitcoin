@@ -24,6 +24,8 @@ const uint16_t FEATURE_BETTING = 3;
 const uint16_t FEATURE_GRANTEFFECTS = 4;
 //! Feature identifier to disable DEx "over-offers" and to switch to plain integer math
 const uint16_t FEATURE_DEXMATH = 5;
+//! Feature identifier to enable Send All transactions
+const uint16_t FEATURE_SENDALL = 6;
 
 /** A structure to represent transaction restrictions.
  */
@@ -162,12 +164,13 @@ CConsensusParams& ConsensusParams(const std::string& network);
 const CConsensusParams& ConsensusParams();
 /** Returns currently active mutable consensus parameter. */
 CConsensusParams& MutableConsensusParams();
+/** Resets consensus paramters. */
+void ResetConsensusParams();
 
 /** Activates a feature at a specific block height. */
-bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlock);
+bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClientVersion, int transactionBlock);
 /** Checks, whether a feature is activated at the given block. */
 bool IsFeatureActivated(uint16_t featureId, int transactionBlock);
-
 /** Checks, if the script type is allowed as input. */
 bool IsAllowedInputType(int whichType, int nBlock);
 /** Checks, if the script type qualifies as output. */

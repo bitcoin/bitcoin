@@ -228,6 +228,7 @@ extern json_spirit::Value reconsiderblock(const json_spirit::Array& params, bool
 
 /* Omni Core data retrieval calls */
 extern json_spirit::Value omni_getinfo(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getactivations(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getallbalancesforid(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getbalance(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_gettransaction(const json_spirit::Array& params, bool fHelp);

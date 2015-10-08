@@ -6,6 +6,7 @@
 
 #include "omnicore/omnicore.h"
 
+#include "omnicore/activation.h"
 #include "omnicore/convert.h"
 #include "omnicore/dex.h"
 #include "omnicore/encoding.h"
@@ -2556,6 +2557,9 @@ static void clear_all_state()
     my_crowds.clear();
     metadex.clear();
     my_pending.clear();
+    ResetConsensusParams();
+    ClearActivations();
+    ClearAlerts();
 
     // LevelDB based storage
     _my_sps->Clear();
@@ -2677,11 +2681,11 @@ int mastercore_init()
         PrintToLog("Exodus balance at start: %s\n", FormatDivisibleMP(exodus_balance));
     }
 
-    // check out levelDB for the most recently stored alert and load it into global_alert_message then check if expired
-    p_txlistdb->setLastAlert(nWaterlineBlock);
-
     // load feature activation messages from txlistdb and process them accordingly
-    p_txlistdb->LoadActivations();
+    p_txlistdb->LoadActivations(nWaterlineBlock);
+
+    // load all alerts from levelDB (and immediately expire old ones)
+    p_txlistdb->LoadAlerts(nWaterlineBlock);
 
     // initial scan
     msc_initial_scan(nWaterlineBlock);
@@ -2888,7 +2892,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
 #endif
 }
 
-void CMPTxList::LoadActivations()
+void CMPTxList::LoadActivations(int blockHeight)
 {
     if (!pdb) return;
 
@@ -2897,17 +2901,22 @@ void CMPTxList::LoadActivations()
 
     PrintToLog("Loading feature activations from levelDB\n");
 
-    for (it->SeekToFirst(); it->Valid(); it->Next()) {
-        skey = it->key();
-        svalue = it->value();
-        std::string itData = svalue.ToString();
+    std::vector<std::pair<int64_t, uint256> > loadOrder;
 
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string itData = it->value().ToString();
         std::vector<std::string> vstr;
         boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
-        if (4 != vstr.size()) continue;
+        if (4 != vstr.size()) continue; // unexpected number of tokens
         if (atoi(vstr[2]) != OMNICORE_MESSAGE_TYPE_ACTIVATION || atoi(vstr[0]) != 1) continue; // we only care about valid activations
+        uint256 txid(it->key().ToString());;
+        loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
+    }
 
-        uint256 hash(skey.ToString());
+    std::sort (loadOrder.begin(), loadOrder.end());
+
+    for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
+        uint256 hash = (*it).second;
         uint256 blockHash = 0;
         CTransaction wtx;
         CMPTransaction mp_obj;
@@ -2945,89 +2954,80 @@ void CMPTxList::LoadActivations()
         }
     }
     delete it;
+    CheckLiveActivations(blockHeight);
+
+    // This alert never expires as long as custom activations are used
+    if (mapArgs.count("-omniactivationallowsender") || mapArgs.count("-omniactivationignoresender")) {
+        AddAlert("omnicore", ALERT_CLIENT_VERSION_EXPIRY, std::numeric_limits<uint32_t>::max(),
+                 "Authorization for feature activation has been modified.  Data provided by this client should not be trusted.");
+    }
 }
 
-int CMPTxList::setLastAlert(int blockHeight)
+void CMPTxList::LoadAlerts(int blockHeight)
 {
-    if (blockHeight > GetHeight()) blockHeight = GetHeight();
-    if (!pdb) return 0;
+    if (!pdb) return;
     Slice skey, svalue;
     Iterator* it = NewIterator();
-    string lastAlertTxid;
-    string lastAlertData;
-    int64_t lastAlertBlock = 0;
-    for(it->SeekToFirst(); it->Valid(); it->Next())
-    {
-       skey = it->key();
-       svalue = it->value();
-       string itData = svalue.ToString();
-       std::vector<std::string> vstr;
-       boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
-       // we expect 5 tokens
-       if (4 == vstr.size())
-       {
-           if (atoi(vstr[2]) == OMNICORE_MESSAGE_TYPE_ALERT) // is it an alert?
-           {
-               if (atoi(vstr[0]) == 1) // is it valid?
-               {
-                    if ((atoi(vstr[1]) > lastAlertBlock) && (atoi(vstr[1]) <= blockHeight)) // is it the most recent and within our parsed range?
-                    {
-                        lastAlertTxid = skey.ToString();
-                        lastAlertData = svalue.ToString();
-                        lastAlertBlock = atoi(vstr[1]);
-                    }
-               }
-           }
-       }
-    }
-    delete it;
 
-    // if lastAlertTxid is not empty, load the alert and see if it's still valid - if so, copy to global_alert_message
-    if(lastAlertTxid.empty())
-    {
-        PrintToLog("DEBUG ALERT No alerts found to load\n");
-    }
-    else
-    {
-        PrintToLog("DEBUG ALERT Loading lastAlertTxid %s\n", lastAlertTxid);
+    std::vector<std::pair<int64_t, uint256> > loadOrder;
 
-        // reparse lastAlertTxid
-        uint256 hash;
-        hash.SetHex(lastAlertTxid);
-        CTransaction wtx;
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string itData = it->value().ToString();
+        std::vector<std::string> vstr;
+        boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
+        if (4 != vstr.size()) continue; // unexpected number of tokens
+        if (atoi(vstr[2]) != OMNICORE_MESSAGE_TYPE_ALERT || atoi(vstr[0]) != 1) continue; // not a valid alert
+        uint256 txid(it->key().ToString());;
+        loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
+    }
+
+    std::sort (loadOrder.begin(), loadOrder.end());
+
+    for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
+        uint256 txid = (*it).second;
         uint256 blockHash = 0;
-        if (!GetTransaction(hash, wtx, blockHash, true)) //can't find transaction
-        {
-            PrintToLog("DEBUG ALERT Unable to load lastAlertTxid, transaction not found\n");
+        CTransaction wtx;
+        CMPTransaction mp_obj;
+        if (!GetTransaction(txid, wtx, blockHash, true)) {
+            PrintToLog("ERROR: While loading alert %s: tx in levelDB but does not exist.\n", txid.GetHex());
+            continue;
         }
-        else // note reparsing here is unavoidable because we've only loaded a txid and have no other alert info stored
-        {
-            CMPTransaction mp_obj;
-            if (0 <= ParseTransaction(wtx, blockHeight, 0, mp_obj))
-            {
-                if (mp_obj.interpret_Transaction())
-                {
-                    if (OMNICORE_MESSAGE_TYPE_ALERT == mp_obj.getType())
-                    {
-                        SetOmniCoreAlert(mp_obj.getAlertString());
+        if (0 != ParseTransaction(wtx, blockHeight, 0, mp_obj)) {
+            PrintToLog("ERROR: While loading alert %s: failed ParseTransaction.\n", txid.GetHex());
+            continue;
+        }
+        if (!mp_obj.interpret_Transaction()) {
+            PrintToLog("ERROR: While loading alert %s: failed interpret_Transaction.\n", txid.GetHex());
+            continue;
+        }
+        if (OMNICORE_MESSAGE_TYPE_ALERT != mp_obj.getType()) {
+            PrintToLog("ERROR: While loading alert %s: levelDB type mismatch, not an alert.\n", txid.GetHex());
+            continue;
+        }
+        if (!CheckAlertAuthorization(mp_obj.getSender())) {
+            PrintToLog("ERROR: While loading alert %s: sender is not authorized to send alerts.\n", txid.GetHex());
+            continue;
+        }
 
-                        int64_t blockTime = 0;
-                        {
-                            LOCK(cs_main);
-                            CBlockIndex* pBlockIndex = chainActive[blockHeight];
-                            if (pBlockIndex != NULL) {
-                                blockTime = pBlockIndex->GetBlockTime();
-                            }
-                        }
-                        if (blockTime > 0) {
-                            CheckExpiredAlerts(blockHeight, blockTime);
-                        }
-                    }
-                }
-            }
+        if (mp_obj.getAlertType() == 65535) { // set alert type to FFFF to clear previously sent alerts
+            DeleteAlerts(mp_obj.getSender());
+        } else {
+            AddAlert(mp_obj.getSender(), mp_obj.getAlertType(), mp_obj.getAlertExpiry(), mp_obj.getAlertMessage());
         }
     }
-    return 0;
+
+    delete it;
+    int64_t blockTime = 0;
+    {
+        LOCK(cs_main);
+        CBlockIndex* pBlockIndex = chainActive[blockHeight-1];
+        if (pBlockIndex != NULL) {
+            blockTime = pBlockIndex->GetBlockTime();
+        }
+    }
+    if (blockTime > 0) {
+        CheckExpiredAlerts(blockHeight, blockTime);
+    }
 }
 
 uint256 CMPTxList::findMetaDExCancel(const uint256 txid)
@@ -4081,6 +4081,9 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
             msc_initial_scan(nWaterlineBlock + 1);
         }
     }
+
+    // handle any features that go live with this block
+    CheckLiveActivations(pBlockIndex->nHeight);
 
     eraseExpiredCrowdsale(pBlockIndex);
 

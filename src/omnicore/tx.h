@@ -81,11 +81,14 @@ private:
     unsigned char subaction;
 
     // Alert
-    char alertString[SP_STRING_FIELD_LEN];
+    uint16_t alert_type;
+    uint32_t alert_expiry;
+    char alert_text[SP_STRING_FIELD_LEN];
 
     // Activation
     uint16_t feature_id;
     uint32_t activation_block;
+    uint32_t min_client_version;
 
     // Indicates whether the transaction can be used to execute logic
     bool rpcOnly;
@@ -183,9 +186,11 @@ public:
     int64_t getDeadline() const { return deadline; }
     uint8_t getEarlyBirdBonus() const { return early_bird; }
     uint8_t getIssuerBonus() const { return percentage; }
-    std::string getAlertString() const { return alertString; }
     bool isRpcOnly() const { return rpcOnly; }
     int getEncodingClass() const { return encodingClass; }
+    uint16_t getAlertType() const { return alert_type; }
+    uint32_t getAlertExpiry() const { return alert_expiry; }
+    std::string getAlertMessage() const { return alert_text; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
@@ -229,10 +234,13 @@ public:
         blocktimelimit = 0;
         min_fee = 0;
         subaction = 0;
-        memset(&alertString, 0, sizeof(alertString));
-        feature_id = 0;
-        activation_block = 999999;
+        alert_type = 0;
+        alert_expiry = 0;
+        memset(&alert_text, 0, sizeof(alert_text));
         rpcOnly = true;
+        feature_id = 0;
+        activation_block = 0;
+        min_client_version = 0;
     }
 
     /** Sets the given values. */

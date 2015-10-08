@@ -358,6 +358,7 @@ static const CRPCCommand vRPCCommands[] =
     /* Omni Core data retrieval calls */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
     { "omni layer (data retrieval)",         "omni_getinfo",                    &omni_getinfo,                    true,       true,       false },
+    { "omni layer (data retrieval)",         "omni_getactivations",             &omni_getactivations,             true,       true,       false },
     { "omni layer (data retrieval)",         "omni_getallbalancesforid",        &omni_getallbalancesforid,        false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getbalance",                 &omni_getbalance,                 false,      true,       false },
     { "omni layer (data retrieval)",         "omni_gettransaction",             &omni_gettransaction,             false,      true,       false },

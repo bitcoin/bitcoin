@@ -6,13 +6,19 @@
 
 #include "omnicore/rules.h"
 
+#include "omnicore/activation.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/notifications.h"
 #include "omnicore/utilsbitcoin.h"
+#include "omnicore/version.h"
 
+#include "alert.h"
 #include "chainparams.h"
+#include "main.h"
 #include "script/standard.h"
 #include "uint256.h"
+#include "ui_interface.h"
 
 #include <openssl/sha.h>
 
@@ -166,7 +172,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     LAST_EXODUS_BLOCK = std::numeric_limits<int>::max();
     // Notice range for feature activations:
     MIN_ACTIVATION_BLOCKS = 0;
-    MAX_ACTIVATION_BLOCKS = std::numeric_limits<int>::max();
+    MAX_ACTIVATION_BLOCKS = 999999;
     // Script related:
     PUBKEYHASH_BLOCK = 0;
     SCRIPTHASH_BLOCK = 0;
@@ -267,6 +273,16 @@ CConsensusParams& MutableConsensusParams()
 }
 
 /**
+ * Resets consensus paramters.
+ */
+void ResetConsensusParams()
+{
+    mainConsensusParams = CMainConsensusParams();
+    testNetConsensusParams = CTestNetConsensusParams();
+    regTestConsensusParams = CRegTestConsensusParams();
+}
+
+/**
  * Checks, if the script type is allowed as input.
  */
 bool IsAllowedInputType(int whichType, int nBlock)
@@ -318,7 +334,7 @@ bool IsAllowedOutputType(int whichType, int nBlock)
  *       than 12288 blocks (roughly 12 weeks) to ensure sufficient notice.
  *       This does not apply for activation during initialization (where loadingActivations is set true).
  */
-bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlock)
+bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClientVersion, int transactionBlock)
 {
     PrintToLog("Feature activation requested (ID %d to go active as of block: %d)\n", featureId, activationBlock);
 
@@ -327,48 +343,62 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, int transactionBlo
     // check activation block is allowed
     if ((activationBlock < (transactionBlock + params.MIN_ACTIVATION_BLOCKS)) ||
         (activationBlock > (transactionBlock + params.MAX_ACTIVATION_BLOCKS))) {
-        PrintToLog("Feature activation of ID %d refused due to notice checks\n", featureId);
+            PrintToLog("Feature activation of ID %d refused due to notice checks\n", featureId);
+            return false;
+    }
+
+    // check whether the feature is already active
+    if (IsFeatureActivated(featureId, transactionBlock)) {
+        PrintToLog("Feature activation of ID %d refused as the feature is already live\n", featureId);
         return false;
     }
 
     // check feature is recognized and activation is successful
+    std::string featureName;
+    bool supported = OMNICORE_VERSION >= minClientVersion;
     switch (featureId) {
         case FEATURE_CLASS_C:
             MutableConsensusParams().NULLDATA_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "Class C transaction encoding is going to be enabled at block %d.\n",
-                       featureId, params.NULLDATA_BLOCK);
-            return true;
+            featureName = "Class C transaction encoding";
+        break;
         case FEATURE_METADEX:
             MutableConsensusParams().MSC_METADEX_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "The distributed token exchange is going to be enabled at block %d.\n",
-                       featureId, params.MSC_METADEX_BLOCK);
-            return true;
+            featureName = "Distributed Meta Token Exchange";
+        break;
         case FEATURE_BETTING:
             MutableConsensusParams().MSC_BET_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "Bet transactions are going to be enabled at block %d.\n",
-                       featureId, params.MSC_BET_BLOCK);
-            return true;
+            featureName = "Bet transactions";
+        break;
         case FEATURE_GRANTEFFECTS:
             MutableConsensusParams().GRANTEFFECTS_FEATURE_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "The potential side effect of crowdsale participations, when "
-                       "granting tokens, is going to be disabled at block %d.\n",
-                       featureId, params.GRANTEFFECTS_FEATURE_BLOCK);
-            return true;
+            featureName = "Remove grant side effects";
+        break;
         case FEATURE_DEXMATH:
             MutableConsensusParams().DEXMATH_FEATURE_BLOCK = activationBlock;
-            PrintToLog("Feature activation of ID %d succeeded. "
-                       "Offering more tokens than available on the traditional DEx "
-                       "is no longer allowed and going to be disabled at block %d.\n",
-                       featureId, params.DEXMATH_FEATURE_BLOCK);
-            return true;
+            featureName = "DEx integer math update";
+        break;
+        case FEATURE_SENDALL:
+            MutableConsensusParams().MSC_SEND_ALL_BLOCK = activationBlock;
+            featureName = "Send All transactions";
+        break;
+        default:
+            featureName = "Unknown feature";
+            supported = false;
+        break;
     }
 
-    PrintToLog("Feature activation of id %d refused due to unknown feature ID\n", featureId);
-    return false;
+    PrintToLog("Feature activation of ID %d processed. %s will be enabled at block %d.\n", featureId, featureName, activationBlock);
+    AddPendingActivation(featureId, activationBlock, minClientVersion, featureName);
+
+    if (!supported) {
+        PrintToLog("WARNING!!! AS OF BLOCK %d THIS CLIENT WILL BE OUT OF CONSENSUS AND WILL AUTOMATICALLY SHUTDOWN.\n", activationBlock);
+        std::string alertText = strprintf("Your client must be updated and will shutdown at block %d (unsupported feature %d ('%s') activated)\n",
+                                          activationBlock, featureId, featureName);
+        AddAlert("omnicore", ALERT_BLOCK_EXPIRY, activationBlock, alertText);
+        CAlert::Notify(alertText, true);
+    }
+
+    return true;
 }
 
 /**
@@ -394,6 +424,9 @@ bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
             break;
         case FEATURE_DEXMATH:
             activationBlock = params.DEXMATH_FEATURE_BLOCK;
+            break;
+        case FEATURE_SENDALL:
+            activationBlock = params.MSC_SEND_ALL_BLOCK;
             break;
         default:
             return false;

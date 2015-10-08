@@ -14,8 +14,10 @@
 #include "transactiontablemodel.h"
 #include "walletmodel.h"
 
+#include "omnicore/activation.h"
 #include "omnicore/notifications.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 #include "omnicore/pending.h"
@@ -621,22 +623,39 @@ void OverviewPage::updateDisplayUnit()
 
 void OverviewPage::updateAlerts()
 {
-    // init variables
-    bool showAlert = false;
-    QString totalMessage;
-    // override to check alert directly rather than passing in param as we won't always be calling from bitcoin in
-    // the clientmodel emit for alertsChanged
-    QString warnings = QString::fromStdString(GetWarnings("statusbar")); // get current bitcoin alert/warning directly
-    QString alertMessage = QString::fromStdString(GetOmniCoreAlertTextOnly()); // just return the text message from alert
-    // any BitcoinCore or MasterCore alerts to display?
-    if((!alertMessage.isEmpty()) || (!warnings.isEmpty())) showAlert = true;
-    this->ui->labelAlerts->setVisible(showAlert);
-    // check if we have a Bitcoin alert to display
-    if(!warnings.isEmpty()) totalMessage = warnings + "\n";
-    // check if we have a MasterProtocol alert to display
-    if(!alertMessage.isEmpty()) totalMessage += alertMessage;
-    // display the alert if needed
-    if(showAlert) { this->ui->labelAlerts->setText(totalMessage); }
+    QString alertString = QString::fromStdString(GetWarnings("statusbar")); // get current bitcoin alert/warning directly
+
+    // get alert messages
+    std::vector<std::string> omniAlerts = GetOmniCoreAlertMessages();
+    for (std::vector<std::string>::iterator it = omniAlerts.begin(); it != omniAlerts.end(); it++) {
+        if (!alertString.isEmpty()) alertString += "\n";
+        alertString += QString::fromStdString(*it);
+    }
+
+    // get activations
+    std::vector<FeatureActivation> vecPendingActivations = GetPendingActivations();
+    for (std::vector<FeatureActivation>::iterator it = vecPendingActivations.begin(); it != vecPendingActivations.end(); ++it) {
+        if (!alertString.isEmpty()) alertString += "\n";
+        FeatureActivation pendingAct = *it;
+        alertString += QString::fromStdString(strprintf("Feature %d ('%s') will go live at block %d",
+                                                  pendingAct.featureId, pendingAct.featureName, pendingAct.activationBlock));
+    }
+    int currentHeight = GetHeight();
+    std::vector<FeatureActivation> vecCompletedActivations = GetCompletedActivations();
+    for (std::vector<FeatureActivation>::iterator it = vecCompletedActivations.begin(); it != vecCompletedActivations.end(); ++it) {
+        if (currentHeight > (*it).activationBlock+1024) continue; // don't include after live+1024 blocks
+        if (!alertString.isEmpty()) alertString += "\n";
+        FeatureActivation completedAct = *it;
+        alertString += QString::fromStdString(strprintf("Feature %d ('%s') is now live.", completedAct.featureId, completedAct.featureName));
+    }
+
+    if (!alertString.isEmpty()) {
+        this->ui->labelAlerts->setVisible(true);
+        this->ui->labelAlerts->setText(alertString);
+    } else {
+        this->ui->labelAlerts->setVisible(false);
+        this->ui->labelAlerts->setText("");
+    }
 }
 
 void OverviewPage::showOutOfSyncWarning(bool fShow)
