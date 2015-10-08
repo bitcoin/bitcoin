@@ -37,11 +37,11 @@ Helper functions for creating blocks and transactions.
 Notes
 =====
 
-You can run any single test by calling qa/pull-tester/rpc-tests.py <testname>
+You can run any single test by calling `qa/pull-tester/rpc-tests.py <testname>`.
 
 Or you can run any combination of tests by calling `qa/pull-tester/rpc-tests.py <testname1> <testname2> <testname3> ...`
 
-Run the regression test suite with `qa/pull-tester/rpc-tests.py'
+Run the regression test suite with `qa/pull-tester/rpc-tests.py`
 
 Run all possible tests with `qa/pull-tester/rpc-tests.py -extended`
 
