@@ -423,6 +423,101 @@ bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxP
     return true;
 }
 
+
+#ifdef USE_YASM
+
+// SHA256 initial state
+static const uint32_t init[8] = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 };
+
+// 8000000000000000000000000000000000000000000000000000000000000000000000e0
+static const uint32_t block1_suffix[9] = { 0x00000080, 0, 0, 0, 0, 0, 0, 0, 0xe0000000 };
+
+// 8000000000000000000000000000000000000000000000000000000000000100
+static const uint32_t block2_suffix[8] = { 0x00000080, 0, 0, 0, 0, 0, 0, 0x00010000 };
+
+extern "C" void sha256_avx(void *input_data, uint32_t digest[8], uint64_t num_blks);
+extern "C" void sha256_avx_swap(void *input_data, uint32_t digest[8], uint64_t num_blks);
+
+class ScanMidstateWorker
+{
+public:
+    ScanMidstateWorker()
+    { }
+    ScanMidstateWorker(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, uint32_t nIntervalBegin, uint32_t nIntervalEnd) 
+        : kernel(kernel), nBits(nBits), nInputTxTime(nInputTxTime), bnValueIn(nValueIn), nIntervalBegin(nIntervalBegin), nIntervalEnd(nIntervalEnd)
+    {
+        solutions = vector<std::pair<uint256,uint32_t> >();
+    }
+
+    void Do()
+    {
+        SetThreadPriority(THREAD_PRIORITY_LOWEST);
+
+        // Sha256 result buffer
+        uint32_t hashProofOfStake[8];
+
+        // Compute maximum possible target to filter out majority of obviously insufficient hashes
+        CBigNum bnTargetPerCoinDay;
+        bnTargetPerCoinDay.SetCompact(nBits);
+
+        uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256(),
+            *pnHashProofOfStake = (uint256 *)&hashProofOfStake;
+
+        uint8_t data_block[64];
+        uint8_t data_block2[64];
+
+        // Copy static part of kernel
+        __builtin_memcpy(&data_block[0], kernel, 24);
+
+        __builtin_memcpy(&data_block[28], &block1_suffix[0], 9 * sizeof(uint32_t));
+        __builtin_memcpy(&data_block2[32], &block2_suffix[0], 8 * sizeof(uint32_t));
+
+        // Search forward in time from the given timestamp
+        // Stopping search in case of shutting down
+        for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; nTimeTx++)
+        {
+            __builtin_memcpy(&data_block[24], &nTimeTx, 4);
+            __builtin_memcpy(&data_block2[0], &init[0], 8 * sizeof(uint32_t));
+
+            sha256_avx_swap(&data_block[0], (uint32_t *) &data_block2[0], 1);
+
+            __builtin_memcpy(&hashProofOfStake[0], &init[0], 8 * sizeof(uint32_t));
+
+            sha256_avx(&data_block2[0], &hashProofOfStake[0], 1);
+
+            // Skip if hash doesn't satisfy the maximum target
+            if (__builtin_bswap32(hashProofOfStake[7]) > nMaxTarget32)
+                continue;
+
+            // Swap byte order
+            for(int i = 0; i < 8; i++)
+                hashProofOfStake[i] = __builtin_bswap32(hashProofOfStake[i]);
+
+            CBigNum bnCoinDayWeight = bnValueIn * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
+            CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+
+            if (bnTargetProofOfStake >= CBigNum(*pnHashProofOfStake))
+                solutions.push_back(std::pair<uint256,uint32_t>(*pnHashProofOfStake, nTimeTx));
+        }
+    }
+
+    vector<std::pair<uint256,uint32_t> >& GetSolutions()
+    {
+        return solutions;
+    }
+
+private:
+    std::vector<std::pair<uint256,uint32_t> > solutions;
+
+    uint8_t *kernel;
+    uint32_t nBits;
+    uint32_t nInputTxTime;
+    CBigNum  bnValueIn;
+    uint32_t nIntervalBegin;
+    uint32_t nIntervalEnd;
+};
+
+#else
 class ScanMidstateWorker
 {
 public:
@@ -496,6 +591,7 @@ private:
     uint32_t nIntervalEnd;
 };
 
+#endif
 // Scan given kernel for solution
 bool ScanKernelForward(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::vector<std::pair<uint256, uint32_t> > &solutions)
 {

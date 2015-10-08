@@ -143,6 +143,19 @@ contains(USE_ASM, 1) {
     }
 }
 
+contains(USE_YASM, 1) {
+    !win32 {
+        DEFINES += USE_YASM
+
+        LIBS += $$PWD/src/crypto/sha2/asm/obj/sha256_avx1.a
+        gensha2.commands = cd $$PWD/src/crypto/sha2/asm && yasm -f x64 -f elf64 -X gnu -g dwarf2 -D LINUX -o obj/sha256_avx1.o sha256_avx1.asm && ar -rs obj/sha256_avx1.a obj/sha256_avx1.o
+        gensha2.target = $$PWD/src/crypto/sha2/asm/obj/sha256_avx1.a
+        gensha2.depends = FORCE
+        PRE_TARGETDEPS += $$PWD/src/crypto/sha2/asm/obj/sha256_avx1.a
+        QMAKE_EXTRA_TARGETS += gensha2
+    }
+}
+
 # regenerate src/build.h
 !windows|contains(USE_BUILD_INFO, 1) {
     genbuild.depends = FORCE
