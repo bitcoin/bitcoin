@@ -145,7 +145,7 @@ std::string CLevelDBWrapper::GetObfuscateKeyHex() const
 { 
     return HexStr(obfuscate_key); 
 }
- 
+
 CLevelDBIterator::~CLevelDBIterator() { delete piter; }
 bool CLevelDBIterator::Valid() { return piter->Valid(); }
 void CLevelDBIterator::SeekToFirst() { piter->SeekToFirst(); }

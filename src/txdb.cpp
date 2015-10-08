@@ -98,7 +98,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
     /* It seems that there are no "const iterators" for LevelDB.  Since we
        only need read operations on it, use a const-cast to get around
        that restriction.  */
-    boost::scoped_ptr<CLevelDBWrapper> pcursor(const_cast<CLevelDBWrapper*>(&db)->NewIterator());
+    boost::scoped_ptr<CLevelDBIterator> pcursor(const_cast<CLevelDBWrapper*>(&db)->NewIterator());
     pcursor->Seek('c');
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
@@ -177,9 +177,9 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
 
 bool CBlockTreeDB::LoadBlockIndexGuts()
 {
-    boost::scoped_ptr<leveldb::Iterator> pcursor(NewIterator());
+    boost::scoped_ptr<CLevelDBIterator> pcursor(NewIterator());
 
-    pcursor->Seek(make_pair('b', uint256(0)));
+    pcursor->Seek(make_pair('b', uint256()));
 
     // Load mapBlockIndex
     while (pcursor->Valid()) {
