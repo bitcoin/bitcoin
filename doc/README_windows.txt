@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+Bitcoin Core 0.11.99
+=====================
+=======
 Bitcoin 0.8.5 BETA
 
 Copyright (c) 2009-2013 Bitcoin Developers
@@ -7,6 +11,7 @@ This product includes software developed by the OpenSSL Project for use in
 the OpenSSL Toolkit (http://www.openssl.org/).  This product includes
 cryptographic software written by Eric Young (eay@cryptsoft.com).
 
+>>>>>>> bitcoin/0.8
 
 Intro
 -----
@@ -20,7 +25,7 @@ Setup
 -----
 Unpack the files into a directory and run bitcoin-qt.exe.
 
-Bitcoin-Qt is the original Bitcoin client and it builds the backbone of the network.
+Bitcoin Core is the original Bitcoin client and it builds the backbone of the network.
 However, it downloads and stores the entire history of Bitcoin transactions;
 depending on the speed of your computer and network connection, the synchronization
 process can take anywhere from a few hours to a day or more.

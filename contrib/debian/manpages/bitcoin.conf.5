@@ -2,7 +2,7 @@
 .SH NAME
 bitcoin.conf \- bitcoin configuration file
 .SH SYNOPSIS
-All command-line options (except for '\-datadir' and '\-conf') may be specified in a configuration file, and all configuration file options may also be specified on the command line. Command-line options override values set in the configuration file.
+All command-line options (except for '\-conf') may be specified in a configuration file, and all configuration file options may also be specified on the command line. Command-line options override values set in the configuration file.
 .TP
 The configuration file is a list of 'setting=value' pairs, one per line, with optional comments starting with the '#' character.
 .TP
@@ -37,9 +37,6 @@ You must set *rpcuser* to secure the JSON-RPC api.
 \fBrpcpassword=\fR\fI'password'\fR
 You must set *rpcpassword* to secure the JSON-RPC api.
 .TP
-\fBrpctimeout=\fR\fI'30'\fR
-How many seconds *bitcoin* will wait for a complete RPC HTTP request, after the HTTP connection is established.
-.TP
 \fBrpcallowip=\fR\fI'192.168.1.*'\fR
 By default, only RPC connections from localhost are allowed. Specify as many *rpcallowip=* settings as you like to allow connections from other hosts (and you may use * as a wildcard character).
 .TP
@@ -48,16 +45,6 @@ Listen for RPC connections on this TCP port.
 .TP
 \fBrpcconnect=\fR\fI'127.0.0.1'\fR
 You can use *bitcoin* or *bitcoind(1)* to send commands to *bitcoin*/*bitcoind(1)* running on another host using this option.
-.TP
-\fBrpcssl=\fR\fI'1'\fR
-Use Secure Sockets Layer (also known as TLS or HTTPS) to communicate with *bitcoin* '\-server' or *bitcoind(1)*. Example of OpenSSL settings used when *rpcssl*='1':
-.TP
-\fB\-rpcsslciphers=\fR<ciphers>
-Acceptable ciphers (default: TLSv1+HIGH:\:!SSLv2:\:!aNULL:\:!eNULL:\:!AH:\:!3DES:\:@STRENGTH)
-.TP
-\fBrpcsslcertificatechainfile=\fR\fI'server.cert'\fR
-.TP
-\fBrpcsslprivatekeyfile=\fR\fI'server.pem'\fR
 .TP
 .SH MISCELLANEOUS OPTIONS
 .TP

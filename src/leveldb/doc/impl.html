@@ -11,7 +11,7 @@
 
 The implementation of leveldb is similar in spirit to the
 representation of a single
-<a href="http://labs.google.com/papers/bigtable.html">
+<a href="http://research.google.com/archive/bigtable.html">
 Bigtable tablet (section 5.3)</a>.
 However the organization of the files that make up the representation
 is somewhat different and is explained below.
@@ -111,7 +111,7 @@ A compaction merges the contents of the picked files to produce a
 sequence of level-(L+1) files.  We switch to producing a new
 level-(L+1) file after the current output file has reached the target
 file size (2MB).  We also switch to a new output file when the key
-range of the current output file has grown enough to overlap more then
+range of the current output file has grown enough to overlap more than
 ten level-(L+2) files.  This last rule ensures that a later compaction
 of a level-(L+1) file will not pick up too much data from level-(L+2).
 
@@ -151,7 +151,7 @@ compaction cost will be approximately 0.5 second.
 If we throttle the background writing to something small, say 10% of
 the full 100MB/s speed, a compaction may take up to 5 seconds.  If the
 user is writing at 10MB/s, we might build up lots of level-0 files
-(~50 to hold the 5*10MB).  This may signficantly increase the cost of
+(~50 to hold the 5*10MB).  This may significantly increase the cost of
 reads due to the overhead of merging more files together on every
 read.
 
