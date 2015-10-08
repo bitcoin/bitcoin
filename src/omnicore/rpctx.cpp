@@ -375,6 +375,7 @@ Value omni_sendissuancecrowdsale(const Array& params, bool fHelp)
     // perform checks
     RequirePropertyName(name);
     RequireExistingProperty(propertyIdDesired);
+    RequireSameEcosystem(ecosystem, propertyIdDesired);
 
     // create a payload for the transaction
     std::vector<unsigned char> payload = CreatePayload_IssuanceVariable(ecosystem, type, previousId, category, subcategory, name, url, data, propertyIdDesired, numTokens, deadline, earlyBonus, issuerPercentage);
