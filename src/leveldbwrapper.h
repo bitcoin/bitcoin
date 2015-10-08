@@ -73,9 +73,16 @@ class CLevelDBIterator
 {
 private:
     leveldb::Iterator *piter;
+    const std::vector<unsigned char> obfuscate_key;
 
 public:
-    CLevelDBIterator(leveldb::Iterator *piterIn) : piter(piterIn) {}
+
+    /**
+     * @param[in] piterIn          The original leveldb iterator.
+     * @param[in] obfuscate_key    If passed, XOR data with this key.
+     */
+    CLevelDBIterator(leveldb::Iterator *piterIn, const std::vector<unsigned char>& obfuscate_key) : 
+        piter(piterIn), obfuscate_key(obfuscate_key) { };
     ~CLevelDBIterator();
 
     bool Valid();
@@ -113,7 +120,7 @@ public:
         leveldb::Slice slValue = piter->value();
         try {
             CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-            ssValue.Xor(db.GetObfuscateKey());
+            ssValue.Xor(obfuscate_key);
             ssValue >> value;
         } catch(std::exception &e) {
             return false;
@@ -251,8 +258,8 @@ public:
 
     CLevelDBIterator *NewIterator() 
     {
-        return new CLevelDBIterator(pdb->NewIterator(iteroptions));
-    {
+        return new CLevelDBIterator(pdb->NewIterator(iteroptions), obfuscate_key);
+    }
 
     /**
      * Return true if the database managed by this class contains no entries.
