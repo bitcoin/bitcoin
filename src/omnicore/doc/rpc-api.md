@@ -526,7 +526,7 @@ Result:
     {
       "alerttype" : n                       // (number) alert type as integer
       "alerttype" : "xxx"                   // (string) alert type (can be "alertexpiringbyblock", "alertexpiringbyblocktime", "alertexpiringbyclientversion" or "error")
-      "alertexpiry" : nnnnnnnnnn            // (number) expiration criteria (can refer to block height, timestamp or client verion)
+      "alertexpiry" : "nnnnnnnnnn"          // (string) expiration criteria (can refer to block height, timestamp or client verion)
       "alertmessage" : "xxx"                // (string) information about the alert
     },
     ...
@@ -1041,11 +1041,11 @@ Get information and recipients of a send-to-owners transaction.
   "propertyid" : n,              // (number) the identifier of sent tokens
   "divisible" : true|false,      // (boolean) whether the sent tokens are divisible
   "amount" : "n.nnnnnnnn",       // (string) the number of tokens sent to owners
-  "totalstofee" : "n.nnnnnnnn",    // (string) the fee paid by the sender, nominated in OMNI or TOMNI
-  "recipients": [                  // (array of JSON objects) a list of recipients
+  "totalstofee" : "n.nnnnnnnn",  // (string) the fee paid by the sender, nominated in OMNI or TOMNI
+  "recipients": [                // (array of JSON objects) a list of recipients
     {
-      "address" : "address",           // (string) the Bitcoin address of the recipient
-      "amount" : "n.nnnnnnnn"          // (string) the number of tokens sent to this recipient
+      "address" : "address",         // (string) the Bitcoin address of the recipient
+      "amount" : "n.nnnnnnnn"        // (string) the number of tokens sent to this recipient
     },
     ...
   ]
@@ -1284,7 +1284,6 @@ The format of `prevtxs` is as following:
 
 **Result:**
 ```js
-Result:
 {
   "txid" : "hash",                 // (string) the hex-encoded hash of the transaction
   "fee" : "n.nnnnnnnn",            // (string) the transaction fee in bitcoins
@@ -1315,11 +1314,37 @@ $ omnicore-cli "omni_decodetransaction" "010000000163af14ce6d477e1c793507e32a5b7
 
 Returns pending and completed feature activations.
 
+**Result:**
+```js
+{
+  "pendingactivations": [      // (array of JSON objects) a list of pending feature activations
+    {
+      "featureid" : n,             // (number) the id of the feature
+      "featurename" : "xxxxxxxx",  // (string) the name of the feature
+      "activationblock" : n,       // (number) the block the feature will be activated
+      "minimumversion" : n         // (number) the minimum client version needed to support this feature
+    },
+    ...
+  ]
+  "completedactivations": [    // (array of JSON objects) a list of completed feature activations
+    {
+      "featureid" : n,             // (number) the id of the feature
+      "featurename" : "xxxxxxxx",  // (string) the name of the feature
+      "activationblock" : n,       // (number) the block the feature will be activated
+      "minimumversion" : n         // (number) the minimum client version needed to support this feature
+    },
+    ...
+  ]
+}
+```
+
 **Example:**
 
 ```bash
 $ omnicore-cli "omni_getactivations"
 ```
+
+---
 
 ## Depreciated API calls
 

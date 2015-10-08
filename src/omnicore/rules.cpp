@@ -157,6 +157,7 @@ CMainConsensusParams::CMainConsensusParams()
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
+    SPCROWDCROSSOVER_FEATURE_BLOCK = 999999;
 }
 
 /**
@@ -191,6 +192,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
+    SPCROWDCROSSOVER_FEATURE_BLOCK = 999999;
 }
 
 /**
@@ -225,6 +227,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
+    SPCROWDCROSSOVER_FEATURE_BLOCK = 999999;
 }
 
 //! Consensus parameters for mainnet
@@ -381,6 +384,10 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             MutableConsensusParams().MSC_SEND_ALL_BLOCK = activationBlock;
             featureName = "Send All transactions";
         break;
+        case FEATURE_SPCROWDCROSSOVER:
+            MutableConsensusParams().SPCROWDCROSSOVER_FEATURE_BLOCK = activationBlock;
+            featureName = "Disable crowdsale ecosystem crossovers";
+        break;
         default:
             featureName = "Unknown feature";
             supported = false;
@@ -427,6 +434,9 @@ bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
             break;
         case FEATURE_SENDALL:
             activationBlock = params.MSC_SEND_ALL_BLOCK;
+            break;
+        case FEATURE_SPCROWDCROSSOVER:
+            activationBlock = params.SPCROWDCROSSOVER_FEATURE_BLOCK;
             break;
         default:
             return false;

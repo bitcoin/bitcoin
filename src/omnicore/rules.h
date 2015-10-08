@@ -26,6 +26,8 @@ const uint16_t FEATURE_GRANTEFFECTS = 4;
 const uint16_t FEATURE_DEXMATH = 5;
 //! Feature identifier to enable Send All transactions
 const uint16_t FEATURE_SENDALL = 6;
+//! Feature identifier disable ecosystem crossovers in crowdsale logic
+const uint16_t FEATURE_SPCROWDCROSSOVER = 7;
 
 /** A structure to represent transaction restrictions.
  */
@@ -107,6 +109,8 @@ public:
     int GRANTEFFECTS_FEATURE_BLOCK;
     //! Block to disable DEx "over-offers" and to switch to plain integer math
     int DEXMATH_FEATURE_BLOCK;
+    //! Block to disable ecosystem crossovers in crowdsale logic
+    int SPCROWDCROSSOVER_FEATURE_BLOCK;
 
     /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
     virtual std::vector<TransactionRestriction> GetRestrictions() const;
