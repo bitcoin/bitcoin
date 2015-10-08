@@ -243,6 +243,7 @@ QString HtmlEscape(const QString& str, bool fMultiLine)
     if(fMultiLine)
     {
         escaped = escaped.replace("\n", "<br>\n");
+        escaped = escaped.replace(" ", "&nbsp;");
     }
     return escaped;
 }
