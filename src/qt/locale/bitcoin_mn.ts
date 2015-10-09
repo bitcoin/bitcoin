@@ -649,10 +649,6 @@
         <translation>Ѳѳрчлѳлтийг санах</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Нийт дүн %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>эсвэл</translation>
     </message>

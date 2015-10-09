@@ -1979,10 +1979,6 @@
         <translation>Копіювати решту</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Всього %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>або</translation>
     </message>
@@ -2021,6 +2017,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Платити тільки мінімальну комісію у розмірі %1</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Всього %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2937,10 +2937,6 @@
         <translation>Помилка відкриття блоку бази даних </translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Помилка: Сталася фатальна помилка (детальніший опис наведено в debug.log)</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Помилка: Мало вільного місця на диску!</translation>
     </message>
@@ -3193,6 +3189,10 @@ rpcpassword=%s
         <translation>Помилка читання бази даних, припиняю роботу.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Помилка: Сталася фатальна помилка (детальніший опис наведено в debug.log)</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Помилка: Параметр -tor не підтримується, використовуйте -onion</translation>
     </message>
@@ -3239,6 +3239,10 @@ rpcpassword=%s
     <message>
         <source>Node relay options:</source>
         <translation>Параметри вузла ретрансляції:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Скорочення кількості блоків...</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

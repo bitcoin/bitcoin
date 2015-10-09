@@ -1971,10 +1971,6 @@
         <translation>Copier la monnaie</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Montant total %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>ou</translation>
     </message>
@@ -2927,10 +2923,6 @@
     <message>
         <source>Error opening block database</source>
         <translation>Erreur lors de l'ouverture de la base de données des blocs</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Erreur : une erreur interne fatale s'est produite. Voir debug.log pour des détails</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

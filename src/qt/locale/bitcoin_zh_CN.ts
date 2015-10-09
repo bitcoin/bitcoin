@@ -1979,10 +1979,6 @@
         <translation>复制零钱</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>总额 %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>或</translation>
     </message>
@@ -2021,6 +2017,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>只支付最小费用 %1</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>总金额 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2943,10 +2943,6 @@
         <translation>导入数据块数据库出错</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>错误：发生了致命的内部错误，请打开debug.log查看详细信息 </translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>错误：磁盘剩余空间低!</translation>
     </message>
@@ -3199,6 +3195,10 @@ rpcpassword=%s
         <translation>读取数据库出错，关闭中。</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>错误：发生了致命的内部错误，详情见 debug.log 文件</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>错误：发现了不支持的参数 -tor，请使用 -onion。</translation>
     </message>
@@ -3241,6 +3241,10 @@ rpcpassword=%s
     <message>
         <source>Node relay options:</source>
         <translation>节点中继选项:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>正在修剪区块存储...</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

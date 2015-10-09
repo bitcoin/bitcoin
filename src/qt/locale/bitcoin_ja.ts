@@ -1979,10 +1979,6 @@
         <translation>釣り銭をコピー</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>総送金額 %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>または</translation>
     </message>
@@ -2021,6 +2017,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>最小手数料 %1 のみを支払う</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>総額 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2938,10 +2938,6 @@
         <translation>ブロック データベースの開始エラー</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>エラー: ディスク容量不足!</translation>
     </message>
@@ -3194,6 +3190,10 @@ rpcpassword=%s
         <translation>データベースの読み込みエラー。シャットダウンします。</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>エラー: サポートされていない引数 -tor が見つかりました。-onion を使用してください。</translation>
     </message>
@@ -3240,6 +3240,10 @@ rpcpassword=%s
     <message>
         <source>Node relay options:</source>
         <translation>ノード中継オプション:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>ブロックデータを剪定しています……</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

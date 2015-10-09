@@ -1979,10 +1979,6 @@
         <translation>複製找零金額</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>總金額 %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>或</translation>
     </message>
@@ -2017,6 +2013,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>只付最低手續費 %1</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>總金額 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2138,7 +2138,7 @@
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation>位元幣核心正在關閉中...</translation>
+        <translation>正在關閉位元幣核心中...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2934,10 +2934,6 @@
         <translation>打開區塊資料庫時發生錯誤</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>錯誤:一個致命的內部錯誤,到debug.log看更多細節</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>錯誤: 磁碟空間很少！</translation>
     </message>
@@ -3186,6 +3182,10 @@ rpcpassword=%s
         <translation>讀取資料庫時發生錯誤，要關閉了。</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>錯誤: 發生了致命的內部錯誤，詳情請看 debug.log</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>錯誤: 找到不再支援的 -tor 參數，請改用 -onion 參數。</translation>
     </message>
@@ -3234,6 +3234,10 @@ rpcpassword=%s
         <translation>節點轉發選項:</translation>
     </message>
     <message>
+        <source>Pruning blockstore...</source>
+        <translation>正在修剪區塊資料庫中...</translation>
+    </message>
+    <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>RPC SSL 選項: (SSL 設定程序請見 Bitcoin Wiki)</translation>
     </message>
@@ -3248,6 +3252,10 @@ rpcpassword=%s
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>啟動時從目前的區塊檔 blk000??.dat 重建區塊鏈的索引</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>接收並顯示對等網路(P2P)警示 (預設值: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

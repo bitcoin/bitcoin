@@ -344,11 +344,11 @@
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>주 창 보이기 또는 숨기기</translation>
+        <translation>메인창 보이기 또는 숨기기</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>소유 지갑 개인키 암호화</translation>
+        <translation>지갑에 포함된 개인키 암호화하기</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -396,7 +396,7 @@
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>비트코인: URI 또는 지불요청 열기</translation>
+        <translation>bitcoin: URI 또는 지불요청 열기</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -425,6 +425,10 @@
     <message>
         <source>%1 and %2</source>
         <translation>%1 그리고 %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n년</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -457,6 +461,36 @@
     <message>
         <source>Catching up...</source>
         <translation>블록 따라잡기...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>날짜: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>금액: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>종류: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>라벨: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>주소: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -498,7 +532,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>거래량:</translation>
+        <translation>금액:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -1523,10 +1557,6 @@
     <message>
         <source>Copy priority</source>
         <translation>우선도 복사</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>총 액수 %1(=%2)</translation>
     </message>
     <message>
         <source>or</source>

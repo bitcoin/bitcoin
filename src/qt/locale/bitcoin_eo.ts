@@ -1445,10 +1445,6 @@
         <translation>Kopii restmonon</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totala Sumo %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>aŭ</translation>
     </message>

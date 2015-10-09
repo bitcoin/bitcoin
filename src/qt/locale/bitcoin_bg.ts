@@ -1633,10 +1633,6 @@
         <translation>Копирай рестото</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Пълна сума %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>или</translation>
     </message>

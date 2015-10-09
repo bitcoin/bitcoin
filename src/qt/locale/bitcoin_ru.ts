@@ -1947,10 +1947,6 @@
         <translation>Копировать размен</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Общая сумма %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>или</translation>
     </message>
@@ -1981,6 +1977,10 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Запрос платежа просрочен.</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Всего %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2877,10 +2877,6 @@
         <translation>Не удалось открыть БД блоков</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Ошибка: произошла неустранимая ошибка, детали в debug.log</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Ошибка: мало места на диске!</translation>
     </message>
@@ -3133,6 +3129,10 @@ rpcpassword=%s
         <translation>Ошибка чтения базы данных, работа завершается.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Ошибка: произошла неустранимая ошибка, подробности в debug.log</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Ошибка: обнаружен неподдерживаемый параметр -tor, используйте -onion.</translation>
     </message>
@@ -3179,6 +3179,10 @@ rpcpassword=%s
     <message>
         <source>Node relay options:</source>
         <translation>Параметры трансляции узла:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Очистка хранилища блоков...</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

@@ -1972,10 +1972,6 @@ Var vänlig och försök igen.</translation>
         <translation>Kopiera växel</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totalt %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>eller</translation>
     </message>
@@ -2014,6 +2010,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Betala endast den minimala avgiften på %1</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Total summa %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2926,10 +2926,6 @@ Var vänlig och försök igen.</translation>
         <translation>Fel vid öppning av blockdatabasen</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Fel: Ett fatalt internt fel inträffade. Se debug.log för detaljer</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Fel: Hårddiskutrymme är lågt!</translation>
     </message>
@@ -3178,6 +3174,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Fel vid läsning från databas, avslutar.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Fel: Ett kritiskt internt fel uppstod, se debug.log för detaljer</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Fel: Argumentet -tor stöds inte, använd -onion.</translation>
     </message>
@@ -3224,6 +3224,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Node relay options:</source>
         <translation>Nodreläoptioner:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Rensar blockstore...</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>

@@ -224,11 +224,11 @@
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Underskriv &amp;besked …</translation>
+        <translation>Underskriv &amp;besked…</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>Synkroniserer med netværk …</translation>
+        <translation>Synkroniserer med netværk…</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
@@ -268,31 +268,31 @@
     </message>
     <message>
         <source>&amp;Options...</source>
-        <translation>&amp;Indstillinger …</translation>
+        <translation>&amp;Indstillinger…</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
-        <translation>&amp;Kryptér tegnebog …</translation>
+        <translation>&amp;Kryptér tegnebog…</translation>
     </message>
     <message>
         <source>&amp;Backup Wallet...</source>
-        <translation>&amp;Sikkerhedskopiér tegnebog …</translation>
+        <translation>&amp;Sikkerhedskopiér tegnebog…</translation>
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Skift adgangskode …</translation>
+        <translation>&amp;Skift adgangskode…</translation>
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;Afsendelsesadresser …</translation>
+        <translation>&amp;Afsendelsesadresser…</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Modtagelsesadresser …</translation>
+        <translation>&amp;Modtagelsesadresser…</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>&amp;Åbn URI …</translation>
+        <translation>&amp;Åbn URI…</translation>
     </message>
     <message>
         <source>Bitcoin Core client</source>
@@ -300,11 +300,11 @@
     </message>
     <message>
         <source>Importing blocks from disk...</source>
-        <translation>Importerer blokke fra disken …</translation>
+        <translation>Importerer blokke fra disken…</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>Genindekserer blokke på disken …</translation>
+        <translation>Genindekserer blokke på disken…</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -328,7 +328,7 @@
     </message>
     <message>
         <source>&amp;Verify message...</source>
-        <translation>&amp;Verificér besked …</translation>
+        <translation>&amp;Verificér besked…</translation>
     </message>
     <message>
         <source>Bitcoin</source>
@@ -428,7 +428,7 @@
     </message>
     <message>
         <source>No block source available...</source>
-        <translation>Ingen blokkilde tilgængelig …</translation>
+        <translation>Ingen blokkilde tilgængelig…</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -484,7 +484,7 @@
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Indhenter …</translation>
+        <translation>Indhenter…</translation>
     </message>
     <message>
         <source>Date: %1
@@ -1365,7 +1365,7 @@
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Gem billede …</translation>
+        <translation>&amp;Gem billede…</translation>
     </message>
     <message>
         <source>&amp;Copy Image</source>
@@ -1608,7 +1608,7 @@
     </message>
     <message>
         <source>Fetching...</source>
-        <translation>Henter …</translation>
+        <translation>Henter…</translation>
     </message>
 </context>
 <context>
@@ -1710,7 +1710,7 @@
     </message>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>&amp;Gem billede …</translation>
+        <translation>&amp;Gem billede…</translation>
     </message>
     <message>
         <source>Request payment to %1</source>
@@ -1792,7 +1792,7 @@
     </message>
     <message>
         <source>Inputs...</source>
-        <translation>Inputs …</translation>
+        <translation>Inputs…</translation>
     </message>
     <message>
         <source>automatically selected</source>
@@ -1844,7 +1844,7 @@
     </message>
     <message>
         <source>Choose...</source>
-        <translation>Vælg …</translation>
+        <translation>Vælg…</translation>
     </message>
     <message>
         <source>collapse fee-settings</source>
@@ -1884,7 +1884,7 @@
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Smart-gebyr er ikke initialiseret endnu. Dette tager typisk nogle få blokke …)</translation>
+        <translation>(Smart-gebyr er ikke initialiseret endnu. Dette tager typisk nogle få blokke…)</translation>
     </message>
     <message>
         <source>Confirmation time:</source>
@@ -1975,10 +1975,6 @@
         <translation>Kopiér byttepenge</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totalbeløb %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>eller</translation>
     </message>
@@ -2017,6 +2013,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Betal kun det minimale gebyr på %1</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Totalbeløb %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2138,7 +2138,7 @@
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation>Bitcoin Core lukker ned …</translation>
+        <translation>Bitcoin Core lukker ned…</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2603,7 +2603,7 @@
     </message>
     <message>
         <source>Range...</source>
-        <translation>Interval …</translation>
+        <translation>Interval…</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -2933,10 +2933,6 @@
         <translation>Åbning af blokdatabase mislykkedes</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Fejl: En fatal intern fejl opstod; se debug.log for detaljer</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Fejl: Mangel på ledig diskplads!</translation>
     </message>
@@ -2950,7 +2946,7 @@
     </message>
     <message>
         <source>Importing...</source>
-        <translation>Importerer …</translation>
+        <translation>Importerer…</translation>
     </message>
     <message>
         <source>Incorrect or no genesis block found. Wrong datadir for network?</source>
@@ -2994,11 +2990,11 @@
     </message>
     <message>
         <source>Verifying blocks...</source>
-        <translation>Verificerer blokke …</translation>
+        <translation>Verificerer blokke…</translation>
     </message>
     <message>
         <source>Verifying wallet...</source>
-        <translation>Verificerer tegnebog …</translation>
+        <translation>Verificerer tegnebog…</translation>
     </message>
     <message>
         <source>Wallet %s resides outside data directory %s</source>
@@ -3154,7 +3150,7 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     </message>
     <message>
         <source>Activating best chain...</source>
-        <translation>Aktiverer bedste kæde …</translation>
+        <translation>Aktiverer bedste kæde…</translation>
     </message>
     <message>
         <source>Can't run with a wallet in prune mode.</source>
@@ -3187,6 +3183,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Fejl under læsning fra database; lukker ned.</translation>
+    </message>
+    <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Fejl: En alvorlig intern fejl er opstået. Se debug.log for detaljer</translation>
     </message>
     <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
@@ -3235,6 +3235,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Node relay options:</source>
         <translation>Videresendelsesvalgmuligheder for knude:</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Beskærer bloklager…</translation>
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
@@ -3350,7 +3354,7 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
-        <translation>Zapper alle transaktioner fra tegnebog …</translation>
+        <translation>Zapper alle transaktioner fra tegnebog…</translation>
     </message>
     <message>
         <source>on startup</source>
@@ -3390,7 +3394,7 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     </message>
     <message>
         <source>Loading addresses...</source>
-        <translation>Indlæser adresser …</translation>
+        <translation>Indlæser adresser…</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet corrupted</source>
@@ -3552,7 +3556,7 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     </message>
     <message>
         <source>Loading block index...</source>
-        <translation>Indlæser blokindeks …</translation>
+        <translation>Indlæser blokindeks…</translation>
     </message>
     <message>
         <source>Add a node to connect to and attempt to keep the connection open</source>
@@ -3560,7 +3564,7 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     </message>
     <message>
         <source>Loading wallet...</source>
-        <translation>Indlæser tegnebog …</translation>
+        <translation>Indlæser tegnebog…</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
@@ -3572,7 +3576,7 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     </message>
     <message>
         <source>Rescanning...</source>
-        <translation>Genindlæser …</translation>
+        <translation>Genindlæser…</translation>
     </message>
     <message>
         <source>Done loading</source>

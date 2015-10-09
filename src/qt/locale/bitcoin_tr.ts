@@ -1979,10 +1979,6 @@
         <translation>Para üstünü kopyala</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Toplam meblağ %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>veya</translation>
     </message>
@@ -2931,10 +2927,6 @@
     <message>
         <source>Error opening block database</source>
         <translation>Blok veritabanının açılışı sırasında hata</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Hata: Ölümcül dahili bir hata meydana geldi, ayrıntılar için debug.log dosyasına bakınız</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
