@@ -32,13 +32,13 @@ class CLevelDBBatch
 
 private:
     leveldb::WriteBatch batch;
-    const std::vector<unsigned char> obfuscate_key;
+    const std::vector<unsigned char> *obfuscate_key;
 
 public:
     /**
      * @param[in] obfuscate_key    If passed, XOR data with this key.
      */
-    CLevelDBBatch(const std::vector<unsigned char>& obfuscate_key) : obfuscate_key(obfuscate_key) { };
+    CLevelDBBatch(const std::vector<unsigned char> *obfuscate_key) : obfuscate_key(obfuscate_key) { };
 
     template <typename K, typename V>
     void Write(const K& key, const V& value)
@@ -51,7 +51,7 @@ public:
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(ssValue.GetSerializeSize(value));
         ssValue << value;
-        ssValue.Xor(obfuscate_key);
+        ssValue.Xor(*obfuscate_key);
         leveldb::Slice slValue(&ssValue[0], ssValue.size());
 
         batch.Put(slKey, slValue);
@@ -73,7 +73,7 @@ class CLevelDBIterator
 {
 private:
     leveldb::Iterator *piter;
-    const std::vector<unsigned char> obfuscate_key;
+    const std::vector<unsigned char> *obfuscate_key;
 
 public:
 
@@ -81,7 +81,7 @@ public:
      * @param[in] piterIn          The original leveldb iterator.
      * @param[in] obfuscate_key    If passed, XOR data with this key.
      */
-    CLevelDBIterator(leveldb::Iterator *piterIn, const std::vector<unsigned char>& obfuscate_key) : 
+    CLevelDBIterator(leveldb::Iterator *piterIn, const std::vector<unsigned char>* obfuscate_key) :
         piter(piterIn), obfuscate_key(obfuscate_key) { };
     ~CLevelDBIterator();
 
@@ -120,7 +120,7 @@ public:
         leveldb::Slice slValue = piter->value();
         try {
             CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-            ssValue.Xor(obfuscate_key);
+            ssValue.Xor(*obfuscate_key);
             ssValue >> value;
         } catch(std::exception &e) {
             return false;
@@ -210,7 +210,7 @@ public:
     template <typename K, typename V>
     bool Write(const K& key, const V& value, bool fSync = false) throw(leveldb_error)
     {
-        CLevelDBBatch batch(obfuscate_key);
+        CLevelDBBatch batch(&obfuscate_key);
         batch.Write(key, value);
         return WriteBatch(batch, fSync);
     }
@@ -237,7 +237,7 @@ public:
     template <typename K>
     bool Erase(const K& key, bool fSync = false) throw(leveldb_error)
     {
-        CLevelDBBatch batch(obfuscate_key);
+        CLevelDBBatch batch(&obfuscate_key);
         batch.Erase(key);
         return WriteBatch(batch, fSync);
     }
@@ -252,13 +252,13 @@ public:
 
     bool Sync() throw(leveldb_error)
     {
-        CLevelDBBatch batch(obfuscate_key);
+        CLevelDBBatch batch(&obfuscate_key);
         return WriteBatch(batch, true);
     }
 
     CLevelDBIterator *NewIterator() 
     {
-        return new CLevelDBIterator(pdb->NewIterator(iteroptions), obfuscate_key);
+        return new CLevelDBIterator(pdb->NewIterator(iteroptions), &obfuscate_key);
     }
 
     /**
