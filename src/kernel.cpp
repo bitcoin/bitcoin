@@ -435,8 +435,14 @@ static const uint32_t block1_suffix[9] = { 0x00000080, 0, 0, 0, 0, 0, 0, 0, 0xe0
 // 8000000000000000000000000000000000000000000000000000000000000100
 static const uint32_t block2_suffix[8] = { 0x00000080, 0, 0, 0, 0, 0, 0, 0x00010000 };
 
+// TODO: cpuid detection of supported instruction sets
+
 extern "C" void sha256_avx(void *input_data, uint32_t digest[8], uint64_t num_blks);
 extern "C" void sha256_avx_swap(void *input_data, uint32_t digest[8], uint64_t num_blks);
+
+// Not used yet
+extern "C" void sha256_sse4(void *input_data, uint32_t digest[8], uint64_t num_blks);
+extern "C" void sha256_sse4_swap(void *input_data, uint32_t digest[8], uint64_t num_blks);
 
 class ScanMidstateWorker
 {

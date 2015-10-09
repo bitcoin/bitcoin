@@ -147,11 +147,11 @@ contains(USE_YASM, 1) {
     !win32 {
         DEFINES += USE_YASM
 
-        LIBS += $$PWD/src/crypto/sha2/asm/obj/sha256_avx1.a
-        gensha2.commands = cd $$PWD/src/crypto/sha2/asm && yasm -f x64 -f elf64 -X gnu -g dwarf2 -D LINUX -o obj/sha256_avx1.o sha256_avx1.asm && ar -rs obj/sha256_avx1.a obj/sha256_avx1.o
-        gensha2.target = $$PWD/src/crypto/sha2/asm/obj/sha256_avx1.a
+        LIBS += $$PWD/src/crypto/sha2/asm/obj/sha256_simd.a
+        gensha2.commands = cd $$PWD/src/crypto/sha2/asm && yasm -f x64 -f elf64 -X gnu -g dwarf2 -D LINUX -o obj/sha256_avx1.o sha256_avx1.asm && yasm -f x64 -f elf64 -X gnu -g dwarf2 -D LINUX -o obj/sha256_sse4.o sha256_sse4.asm && ar -rs obj/sha256_simd.a obj/*.o
+        gensha2.target = $$PWD/src/crypto/sha2/asm/obj/sha256_simd.a
         gensha2.depends = FORCE
-        PRE_TARGETDEPS += $$PWD/src/crypto/sha2/asm/obj/sha256_avx1.a
+        PRE_TARGETDEPS += $$PWD/src/crypto/sha2/asm/obj/sha256_simd.a
         QMAKE_EXTRA_TARGETS += gensha2
     }
 }
