@@ -1941,10 +1941,6 @@ Adresa: %4
         <translation>Copiază rest</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Suma totală %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>sau</translation>
     </message>

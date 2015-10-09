@@ -1633,10 +1633,6 @@ Address: %4
         <translation>우선도 복사</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>총 액수 %1(=%2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>또는</translation>
     </message>

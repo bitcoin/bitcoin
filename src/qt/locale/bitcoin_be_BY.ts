@@ -1367,10 +1367,6 @@ Address: %4
         <translation>Памылка адчынення базы звестак блокаў</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Памылка: здарылася Фатальная унутраная памылка, глядзі debug.log для падрабязнасцяў</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Памылка: Замала вольнага месца на дыску!</translation>
     </message>

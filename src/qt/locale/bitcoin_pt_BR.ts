@@ -1976,10 +1976,6 @@ Endereço: %4</translation>
         <translation>Copia alteração</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Quantidade Total %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>ou</translation>
     </message>
@@ -2916,10 +2912,6 @@ Endereço: %4</translation>
     <message>
         <source>Error opening block database</source>
         <translation>Erro ao abrir banco de dados de blocos</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Erro: Um erro interno fatal ocorreu, ver o debug.log para detalhes</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

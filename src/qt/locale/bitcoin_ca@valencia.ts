@@ -1949,10 +1949,6 @@ Address: %4
         <translation>Copia el canvi</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Import total %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>o</translation>
     </message>
@@ -2865,10 +2861,6 @@ Address: %4
     <message>
         <source>Error opening block database</source>
         <translation>Error en obrir la base de dades de blocs</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Error: s'ha produït un error intern fatal. Consulteu debug.log per a més detalls</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

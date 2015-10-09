@@ -1989,10 +1989,6 @@ Endereço: %4</translation>
         <translation>Copiar alteração</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Quantia Total %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>ou</translation>
     </message>
@@ -2931,10 +2927,6 @@ Endereço: %4</translation>
         <translation>Erro ao abrir a base de dados de blocos</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Erro: Um erro fatal interno ocorreu, verificar debug.log para mais informação</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Erro: Pouco espaço em disco!</translation>
     </message>
@@ -3025,6 +3017,10 @@ Endereço: %4</translation>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>Vincualar o endereço dado e listar as ligações conectadas ao mesmo na lista branca. Use a notação [anfitrião]:porta para IPv6</translation>
+    </message>
+    <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>Vinculado para dar o endereço para atender as ligações JSON-RPC. Use [host]: Notação de porta para IPv6. Esta opção pode ser especificada várias vezes (padrão: ligam-se a todas as interfaces)</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>

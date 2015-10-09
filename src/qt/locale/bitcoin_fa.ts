@@ -1971,10 +1971,6 @@ Address: %4
         <translation>خطا در بازگشایی پایگاه داده ی بلوک</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>خطا: یک خطای داخلی مهلک روی داد، debug.log را برای جزئیات ببینید</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>خطا: فضای دیسک کم است!</translation>
     </message>

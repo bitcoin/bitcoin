@@ -1976,10 +1976,6 @@ Osoite: %4</translation>
         <translation>Kopioi vaihtoraha</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Yhteensä %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>tai</translation>
     </message>
@@ -2904,10 +2900,6 @@ Osoite: %4</translation>
     <message>
         <source>Error opening block database</source>
         <translation>Virhe avattaessa lohkoindeksiä</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Virhe: Sisäinen kriittinen virhe kohdattiin, katso debug.log:sta lisätietoja</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

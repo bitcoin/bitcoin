@@ -1980,10 +1980,6 @@ Adresa: %4</translation>
         <translation>Kopírovať zmenu</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Celková suma %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>alebo</translation>
     </message>
@@ -2898,10 +2894,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Error opening block database</source>
         <translation>Chyba otvárania databázy blokov</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Chyba: Nastala fatálna interná chyba. Pre podrobnosti pozrite debug.log</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

@@ -1573,10 +1573,6 @@ Alamat: %4
         <translation>Salin uang kembali</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Jumlah Nilai %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>atau</translation>
     </message>

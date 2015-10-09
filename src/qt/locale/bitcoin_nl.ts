@@ -1993,10 +1993,6 @@ Adres: %4
         <translation>Kopieer wijziging</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totaal bedrag %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>of</translation>
     </message>
@@ -2933,10 +2929,6 @@ Adres: %4
     <message>
         <source>Error opening block database</source>
         <translation>Fout bij openen blokkendatabase</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Fout: Een fatale interne fout is opgetreden, zie debug.log voor details</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

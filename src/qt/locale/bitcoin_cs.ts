@@ -1993,10 +1993,6 @@ Adresa: %4
         <translation>Kopíruj drobné</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Celková částka %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>nebo</translation>
     </message>
@@ -2933,10 +2929,6 @@ Adresa: %4
     <message>
         <source>Error opening block database</source>
         <translation>Chyba při otevírání databáze bloků</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Chyba: Stala se fatální vnitřní chyba. detaily viz v debug.log</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

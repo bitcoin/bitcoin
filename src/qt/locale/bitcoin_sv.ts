@@ -1986,8 +1986,8 @@ Adress: %4
         <translation>Kopiera växel</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totalt %1 (= %2)</translation>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Total summa %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>or</source>
@@ -2928,10 +2928,6 @@ Adress: %4
         <translation>Fel vid öppning av blockdatabasen</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Fel: Ett fatalt internt fel inträffade. Se debug.log för detaljer</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Fel: Hårddiskutrymme är lågt!</translation>
     </message>
@@ -3157,6 +3153,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Fel vid läsning från databas, avslutar.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Fel: Ett kritiskt internt fel uppstod, se debug.log för detaljer</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Fel: Argumentet -tor stöds inte, använd -onion.</translation>
     </message>
@@ -3223,6 +3223,10 @@ till exempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Slupmässigt brus 1 gång varje &lt;n&gt; nätverksmeddelande</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Ta emot och visa varningar för P2P-nätverk (standard: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

@@ -1989,8 +1989,8 @@ Adres: %4
         <translation>Skopiuj resztę</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Łączna kwota %1 (= %2)</translation>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Całkowita kwota %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>or</source>
@@ -2923,10 +2923,6 @@ Adres: %4
         <translation>Błąd otwierania bazy bloków</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Błąd: Wystąpił krytyczny błąd wewnętrzny, sprawdź w debug.log</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Błąd: Mało miejsca na dysku!</translation>
     </message>
@@ -3153,6 +3149,10 @@ na przykład: alertnotify=echo %%s | mail -s "Alarm Bitcoin" admin@foo.com
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Błąd odczytu z bazy danych, wyłączam się.</translation>
+    </message>
+    <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Błąd: Wystąpił fatalny błąd wewnętrzny, sprawdź szczegóły w debug.log</translation>
     </message>
     <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>

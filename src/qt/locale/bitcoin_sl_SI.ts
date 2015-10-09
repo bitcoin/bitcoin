@@ -1933,10 +1933,6 @@ Naslov: %4
         <translation>Kopiraj drobiž</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Skupni znesek %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>ali</translation>
     </message>
@@ -2809,10 +2805,6 @@ Naslov: %4
     <message>
         <source>Error opening block database</source>
         <translation>Napaka pri odpiranju podatkovne baze blokov</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Napaka: Med izvajanjem je prišlo do nepopravljive napake. Podrobnosti so v datoteki debug.log</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

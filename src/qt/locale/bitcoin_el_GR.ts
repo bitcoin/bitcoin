@@ -1787,6 +1787,10 @@ Address: %4
         <translation>ανά kilobyte</translation>
     </message>
     <message>
+        <source>total at least</source>
+        <translation>συνολικά τουλάχιστον</translation>
+    </message>
+    <message>
         <source>Recommended:</source>
         <translation>Προτεινόμενο: </translation>
     </message>
@@ -1877,10 +1881,6 @@ Address: %4
     <message>
         <source>Copy change</source>
         <translation>Αντιγραφή των ρέστων</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Ολικό Ποσό %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
@@ -2735,10 +2735,6 @@ Address: %4
     <message>
         <source>Error opening block database</source>
         <translation>Σφάλμα φορτωσης της βασης δεδομενων των μπλοκ</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Σφάλμα: Παρουσιάστηκε ανεπανόρθωτο εσωτερικό σφάλμα, δείτε debug.log για λεπτομέρειες</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>

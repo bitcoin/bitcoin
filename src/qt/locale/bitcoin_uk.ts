@@ -1993,8 +1993,8 @@ Address: %4
         <translation>Копіювати решту</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Всього %1 (= %2)</translation>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Всього %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>or</source>
@@ -2935,10 +2935,6 @@ Address: %4
         <translation>Помилка відкриття блоку бази даних </translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Помилка: Сталася фатальна помилка (детальніший опис наведено в debug.log)</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Помилка: Мало вільного місця на диску!</translation>
     </message>
@@ -3167,6 +3163,10 @@ rpcpassword=%s
         <translation>Помилка читання бази даних, припиняю роботу.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Помилка: Сталася фатальна помилка (детальніший опис наведено в debug.log)</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Помилка: Параметр -tor не підтримується, використовуйте -onion</translation>
     </message>
@@ -3233,6 +3233,10 @@ rpcpassword=%s
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Випадковим чином пошкоджувати 1 з &lt;n&gt; мережевих повідомлень</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Отримувати та відображати попередження з мережі (типово: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

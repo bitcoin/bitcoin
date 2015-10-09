@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Fare clic con il tasto destro del mouse per modificare l'indirizzo o l'etichetta</translation>
+        <translation>Fare click con il tasto destro del mouse per modificare l'indirizzo o l'etichetta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -1987,10 +1987,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Copia resto</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Importo Totale %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>o</translation>
     </message>
@@ -2929,10 +2925,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Errore durante l'apertura del database blocchi</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Errore: si è verificato un errore interno fatale. Consulta il file debug.log for maggiori dettagli.</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Errore: la spazio libero sul disco è insufficiente!</translation>
     </message>
@@ -3154,6 +3146,10 @@ Si raccomanda inoltre di configurare alertnotify in modo da ricevere notifiche d
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Errore durante lalettura del database. Arresto in corso.</translation>
+    </message>
+    <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Errore: si è presentato un errore interno fatale, consulta il file debug.log per maggiori dettagli</translation>
     </message>
     <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>

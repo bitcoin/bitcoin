@@ -1989,10 +1989,6 @@ Dirección: %4
         <translation>Copiar Cambio</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Cuantía Total %1 (=%2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>o</translation>
     </message>
@@ -2931,10 +2927,6 @@ Dirección: %4
         <translation>Error al abrir base de datos de bloques.</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Error: un error grave interno ocurrió, sea debug.log para más detalles.</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Error: ¡Espacio en disco bajo!</translation>
     </message>
@@ -3155,6 +3147,10 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
         <translation>Error al leer la base de datos, cerrando.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Un error interno fatal ocurrió, ver debug.log para detalles</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Error: Argumento encontrado -tor no soportado, utilice -onion</translation>
     </message>
@@ -3221,6 +3217,10 @@ por ejemplo: alertnotify=echo %% s | correo -s "Alerta Bitcoin" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Introducir datos fuzz en 1 de cada &lt;n&gt; mensajes de red al azar</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Recibir y mostrar alertas de la red P2P (default: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
