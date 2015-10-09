@@ -467,22 +467,20 @@ public:
         uint8_t data_block2[64];
 
         // Copy static part of kernel
-        __builtin_memcpy(&data_block[0], kernel, 24);
+        memcpy(&data_block[0], kernel, 24);
 
-        __builtin_memcpy(&data_block[28], &block1_suffix[0], 9 * sizeof(uint32_t));
-        __builtin_memcpy(&data_block2[32], &block2_suffix[0], 8 * sizeof(uint32_t));
+        memcpy(&data_block[28], &block1_suffix[0], 9 * sizeof(uint32_t));
+        memcpy(&data_block2[32], &block2_suffix[0], 8 * sizeof(uint32_t));
 
         // Search forward in time from the given timestamp
         // Stopping search in case of shutting down
         for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; nTimeTx++)
         {
-            __builtin_memcpy(&data_block[24], &nTimeTx, 4);
-            __builtin_memcpy(&data_block2[0], &init[0], 8 * sizeof(uint32_t));
+            memcpy(&data_block[24], &nTimeTx, 4); // Timestamp
 
+            memcpy(&data_block2[0], &init[0], 8 * sizeof(uint32_t));
             sha256_avx_swap(&data_block[0], (uint32_t *) &data_block2[0], 1);
-
-            __builtin_memcpy(&hashProofOfStake[0], &init[0], 8 * sizeof(uint32_t));
-
+            memcpy(&hashProofOfStake[0], &init[0], 8 * sizeof(uint32_t));
             sha256_avx(&data_block2[0], &hashProofOfStake[0], 1);
 
             // Skip if hash doesn't satisfy the maximum target
