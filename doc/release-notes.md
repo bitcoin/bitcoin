@@ -104,7 +104,6 @@ git merge commit are mentioned.
 - #6439 `980f820` Updated URL location of netinstall for Debian
 - #6384 `8e5a969` qt: Force TLS1.0+ for SSL connections
 - #6471 `92401c2` Depends: bump to qt 5.5
-- #6077 `bc484ef` Cache transaction validation successes
 - #6224 `93b606a` Be even stricter in processing unrequested blocks
 - #6571 `100ac4e` libbitcoinconsensus: avoid a crash in multi-threaded environments
 - #6545 `649f5d9` Do not store more than 200 timedata samples.
