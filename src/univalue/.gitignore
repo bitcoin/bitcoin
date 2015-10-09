@@ -19,4 +19,13 @@ test-driver
 libtool
 ltmain.sh
 
+*.a
+*.la
+*.lo
+*.logs
 *.o
+*.pc
+*.trs
+
+.dirstamp
+.libs
