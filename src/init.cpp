@@ -777,6 +777,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             LogPrintf("%s: parameter interaction: -externalip set -> setting -discover=0\n", __func__);
     }
 
+    if (!GetBoolArg("-discover", true)) {
+        if (SoftSetBoolArg("-upnp", false))
+            LogPrintf("%s: parameter interaction: -discover=0 -> setting -upnp=0\n", __func__);
+    }
+
     if (GetBoolArg("-salvagewallet", false)) {
         // Rewrite just private keys: rescan to find transactions
         if (SoftSetBoolArg("-rescan", true))
