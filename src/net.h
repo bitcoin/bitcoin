@@ -51,11 +51,7 @@ static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** -listen default */
 static const bool DEFAULT_LISTEN = true;
 /** -upnp default */
-#ifdef USE_UPNP
-static const bool DEFAULT_UPNP = USE_UPNP;
-#else
 static const bool DEFAULT_UPNP = false;
-#endif
 /** The maximum number of entries in mapAskFor */
 static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
 /** The maximum number of peer connections to maintain. */
