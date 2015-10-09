@@ -1,9 +1,9 @@
-Bitcoin Core version 0.10.2 is now available from:
+Bitcoin Core version 0.10.3 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.10.2/>
+  <https://bitcoin.org/bin/bitcoin-core-0.10.3/>
 
-This is a new minor version release, bringing minor bug fixes and translation 
-updates. It is recommended to upgrade to this version.
+This is a new minor version release, bringing security fixes and translation 
+updates. It is recommended to upgrade to this version as soon as possible.
 
 Please report bugs using the issue tracker at github:
 
@@ -46,41 +46,98 @@ This does not affect wallet forward or backward compatibility.
 Notable changes
 ===============
 
-This fixes a serious problem on Windows with data directories that have non-ASCII
-characters (https://github.com/bitcoin/bitcoin/issues/6078).
+Fix buffer overflow in bundled upnp
+------------------------------------
 
-For other platforms there are no notable changes.
+Bundled miniupnpc was updated to 1.9.20151008. This fixes a buffer overflow in
+the XML parser during initial network discovery.
 
-For the notable changes in 0.10, refer to the release notes
-at https://github.com/bitcoin/bitcoin/blob/v0.10.0/doc/release-notes.md
+Details can be found here: http://talosintel.com/reports/TALOS-2015-0035/
 
-0.10.2 Change log
+This applies to the distributed executables only, not when building from source or
+using distribution provided packages.
+
+Test for LowS signatures before relaying
+-----------------------------------------
+
+Make the node require the canonical 'low-s' encoding for ECDSA signatures when
+relaying or mining.  This removes a nuisance malleability vector.
+
+Consensus behavior is unchanged.
+
+If widely deployed this change would eliminate the last remaining known vector
+for nuisance malleability on SIGHASH_ALL P2PKH transactions. On the down-side
+it will block most transactions made by sufficiently out of date software.
+
+Unlike the other avenues to change txids on transactions this
+one was randomly violated by all deployed bitcoin software prior to
+its discovery. So, while other malleability vectors where made
+non-standard as soon as they were discovered, this one has remained
+permitted. Even BIP62 did not propose applying this rule to
+old version transactions, but conforming implementations have become
+much more common since BIP62 was initially written.
+
+Bitcoin Core has produced compatible signatures since a28fb70e in
+September 2013, but this didn't make it into a release until 0.9
+in March 2014; Bitcoinj has done so for a similar span of time.
+Bitcoinjs and electrum have been more recently updated.
+
+This does not replace the need for BIP62 or similar, as miners can
+still cooperate to break transactions.  Nor does it replace the
+need for wallet software to handle malleability sanely[1]. This
+only eliminates the cheap and irritating DOS attack.
+
+[1] On the Malleability of Bitcoin Transactions
+Marcin Andrychowicz, Stefan Dziembowski, Daniel Malinowski, Łukasz Mazurek
+http://fc15.ifca.ai/preproceedings/bitcoin/paper_9.pdf
+
+0.10.3 Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect external
 behavior, not code moves, refactors or string updates.
 
-Wallet:
-- `824c011` fix boost::get usage with boost 1.58
-
-Miscellaneous:
-- `da65606` Avoid crash on start in TestBlockValidity with gen=1.
-- `424ae66` don't imbue boost::filesystem::path with locale "C" on windows (fixes #6078)
+- #6186 `e4a7d51` Fix two problems in CSubnet parsing
+- #6153 `ebd7d8d` Parameter interaction: disable upnp if -proxy set
+- #6203 `ecc96f5` Remove P2SH coinbase flag, no longer interesting
+- #6226 `181771b` json: fail read_string if string contains trailing garbage
+- #6244 `09334e0` configure: Detect (and reject) LibreSSL
+- #6276 `0fd8464` Fix getbalance * 0
+- #6274 `be64204` Add option `-alerts` to opt out of alert system
+- #6319 `3f55638` doc: update mailing list address
+- #6438 `7e66e9c` openssl: avoid config file load/race
+- #6439 `255eced` Updated URL location of netinstall for Debian
+- #6412 `0739e6e` Test whether created sockets are select()able
+- #6694 `f696ea1` [QT] fix thin space word wrap line brake issue
+- #6704 `743cc9e` Backport bugfixes to 0.10
+- #6769 `1cea6b0` Test LowS in standardness, removes nuisance malleability vector.
+- #6789 `093d7b5` Update miniupnpc to 1.9.20151008
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
+- Adam Weiss
+- Alex Morcos
+- Casey Rodarmor
 - Cory Fields
+- fanquake
 - Gregory Maxwell
 - Jonas Schnelli
+- J Ross Nicoll
+- Luke Dashjr
+- Pavel Vasin
+- Pieter Wuille
+- randy-waterhouse
+- ฿tcDrak
+- Tom Harding
+- Veres Lajos
 - Wladimir J. van der Laan
 
 And all those who contributed additional code review and/or security research:
 
-- dexX7
-- Pieter Wuille
-- vayvanne
+- timothy on IRC for reporting the issue
+- Vulnerability in miniupnp discovered by Aleksandar Nikolic of Cisco Talos
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
