@@ -13,7 +13,7 @@ For example:
     make HOST=x86_64-w64-mingw32 -j4
 
 A prefix will be generated that's suitable for plugging into Bitcoin's
-configure. In the above example, a dir named i686-w64-mingw32 will be
+configure. In the above example, a dir named x86_64-w64-mingw32 will be
 created. To use it for Bitcoin:
 
     ./configure --prefix=`pwd`/depends/x86_64-w64-mingw32
