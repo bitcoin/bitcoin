@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(leveldbwrapper_batch)
         uint256 in3 = GetRandHash();
 
         uint256 res;
-        CLevelDBBatch batch(dbw.GetObfuscateKey());
+        CLevelDBBatch batch(&dbw.GetObfuscateKey());
 
         batch.Write(key, in);
         batch.Write(key2, in2);
