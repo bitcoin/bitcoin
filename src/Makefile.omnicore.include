@@ -2,6 +2,7 @@ OMNICORE_H = \
   omnicore/activation.h \
   omnicore/convert.h \
   omnicore/createpayload.h \
+  omnicore/createtx.h \
   omnicore/dex.h \
   omnicore/encoding.h \
   omnicore/errors.h \
@@ -38,6 +39,7 @@ OMNICORE_CPP = \
   omnicore/activation.cpp \
   omnicore/convert.cpp \
   omnicore/createpayload.cpp \
+  omnicore/createtx.cpp \
   omnicore/dex.cpp \
   omnicore/encoding.cpp \
   omnicore/fetchwallettx.cpp \
