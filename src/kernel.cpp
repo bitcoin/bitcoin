@@ -485,9 +485,9 @@ public:
             memcpy(&data_block[24], &nTimeTx, 4); // Timestamp
 
             memcpy(&data_block2[0], &init[0], 8 * sizeof(uint32_t));
-            sha256_avx_swap(&data_block[0], (uint32_t *) &data_block2[0], 1);
+            sha256_sse4_swap(&data_block[0], (uint32_t *) &data_block2[0], 1);
             memcpy(&hashProofOfStake[0], &init[0], 8 * sizeof(uint32_t));
-            sha256_avx(&data_block2[0], &hashProofOfStake[0], 1);
+            sha256_sse4(&data_block2[0], &hashProofOfStake[0], 1);
 
             // Skip if hash doesn't satisfy the maximum target
             if (__builtin_bswap32(hashProofOfStake[7]) > nMaxTarget32)
