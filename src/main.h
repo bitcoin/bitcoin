@@ -83,6 +83,12 @@ static const unsigned int DATABASE_WRITE_INTERVAL = 60 * 60;
 static const unsigned int DATABASE_FLUSH_INTERVAL = 24 * 60 * 60;
 /** Maximum length of reject messages. */
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
+/** The number of block heights to gradually choke spam transactions over */
+static const unsigned int MAX_BLOCK_SIZE_MULTIPLYER = 10;
+/** The minimum value possible for -limitfreerelay when rate limiting */
+static const unsigned int MIN_LIMIT_FREE_RELAY = 1;
+/** The default value for -limitfreerelay */
+static const unsigned int DEFAULT_LIMIT_FREE_RELAY = 15;
 
 struct BlockHasher
 {
