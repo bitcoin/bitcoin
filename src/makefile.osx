@@ -59,6 +59,12 @@ else
 CFLAGS = -g -msse2
 endif
 
+ifeq  (${USE_SSSE3}, 1)
+# Intrinsic implementation of block copy
+DEFS += -DUSE_SSSE3
+CFLAGS += -mssse3
+endif
+
 # ppc doesn't work because we don't support big-endian
 CFLAGS += -Wall -Wextra -Wformat -Wno-ignored-qualifiers -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
@@ -132,7 +138,7 @@ endif
 ifeq (${USE_ASM}, 1)
 # Assembler implementation
 OBJS += crypto/scrypt/asm/obj/scrypt-arm.o crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
-OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o
+OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o crypto/sha2/asm/obj/copy_swap.o
 
 crypto/scrypt/asm/obj/scrypt-x86.o: crypto/scrypt/asm/scrypt-x86.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
@@ -155,7 +161,11 @@ crypto/sha/asm/obj/sha-arm.o: crypto/sha2/asm/sha2-x86_64.S
 crypto/sha/asm/obj/sha-arm.o: crypto/sha2/asm/sha2-arm.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
+crypto/sha2/asm/obj/copy_swap.o: crypto/sha2/asm/copy_swap.c
+	$(CC)  -c $(CFLAGS) -MMD -o $@ $<
+
 DEFS += -DUSE_ASM
+
 else
 ifeq  (${USE_SSE2}, 1)
 # Intrinsic implementation

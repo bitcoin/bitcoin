@@ -56,6 +56,13 @@ ifeq (${USE_O3}, 1)
 endif
 
 DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
+
+ifeq  (${USE_SSSE3}, 1)
+# Intrinsic implementation of block copy
+DEFS += -DUSE_SSSE3
+xOPT_LEVEL += -mssse3
+endif
+
 DEBUGFLAGS=-g
 CFLAGS=$(xOPT_LEVEL) -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -static-libgcc -static-libstdc++
@@ -131,7 +138,7 @@ endif
 ifeq (${USE_ASM}, 1)
 # Assembler implementation
 OBJS += crypto/scrypt/asm/obj/scrypt-arm.o crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
-OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o
+OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o crypto/sha2/asm/obj/copy_swap.o
 
 crypto/scrypt/asm/obj/scrypt-x86.o: crypto/scrypt/asm/scrypt-x86.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
@@ -153,6 +160,9 @@ crypto/sha2/asm/obj/sha2-x86_64.o: crypto/sha2/asm/sha2-x86_64.S
 
 crypto/sha2/asm/obj/sha2-arm.o: crypto/sha2/asm/sha2-arm.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
+
+crypto/sha2/asm/obj/copy_swap.o: crypto/sha2/asm/copy_swap.c
+	$(CC)  -c $(CFLAGS) -MMD -o $@ $<
 
 DEFS += -DUSE_ASM
 else

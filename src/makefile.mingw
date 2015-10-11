@@ -43,6 +43,12 @@ ifeq (${USE_O3}, 1)
     xOPT_LEVEL=-O3
 endif
 
+ifdef  USE_SSSE3
+# Intrinsic implementation of block copy
+DEFS += -DUSE_SSSE3
+xOPT_LEVEL+=-mssse3
+endif
+
 DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 DEBUGFLAGS=-g
 CFLAGS=-mthreads $(xOPT_LEVEL) -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
@@ -120,7 +126,7 @@ endif
 ifdef USE_ASM
 # Assembler implementation
 OBJS += crypto/scrypt/asm/obj/scrypt-arm.o crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
-OBJS += crypto/sha2/asm/obj/scrypt-arm.o crypto/sha2/asm/obj/scrypt-x86.o crypto/sha2/asm/obj/scrypt-x86_64.o
+OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o crypto/sha2/asm/obj/copy_swap.o
 
 crypto/scrypt/asm/obj/scrypt-x86.o: crypto/scrypt/asm/scrypt-x86.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
@@ -134,7 +140,11 @@ crypto/scrypt/asm/obj/scrypt-arm.o: crypto/scrypt/asm/scrypt-arm.S
 crypto/scrypt/asm/obj/asm-wrapper.o: crypto/scrypt/asm/asm-wrapper.cpp
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
+crypto/sha2/asm/obj/copy_swap.o: crypto/sha2/asm/copy_swap.c
+	$(CC)  -c $(CFLAGS) -MMD -o $@ $<
+
 DEFS += -DUSE_ASM
+
 else
 ifdef USE_SSE2
 # Intrinsic implementation

@@ -3574,6 +3574,33 @@ sha256_use_4way_exit:
     popq    %rbx
     ret
 
+#if defined(USE_SSSE3)
+    .text
+    .p2align 6
+    .globl sha256_use_ssse3
+    .globl _sha256_use_ssse3
+sha256_use_ssse3:
+_sha256_use_ssse3:
+    pushq    %rbx
+    pushq    %rcx
+    pushq    %rdx
+    cpuid
+    andl    $0x00000200, %ecx
+    jz sha256_use_ssse3_done
+    xorl    %eax, %eax
+    popq    %rdx
+    popq    %rcx
+    popq    %rbx
+    ret
+    
+sha256_use_ssse3_done:
+    movl    $1, %eax
+    popq    %rdx
+    popq    %rcx
+    popq    %rbx
+    ret
+#endif
+
     .text
     .p2align 6
     .globl sha256d_ms_8way

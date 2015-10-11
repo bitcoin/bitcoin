@@ -93,6 +93,12 @@ ifeq (${USE_O3}, 1)
     xOPT_LEVEL=-O3
 endif
 
+ifeq  (${USE_SSSE3}, 1)
+# Intrinsic implementation of block copy
+DEFS += -DUSE_SSSE3
+xOPT_LEVEL += -mssse3
+endif
+
 # CXXFLAGS can be specified on the make command line, so we use xCXXFLAGS that only
 # adds some defaults in front. Unfortunately, CXXFLAGS=... $(CXXFLAGS) does not work.
 xCXXFLAGS=$(xOPT_LEVEL) -msse2 -pthread -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter \
@@ -154,9 +160,12 @@ OBJS += obj/txdb-bdb.o
 endif
 
 ifeq (${USE_ASM}, 1)
+
+DEFS += -DUSE_ASM
+
 # Assembler implementation
 OBJS += crypto/scrypt/asm/obj/scrypt-arm.o crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
-OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o
+OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o crypto/sha2/asm/obj/copy_swap.o
 
 crypto/scrypt/asm/obj/scrypt-x86.o: crypto/scrypt/asm/scrypt-x86.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
@@ -179,7 +188,9 @@ crypto/sha2/asm/obj/sha2-x86_64.o: crypto/sha2/asm/sha2-x86_64.S
 crypto/sha2/asm/obj/sha2-arm.o: crypto/sha2/asm/sha2-arm.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
-DEFS += -DUSE_ASM
+crypto/sha2/asm/obj/copy_swap.o: crypto/sha2/asm/copy_swap.c
+	$(CC)  -c $(xCXXFLAGS) -MMD -o $@ $<
+
 else
 ifeq  (${USE_SSE2}, 1)
 # Intrinsic implementation

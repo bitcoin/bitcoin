@@ -1,4 +1,7 @@
 // Copyright (c) 2012-2013 The PPCoin developers
+// Copyright (c) 2013-2015 The Novacoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -454,12 +457,20 @@ static const uint32_t block2_suffix_4way[4 * 8] = {
 };
 
 extern "C" int sha256_use_4way();
-
 extern "C" void sha256_init(uint32_t *state);
 extern "C" void sha256_transform(uint32_t *state, const uint32_t *block, int swap);
-
 extern "C" void sha256_init_4way(uint32_t *state);
 extern "C" void sha256_transform_4way(uint32_t *state, const uint32_t *block, int swap);
+extern "C" void copy_swap_hashes(uint32_t *blocks, uint32_t *state); // Generic block copy function
+
+#ifdef USE_SSSE3
+extern "C" int sha256_use_ssse3();
+extern "C" void copy_swap_hashes_ssse3(uint32_t *blocks, uint32_t *state); // SSSE3 optimized block copy function
+
+void (*copy_swap)(uint32_t *, uint32_t *) = (sha256_use_ssse3() != 0) ? &copy_swap_hashes_ssse3 : copy_swap_hashes;
+#else
+void (*copy_swap)(uint32_t *, uint32_t *) = &copy_swap_hashes;
+#endif
 
 bool fUse4Way = sha256_use_4way() != 0;
 
@@ -476,6 +487,8 @@ public:
 
     void Do_4way()
     {
+        cout << sha256_use_ssse3() << endl;
+
         SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
         // Compute maximum possible target to filter out majority of obviously insufficient hashes
@@ -518,10 +531,7 @@ public:
             blocks1[27] = nTimeTx++;
 
             sha256_transform_4way(&state1[0], &blocks1[0], 1); // first hashing
-
-            for(int i=0; i<32; i++)
-                blocks2[i] = __builtin_bswap32(state1[i]);
-
+            copy_swap(&blocks2[0], &state1[0]);
             sha256_transform_4way(&state2[0], &blocks2[0], 1); // second hashing
 
             for(int nResult = 0; nResult < 4; nResult++)
