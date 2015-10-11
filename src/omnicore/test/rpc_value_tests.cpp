@@ -1,6 +1,11 @@
+#include "omnicore/createtx.h"
 #include "omnicore/rpcvalues.h"
 
+#include "primitives/transaction.h"
+#include "pubkey.h"
 #include "rpcprotocol.h"
+#include "script/script.h"
+#include "utilstrencodings.h"
 
 #include "json/json_spirit_value.h"
 
@@ -337,5 +342,222 @@ BOOST_AUTO_TEST_CASE(rpcvalues_meta_dex_action)
     BOOST_CHECK_THROW(ParseMetaDExAction(ValueFromString("null")), std::runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE(rpcvalues_transaction)
+{
+    // Valid input
+    CTransaction txParsed = ParseTransaction(Value("07000000000100000000000000000a6a086f6d6e6961746f6d00000000"));
+    BOOST_CHECK_EQUAL(txParsed.nVersion, 7);
+    BOOST_CHECK_EQUAL(txParsed.vin.size(), 0);
+    BOOST_CHECK_EQUAL(txParsed.vout.size(), 1);
+    BOOST_CHECK_EQUAL(txParsed.nLockTime, 0);
+    BOOST_CHECK_NO_THROW(ParseTransaction(Value()));
+    BOOST_CHECK_NO_THROW(ParseTransaction(Value("")));
+    BOOST_CHECK_NO_THROW(ParseTransaction(ValueFromString("null")));
+    // Invalid input
+    BOOST_CHECK_THROW(ParseTransaction(Value("null")), Object);
+    BOOST_CHECK_THROW(ParseTransaction(Value("01007")), Object);
+    // Invalid types
+    BOOST_CHECK_THROW(ParseTransaction(ValueFromString("0100000000")), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(rpcvalues_mutable_transaction)
+{
+    // Valid input
+    CMutableTransaction txParsed = ParseMutableTransaction(Value(
+            "0100000001343b5a6728370da71c439bd032a8bb920b6ae1dc459a016a4b11c6afe7d0332a0000000000ffffffff00ffffffff"));
+    BOOST_CHECK_EQUAL(txParsed.nVersion, 1);
+    BOOST_CHECK_EQUAL(txParsed.vin.size(), 1);
+    BOOST_CHECK_EQUAL(txParsed.vout.size(), 0);
+    BOOST_CHECK_EQUAL(txParsed.nLockTime, 0xFFFFFFFF);
+    BOOST_CHECK_NO_THROW(ParseTransaction(Value()));
+    BOOST_CHECK_NO_THROW(ParseTransaction(Value("")));
+    BOOST_CHECK_NO_THROW(ParseTransaction(ValueFromString("null")));
+    // Invalid input
+    BOOST_CHECK_THROW(ParseMutableTransaction(Value("null")), Object);    
+    BOOST_CHECK_THROW(ParseMutableTransaction(Value("12355")), Object);    
+    // Invalid types
+    BOOST_CHECK_THROW(ParseMutableTransaction(ValueFromString("300.5")), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(rpcvalues_address_or_pubkey)
+{
+    // Valid input
+    std::string validPubKey("02f3e471222bb57a7d416c82bf81c627bfcd2bdc47f36e763ae69935bba4601ece");
+    BOOST_CHECK(ParsePubKeyOrAddress(Value(validPubKey)) == CPubKey(ParseHex(validPubKey)));
+    // Invalid input
+    std::string nonWalletAddress("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
+    std::string invalidPubKey("02f3e471222bb57a7d416c82bf81c627bfcd2bdc47f36e763ae69935bba4601ed0");
+    BOOST_CHECK_THROW(ParsePubKeyOrAddress(Value(nonWalletAddress)), Object); // pubkey not in wallet
+    BOOST_CHECK_THROW(ParsePubKeyOrAddress(Value(invalidPubKey)), Object); // not a valid ECDSA point
+    // Invalid types
+    BOOST_CHECK_THROW(ParsePubKeyOrAddress(Value()), std::runtime_error);
+    BOOST_CHECK_THROW(ParsePubKeyOrAddress(ValueFromString("020202020202007")), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(rpcvalues_output_index)
+{
+    // Valid input
+    BOOST_CHECK_EQUAL(ParseOutputIndex(ValueFromString("0")), uint32_t(0));
+    BOOST_CHECK_EQUAL(ParseOutputIndex(ValueFromString("2")), uint32_t(2));
+    BOOST_CHECK_EQUAL(ParseOutputIndex(ValueFromString("55")), uint32_t(55));
+    // Out of range
+    BOOST_CHECK_THROW(ParseOutputIndex(ValueFromString("-1")), Object);
+    // Invalid types
+    BOOST_CHECK_THROW(ParseOutputIndex(Value()), std::runtime_error);
+    BOOST_CHECK_THROW(ParseOutputIndex(Value("123")), std::runtime_error);
+    BOOST_CHECK_THROW(ParseOutputIndex(ValueFromString("null")), std::runtime_error);
+    BOOST_CHECK_THROW(ParseOutputIndex(ValueFromString("1.0")), std::runtime_error);
+    BOOST_CHECK_THROW(ParseOutputIndex(ValueFromString("-0.99")), std::runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE(rpcvalues_prevtxs_empty)
+{
+    std::vector<PrevTxsEntry> prevTxs = ParsePrevTxs(ValueFromString("[]"));
+    BOOST_CHECK_EQUAL(0, prevTxs.size());
+}
+
+BOOST_AUTO_TEST_CASE(rpcvalues_prevtxs_one)
+{
+    std::string validPrevTx(
+        "["
+            "{"
+                "\"txid\":\"c7de70ef10a1c3d3f8a446337bc1460e70893e61b1d1adb79cced09b16e14c6d\","
+                "\"vout\":4,"
+                "\"scriptPubKey\":\"76a914b25aa453f8d633b92db2bbb8f552170324d1e00d88ac\","
+                "\"value\":0.00152810"
+            "}"
+        "]");
+
+    std::vector<PrevTxsEntry> prevTxs = ParsePrevTxs(ValueFromString(validPrevTx));
+    std::vector<unsigned char> script = ParseHex("76a914b25aa453f8d633b92db2bbb8f552170324d1e00d88ac");
+
+    BOOST_CHECK_EQUAL(1, prevTxs.size());
+    BOOST_CHECK(uint256("c7de70ef10a1c3d3f8a446337bc1460e70893e61b1d1adb79cced09b16e14c6d") == prevTxs[0].outPoint.hash);
+    BOOST_CHECK_EQUAL(4, prevTxs[0].outPoint.n);
+    BOOST_CHECK(CScript(script.begin(), script.end()) == prevTxs[0].txOut.scriptPubKey);
+    BOOST_CHECK_EQUAL(152810LL, prevTxs[0].txOut.nValue);
+}
+
+BOOST_AUTO_TEST_CASE(rpcvalues_prevtxs_two)
+{
+    std::string validPrevTx(
+        "["
+        "    {"
+        "        \"scriptPubKey\":           \"a914ea1153af4beaf36067175ab8c9ef34b4bfec419e87\","
+        "        \"value\": 0.03347963,"
+        "        \"txid\": \"ab283ae1c1d71468a98eb850c39f688e1ffa022f7dfbc1c4ac58fc56a272167c\","
+        "        \"vout\": 0"
+        "    }, {"
+                "\"txid\":\"1137e11996ea3fe690394bc02cef422d10310b6042c956ca7eb95f24277b6fea\","
+                "\"vout\":0,"
+                "\"scriptPubKey\":\"51210394abb6fe6d492495f855ab3fa29acd6be04f347d17597985da0e8c70a26036f22102f8acc5e6654559ca12408fdc6184aa68db62083a6c1f448894845c3f7dfed78552ae\","
+                "\"value\":7.0"
+            "}"
+        "]");
+
+    std::vector<PrevTxsEntry> prevTxs = ParsePrevTxs(ValueFromString(validPrevTx));
+    std::vector<unsigned char> scriptA = ParseHex("a914ea1153af4beaf36067175ab8c9ef34b4bfec419e87");
+    std::vector<unsigned char> scriptB = ParseHex("51210394abb6fe6d492495f855ab3fa29acd6be04f347d17597985da0e8c70a26036f22102f8acc5e6654559ca12408fdc6184aa68db62083a6c1f448894845c3f7dfed78552ae");
+
+    BOOST_CHECK_EQUAL(2, prevTxs.size());
+    BOOST_CHECK(uint256("ab283ae1c1d71468a98eb850c39f688e1ffa022f7dfbc1c4ac58fc56a272167c") == prevTxs[0].outPoint.hash);
+    BOOST_CHECK(uint256("1137e11996ea3fe690394bc02cef422d10310b6042c956ca7eb95f24277b6fea") == prevTxs[1].outPoint.hash);
+    BOOST_CHECK_EQUAL(0, prevTxs[0].outPoint.n);
+    BOOST_CHECK_EQUAL(0, prevTxs[1].outPoint.n);
+    BOOST_CHECK(CScript(scriptA.begin(), scriptA.end()) == prevTxs[0].txOut.scriptPubKey);
+    BOOST_CHECK(CScript(scriptB.begin(), scriptB.end()) == prevTxs[1].txOut.scriptPubKey);
+    BOOST_CHECK_EQUAL(3347963LL, prevTxs[0].txOut.nValue);
+    BOOST_CHECK_EQUAL(700000000LL, prevTxs[1].txOut.nValue);
+}
+
+BOOST_AUTO_TEST_CASE(rpcvalues_prevtxs_invalid)
+{
+    // missing txid
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"vout\":4,"
+                "\"scriptPubKey\":\"76a9145b21669fe9375599bb65919cb9efb9d349f33b5a88ac\","
+                "\"value\":0.00155220"
+            "}"
+        "]")), Object);
+    // missing vout
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"txid\":\"75cb6a2e2853c850baeb20a91b7015ef61d2b6886e26866a25f88bc71280b6f9\","
+                "\"scriptPubKey\":\"76a9145b21669fe9375599bb65919cb9efb9d349f33b5a88ac\","
+                "\"value\":0.00155220"
+            "}"
+        "]")), Object);
+    // missing scriptPubKey
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"txid\":\"75cb6a2e2853c850baeb20a91b7015ef61d2b6886e26866a25f88bc71280b6f9\","
+                "\"vout\":4,"
+                "\"value\":0.00155220"
+            "}"
+        "]")), Object);
+    // missing value
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"txid\":\"75cb6a2e2853c850baeb20a91b7015ef61d2b6886e26866a25f88bc71280b6f9\","
+                "\"vout\":4,"
+                "\"scriptPubKey\":\"76a9145b21669fe9375599bb65919cb9efb9d349f33b5a88ac\""
+            "}"
+        "]")), Object);
+    // invalid txid
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"txid\":1234,"
+                "\"vout\":4,"
+                "\"scriptPubKey\":\"76a9145b21669fe9375599bb65919cb9efb9d349f33b5a88ac\","
+                "\"value\":0.00155220"
+            "}"
+        "]")), Object);
+    // invalid vout
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"txid\":\"75cb6a2e2853c850baeb20a91b7015ef61d2b6886e26866a25f88bc71280b6f9\","
+                "\"vout\":-3,"
+                "\"scriptPubKey\":\"76a9145b21669fe9375599bb65919cb9efb9d349f33b5a88ac\","
+                "\"value\":0.00155220" 
+            "}"
+        "]")), Object);
+    // invalid script
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"txid\":\"75cb6a2e2853c850baeb20a91b7015ef61d2b6886e26866a25f88bc71280b6f9\","
+                "\"vout\":4,"
+                "\"scriptPubKey\":\"76a9145b21669fe9375599bb65919cb9efb9d349f33b5a88a\","
+                "\"value\":0.00155220" 
+            "}"
+        "]")), Object);
+    // invalid value
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"txid\":\"75cb6a2e2853c850baeb20a91b7015ef61d2b6886e26866a25f88bc71280b6f9\","
+                "\"vout\":4,"
+                "\"scriptPubKey\":\"76a9145b21669fe9375599bb65919cb9efb9d349f33b5a88a\","
+                "\"value\":-0.00155220" 
+            "}"
+        "]")), Object);
+    // invalid value
+    BOOST_CHECK_THROW(ParsePrevTxs(ValueFromString(
+        "["
+            "{"
+                "\"txid\":\"75cb6a2e2853c850baeb20a91b7015ef61d2b6886e26866a25f88bc71280b6f9\","
+                "\"vout\":4,"
+                "\"scriptPubKey\":\"76a9145b21669fe9375599bb65919cb9efb9d349f33b5a88a\","
+                "\"value\":21000001" 
+            "}"
+        "]")), Object);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
