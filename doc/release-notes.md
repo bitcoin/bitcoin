@@ -58,6 +58,11 @@ Details can be found here: http://talosintel.com/reports/TALOS-2015-0035/
 This applies to the distributed executables only, not when building from source or
 using distribution provided packages.
 
+Additionally, upnp has been disabled by default. This may result in a lower
+number of reachable nodes on IPv4, however this prevents future libupnpc
+vulnerabilities from being a structural risk to the network
+(see https://github.com/bitcoin/bitcoin/pull/6795).
+
 Test for LowS signatures before relaying
 -----------------------------------------
 
@@ -92,6 +97,20 @@ only eliminates the cheap and irritating DOS attack.
 Marcin Andrychowicz, Stefan Dziembowski, Daniel Malinowski, Łukasz Mazurek
 http://fc15.ifca.ai/preproceedings/bitcoin/paper_9.pdf
 
+Minimum relay fee default increase
+-----------------------------------
+
+The default for the `-minrelaytxfee` setting has been increased from `0.00001`
+to `0.00005`.
+
+This is necessitated by the current transaction flooding, causing
+outrageous memory usage on nodes due to the mempool ballooning. This is a
+temporary measure, bridging the time until a dynamic method for determining
+this fee is merged (which will be in 0.12).
+
+(see https://github.com/bitcoin/bitcoin/pull/6793, as well as the 0.11
+release notes, in which this value was suggested)
+
 0.11.1 Change log
 =================
 
@@ -114,6 +133,8 @@ git merge commit are mentioned.
 - #6789 `b4ad73f` Update miniupnpc to 1.9.20151008
 - #6785 `b4dc33e` Backport to v0.11: In (strCommand == "tx"), return if AlreadyHave()
 - #6412 `0095b9a` Test whether created sockets are select()able
+- #6795 `4dbcec0` net: Disable upnp by default
+- #6793 `e7bcc4a` Bump minrelaytxfee default
 
 Credits
 =======
