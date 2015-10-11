@@ -518,15 +518,15 @@ public:
 
         // Search forward in time from the given timestamp
         // Stopping search in case of shutting down
-        for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; )
+        for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; nTimeTx +=4)
         {
             sha256_init_4way(state1);
             sha256_init_4way(state2);
 
-            blocks1[24] = nTimeTx++;
-            blocks1[25] = nTimeTx++;
-            blocks1[26] = nTimeTx++;
-            blocks1[27] = nTimeTx++;
+            blocks1[24] = nTimeTx;
+            blocks1[25] = nTimeTx+1;
+            blocks1[26] = nTimeTx+2;
+            blocks1[27] = nTimeTx+3;
 
             sha256_transform_4way(&state1[0], &blocks1[0], 1); // first hashing
             copy_swap(&blocks2[0], &state1[0]);
