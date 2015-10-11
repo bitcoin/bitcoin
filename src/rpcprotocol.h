@@ -69,6 +69,12 @@ enum RPCErrorCode
     RPC_WALLET_WRONG_ENC_STATE      = -15, // Command given in wrong wallet encryption state (encrypting an encrypted wallet etc.)
     RPC_WALLET_ENCRYPTION_FAILED    = -16, // Failed to encrypt the wallet
     RPC_WALLET_ALREADY_UNLOCKED     = -17, // Wallet is already unlocked
+
+    // Name errors
+    RPC_NAME_NOT_FOUND              = -100, // Name is not in the database
+    RPC_NAME_NOT_AVAILABLE          = -101, // Name is already taken
+    RPC_NAME_PENDING_OPERATION      = -102, // There is already a pending name operation
+    RPC_NAME_INVALID                = -103, // The name is not allowed for registration
 };
 
 //

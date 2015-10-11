@@ -25,6 +25,9 @@ class CTransaction;
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 static const unsigned int MAX_OP_RETURN_RELAY = 40;      // bytes
 
+/** Type used for generic data on the stack.  */
+typedef std::vector<unsigned char> vchType;
+
 /** Signature hash types/flags */
 enum
 {
@@ -42,6 +45,8 @@ enum
     SCRIPT_VERIFY_STRICTENC = (1U << 1), // enforce strict conformance to DER and SEC2 for signatures and pubkeys
     SCRIPT_VERIFY_EVEN_S    = (1U << 2), // enforce even S values in signatures (depends on STRICTENC)
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
+
+    SCRIPT_VERIFY_NAMES     = (1U << 10), // check name operations?
 };
 
 enum txnouttype
@@ -53,6 +58,7 @@ enum txnouttype
     TX_SCRIPTHASH,
     TX_MULTISIG,
     TX_NULL_DATA,
+    TX_NAME_OPERATION,
 };
 
 class CNoDestination {
@@ -84,6 +90,7 @@ enum opcodetype
     OP_RESERVED = 0x50,
     OP_1 = 0x51,
     OP_TRUE=OP_1,
+    OP_NAME_REGISTER=OP_1,
     OP_2 = 0x52,
     OP_3 = 0x53,
     OP_4 = 0x54,

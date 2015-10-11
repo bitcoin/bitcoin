@@ -81,6 +81,16 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry)
         for (unsigned int i = 0; i < tx.vin.size(); i++)
             mapNextTx[tx.vin[i].prevout] = CInPoint(&tx, i);
         nTransactionsUpdated++;
+
+        /* Names are handled here without checking the softfork height.
+           This is done because otherwise, we would need logic to add names
+           of transactions already in the mempool as soon as the chain
+           grows beyond the softfork height, which would get complicated.
+           Also, the worst that will happen, is that nodes don't relay or
+           mine transactions that look like name operations even before the
+           softfork -- since those do not really appear normally anyway,
+           that shouldn't be a problem.  */
+        names.addTransaction (tx);
     }
     return true;
 }
@@ -106,6 +116,7 @@ void CTxMemPool::remove(const CTransaction &tx, std::list<CTransaction>& removed
             BOOST_FOREACH(const CTxIn& txin, tx.vin)
                 mapNextTx.erase(txin.prevout);
             mapTx.erase(hash);
+            names.removeTransaction (tx);
             nTransactionsUpdated++;
         }
     }
@@ -133,6 +144,7 @@ void CTxMemPool::clear()
     LOCK(cs);
     mapTx.clear();
     mapNextTx.clear();
+    names.clear ();
     ++nTransactionsUpdated;
 }
 
@@ -174,6 +186,25 @@ void CTxMemPool::check(CCoinsViewCache *pcoins) const
         assert(tx.vin.size() > it->second.n);
         assert(it->first == it->second.ptx->vin[it->second.n].prevout);
     }
+
+    /* Check the names mempool.  */
+    unsigned nameCount = 0;
+    for (std::map<uint256, CTxMemPoolEntry>::const_iterator it = mapTx.begin ();
+         it != mapTx.end (); it++)
+    {
+        const CTransaction& tx = it->second.GetTx ();
+        for (std::vector<CTxOut>::const_iterator out = tx.vout.begin ();
+             out != tx.vout.end (); ++out)
+        {
+            CName name;
+            if (!IsNameOperation (*out, name))
+              continue;
+
+            ++nameCount;
+            assert (names.hasName (name));
+        }
+    }
+    assert (nameCount == names.size ());
 }
 
 void CTxMemPool::queryHashes(vector<uint256>& vtxid)

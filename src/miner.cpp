@@ -280,7 +280,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 continue;
 
             CValidationState state;
-            if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH))
+            if (!CheckInputs (tx, state, view, true,
+                              SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_NAMES))
                 continue;
 
             CTxUndo txundo;

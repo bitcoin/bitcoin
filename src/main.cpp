@@ -405,6 +405,17 @@ CBlockTreeDB *pblocktree = NULL;
 
 //////////////////////////////////////////////////////////////////////////////
 //
+// CBlockUndo
+//
+
+CBlockUndo::CBlockUndo (const CBlockIndex* pindex)
+  : vtxundo(), names()
+{
+  supportsNames = (pindex->nHeight >= Params ().GetNamesForkHeight ());
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
 // mapOrphanTransactions
 //
 
@@ -895,12 +906,19 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                          hash.ToString(),
                          nFees, CTransaction::nMinRelayTxFee * 10000);
 
+        /* Check that there's not already a pending name operation.  */
+        if (!pool.names.checkTransaction (tx))
+            return error ("AcceptToMemoryPool: already have an operation on"
+                          " the same name");
+
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-        if (!CheckInputs(tx, state, view, true, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_STRICTENC))
-        {
+        const unsigned checkFlags = SCRIPT_VERIFY_P2SH
+                                    | SCRIPT_VERIFY_STRICTENC
+                                    | SCRIPT_VERIFY_NAMES;
+        if (!CheckInputs (tx, state, view, true, checkFlags))
             return error("AcceptToMemoryPool: : ConnectInputs failed %s", hash.ToString());
-        }
+
         // Store transaction in memory
         pool.addUnchecked(hash, entry);
     }
@@ -1562,6 +1580,15 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, CCoinsViewCach
         }
     }
 
+    /* Check name operations if the flag is set.  */
+    if (flags & SCRIPT_VERIFY_NAMES)
+        for (std::vector<CTxOut>::const_iterator out = tx.vout.begin ();
+             out != tx.vout.end (); ++out)
+        {
+            if (!CheckNameOperation (*out, inputs, state))
+                return error ("CheckInputs: name operation is invalid");
+        }
+
     return true;
 }
 
@@ -1576,7 +1603,7 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
 
     bool fClean = true;
 
-    CBlockUndo blockUndo;
+    CBlockUndo blockUndo(pindex);
     CDiskBlockPos pos = pindex->GetUndoPos();
     if (pos.IsNull())
         return error("DisconnectBlock() : no undo data available");
@@ -1644,6 +1671,10 @@ bool DisconnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex
         }
     }
 
+    /* Undo name operations.  */
+    if (!blockUndo.names.applyUndo (view))
+        return error ("DisconnectBlock: failed to undo name operations");
+
     // move best block pointer to prevout block
     view.SetBestBlock(pindex->pprev->GetBlockHash());
 
@@ -1694,6 +1725,15 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
     if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
         return false;
 
+    /* Check that no names appear multiple times in an operation
+       in the single block.  This needs the current height (since we only
+       do this check after the softfork), thus it can't be part of
+       the initial CheckBlock routine.  */
+    const int namesForkHeight = Params ().GetNamesForkHeight ();
+    const bool considerNames = (pindex->nHeight >= namesForkHeight);
+    if (considerNames && !CheckNamesInBlock (block, state))
+      return error ("CheckBlock: CheckNamesInBlock failed");
+
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256(0) : pindex->pprev->GetBlockHash();
     assert(hashPrevBlock == view.GetBestBlock());
@@ -1737,8 +1777,10 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
 
     unsigned int flags = SCRIPT_VERIFY_NOCACHE |
                          (fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE);
+    if (considerNames)
+        flags |= SCRIPT_VERIFY_NAMES;
 
-    CBlockUndo blockundo;
+    CBlockUndo blockundo(pindex);
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
@@ -1788,6 +1830,14 @@ bool ConnectBlock(CBlock& block, CValidationState& state, CBlockIndex* pindex, C
         UpdateCoins(tx, state, view, txundo, pindex->nHeight, block.GetTxHash(i));
         if (!tx.IsCoinBase())
             blockundo.vtxundo.push_back(txundo);
+
+        /* Update the name database for all name operations found.  */
+        if (considerNames)
+            for (std::vector<CTxOut>::const_iterator out = tx.vout.begin ();
+                 out != tx.vout.end (); ++out)
+            {
+                ApplyNameOperation (*out, view, blockundo.names, state);
+            }
 
         vPos.push_back(std::make_pair(block.GetTxHash(i), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
@@ -2901,7 +2951,7 @@ bool VerifyDB(int nCheckLevel, int nCheckDepth)
             return error("VerifyDB() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
-            CBlockUndo undo;
+            CBlockUndo undo(pindex);
             CDiskBlockPos pos = pindex->GetUndoPos();
             if (!pos.IsNull()) {
                 if (!undo.ReadFromDisk(pos, pindex->pprev->GetBlockHash()))
