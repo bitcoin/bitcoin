@@ -512,10 +512,10 @@ public:
             sha256_init_4way(state1);
             sha256_init_4way(state2);
 
-            blocks1[24] = nTimeTx;
-            blocks1[25] = ++nTimeTx;
-            blocks1[26] = ++nTimeTx;
-            blocks1[27] = ++nTimeTx;
+            blocks1[24] = nTimeTx++;
+            blocks1[25] = nTimeTx++;
+            blocks1[26] = nTimeTx++;
+            blocks1[27] = nTimeTx++;
 
             sha256_transform_4way(&state1[0], &blocks1[0], 1); // first hashing
 
@@ -526,11 +526,11 @@ public:
 
             for(int nResult = 0; nResult < 4; nResult++)
             {
-                uint32_t nTime = blocks1[24+nResult];
                 uint32_t nHash = __builtin_bswap32(state2[28+nResult]);
 
                 if (nHash <= nMaxTarget32) // Possible hit
                 {
+                    uint32_t nTime = blocks1[24+nResult];
                     uint256 nHashProofOfStake = 0;
                     uint32_t *pnHashProofOfStake = (uint32_t *) &nHashProofOfStake;
                     pnHashProofOfStake[7] = nHash;
