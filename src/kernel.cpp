@@ -461,6 +461,8 @@ extern "C" void sha256_transform(uint32_t *state, const uint32_t *block, int swa
 extern "C" void sha256_init_4way(uint32_t *state);
 extern "C" void sha256_transform_4way(uint32_t *state, const uint32_t *block, int swap);
 
+bool fUse4Way = sha256_use_4way() != 0;
+
 class ScanMidstateWorker
 {
 public:
@@ -505,13 +507,16 @@ public:
 
         // Search forward in time from the given timestamp
         // Stopping search in case of shutting down
-        for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; nTimeTx+=4)
+        for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; )
         {
-            for (int n = 0; n < 4; n++)
-                blocks1[24+n] = nTimeTx + n;
-
             sha256_init_4way(state1);
             sha256_init_4way(state2);
+
+            blocks1[24] = nTimeTx;
+            blocks1[25] = ++nTimeTx;
+            blocks1[26] = ++nTimeTx;
+            blocks1[27] = ++nTimeTx;
+
             sha256_transform_4way(&state1[0], &blocks1[0], 1); // first hashing
 
             for(int i=0; i<32; i++)
@@ -519,10 +524,10 @@ public:
 
             sha256_transform_4way(&state2[0], &blocks2[0], 1); // second hashing
 
-            for(int n = 0; n < 4; n++)
+            for(int nResult = 0; nResult < 4; nResult++)
             {
-                uint32_t nTime = blocks1[24+n];
-                uint32_t nHash = __builtin_bswap32(state2[28+n]);
+                uint32_t nTime = blocks1[24+nResult];
+                uint32_t nHash = __builtin_bswap32(state2[28+nResult]);
 
                 if (nHash <= nMaxTarget32) // Possible hit
                 {
@@ -531,7 +536,7 @@ public:
                     pnHashProofOfStake[7] = nHash;
 
                     for (int i = 0; i < 7; i++)
-                        pnHashProofOfStake[i] = __builtin_bswap32(state2[(i*4) + n]);
+                        pnHashProofOfStake[i] = __builtin_bswap32(state2[(i*4) + nResult]);
 
                     CBigNum bnCoinDayWeight = bnValueIn * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
                     CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
@@ -593,9 +598,10 @@ public:
 
     void Do()
     {
-        if (sha256_use_4way() != 0)
+        if (fUse4Way)
             Do_4way();
-        Do_generic();
+        else
+            Do_generic();
     }
 
     vector<std::pair<uint256,uint32_t> >& GetSolutions()
