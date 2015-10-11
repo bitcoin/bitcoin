@@ -424,25 +424,42 @@ bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxP
 }
 
 
-#ifdef USE_YASM
+#ifdef USE_ASM
 
-// SHA256 initial state
-static const uint32_t init[8] = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 };
+// kernel padding
+static const uint32_t block1_suffix[9] = { 0x80000000, 0, 0, 0, 0, 0, 0, 0, 0xe0000000 };
+static const uint32_t block1_suffix_4way[4 * 9] = {
+    0x00000080, 0x00000080, 0x00000080, 0x00000080,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0xe0000000, 0xe0000000, 0xe0000000, 0xe0000000
+};
 
-// 8000000000000000000000000000000000000000000000000000000000000000000000e0
-static const uint32_t block1_suffix[9] = { 0x00000080, 0, 0, 0, 0, 0, 0, 0, 0xe0000000 };
+// hash padding
+static const uint32_t block2_suffix[8] = { 0x80000000, 0, 0, 0, 0, 0, 0, 0x00010000 };
+static const uint32_t block2_suffix_4way[4 * 8] = {
+    0x00000080, 0x00000080, 0x00000080, 0x00000080,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+    0x00010000, 0x00010000, 0x00010000, 0x00010000
+};
 
-// 8000000000000000000000000000000000000000000000000000000000000100
-static const uint32_t block2_suffix[8] = { 0x00000080, 0, 0, 0, 0, 0, 0, 0x00010000 };
+extern "C" int sha256_use_4way();
 
-// TODO: cpuid detection of supported instruction sets
+extern "C" void sha256_init(uint32_t *state);
+extern "C" void sha256_transform(uint32_t *state, const uint32_t *block, int swap);
 
-extern "C" void sha256_avx(void *input_data, uint32_t digest[8], uint64_t num_blks);
-extern "C" void sha256_avx_swap(void *input_data, uint32_t digest[8], uint64_t num_blks);
-
-// Not used yet
-extern "C" void sha256_sse4(void *input_data, uint32_t digest[8], uint64_t num_blks);
-extern "C" void sha256_sse4_swap(void *input_data, uint32_t digest[8], uint64_t num_blks);
+extern "C" void sha256_init_4way(uint32_t *state);
+extern "C" void sha256_transform_4way(uint32_t *state, const uint32_t *block, int swap);
 
 class ScanMidstateWorker
 {
@@ -455,9 +472,87 @@ public:
         solutions = vector<std::pair<uint256,uint32_t> >();
     }
 
-    void Do()
+    void Do_4way()
     {
         SetThreadPriority(THREAD_PRIORITY_LOWEST);
+
+        // Compute maximum possible target to filter out majority of obviously insufficient hashes
+        CBigNum bnTargetPerCoinDay;
+        bnTargetPerCoinDay.SetCompact(nBits);
+        uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256();
+
+        uint32_t state1[4 * 8] __attribute__((aligned(16)));
+        uint32_t state2[4 * 8] __attribute__((aligned(16)));
+        uint32_t blocks1[4 * 16] __attribute__((aligned(16)));
+        uint32_t blocks2[4 * 16] __attribute__((aligned(16)));
+
+        vector<uint32_t> vRow = vector<uint32_t>(4);
+        uint32_t *pnKernel = (uint32_t *) kernel;
+
+        for(int i = 0; i < 7; i++)
+        {
+            uint32_t nVal = pnKernel[i];
+            fill(vRow.begin(), vRow.end(), nVal);
+
+            for (int j = 0; j < 4; j++)
+            {
+                memcpy(&blocks1[i*4], &vRow[0], 16);
+            }
+        }
+
+        memcpy(&blocks1[28], &block1_suffix_4way[0], 36*4);   // sha256 padding
+        memcpy(&blocks2[32], &block2_suffix_4way[0], 32*4);
+
+        // Search forward in time from the given timestamp
+        // Stopping search in case of shutting down
+        for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; nTimeTx+=4)
+        {
+            for (int n = 0; n < 4; n++)
+                blocks1[24+n] = nTimeTx + n;
+
+            sha256_init_4way(state1);
+            sha256_init_4way(state2);
+            sha256_transform_4way(&state1[0], &blocks1[0], 1); // first hashing
+
+            for(int i=0; i<32; i++)
+                blocks2[i] = __builtin_bswap32(state1[i]);
+
+            sha256_transform_4way(&state2[0], &blocks2[0], 1); // second hashing
+
+            for(int n = 0; n < 4; n++)
+            {
+                uint32_t nTime = blocks1[24+n];
+                uint32_t nHash = __builtin_bswap32(state2[28+n]);
+
+                if (nHash <= nMaxTarget32) // Possible hit
+                {
+                    uint256 nHashProofOfStake = 0;
+                    uint32_t *pnHashProofOfStake = (uint32_t *) &nHashProofOfStake;
+                    pnHashProofOfStake[7] = nHash;
+
+                    for (int i = 0; i < 7; i++)
+                        pnHashProofOfStake[i] = __builtin_bswap32(state2[(i*4) + n]);
+
+                    CBigNum bnCoinDayWeight = bnValueIn * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
+                    CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+
+                    if (bnTargetProofOfStake >= CBigNum(nHashProofOfStake))
+                        solutions.push_back(std::pair<uint256,uint32_t>(nHashProofOfStake, nTime));
+                }
+            }
+        }
+    }
+
+    void Do_generic()
+    {
+        SetThreadPriority(THREAD_PRIORITY_LOWEST);
+
+        // Init new sha256 context and update it
+        //   with first 24 bytes of kernel
+        SHA256_CTX workerCtx;
+        SHA256_Init(&workerCtx);
+        SHA256_Update(&workerCtx, kernel, 8 + 16);
+        SHA256_CTX ctx = workerCtx;
 
         // Sha256 result buffer
         uint32_t hashProofOfStake[8];
@@ -469,33 +564,24 @@ public:
         uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256(),
             *pnHashProofOfStake = (uint256 *)&hashProofOfStake;
 
-        uint8_t data_block[64];
-        uint8_t data_block2[64];
-
-        // Copy static part of kernel
-        memcpy(&data_block[0], kernel, 24);
-
-        memcpy(&data_block[28], &block1_suffix[0], 9 * sizeof(uint32_t));
-        memcpy(&data_block2[32], &block2_suffix[0], 8 * sizeof(uint32_t));
-
         // Search forward in time from the given timestamp
         // Stopping search in case of shutting down
         for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; nTimeTx++)
         {
-            memcpy(&data_block[24], &nTimeTx, 4); // Timestamp
+            // Complete first hashing iteration
+            uint256 hash1;
+            SHA256_Update(&ctx, (unsigned char*)&nTimeTx, 4);
+            SHA256_Final((unsigned char*)&hash1, &ctx);
 
-            memcpy(&data_block2[0], &init[0], 8 * sizeof(uint32_t));
-            sha256_sse4_swap(&data_block[0], (uint32_t *) &data_block2[0], 1);
-            memcpy(&hashProofOfStake[0], &init[0], 8 * sizeof(uint32_t));
-            sha256_sse4(&data_block2[0], &hashProofOfStake[0], 1);
+            // Restore context
+            ctx = workerCtx;
+
+            // Finally, calculate kernel hash
+            SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
 
             // Skip if hash doesn't satisfy the maximum target
-            if (__builtin_bswap32(hashProofOfStake[7]) > nMaxTarget32)
+            if (hashProofOfStake[7] > nMaxTarget32)
                 continue;
-
-            // Swap byte order
-            for(int i = 0; i < 8; i++)
-                hashProofOfStake[i] = __builtin_bswap32(hashProofOfStake[i]);
 
             CBigNum bnCoinDayWeight = bnValueIn * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
             CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
@@ -503,6 +589,13 @@ public:
             if (bnTargetProofOfStake >= CBigNum(*pnHashProofOfStake))
                 solutions.push_back(std::pair<uint256,uint32_t>(*pnHashProofOfStake, nTimeTx));
         }
+    }
+
+    void Do()
+    {
+        if (sha256_use_4way() != 0)
+            Do_4way();
+        Do_generic();
     }
 
     vector<std::pair<uint256,uint32_t> >& GetSolutions()

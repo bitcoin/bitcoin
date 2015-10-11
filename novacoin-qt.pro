@@ -127,32 +127,21 @@ contains(USE_LEVELDB, 1) {
 
 # use: qmake "USE_ASM=1"
 contains(USE_ASM, 1) {
-    message(Using assembler scrypt implementation)
+    message(Using assembler scrypt & sha256 implementations)
+    DEFINES += USE_ASM
     SOURCES += src/crypto/scrypt/asm/scrypt-arm.S src/crypto/scrypt/asm/scrypt-x86.S src/crypto/scrypt/asm/scrypt-x86_64.S src/crypto/scrypt/asm/asm-wrapper.cpp
+    SOURCES += src/crypto/sha2/asm/sha2-arm.S src/crypto/sha2/asm/sha2-x86.S src/crypto/sha2/asm/sha2-x86_64.S
 } else {
     # use: qmake "USE_SSE2=1"
     contains(USE_SSE2, 1) {
-        message(Using SSE2 intrinsic scrypt implementation)
+        message(Using SSE2 intrinsic scrypt implementation & generic sha256 implementation)
         SOURCES += src/crypto/scrypt/intrin/scrypt-sse2.cpp
         DEFINES += USE_SSE2
         QMAKE_CXXFLAGS += -msse2
         QMAKE_CFLAGS += -msse2
     } else {
-        message(Using generic scrypt implementation)
+        message(Using generic scrypt & sha256 implementations)
         SOURCES += src/crypto/scrypt/generic/scrypt-generic.cpp
-    }
-}
-
-contains(USE_YASM, 1) {
-    !win32 {
-        DEFINES += USE_YASM
-
-        LIBS += $$PWD/src/crypto/sha2/asm/obj/sha256_simd.a
-        gensha2.commands = cd $$PWD/src/crypto/sha2/asm && yasm -f x64 -f elf64 -X gnu -g dwarf2 -D LINUX -o obj/sha256_avx1.o sha256_avx1.asm && yasm -f x64 -f elf64 -X gnu -g dwarf2 -D LINUX -o obj/sha256_sse4.o sha256_sse4.asm && ar -rs obj/sha256_simd.a obj/*.o
-        gensha2.target = $$PWD/src/crypto/sha2/asm/obj/sha256_simd.a
-        gensha2.depends = FORCE
-        PRE_TARGETDEPS += $$PWD/src/crypto/sha2/asm/obj/sha256_simd.a
-        QMAKE_EXTRA_TARGETS += gensha2
     }
 }
 
