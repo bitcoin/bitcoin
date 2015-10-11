@@ -92,7 +92,7 @@ AC_ARG_ENABLE(tests,
     [use_tests=yes])
 
 AC_ARG_ENABLE(bench,
-    AS_HELP_STRING([--enable-bench],[compile benchmarks (default is yes)]),
+    AS_HELP_STRING([--disable-bench],[do not compile benchmarks (default is to compile)]),
     [use_bench=$enableval],
     [use_bench=yes])
 
