@@ -47,7 +47,7 @@ def run_allowip_test(tmpdir, allow_ips, rpchost, rpcport):
     try:
         # connect to node through non-loopback interface
         url = "http://rt:rt@%s:%d" % (rpchost, rpcport,)
-        node = AuthServiceProxy(url)
+        node = get_rpc_proxy(url, 1)
         node.getinfo()
     finally:
         node = None # make sure connection will be garbage collected and closed
