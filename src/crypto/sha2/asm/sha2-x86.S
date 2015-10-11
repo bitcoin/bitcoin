@@ -1200,12 +1200,12 @@ _sha256_use_ssse3:
     movl    $1, %eax
     cpuid
     andl    $0x00000200, %ecx
-    jnz sha256_use_ssse3
+    jnz sha256_use_ssse3_done
     xorl    %eax, %eax
     popl    %ebx
     ret
     
-sha256_use_ssse3:
+sha256_use_ssse3_done:
     movl    $1, %eax
     popl    %ebx
     ret

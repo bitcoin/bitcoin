@@ -101,7 +101,7 @@ Value scaninput(const Array& params, bool fHelp)
     uint32_t nBits = GetNextTargetRequired(pindexBest, true);
 
     const Value& diff_v = find_value(scanParams, "difficulty");
-    if (diff_v.type() == real_type)
+    if (diff_v.type() == real_type || diff_v.type() == int_type)
     {
         double dDiff = diff_v.get_real();
         if (dDiff <= 0)
