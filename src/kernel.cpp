@@ -487,8 +487,6 @@ public:
 
     void Do_4way()
     {
-        cout << sha256_use_ssse3() << endl;
-
         SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
         // Compute maximum possible target to filter out majority of obviously insufficient hashes
