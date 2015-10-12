@@ -734,7 +734,7 @@ Value sendmany(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 2 || params.size() > 4)
         throw runtime_error(
-            "sendmany <fromaccount> {address:amount,...} [minconf=1] [comment]\n"
+            "sendmany <fromaccount> '{address:amount,...}' [minconf=1] [comment]\n"
             "amounts are double-precision floating point numbers"
             + HelpRequiringPassphrase());
 

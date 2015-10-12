@@ -228,7 +228,7 @@ Value createrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "createrawtransaction [{\"txid\":txid,\"vout\":n},...] {address:amount,...}\n"
+            "createrawtransaction '[{\"txid\":txid,\"vout\":n},...]' '{address:amount,...}'\n"
             "Create a transaction spending given inputs\n"
             "(array of objects containing transaction id and output number),\n"
             "sending to given address(es).\n"
@@ -341,7 +341,7 @@ Value signrawtransaction(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 4)
         throw runtime_error(
-            "signrawtransaction <hex string> [{\"txid\":txid,\"vout\":n,\"scriptPubKey\":hex,\"redeemScript\":hex},...] [<privatekey1>,...] [sighashtype=\"ALL\"]\n"
+            "signrawtransaction <hex string> '[{\"txid\":txid,\"vout\":n,\"scriptPubKey\":hex,\"redeemScript\":hex},...]' '[<privatekey1>,...]' [sighashtype=\"ALL\"]\n"
             "Sign inputs for raw transaction (serialized, hex-encoded).\n"
             "Second optional argument (may be null) is an array of previous transaction outputs that\n"
             "this transaction depends on but may not yet be in the blockchain.\n"

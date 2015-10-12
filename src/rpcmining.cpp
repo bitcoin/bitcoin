@@ -78,7 +78,7 @@ Value scaninput(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "scaninput {\"txid\":txid, \"vout\":[vout1, vout2, ..., voutN], \"difficulty\":difficulty, \"days\":days}\n"
+            "scaninput '{\"txid\":txid, \"vout\":[vout1, vout2, ..., voutN], \"difficulty\":difficulty, \"days\":days}'\n"
             "Scan specified transaction or input for suitable kernel solutions.\n"
             "    difficulty - upper limit for difficulty, current difficulty by default;\n"
             "    days - time window, 90 days by default.\n"
