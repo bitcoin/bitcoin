@@ -584,17 +584,16 @@ public:
         uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256();
 
 #ifdef __i386__
-        SHA256_CTX ctx = workerCtx;
+        SHA256_CTX ctx, workerCtx;
+        // Init new sha256 context and update it
+        //   with first 24 bytes of kernel
+        SHA256_Init(&ctx);
+        SHA256_Update(&ctx, kernel, 8 + 16);
+        workerCtx = ctx; // save context
 
         // Sha256 result buffer
         uint32_t hashProofOfStake[8];
-
-        // Compute maximum possible target to filter out majority of obviously insufficient hashes
-        CBigNum bnTargetPerCoinDay;
-        bnTargetPerCoinDay.SetCompact(nBits);
-
-        uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256(),
-            *pnHashProofOfStake = (uint256 *)&hashProofOfStake;
+        uint256 *pnHashProofOfStake = (uint256 *)&hashProofOfStake;
 
         // Search forward in time from the given timestamp
         // Stopping search in case of shutting down
