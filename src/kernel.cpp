@@ -460,8 +460,10 @@ static const uint32_t block2_suffix_4way[4 * 8] = {
 static const uint32_t sha256_initial[8] = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 };
 
 extern "C" int sha256_use_4way();
-extern "C" void sha256_init(uint32_t *state);
+#ifndef __i386__
 extern "C" void sha256_transform(uint32_t *state, const uint32_t *block, int swap);
+#endif
+
 extern "C" void sha256_init_4way(uint32_t *state);
 extern "C" void sha256_transform_4way(uint32_t *state, const uint32_t *block, int swap);
 
@@ -581,6 +583,45 @@ public:
         bnTargetPerCoinDay.SetCompact(nBits);
         uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256();
 
+#ifdef __i386__
+        SHA256_CTX ctx = workerCtx;
+
+        // Sha256 result buffer
+        uint32_t hashProofOfStake[8];
+
+        // Compute maximum possible target to filter out majority of obviously insufficient hashes
+        CBigNum bnTargetPerCoinDay;
+        bnTargetPerCoinDay.SetCompact(nBits);
+
+        uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256(),
+            *pnHashProofOfStake = (uint256 *)&hashProofOfStake;
+
+        // Search forward in time from the given timestamp
+        // Stopping search in case of shutting down
+        for (uint32_t nTimeTx=nIntervalBegin, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<nIntervalEnd && !fShutdown; nTimeTx++)
+        {
+            // Complete first hashing iteration
+            uint256 hash1;
+            SHA256_Update(&ctx, (unsigned char*)&nTimeTx, 4);
+            SHA256_Final((unsigned char*)&hash1, &ctx);
+
+            // Restore context
+            ctx = workerCtx;
+
+            // Finally, calculate kernel hash
+            SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
+
+            // Skip if hash doesn't satisfy the maximum target
+            if (hashProofOfStake[7] > nMaxTarget32)
+                continue;
+
+            CBigNum bnCoinDayWeight = bnValueIn * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
+            CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
+
+            if (bnTargetProofOfStake >= CBigNum(*pnHashProofOfStake))
+                solutions.push_back(std::pair<uint256,uint32_t>(*pnHashProofOfStake, nTimeTx));
+        }
+#else
         uint32_t block1[16] __attribute__((aligned(16)));
         uint32_t block2[16] __attribute__((aligned(16)));
         uint32_t candidate[8] __attribute__((aligned(16)));
@@ -624,6 +665,7 @@ public:
             if (bnTargetProofOfStake >= CBigNum(nHashProofOfStake))
                 solutions.push_back(std::pair<uint256,uint32_t>(nHashProofOfStake, nTimeTx));
         }
+#endif
     }
 
     void Do()
