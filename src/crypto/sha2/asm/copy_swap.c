@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <stdint.h>
-#include <immintrin.h>
 
 void copy_swap_hashes(uint32_t *blocks, uint32_t *state)
 {
@@ -42,6 +41,8 @@ void copy_swap_hashes(uint32_t *blocks, uint32_t *state)
 }
 
 #ifdef USE_SSSE3
+#include <immintrin.h>
+
 void copy_swap_hashes_ssse3(uint32_t *blocks, uint32_t *state) 
 {
     __m128i mask = _mm_set_epi8(12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3);
