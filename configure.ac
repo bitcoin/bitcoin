@@ -107,6 +107,11 @@ AC_ARG_ENABLE([comparison-tool-reorg-tests],
     [use_comparison_tool_reorg_tests=$enableval],
     [use_comparison_tool_reorg_tests=no])
 
+AC_ARG_ENABLE([extended-rpc-tests],
+    AS_HELP_STRING([--enable-extended-rpc-tests],[enable expensive RPC tests when using lcov (default no)]),
+    [use_extended_rpc_tests=$enableval],
+    [use_extended_rpc_tests=no])
+
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
   [enable QR code support (default is yes if qt is enabled and libqrencode is found)])],
@@ -340,6 +345,10 @@ if test x$use_comparison_tool_reorg_tests != xno; then
   AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 1)
 else
   AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 0)
+fi
+
+if test x$use_extended_rpc_tests != xno; then
+  AC_SUBST(EXTENDED_RPC_TESTS, -extended)
 fi
 
 if test x$use_lcov = xyes; then
