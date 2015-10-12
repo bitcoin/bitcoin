@@ -139,7 +139,7 @@ contains(USE_ASM, 1) {
     }
 
     SOURCES += src/crypto/scrypt/asm/scrypt-arm.S src/crypto/scrypt/asm/scrypt-x86.S src/crypto/scrypt/asm/scrypt-x86_64.S src/crypto/scrypt/asm/asm-wrapper.cpp
-    SOURCES += src/crypto/sha2/asm/sha2-arm.S src/crypto/sha2/asm/sha2-x86.S src/crypto/sha2/asm/sha2-x86_64.S src/crypto/sha2/asm/copy_swap.c
+    SOURCES += src/crypto/sha2/asm/sha2-arm.S src/crypto/sha2/asm/sha2-x86.S src/crypto/sha2/asm/sha2-x86_64.S
 } else {
     # use: qmake "USE_SSE2=1"
     contains(USE_SSE2, 1) {

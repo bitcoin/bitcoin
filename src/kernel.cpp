@@ -430,9 +430,9 @@ bool CheckStakeKernelHash(uint32_t nBits, const CBlock& blockFrom, uint32_t nTxP
 #ifdef USE_ASM
 
 // kernel padding
-static const uint32_t block1_suffix[9] = { 0x80000000, 0, 0, 0, 0, 0, 0, 0, 0xe0000000 };
+static const uint32_t block1_suffix[9] = { 0x80000000, 0, 0, 0, 0, 0, 0, 0, 0x000000e0 };
 static const uint32_t block1_suffix_4way[4 * 9] = {
-    0x00000080, 0x00000080, 0x00000080, 0x00000080,
+    0x80000000, 0x80000000, 0x80000000, 0x80000000,
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
@@ -440,20 +440,20 @@ static const uint32_t block1_suffix_4way[4 * 9] = {
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
-    0xe0000000, 0xe0000000, 0xe0000000, 0xe0000000
+    0x000000e0, 0x000000e0, 0x000000e0, 0x000000e0
 };
 
 // hash padding
-static const uint32_t block2_suffix[8] = { 0x80000000, 0, 0, 0, 0, 0, 0, 0x00010000 };
+static const uint32_t block2_suffix[8] = { 0x80000000, 0, 0, 0, 0, 0, 0, 0x00000100 };
 static const uint32_t block2_suffix_4way[4 * 8] = {
-    0x00000080, 0x00000080, 0x00000080, 0x00000080,
+    0x80000000, 0x80000000, 0x80000000, 0x80000000,
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
-    0x00010000, 0x00010000, 0x00010000, 0x00010000
+    0x00000100, 0x00000100, 0x00000100, 0x00000100
 };
 
 extern "C" int sha256_use_4way();
@@ -461,15 +461,32 @@ extern "C" void sha256_init(uint32_t *state);
 extern "C" void sha256_transform(uint32_t *state, const uint32_t *block, int swap);
 extern "C" void sha256_init_4way(uint32_t *state);
 extern "C" void sha256_transform_4way(uint32_t *state, const uint32_t *block, int swap);
-extern "C" void copy_swap_hashes(uint32_t *blocks, uint32_t *state); // Generic block copy function
 
 #ifdef USE_SSSE3
-extern "C" int sha256_use_ssse3();
-extern "C" void copy_swap_hashes_ssse3(uint32_t *blocks, uint32_t *state); // SSSE3 optimized block copy function
+#include <immintrin.h>
 
-void (*copy_swap)(uint32_t *, uint32_t *) = (sha256_use_ssse3() != 0) ? &copy_swap_hashes_ssse3 : copy_swap_hashes;
+extern "C" int sha256_use_ssse3();
+bool fUseSSSE3 = sha256_use_ssse3() != 0;
+
+inline void copyrow_swap32(uint32_t *to, uint32_t *from)
+{
+    if (!fUseSSSE3)
+    {
+        for (int i = 0; i < 4; i++)
+            to[i] = __builtin_bswap32(from[i]);
+    }
+    else
+    {
+        __m128i mask = _mm_set_epi8(12, 13, 14, 15, 8, 9, 10, 11, 4, 5, 6, 7, 0, 1, 2, 3);
+        _mm_storeu_si128((__m128i *)&to[0], _mm_shuffle_epi8(_mm_loadu_si128((__m128i *)&from[0]), mask));
+    }
+}
 #else
-void (*copy_swap)(uint32_t *, uint32_t *) = &copy_swap_hashes;
+inline void copyrow_swap32(uint32_t *to, uint32_t *from)
+{
+    for (int i = 0; i < 4; i++)
+        to[i] = __builtin_bswap32(from[i]);
+}
 #endif
 
 bool fUse4Way = sha256_use_4way() != 0;
@@ -504,17 +521,15 @@ public:
 
         for(int i = 0; i < 7; i++)
         {
-            uint32_t nVal = pnKernel[i];
-            fill(vRow.begin(), vRow.end(), nVal);
-
-            for (int j = 0; j < 4; j++)
-            {
-                memcpy(&blocks1[i*4], &vRow[0], 16);
-            }
+            fill(vRow.begin(), vRow.end(), pnKernel[i]);
+            copyrow_swap32(&blocks1[i*4], &vRow[0]);
         }
 
         memcpy(&blocks1[28], &block1_suffix_4way[0], 36*4);   // sha256 padding
         memcpy(&blocks2[32], &block2_suffix_4way[0], 32*4);
+
+        uint32_t nTimeStamps[4] = {0, 0, 0, 0};
+        uint32_t nHashes[4] = {0, 0, 0, 0};
 
         // Search forward in time from the given timestamp
         // Stopping search in case of shutting down
@@ -523,34 +538,33 @@ public:
             sha256_init_4way(state1);
             sha256_init_4way(state2);
 
-            blocks1[24] = nTimeTx;
-            blocks1[25] = nTimeTx+1;
-            blocks1[26] = nTimeTx+2;
-            blocks1[27] = nTimeTx+3;
+            nTimeStamps[0] = nTimeTx;
+            nTimeStamps[1] = nTimeTx+1;
+            nTimeStamps[2] = nTimeTx+2;
+            nTimeStamps[3] = nTimeTx+3;
 
-            sha256_transform_4way(&state1[0], &blocks1[0], 1); // first hashing
-            copy_swap(&blocks2[0], &state1[0]);
-            sha256_transform_4way(&state2[0], &blocks2[0], 1); // second hashing
+            copyrow_swap32(&blocks1[24], &nTimeStamps[0]); // Kernel timestamps
+            sha256_transform_4way(&state1[0], &blocks1[0], 0); // first hashing
+            memcpy(&blocks2[0], &state1[0], 128);
+            sha256_transform_4way(&state2[0], &blocks2[0], 0); // second hashing
+            copyrow_swap32(&nHashes[0], &state2[28]);
 
             for(int nResult = 0; nResult < 4; nResult++)
             {
-                uint32_t nHash = __builtin_bswap32(state2[28+nResult]);
-
-                if (nHash <= nMaxTarget32) // Possible hit
+                if (nHashes[nResult] <= nMaxTarget32) // Possible hit
                 {
-                    uint32_t nTime = blocks1[24+nResult];
                     uint256 nHashProofOfStake = 0;
                     uint32_t *pnHashProofOfStake = (uint32_t *) &nHashProofOfStake;
-                    pnHashProofOfStake[7] = nHash;
 
                     for (int i = 0; i < 7; i++)
                         pnHashProofOfStake[i] = __builtin_bswap32(state2[(i*4) + nResult]);
+                    pnHashProofOfStake[7] = nHashes[nResult];
 
-                    CBigNum bnCoinDayWeight = bnValueIn * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
+                    CBigNum bnCoinDayWeight = bnValueIn * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeStamps[nResult]) / COIN / nOneDay;
                     CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
 
                     if (bnTargetProofOfStake >= CBigNum(nHashProofOfStake))
-                        solutions.push_back(std::pair<uint256,uint32_t>(nHashProofOfStake, nTime));
+                        solutions.push_back(std::pair<uint256,uint32_t>(nHashProofOfStake, nTimeStamps[nResult]));
                 }
             }
         }

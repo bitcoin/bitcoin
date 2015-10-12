@@ -126,7 +126,7 @@ endif
 ifdef USE_ASM
 # Assembler implementation
 OBJS += crypto/scrypt/asm/obj/scrypt-arm.o crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
-OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o crypto/sha2/asm/obj/copy_swap.o
+OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o
 
 crypto/scrypt/asm/obj/scrypt-x86.o: crypto/scrypt/asm/scrypt-x86.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
@@ -139,9 +139,6 @@ crypto/scrypt/asm/obj/scrypt-arm.o: crypto/scrypt/asm/scrypt-arm.S
 
 crypto/scrypt/asm/obj/asm-wrapper.o: crypto/scrypt/asm/asm-wrapper.cpp
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
-
-crypto/sha2/asm/obj/copy_swap.o: crypto/sha2/asm/copy_swap.c
-	$(CC)  -c $(CFLAGS) -MMD -o $@ $<
 
 DEFS += -DUSE_ASM
 
