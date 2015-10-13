@@ -188,7 +188,7 @@ crypto/sha2/asm/obj/sha2-x86.o: crypto/sha2/asm/sha2-x86.S
 crypto/sha2/asm/obj/sha2-x86_64.o: crypto/sha2/asm/sha2-x86_64.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
-crypto/sha2/asm/obj/sha2-arm.o: crypto/sha2/asm/sha2-x86.S
+crypto/sha2/asm/obj/sha2-arm.o: crypto/sha2/asm/sha2-arm.S
 	$(CXX) -c $(xCXXFLAGS) -MMD -o $@ $<
 
 DEFS += -DUSE_ASM
