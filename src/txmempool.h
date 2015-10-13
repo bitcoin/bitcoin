@@ -290,11 +290,13 @@ private:
     mutable int64_t lastRollingFeeUpdate;
     mutable bool blockSinceLastRollingFeeBump;
     mutable double rollingMinimumFeeRate; //! minimum fee to get into the pool, decreases exponentially
-    static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12;
 
     void trackPackageRemoved(const CFeeRate& rate);
 
 public:
+
+    static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
+
     typedef boost::multi_index_container<
         CTxMemPoolEntry,
         boost::multi_index::indexed_by<
