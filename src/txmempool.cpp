@@ -305,7 +305,7 @@ void CTxMemPoolEntry::UpdateState(int64_t modifySize, CAmount modifyFee, int64_t
     }
 }
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
+CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
     nTransactionsUpdated(0)
 {
     // Sanity checks off by default for performance, because otherwise
@@ -313,7 +313,8 @@ CTxMemPool::CTxMemPool(const CFeeRate& _minRelayFee) :
     // of transactions in the pool
     fSanityCheck = false;
 
-    minerPolicyEstimator = new CBlockPolicyEstimator(_minRelayFee);
+    minerPolicyEstimator = new CBlockPolicyEstimator(_minReasonableRelayFee);
+    minReasonableRelayFee = _minReasonableRelayFee;
 }
 
 CTxMemPool::~CTxMemPool()
