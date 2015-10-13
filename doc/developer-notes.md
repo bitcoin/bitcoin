@@ -1,5 +1,5 @@
-Coding Standards
-================
+Developer Notes
+===============
 
 Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
