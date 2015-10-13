@@ -78,7 +78,7 @@ bytes).
 These options can also be provided in bitcoin.conf.
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
-[ZeroMQ API](http://api.zeromq.org).
+[ZeroMQ API](http://api.zeromq.org/4-0:_start).
 
 Client side, then, the ZeroMQ subscriber socket must have the
 ZMQ_SUBSCRIBE option set to one or either of these prefixes (for
