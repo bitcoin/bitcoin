@@ -244,9 +244,9 @@ clean:
 	-rm -f crypto/scrypt/generic/obj/*.o
 	-rm -f crypto/scrypt/generic/obj/*.P
 	-rm -f crypto/scrypt/generic/obj/*.d
-        -rm -f crypto/sha2/asm/obj/*.o
-        -rm -f crypto/sha2/asm/obj/*.P
-        -rm -f crypto/sha2/asm/obj/*.d
+	-rm -f crypto/sha2/asm/obj/*.o
+	-rm -f crypto/sha2/asm/obj/*.P
+	-rm -f crypto/sha2/asm/obj/*.d
 	-rm -f obj/build.h
 
 FORCE:

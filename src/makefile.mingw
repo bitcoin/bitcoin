@@ -178,7 +178,7 @@ novacoind.exe: $(OBJS:obj/%=obj/%)
 clean:
 	-del /Q novacoind
 	-del /Q obj\*
-        -del /Q crypto\scrypt\asm\obj\*
-        -del /Q crypto\sha2\asm\obj\*
+	-del /Q crypto\scrypt\asm\obj\*
+	-del /Q crypto\sha2\asm\obj\*
 
 FORCE:
