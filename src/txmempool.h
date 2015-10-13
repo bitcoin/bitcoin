@@ -285,6 +285,8 @@ private:
     uint64_t totalTxSize; //! sum of all mempool tx' byte sizes
     uint64_t cachedInnerUsage; //! sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
+    CFeeRate minReasonableRelayFee;
+
 public:
     typedef boost::multi_index_container<
         CTxMemPoolEntry,
@@ -334,7 +336,12 @@ public:
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
-    CTxMemPool(const CFeeRate& _minRelayFee);
+    /** Create a new CTxMemPool.
+     *  minReasonableRelayFee should be a feerate which is, roughly, somewhere
+     *  around what it "costs" to relay a transaction around the network and
+     *  below which we would reasonably say a transaction has 0-effective-fee.
+     */
+    CTxMemPool(const CFeeRate& _minReasonableRelayFee);
     ~CTxMemPool();
 
     /**
