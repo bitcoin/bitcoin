@@ -626,8 +626,6 @@ sha256d_ms_finish:
 #endif
 
 
-#ifdef __ARM_NEON__
-
 	.text
 	.code 32
 	.align 2
@@ -1575,7 +1573,5 @@ sha256_use_4way:
 _sha256_use_4way:
 	mov	r0, #1
 	bx	lr
-
-#endif /* __ARM_NEON__ */
 
 #endif
