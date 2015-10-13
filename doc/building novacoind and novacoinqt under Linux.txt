@@ -4,7 +4,7 @@
 Ubuntu/Debian:
  sudo apt-get install git qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev
    libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev
-   libssl-dev libdb++-dev libminiupnpc-dev libqrencode-dev
+   libssl-dev libdb++-dev libqrencode-dev
 
 Если у вас возникла ошибка при установке qt4-qmake (Возникает на Ubuntu 14.04.2 и возможно в других версиях)
 libcheese-gtk23 : Depends: libclutter-gtk-1.0-0 (>= 0.91.8) but it is not going to be installed
@@ -18,7 +18,7 @@ libclutter-1.0-0 : Depends: libcogl-pango15 (>= 1.15.8) but it is not going to b
 sudo apt-get install  libglew-dev libcheese7 libcheese-gtk23 libclutter-gst-2.0-0 libcogl15 libclutter-gtk-1.0-0 libclutter-1.0-0  xserver-xorg-input-all
 
 openSUSE(проверено на версии 13.2):
- sudo zypper install git gcc gcc-c++ libqt4-devel boost-devel libopenssl-devel libdb-4_8-devel libminiupnpc-devel libqrencode3
+ sudo zypper install git gcc gcc-c++ libqt4-devel boost-devel libopenssl-devel libdb-4_8-devel libqrencode3
 
 После того, как установка завершалась, можно клонировать Novacoin репозитарий
 
@@ -27,10 +27,10 @@ openSUSE(проверено на версии 13.2):
 и наконец, скомпилировать свой клиент
 
  cd novacoin
- qmake USE_UPNP=1 USE_O3=1 USE_ASM=1 (если хотите LevelDB, то USE_LEVELDB=1)  
+ qmake USE_O3=1 USE_ASM=1 (если хотите LevelDB, то USE_LEVELDB=1)  
  make
  cd src
- make -f makefile.unix USE_UPNP=1  USE_O3=1 USE_ASM=1 (если хотите LevelDB, то USE_LEVELDB=1) 
+ make -f makefile.unix USE_O3=1 USE_ASM=1 (если хотите LevelDB, то USE_LEVELDB=1) 
  strip novacoind      
 
 Команды выше компилируют бинарные файлы с динамической линковкой, если вы хотите со статической линковкой и ваш дистрибутив содержит статические библиотеки(.a , а не .so), то добавьте:

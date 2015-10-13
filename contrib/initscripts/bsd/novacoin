@@ -30,7 +30,7 @@ command=/usr/local/bin/novacoind
 novacoin_chdir=${novacoin_datadir}
 pidfile="${novacoin_datadir}/novacoind.pid"
 stop_cmd=novacoin_stop
-command_args="-conf=${novacoin_config} -datadir=${novacoin_datadir} -noupnp -daemon -pid=${pidfile}"
+command_args="-conf=${novacoin_config} -datadir=${novacoin_datadir} -daemon -pid=${pidfile}"
 start_precmd="${name}_prestart"
 
 novacoin_create_datadir()

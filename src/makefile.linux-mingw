@@ -13,15 +13,12 @@ DEPSDIR:=/usr/$(TARGET_PLATFORM)-w64-mingw32
 
 BOOST_LIB_PATH:=$(DEPSDIR)/boost_1_57_0/stage/lib
 BDB_LIB_PATH:=$(DEPSDIR)/db-6.0.20.NC/build_unix
-MINIUPNPC_LIB_PATH:=$(DEPSDIR)/miniupnpc-1.9
 OPENSSL_LIB_PATH:=$(DEPSDIR)/openssl-1.0.1h
 
 BOOST_INCLUDE_PATH:=$(DEPSDIR)/boost_1_57_0
 BDB_INCLUDE_PATH:=$(DEPSDIR)/db-6.0.20.NC/build_unix
-MINIUPNPC_INCLUDE_PATH:=$(DEPSDIR)
 OPENSSL_INCLUDE_PATH:=$(DEPSDIR)/openssl-1.0.1h/include
 
-USE_UPNP:=0
 USE_LEVELDB:=0
 USE_IPV6:=1
 
@@ -30,14 +27,12 @@ INCLUDEPATHS= \
  -I"$(CURDIR)"/obj \
  -I"$(BOOST_INCLUDE_PATH)" \
  -I"$(BDB_INCLUDE_PATH)" \
- -I"$(OPENSSL_INCLUDE_PATH)" \
- -I"$(MINIUPNPC_INCLUDE_PATH)"
+ -I"$(OPENSSL_INCLUDE_PATH)"
 
 LIBPATHS= \
  -L"$(BOOST_LIB_PATH)" \
  -L"$(BDB_LIB_PATH)" \
- -L"$(OPENSSL_LIB_PATH)" \
- -L"$(MINIUPNPC_LIB_PATH)"
+ -L"$(OPENSSL_LIB_PATH)"
 
 LIBS= \
  -l boost_system-mt \
@@ -66,15 +61,6 @@ endif
 DEBUGFLAGS=-g
 CFLAGS=$(xOPT_LEVEL) -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -static-libgcc -static-libstdc++
-
-ifndef USE_UPNP
-	override USE_UPNP = -
-endif
-ifneq (${USE_UPNP}, -)
-	LIBPATHS += -L"$(DEPSDIR)/miniupnpc"
-	LIBS += -l miniupnpc -l iphlpapi
-	DEFS += -DSTATICLIB -DUSE_UPNP=$(USE_UPNP)
-endif
 
 ifneq (${USE_IPV6}, -)
 	DEFS += -DUSE_IPV6=$(USE_IPV6)

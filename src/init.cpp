@@ -263,13 +263,6 @@ std::string HelpMessage()
         "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
         "  -maxreceivebuffer=<n>  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 5000)") + "\n" +
         "  -maxsendbuffer=<n>     " + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 1000)") + "\n" +
-#ifdef USE_UPNP
-#if USE_UPNP
-        "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n" +
-#else
-        "  -upnp                  " + _("Use UPnP to map the listening port (default: 0)") + "\n" +
-#endif
-#endif
         "  -detachdb              " + _("Detach block and address databases. Increases shutdown time (default: 0)") + "\n" +
 
 #ifdef DB_LOG_IN_MEMORY
@@ -421,7 +414,6 @@ bool AppInit2()
 
     if (!GetBoolArg("-listen", true)) {
         // do not map ports or try to retrieve public IP when not listening (pointless)
-        SoftSetBoolArg("-upnp", false);
         SoftSetBoolArg("-discover", false);
     }
 
@@ -668,13 +660,10 @@ bool AppInit2()
         fNoListen = !GetBoolArg("-listen", true);
         fDiscover = GetBoolArg("-discover", true);
         fNameLookup = GetBoolArg("-dns", true);
-#ifdef USE_UPNP
-        fUseUPnP = GetBoolArg("-upnp", USE_UPNP);
-#endif
     } else {
         // Don't listen, discover addresses or search for nodes if IPv4 and IPv6 networking is disabled.
         fNoListen = true;
-        fDiscover = fNameLookup = fUseUPnP = false;
+        fDiscover = fNameLookup = false;
         SoftSetBoolArg("-irc", false);
         SoftSetBoolArg("-dnsseed", false);
     }

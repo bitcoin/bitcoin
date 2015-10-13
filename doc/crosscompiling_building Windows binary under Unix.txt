@@ -66,59 +66,7 @@ libz.a
 libdb.a
 libdb_cxx.a
 
-2.5) Miniupnpc
--Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150206.tar.gz
--Распакуйте в домашнюю папку
--Переименуйте папку miniupnpc-1.9.20150206 в miniupnpc
--Перейдите в папку miniupnpc и создайте файл miniupnpcstrings.h
--Напишите в нём:
-
-#ifndef MINIUPNPCSTRINGS_H_INCLUDED
-#define MINIUPNPCSTRINGS_H_INCLUDED
-
-#define OS_STRING "MSWindows/6.1.7601"
-#define MINIUPNPC_VERSION_STRING "1.9"
-
-#if 0
-/* according to "UPnP Device Architecture 1.0" */
-#define UPNP_VERSION_STRING "UPnP/1.0"
-#else
-/* according to "UPnP Device Architecture 1.1" */
-#define UPNP_VERSION_STRING "UPnP/1.1"
-#endif
-
-#endif
-
-и сохраните файл
--Откройте файл Makefile.mingw
--Измените строку 7:
-измените
- CC = gcc
-на
- CC=$(CROSS)gcc
-
--Удалите строки с 67 по 73
-
-wingenminiupnpcstrings:	wingenminiupnpcstrings.o
-
-wingenminiupnpcstrings.o:	wingenminiupnpcstrings.c
-
-miniupnpcstrings.h: miniupnpcstrings.h.in wingenminiupnpcstrings
-	wingenminiupnpcstrings $< $@
-
--Сохраните файл
-
--Откройте терминал
-
- export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
- make CROSS=i686-w64-mingw32.static- -f Makefile.mingw init upnpc-static
-
-
-Проверка, что установка Miniupnpc прошла успешно:
-В папке miniupnpc должен появиться файл libminiupnpc.a
-
-
-2.6) qrencode
+2.5) qrencode
 -Скачайте http://download.sourceforge.net/libpng/libpng-1.6.15.tar.gz?download
 -Распакуйте в домашнюю папку
 -Откройте терминал
@@ -150,7 +98,7 @@ libpng.a
 в папке /home/<ваше имя>/qrencode-3.4.4/.libs должен быть файл:
 libqrencode.a
 
-2.7 Qt 5 и Qt 4
+2.6 Qt 5 и Qt 4
 
 Qt 4
 -Откройте терминал
@@ -198,7 +146,6 @@ Using Qt version 5.4.0 in /home/<ваше имя>/mxe/usr/i686-w64-mingw32.stati
 -Вставьте 
 CC=$(CROSS)gcc
 CXX=$(CROSS)g++
--Поменяйте USE_UPNP:=0 на USE_UPNP:=1
 -Добавьте  строчку USE_ASM:=1
 -Поменяйте текущие INCLUDEPATHS, LIBPATHS, LIBS на:
 
@@ -213,7 +160,6 @@ INCLUDEPATHS= \
 LIBPATHS= \
  -L"$(CURDIR)/leveldb" \
  -L"/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib" \
- -L"/home/<ваше имя>/miniupnpc" \
  -L"/home/<ваше имя>/db-6.0.20/build_unix" \
 
 LIBS= \
@@ -301,8 +247,6 @@ BDB_INCLUDE_PATH=/home/<ваше имя>/db-6.0.20/build_unix
 BDB_LIB_PATH=//home/<ваше имя>/db-6.0.20/build_unix
 OPENSSL_INCLUDE_PATH=/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/include
 OPENSSL_LIB_PATH=/home/<ваше имя>/mxe/usr/i686-w64-mingw32.static/lib
-MINIUPNPC_INCLUDE_PATH=/home/<ваше имя>/
-MINIUPNPC_LIB_PATH=/home/<ваше имя>/miniupnpc
 QRENCODE_INCLUDE_PATH=/home/<ваше имя>/qrencode-3.4.4
 QRENCODE_LIB_PATH=/home/<ваше имя>/qrencode-3.4.4/.libs
 
@@ -344,28 +288,28 @@ Qt4 + транзакционный индекс LevelDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt4 "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+i686-w64-mingw32.static-qmake-qt4 "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt4 + транзакционный индекс BDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt4 "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+i686-w64-mingw32.static-qmake-qt4 "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt5 + транзакционный индекс LevelDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt5 "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+i686-w64-mingw32.static-qmake-qt5 "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 Qt5 + транзакционный индекс BDB
 
 export PATH=/home/<ваше имя>/mxe/usr/bin:$PATH
 cd /home/<ваше имя>/novacoin
-i686-w64-mingw32.static-qmake-qt5 "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+i686-w64-mingw32.static-qmake-qt5 "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
 make -j n -f Makefile.Release  (вместо n количество ядер вашего процессора, которые вы хотите выделить под сборку)
 
 

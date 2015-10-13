@@ -26,7 +26,7 @@ for Ubuntu >= 12.04 (please read the 'Berkely DB version warning' below):
 
     apt-get install qt4-qmake libqt4-dev build-essential libboost-dev libboost-system-dev \
         libboost-filesystem-dev libboost-program-options-dev libboost-thread-dev \
-        libssl-dev libdb++-dev libminiupnpc-dev
+        libssl-dev libdb++-dev
 
 then execute the following:
 
@@ -71,7 +71,7 @@ Mac OS X
 ::
 
 	sudo port selfupdate
-	sudo port install boost db48 miniupnpc
+	sudo port install boost db48
 
 - Open the .pro file in Qt Creator and build as normal (cmd-B)
 
@@ -117,30 +117,6 @@ If you're using clang compiler then you need to unroll macroses before compiling
     ../contrib/clang/nomacro.pl
 
 No additional external dependencies required. Note that only x86, x86_64 and ARM processors are supported.
-
-UPNnP port forwarding
----------------------
-
-To use UPnP for port forwarding behind a NAT router (recommended, as more connections overall allow for a faster and more stable novacoin experience), pass the following argument to qmake:
-
-::
-
-    qmake "USE_UPNP=1"
-
-(in **Qt Creator**, you can find the setting for additional qmake arguments under "Projects" -> "Build Settings" -> "Build Steps", then click "Details" next to **qmake**)
-
-This requires miniupnpc for UPnP port mapping.  It can be downloaded from
-http://miniupnp.tuxfamily.org/files/.  UPnP support is not compiled in by default.
-
-Set USE_UPNP to a different value to control this:
-
-+------------+--------------------------------------------------------------------------+
-| USE_UPNP=- | no UPnP support, miniupnpc not required;                                 |
-+------------+--------------------------------------------------------------------------+
-| USE_UPNP=0 | (the default) built with UPnP, support turned off by default at runtime; |
-+------------+--------------------------------------------------------------------------+
-| USE_UPNP=1 | build with UPnP support turned on by default at runtime.                 |
-+------------+--------------------------------------------------------------------------+
 
 Notification support for recent (k)ubuntu versions
 ---------------------------------------------------

@@ -68,15 +68,7 @@ cd C:\deps\boost_1_57_0\
 bootstrap.bat mingw
 b2 --build-type=complete --with-chrono --with-filesystem --with-program_options --with-system --with-thread toolset=gcc variant=release link=static threading=multi runtime-link=static stage
 
-2.4 Miniupnpc
--Скачайте http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20150206.tar.gz
--Распакуйте miniupnpc-1.9.20150206.tar.gz с помощью 7z. (Распаковать нужно 2 раза, нажмите на файле miniupnpc-1.9.20150206.tar.gz левой кнопкой мыши и выберите 7-Zip, затем Распаковать здесь. Появится файл miniupnpc-1.9.20150206.tar. С ним аналогично, левая кнопка мыши -> 7-Zip -> Распаковать здесь. Появится папка miniupnpc-1.9.20150206. Переименуйте её в miniupnpc.
--Откройте командную строку Windows, и выполните следующий код:
-
-cd C:\deps\miniupnpc
-mingw32-make -f Makefile.mingw init upnpc-static
-
-2.5 qrencode
+2.4 qrencode
 -Скачайте http://download.sourceforge.net/libpng/libpng-1.6.15.tar.gz?download
 -Распакуйте
 -Откройте MinGw shell (C:\MinGW\msys\1.0\msys.bat) и выполните следующий код:
@@ -99,7 +91,7 @@ configure --enable-static --disable-shared --without-tools
 
 make
 
-2.6 Qt 5 и Qt 4
+2.5 Qt 5 и Qt 4
 Библиотеки Qt будем хранить в папке C:\Qt
 Для ускорения компиляции  вместо 
 mingw32-make 
@@ -158,7 +150,6 @@ mingw32-make
 3.2 Собираем novacoind 
 -Перейдите в папку C:\MyProjects\novacoin-master\src
 -Откройте файл makefile.mingw в текстовом редакторе.(При написании инструкции использовался WordPad)
--Поменяйте USE_UPNP:=0 на USE_UPNP:=1
 -Добавьте  строчку USE_ASM:=1
 -Поменяйте текущие INCLUDEPATHS, LIBPATHS, LIBS на:
 
@@ -174,7 +165,6 @@ INCLUDEPATHS= \
 LIBPATHS= \
  -L"$(CURDIR)/leveldb" \
  -L"/c/deps/boost_1_57_0/stage/lib" \
- -L"/c/deps/miniupnpc" \
  -L"/c/deps/db-6.0.20/build_unix" \
  -L"/c/deps/openssl-1.0.2"
 
@@ -251,8 +241,6 @@ BDB_INCLUDE_PATH=C:/deps/db-6.0.20/build_unix
 BDB_LIB_PATH=C:/deps/db-6.0.20/build_unix
 OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.2/include
 OPENSSL_LIB_PATH=C:/deps/openssl-1.0.2
-MINIUPNPC_INCLUDE_PATH=C:/deps/
-MINIUPNPC_LIB_PATH=C:/deps/miniupnpc
 QRENCODE_INCLUDE_PATH=C:/deps/qrencode-3.4.4
 QRENCODE_LIB_PATH=C:/deps/qrencode-3.4.4/.libs
 
@@ -284,7 +272,7 @@ Qt5 + транзакционный индекс BDB
 
 set PATH=%PATH%;C:\Qt\5.4.0\bin
 cd C:\MyProjects\novacoin-master
-qmake "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+qmake "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
 mingw32-make -f Makefile.Release
 
 
@@ -292,21 +280,21 @@ Qt5 + транзакционный индекс LevelDB
 
 set PATH=%PATH%;C:\Qt\5.4.0\bin
 cd C:\MyProjects\novacoin-master
-qmake "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+qmake "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
 mingw32-make -f Makefile.Release
 
 Qt4 + транзакционный индекс BDB
 
 set PATH=%PATH%;C:\Qt\4.8.6\bin
 cd C:\MyProjects\novacoin-master
-qmake "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
+qmake "USE_IPV6=1" "USE_ASM=1" novacoin-qt.pro
 mingw32-make -f Makefile.Release
 
 Qt4 + транзакционный индекс LevelDB
 
 set PATH=%PATH%;C:\Qt\4.8.6\bin
 cd C:\MyProjects\novacoin-master
-qmake "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
+qmake "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt.pro
 mingw32-make -f Makefile.Release
 
 
@@ -360,9 +348,7 @@ make
 
 2.3 Так же как 32 bit, только распаковка в C:\deps\x64 и команда cd C:\deps\boost_1_57_0\ меняется на cd C:\deps\x64\boost_1_57_0\ 
 
-2.4 Так же как 32 bit, только распаковка в C:\deps\x64 и заменить cd C:\deps\miniupnpc на cd C:\deps\x64\miniupnpc
-
-2.5 Часть с libpng так же как 32 bit, только распаковка в C:\deps\x64 
+2.4 Часть с libpng так же как 32 bit, только распаковка в C:\deps\x64 
 Затем
 -Скачайте http://fukuchi.org/works/qrencode/qrencode-3.4.4.tar.gz
 -Распакуйте в C:\deps\x64
@@ -378,7 +364,7 @@ configure --enable-static --disable-shared --without-tools
 make
 
 
-2.6 Qt 5 и Qt 4
+2.5 Qt 5 и Qt 4
 Библиотеки Qt будем хранить в папке C:\Qt
 Для ускорения компиляции  вместо 
 mingw32-make 
@@ -481,7 +467,7 @@ Qt5 + транзакционный индекс BDB
 
 set PATH=%PATH%;C:\Qt\5.4.0-x64\bin
 cd C:\MyProjects\novacoin-master
-qmake "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt64.pro
+qmake "USE_IPV6=1" "USE_ASM=1" novacoin-qt64.pro
 mingw32-make -f Makefile.Release
 
 
@@ -489,21 +475,21 @@ Qt5 + транзакционный индекс LevelDB
 
 set PATH=%PATH%;C:\Qt\5.4.0-x64\bin
 cd C:\MyProjects\novacoin-master
-qmake "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt64.pro
+qmake "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt64.pro
 mingw32-make -f Makefile.Release
 
 Qt4 + транзакционный индекс BDB
 
 set PATH=%PATH%;C:\Qt\4.8.6-x64\bin
 cd C:\MyProjects\novacoin-master
-qmake "USE_UPNP=1" "USE_IPV6=1" "USE_ASM=1" novacoin-qt64.pro
+qmake "USE_IPV6=1" "USE_ASM=1" novacoin-qt64.pro
 mingw32-make -f Makefile.Release
 
 Qt4 + транзакционный индекс LevelDB
 
 set PATH=%PATH%;C:\Qt\4.8.6-x64\bin
 cd C:\MyProjects\novacoin-master
-qmake "USE_UPNP=1" "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt64.pro
+qmake "USE_IPV6=1" "USE_LEVELDB=1" "USE_ASM=1" novacoin-qt64.pro
 mingw32-make -f Makefile.Release
 
 Если всё сделано правильно, то файл novacoin-qt.exe будет находится в папке C:\MyProjects\novacoin-master\release
