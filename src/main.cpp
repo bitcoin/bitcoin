@@ -138,6 +138,20 @@ namespace {
       */
     multimap<CBlockIndex*, CBlockIndex*> mapBlocksUnlinked;
 
+    /**
+     * Whether we are in initial headers download.  This flag is set when
+     * we receive full-sized "headers" messages and unset on fewer headers.
+     * If true, this prevents the node from requesting newly announced blocks.
+     */
+    bool fInitialHeadersSync = false;
+    /**
+     * Minimum number of new best headers a peer must include in a headers
+     * message before we set fInitialHeadersSync.  This must be high enough
+     * so that an attacker is unlikely to create this many new headers
+     * with PoW.
+     */
+    static const int MIN_BEST_HEADERS_INITIAL_SYNC = 12;
+
     CCriticalSection cs_LastBlockFile;
     std::vector<CBlockFileInfo> vinfoBlockFile;
     int nLastBlockFile = 0;
@@ -4120,7 +4134,21 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
-                if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash)) {
+
+                /* If we are in initial headers sync, do not request the newly
+                   announced block.  Otherwise, we may end up requesting the
+                   same headers multiple times; each request even starts a
+                   "chain" of requests for more, which would all be redundant.
+
+                   Note that fInitialHeadersSync is only set to true if a peer
+                   sent us new and, importantly, best headers without any
+                   other peer sending fewer headers in response to a
+                   "getheaders" request afterwards.  It is not possible to
+                   abuse this to make an actually up-to-date node not request
+                   a new block, since an attacker would have to prepare
+                   MIN_BEST_HEADERS_INITIAL_SYNC headers with valid PoW.  */
+
+                if (!fAlreadyHave && !fImporting && !fReindex && !mapBlocksInFlight.count(inv.hash) && !fInitialHeadersSync) {
                     // First request the headers preceding the announced block. In the normal fully-synced
                     // case where a new block is announced that succeeds the current tip (no reorganization),
                     // there are no such headers.
@@ -4406,14 +4434,24 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         LOCK(cs_main);
 
+        /* For now, reset fInitialHeadersSync to false.  It is safer
+           to disable the flag when in doubt.  In case this message
+           looks like we are still in the initial sync, we enable
+           it later on again.  */
+        fInitialHeadersSync = false;
+
         if (nCount == 0) {
             // Nothing interesting. Stop asking this peers for more headers.
             return true;
         }
 
+        const CBlockIndex *pindexFormerBest = pindexBestHeader;
+        bool fExtendingFormerBest = false;
         CBlockIndex *pindexLast = NULL;
         BOOST_FOREACH(const CBlockHeader& header, headers) {
             CValidationState state;
+            if (header.hashPrevBlock == *pindexFormerBest->phashBlock)
+                fExtendingFormerBest = true;
             if (pindexLast != NULL && header.hashPrevBlock != pindexLast->GetBlockHash()) {
                 Misbehaving(pfrom->GetId(), 20);
                 return error("non-continuous headers sequence");
@@ -4433,6 +4471,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (nCount == MAX_HEADERS_RESULTS && pindexLast) {
             // Headers message had its maximum size; the peer may have more headers.
+
+            /* We also possibly set the flag for initial headers sync.  This
+               prevents the node from requesting newly announced blocks, so
+               must be done carefully.  We only set it if not only the headers
+               message was full size, but also many of them were new and best
+               headers for us.  */
+            assert(!headers.empty());
+            if (fExtendingFormerBest && pindexLast->nHeight >= pindexFormerBest->nHeight + MIN_BEST_HEADERS_INITIAL_SYNC)
+            {
+                LogPrint("net", "seems we are in initial headers sync\n");
+                fInitialHeadersSync = true;
+            }
+
             // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
             // from there instead.
             LogPrint("net", "more getheaders (%d) to end to peer=%d (startheight:%d)\n", pindexLast->nHeight, pfrom->id, pfrom->nStartingHeight);
