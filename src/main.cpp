@@ -4955,7 +4955,16 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
                 state.fSyncStarted = true;
                 nSyncStarted++;
-                CBlockIndex *pindexStart = pindexBestHeader->pprev ? pindexBestHeader->pprev : pindexBestHeader;
+                const CBlockIndex *pindexStart = pindexBestHeader;
+                /* If possible, start at the block preceding the currently
+                   best known header.  This ensures that we always get a
+                   non-empty list of headers back as long as the peer
+                   is up-to-date.  With a non-empty response, we can initialise
+                   the peer's known best block.  This wouldn't be possible
+                   if we requested starting at pindexBestHeader and
+                   got back an empty response.  */
+                if (pindexStart->pprev)
+                    pindexStart = pindexStart->pprev;
                 LogPrint("net", "initial getheaders (%d) to peer=%d (startheight:%d)\n", pindexStart->nHeight, pto->id, pto->nStartingHeight);
                 pto->PushMessage("getheaders", chainActive.GetLocator(pindexStart), uint256());
             }
