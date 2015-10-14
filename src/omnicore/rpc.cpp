@@ -119,7 +119,7 @@ void MetaDexObjectsToJSON(std::vector<CMPMetaDEx>& vMetaDexObjs, Array& response
     }
 }
 
-void BalanceToJSON(const std::string& address, uint32_t property, Object& balance_obj, bool divisible)
+bool BalanceToJSON(const std::string& address, uint32_t property, Object& balance_obj, bool divisible)
 {
     // confirmed balance minus unconfirmed, spent amounts
     int64_t nAvailable = getUserAvailableMPbalance(address, property);
@@ -135,6 +135,12 @@ void BalanceToJSON(const std::string& address, uint32_t property, Object& balanc
     } else {
         balance_obj.push_back(Pair("balance", FormatIndivisibleMP(nAvailable)));
         balance_obj.push_back(Pair("reserved", FormatIndivisibleMP(nReserved)));
+    }
+
+    if (nAvailable == 0 && nReserved == 0) {
+        return false;
+    } else {
+        return true;
     }
 }
 
@@ -419,9 +425,11 @@ Value omni_getallbalancesforid(const Array& params, bool fHelp)
         }
         Object balanceObj;
         balanceObj.push_back(Pair("address", address));
-        BalanceToJSON(address, propertyId, balanceObj, isDivisible);
+        bool nonEmptyBalance = BalanceToJSON(address, propertyId, balanceObj, isDivisible);
 
-        response.push_back(balanceObj);
+        if (nonEmptyBalance) {
+            response.push_back(balanceObj);
+        }
     }
 
     return response;
@@ -467,9 +475,11 @@ Value omni_getallbalancesforaddress(const Array& params, bool fHelp)
     while (0 != (propertyId = addressTally->next())) {
         Object balanceObj;
         balanceObj.push_back(Pair("propertyid", (uint64_t) propertyId));
-        BalanceToJSON(address, propertyId, balanceObj, isPropertyDivisible(propertyId));
+        bool nonEmptyBalance = BalanceToJSON(address, propertyId, balanceObj, isPropertyDivisible(propertyId));
 
-        response.push_back(balanceObj);
+        if (nonEmptyBalance) {
+            response.push_back(balanceObj);
+        }
     }
 
     return response;
