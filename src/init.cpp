@@ -190,12 +190,11 @@ bool AppInit(int argc, char* argv[])
 extern void noui_connect();
 int main(int argc, char* argv[])
 {
-    bool fRet = false;
 
     // Connect bitcoind signal handlers
     noui_connect();
 
-    fRet = AppInit(argc, argv);
+    bool fRet = AppInit(argc, argv);
 
     if (fRet && fDaemon)
         return 0;
