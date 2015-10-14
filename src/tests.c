@@ -2322,7 +2322,8 @@ void test_ecdsa_end_to_end(void) {
     unsigned char privkey[32];
     unsigned char message[32];
     unsigned char privkey2[32];
-    secp256k1_ecdsa_signature signature[5];
+    secp256k1_ecdsa_signature signature[6];
+    secp256k1_scalar r, s;
     unsigned char sig[74];
     size_t siglen = 74;
     unsigned char pubkeyc[65];
@@ -2409,6 +2410,21 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[1], message, &pubkey) == 1);
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[2], message, &pubkey) == 1);
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[3], message, &pubkey) == 1);
+    /* Test lower-S form, malleate, verify and fail, test again, malleate again */
+    CHECK(!secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[0]));
+    secp256k1_ecdsa_signature_load(ctx, &r, &s, &signature[0]);
+    secp256k1_scalar_negate(&s, &s);
+    secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
+    CHECK(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 0);
+    CHECK(secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
+    CHECK(secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
+    CHECK(!secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
+    CHECK(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
+    secp256k1_scalar_negate(&s, &s);
+    secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
+    CHECK(!secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
+    CHECK(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
+    CHECK(memcmp(&signature[5], &signature[0], 64) == 0);
 
     /* Serialize/parse DER and verify again */
     CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, sig, &siglen, &signature[0]) == 1);
