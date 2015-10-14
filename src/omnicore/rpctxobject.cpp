@@ -1,29 +1,36 @@
-// Handler for populating RPC transaction objects
+/**
+ * @file rpctxobject.cpp
+ *
+ * Handler for populating RPC transaction objects.
+ */
+
 #include "omnicore/rpctxobject.h"
 
-// Bitcoin Core includes
-#include "wallet.h"
-#include "json/json_spirit_value.h"
-#include "json/json_spirit_reader_template.h"
-
-// Omni Core includes
-#include "omnicore/rpctxobject.h"
-#include "omnicore/omnicore.h"
 #include "omnicore/dex.h"
-#include "omnicore/mdex.h"
 #include "omnicore/errors.h"
+#include "omnicore/mdex.h"
+#include "omnicore/omnicore.h"
+#include "omnicore/pending.h"
+#include "omnicore/rpctxobject.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
-#include "omnicore/pending.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/wallettxs.h"
 
-// Boost includes
-#include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
+#include "main.h"
+#include "primitives/transaction.h"
+#include "sync.h"
+#include "uint256.h"
 
-// Generic includes
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_value.h"
+
+#include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <stdint.h>
 #include <string>
+#include <vector>
 
 // Namespaces
 using namespace json_spirit;
