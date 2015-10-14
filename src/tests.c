@@ -24,6 +24,8 @@
 #include "openssl/obj_mac.h"
 #endif
 
+#include "contrib/lax_der_parsing.h"
+
 #if !defined(VG_CHECK)
 # if defined(VALGRIND)
 #  include <valgrind/memcheck.h>
@@ -2512,6 +2514,12 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
     size_t len_der = 2048;
     int parsed_der = 0, valid_der = 0, roundtrips_der = 0;
 
+    secp256k1_ecdsa_signature sig_der_lax;
+    unsigned char roundtrip_der_lax[2048];
+    unsigned char compact_der_lax[64];
+    size_t len_der_lax = 2048;
+    int parsed_der_lax = 0, valid_der_lax = 0, roundtrips_der_lax = 0;
+
 #ifdef ENABLE_OPENSSL_TESTS
     ECDSA_SIG *sig_openssl;
     const unsigned char *sigptr;
@@ -2530,6 +2538,16 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
         roundtrips_der = (len_der == siglen) && memcmp(roundtrip_der, sig, siglen) == 0;
     }
 
+    parsed_der_lax = secp256k1_ecdsa_signature_parse_der_lax(ctx, &sig_der_lax, sig, siglen);
+    if (parsed_der_lax) {
+        ret |= (!secp256k1_ecdsa_signature_serialize_compact(ctx, compact_der_lax, &sig_der_lax)) << 10;
+        valid_der_lax = (memcmp(compact_der_lax, zeroes, 32) != 0) && (memcmp(compact_der_lax + 32, zeroes, 32) != 0);
+    }
+    if (valid_der_lax) {
+        ret |= (!secp256k1_ecdsa_signature_serialize_der(ctx, roundtrip_der_lax, &len_der_lax, &sig_der_lax)) << 11;
+        roundtrips_der_lax = (len_der_lax == siglen) && memcmp(roundtrip_der_lax, sig, siglen) == 0;
+    }
+
     if (certainly_der) {
         ret |= (!parsed_der) << 2;
     }
@@ -2538,6 +2556,16 @@ int test_ecdsa_der_parse(const unsigned char *sig, size_t siglen, int certainly_
     }
     if (valid_der) {
         ret |= (!roundtrips_der) << 3;
+    }
+
+    if (valid_der) {
+        ret |= (!roundtrips_der_lax) << 12;
+        ret |= (len_der != len_der_lax) << 13;
+        ret |= (memcmp(roundtrip_der_lax, roundtrip_der, len_der) != 0) << 14;
+    }
+    ret |= (roundtrips_der != roundtrips_der_lax) << 15;
+    if (parsed_der) {
+        ret |= (!parsed_der_lax) << 16;
     }
 
 #ifdef ENABLE_OPENSSL_TESTS
