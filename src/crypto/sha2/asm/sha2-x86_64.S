@@ -1967,7 +1967,6 @@ sha256_use_4way_exit:
     popq    %rbx
     ret
 
-#if defined(USE_SSSE3)
     .text
     .p2align 6
     .globl sha256_use_ssse3
@@ -1992,7 +1991,6 @@ sha256_use_ssse3_done:
     popq    %rcx
     popq    %rbx
     ret
-#endif
 
 .macro sha256_avx2_main_round_red i, r0, r1, r2, r3, r4
     vpaddd    32*\i(%rax), \r0, %ymm6

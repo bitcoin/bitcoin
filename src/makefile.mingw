@@ -41,15 +41,9 @@ ifeq (${USE_O3}, 1)
     xOPT_LEVEL=-O3
 endif
 
-ifdef  USE_SSSE3
-# Intrinsic implementation of block copy
-DEFS += -DUSE_SSSE3
-xOPT_LEVEL+=-mssse3
-endif
-
 DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 DEBUGFLAGS=-g
-CFLAGS=-mthreads $(xOPT_LEVEL) -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=-mthreads $(xOPT_LEVEL) -msse2 -mssse3 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static
 
 ifneq (${USE_IPV6}, -)

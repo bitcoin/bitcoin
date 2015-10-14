@@ -52,14 +52,8 @@ endif
 
 DEFS=-D_MT -DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
 
-ifeq  (${USE_SSSE3}, 1)
-# Intrinsic implementation of block copy
-DEFS += -DUSE_SSSE3
-xOPT_LEVEL += -mssse3
-endif
-
 DEBUGFLAGS=-g
-CFLAGS=$(xOPT_LEVEL) -msse2 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=$(xOPT_LEVEL) -msse2 -mssse3 -w -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -static-libgcc -static-libstdc++
 
 ifneq (${USE_IPV6}, -)

@@ -4,6 +4,7 @@
 
 USE_LEVELDB:=0
 USE_IPV6:=1
+ARCH:=$(uname -m)
 
 LINK:=$(CXX)
 
@@ -79,20 +80,22 @@ LIBS+= \
 
 DEBUGFLAGS=-g
 
+ifeq (${ARCH}, i386)
+    EXT_OPTIONS=-msse2 -mssse3
+endif
+
+ifeq (${ARCH}, amd64)
+    EXT_OPTIONS=-mssse3
+endif
+
 xOPT_LEVEL=-O2
 ifeq (${USE_O3}, 1)
     xOPT_LEVEL=-O3
 endif
 
-ifeq  (${USE_SSSE3}, 1)
-# Intrinsic implementation of block copy
-DEFS += -DUSE_SSSE3
-xOPT_LEVEL += -mssse3
-endif
-
 # CXXFLAGS can be specified on the make command line, so we use xCXXFLAGS that only
 # adds some defaults in front. Unfortunately, CXXFLAGS=... $(CXXFLAGS) does not work.
-xCXXFLAGS=$(xOPT_LEVEL) -msse2 -pthread -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter \
+xCXXFLAGS=$(xOPT_LEVEL) $(EXT_OPTIONS) -pthread -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter \
     $(DEBUGFLAGS) $(DEFS) $(HARDENING) $(CXXFLAGS)
 
 # LDFLAGS can be specified on the make command line, so we use xLDFLAGS that only

@@ -602,7 +602,6 @@ sha256_use_4way_sse2:
     popl    %ebx
     ret
 
-#if defined(USE_SSSE3)
     .text
     .p2align 5
     .globl sha256_use_ssse3
@@ -623,7 +622,5 @@ sha256_use_ssse3_done:
     movl    $1, %eax
     popl    %ebx
     ret
-#endif
-
 
 #endif

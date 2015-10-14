@@ -9,6 +9,10 @@ CONFIG += no_include_pwd
 CONFIG += thread
 CONFIG += static
 
+linux-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch
+linux-g++-32: QMAKE_TARGET.arch = x86
+linux-g++-64: QMAKE_TARGET.arch = x86_64
+
 # for boost 1.37, add -mt to the boost libraries
 # use: qmake BOOST_LIB_SUFFIX=-mt
 # for boost thread win32 with _win32 sufix
@@ -32,6 +36,7 @@ CONFIG += static
 OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
+
 
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
@@ -106,18 +111,26 @@ contains(USE_LEVELDB, 1) {
     SOURCES += src/txdb-bdb.cpp
 }
 
+
 # use: qmake "USE_ASM=1"
 contains(USE_ASM, 1) {
     message(Using assembler scrypt & sha256 implementations)
     DEFINES += USE_ASM
-    QMAKE_CFLAGS += -msse2
-    QMAKE_CXXFLAGS += -msse2
 
-    contains(USE_SSSE3, 1) {
-        DEFINES += USE_SSSE3
-        QMAKE_CFLAGS += -mssse3
-        QMAKE_CXXFLAGS += -mssse3
+    contains(QMAKE_TARGET.arch, x86) {
+        message("x86 platform, setting -msse2 & -mssse3 flags")
+
+        QMAKE_CXXFLAGS += -msse2 -mssse3
+        QMAKE_CFLAGS += -msse2 -mssse3
     }
+
+    contains(QMAKE_TARGET.arch, x86_64) {
+        message("x86_64 platform, setting -mssse3 flag")
+
+        QMAKE_CXXFLAGS += -mssse3
+        QMAKE_CFLAGS += -mssse3
+    }
+
 
     SOURCES += src/crypto/scrypt/asm/scrypt-arm.S src/crypto/scrypt/asm/scrypt-x86.S src/crypto/scrypt/asm/scrypt-x86_64.S src/crypto/scrypt/asm/asm-wrapper.cpp
     SOURCES += src/crypto/sha2/asm/sha2-arm.S src/crypto/sha2/asm/sha2-x86.S src/crypto/sha2/asm/sha2-x86_64.S
@@ -153,12 +166,6 @@ contains(USE_O3, 1) {
     QMAKE_CFLAGS += -O3
 }
 
-*-g++-32 {
-    message("32 platform, adding -msse2 flag")
-
-    QMAKE_CXXFLAGS += -msse2
-    QMAKE_CFLAGS += -msse2
-}
 
 QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector
 

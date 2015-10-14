@@ -53,15 +53,9 @@ ifdef RELEASE
 # Compile for maximum compatibility and smallest size.
 # This requires that dependencies are compiled
 # the same way.
-CFLAGS = -O2 -msse2
+CFLAGS = -O2 -msse2 -mssse3
 else
-CFLAGS = -g -msse2
-endif
-
-ifeq  (${USE_SSSE3}, 1)
-# Intrinsic implementation of block copy
-DEFS += -DUSE_SSSE3
-CFLAGS += -mssse3
+CFLAGS = -g -msse2 -mssse3
 endif
 
 # ppc doesn't work because we don't support big-endian
@@ -124,16 +118,13 @@ endif
 
 ifeq (${USE_ASM}, 1)
 # Assembler implementation
-OBJS += crypto/scrypt/asm/obj/scrypt-arm.o crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
-OBJS += crypto/sha2/asm/obj/sha2-arm.o crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o
+OBJS += crypto/scrypt/asm/obj/scrypt-x86.o crypto/scrypt/asm/obj/scrypt-x86_64.o crypto/scrypt/asm/obj/asm-wrapper.o
+OBJS += crypto/sha2/asm/obj/sha2-x86.o crypto/sha2/asm/obj/sha2-x86_64.o
 
 crypto/scrypt/asm/obj/scrypt-x86.o: crypto/scrypt/asm/scrypt-x86.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 crypto/scrypt/asm/obj/scrypt-x86_64.o: crypto/scrypt/asm/scrypt-x86_64.S
-	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
-
-crypto/scrypt/asm/obj/scrypt-arm.o: crypto/scrypt/asm/scrypt-arm.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 crypto/scrypt/asm/obj/asm-wrapper.o: crypto/scrypt/asm/asm-wrapper.cpp
@@ -143,9 +134,6 @@ crypto/sha2/asm/obj/sha2-x86.o: crypto/sha2/asm/sha2-x86.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 crypto/sha2/asm/obj/sha2-x86_64.o: crypto/sha2/asm/sha2-x86_64.S
-	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
-
-crypto/sha2/asm/obj/sha2-arm.o: crypto/sha2/asm/sha2-arm.S
 	$(CXX) -c $(CFLAGS) -MMD -o $@ $<
 
 DEFS += -DUSE_ASM
