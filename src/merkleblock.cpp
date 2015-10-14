@@ -139,7 +139,7 @@ uint256 CPartialMerkleTree::ExtractMatches(std::vector<uint256> &vMatch) {
     // traverse the partial tree
     unsigned int nBitsUsed = 0, nHashUsed = 0;
     uint256 hashMerkleRoot = TraverseAndExtract(nHeight, 0, nBitsUsed, nHashUsed, vMatch);
-    // verify that no problems occured during the tree traversal
+    // verify that no problems occurred during the tree traversal
     if (fBad)
         return 0;
     // verify that all bits were consumed (except for the padding caused by serializing it as a byte sequence)

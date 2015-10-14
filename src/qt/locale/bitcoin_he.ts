@@ -1852,10 +1852,6 @@ Address: %4
         <translation>העתקת עודף</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>הסכום הכולל %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>או</translation>
     </message>

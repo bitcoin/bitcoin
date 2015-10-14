@@ -1581,10 +1581,6 @@ Address: %4
         <translation>ხურდის კოპირება</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>ჯამური თანხა %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>ან</translation>
     </message>

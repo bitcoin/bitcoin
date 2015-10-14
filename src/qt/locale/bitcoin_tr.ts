@@ -1289,6 +1289,10 @@ Adres: %4
         <translation>%1 öğesinden iade</translation>
     </message>
     <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>%1 ödeme talebi çok büyük (%2 bayt, müsaade edilen %3 bayt).</translation>
+    </message>
+    <message>
         <source>Payment request DoS protection</source>
         <translation>Ödeme talebi DoS koruması</translation>
     </message>
@@ -1325,7 +1329,7 @@ Adres: %4
     </message>
     <message>
         <source>Ping Time</source>
-        <translation>Ping Zamanı</translation>
+        <translation>Ping Süresi</translation>
     </message>
 </context>
 <context>
@@ -1498,7 +1502,7 @@ Adres: %4
     </message>
     <message>
         <source>Connection Time</source>
-        <translation>Bağlantı Zamanı</translation>
+        <translation>Bağlantı Süresi</translation>
     </message>
     <message>
         <source>Last Send</source>
@@ -1518,7 +1522,7 @@ Adres: %4
     </message>
     <message>
         <source>Ping Time</source>
-        <translation>Ping Zamanı</translation>
+        <translation>Ping Süresi</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1987,10 +1991,6 @@ Adres: %4
     <message>
         <source>Copy change</source>
         <translation>Para üstünü kopyala</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Toplam meblağ %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
@@ -2931,10 +2931,6 @@ Adres: %4
         <translation>Blok veritabanının açılışı sırasında hata</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Hata: Ölümcül dahili bir hata meydana geldi, ayrıntılar için debug.log dosyasına bakınız</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Hata: Disk alanı düşük!</translation>
     </message>
@@ -3083,6 +3079,10 @@ Adres: %4
         <translation>Adres sayısı azaldıysa DNS sorgulamasıyla eş adresleri ara (varsayılan: 1 -connect kullanılmadıysa)</translation>
     </message>
     <message>
+        <source>Require high priority for relaying free or low-fee transactions (default:%u)</source>
+        <translation>Ücretsiz ya da düşük ücretli muamelelerin geçişi için yüksek öncelik iste (varsayılan: %u)</translation>
+    </message>
+    <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Yüksek öncelikli/düşük ücretli muamelelerin azami boyutunu bayt olarak ayarla (varsayılan: %d)</translation>
     </message>
@@ -3155,6 +3155,10 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>wallet.dat dosyasının yüklenmesinde hata: Cüzdan Bitcoin Çekirdeğinin daha yeni bir sürümünü gerektirmektedir</translation>
     </message>
     <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Veritabanından okumada hata, kapatılıyor.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Hata: Deskteklenmeyen -tor argümanı bulundu, -onion kullanınız.</translation>
     </message>
@@ -3209,6 +3213,10 @@ mesela: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>RPC server options:</source>
         <translation>RPC sunucu seçenekleri:</translation>
+    </message>
+    <message>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>Kalıcı HTTP bağlantıları için RPC desteği (varsayılan: %d)</translation>
     </message>
     <message>
         <source>Randomly drop 1 of every &lt;n&gt; network messages</source>

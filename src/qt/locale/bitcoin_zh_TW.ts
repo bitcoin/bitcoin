@@ -1993,8 +1993,8 @@ Address: %4
         <translation>複製找零金額</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>總金額 %1 (= %2)</translation>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>總金額 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>or</source>
@@ -2936,10 +2936,6 @@ Address: %4
         <translation>打開區塊資料庫時發生錯誤</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>錯誤:一個致命的內部錯誤,到debug.log看更多細節</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>錯誤: 磁碟空間很少！</translation>
     </message>
@@ -3164,6 +3160,10 @@ rpcpassword=%s
         <translation>讀取資料庫時發生錯誤，要關閉了。</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>錯誤：發生了致命的內部錯誤，細節請看 debug.log</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>錯誤: 找到不再支援的 -tor 參數，請改用 -onion 參數。</translation>
     </message>
@@ -3230,6 +3230,10 @@ rpcpassword=%s
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>隨機亂動 &lt;n&gt; 分之一的網路訊息裡的資料</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>接收並顯示 P2P 網路警示 (預設值: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
