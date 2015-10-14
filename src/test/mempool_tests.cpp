@@ -428,7 +428,6 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     // ... but feerate should never drop below 1000
 
     SetMockTime(42 + 8*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
-    pool.GetMinFee(1);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), 0);
     // ... unless it has gone all the way to 0 (after getting past 1000/2)
 
