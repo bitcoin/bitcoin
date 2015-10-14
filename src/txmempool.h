@@ -420,11 +420,11 @@ public:
     bool CalculateMemPoolAncestors(const CTxMemPoolEntry &entry, setEntries &setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string &errString, bool fSearchForParents = true);
 
     /** The minimum fee to get into the mempool, which may itself not be enough
-	 *  for larger-sized transactions.
-	 *  The minReasonableRelayFee constructor arg is used to bound the time it
-     *  takes the fee rate to go back down all the way to 0. When the feerate
-     *  would otherwise be half of this, it is set to 0 instead.
-	 */
+      *  for larger-sized transactions.
+      *  The minReasonableRelayFee constructor arg is used to bound the time it
+      *  takes the fee rate to go back down all the way to 0. When the feerate
+      *  would otherwise be half of this, it is set to 0 instead.
+      */
     CFeeRate GetMinFee(size_t sizelimit) const;
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit. */
