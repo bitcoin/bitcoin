@@ -10,9 +10,11 @@
 #include "transactiontablemodel.h"
 
 #include "base58.h"
+#include "coins.h"
 #include "db.h"
 #include "keystore.h"
 #include "main.h"
+#include "names.h"
 #include "sync.h"
 #include "ui_interface.h"
 #include "wallet.h"
@@ -23,6 +25,19 @@
 #include <QDebug>
 #include <QSet>
 #include <QTimer>
+
+bool
+SendCoinsRecipient::getAddress (const WalletModel& model, CTxDestination& dest) const
+{
+  CBitcoinAddress addr(recipient.toStdString ());
+  if (addr.IsValid ())
+    {
+      dest = addr.Get ();
+      return true;
+    }
+
+  return model.checkRecipientName (recipient, dest);
+}
 
 WalletModel::WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
@@ -157,10 +172,24 @@ void WalletModel::updateAddressBook(const QString &address, const QString &label
         addressTableModel->updateEntry(address, label, isMine, purpose, status);
 }
 
-bool WalletModel::validateAddress(const QString &address)
+bool WalletModel::validateAddress(const QString &address) const
 {
     CBitcoinAddress addressParsed(address.toStdString());
     return addressParsed.IsValid();
+}
+
+bool
+WalletModel::checkRecipientName (const QString& name, CTxDestination& dest) const
+{
+  const CName vchName = NameFromString (name.toStdString ());
+  CNameData data;
+  if (!pcoinsTip->GetName (vchName, data))
+    return false;
+
+  if (!ExtractDestination (data.address, dest))
+    return false;
+
+  return true;
 }
 
 WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
@@ -200,20 +229,20 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             total += subtotal;
         }
         else
-        {   // User-entered Crowncoin address / amount:
-            if(!validateAddress(rcp.address))
-            {
+        {
+            CTxDestination dest;
+            if (!rcp.getAddress (*this, dest))
                 return InvalidAddress;
-            }
+
             if(rcp.amount <= 0)
             {
                 return InvalidAmount;
             }
-            setAddress.insert(rcp.address);
+            setAddress.insert(rcp.recipient);
             ++nAddresses;
 
             CScript scriptPubKey;
-            scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            scriptPubKey.SetDestination(dest);
             vecSend.push_back(std::pair<CScript, int64_t>(scriptPubKey, rcp.amount));
 
             total += rcp.amount;
@@ -303,8 +332,8 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         // Don't touch the address book when we have a payment request
         if (!rcp.paymentRequest.IsInitialized())
         {
-            std::string strAddress = rcp.address.toStdString();
-            CTxDestination dest = CBitcoinAddress(strAddress).Get();
+            CTxDestination dest;
+            rcp.getAddress(*this, dest);
             std::string strLabel = rcp.label.toStdString();
             {
                 LOCK(wallet->cs_wallet);

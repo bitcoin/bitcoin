@@ -132,7 +132,7 @@ void ReceiveRequestDialog::update()
         return;
     QString target = info.label;
     if(target.isEmpty())
-        target = info.address;
+        target = info.recipient;
     setWindowTitle(tr("Request payment to %1").arg(target));
 
     QString uri = GUIUtil::formatBitcoinURI(info);
@@ -142,7 +142,7 @@ void ReceiveRequestDialog::update()
     html += "<b>"+tr("Payment information")+"</b><br>";
     html += "<b>"+tr("URI")+"</b>: ";
     html += "<a href=\""+uri+"\">" + GUIUtil::HtmlEscape(uri) + "</a><br>";
-    html += "<b>"+tr("Address")+"</b>: " + GUIUtil::HtmlEscape(info.address) + "<br>";
+    html += "<b>"+tr("Address")+"</b>: " + GUIUtil::HtmlEscape(info.recipient) + "<br>";
     if(info.amount)
         html += "<b>"+tr("Amount")+"</b>: " + BitcoinUnits::formatWithUnit(model->getDisplayUnit(), info.amount) + "<br>";
     if(!info.label.isEmpty())
@@ -193,5 +193,5 @@ void ReceiveRequestDialog::on_btnCopyURI_clicked()
 
 void ReceiveRequestDialog::on_btnCopyAddress_clicked()
 {
-    GUIUtil::setClipboard(info.address);
+    GUIUtil::setClipboard(info.recipient);
 }

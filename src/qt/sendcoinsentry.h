@@ -54,7 +54,7 @@ signals:
 
 private slots:
     void deleteClicked();
-    void on_payTo_textChanged(const QString &address);
+    void on_payTo_textChanged(const QString &value);
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
     void updateDisplayUnit();
@@ -64,7 +64,7 @@ private:
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
 
-    bool updateLabel(const QString &address);
+    bool updateLabel();
 };
 
 #endif // SENDCOINSENTRY_H

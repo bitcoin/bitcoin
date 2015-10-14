@@ -193,7 +193,7 @@ bool PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             SendCoinsRecipient r;
             if (GUIUtil::parseBitcoinURI(arg, &r))
             {
-                CBitcoinAddress address(r.address.toStdString());
+                CBitcoinAddress address(r.recipient.toStdString());
 
                 SelectParams(CChainParams::MAIN);
                 if (!address.IsValid())
@@ -521,7 +521,7 @@ bool PaymentServer::processPaymentRequest(PaymentRequestPlus& request, SendCoins
         recipient.amount += sendingTo.second;
     }
     // Store addresses and format them to fit nicely into the GUI
-    recipient.address = addresses.join("<br />");
+    recipient.recipient = addresses.join("<br />");
 
     if (!recipient.authenticatedMerchant.isEmpty()) {
         qDebug() << "PaymentServer::processPaymentRequest : Secure payment request from " << recipient.authenticatedMerchant;
