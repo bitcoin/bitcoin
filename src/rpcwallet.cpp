@@ -18,7 +18,7 @@ int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
 extern int64_t nReserveBalance;
-extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, json_spirit::Object& entry);
+extern void TxToJSON(const CTransaction& tx, const uint256& hashBlock, json_spirit::Object& entry);
 
 std::string HelpRequiringPassphrase()
 {
