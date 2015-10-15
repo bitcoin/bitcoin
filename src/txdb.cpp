@@ -99,7 +99,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
        only need read operations on it, use a const-cast to get around
        that restriction.  */
     boost::scoped_ptr<CLevelDBIterator> pcursor(const_cast<CLevelDBWrapper*>(&db)->NewIterator());
-    pcursor->Seek('c');
+    pcursor->Seek(DB_COINS);
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     stats.hashBlock = GetBestBlock();
@@ -109,7 +109,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
         boost::this_thread::interruption_point();
         std::pair<char, uint256> key;
         CCoins coins;
-        if (pcursor->GetKey(key) && key.first == 'c') {
+        if (pcursor->GetKey(key) && key.first == DB_COINS) {
             if (pcursor->GetValue(coins)) {
                 stats.nTransactions++;
                 for (unsigned int i=0; i<coins.vout.size(); i++) {
@@ -179,13 +179,13 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
 {
     boost::scoped_ptr<CLevelDBIterator> pcursor(NewIterator());
 
-    pcursor->Seek(make_pair('b', uint256()));
+    pcursor->Seek(make_pair(DB_BLOCK_INDEX, uint256()));
 
     // Load mapBlockIndex
     while (pcursor->Valid()) {
         boost::this_thread::interruption_point();
         std::pair<char, uint256> key;
-        if (pcursor->GetKey(key) && key.first == 'b') {
+        if (pcursor->GetKey(key) && key.first == DB_BLOCK_INDEX) {
             CDiskBlockIndex diskindex;
             if (pcursor->GetValue(diskindex)) {
                 // Construct block index object
