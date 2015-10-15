@@ -207,8 +207,8 @@ void TxConfirmStats::Read(CAutoFile& filein)
         throw std::runtime_error("Corrupt estimates file. Mismatch in tx count bucket count");
     filein >> fileConfAvg;
     maxConfirms = fileConfAvg.size();
-    if (maxConfirms <= 0 || maxConfirms > 6 * 24 * 7) // one week
-        throw std::runtime_error("Corrupt estimates file.  Must maintain estimates for between 1 and 1008 (one week) confirms");
+    if (maxConfirms <= 1 || maxConfirms > 6 * 24 * 7) // one week
+        throw std::runtime_error("Corrupt estimates file.  Must maintain estimates for between 2 and 1008 (one week) confirms");
     for (unsigned int i = 0; i < maxConfirms; i++) {
         if (fileConfAvg[i].size() != numBuckets)
             throw std::runtime_error("Corrupt estimates file. Mismatch in fee/pri conf average bucket count");
@@ -307,6 +307,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
         vfeelist.push_back(bucketBoundary);
     }
     vfeelist.push_back(INF_FEERATE);
+    assert(MAX_BLOCK_CONFIRMS >= 2); // Have to track at least to 2 blocks
     feeStats.Initialize(vfeelist, MAX_BLOCK_CONFIRMS, DEFAULT_DECAY, "FeeRate");
 
     minTrackedPriority = AllowFreeThreshold() < MIN_PRIORITY ? MIN_PRIORITY : AllowFreeThreshold();
@@ -496,7 +497,17 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
     if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
         return CFeeRate(0);
 
-    double median = feeStats.EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    double median = -1;
+    if (confTarget == 1) {
+        // Special case 1 with a lower success threshold, but ensure it can't give a lower estimate than 2.
+        median = feeStats.EstimateMedianVal(1, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT_1CONF, true, nBestSeenHeight);
+        if (median > 0) {
+            median = std::max(median, feeStats.EstimateMedianVal(2, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight));
+        }
+    }
+    else {
+        median = feeStats.EstimateMedianVal(confTarget, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    }
 
     if (median < 0)
         return CFeeRate(0);
@@ -510,7 +521,19 @@ double CBlockPolicyEstimator::estimatePriority(int confTarget)
     if (confTarget <= 0 || (unsigned int)confTarget > priStats.GetMaxConfirms())
         return -1;
 
-    return priStats.EstimateMedianVal(confTarget, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    double median = -1;
+    if (confTarget == 1) {
+        // Special case 1 with a lower success threshold, but ensure it can't give a lower estimate than 2.
+        median = priStats.EstimateMedianVal(1, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT_1CONF, true, nBestSeenHeight);
+        if (median > 0) {
+            median = std::max(median, priStats.EstimateMedianVal(2, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBestSeenHeight));
+        }
+    }
+    else {
+        median = priStats.EstimateMedianVal(confTarget, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    }
+
+    return median;
 }
 
 void CBlockPolicyEstimator::Write(CAutoFile& fileout)
