@@ -135,6 +135,9 @@ const char* Consensus::SoftForks::GetBipName(int bip)
     case BIP66:
         return "BIP66";
 
+    case BIP9999:
+        return "BIP9999";
+
     default:
         return "N/A";
     }

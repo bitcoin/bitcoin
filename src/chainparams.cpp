@@ -6,6 +6,7 @@
 #include "chainparams.h"
 #include "consensus/merkle.h"
 
+#include "consensus/softforks.h"
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -227,6 +228,9 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
+
+        // Example versionbits soft fork deployment on bit 0
+        consensus.softForkDeployments.AddSoftFork(0, Consensus::SoftForks::BIP9999, 1512, 0x00000000, 0xffffffff);
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
