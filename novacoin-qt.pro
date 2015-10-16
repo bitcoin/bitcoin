@@ -201,6 +201,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/hash.h \
     src/uint256.h \
     src/kernel.h \
+    src/kernel_worker.h \
     src/scrypt.h \
     src/serialize.h \
     src/main.h \
@@ -335,6 +336,7 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/rpcconsole.cpp \
     src/noui.cpp \
     src/kernel.cpp \
+    src/kernel_worker.cpp \
     src/qt/multisigaddressentry.cpp \
     src/qt/multisiginputentry.cpp \
     src/qt/multisigdialog.cpp \
