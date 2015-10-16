@@ -28,6 +28,7 @@
 
 #include <boost/unordered_map.hpp>
 
+namespace Consensus { namespace VersionBits { class BlockRuleIndex; }}
 class CBlockIndex;
 class CBlockTreeDB;
 class CBloomFilter;
@@ -137,6 +138,7 @@ extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
+extern Consensus::VersionBits::BlockRuleIndex g_blockRuleIndex;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;

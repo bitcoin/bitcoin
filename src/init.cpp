@@ -15,6 +15,7 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "compat/sanity.h"
+#include "consensus/blockruleindex.h"
 #include "consensus/validation.h"
 #include "httpserver.h"
 #include "httprpc.h"
@@ -1280,6 +1281,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("* Using %.1fMiB for block index database\n", nBlockTreeDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for chain state database\n", nCoinDBCache * (1.0 / 1024 / 1024));
     LogPrintf("* Using %.1fMiB for in-memory UTXO set\n", nCoinCacheUsage * (1.0 / 1024 / 1024));
+
+    // Initialize block rule index for versionbits support
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex; // from main.cpp
+    blockRuleIndex.SetSoftForkDeployments(consensusParams.DifficultyAdjustmentInterval(),
+                                          &consensusParams.softForkDeployments);
 
     bool fLoaded = false;
     while (!fLoaded) {
