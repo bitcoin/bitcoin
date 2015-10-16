@@ -10,7 +10,9 @@
 
 using namespace std;
 
-class CAddrManTest : public CAddrMan{};
+class CAddrManTest : public CAddrMan
+{
+};
 
 BOOST_FIXTURE_TEST_SUITE(addrman_tests, BasicTestingSetup)
 
@@ -35,7 +37,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     CAddrInfo addr_ret1 = addrman.Select();
     BOOST_CHECK(addr_ret1.ToString() == "250.1.1.1:8333");
 
-    // Test 3: Does IP address deduplication work correctly. 
+    // Test 3: Does IP address deduplication work correctly.
     //  Expected dup IP should not be added.
     CService addr1_dup = CService("250.1.1.1:8333");
     addrman.Add(CAddress(addr1_dup), source);
@@ -48,7 +50,7 @@ BOOST_AUTO_TEST_CASE(addrman_simple)
     addrman.Add(CAddress(addr2), source);
     BOOST_CHECK(addrman.size() == 2);
 
-    // Test 6: AddrMan::Clear() should empty the new table. 
+    // Test 6: AddrMan::Clear() should empty the new table.
     addrman.Clear();
     BOOST_CHECK(addrman.size() == 0);
     CAddrInfo addr_null2 = addrman.Select();
@@ -127,8 +129,8 @@ BOOST_AUTO_TEST_CASE(addrman_new_collisions)
 
     BOOST_CHECK(addrman.size() == 0);
 
-    for (unsigned int i = 1; i < 4; i++){
-        CService addr = CService("250.1.1."+boost::to_string(i));
+    for (unsigned int i = 1; i < 4; i++) {
+        CService addr = CService("250.1.1." + boost::to_string(i));
         addrman.Add(CAddress(addr), source);
 
         //Test 11: No collision in new table yet.
@@ -156,8 +158,8 @@ BOOST_AUTO_TEST_CASE(addrman_tried_collisions)
 
     BOOST_CHECK(addrman.size() == 0);
 
-    for (unsigned int i = 1; i < 75; i++){
-        CService addr = CService("250.1.1."+boost::to_string(i));
+    for (unsigned int i = 1; i < 75; i++) {
+        CService addr = CService("250.1.1." + boost::to_string(i));
         addrman.Add(CAddress(addr), source);
         addrman.Good(CAddress(addr));
 
