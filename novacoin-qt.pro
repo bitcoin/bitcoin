@@ -9,8 +9,9 @@ CONFIG += no_include_pwd
 CONFIG += thread
 CONFIG += static
 
+freebsd-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch
 linux-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch
-linux-g++-32: QMAKE_TARGET.arch = x86
+linux-g++-32: QMAKE_TARGET.arch = i686
 linux-g++-64: QMAKE_TARGET.arch = x86_64
 
 # for boost 1.37, add -mt to the boost libraries
@@ -36,7 +37,6 @@ linux-g++-64: QMAKE_TARGET.arch = x86_64
 OBJECTS_DIR = build
 MOC_DIR = build
 UI_DIR = build
-
 
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
@@ -117,14 +117,17 @@ contains(USE_ASM, 1) {
     message(Using assembler scrypt & sha256 implementations)
     DEFINES += USE_ASM
 
-    contains(QMAKE_TARGET.arch, x86) {
+     contains(QMAKE_TARGET.arch, i386) | 
+     contains(QMAKE_TARGET.arch, i386) | 
+     contains(QMAKE_TARGET.arch, i686) {
         message("x86 platform, setting -msse2 & -mssse3 flags")
 
         QMAKE_CXXFLAGS += -msse2 -mssse3
         QMAKE_CFLAGS += -msse2 -mssse3
     }
 
-    contains(QMAKE_TARGET.arch, x86_64) {
+    contains(QMAKE_TARGET.arch, x86_64) | 
+    contains(QMAKE_TARGET.arch, amd64) {
         message("x86_64 platform, setting -mssse3 flag")
 
         QMAKE_CXXFLAGS += -mssse3
