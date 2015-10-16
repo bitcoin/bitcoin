@@ -552,9 +552,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 
         // Allow free?
         double dPriorityNeeded = mempoolEstimatePriority;
-        if (dPriorityNeeded <= 0)
-            dPriorityNeeded = AllowFreeThreshold(); // not enough data, back to hard-coded
-        fAllowFree = (dPriority >= dPriorityNeeded);
+        // Allow free if we have priority greater than valid priority estimate
+        fAllowFree = (dPriorityNeeded > 0) && (dPriority >= dPriorityNeeded);
 
         if (fSendFreeTransactions)
             if (fAllowFree && nBytes <= MAX_FREE_TRANSACTION_CREATE_SIZE)
