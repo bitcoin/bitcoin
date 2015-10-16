@@ -103,6 +103,7 @@ BITCOIN_CORE_H = \
   consensus/merkle.h \
   consensus/params.h \
   consensus/blockruleindex.h \
+  consensus/softforks.h \
   consensus/validation.h \
   consensus/versionbits.h \
   core_io.h \
@@ -191,6 +192,7 @@ libbitcoin_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   consensus/blockruleindex.cpp \
+  consensus/softforks.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
