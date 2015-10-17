@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                             *
+ * Copyright (c) 2013-2015 Pieter Wuille                              *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -16,6 +16,8 @@
 static secp256k1_rfc6979_hmac_sha256_t secp256k1_test_rng;
 static uint32_t secp256k1_test_rng_precomputed[8];
 static int secp256k1_test_rng_precomputed_used = 8;
+static uint64_t secp256k1_test_rng_integer;
+static int secp256k1_test_rng_integer_bits_left = 0;
 
 SECP256K1_INLINE static void secp256k1_rand_seed(const unsigned char *seed16) {
     secp256k1_rfc6979_hmac_sha256_initialize(&secp256k1_test_rng, seed16, 16);
@@ -29,32 +31,59 @@ SECP256K1_INLINE static uint32_t secp256k1_rand32(void) {
     return secp256k1_test_rng_precomputed[secp256k1_test_rng_precomputed_used++];
 }
 
+static uint32_t secp256k1_rand_bits(int bits) {
+    uint32_t ret;
+    if (secp256k1_test_rng_integer_bits_left < bits) {
+        secp256k1_test_rng_integer |= (((uint64_t)secp256k1_rand32()) << secp256k1_test_rng_integer_bits_left);
+        secp256k1_test_rng_integer_bits_left += 32;
+    }
+    ret = secp256k1_test_rng_integer;
+    secp256k1_test_rng_integer >>= bits;
+    secp256k1_test_rng_integer_bits_left -= bits;
+    ret &= ((~((uint32_t)0)) >> (32 - bits));
+    return ret;
+}
+
+static uint32_t secp256k1_rand_int(uint32_t range) {
+    int bits = 0;
+    uint32_t ret = range - 1;
+    if (range <= 1) {
+        return 0;
+    }
+    while (ret > 0) {
+        ret >>= 1;
+        bits++;
+    }
+    while (1) {
+        ret = secp256k1_rand_bits(bits);
+        if (ret < range) {
+            return ret;
+        }
+    }
+}
+
 static void secp256k1_rand256(unsigned char *b32) {
     secp256k1_rfc6979_hmac_sha256_generate(&secp256k1_test_rng, b32, 32);
 }
 
-static void secp256k1_rand256_test(unsigned char *b32) {
-    int bits=0;
-    uint64_t ent = 0;
-    int entleft = 0;
-    memset(b32, 0, 32);
-    while (bits < 256) {
+static void secp256k1_rand_bytes_test(unsigned char *bytes, size_t len) {
+    size_t bits = 0;
+    memset(bytes, 0, len);
+    while (bits < len * 8) {
         int now;
         uint32_t val;
-        if (entleft < 12) {
-            ent |= ((uint64_t)secp256k1_rand32()) << entleft;
-            entleft += 32;
-        }
-        now = 1 + ((ent % 64)*((ent >> 6) % 32)+16)/31;
-        val = 1 & (ent >> 11);
-        ent >>= 12;
-        entleft -= 12;
-        while (now > 0 && bits < 256) {
-            b32[bits / 8] |= val << (bits % 8);
+        now = 1 + (secp256k1_rand_bits(6) * secp256k1_rand_bits(5) + 16) / 31;
+        val = secp256k1_rand_bits(1);
+        while (now > 0 && bits < len * 8) {
+            bytes[bits / 8] |= val << (bits % 8);
             now--;
             bits++;
         }
     }
+}
+
+static void secp256k1_rand256_test(unsigned char *b32) {
+    secp256k1_rand_bytes_test(b32, 32);
 }
 
 #endif
