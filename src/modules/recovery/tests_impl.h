@@ -56,7 +56,7 @@ void test_ecdsa_recovery_end_to_end(void) {
     CHECK(memcmp(&pubkey, &recpubkey, sizeof(pubkey)) == 0);
     /* Serialize/destroy/parse signature and verify again. */
     CHECK(secp256k1_ecdsa_recoverable_signature_serialize_compact(ctx, sig, &recid, &rsignature[4]) == 1);
-    sig[secp256k1_rand32() % 64] += 1 + (secp256k1_rand32() % 255);
+    sig[secp256k1_rand_bits(6)] += 1 + secp256k1_rand_int(255);
     CHECK(secp256k1_ecdsa_recoverable_signature_parse_compact(ctx, &rsignature[4], sig, recid) == 1);
     CHECK(secp256k1_ecdsa_recoverable_signature_convert(ctx, &signature[4], &rsignature[4]) == 1);
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[4], message, &pubkey) == 0);
