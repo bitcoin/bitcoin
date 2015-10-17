@@ -1,7 +1,7 @@
 Gitian building
 ================
 
-*Setup instructions for a gitian build of Bitcoin using a Debian VM or physical system.*
+*Setup instructions for a Gitian build of Bitcoin using a Debian VM or physical system.*
 
 Gitian is the deterministic build process that is used to build the Bitcoin
 Core executables. It provides a way to be reasonably sure that the
@@ -13,7 +13,7 @@ Multiple developers build the source code by following a specific descriptor
 These results are compared and only if they match, the build is accepted and uploaded
 to bitcoin.org.
 
-More independent gitian builders are needed, which is why this guide exists. 
+More independent Gitian builders are needed, which is why this guide exists.
 It is preferred you follow these steps yourself instead of using someone else's
 VM image to avoid 'contaminating' the build.
 
@@ -22,9 +22,9 @@ Table of Contents
 
 - [Create a new VirtualBox VM](#create-a-new-virtualbox-vm)
 - [Connecting to the VM](#connecting-to-the-vm)
-- [Setting up Debian for gitian building](#setting-up-debian-for-gitian-building)
-- [Installing gitian](#installing-gitian)
-- [Setting up the gitian image](#setting-up-the-gitian-image)
+- [Setting up Debian for Gitian building](#setting-up-debian-for-gitian-building)
+- [Installing Gitian](#installing-gitian)
+- [Setting up the Gitian image](#setting-up-the-gitian-image)
 - [Getting and building the inputs](#getting-and-building-the-inputs)
 - [Building Bitcoin](#building-bitcoin)
 - [Building an alternative repository](#building-an-alternative-repository)
@@ -43,7 +43,7 @@ Any kind of virtualization can be used, for example:
 - [KVM](http://www.linux-kvm.org/page/Main_Page)
 - [LXC](https://linuxcontainers.org/), see also [Gitian host docker container](https://github.com/gdm85/tenku/tree/master/docker/gitian-bitcoin-host/README.md).
 
-You can also install gitian on actual hardware instead of using virtualization.
+You can also install Gitian on actual hardware instead of using virtualization.
 
 Create a new VirtualBox VM
 ---------------------------
@@ -60,18 +60,18 @@ In the VirtualBox GUI click "Create" and choose the following parameters in the 
 ![](gitian-building/create_vm_hard_disk.png)
 
 - Hard Disk: Create a virtual hard disk now
-    
+
 ![](gitian-building/create_vm_hard_disk_file_type.png)
 
-- Hard Disk file type: Use the default, VDI (VirtualBox Disk Image) 
+- Hard Disk file type: Use the default, VDI (VirtualBox Disk Image)
 
 ![](gitian-building/create_vm_storage_physical_hard_disk.png)
-    
-- Storage on physical hard disk: Dynamically Allocated 
-    
+
+- Storage on physical hard disk: Dynamically Allocated
+
 ![](gitian-building/create_vm_file_location_size.png)
 
-- File location and size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side 
+- File location and size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side
 - Click `Create`
 
 Get the [Debian 8.x net installer](http://cdimage.debian.org/debian-cd/8.2.0/amd64/iso-cd/debian-8.2.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
@@ -81,7 +81,7 @@ Unixy OSes by entering the following in a terminal:
     echo "d393d17ac6b3113c81186e545c416a00f28ed6e05774284bb5e8f0df39fcbcb9  debian-8.2.0-amd64-netinst.iso" | sha256sum -c
     # (must return OK)
 
-After creating the VM, we need to configure it. 
+After creating the VM, we need to configure it.
 
 - Click the `Settings` button, then go to the `Network` tab. Adapter 1 should be attached to `NAT`.
 
@@ -115,8 +115,8 @@ This section will explain how to install Debian on the newly created VM.
 
 ![](gitian-building/debian_install_1_boot_menu.png)
 
-**Note**: Navigating in the Debian installer: 
-To keep a setting at the default and proceed, just press `Enter`. 
+**Note**: Navigating in the Debian installer:
+To keep a setting at the default and proceed, just press `Enter`.
 To select a different button, press `Tab`.
 
 - Choose locale and keyboard settings (doesn't matter, you can just go with the defaults or select your own information)
@@ -126,23 +126,23 @@ To select a different button, press `Tab`.
 ![](gitian-building/debian_install_4_configure_keyboard.png)
 
 - The VM will detect network settings using DHCP, this should all proceed automatically
-- Configure the network: 
+- Configure the network:
   - Hostname `debian`.
   - Leave domain name empty.
 
 ![](gitian-building/debian_install_5_configure_the_network.png)
 
-- Choose a root password and enter it twice (remember it for later) 
+- Choose a root password and enter it twice (remember it for later)
 
 ![](gitian-building/debian_install_6a_set_up_root_password.png)
 
-- Name the new user `debian` (the full name doesn't matter, you can leave it empty) 
+- Name the new user `debian` (the full name doesn't matter, you can leave it empty)
 - Set the account username as `debian`
 
 ![](gitian-building/debian_install_7_set_up_user_fullname.png)
 ![](gitian-building/debian_install_8_set_up_username.png)
 
-- Choose a user password and enter it twice (remember it for later) 
+- Choose a user password and enter it twice (remember it for later)
 
 ![](gitian-building/debian_install_9_user_password.png)
 
@@ -152,11 +152,11 @@ To select a different button, press `Tab`.
 ![](gitian-building/debian_install_10_configure_clock.png)
 
 - Disk setup
-  - Partitioning method: Guided - Use the entire disk 
-  
+  - Partitioning method: Guided - Use the entire disk
+
 ![](gitian-building/debian_install_11_partition_disks.png)
 
-  - Select disk to partition: SCSI1 (0,0,0) 
+  - Select disk to partition: SCSI1 (0,0,0)
 
 ![](gitian-building/debian_install_12_choose_disk.png)
 
@@ -166,7 +166,7 @@ To select a different button, press `Tab`.
 ![](gitian-building/debian_install_15_write_changes.png)
 
 - The base system will be installed, this will take a minute or so
-- Choose a mirror (any will do) 
+- Choose a mirror (any will do)
 
 ![](gitian-building/debian_install_16_choose_a_mirror.png)
 
@@ -201,7 +201,7 @@ After Installation
 The next step in the guide involves logging in as root via SSH.
 SSH login for root users is disabled by default, so we'll enable that now.
 
-Login to the VM using username `root` and the root password you choose earlier.
+Login to the VM using username `root` and the root password you chose earlier.
 You'll be presented with a screen similar to this.
 
 ![](gitian-building/debian_root_login.png)
@@ -243,7 +243,7 @@ For example, to connect as `root` from a Linux command prompt use
 
 Replace `root` with `debian` to log in as user.
 
-Setting up Debian for gitian building
+Setting up Debian for Gitian building
 --------------------------------------
 
 In this section we will be setting up the Debian installation for Gitian building.
@@ -260,7 +260,7 @@ Then set up LXC and the rest with the following, which is a complex jumble of se
 
 ```bash
 # the version of lxc-start in Debian 7.4 needs to run as root, so make sure
-# that the build script can exectute it without providing a password
+# that the build script can execute it without providing a password
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc
 # add cgroup for LXC
 echo "cgroup  /sys/fs/cgroup  cgroup  defaults  0   0" >> /etc/fstab
@@ -280,7 +280,7 @@ reboot
 At the end the VM is rebooted to make sure that the changes take effect. The steps in this
 section only need to be performed once.
 
-Installing gitian
+Installing Gitian
 ------------------
 
 Re-login as the user `debian` that was created during installation.
@@ -300,14 +300,14 @@ cd ..
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
-Clone the git repositories for bitcoin and gitian.
+Clone the git repositories for bitcoin and Gitian.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
 git clone https://github.com/bitcoin/bitcoin
 ```
 
-Setting up the gitian image
+Setting up the Gitian image
 -------------------------
 
 Gitian needs a virtual image of the operating system to build in.
@@ -333,14 +333,14 @@ Getting and building the inputs
 Follow the instructions in [doc/release-process.md](release-process.md#fetch-and-build-inputs-first-time-or-when-dependency-versions-change)
 in the bitcoin repository under 'Fetch and build inputs' to install sources which require
 manual intervention. Also optionally follow the next step: 'Seed the Gitian sources cache
-and offline git repositories' which will fetch the remaining files required for building 
+and offline git repositories' which will fetch the remaining files required for building
 offline.
 
 Building Bitcoin
 ----------------
 
-To build Bitcoin (for Linux, OSX and Windows) just follow the steps under 'perform
-gitian builds' in [doc/release-process.md](release-process.md#perform-gitian-builds) in the bitcoin repository.
+To build Bitcoin (for Linux, OS X and Windows) just follow the steps under 'perform
+Gitian builds' in [doc/release-process.md](release-process.md#perform-gitian-builds) in the bitcoin repository.
 
 This may take some time as it will build all the dependencies needed for each descriptor.
 These dependencies will be cached after a successful build to avoid rebuilding them when possible.
@@ -380,7 +380,7 @@ Building an alternative repository
 -----------------------------------
 
 If you want to do a test build of a pull on GitHub it can be useful to point
-the gitian builder at an alternative repository, using the same descriptors
+the Gitian builder at an alternative repository, using the same descriptors
 and inputs.
 
 For example:
@@ -395,9 +395,9 @@ COMMIT=2014_03_windows_unicode_path
 Building fully offline
 -----------------------
 
-For building fully offline including attaching signatures to unsigned builds, the detached-sigs repository 
+For building fully offline including attaching signatures to unsigned builds, the detached-sigs repository
 and the bitcoin git repository with the desired tag must both be available locally, and then gbuild must be
-told where to find them. It also requires an apt-cacher-ng which is fully-populated but set to offline mode, or 
+told where to find them. It also requires an apt-cacher-ng which is fully-populated but set to offline mode, or
 manually disabling gitian-builder's use of apt-get to update the VM build environment.
 
 To configure apt-cacher-ng as an offline cacher, you will need to first populate its cache with the relevant
@@ -417,7 +417,7 @@ LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root \
   -e DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends -y install \
   $( sed -ne '/^packages:/,/[^-] .*/ {/^- .*/{s/"//g;s/- //;p}}' ../bitcoin/contrib/gitian-descriptors/*|sort|uniq )
 LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root apt-get -q -y purge grub
-LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root -e DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade 
+LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root -e DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
 ```
 
 And then set offline mode for apt-cacher-ng:
@@ -431,7 +431,7 @@ Offlinemode: 1
 service apt-cacher-ng restart
 ```
 
-Then when building, override the remote URLs that gbuild would otherwise pull from the gitian descriptors::
+Then when building, override the remote URLs that gbuild would otherwise pull from the Gitian descriptors::
 ```bash
 
 cd /some/root/path/
@@ -461,7 +461,7 @@ in `gitian.sigs` to your signing machine and do
 ```
 
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
-gitian build.
+Gitian build.
 
 Uploading signatures
 ---------------------
