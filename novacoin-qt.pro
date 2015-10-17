@@ -406,7 +406,7 @@ isEmpty(BDB_LIB_PATH) {
 }
 
 isEmpty(OPENSSL_LIB_PATH) {
-    macx:BDB_LIB_PATH = /usr/local/ssl/lib
+    macx:OPENSSL_LIB_PATH = /usr/local/ssl/lib
 }
 
 isEmpty(BDB_LIB_SUFFIX) {
