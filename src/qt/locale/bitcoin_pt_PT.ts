@@ -1989,10 +1989,6 @@ Endereço: %4</translation>
         <translation>Copiar alteração</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Quantia Total %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>ou</translation>
     </message>
@@ -2931,10 +2927,6 @@ Endereço: %4</translation>
         <translation>Erro ao abrir a base de dados de blocos</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Erro: Um erro fatal interno ocorreu, verificar debug.log para mais informação</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Erro: Pouco espaço em disco!</translation>
     </message>
@@ -3027,6 +3019,10 @@ Endereço: %4</translation>
         <translation>Vincualar o endereço dado e listar as ligações conectadas ao mesmo na lista branca. Use a notação [anfitrião]:porta para IPv6</translation>
     </message>
     <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>Vinculado para dar o endereço para atender as ligações JSON-RPC. Use [host]: Notação de porta para IPv6. Esta opção pode ser especificada várias vezes (padrão: ligam-se a todas as interfaces)</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation>Impossível trancar a pasta de dados %s. Provavelmente o Bitcoin Core já está a ser executado.</translation>
     </message>
@@ -3037,6 +3033,18 @@ Endereço: %4</translation>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>Definir tamanho máximo de transações com alta-prioridade/baixa-taxa em bytes (por defeito: %d)</translation>
+    </message>
+    <message>
+        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Atenção: Por favor verifique que a data e hora do seu computador estão correctas! Se o seu relógio não estiver certo o Bitcoin Core não irá funcionar correctamente.</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
+        <translation>Copyright (C) 2009-%i Os Programadores do Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
+        <translation>Erro ao carregar wallet.dat: A Carteira requer uma versão mais recente do Bitcoin Core</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3081,6 +3089,10 @@ Endereço: %4</translation>
     <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Nome de utilizador para ligações JSON-RPC</translation>
+    </message>
+    <message>
+        <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
+        <translation>A Carteira precisou de ser reescrita: reinicie o Bitcoin Core para completar o processo</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3141,6 +3153,58 @@ Endereço: %4</translation>
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Endereço -proxy inválido: '%s'</translation>
+    </message>
+    <message>
+        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>Escutar por ligações JSON-RPC na porta &lt;port&gt; (por defeito: %u ou rede de testes: %u)</translation>
+    </message>
+    <message>
+        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>Escute ligações na porta &lt;port&gt; (por defeito: %u ou testnet: %u)</translation>
+    </message>
+    <message>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
+        <translation>Manter no máximo &lt;n&gt; ligações a outros nós da rede (por defeito: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
+        <translation>Maximo armazenamento intermédio de recepção por ligação, &lt;n&gt;*1000 bytes (por defeito: %u)</translation>
+    </message>
+    <message>
+        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
+        <translation>Maximo armazenamento intermédio de envio por ligação, &lt;n&gt;*1000 bytes (por defeito: %u)</translation>
+    </message>
+    <message>
+        <source>Prepend debug output with timestamp (default: %u)</source>
+        <translation>Adicionar data e hora à informação de depuração (por defeito: %u)</translation>
+    </message>
+    <message>
+        <source>Server certificate file (default: %s)</source>
+        <translation>Ficheiro de certificado do servidor (por defeito: %s)</translation>
+    </message>
+    <message>
+        <source>Server private key (default: %s)</source>
+        <translation>Chave privada do servidor (por defeito: %s)</translation>
+    </message>
+    <message>
+        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
+        <translation>Definir o tamanho da memória de chaves para &lt;n&gt; (por defeito: %u)</translation>
+    </message>
+    <message>
+        <source>Set minimum block size in bytes (default: %u)</source>
+        <translation>Definir tamanho minímo de um bloco em bytes (por defeito: %u)</translation>
+    </message>
+    <message>
+        <source>Set the number of threads to service RPC calls (default: %d)</source>
+        <translation>Defina o número de processos para servir as chamadas RPC (por defeito: %d)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>Especificar ficheiro de configuração (por defeito: %s)</translation>
+    </message>
+    <message>
+        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
+        <translation>Especificar tempo de espera da ligação em milissegundos (mínimo 1, por defeito: %d)</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

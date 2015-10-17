@@ -1993,8 +1993,8 @@ Adresse: %4
         <translation>Kopier veksel</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totalt Beløp %1 (= %2)</translation>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Totalt Beløp %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>or</source>
@@ -2935,10 +2935,6 @@ Adresse: %4
         <translation>Feil under åpning av blokkdatabase</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Feil: Lite ledig lagringsplass!</translation>
     </message>
@@ -3167,6 +3163,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Feil ved lesing fra database, stenger ned.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Feil: Argumentet -tor er ikke støttet, bruk -onion.</translation>
     </message>
@@ -3233,6 +3233,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Slumpvis bland 1 av hver &lt;n&gt; nettverksmeldinger</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Motta og vis P2P-nettverksvarsler (standardvalg: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

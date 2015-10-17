@@ -2,12 +2,20 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>پتہ تبدیل کرے کے لیے دائیاں کلک کریں</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
-        <translation>نیا ایڈریس بنائیں</translation>
+        <translation>نیا پتہ بنائیں</translation>
     </message>
     <message>
         <source>&amp;New</source>
         <translation>نیا</translation>
+    </message>
+    <message>
+        <source>Copy the currently selected address to the system clipboard</source>
+        <translation>سلیکٹڈ پتے کو کمپوٹر کی عارضی جگہ رکھیں</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -22,16 +30,36 @@
         <translation>کاپی پتہ</translation>
     </message>
     <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>سلیکٹڈ پتے کو مٹائیں</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>موجودہ ڈیٹا کو فائیل میں محفوظ کریں</translation>
+    </message>
+    <message>
         <source>&amp;Export</source>
         <translation>برآمد</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>مٹا</translation>
+        <translation>مٹائیں</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>کوئین وصول کرنے والے کا پتہ</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>کوئین بھیجنے  والے کا پتہ</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
         <translation>چننا</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>جس پتے پر بھیجنے ہیں</translation>
     </message>
     </context>
 <context>
@@ -314,6 +342,10 @@
     <message>
         <source>&amp;Export</source>
         <translation>برآمد</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>موجودہ ڈیٹا کو فائیل میں محفوظ کریں</translation>
     </message>
     </context>
 <context>

@@ -1485,10 +1485,6 @@ Adrese: %4
         <translation>Kopēt atlikumu</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Kopējā Summa %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>vai</translation>
     </message>

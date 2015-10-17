@@ -709,10 +709,6 @@
         <translation>copiar cambio</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Monto total %1(=%2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>o</translation>
     </message>

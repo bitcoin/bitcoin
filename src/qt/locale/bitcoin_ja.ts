@@ -1992,8 +1992,8 @@ Address: %4
         <translation>釣り銭をコピー</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>総送金額 %1 (= %2)</translation>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>総額 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>or</source>
@@ -2935,10 +2935,6 @@ Address: %4
         <translation>ブロック データベースの開始エラー</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>エラー: ディスク容量不足!</translation>
     </message>
@@ -3167,6 +3163,10 @@ rpcpassword=%s
         <translation>データベースの読み込みエラー。シャットダウンします。</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>エラー: サポートされていない引数 -tor が見つかりました。-onion を使用してください。</translation>
     </message>
@@ -3233,6 +3233,10 @@ rpcpassword=%s
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>&lt;n&gt;個のネットワークメッセージごとにひとつをランダムに改変する</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>P2Pネットワークのアラートの受け取りと表示を行う (デフォルト: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

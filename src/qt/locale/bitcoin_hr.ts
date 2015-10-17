@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Desni klik za uređivanje adresa i oznaka</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Dodajte novu adresu</translation>
     </message>
@@ -406,9 +410,33 @@
         <source>Show the list of used receiving addresses and labels</source>
         <translation>Prikaži popis korištenih adresa i oznaka za primanje isplate</translation>
     </message>
+    <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>Otvori bitcoin: URI adresu ili zahtjev za uplatu</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>Opcije &amp;naredbene linije</translation>
+    </message>
+    <message>
+        <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
+        <translation>Ispis svih opcija naredbene linije programa sa kratkim opisom</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n aktivna veza na Bitcoin mrežu</numerusform><numerusform>%n aktivne veze na Bitcoin mrežu</numerusform><numerusform>%n aktivnih veza na Bitcoin mrežu</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 i %2</translation>
+    </message>
+    <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Zadnji primljeni blok je bio ustvaren prije %1.</translation>
+    </message>
+    <message>
+        <source>Transactions after this will not yet be visible.</source>
+        <translation>Transakcije izvršene za tim blokom nisu jop prikazane.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -465,20 +493,68 @@ Adresa:%4
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Izbor ulaza transakcije</translation>
+    </message>
+    <message>
+        <source>Quantity:</source>
+        <translation>Količina:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>Bajtova:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Iznos:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>Prioriteta:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>Naknada:</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Prah:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>Vraćeno:</translation>
+    </message>
+    <message>
+        <source>(un)select all</source>
+        <translation>Izaberi sve/ništa</translation>
     </message>
     <message>
         <source>Amount</source>
         <translation>Iznos</translation>
     </message>
     <message>
+        <source>Received with label</source>
+        <translation>Primljeno pod oznakom</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Primljeno na adresu</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Datum</translation>
     </message>
     <message>
+        <source>Confirmations</source>
+        <translation>Broj potvrda</translation>
+    </message>
+    <message>
         <source>Confirmed</source>
         <translation>Potvrđeno</translation>
+    </message>
+    <message>
+        <source>Priority</source>
+        <translation>Prioriteta</translation>
     </message>
     <message>
         <source>Copy address</source>
@@ -491,6 +567,58 @@ Adresa:%4
     <message>
         <source>Copy amount</source>
         <translation>Kopiraj iznos</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Kopiraj ID transakcije</translation>
+    </message>
+    <message>
+        <source>highest</source>
+        <translation>najviša</translation>
+    </message>
+    <message>
+        <source>higher</source>
+        <translation>viša</translation>
+    </message>
+    <message>
+        <source>high</source>
+        <translation>visoka</translation>
+    </message>
+    <message>
+        <source>medium-high</source>
+        <translation>srednje visoka</translation>
+    </message>
+    <message>
+        <source>medium</source>
+        <translation>srednja</translation>
+    </message>
+    <message>
+        <source>low-medium</source>
+        <translation>srednje niska</translation>
+    </message>
+    <message>
+        <source>low</source>
+        <translation>niska</translation>
+    </message>
+    <message>
+        <source>lower</source>
+        <translation>niža</translation>
+    </message>
+    <message>
+        <source>lowest</source>
+        <translation>najniža</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>da</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>ne</translation>
+    </message>
+    <message>
+        <source>Transactions with higher priority are more likely to get included into a block.</source>
+        <translation>Transakcije više prioritete imaju veću vjerojatnost da budu prije dodane u novi blok.</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -506,6 +634,14 @@ Adresa:%4
     <message>
         <source>&amp;Label</source>
         <translation>&amp;Oznaka</translation>
+    </message>
+    <message>
+        <source>The label associated with this address list entry</source>
+        <translation>Oznaka adrese</translation>
+    </message>
+    <message>
+        <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
+        <translation>Bitcoin adresa. Izmjene adrese su moguće samo za adrese za slanje.</translation>
     </message>
     <message>
         <source>&amp;Address</source>
@@ -547,10 +683,18 @@ Adresa:%4
 <context>
     <name>FreespaceChecker</name>
     <message>
+        <source>A new data directory will be created.</source>
+        <translation>Stvoren će biti novi direktorij za podatke.</translation>
+    </message>
+    <message>
         <source>name</source>
         <translation>ime</translation>
     </message>
-    </context>
+    <message>
+        <source>Cannot create data directory here.</source>
+        <translation>Nije moguće stvoriti direktorij za podatke na tom mjestu.</translation>
+    </message>
+</context>
 <context>
     <name>HelpMessageDialog</name>
     <message>
@@ -562,12 +706,24 @@ Adresa:%4
         <translation>verzija</translation>
     </message>
     <message>
+        <source>(%1-bit)</source>
+        <translation>(%1-bit)</translation>
+    </message>
+    <message>
         <source>About Bitcoin Core</source>
         <translation>O Bitcoin Jezrgu</translation>
     </message>
     <message>
+        <source>Command-line options</source>
+        <translation>Opcije programa u naredbenoj liniji</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Upotreba:</translation>
+    </message>
+    <message>
+        <source>command-line options</source>
+        <translation>opcije programa u naredbenoj liniji</translation>
     </message>
     <message>
         <source>UI options</source>
@@ -585,6 +741,10 @@ Adresa:%4
         <translation>Dobrodošli</translation>
     </message>
     <message>
+        <source>Welcome to Bitcoin Core.</source>
+        <translation>Dobrodošli u programu Bitcoin Core.</translation>
+    </message>
+    <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Jezgra</translation>
     </message>
@@ -595,7 +755,27 @@ Adresa:%4
     </context>
 <context>
     <name>OpenURIDialog</name>
-    </context>
+    <message>
+        <source>Open URI</source>
+        <translation>Otvori URI adresu</translation>
+    </message>
+    <message>
+        <source>Open payment request from URI or file</source>
+        <translation>Otvori zahtjev za plaćanje iz URI adrese ili datoteke</translation>
+    </message>
+    <message>
+        <source>URI:</source>
+        <translation>URI:</translation>
+    </message>
+    <message>
+        <source>Select payment request file</source>
+        <translation>Izaberi datoteku zahtjeva za plaćanje</translation>
+    </message>
+    <message>
+        <source>Select payment request file to open</source>
+        <translation>Izaberi datoteku zahtjeva za plaćanje</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -615,8 +795,44 @@ Adresa:%4
         <translation>&amp;Pokreni Bitcoin kod pokretanja sustava</translation>
     </message>
     <message>
+        <source>Size of &amp;database cache</source>
+        <translation>Veličina predmemorije baze podataka</translation>
+    </message>
+    <message>
+        <source>MB</source>
+        <translation>MB</translation>
+    </message>
+    <message>
+        <source>Number of script &amp;verification threads</source>
+        <translation>Broj CPU niti za verifikaciju transakcija</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Dozvoli povezivanje izvana</translation>
+    </message>
+    <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>IP adresa proxy servera (npr. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+    </message>
+    <message>
+        <source>Reset all client options to default.</source>
+        <translation>Nastavi sve postavke programa na početne vrijednosti.</translation>
+    </message>
+    <message>
+        <source>&amp;Reset Options</source>
+        <translation>Po&amp;nastavi postavke</translation>
+    </message>
+    <message>
         <source>&amp;Network</source>
         <translation>&amp;Mreža</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>&amp;Novčanik</translation>
+    </message>
+    <message>
+        <source>&amp;Spend unconfirmed change</source>
+        <translation>&amp;Trošenje nepotvrđenih vraćenih iznosa</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -629,6 +845,10 @@ Adresa:%4
     <message>
         <source>Proxy &amp;IP:</source>
         <translation>Proxy &amp;IP:</translation>
+    </message>
+    <message>
+        <source>&amp;Port:</source>
+        <translation>&amp;Vrata:</translation>
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
@@ -657,6 +877,10 @@ Adresa:%4
     <message>
         <source>&amp;Display</source>
         <translation>&amp;Prikaz</translation>
+    </message>
+    <message>
+        <source>User Interface &amp;language:</source>
+        <translation>Jezik:</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
@@ -722,6 +946,10 @@ Adresa:%4
 <context>
     <name>QRImageWidget</name>
     <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Spremi sliku...</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation>Spremi QR kod</translation>
     </message>
@@ -769,6 +997,34 @@ Adresa:%4
         <translation>Trenutni broj blokova</translation>
     </message>
     <message>
+        <source>Received</source>
+        <translation>Primljeno</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Poslano</translation>
+    </message>
+    <message>
+        <source>Direction</source>
+        <translation>Smjer</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Verzija</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation>Trajanje veze</translation>
+    </message>
+    <message>
+        <source>Bytes Sent</source>
+        <translation>Bajtova poslano</translation>
+    </message>
+    <message>
+        <source>Bytes Received</source>
+        <translation>Bajtova primljeno</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Posljednje vrijeme bloka</translation>
     </message>
@@ -779,6 +1035,10 @@ Adresa:%4
     <message>
         <source>&amp;Console</source>
         <translation>&amp;Konzola</translation>
+    </message>
+    <message>
+        <source>&amp;Network Traffic</source>
+        <translation>&amp;Mrežni promet</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -796,12 +1056,32 @@ Adresa:%4
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>Kako bi navigirali kroz povijest koristite strelice gore i dolje. &lt;b&gt;Ctrl-L&lt;/b&gt; kako bi očistili ekran.</translation>
     </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Nepoznato</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Iznos:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Oznaka:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>&amp;Poruka:</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Obriši sva polja</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>&amp;Zatraži plaćanje</translation>
     </message>
     <message>
         <source>Show</source>
@@ -823,6 +1103,22 @@ Adresa:%4
         <translation>QR kôd</translation>
     </message>
     <message>
+        <source>Copy &amp;URI</source>
+        <translation>Kopiraj &amp;URI</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Kopiraj &amp;adresu</translation>
+    </message>
+    <message>
+        <source>&amp;Save Image...</source>
+        <translation>&amp;Spremi sliku...</translation>
+    </message>
+    <message>
+        <source>URI</source>
+        <translation>URI</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Adresa</translation>
     </message>
@@ -842,7 +1138,11 @@ Adresa:%4
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
         <translation>Rezultirajući URI je predug, probajte umanjiti tekst za naslov / poruku.</translation>
     </message>
-    </context>
+    <message>
+        <source>Error encoding URI into QR Code.</source>
+        <translation>Greška pri kodiranju URI adrese u QR kod.</translation>
+    </message>
+</context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -865,7 +1165,15 @@ Adresa:%4
         <source>(no label)</source>
         <translation>(bez oznake)</translation>
     </message>
-    </context>
+    <message>
+        <source>(no message)</source>
+        <translation>(bez poruke)</translation>
+    </message>
+    <message>
+        <source>(no amount)</source>
+        <translation>(bez iznosa)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -873,8 +1181,28 @@ Adresa:%4
         <translation>Slanje novca</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation>Količina:</translation>
+    </message>
+    <message>
+        <source>Bytes:</source>
+        <translation>Bajtova:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Iznos:</translation>
+    </message>
+    <message>
+        <source>Priority:</source>
+        <translation>Prioriteta:</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>Naknada:</translation>
+    </message>
+    <message>
+        <source>Change:</source>
+        <translation>Vraćeno:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -883,6 +1211,14 @@ Adresa:%4
     <message>
         <source>Add &amp;Recipient</source>
         <translation>&amp;Dodaj primatelja</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Obriši sva polja</translation>
+    </message>
+    <message>
+        <source>Dust:</source>
+        <translation>Prah:</translation>
     </message>
     <message>
         <source>Clear &amp;All</source>
@@ -1298,6 +1634,10 @@ Adresa:%4
     <message>
         <source>Copy amount</source>
         <translation>Kopiraj iznos</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>Kopiraj ID transakcije</translation>
     </message>
     <message>
         <source>Edit label</source>
