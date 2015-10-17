@@ -402,7 +402,11 @@ isEmpty(BOOST_THREAD_LIB_SUFFIX) {
 }
 
 isEmpty(BDB_LIB_PATH) {
-    macx:BDB_LIB_PATH = /usr/local/lib
+    macx:BDB_LIB_PATH = /usr/local/BerkeleyDB.6.1/lib
+}
+
+isEmpty(OPENSSL_LIB_PATH) {
+    macx:BDB_LIB_PATH = /usr/local/ssl/lib
 }
 
 isEmpty(BDB_LIB_SUFFIX) {
@@ -410,7 +414,11 @@ isEmpty(BDB_LIB_SUFFIX) {
 }
 
 isEmpty(BDB_INCLUDE_PATH) {
-    macx:BDB_INCLUDE_PATH = /usr/local/include
+    macx:BDB_INCLUDE_PATH = /usr/local/BerkeleyDB.6.1/include
+}
+
+isEmpty(OPENSSL_INCLUDE_PATH) {
+    macx:OPENSSL_INCLUDE_PATH = /usr/local/ssl/include
 }
 
 isEmpty(BOOST_LIB_PATH) {
