@@ -284,6 +284,78 @@ void run_rfc6979_hmac_sha256_tests(void) {
     secp256k1_rfc6979_hmac_sha256_finalize(&rng);
 }
 
+/***** RANDOM TESTS *****/
+
+void test_rand_bits(int rand32, int bits) {
+    /* (1-1/2^B)^rounds[B] < 1/10^9, so rounds is the number of iterations to
+     * get a false negative chance below once in a billion */
+    static const unsigned int rounds[7] = {1, 30, 73, 156, 322, 653, 1316};
+    /* We try multiplying the results with various odd numbers, which shouldn't
+     * influence the uniform distribution modulo a power of 2. */
+    static const uint32_t mults[6] = {1, 3, 21, 289, 0x9999, 0x80402011};
+    /* We only select up to 6 bits from the output to analyse */
+    unsigned int usebits = bits > 6 ? 6 : bits;
+    unsigned int maxshift = bits - usebits;
+    /* For each of the maxshift+1 usebits-bit sequences inside a bits-bit
+       number, track all observed outcomes, one per bit in a uint64_t. */
+    uint64_t x[6][27] = {{0}};
+    unsigned int i, shift, m;
+    /* Multiply the output of all rand calls with the odd number m, which
+       should not change the uniformity of its distribution. */
+    for (i = 0; i < rounds[usebits]; i++) {
+        uint32_t r = (rand32 ? secp256k1_rand32() : secp256k1_rand_bits(bits));
+        CHECK((((uint64_t)r) >> bits) == 0);
+        for (m = 0; m < sizeof(mults) / sizeof(mults[0]); m++) {
+            uint32_t rm = r * mults[m];
+            for (shift = 0; shift <= maxshift; shift++) {
+                x[m][shift] |= (((uint64_t)1) << ((rm >> shift) & ((1 << usebits) - 1)));
+            }
+        }
+    }
+    for (m = 0; m < sizeof(mults) / sizeof(mults[0]); m++) {
+        for (shift = 0; shift <= maxshift; shift++) {
+            /* Test that the lower usebits bits of x[shift] are 1 */
+            CHECK(((~x[m][shift]) << (64 - (1 << usebits))) == 0);
+        }
+    }
+}
+
+/* Subrange must be a whole divisor of range, and at most 64 */
+void test_rand_int(uint32_t range, uint32_t subrange) {
+    /* (1-1/subrange)^rounds < 1/10^9 */
+    int rounds = (subrange * 2073) / 100;
+    int i;
+    uint64_t x = 0;
+    CHECK((range % subrange) == 0);
+    for (i = 0; i < rounds; i++) {
+        uint32_t r = secp256k1_rand_int(range);
+        CHECK(r < range);
+        r = r % subrange;
+        x |= (((uint64_t)1) << r);
+    }
+    /* Test that the lower subrange bits of x are 1. */
+    CHECK(((~x) << (64 - subrange)) == 0);
+}
+
+void run_rand_bits(void) {
+    size_t b;
+    test_rand_bits(1, 32);
+    for (b = 1; b <= 32; b++) {
+        test_rand_bits(0, b);
+    }
+}
+
+void run_rand_int(void) {
+    static const uint32_t ms[] = {1, 3, 17, 1000, 13771, 999999, 33554432};
+    static const uint32_t ss[] = {1, 3, 6, 9, 13, 31, 64};
+    unsigned int m, s;
+    for (m = 0; m < sizeof(ms) / sizeof(ms[0]); m++) {
+        for (s = 0; s < sizeof(ss) / sizeof(ss[0]); s++) {
+            test_rand_int(ms[m] * ss[s], ss[s]);
+        }
+    }
+}
+
 /***** NUM TESTS *****/
 
 #ifndef USE_NUM_NONE
@@ -2686,6 +2758,10 @@ int main(int argc, char **argv) {
         secp256k1_rand256(run32);
         CHECK(secp256k1_context_randomize(ctx, (secp256k1_rand32() & 1) ? run32 : NULL));
     }
+
+    run_rand_bits();
+    run_rand_int();
+
     run_sha256_tests();
     run_hmac_sha256_tests();
     run_rfc6979_hmac_sha256_tests();
