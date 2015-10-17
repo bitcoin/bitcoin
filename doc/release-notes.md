@@ -181,7 +181,7 @@ configured specifically to process scriptPubKey and not scriptSig scripts.
 
 - Removed bitrpc.py from contrib
 
-Addition of ZMQ-based Notifcations
+Addition of ZMQ-based Notifications
 ==================================
 
 Bitcoind can now (optionally) asynchronously notify clients through a
