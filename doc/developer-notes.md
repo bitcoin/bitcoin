@@ -57,7 +57,7 @@ As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this cas
 
 To describe a class use the same construct above the class definition:
 ```c++
-/** 
+/**
  * Alerts are for notifying old versions if they become too obsolete and
  * need to upgrade. The message is displayed in the status bar.
  * @see GetWarnings()
