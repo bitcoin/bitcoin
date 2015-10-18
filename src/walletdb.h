@@ -6,7 +6,7 @@
 #define BITCOIN_WALLETDB_H
 
 #include "db.h"
-#include "base58.h"
+//#include "base58.h"
 #include "keystore.h"
 
 class CKeyPool;

@@ -174,7 +174,7 @@ contains(USE_O3, 1) {
 }
 
 
-QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wstack-protector
+QMAKE_CXXFLAGS_WARN_ON = -fdiagnostics-show-option -Wall -Wextra -Wno-ignored-qualifiers -Wformat -Wformat-security -Wno-unused-parameter -Wno-unused-local-typedef -Wstack-protector
 
 # Input
 DEPENDPATH += src src/json src/qt
@@ -348,7 +348,8 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/multisiginputentry.cpp \
     src/qt/multisigdialog.cpp \
     src/qt/secondauthdialog.cpp \
-    src/qt/qrcodedialog.cpp
+    src/qt/qrcodedialog.cpp \
+    src/base58.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

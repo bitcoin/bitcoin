@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\alert.cpp" />
     <ClCompile Include="..\..\src\stun.cpp" />
+    <ClCompile Include="..\..\src\base58.cpp" />
     <ClCompile Include="..\..\src\txdb-leveldb.cpp" />
     <ClCompile Include="..\..\src\version.cpp" />
     <ClCompile Include="..\..\src\checkpoints.cpp" />
