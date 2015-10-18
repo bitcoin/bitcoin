@@ -121,17 +121,14 @@ contains(USE_ASM, 1) {
     message(Using assembler scrypt & sha256 implementations)
     DEFINES += USE_ASM
 
-     contains(QMAKE_TARGET.arch, i386) | 
-     contains(QMAKE_TARGET.arch, i386) | 
-     contains(QMAKE_TARGET.arch, i686) {
+     contains(QMAKE_TARGET.arch, i386) | contains(QMAKE_TARGET.arch, i586) | contains(QMAKE_TARGET.arch, i686) {
         message("x86 platform, setting -msse2 & -mssse3 flags")
 
         QMAKE_CXXFLAGS += -msse2 -mssse3
         QMAKE_CFLAGS += -msse2 -mssse3
     }
 
-    contains(QMAKE_TARGET.arch, x86_64) | 
-    contains(QMAKE_TARGET.arch, amd64) {
+    contains(QMAKE_TARGET.arch, x86_64) | contains(QMAKE_TARGET.arch, amd64) {
         message("x86_64 platform, setting -mssse3 flag")
 
         QMAKE_CXXFLAGS += -mssse3
