@@ -30,6 +30,77 @@ void BlockRuleIndex::SetSoftForkDeployments(int activationInterval, const SoftFo
     m_ruleStateMap.clear();
 }
 
+int BlockRuleIndex::CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const std::set<int>& disabledRules) const
+{
+    int nVersion = VERSION_HIGH_BITS;
+
+    if (!m_deployments)
+        return nVersion;
+
+    std::set<int> setRules;
+    std::set<int> finalizedRules;
+
+    CBlockIndex blockIndex;
+    blockIndex.nTime = nTime;
+    blockIndex.pprev = pprev;
+    uint32_t medianTime = blockIndex.GetMedianTimePast();
+
+    {
+        // Set bits for all defined soft forks that haven't activated, failed, or have been requested disabled
+        RuleStates ruleStates = GetRuleStates(pprev);
+        RuleStates::const_iterator it = ruleStates.begin();
+        for (; it != ruleStates.end(); ++it)
+        {
+            switch (it->second)
+            {
+            case DEFINED:
+                // Set assigned bits we're not disabling
+                if (!disabledRules.count(it->first) &&
+                    m_deployments->IsRuleAssigned(it->first, medianTime))
+                        setRules.insert(it->first);
+                break;
+
+            case LOCKED_IN:
+                // Always set bits for locked in rules
+                setRules.insert(it->first);
+                break;
+
+            case ACTIVE:
+                // Do not set bits for active and failed rules
+
+            case FAILED:
+                finalizedRules.insert(it->first);
+
+            default:
+                break;
+            }
+        }
+    }
+
+    {
+        // Also set bits for any new deployments that have not been requested disabled
+        std::set<int> assignedRules = m_deployments->GetAssignedRules(nTime);
+        std::set<int>::const_iterator it = assignedRules.begin();
+        for (; it != assignedRules.end(); ++it)
+        {
+            if (!(finalizedRules.count(*it) || disabledRules.count(*it)))
+                setRules.insert(*it);
+        }
+    }
+
+    {
+        std::set<int>::const_iterator it = setRules.begin();
+        for (; it != setRules.end(); ++it)
+        {
+            const SoftFork* psoftFork = m_deployments->GetSoftFork(*it);
+            if (psoftFork)
+                nVersion |= (0x1 << psoftFork->GetBit());
+        }
+    }
+
+    return nVersion;
+}
+
 RuleState BlockRuleIndex::GetRuleState(int rule, const CBlockIndex* pblockIndex) const
 {
     if (!m_activationInterval || !m_deployments)

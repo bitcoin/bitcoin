@@ -35,6 +35,10 @@ public:
     // Clears the index, so should only be called upon initialization
     void SetSoftForkDeployments(int activationInterval, const SoftForkDeployments* deployments);
 
+    // Constructs a new nVersion field with bits set for all deployments that have not yet activated or failed
+    // The disabledRules parameter allows us to request that the bit for a rule be unset if it has not yet locked in
+    int CreateBlockVersion(uint32_t nTime, CBlockIndex* pprev, const std::set<int>& disabledRules = std::set<int>()) const;
+
     RuleState GetRuleState(int rule, const CBlockIndex* pblockIndex) const;
 
     RuleStates GetRuleStates(const CBlockIndex* pblockIndex) const;
