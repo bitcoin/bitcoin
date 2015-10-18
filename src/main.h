@@ -165,8 +165,8 @@ public:
     }
 
     IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
-    void SetNull() { nFile = (unsigned int) -1; nBlockPos = 0; nTxPos = 0; }
-    bool IsNull() const { return (nFile == (unsigned int) -1); }
+    void SetNull() { nFile = std::numeric_limits<uint32_t>::max(); nBlockPos = 0; nTxPos = 0; }
+    bool IsNull() const { return (nFile == std::numeric_limits<uint32_t>::max()); }
 
     friend bool operator==(const CDiskTxPos& a, const CDiskTxPos& b)
     {
@@ -206,8 +206,8 @@ public:
 
     CInPoint() { SetNull(); }
     CInPoint(CTransaction* ptxIn, unsigned int nIn) { ptx = ptxIn; n = nIn; }
-    void SetNull() { ptx = NULL; n = (unsigned int) -1; }
-    bool IsNull() const { return (ptx == NULL && n == (unsigned int) -1); }
+    void SetNull() { ptx = NULL; n = std::numeric_limits<uint32_t>::max(); }
+    bool IsNull() const { return (ptx == NULL && n == std::numeric_limits<uint32_t>::max()); }
 };
 
 
@@ -222,8 +222,8 @@ public:
     COutPoint() { SetNull(); }
     COutPoint(uint256 hashIn, unsigned int nIn) { hash = hashIn; n = nIn; }
     IMPLEMENT_SERIALIZE( READWRITE(FLATDATA(*this)); )
-    void SetNull() { hash = 0; n = (unsigned int) -1; }
-    bool IsNull() const { return (hash == 0 && n == (unsigned int) -1); }
+    void SetNull() { hash = 0; n = std::numeric_limits<uint32_t>::max(); }
+    bool IsNull() const { return (hash == 0 && n == std::numeric_limits<uint32_t>::max()); }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
     {
