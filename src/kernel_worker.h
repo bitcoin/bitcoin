@@ -1,6 +1,10 @@
 #ifndef BITCOIN_HERNELWORKER_H
 #define BITCOIN_HERNELWORKER_H
 
+#include <vector>
+
+using namespace std;
+
 class KernelWorker
 {
 public:
@@ -8,7 +12,7 @@ public:
     { }
     KernelWorker(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, uint32_t nIntervalBegin, uint32_t nIntervalEnd);
     void Do();
-    vector<std::pair<uint256,uint32_t> >& GetSolutions();
+    vector<pair<uint256,uint32_t> >& GetSolutions();
 
 private:
 #ifdef USE_ASM
@@ -23,7 +27,7 @@ private:
     void Do_generic();
 
     // Kernel solutions.
-    std::vector<std::pair<uint256,uint32_t> > solutions;
+    vector<pair<uint256,uint32_t> > solutions;
 
     // Kernel metadaya
     uint8_t *kernel;
@@ -35,5 +39,8 @@ private:
     uint32_t nIntervalBegin;
     uint32_t nIntervalEnd;
 };
+
+// Scan given kernel for solutions
+bool ScanKernelBackward(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, pair<uint32_t, uint32_t> &SearchInterval, pair<uint256, uint32_t> &solution);
 
 #endif

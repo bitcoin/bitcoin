@@ -7,6 +7,7 @@
 #include "txdb.h"
 #include "miner.h"
 #include "kernel.h"
+#include "kernel_worker.h"
 
 using namespace std;
 
@@ -530,8 +531,8 @@ bool CheckStake(CBlock* pblock, CWallet& wallet)
 }
 
 // Precalculated SHA256 contexts and metadata
-// (txid, vout.n) => (SHA256_CTX, (tx.nTime, nAmount))
-typedef std::map<std::pair<uint256, unsigned int>, std::pair<SHA256_CTX, std::pair<uint32_t, uint64_t> > > MidstateMap;
+// (txid, vout.n) => (kernel, (tx.nTime, nAmount))
+typedef std::map<std::pair<uint256, unsigned int>, std::pair<std::vector<unsigned char>, std::pair<uint32_t, uint64_t> > > MidstateMap;
 
 // Fill the inputs map with precalculated contexts and metadata
 bool FillMap(CWallet *pwallet, uint32_t nUpperTime, MidstateMap &inputsMap)
@@ -598,16 +599,9 @@ bool FillMap(CWallet *pwallet, uint32_t nUpperTime, MidstateMap &inputsMap)
             CDataStream ssKernel(SER_GETHASH, 0);
             ssKernel << nStakeModifier;
             ssKernel << block.nTime << (txindex.pos.nTxPos - txindex.pos.nBlockPos) << pcoin->first->nTime << pcoin->second;
-            CDataStream::const_iterator itK = ssKernel.begin();
 
-            // Init new sha256 context and update it
-            //   with first 24 bytes of kernel
-            SHA256_CTX ctx;
-            SHA256_Init(&ctx);
-            SHA256_Update(&ctx, (unsigned char*)&itK[0], 8 + 16);
-
-            // (txid, vout.n) => (SHA256_CTX, (tx.nTime, nAmount))
-            inputsMap[key] = make_pair(ctx, make_pair(pcoin->first->nTime, pcoin->first->vout[pcoin->second].nValue));
+            // (txid, vout.n) => (kernel, (tx.nTime, nAmount))
+            inputsMap[key] = make_pair(std::vector<unsigned char>(ssKernel.begin(), ssKernel.end()), make_pair(pcoin->first->nTime, pcoin->first->vout[pcoin->second].nValue));
         }
 
         nStakeInputsMapSize = inputsMap.size();
@@ -633,13 +627,13 @@ bool ScanMap(const MidstateMap &inputsMap, uint32_t nBits, MidstateMap::key_type
         interval.first = nSearchTime;
         interval.second = nSearchTime - min(nSearchTime-nLastCoinStakeSearchTime, nMaxStakeSearchInterval);
 
-        // (txid, nout) => (SHA256_CTX, (tx.nTime, nAmount))
+        // (txid, nout) => (kernel, (tx.nTime, nAmount))
         for(MidstateMap::const_iterator input = inputsMap.begin(); input != inputsMap.end(); input++)
         {
-            SHA256_CTX ctx = input->second.first;
+            unsigned char *kernel = (unsigned char *) &input->second.first[0];
 
             // scan(State, Bits, Time, Amount, ...)
-            if (ScanContextBackward(ctx, nBits, input->second.second.first, input->second.second.second, interval, solution))
+            if (ScanKernelBackward(kernel, nBits, input->second.second.first, input->second.second.second, interval, solution))
             {
                 // Solution found
                 LuckyInput = input->first; // (txid, nout)

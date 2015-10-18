@@ -468,53 +468,6 @@ bool ScanKernelForward(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxT
     return true;
 }
 
-// Scan given midstate for solution
-bool ScanContextBackward(SHA256_CTX &ctx, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution)
-{
-    CBigNum bnTargetPerCoinDay;
-    bnTargetPerCoinDay.SetCompact(nBits);
-
-    // Get maximum possible target to filter out the majority of obviously insufficient hashes
-    CBigNum bnMaxTargetPerCoinDay = bnTargetPerCoinDay * CBigNum(nValueIn) * nStakeMaxAge / COIN / nOneDay;
-    uint256 maxTarget = bnMaxTargetPerCoinDay.getuint256();
-
-    SHA256_CTX ctxCopy = ctx;
-
-    // Search backward in time from the given timestamp
-    // Stopping search in case of shutting down
-    for (uint32_t nTimeTx=SearchInterval.first; nTimeTx>SearchInterval.second && !fShutdown; nTimeTx--)
-    {
-        // Complete first hashing iteration
-        uint256 hash1;
-        SHA256_Update(&ctxCopy, (unsigned char*)&nTimeTx, 4);
-        SHA256_Final((unsigned char*)&hash1, &ctxCopy);
-
-        // Restore context
-        ctxCopy = ctx;
-
-        // Finally, calculate kernel hash
-        uint256 hashProofOfStake;
-        SHA256((unsigned char*)&hash1, sizeof(hashProofOfStake), (unsigned char*)&hashProofOfStake);
-
-        // Skip if hash doesn't satisfy the maximum target
-        if (hashProofOfStake > maxTarget)
-            continue;
-
-        CBigNum bnCoinDayWeight = CBigNum(nValueIn) * GetWeight((int64_t)nInputTxTime, (int64_t)nTimeTx) / COIN / nOneDay;
-        CBigNum bnTargetProofOfStake = bnCoinDayWeight * bnTargetPerCoinDay;
-
-        if (bnTargetProofOfStake >= CBigNum(hashProofOfStake))
-        {
-            solution.first = hashProofOfStake;
-            solution.second = nTimeTx;
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
 // Check kernel hash target and coinstake signature
 bool CheckProofOfStake(const CTransaction& tx, unsigned int nBits, uint256& hashProofOfStake, uint256& targetProofOfStake)
 {
