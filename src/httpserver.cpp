@@ -252,7 +252,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     std::auto_ptr<HTTPRequest> hreq(new HTTPRequest(req));
 
     LogPrint("http", "Received a %s request for %s from %s\n",
-             RequestMethodString(hreq->GetRequestMethod()), hreq->GetURI(), hreq->GetPeer().ToString());
+        RequestMethodString(hreq->GetRequestMethod()), hreq->GetURI(), hreq->GetPeer().ToString());
 
     // Early address-based allow check
     if (!ClientAllowed(hreq->GetPeer())) {
@@ -582,7 +582,7 @@ void HTTPRequest::WriteReply(int nStatus, const std::string& strReply)
     assert(evb);
     evbuffer_add(evb, strReply.data(), strReply.size());
     HTTPEvent* ev = new HTTPEvent(eventBase, true,
-                                  boost::bind(evhttp_send_reply, req, nStatus, (const char*)NULL, (struct evbuffer*)NULL));
+        boost::bind(evhttp_send_reply, req, nStatus, (const char*)NULL, (struct evbuffer*)NULL));
     ev->trigger(0);
     replySent = true;
     req = 0; // transferred back to main thread
