@@ -42,7 +42,7 @@ static bool AppInitRawTx(int argc, char* argv[])
 
     fCreateBlank = GetBoolArg("-create", false);
 
-    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-help"))
+    if (argc<2 || mapArgs.count("-?") || mapArgs.count("-h") || mapArgs.count("-help"))
     {
         // First part of help message is specific to this utility
         std::string strUsage = _("Bitcoin Core bitcoin-tx utility version") + " " + FormatFullVersion() + "\n\n" +
