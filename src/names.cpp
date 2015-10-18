@@ -32,12 +32,23 @@ GetNameCost (const CName& name)
 {
   const vchType::size_type len = name.size ();
 
-  /* TODO: Decide about real cost schedule.  */
-
-  if (len < 3)
+  /* The empty name is not allowed.  */
+  if (len < 1 || len > 100)
     return -1;
 
-  return COIN;
+  /* Cost decided by the Crowncoin team.  */
+  if (len <= 3)
+    return 500 * COIN;
+  if (len <= 15)
+    return 250 * COIN;
+  if (len <= 30)
+    return 100 * COIN;
+  if (len <= 50)
+    return 50 * COIN;
+  if (len <= 100)
+    return 25 * COIN;
+
+  assert (false);
 }
 
 /* ************************************************************************** */
@@ -329,7 +340,7 @@ CheckNameOperation (const CTxOut& txo, const CCoinsView& coins,
                                  NameToString (name).c_str ()));
 
   assert (cost >= 0);
-  if (txo.nValue < GetNameCost (name))
+  if (txo.nValue < cost)
     return state.Invalid (error ("CheckNameOperation: not enough coins paid"
                                  " for '%s'",
                                  NameToString (name).c_str ()));
