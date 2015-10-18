@@ -147,6 +147,18 @@ Value scaninput(const Array& params, bool fHelp)
                 vInputs.push_back(nOut);
             }
         }
+        else if(inputs_v.type() == int_type)
+        {
+            int nOut = inputs_v.get_int();
+            if (nOut < 0 || nOut > (int)tx.vout.size() - 1)
+            {
+                stringstream strErrorMsg;
+                strErrorMsg << boost::format("Invalid parameter, input number %d is out of range") % nOut;
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strErrorMsg.str());
+            }
+
+            vInputs.push_back(nOut);
+        }
         else
         {
             vInputs = vector<int>(boost::counting_iterator<int>( 0 ), boost::counting_iterator<int>( tx.vout.size() ));
