@@ -238,11 +238,11 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
      *  secp256k1_gej_eq_x implements the (xr * pr.z^2 mod p == pr.x) test.
      */
     if (secp256k1_gej_eq_x_var(&xr, &pr)) {
-        /* xr.x == xr * xr.z^2 mod p, so the signature is valid. */
+        /* xr * pr.z^2 mod p == pr.x, so the signature is valid. */
         return 1;
     }
     if (secp256k1_fe_cmp_var(&xr, &secp256k1_ecdsa_const_p_minus_order) >= 0) {
-        /* xr + p >= n, so we can skip testing the second case. */
+        /* xr + n >= p, so we can skip testing the second case. */
         return 0;
     }
     secp256k1_fe_add(&xr, &secp256k1_ecdsa_const_order_as_fe);
@@ -301,6 +301,7 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_scalar_set_b32(sigr, b, &overflow);
     if (secp256k1_scalar_is_zero(sigr)) {
         /* P.x = order is on the curve, so technically sig->r could end up zero, which would be an invalid signature. */
+        /* This branch is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N. */
         secp256k1_gej_clear(&rp);
         secp256k1_ge_clear(&r);
         return 0;

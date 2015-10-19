@@ -182,7 +182,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
         secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
         retry = !secp256k1_fe_set_b32(&s, nonce32);
         retry |= secp256k1_fe_is_zero(&s);
-    } while (retry);
+    } while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > Fp. */
     /* Randomize the projection to defend against multiplier sidechannels. */
     secp256k1_gej_rescale(&ctx->initial, &s);
     secp256k1_fe_clear(&s);
@@ -191,7 +191,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
         secp256k1_scalar_set_b32(&b, nonce32, &retry);
         /* A blinding value of 0 works, but would undermine the projection hardening. */
         retry |= secp256k1_scalar_is_zero(&b);
-    } while (retry);
+    } while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > order. */
     secp256k1_rfc6979_hmac_sha256_finalize(&rng);
     memset(nonce32, 0, 32);
     secp256k1_ecmult_gen(ctx, &gb, &b);
