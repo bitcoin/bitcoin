@@ -13,7 +13,6 @@ freebsd-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch
 linux-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch
 linux-g++-32: QMAKE_TARGET.arch = i686
 linux-g++-64: QMAKE_TARGET.arch = x86_64
-linux-g++-64: QMAKE_TARGET.arch = x86_64
 win32-g++-cross: QMAKE_TARGET.arch = $$TARGET_PLATFORM
 
 # for boost 1.37, add -mt to the boost libraries

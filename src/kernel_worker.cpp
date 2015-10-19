@@ -421,7 +421,7 @@ bool ScanKernelBackward_8way(unsigned char *kernel, uint32_t nBits, uint32_t nIn
 
     // Search forward in time from the given timestamp
     // Stopping search in case of shutting down
-    for (uint32_t nTimeTx=SearchInterval.first, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<SearchInterval.second && !fShutdown; nTimeTx -=8)
+    for (uint32_t nTimeTx=SearchInterval.first, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx>SearchInterval.second && !fShutdown; nTimeTx -=8)
     {
         sha256_init_8way(blocks2);
         sha256_init_8way(candidates);
@@ -500,7 +500,7 @@ bool ScanKernelBackward_4Way(unsigned char *kernel, uint32_t nBits, uint32_t nIn
 
     // Search forward in time from the given timestamp
     // Stopping search in case of shutting down
-    for (uint32_t nTimeTx=SearchInterval.first, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx<SearchInterval.second && !fShutdown; nTimeTx -=4)
+    for (uint32_t nTimeTx=SearchInterval.first, nMaxTarget32 = nMaxTarget.Get32(7); nTimeTx>SearchInterval.second && !fShutdown; nTimeTx -=4)
     {
         sha256_init_4way(blocks2);
         sha256_init_4way(candidates);
