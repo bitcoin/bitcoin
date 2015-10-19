@@ -81,12 +81,11 @@ testScriptsExt = [
     'invalidateblock.py',
     'keypool.py',
     'receivedby.py',
-    'rpcbind_test.py',
-#   'script_test.py',
+#    'rpcbind_test.py', #temporary, bug in libevent, see #6655
+#   'script_test.py', #used for manual comparison of 2 binaries
     'smartfees.py',
     'maxblocksinflight.py',
     'invalidblockrequest.py',
-#    'forknotify.py',
     'p2p-acceptblock.py',
     'mempool_packages.py',
 ]
