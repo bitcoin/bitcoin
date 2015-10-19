@@ -2960,6 +2960,34 @@ void test_ecdsa_edge_cases(void) {
         key[0] = 0;
     }
 
+    {
+        /* Check that optional nonce arguments do not have equivilent effect. */
+        const unsigned char zeros[32] = {0};
+        unsigned char nonce[32];
+        unsigned char nonce2[32];
+        unsigned char nonce3[32];
+        unsigned char nonce4[32];
+        VG_UNDEF(nonce,32);
+        VG_UNDEF(nonce2,32);
+        VG_UNDEF(nonce3,32);
+        VG_UNDEF(nonce4,32);
+        CHECK(nonce_function_rfc6979(nonce, zeros, zeros, NULL, NULL, 0) == 1);
+        VG_CHECK(nonce,32);
+        CHECK(nonce_function_rfc6979(nonce2, zeros, zeros, zeros, NULL, 0) == 1);
+        VG_CHECK(nonce2,32);
+        CHECK(nonce_function_rfc6979(nonce3, zeros, zeros, NULL, (void *)zeros, 0) == 1);
+        VG_CHECK(nonce3,32);
+        CHECK(nonce_function_rfc6979(nonce4, zeros, zeros, zeros, (void *)zeros, 0) == 1);
+        VG_CHECK(nonce4,32);
+        CHECK(memcmp(nonce, nonce2, 32) != 0);
+        CHECK(memcmp(nonce, nonce3, 32) != 0);
+        CHECK(memcmp(nonce, nonce4, 32) != 0);
+        CHECK(memcmp(nonce2, nonce3, 32) != 0);
+        CHECK(memcmp(nonce2, nonce4, 32) != 0);
+        CHECK(memcmp(nonce3, nonce4, 32) != 0);
+    }
+
+
     /* Privkey export where pubkey is the point at infinity. */
     {
         unsigned char privkey[300];

@@ -300,8 +300,10 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
    /* We feed a byte array to the PRNG as input, consisting of:
     * - the private key (32 bytes) and message (32 bytes), see RFC 6979 3.2d.
     * - optionally 32 extra bytes of data, see RFC 6979 3.6 Additional Data.
-    * - optionally 16 extra bytes with the algorithm name (the extra data bytes
-    *   are set to zeroes when not present, while the algorithm name is).
+    * - optionally 16 extra bytes with the algorithm name.
+    * Because the arguments have distinct fixed lengths it is not possible for
+    *  different argument mixtures to emulate each other and result in the same
+    *  nonces.
     */
    memcpy(keydata, key32, 32);
    memcpy(keydata + 32, msg32, 32);
@@ -310,9 +312,8 @@ static int nonce_function_rfc6979(unsigned char *nonce32, const unsigned char *m
        keylen = 96;
    }
    if (algo16 != NULL) {
-       memset(keydata + keylen, 0, 96 - keylen);
-       memcpy(keydata + 96, algo16, 16);
-       keylen = 112;
+       memcpy(keydata + keylen, algo16, 16);
+       keylen += 16;
    }
    secp256k1_rfc6979_hmac_sha256_initialize(&rng, keydata, keylen);
    memset(keydata, 0, sizeof(keydata));
