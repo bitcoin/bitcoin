@@ -40,8 +40,13 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
         static const unsigned char nums_b32[33] = "The scalar for this x is unknown";
         secp256k1_fe nums_x;
         secp256k1_ge nums_ge;
-        VERIFY_CHECK(secp256k1_fe_set_b32(&nums_x, nums_b32));
-        VERIFY_CHECK(secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0));
+        int r;
+        r = secp256k1_fe_set_b32(&nums_x, nums_b32);
+        (void)r;
+        VERIFY_CHECK(r);
+        r = secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0);
+        (void)r;
+        VERIFY_CHECK(r);
         secp256k1_gej_set_ge(&nums_gej, &nums_ge);
         /* Add G to make the bits in x uniformly distributed. */
         secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, &secp256k1_ge_const_g, NULL);

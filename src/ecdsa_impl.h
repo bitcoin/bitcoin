@@ -260,13 +260,16 @@ static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context *ctx, cons
     secp256k1_gej xj;
     secp256k1_scalar rn, u1, u2;
     secp256k1_gej qj;
+    int r;
 
     if (secp256k1_scalar_is_zero(sigr) || secp256k1_scalar_is_zero(sigs)) {
         return 0;
     }
 
     secp256k1_scalar_get_b32(brx, sigr);
-    VERIFY_CHECK(secp256k1_fe_set_b32(&fx, brx)); /* brx comes from a scalar, so is less than the order; certainly less than p */
+    r = secp256k1_fe_set_b32(&fx, brx);
+    (void)r;
+    VERIFY_CHECK(r); /* brx comes from a scalar, so is less than the order; certainly less than p */
     if (recid & 2) {
         if (secp256k1_fe_cmp_var(&fx, &secp256k1_ecdsa_const_p_minus_order) >= 0) {
             return 0;

@@ -224,6 +224,7 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
         0xFF,0xFF,0xFF,0xFE,0xFF,0xFF,0xFC,0x2F
     };
     unsigned char b[32];
+    int res;
     secp256k1_fe c = *a;
     secp256k1_fe_normalize_var(&c);
     secp256k1_fe_get_b32(b, &c);
@@ -231,7 +232,9 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
     secp256k1_num_set_bin(&m, prime, 32);
     secp256k1_num_mod_inverse(&n, &n, &m);
     secp256k1_num_get_bin(b, 32, &n);
-    VERIFY_CHECK(secp256k1_fe_set_b32(r, b));
+    res = secp256k1_fe_set_b32(r, b);
+    (void)res;
+    VERIFY_CHECK(res);
     /* Verify the result is the (unique) valid inverse using non-GMP code. */
     secp256k1_fe_mul(&c, &c, r);
     secp256k1_fe_add(&c, &negone);
