@@ -390,7 +390,7 @@ vector<pair<uint256,uint32_t> >& KernelWorker::GetSolutions()
 #ifdef USE_ASM
 
 #ifdef __x86_64__
-bool ScanKernelBackward_8way(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution)
+bool ScanKernelBackward_8Way(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxTime, int64_t nValueIn, std::pair<uint32_t, uint32_t> &SearchInterval, std::pair<uint256, uint32_t> &solution)
 {
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
