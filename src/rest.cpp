@@ -607,6 +607,15 @@ static const struct {
       {"/rest/mempool/contents", rest_mempool_contents},
       {"/rest/headers/", rest_headers},
       {"/rest/getutxos", rest_getutxos},
+
+      {"/rest/v1/tx/", rest_tx},
+      {"/rest/v1/block/notxdetails/", rest_block_notxdetails},
+      {"/rest/v1/block/", rest_block_extended},
+      {"/rest/v1/chaininfo", rest_chaininfo},
+      {"/rest/v1/mempool/info", rest_mempool_info},
+      {"/rest/v1/mempool/contents", rest_mempool_contents},
+      {"/rest/v1/headers/", rest_headers},
+      {"/rest/v1/getutxos", rest_getutxos},
 };
 
 bool StartREST()
