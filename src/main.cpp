@@ -2502,7 +2502,7 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
         list<CTransaction> removed;
         CValidationState stateDummy;
         if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, true)) {
-            mempool.remove(tx, removed, true);
+            mempool.removeRecursive(tx, removed);
         } else if (mempool.exists(tx.GetHash())) {
             vHashUpdate.push_back(tx.GetHash());
         }

@@ -57,12 +57,12 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     std::list<CTransaction> removed;
 
     // Nothing in pool, remove should do nothing:
-    testPool.remove(txParent, removed, true);
+    testPool.removeRecursive(txParent, removed);
     BOOST_CHECK_EQUAL(removed.size(), 0);
 
     // Just the parent:
     testPool.addUnchecked(txParent.GetHash(), entry.FromTx(txParent));
-    testPool.remove(txParent, removed, true);
+    testPool.removeRecursive(txParent, removed);
     BOOST_CHECK_EQUAL(removed.size(), 1);
     removed.clear();
     
@@ -74,16 +74,16 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
         testPool.addUnchecked(txGrandChild[i].GetHash(), entry.FromTx(txGrandChild[i]));
     }
     // Remove Child[0], GrandChild[0] should be removed:
-    testPool.remove(txChild[0], removed, true);
+    testPool.removeRecursive(txChild[0], removed);
     BOOST_CHECK_EQUAL(removed.size(), 2);
     removed.clear();
     // ... make sure grandchild and child are gone:
-    testPool.remove(txGrandChild[0], removed, true);
+    testPool.removeRecursive(txGrandChild[0], removed);
     BOOST_CHECK_EQUAL(removed.size(), 0);
-    testPool.remove(txChild[0], removed, true);
+    testPool.removeRecursive(txChild[0], removed);
     BOOST_CHECK_EQUAL(removed.size(), 0);
     // Remove parent, all children/grandchildren should go:
-    testPool.remove(txParent, removed, true);
+    testPool.removeRecursive(txParent, removed);
     BOOST_CHECK_EQUAL(removed.size(), 5);
     BOOST_CHECK_EQUAL(testPool.size(), 0);
     removed.clear();
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
     }
     // Now remove the parent, as might happen if a block-re-org occurs but the parent cannot be
     // put into the mempool (maybe because it is non-standard):
-    testPool.remove(txParent, removed, true);
+    testPool.removeRecursive(txParent, removed);
     BOOST_CHECK_EQUAL(removed.size(), 6);
     BOOST_CHECK_EQUAL(testPool.size(), 0);
     removed.clear();
@@ -281,11 +281,11 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     // Now try removing tx10 and verify the sort order returns to normal
     std::list<CTransaction> removed;
-    pool.remove(pool.mapTx.find(tx10.GetHash())->GetTx(), removed, true);
+    pool.removeRecursive(pool.mapTx.find(tx10.GetHash())->GetTx(), removed);
     CheckSort<descendant_score>(pool, snapshotOrder);
 
-    pool.remove(pool.mapTx.find(tx9.GetHash())->GetTx(), removed, true);
-    pool.remove(pool.mapTx.find(tx8.GetHash())->GetTx(), removed, true);
+    pool.removeRecursive(pool.mapTx.find(tx9.GetHash())->GetTx(), removed);
+    pool.removeRecursive(pool.mapTx.find(tx8.GetHash())->GetTx(), removed);
     /* Now check the sort on the mining score index.
      * Final order should be:
      *
