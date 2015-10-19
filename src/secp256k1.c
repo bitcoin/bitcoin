@@ -399,13 +399,13 @@ int secp256k1_ec_pubkey_create(const secp256k1_context* ctx, secp256k1_pubkey *p
 
     secp256k1_scalar_set_b32(&sec, seckey, &overflow);
     ret = (!overflow) & (!secp256k1_scalar_is_zero(&sec));
-    secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pj, &sec);
-    secp256k1_ge_set_gej(&p, &pj);
-    secp256k1_pubkey_save(pubkey, &p);
-    secp256k1_scalar_clear(&sec);
-    if (!ret) {
-        memset(pubkey, 0, sizeof(*pubkey));
+    memset(pubkey, 0, sizeof(*pubkey));
+    if (ret) {
+        secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pj, &sec);
+        secp256k1_ge_set_gej(&p, &pj);
+        secp256k1_pubkey_save(pubkey, &p);
     }
+    secp256k1_scalar_clear(&sec);
     return ret;
 }
 
