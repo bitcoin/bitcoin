@@ -2,7 +2,7 @@
 
 [ZeroMQ](http://zeromq.org/) is a lightweight wrapper around TCP
 connections, inter-process communication, and shared-memory,
-providing various message-oriented semantics such as publish/subcribe,
+providing various message-oriented semantics such as publish/subscribe,
 request/reply, and push/pull.
 
 The Bitcoin Core daemon can be configured to act as a trusted "border
