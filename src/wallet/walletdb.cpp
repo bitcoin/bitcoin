@@ -6,8 +6,8 @@
 #include "wallet/walletdb.h"
 
 #include "base58.h"
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
-#include "main.h" // For CheckTransaction
 #include "protocol.h"
 #include "serialize.h"
 #include "sync.h"
@@ -349,6 +349,7 @@ bool
 ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
              CWalletScanState &wss, string& strType, string& strErr)
 {
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     try {
         // Unserialize
         // Taking advantage of the fact that pair serialization
@@ -373,7 +374,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CWalletTx wtx;
             ssValue >> wtx;
             CValidationState state;
-            if (!(CheckTransaction(wtx, state) && (wtx.GetHash() == hash) && state.IsValid()))
+            if (!(Consensus::CheckTx(wtx, state, consensusParams) && (wtx.GetHash() == hash) && state.IsValid()))
                 return false;
 
             // Undo serialize changes in 31600
