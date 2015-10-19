@@ -61,6 +61,18 @@ static const int64_t CENT = 10000;
 void LogStackTrace();
 #endif
 
+#if defined(_MSC_VER) || defined(__MSVCRT__)
+ /* Silence compiler warnings on Windows 
+     related to MinGWs inttypes.h */
+ #undef PRIu64
+ #undef PRId64
+ #undef PRIx64
+
+ #define PRIu64 "I64u"
+ #define PRId64 "I64d"
+ #define PRIx64 "I64x"
+
+#endif
 
 /* Format characters for (s)size_t and ptrdiff_t */
 #if defined(_MSC_VER) || defined(__MSVCRT__)
