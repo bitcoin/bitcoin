@@ -1881,7 +1881,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
     std::set<int> setFilesToPrune;
     bool fFlushForPrune = false;
     try {
-    if (fPruneMode && fCheckForPruning) {
+    if (fPruneMode && fCheckForPruning && !fReindex) {
         FindFilesToPrune(setFilesToPrune);
         fCheckForPruning = false;
         if (!setFilesToPrune.empty()) {
