@@ -903,10 +903,10 @@ void CTxMemPool::TrimToSize(size_t sizelimit) {
     while (DynamicMemoryUsage() > sizelimit) {
         indexed_transaction_set::nth_index<1>::type::iterator it = mapTx.get<1>().begin();
 
-        // We set the new mempool min fee to either the feerate of the removed set,
-        // or the "minimum reasonable fee rate" (ie some value under which we consider
-        // txn to have 0 fee). This way, if the mempool reaches its full size on free
-        // txn, we will simply disable free txn until there is a block, and some time.
+        // We set the new mempool min fee to the feerate of the removed set, plus the
+        // "minimum reasonable fee rate" (ie some value under which we consider txn
+        // to have 0 fee). This way, we don't allow txn to enter mempool with feerate
+        // equal to txn which were removed with no block in between.
         CFeeRate removed(it->GetFeesWithDescendants(), it->GetSizeWithDescendants());
         removed += minReasonableRelayFee;
         trackPackageRemoved(removed);
