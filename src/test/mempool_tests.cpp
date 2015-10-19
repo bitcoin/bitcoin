@@ -317,6 +317,110 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     CheckSort<mining_score>(pool, sortedOrder);
 }
 
+BOOST_AUTO_TEST_CASE(MempoolAncestorIndexingTest)
+{
+    CTxMemPool pool(CFeeRate(0));
+    TestMemPoolEntryHelper entry;
+    entry.hadNoDependencies = true;
+
+    /* 3rd highest fee */
+    CMutableTransaction tx1 = CMutableTransaction();
+    tx1.vout.resize(1);
+    tx1.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx1.vout[0].nValue = 10 * COIN;
+    pool.addUnchecked(tx1.GetHash(), entry.Fee(10000LL).Priority(10.0).FromTx(tx1));
+
+    /* highest fee */
+    CMutableTransaction tx2 = CMutableTransaction();
+    tx2.vout.resize(1);
+    tx2.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx2.vout[0].nValue = 2 * COIN;
+    pool.addUnchecked(tx2.GetHash(), entry.Fee(20000LL).Priority(9.0).FromTx(tx2));
+    uint64_t tx2Size = ::GetSerializeSize(tx2, SER_NETWORK, PROTOCOL_VERSION);
+
+    /* lowest fee */
+    CMutableTransaction tx3 = CMutableTransaction();
+    tx3.vout.resize(1);
+    tx3.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx3.vout[0].nValue = 5 * COIN;
+    pool.addUnchecked(tx3.GetHash(), entry.Fee(0LL).Priority(100.0).FromTx(tx3));
+
+    /* 2nd highest fee */
+    CMutableTransaction tx4 = CMutableTransaction();
+    tx4.vout.resize(1);
+    tx4.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx4.vout[0].nValue = 6 * COIN;
+    pool.addUnchecked(tx4.GetHash(), entry.Fee(15000LL).Priority(1.0).FromTx(tx4));
+
+    /* equal fee rate to tx1, but newer */
+    CMutableTransaction tx5 = CMutableTransaction();
+    tx5.vout.resize(1);
+    tx5.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx5.vout[0].nValue = 11 * COIN;
+    pool.addUnchecked(tx5.GetHash(), entry.Fee(10000LL).FromTx(tx5));
+    BOOST_CHECK_EQUAL(pool.size(), 5);
+
+    std::vector<std::string> sortedOrder;
+    sortedOrder.resize(5);
+    sortedOrder[0] = tx2.GetHash().ToString(); // 20000
+    sortedOrder[1] = tx4.GetHash().ToString(); // 15000
+    // tx1 and tx5 are both 10000
+    // Ties are broken by hash, not timestamp, so determine which
+    // hash comes first.
+    if (tx1.GetHash() < tx5.GetHash()) {
+        sortedOrder[2] = tx1.GetHash().ToString();
+        sortedOrder[3] = tx5.GetHash().ToString();
+    } else {
+        sortedOrder[2] = tx5.GetHash().ToString();
+        sortedOrder[3] = tx1.GetHash().ToString();
+    }
+    sortedOrder[4] = tx3.GetHash().ToString(); // 0
+
+    CheckSort<ancestor_score>(pool, sortedOrder);
+
+    /* low fee parent with high fee child */
+    /* tx6 (0) -> tx7 (high) */
+    CMutableTransaction tx6 = CMutableTransaction();
+    tx6.vout.resize(1);
+    tx6.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx6.vout[0].nValue = 20 * COIN;
+    uint64_t tx6Size = ::GetSerializeSize(tx6, SER_NETWORK, PROTOCOL_VERSION);
+
+    pool.addUnchecked(tx6.GetHash(), entry.Fee(0LL).FromTx(tx6));
+    BOOST_CHECK_EQUAL(pool.size(), 6);
+    sortedOrder.push_back(tx6.GetHash().ToString());
+    CheckSort<ancestor_score>(pool, sortedOrder);
+
+    CMutableTransaction tx7 = CMutableTransaction();
+    tx7.vin.resize(1);
+    tx7.vin[0].prevout = COutPoint(tx6.GetHash(), 0);
+    tx7.vin[0].scriptSig = CScript() << OP_11;
+    tx7.vout.resize(1);
+    tx7.vout[0].scriptPubKey = CScript() << OP_11 << OP_EQUAL;
+    tx7.vout[0].nValue = 10 * COIN;
+    uint64_t tx7Size = ::GetSerializeSize(tx7, SER_NETWORK, PROTOCOL_VERSION);
+
+    /* set the fee to just below tx2's feerate when including ancestor */
+    CAmount fee = (20000/tx2Size)*(tx7Size + tx6Size) - 1;
+
+    //CTxMemPoolEntry entry7(tx7, fee, 2, 10.0, 1, true);
+    pool.addUnchecked(tx7.GetHash(), entry.Fee(fee).FromTx(tx7));
+    BOOST_CHECK_EQUAL(pool.size(), 7);
+    sortedOrder.insert(sortedOrder.begin()+1, tx7.GetHash().ToString());
+    CheckSort<ancestor_score>(pool, sortedOrder);
+
+    /* after tx6 is mined, tx7 should move up in the sort */
+    std::vector<CTransaction> vtx;
+    vtx.push_back(tx6);
+    std::list<CTransaction> dummy;
+    pool.removeForBlock(vtx, 1, dummy, false);
+
+    sortedOrder.erase(sortedOrder.begin()+1);
+    sortedOrder.pop_back();
+    sortedOrder.insert(sortedOrder.begin(), tx7.GetHash().ToString());
+    CheckSort<ancestor_score>(pool, sortedOrder);
+}
+
 
 BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
 {
