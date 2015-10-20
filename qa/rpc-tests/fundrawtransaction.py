@@ -28,7 +28,15 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def run_test(self):
         print "Mining blocks..."
-        feeTolerance = Decimal(0.00000002) #if the fee's positive delta is higher than this value tests will fail, neg. delta always fail the tests
+
+        min_relay_tx_fee = self.nodes[0].getnetworkinfo()['relayfee']
+        # if the fee's positive delta is higher than this value tests will fail,
+        # neg. delta always fail the tests.
+        # The size of the signature of every input may be at most 2 bytes larger
+        # than a minimum sized signature.
+
+        #            = 2 bytes * minRelayTxFeePerByte
+        feeTolerance = 2 * min_relay_tx_fee/1000
 
         self.nodes[2].generate(1)
         self.sync_all()
