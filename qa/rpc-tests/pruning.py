@@ -61,6 +61,9 @@ class PruneTest(BitcoinTestFramework):
         self.address[0] = self.nodes[0].getnewaddress()
         self.address[1] = self.nodes[1].getnewaddress()
 
+        # Determine default relay fee
+        self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
+
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
         connect_nodes(self.nodes[2], 0)
@@ -239,7 +242,7 @@ class PruneTest(BitcoinTestFramework):
             outputs = {}
             t = self.utxo.pop()
             inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
-            remchange = t["amount"] - Decimal("0.001000")
+            remchange = t["amount"] - 100*self.relayfee # Fee must be above min relay rate for 66kb tx
             outputs[address]=remchange
             # Create a basic transaction that will send change back to ourself after account for a fee
             # And then insert the 128 generated transaction outs in the middle rawtx[92] is where the #
