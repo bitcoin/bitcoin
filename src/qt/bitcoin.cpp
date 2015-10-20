@@ -309,14 +309,8 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     // UI per-platform customization
     // This must be done inside the BitcoinApplication constructor, or after it, because
     // PlatformStyle::instantiate requires a QApplication
-#if defined(Q_OS_MAC)
-    std::string platformName = "macosx";
-#elif defined(Q_OS_WIN)
-    std::string platformName = "windows";
-#else
-    std::string platformName = "other";
-#endif
-    platformName = GetArg("-uiplatform", platformName);
+    std::string platformName;
+    platformName = GetArg("-uiplatform", uiInterface.DefaultUIPlatform);
     platformStyle = PlatformStyle::instantiate(QString::fromStdString(platformName));
     if (!platformStyle) // Fall back to "other" if specified name not found
         platformStyle = PlatformStyle::instantiate("other");
@@ -509,6 +503,16 @@ int main(int argc, char *argv[])
 {
     SetupEnvironment();
 
+    uiInterface.DefaultUIPlatform =
+#if defined(Q_OS_MAC)
+        "macosx"
+#elif defined(Q_OS_WIN)
+        "windows"
+#else
+        "other"
+#endif
+        ;
+
     /// 1. Parse command-line options. These take precedence over anything else.
     // Command-line options take precedence:
     ParseParameters(argc, argv);
@@ -648,7 +652,7 @@ int main(int argc, char *argv[])
     // Subscribe to global signals from core
     uiInterface.InitMessage.connect(InitMessage);
 
-    if (GetBoolArg("-splash", true) && !GetBoolArg("-min", false))
+    if (GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !GetBoolArg("-min", false))
         app.createSplashScreen(networkStyle.data());
 
     try

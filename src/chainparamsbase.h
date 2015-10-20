@@ -39,6 +39,8 @@ protected:
  */
 const CBaseChainParams& BaseParams();
 
+CBaseChainParams &BaseParams(CBaseChainParams::Network);
+
 /** Sets the params returned by Params() to those for the given network. */
 void SelectBaseParams(CBaseChainParams::Network network);
 
