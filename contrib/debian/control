@@ -20,11 +20,12 @@ Build-Depends: debhelper,
  qt4-qmake,
  libqt4-dev,
  libqrencode-dev,
- libprotobuf-dev, protobuf-compiler
+ libprotobuf-dev, protobuf-compiler,
+ python
 Standards-Version: 3.9.2
-Homepage: http://www.bitcoin.org/
+Homepage: https://www.bitcoin.org/
 Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: http://github.com/bitcoin/bitcoin
+Vcs-Browser: https://github.com/bitcoin/bitcoin
 
 Package: bitcoind
 Architecture: any
