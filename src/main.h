@@ -43,6 +43,10 @@ struct CNodeStateStats;
 static const bool DEFAULT_ALERTS = true;
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 500;
+/** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
+static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 168;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
 static const unsigned int DEFAULT_ANCESTOR_LIMIT = 100;
 /** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
@@ -223,7 +227,15 @@ void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
 
-/** (try to) add transaction to memory pool **/
+/**
+ * Attempt to accept a new transaction into the memory pool
+ * @param[in]   pool    A reference to the mempool
+ * @param[out]  state   This may be set to an Invalid state if the transaction can not be accepted due to being invalid or failing policy requirements.  The reason for rejection is returned in the state.
+ * @param[in]   tx      A reference to the tx to be accepted
+ * @param[in]   fLimitFree  Whether free txs should be limited and mempool limits should be respected. Used during reorgs to prevent txs being readded from a disconnected block causing other mempool txs to be evicted.
+ * @param[out]  pfMissingInputs Used to indicate the tx was missing inputs and should be considered an orphan
+ * @param[in]   fRejectAbsurdFee Perform a high fee check before accepting (used for wallet txs).  Default: false
+ **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fRejectAbsurdFee=false);
 
