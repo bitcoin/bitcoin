@@ -120,7 +120,7 @@ bool CCoinsViewDB::GetStats(CCoinsStats &stats) const {
                         nTotalAmount += out.nValue;
                     }
                 }
-                stats.nSerializedSize += 32 + pcursor->GetKeySize();
+                stats.nSerializedSize += 32 + pcursor->GetValueSize();
                 ss << VARINT(0);
             } else {
                 return error("CCoinsViewDB::GetStats() : unable to read value");
