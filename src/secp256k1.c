@@ -501,36 +501,6 @@ int secp256k1_ec_pubkey_tweak_mul(const secp256k1_context* ctx, secp256k1_pubkey
     return ret;
 }
 
-int secp256k1_ec_privkey_export(const secp256k1_context* ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *seckey, unsigned int flags) {
-    secp256k1_scalar key;
-    int ret = 0;
-    VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(seckey != NULL);
-    ARG_CHECK(privkey != NULL);
-    ARG_CHECK(privkeylen != NULL);
-    ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
-
-    secp256k1_scalar_set_b32(&key, seckey, NULL);
-    ret = secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, privkeylen, &key, flags);
-    secp256k1_scalar_clear(&key);
-    return ret;
-}
-
-int secp256k1_ec_privkey_import(const secp256k1_context* ctx, unsigned char *seckey, const unsigned char *privkey, size_t privkeylen) {
-    secp256k1_scalar key;
-    int ret = 0;
-    ARG_CHECK(seckey != NULL);
-    ARG_CHECK(privkey != NULL);
-    (void)ctx;
-
-    ret = secp256k1_eckey_privkey_parse(&key, privkey, privkeylen);
-    if (ret) {
-        secp256k1_scalar_get_b32(seckey, &key);
-    }
-    secp256k1_scalar_clear(&key);
-    return ret;
-}
-
 int secp256k1_context_randomize(secp256k1_context* ctx, const unsigned char *seed32) {
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));

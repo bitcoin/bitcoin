@@ -25,6 +25,7 @@
 #endif
 
 #include "contrib/lax_der_parsing.h"
+#include "contrib/lax_der_privatekey_parsing.h"
 
 #if !defined(VG_CHECK)
 # if defined(VALGRIND)
@@ -2351,8 +2352,8 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
 
     /* Verify private key import and export. */
-    CHECK(secp256k1_ec_privkey_export(ctx, seckey, &seckeylen, privkey, secp256k1_rand_bits(1) == 1) ? SECP256K1_EC_COMPRESSED : 0);
-    CHECK(secp256k1_ec_privkey_import(ctx, privkey2, seckey, seckeylen) == 1);
+    CHECK(secp256k1_ec_privkey_export_der(ctx, seckey, &seckeylen, privkey, secp256k1_rand_bits(1) == 1) ? SECP256K1_EC_COMPRESSED : 0);
+    CHECK(secp256k1_ec_privkey_import_der(ctx, privkey2, seckey, seckeylen) == 1);
     CHECK(memcmp(privkey, privkey2, 32) == 0);
 
     /* Optionally tweak the keys using addition. */
@@ -2998,9 +2999,9 @@ void test_ecdsa_edge_cases(void) {
             0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41,
         };
         size_t outlen = 300;
-        CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, 0));
+        CHECK(!secp256k1_ec_privkey_export_der(ctx, privkey, &outlen, seckey, 0));
         outlen = 300;
-        CHECK(!secp256k1_ec_privkey_export(ctx, privkey, &outlen, seckey, SECP256K1_EC_COMPRESSED));
+        CHECK(!secp256k1_ec_privkey_export_der(ctx, privkey, &outlen, seckey, SECP256K1_EC_COMPRESSED));
     }
 }
 

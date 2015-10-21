@@ -478,55 +478,6 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
     const unsigned char *seckey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-/** Export a private key in BER format.
- *
- *  Returns: 1 if the private key was valid.
- *  Args: ctx:        pointer to a context object, initialized for signing (cannot
- *                    be NULL)
- *  Out: privkey:     pointer to an array for storing the private key in BER.
- *                    Should have space for 279 bytes, and cannot be NULL.
- *       privkeylen:  Pointer to an int where the length of the private key in
- *                    privkey will be stored.
- *  In:  seckey:      pointer to a 32-byte secret key to export.
- *       flags:       SECP256K1_EC_COMPRESSED if the key should be exported in
- *                    compressed format.
- *
- *  This function is purely meant for compatibility with applications that
- *  require BER encoded keys. When working with secp256k1-specific code, the
- *  simple 32-byte private keys are sufficient.
- *
- *  Note that this function does not guarantee correct DER output. It is
- *  guaranteed to be parsable by secp256k1_ec_privkey_import.
- */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_export(
-    const secp256k1_context* ctx,
-    unsigned char *privkey,
-    size_t *privkeylen,
-    const unsigned char *seckey,
-    unsigned int flags
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
-
-/** Import a private key in DER format.
- * Returns: 1 if a private key was extracted.
- * Args: ctx:        pointer to a context object (cannot be NULL).
- * Out:  seckey:     pointer to a 32-byte array for storing the private key.
- *                   (cannot be NULL).
- * In:   privkey:    pointer to a private key in DER format (cannot be NULL).
- *       privkeylen: length of the DER private key pointed to be privkey.
- *
- * This function will accept more than just strict DER, and even allow some BER
- * violations. The public key stored inside the DER-encoded private key is not
- * verified for correctness, nor are the curve parameters. Use this function
- * only if you know in advance it is supposed to contain a secp256k1 private
- * key.
- */
-SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_import(
-    const secp256k1_context* ctx,
-    unsigned char *seckey,
-    const unsigned char *privkey,
-    size_t privkeylen
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
-
 /** Tweak a private key by adding tweak to it.
  * Returns: 0 if the tweak was out of range (chance of around 1 in 2^128 for
  *          uniformly random 32-byte arrays, or if the resulting private key
