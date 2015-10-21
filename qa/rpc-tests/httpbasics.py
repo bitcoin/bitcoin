@@ -97,5 +97,19 @@ class HTTPBasicsTest (BitcoinTestFramework):
         assert_equal('"error":null' in out1, True)
         assert_equal(conn.sock!=None, True) #connection must be closed because bitcoind should use keep-alive by default
 
+        # Check excessive request size
+        conn = httplib.HTTPConnection(urlNode2.hostname, urlNode2.port)
+        conn.connect()
+        conn.request('GET', '/' + ('x'*1000), '', headers)
+        out1 = conn.getresponse()
+        assert_equal(out1.status, httplib.NOT_FOUND)
+
+        conn = httplib.HTTPConnection(urlNode2.hostname, urlNode2.port)
+        conn.connect()
+        conn.request('GET', '/' + ('x'*10000), '', headers)
+        out1 = conn.getresponse()
+        assert_equal(out1.status, httplib.BAD_REQUEST)
+
+
 if __name__ == '__main__':
     HTTPBasicsTest ().main ()
