@@ -1979,10 +1979,6 @@
         <translation>釣り銭をコピー</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>総送金額 %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>または</translation>
     </message>
@@ -2021,6 +2017,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>最小手数料 %1 のみを支払う</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>総額 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2849,6 +2849,14 @@
         <translation>このコンピュータの %s にバインドすることができません。おそらく Bitcoin Core は既に実行されています。</translation>
     </message>
     <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>警告：異常に多くの数のブロックが生成されています。%d ブロックが最近 %d 時間以内に受け取られました。(期待値: %d)</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>警告：ネットワーク接続を確認してください。%d ブロックが最近 %d 時間以内にに受け取られました。(期待値: %d)</translation>
+    </message>
+    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>警告: -paytxfee が非常に高く設定されています! これは取引を送信する場合に支払う取引手数料です。</translation>
     </message>
@@ -2928,10 +2936,6 @@
     <message>
         <source>Error opening block database</source>
         <translation>ブロック データベースの開始エラー</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
@@ -3186,6 +3190,10 @@ rpcpassword=%s
         <translation>データベースの読み込みエラー。シャットダウンします。</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>エラー: サポートされていない引数 -tor が見つかりました。-onion を使用してください。</translation>
     </message>
@@ -3234,6 +3242,10 @@ rpcpassword=%s
         <translation>ノード中継オプション:</translation>
     </message>
     <message>
+        <source>Pruning blockstore...</source>
+        <translation>ブロックデータを剪定しています……</translation>
+    </message>
+    <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>RPC SSL オプション: (SSLのセットアップ手順はビットコインWikiを参照してください)</translation>
     </message>
@@ -3248,6 +3260,10 @@ rpcpassword=%s
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>起動時に現在の blk000??.dat ファイルからブロック チェーンのインデックスを再構築</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>P2Pネットワークのアラートの受け取りと表示を行う (デフォルト: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

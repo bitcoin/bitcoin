@@ -379,6 +379,12 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nConnectTimeout, &proxyConnectionFailed) :
                   ConnectSocket(addrConnect, hSocket, nConnectTimeout, &proxyConnectionFailed))
     {
+        if (!IsSelectableSocket(hSocket)) {
+            LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
+            CloseSocket(hSocket);
+            return NULL;
+        }
+
         addrman.Attempt(addrConnect);
 
         // Add node
@@ -551,7 +557,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
                 return false;
 
         if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
-            LogPrint("net", "Oversized message from peer=%i, disconnecting", GetId());
+            LogPrint("net", "Oversized message from peer=%i, disconnecting\n", GetId());
             return false;
         }
 
@@ -849,8 +855,14 @@ void ThreadSocketHandler()
                     if (nErr != WSAEWOULDBLOCK)
                         LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
                 }
+                else if (!IsSelectableSocket(hSocket))
+                {
+                    LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToString());
+                    CloseSocket(hSocket);
+                }
                 else if (nInbound >= nMaxConnections - MAX_OUTBOUND_CONNECTIONS)
                 {
+                    LogPrint("net", "connection from %s dropped (full)\n", addr.ToString());
                     CloseSocket(hSocket);
                 }
                 else if (CNode::IsBanned(addr) && !whitelisted)
@@ -998,10 +1010,14 @@ void ThreadMapPort()
 #ifndef UPNPDISCOVER_SUCCESS
     /* miniupnpc 1.5 */
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0);
-#else
+#elif MINIUPNPC_API_VERSION < 14
     /* miniupnpc 1.6 */
     int error = 0;
     devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, &error);
+#else
+    /* miniupnpc 1.9.20150730 */
+    int error = 0;
+    devlist = upnpDiscover(2000, multicastif, minissdpdpath, 0, 0, 2, &error);
 #endif
 
     struct UPNPUrls urls;
@@ -1498,6 +1514,13 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
         LogPrintf("%s\n", strError);
         return false;
     }
+    if (!IsSelectableSocket(hListenSocket))
+    {
+        strError = "Error: Couldn't create a listenable socket for incoming connections";
+        LogPrintf("%s\n", strError);
+        return false;
+    }
+
 
 #ifndef WIN32
 #ifdef SO_NOSIGPIPE
@@ -1505,8 +1528,10 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
     setsockopt(hListenSocket, SOL_SOCKET, SO_NOSIGPIPE, (void*)&nOne, sizeof(int));
 #endif
     // Allow binding if the port is still in TIME_WAIT state after
-    // the program was closed and restarted. Not an issue on windows!
+    // the program was closed and restarted.
     setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
+#else
+    setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&nOne, sizeof(int));
 #endif
 
     // Set to non-blocking, incoming connections will also inherit this
@@ -1930,7 +1955,7 @@ unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
 
 CNode::CNode(SOCKET hSocketIn, CAddress addrIn, std::string addrNameIn, bool fInboundIn) :
     ssSend(SER_NETWORK, INIT_PROTO_VERSION),
-    addrKnown(5000, 0.001, insecure_rand()),
+    addrKnown(5000, 0.001),
     setInventoryKnown(SendBufferSize() / 1000)
 {
     nServices = 0;
@@ -2055,8 +2080,10 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
         Fuzz(GetArg("-fuzzmessagestest", 10));
 
     if (ssSend.size() == 0)
+    {
+        LEAVE_CRITICAL_SECTION(cs_vSend);
         return;
-
+    }
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);

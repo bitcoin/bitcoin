@@ -1117,10 +1117,6 @@
         <translation>نسخ التعديل</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>مجموع المبلغ %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>أو</translation>
     </message>

@@ -45,7 +45,7 @@ protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
     void keyPressEvent(QKeyEvent *);
 
-private slots:
+private Q_SLOTS:
     void on_lineEdit_returnPressed();
     void on_tabWidget_currentChanged(int index);
     /** open the debug.log from the current datadir */
@@ -58,7 +58,7 @@ private slots:
     void showEvent(QShowEvent *event);
     void hideEvent(QHideEvent *event);
 
-public slots:
+public Q_SLOTS:
     void clear();
     void message(int category, const QString &message, bool html = false);
     /** Set number of connections shown in the UI */
@@ -74,7 +74,7 @@ public slots:
     /** Handle updated peer information */
     void peerLayoutChanged();
 
-signals:
+Q_SIGNALS:
     // For RPC command executor
     void stopExecutor();
     void cmdRequest(const QString &command);

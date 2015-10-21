@@ -1979,10 +1979,6 @@
         <translation>Wechselgeld kopieren</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Gesamtbetrag %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>oder</translation>
     </message>
@@ -2021,6 +2017,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Nur die minimale Gebühr in Höhe von %1 zahlen</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Gesamtbetrag %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2849,6 +2849,14 @@
         <translation>Kann auf diesem Computer nicht an %s binden, da Bitcoin Core wahrscheinlich bereits gestartet wurde.</translation>
     </message>
     <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>Warnung: Es wurde eine ungewöhnlich hohe Anzahl Blöcke erzeugt, %d Blöcke wurden in den letzten %d Stunden empfangen (%d wurden erwartet).</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>Warnung: Überprüpfen Sie ihre Netzwerkverbindung, %d Blöcke wurden in den letzten %d Stunden empfangen (%d wurden erwartet).</translation>
+    </message>
+    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Warnung: -paytxfee ist auf einen sehr hohen Wert festgelegt! Dies ist die Gebühr die beim Senden einer Transaktion fällig wird.</translation>
     </message>
@@ -2927,10 +2935,6 @@
     <message>
         <source>Error opening block database</source>
         <translation>Fehler beim Öffnen der Blockdatenbank</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Fehler: Ein schwerer Fehler ist aufgetreten, für Details debug.log ansehen.</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
@@ -3185,6 +3189,10 @@ Beispiel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Fehler beim lesen der Datenbank, Ausführung wird beendet.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Fehler: Ein schwerer interner Fehler ist aufgetreten, siehe debug.log für Details.</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Fehler: Nicht unterstütztes Argument -tor gefunden, bitte -onion verwenden.</translation>
     </message>
@@ -3247,6 +3255,10 @@ Beispiel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>Blockkettenindex aus aktuellen Dateien blk000??.dat beim Starten wiederaufbauen</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>P2P-Netzwerk-Alarme empfangen und anzeigen (Standard: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

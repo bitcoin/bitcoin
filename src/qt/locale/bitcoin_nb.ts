@@ -1979,10 +1979,6 @@
         <translation>Kopier veksel</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totalt Beløp %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>eller</translation>
     </message>
@@ -2021,6 +2017,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Betal kun minimumsgebyret på %1</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Totalt Beløp %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2849,6 +2849,14 @@
         <translation>Ute av stand til å binde til %s på denne datamaskinen. Bitcoin Core kjører sannsynligvis allerede.</translation>
     </message>
     <message>
+        <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>ADVARSEL: unormalt høyt antall blokker generert, %d blokker mottatt de siste %d timene (%d forventet)</translation>
+    </message>
+    <message>
+        <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
+        <translation>ADVARSEL: kontroller nettverkstilkoblingen, mottok %d blokker i de siste %d timene (%d forventet)</translation>
+    </message>
+    <message>
         <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
         <translation>Advarsel: -paytxfee er satt veldig høyt! Dette er transaksjonsgebyret du betaler når du sender transaksjoner.</translation>
     </message>
@@ -2927,10 +2935,6 @@
     <message>
         <source>Error opening block database</source>
         <translation>Feil under åpning av blokkdatabase</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
@@ -3185,6 +3189,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Feil ved lesing fra database, stenger ned.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Feil: Argumentet -tor er ikke støttet, bruk -onion.</translation>
     </message>
@@ -3233,6 +3241,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Node alternativer for videresending:</translation>
     </message>
     <message>
+        <source>Pruning blockstore...</source>
+        <translation>Beskjærer blokklageret...</translation>
+    </message>
+    <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
         <translation>RPC SSL-valg: (se Bitcoin Wiki for oppsettsinstruksjoner for SSL)</translation>
     </message>
@@ -3247,6 +3259,10 @@ for eksempel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
         <translation>Gjenopprett blokkjedeindeks fra gjeldende blk000??.dat filer ved oppstart</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Motta og vis P2P nettverksvarsler (standardvalg: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

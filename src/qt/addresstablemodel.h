@@ -84,7 +84,7 @@ private:
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);
 
-public slots:
+public Q_SLOTS:
     /* Update address list from core.
      */
     void updateEntry(const QString &address, const QString &label, bool isMine, const QString &purpose, int status);

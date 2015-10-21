@@ -251,7 +251,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // Format confirmation message
     QStringList formatted;
-    foreach(const SendCoinsRecipient &rcp, currentTransaction.getRecipients())
+    Q_FOREACH(const SendCoinsRecipient &rcp, currentTransaction.getRecipients())
     {
         // generate bold amount string
         QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
@@ -305,14 +305,14 @@ void SendCoinsDialog::on_sendButton_clicked()
     questionString.append("<hr />");
     CAmount totalAmount = currentTransaction.getTotalTransactionAmount() + txFee;
     QStringList alternativeUnits;
-    foreach(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
+    Q_FOREACH(BitcoinUnits::Unit u, BitcoinUnits::availableUnits())
     {
         if(u != model->getOptionsModel()->getDisplayUnit())
             alternativeUnits.append(BitcoinUnits::formatHtmlWithUnit(u, totalAmount));
     }
-    questionString.append(tr("Total Amount %1 (= %2)")
+    questionString.append(tr("Total Amount %1<span style='font-size:10pt;font-weight:normal;'><br />(=%2)</span>")
         .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), totalAmount))
-        .arg(alternativeUnits.join(" " + tr("or") + " ")));
+        .arg(alternativeUnits.join(" " + tr("or") + "<br />")));
 
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
         questionString.arg(formatted.join("<br />")),
@@ -540,7 +540,7 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         return;
     }
 
-    emit message(tr("Send Coins"), msgParams.first, msgParams.second);
+    Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
 }
 
 void SendCoinsDialog::minimizeFeeSection(bool fMinimize)

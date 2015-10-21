@@ -183,7 +183,11 @@
         <source>Wallet decryption failed</source>
         <translation>کشف رمز wallet انجام نشد</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>رمز عبور کیف پول با موفقیت تغییر کرد.</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -220,11 +224,11 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>درباره و QT</translation>
+        <translation>درباره و Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>نمایش اطلاعات درباره QT</translation>
+        <translation>نمایش اطلاعات درباره Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
