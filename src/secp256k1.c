@@ -424,6 +424,7 @@ int secp256k1_ec_privkey_tweak_add(const secp256k1_context* ctx, unsigned char *
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
 
     ret = !overflow && secp256k1_eckey_privkey_tweak_add(&sec, &term);
+    memset(seckey, 0, 32);
     if (ret) {
         secp256k1_scalar_get_b32(seckey, &sec);
     }
@@ -444,12 +445,13 @@ int secp256k1_ec_pubkey_tweak_add(const secp256k1_context* ctx, secp256k1_pubkey
     ARG_CHECK(tweak != NULL);
 
     secp256k1_scalar_set_b32(&term, tweak, &overflow);
-    if (!overflow && secp256k1_pubkey_load(ctx, &p, pubkey)) {
-        ret = secp256k1_eckey_pubkey_tweak_add(&ctx->ecmult_ctx, &p, &term);
-        if (ret) {
+    ret = !overflow && secp256k1_pubkey_load(ctx, &p, pubkey);
+    memset(pubkey, 0, sizeof(*pubkey));
+    if (ret) {
+        if (secp256k1_eckey_pubkey_tweak_add(&ctx->ecmult_ctx, &p, &term)) {
             secp256k1_pubkey_save(pubkey, &p);
         } else {
-            memset(pubkey, 0, sizeof(*pubkey));
+            ret = 0;
         }
     }
 
@@ -469,6 +471,7 @@ int secp256k1_ec_privkey_tweak_mul(const secp256k1_context* ctx, unsigned char *
     secp256k1_scalar_set_b32(&factor, tweak, &overflow);
     secp256k1_scalar_set_b32(&sec, seckey, NULL);
     ret = !overflow && secp256k1_eckey_privkey_tweak_mul(&sec, &factor);
+    memset(seckey, 0, 32);
     if (ret) {
         secp256k1_scalar_get_b32(seckey, &sec);
     }
@@ -489,12 +492,13 @@ int secp256k1_ec_pubkey_tweak_mul(const secp256k1_context* ctx, secp256k1_pubkey
     ARG_CHECK(tweak != NULL);
 
     secp256k1_scalar_set_b32(&factor, tweak, &overflow);
-    if (!overflow && secp256k1_pubkey_load(ctx, &p, pubkey)) {
-        ret = secp256k1_eckey_pubkey_tweak_mul(&ctx->ecmult_ctx, &p, &factor);
-        if (ret) {
+    ret = !overflow && secp256k1_pubkey_load(ctx, &p, pubkey);
+    memset(pubkey, 0, sizeof(*pubkey));
+    if (ret) {
+        if (secp256k1_eckey_pubkey_tweak_mul(&ctx->ecmult_ctx, &p, &factor)) {
             secp256k1_pubkey_save(pubkey, &p);
         } else {
-            memset(pubkey, 0, sizeof(*pubkey));
+            ret = 0;
         }
     }
 
