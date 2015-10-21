@@ -62,7 +62,7 @@ secp256k1_context* secp256k1_context_create(unsigned int flags) {
     ret->illegal_callback = default_illegal_callback;
     ret->error_callback = default_error_callback;
 
-    if (EXPECT(!(flags & SECP256K1_CONTEXT_CHECK_BIT), 0)) {
+    if (EXPECT((flags & SECP256K1_FLAGS_TYPE_MASK) != SECP256K1_FLAGS_TYPE_CONTEXT, 0)) {
             secp256k1_callback_call(&ret->illegal_callback,
                                     "Invalid flags");
             free(ret);
@@ -72,10 +72,10 @@ secp256k1_context* secp256k1_context_create(unsigned int flags) {
     secp256k1_ecmult_context_init(&ret->ecmult_ctx);
     secp256k1_ecmult_gen_context_init(&ret->ecmult_gen_ctx);
 
-    if (flags & SECP256K1_CONTEXT_SIGN_BIT) {
+    if (flags & SECP256K1_FLAGS_BIT_CONTEXT_SIGN) {
         secp256k1_ecmult_gen_context_build(&ret->ecmult_gen_ctx, &ret->error_callback);
     }
-    if (flags & SECP256K1_CONTEXT_VERIFY_BIT) {
+    if (flags & SECP256K1_FLAGS_BIT_CONTEXT_VERIFY) {
         secp256k1_ecmult_context_build(&ret->ecmult_ctx, &ret->error_callback);
     }
 
@@ -173,9 +173,9 @@ int secp256k1_ec_pubkey_serialize(const secp256k1_context* ctx, unsigned char *o
     ARG_CHECK(output != NULL);
     ARG_CHECK(outputlen != NULL);
     ARG_CHECK(pubkey != NULL);
-    ARG_CHECK(flags & SECP256K1_EC_CHECK_BIT);
+    ARG_CHECK((flags & SECP256K1_FLAGS_TYPE_MASK) == SECP256K1_FLAGS_TYPE_COMPRESSION);
     return (secp256k1_pubkey_load(ctx, &Q, pubkey) &&
-            secp256k1_eckey_pubkey_serialize(&Q, output, outputlen, flags));
+            secp256k1_eckey_pubkey_serialize(&Q, output, outputlen, flags & SECP256K1_FLAGS_BIT_COMPRESSION));
 }
 
 static void secp256k1_ecdsa_signature_load(const secp256k1_context* ctx, secp256k1_scalar* r, secp256k1_scalar* s, const secp256k1_ecdsa_signature* sig) {

@@ -1544,9 +1544,9 @@ void test_point_times_order(const secp256k1_gej *point) {
     secp256k1_ge_set_gej(&res3, &res1);
     CHECK(secp256k1_ge_is_infinity(&res3));
     CHECK(secp256k1_ge_is_valid_var(&res3) == 0);
-    CHECK(secp256k1_eckey_pubkey_serialize(&res3, pub, &psize, SECP256K1_EC_UNCOMPRESSED) == 0);
+    CHECK(secp256k1_eckey_pubkey_serialize(&res3, pub, &psize, 0) == 0);
     psize = 65;
-    CHECK(secp256k1_eckey_pubkey_serialize(&res3, pub, &psize, SECP256K1_EC_COMPRESSED) == 0);
+    CHECK(secp256k1_eckey_pubkey_serialize(&res3, pub, &psize, 1) == 0);
     /* check zero/one edge cases */
     secp256k1_ecmult(&ctx->ecmult_ctx, &res1, point, &zero, &zero);
     secp256k1_ge_set_gej(&res3, &res1);
@@ -2580,7 +2580,7 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
 
     /* Verify private key import and export. */
-    CHECK(secp256k1_ec_privkey_export_der(ctx, seckey, &seckeylen, privkey, secp256k1_rand_bits(1) == 1 ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED));
+    CHECK(secp256k1_ec_privkey_export_der(ctx, seckey, &seckeylen, privkey, secp256k1_rand_bits(1) == 1));
     CHECK(secp256k1_ec_privkey_import_der(ctx, privkey2, seckey, seckeylen) == 1);
     CHECK(memcmp(privkey, privkey2, 32) == 0);
 
@@ -2698,7 +2698,7 @@ void test_random_pubkeys(void) {
         size_t size = len;
         firstb = in[0];
         /* If the pubkey can be parsed, it should round-trip... */
-        CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, (len == 33) ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED));
+        CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, len == 33));
         CHECK(size == len);
         CHECK(memcmp(&in[1], &out[1], len-1) == 0);
         /* ... except for the type of hybrid inputs. */
@@ -2706,7 +2706,7 @@ void test_random_pubkeys(void) {
             CHECK(in[0] == out[0]);
         }
         size = 65;
-        CHECK(secp256k1_eckey_pubkey_serialize(&elem, in, &size, SECP256K1_EC_UNCOMPRESSED));
+        CHECK(secp256k1_eckey_pubkey_serialize(&elem, in, &size, 0));
         CHECK(size == 65);
         CHECK(secp256k1_eckey_pubkey_parse(&elem2, in, size));
         ge_equals_ge(&elem,&elem2);
@@ -2722,7 +2722,7 @@ void test_random_pubkeys(void) {
         }
         if (res) {
             ge_equals_ge(&elem,&elem2);
-            CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, SECP256K1_EC_UNCOMPRESSED));
+            CHECK(secp256k1_eckey_pubkey_serialize(&elem, out, &size, 0));
             CHECK(memcmp(&in[1], &out[1], 64) == 0);
         }
     }
@@ -3399,9 +3399,9 @@ void test_ecdsa_edge_cases(void) {
             0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41,
         };
         size_t outlen = 300;
-        CHECK(!secp256k1_ec_privkey_export_der(ctx, privkey, &outlen, seckey, SECP256K1_EC_UNCOMPRESSED));
+        CHECK(!secp256k1_ec_privkey_export_der(ctx, privkey, &outlen, seckey, 0));
         outlen = 300;
-        CHECK(!secp256k1_ec_privkey_export_der(ctx, privkey, &outlen, seckey, SECP256K1_EC_COMPRESSED));
+        CHECK(!secp256k1_ec_privkey_export_der(ctx, privkey, &outlen, seckey, 1));
     }
 }
 
@@ -3416,7 +3416,7 @@ EC_KEY *get_openssl_key(const secp256k1_scalar *key) {
     const unsigned char* pbegin = privkey;
     int compr = secp256k1_rand_bits(1);
     EC_KEY *ec_key = EC_KEY_new_by_curve_name(NID_secp256k1);
-    CHECK(secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, &privkeylen, key, compr ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED));
+    CHECK(secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, &privkeylen, key, compr));
     CHECK(d2i_ECPrivateKey(&ec_key, &pbegin, privkeylen));
     CHECK(EC_KEY_check_key(ec_key));
     return ec_key;
