@@ -406,6 +406,13 @@ public:
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
 
     /**
+     * Check if we have the given tx already loaded in this cache.
+     * The semantics are the same as HaveCoins(), but no calls to
+     * the backing CCoinsView are made.
+     */
+    bool HaveCoinsInCache(const uint256 &txid) const;
+
+    /**
      * Return a pointer to CCoins in the cache, or NULL if not found. This is
      * more efficient than GetCoins. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
