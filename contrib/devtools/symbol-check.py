@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # Copyright (c) 2014 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -15,6 +15,7 @@ from __future__ import division, print_function
 import subprocess
 import re
 import sys
+import os
 
 # Debian 6.0.9 (Squeeze) has:
 #
@@ -45,8 +46,10 @@ MAX_VERSIONS = {
 IGNORE_EXPORTS = {
 '_edata', '_end', '_init', '__bss_start', '_fini'
 }
-READELF_CMD = '/usr/bin/readelf'
-CPPFILT_CMD = '/usr/bin/c++filt'
+READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
+CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
+# Allowed NEEDED libraries
+ALLOWED_LIBRARIES = {'librt.so.1','libpthread.so.0','libanl.so.1','libm.so.6','libgcc_s.so.1','libc.so.6','ld-linux-x86-64.so.2'}
 
 class CPPFilt(object):
     '''
@@ -98,6 +101,22 @@ def check_version(max_versions, version):
         return False
     return ver <= max_versions[lib]
 
+def read_libraries(filename):
+    p = subprocess.Popen([READELF_CMD, '-d', '-W', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    if p.returncode:
+        raise IOError('Error opening file')
+    libraries = []
+    for line in stdout.split('\n'):
+        tokens = line.split()
+        if len(tokens)>2 and tokens[1] == '(NEEDED)':
+            match = re.match('^Shared library: \[(.*)\]$', ' '.join(tokens[2:]))
+            if match:
+                libraries.append(match.group(1))
+            else:
+                raise ValueError('Unparseable (NEEDED) specification')
+    return libraries
+
 if __name__ == '__main__':
     cppfilt = CPPFilt()
     retval = 0
@@ -113,6 +132,11 @@ if __name__ == '__main__':
                 continue
             print('%s: export of symbol %s not allowed' % (filename, cppfilt(sym)))
             retval = 1
+        # Check dependency libraries
+        for library_name in read_libraries(filename):
+            if library_name not in ALLOWED_LIBRARIES:
+                print('%s: NEEDED library %s is not allowed' % (filename, library_name))
+                retval = 1
 
     exit(retval)
 
