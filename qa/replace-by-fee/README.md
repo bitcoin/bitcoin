@@ -1,11 +1,11 @@
 Replace-by-fee regression test
 ==============================
 
-First get version v0.3.0 of the python-bitcoinlib library. In this directory
+First get version v0.5.0 of the python-bitcoinlib library. In this directory
 run:
 
     git clone -n https://github.com/petertodd/python-bitcoinlib
-    (cd python-bitcoinlib && git checkout c481254c623cc9a002187dc23263cce3e05f5754)
+    (cd python-bitcoinlib && git checkout 8270bfd9c6ac37907d75db3d8b9152d61c7255cd)
 
 Then run the tests themselves with a bitcoind available running in regtest
 mode:
