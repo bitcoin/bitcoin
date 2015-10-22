@@ -437,6 +437,12 @@ public:
      */
     bool Flush();
 
+    /**
+     * Removes the transaction with the given hash from the cache, if it is
+     * not modified.
+     */
+    void Uncache(const uint256 &txid);
+
     //! Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize() const;
 
