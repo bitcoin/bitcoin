@@ -63,6 +63,7 @@ int secp256k1_ecdsa_recoverable_signature_serialize_compact(const secp256k1_cont
     (void)ctx;
     ARG_CHECK(output64 != NULL);
     ARG_CHECK(sig != NULL);
+    ARG_CHECK(recid != NULL);
 
     secp256k1_ecdsa_recoverable_signature_load(ctx, &r, &s, recid, sig);
     secp256k1_scalar_get_b32(&output64[0], &r);

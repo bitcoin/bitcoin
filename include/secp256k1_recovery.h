@@ -65,7 +65,7 @@ SECP256K1_API int secp256k1_ecdsa_recoverable_signature_serialize_compact(
     unsigned char *output64,
     int *recid,
     const secp256k1_ecdsa_recoverable_signature* sig
-) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(4);
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Create a recoverable ECDSA signature.
  *

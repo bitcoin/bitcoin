@@ -271,6 +271,27 @@ SECP256K1_API int secp256k1_ec_pubkey_serialize(
     unsigned int flags
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
+/** Parse an ECDSA signature in compact (64 bytes) format.
+ *
+ *  Returns: 1 when the signature could be parsed, 0 otherwise.
+ *  Args: ctx:      a secp256k1 context object
+ *  Out:  sig:      a pointer to a signature object
+ *  In:   input64:  a pointer to the 64-byte array to parse
+ *
+ *  The signature must consist of a 32-byte big endian R value, followed by a
+ *  32-byte big endian S value. If R or S fall outside of [0..order-1], the
+ *  encoding is invalid. R and S with value 0 are allowed in the encoding.
+ *
+ *  After the call, sig will always be initialized. If parsing failed or R or
+ *  S are zero, the resulting sig value is guaranteed to fail validation for any
+ *  message and public key.
+ */
+SECP256K1_API int secp256k1_ecdsa_signature_parse_compact(
+    const secp256k1_context* ctx,
+    secp256k1_ecdsa_signature* sig,
+    const unsigned char *input64
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
 /** Parse a DER ECDSA signature.
  *
  *  Returns: 1 when the signature could be parsed, 0 otherwise.
@@ -279,7 +300,12 @@ SECP256K1_API int secp256k1_ec_pubkey_serialize(
  *  In:   input:    a pointer to the signature to be parsed
  *        inputlen: the length of the array pointed to be input
  *
- *  Note that this function also supports some violations of DER and even BER.
+ *  This function will accept any valid DER encoded signature, even if the
+ *  encoded numbers are out of range.
+ *
+ *  After the call, sig will always be initialized. If parsing failed or the
+ *  encoded numbers are out of range, signature validation with it is
+ *  guaranteed to fail for every message and public key.
  */
 SECP256K1_API int secp256k1_ecdsa_signature_parse_der(
     const secp256k1_context* ctx,
@@ -306,6 +332,21 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
     const secp256k1_ecdsa_signature* sig
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
+/** Serialize an ECDSA signature in compact (64 byte) format.
+ *
+ *  Returns: 1
+ *  Args:   ctx:       a secp256k1 context object
+ *  Out:    output64:  a pointer to a 64-byte array to store the compact serialization
+ *  In:     sig:       a pointer to an initialized signature object
+ *
+ *  See secp256k1_ecdsa_signature_parse_compact for details about the encoding.
+ */
+SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
+    const secp256k1_context* ctx,
+    unsigned char *output64,
+    const secp256k1_ecdsa_signature* sig
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
+
 /** Verify an ECDSA signature.
  *
  *  Returns: 1: correct signature
@@ -314,6 +355,15 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_der(
  *  In:      sig:       the signature being verified (cannot be NULL)
  *           msg32:     the 32-byte message hash being verified (cannot be NULL)
  *           pubkey:    pointer to an initialized public key to verify with (cannot be NULL)
+ *
+ * To avoid accepting malleable signatures, only ECDSA signatures in lower-S
+ * form are accepted.
+ *
+ * If you need to accept ECDSA signatures from sources that do not obey this
+ * rule, apply secp256k1_ecdsa_signature_normalize to the signature prior to
+ * validation, but be aware that doing so results in malleable signatures.
+ *
+ * For details, see the comments for that function.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
     const secp256k1_context* ctx,
@@ -321,6 +371,54 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
     const unsigned char *msg32,
     const secp256k1_pubkey *pubkey
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
+/** Convert a signature to a normalized lower-S form.
+ *
+ *  Returns: 1 if sigin was not normalized, 0 if it already was.
+ *  Args: ctx:    a secp256k1 context object
+ *  Out:  sigout: a pointer to a signature to fill with the normalized form,
+ *                or copy if the input was already normalized. (can be NULL if
+ *                you're only interested in whether the input was already
+ *                normalized).
+ *  In:   sigin:  a pointer to a signature to check/normalize (cannot be NULL,
+ *                can be identical to sigout)
+ *
+ *  With ECDSA a third-party can forge a second distinct signature of the same
+ *  message, given a single initial signature, but without knowing the key. This
+ *  is done by negating the S value modulo the order of the curve, 'flipping'
+ *  the sign of the random point R which is not included in the signature.
+ *
+ *  Forgery of the same message isn't universally problematic, but in systems
+ *  where message malleability or uniqueness of signatures is important this can
+ *  cause issues. This forgery can be blocked by all verifiers forcing signers
+ *  to use a normalized form.
+ *
+ *  The lower-S form reduces the size of signatures slightly on average when
+ *  variable length encodings (such as DER) are used and is cheap to verify,
+ *  making it a good choice. Security of always using lower-S is assured because
+ *  anyone can trivially modify a signature after the fact to enforce this
+ *  property anyway.
+ *
+ *  The lower S value is always between 0x1 and
+ *  0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
+ *  inclusive.
+ *
+ *  No other forms of ECDSA malleability are known and none seem likely, but
+ *  there is no formal proof that ECDSA, even with this additional restriction,
+ *  is free of other malleability. Commonly used serialization schemes will also
+ *  accept various non-unique encodings, so care should be taken when this
+ *  property is required for an application.
+ *
+ *  The secp256k1_ecdsa_sign function will by default create signatures in the
+ *  lower-S form, and secp256k1_ecdsa_verify will not accept others. In case
+ *  signatures come from a system that cannot enforce this property,
+ *  secp256k1_ecdsa_signature_normalize must be called before verification.
+ */
+SECP256K1_API int secp256k1_ecdsa_signature_normalize(
+    const secp256k1_context* ctx,
+    secp256k1_ecdsa_signature *sigout,
+    const secp256k1_ecdsa_signature *sigin
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(3);
 
 /** An implementation of RFC6979 (using HMAC-SHA256) as nonce generation function.
  * If a data pointer is passed, it is assumed to be a pointer to 32 bytes of
@@ -342,32 +440,8 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
  *           noncefp:pointer to a nonce generation function. If NULL, secp256k1_nonce_function_default is used
  *           ndata:  pointer to arbitrary data used by the nonce generation function (can be NULL)
  *
- * The sig always has an s value in the lower half of the range (From 0x1
- * to 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0,
- * inclusive), unlike many other implementations.
- *
- * With ECDSA a third-party can can forge a second distinct signature
- * of the same message given a single initial signature without knowing
- * the key by setting s to its additive inverse mod-order, 'flipping' the
- * sign of the random point R which is not included in the signature.
- * Since the forgery is of the same message this isn't universally
- * problematic, but in systems where message malleability or uniqueness
- * of signatures is important this can cause issues.  This forgery can be
- * blocked by all verifiers forcing signers to use a canonical form. The
- * lower-S form reduces the size of signatures slightly on average when
- * variable length encodings (such as DER) are used and is cheap to
- * verify, making it a good choice. Security of always using lower-S is
- * assured because anyone can trivially modify a signature after the
- * fact to enforce this property.  Adjusting it inside the signing
- * function avoids the need to re-serialize or have curve specific
- * constants outside of the library.  By always using a canonical form
- * even in applications where it isn't needed it becomes possible to
- * impose a requirement later if a need is discovered.
- * No other forms of ECDSA malleability are known and none seem likely,
- * but there is no formal proof that ECDSA, even with this additional
- * restriction, is free of other malleability.  Commonly used serialization
- * schemes will also accept various non-unique encodings, so care should
- * be taken when this property is required for an application.
+ * The created signature is always in lower-S form. See
+ * secp256k1_ecdsa_signature_normalize for more details.
  */
 SECP256K1_API int secp256k1_ecdsa_sign(
     const secp256k1_context* ctx,

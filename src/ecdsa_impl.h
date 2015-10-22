@@ -1,5 +1,5 @@
 /**********************************************************************
- * Copyright (c) 2013, 2014 Pieter Wuille                               *
+ * Copyright (c) 2013-2015 Pieter Wuille                              *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
@@ -46,66 +46,132 @@ static const secp256k1_fe secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CON
     0, 0, 0, 1, 0x45512319UL, 0x50B75FC4UL, 0x402DA172UL, 0x2FC9BAEEUL
 );
 
+static int secp256k1_der_read_len(const unsigned char **sigp, const unsigned char *sigend) {
+    int lenleft, b1;
+    size_t ret = 0;
+    if (*sigp >= sigend) {
+        return -1;
+    }
+    b1 = *((*sigp)++);
+    if (b1 == 0xFF) {
+        /* X.690-0207 8.1.3.5.c the value 0xFF shall not be used. */
+        return -1;
+    }
+    if ((b1 & 0x80) == 0) {
+        /* X.690-0207 8.1.3.4 short form length octets */
+        return b1;
+    }
+    if (b1 == 0x80) {
+        /* Indefinite length is not allowed in DER. */
+        return -1;
+    }
+    /* X.690-207 8.1.3.5 long form length octets */
+    lenleft = b1 & 0x7F;
+    if (lenleft > sigend - *sigp) {
+        return -1;
+    }
+    if (**sigp == 0) {
+        /* Not the shortest possible length encoding. */
+        return -1;
+    }
+    if ((size_t)lenleft > sizeof(size_t)) {
+        /* The resulthing length would exceed the range of a size_t, so
+           certainly longer than the passed array size. */
+        return -1;
+    }
+    while (lenleft > 0) {
+        if ((ret >> ((sizeof(size_t) - 1) * 8)) != 0) {
+        }
+        ret = (ret << 8) | **sigp;
+        if (ret + lenleft > (size_t)(sigend - *sigp)) {
+            /* Result exceeds the length of the passed array. */
+            return -1;
+        }
+        (*sigp)++;
+        lenleft--;
+    }
+    if (ret < 128) {
+        /* Not the shortest possible length encoding. */
+        return -1;
+    }
+    return ret;
+}
+
+static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char **sig, const unsigned char *sigend) {
+    int overflow = 0;
+    unsigned char ra[32] = {0};
+    int rlen;
+
+    if (*sig == sigend || **sig != 0x02) {
+        /* Not a primitive integer (X.690-0207 8.3.1). */
+        return 0;
+    }
+    (*sig)++;
+    rlen = secp256k1_der_read_len(sig, sigend);
+    if (rlen <= 0 || (*sig) + rlen > sigend) {
+        /* Exceeds bounds or not at least length 1 (X.690-0207 8.3.1).  */
+        return 0;
+    }
+    if (**sig == 0x00 && rlen > 1 && (((*sig)[1]) & 0x80) == 0x00) {
+        /* Excessive 0x00 padding. */
+        return 0;
+    }
+    if (**sig == 0xFF && rlen > 1 && (((*sig)[1]) & 0x80) == 0x80) {
+        /* Excessive 0xFF padding. */
+        return 0;
+    }
+    if ((**sig & 0x80) == 0x80) {
+        /* Negative. */
+        overflow = 1;
+    }
+    while (rlen > 0 && **sig == 0) {
+        /* Skip leading zero bytes */
+        rlen--;
+        (*sig)++;
+    }
+    if (rlen > 32) {
+        overflow = 1;
+    }
+    if (!overflow) {
+        memcpy(ra + 32 - rlen, *sig, rlen);
+        secp256k1_scalar_set_b32(r, ra, &overflow);
+    }
+    if (overflow) {
+        secp256k1_scalar_set_int(r, 0);
+    }
+    (*sig) += rlen;
+    return 1;
+}
+
 static int secp256k1_ecdsa_sig_parse(secp256k1_scalar *rr, secp256k1_scalar *rs, const unsigned char *sig, size_t size) {
-    unsigned char ra[32] = {0}, sa[32] = {0};
-    const unsigned char *rp;
-    const unsigned char *sp;
-    size_t lenr;
-    size_t lens;
-    int overflow;
-    if (sig[0] != 0x30) {
+    const unsigned char *sigend = sig + size;
+    int rlen;
+    if (sig == sigend || *(sig++) != 0x30) {
+        /* The encoding doesn't start with a constructed sequence (X.690-0207 8.9.1). */
         return 0;
     }
-    lenr = sig[3];
-    if (5+lenr >= size) {
+    rlen = secp256k1_der_read_len(&sig, sigend);
+    if (rlen < 0 || sig + rlen > sigend) {
+        /* Tuple exceeds bounds */
         return 0;
     }
-    lens = sig[lenr+5];
-    if (sig[1] != lenr+lens+4) {
+    if (sig + rlen != sigend) {
+        /* Garbage after tuple. */
         return 0;
     }
-    if (lenr+lens+6 > size) {
+
+    if (!secp256k1_der_parse_integer(rr, &sig, sigend)) {
         return 0;
     }
-    if (sig[2] != 0x02) {
+    if (!secp256k1_der_parse_integer(rs, &sig, sigend)) {
         return 0;
     }
-    if (lenr == 0) {
+
+    if (sig != sigend) {
+        /* Trailing garbage inside tuple. */
         return 0;
     }
-    if (sig[lenr+4] != 0x02) {
-        return 0;
-    }
-    if (lens == 0) {
-        return 0;
-    }
-    sp = sig + 6 + lenr;
-    while (lens > 0 && sp[0] == 0) {
-        lens--;
-        sp++;
-    }
-    if (lens > 32) {
-        return 0;
-    }
-    rp = sig + 4;
-    while (lenr > 0 && rp[0] == 0) {
-        lenr--;
-        rp++;
-    }
-    if (lenr > 32) {
-        return 0;
-    }
-    memcpy(ra + 32 - lenr, rp, lenr);
-    memcpy(sa + 32 - lens, sp, lens);
-    overflow = 0;
-    secp256k1_scalar_set_b32(rr, ra, &overflow);
-    if (overflow) {
-        return 0;
-    }
-    secp256k1_scalar_set_b32(rs, sa, &overflow);
-    if (overflow) {
-        return 0;
-    }
+
     return 1;
 }
 
