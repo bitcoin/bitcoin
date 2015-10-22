@@ -115,7 +115,6 @@ extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
-extern CAmount nMaxFssRbfFee;
 extern bool fAlerts;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
