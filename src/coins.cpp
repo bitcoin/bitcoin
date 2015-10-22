@@ -144,6 +144,11 @@ bool CCoinsViewCache::HaveCoins(const uint256 &txid) const {
     return (it != cacheCoins.end() && !it->second.coins.vout.empty());
 }
 
+bool CCoinsViewCache::HaveCoinsInCache(const uint256 &txid) const {
+    CCoinsMap::const_iterator it = cacheCoins.find(txid);
+    return it != cacheCoins.end();
+}
+
 uint256 CCoinsViewCache::GetBestBlock() const {
     if (hashBlock.IsNull())
         hashBlock = base->GetBestBlock();
