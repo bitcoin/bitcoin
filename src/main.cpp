@@ -740,6 +740,25 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     return true;
 }
 
+void LimitMempoolSize(CTxMemPool& pool, size_t limit, unsigned long age) {
+    int expired = pool.Expire(GetTime() - age);
+    if (expired != 0)
+        LogPrint("mempool", "Expired %i transactions from the memory pool\n", expired);
+
+    size_t mempoolUsage = pool.DynamicMemoryUsage();
+    size_t coinsUsage = pcoinsTip->DynamicMemoryUsage();
+
+    while (mempoolUsage > limit || coinsUsage + mempoolUsage > nCoinCacheUsage + limit) {
+        std::vector<uint256> vNoSpendsRemaining;
+        pool.TrimToSize(std::min(limit, mempoolUsage - 1), &vNoSpendsRemaining);
+        BOOST_FOREACH(const uint256& removed, vNoSpendsRemaining)
+            pcoinsTip->Uncache(removed);
+
+        mempoolUsage = pool.DynamicMemoryUsage();
+        coinsUsage = pcoinsTip->DynamicMemoryUsage();
+    }
+}
+
 CAmount GetMinRelayFee(const CTransaction& tx, const CTxMemPool& pool, unsigned int nBytes, bool fAllowFree)
 {
     uint256 hash = tx.GetHash();
@@ -957,12 +976,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         // trim mempool and check if tx was trimmed
         if (!fOverrideMempoolLimit) {
-            int expired = pool.Expire(GetTime() - GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
-            if (expired != 0)
-                LogPrint("mempool", "Expired %i transactions from the memory pool\n", expired);
-
-            pool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
-            if (!pool.exists(tx.GetHash()))
+            LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+            if (!pool.exists(hash))
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
         }
     }
@@ -2282,7 +2297,7 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     }
 
     if (fBlocksDisconnected)
-        mempool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+        LimitMempoolSize(mempool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
 
     // Callbacks/notifications for a new best chain.
     if (fInvalidFound)
@@ -2370,7 +2385,7 @@ bool InvalidateBlock(CValidationState& state, CBlockIndex *pindex) {
         }
     }
 
-    mempool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+    LimitMempoolSize(mempool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
 
     // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
     // add it again.
