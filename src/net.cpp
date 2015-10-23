@@ -733,6 +733,14 @@ int CNetMessage::readData(const char *pch, unsigned int nBytes)
 // requires LOCK(cs_vSend)
 void SocketSendData(CNode *pnode)
 {
+    // Cork the socket
+    int set = 0;
+#ifdef WIN32
+    setsockopt(pnode->hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
+#else
+    setsockopt(pnode->hSocket, IPPROTO_TCP, TCP_NODELAY, (void*)&set, sizeof(int));
+#endif
+
     std::deque<CSerializeData>::iterator it = pnode->vSendMsg.begin();
 
     while (it != pnode->vSendMsg.end()) {
@@ -764,6 +772,27 @@ void SocketSendData(CNode *pnode)
             }
             // couldn't send anything at all
             break;
+        }
+    }
+
+    // Un-Cork the socket
+    set = 1;
+#ifdef WIN32
+    setsockopt(pnode->hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
+#else
+    setsockopt(pnode->hSocket, IPPROTO_TCP, TCP_NODELAY, (void*)&set, sizeof(int));
+#endif
+
+    // Flush the queue
+    int nBytes = send(pnode->hSocket, NULL, 0, MSG_NOSIGNAL | MSG_DONTWAIT);
+
+    if (nBytes < 0) {
+        // error
+        int nErr = WSAGetLastError();
+        if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
+        {
+            LogPrintf("socket send error %s\n", NetworkErrorString(nErr));
+            pnode->CloseSocketDisconnect();
         }
     }
 
