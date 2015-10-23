@@ -331,13 +331,14 @@ bitcoind_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO) \
-  $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
 if ENABLE_ZMQ
 bitcoind_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
+
+bitcoind_LDADD += $(SQLITE3_LIBS)
 
 if ENABLE_WALLET
 bitcoind_LDADD += libbitcoin_wallet.a

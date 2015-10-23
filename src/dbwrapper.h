@@ -14,8 +14,17 @@
 
 #include <boost/filesystem/path.hpp>
 
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
+#include <sqlite3.h>
+
+enum {
+        DBW_PUT,
+        DBW_GET,
+        DBW_DELETE,
+        DBW_BEGIN,
+        DBW_COMMIT,
+        DBW_GET_ALL_COUNT,
+        DBW_SEEK_SORTED,
+};
 
 class dbwrapper_error : public std::runtime_error
 {
@@ -23,7 +32,16 @@ public:
     dbwrapper_error(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-void HandleError(const leveldb::Status& status) throw(dbwrapper_error);
+class BatchEntry {
+public:
+    bool           isErase;
+    std::string    key;
+    std::string    value;
+
+    BatchEntry(bool isErase_, const std::string& key_,
+               const std::string& value_) : isErase(isErase_), key(key_), value(value_) { }
+    BatchEntry(bool isErase_, const std::string& key_) : isErase(isErase_), key(key_) { }
+};
 
 /** Batch of changes queued to be written to a CDBWrapper */
 class CDBBatch
@@ -31,7 +49,7 @@ class CDBBatch
     friend class CDBWrapper;
 
 private:
-    leveldb::WriteBatch batch;
+    std::vector<BatchEntry> entries;
     const std::vector<unsigned char> *obfuscate_key;
 
 public:
@@ -46,15 +64,18 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
+
+        std::string rawKey(&ssKey[0], ssKey.size());
 
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(ssValue.GetSerializeSize(value));
         ssValue << value;
         ssValue.Xor(*obfuscate_key);
-        leveldb::Slice slValue(&ssValue[0], ssValue.size());
 
-        batch.Put(slKey, slValue);
+        std::string rawValue(&ssValue[0], ssValue.size());
+
+        BatchEntry be(false, rawKey, rawValue);
+        entries.push_back(be);
     }
 
     template <typename K>
@@ -63,17 +84,20 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
 
-        batch.Delete(slKey);
+        std::string rawKey(&ssKey[0], ssKey.size());
+
+        BatchEntry be(true, rawKey);
+        entries.push_back(be);
     }
 };
 
 class CDBIterator
 {
 private:
-    leveldb::Iterator *piter;
+    sqlite3_stmt *pstmt;
     const std::vector<unsigned char> *obfuscate_key;
+    bool valid;
 
 public:
 
@@ -81,28 +105,53 @@ public:
      * @param[in] piterIn          The original leveldb iterator.
      * @param[in] obfuscate_key    If passed, XOR data with this key.
      */
-    CDBIterator(leveldb::Iterator *piterIn, const std::vector<unsigned char>* obfuscate_key) :
-        piter(piterIn), obfuscate_key(obfuscate_key) { };
+    CDBIterator(sqlite3_stmt *pstmt_, const std::vector<unsigned char>* obfuscate_key) :
+        pstmt(pstmt_), obfuscate_key(obfuscate_key), valid(false) { };
     ~CDBIterator();
 
-    bool Valid();
-
-    void SeekToFirst();
+    bool Valid() { return valid; };
 
     template<typename K> void Seek(const K& key) {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
-        piter->Seek(slKey);
+
+        valid = false;
+
+        int rrc = sqlite3_reset(pstmt);
+        if (rrc != SQLITE_OK)
+            throw dbwrapper_error("DB reset failure");
+
+        std::string rawKey(&ssKey[0], ssKey.size());
+
+        if (sqlite3_bind_blob(pstmt, 0, rawKey.c_str(), rawKey.size(),
+                              SQLITE_TRANSIENT) != SQLITE_OK)
+            throw dbwrapper_error("DB find failure");
+
+        int src = sqlite3_step(pstmt);
+        if (src == SQLITE_ROW)
+            valid = true;
     }
 
-    void Next();
+    void Next() {
+        if (!valid)
+            return;
+
+        int src = sqlite3_step(pstmt);
+        if (src == SQLITE_ROW)
+            valid = true;
+        else
+            valid = false;
+    }
 
     template<typename K> bool GetKey(K& key) {
-        leveldb::Slice slKey = piter->key();
+        if (!valid)
+            return false;
+
+        std::string strCol((const char *) sqlite3_column_blob(pstmt, 0),
+                           (size_t) sqlite3_column_bytes(pstmt, 0));
         try {
-            CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssKey(&strCol[0], &strCol[0] + strCol.size(), SER_DISK, CLIENT_VERSION);
             ssKey >> key;
         } catch(std::exception &e) {
             return false;
@@ -111,13 +160,19 @@ public:
     }
 
     unsigned int GetKeySize() {
-        return piter->key().size();
+        if (!valid)
+            return 0;
+        return sqlite3_column_bytes(pstmt, 0);
     }
 
     template<typename V> bool GetValue(V& value) {
-        leveldb::Slice slValue = piter->value();
+        if (!valid)
+            return false;
+
+        std::string strCol((const char *) sqlite3_column_blob(pstmt, 1),
+                           (size_t) sqlite3_column_bytes(pstmt, 1));
         try {
-            CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
+            CDataStream ssValue(&strCol[0], &strCol[0] + strCol.size(), SER_DISK, CLIENT_VERSION);
             ssValue.Xor(*obfuscate_key);
             ssValue >> value;
         } catch(std::exception &e) {
@@ -127,7 +182,9 @@ public:
     }
 
     unsigned int GetValueSize() {
-        return piter->value().size();
+        if (!valid)
+            return 0;
+        return sqlite3_column_bytes(pstmt, 1);
     }
 
 };
@@ -135,26 +192,10 @@ public:
 class CDBWrapper
 {
 private:
-    //! custom environment this database is using (may be NULL in case of default environment)
-    leveldb::Env* penv;
-
-    //! database options used
-    leveldb::Options options;
-
-    //! options used when reading from the database
-    leveldb::ReadOptions readoptions;
-
-    //! options used when iterating over values of the database
-    leveldb::ReadOptions iteroptions;
-
-    //! options used when writing to the database
-    leveldb::WriteOptions writeoptions;
-
-    //! options used when sync writing to the database
-    leveldb::WriteOptions syncoptions;
-
     //! the database itself
-    leveldb::DB* pdb;
+    sqlite3* psql;
+
+    std::vector<sqlite3_stmt*> stmts;
 
     //! a key used for optional XOR-obfuscation of the database
     std::vector<unsigned char> obfuscate_key;
@@ -185,16 +226,28 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
 
-        std::string strValue;
-        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
-            if (status.IsNotFound())
+        if (sqlite3_bind_blob(stmts[DBW_GET], 0, &ssKey[0], ssKey.size(),
+                              SQLITE_TRANSIENT) != SQLITE_OK)
+            throw dbwrapper_error("DB find failure");
+
+        int src = sqlite3_step(stmts[DBW_GET]);
+        if (src != SQLITE_ROW) {
+            sqlite3_reset(stmts[DBW_GET]);
+
+            if (src == SQLITE_DONE)                // success; 0 results
                 return false;
-            LogPrintf("LevelDB read failure: %s\n", status.ToString());
-            HandleError(status);
+
+            // exceptional error
+            throw dbwrapper_error("DB read failure");
         }
+
+        // SQLITE_ROW - we have a result
+        int col_size = sqlite3_column_bytes(stmts[DBW_GET], 0);
+        std::string strValue((const char *) sqlite3_column_blob(stmts[DBW_GET], 0), col_size);
+
+        sqlite3_reset(stmts[DBW_GET]);
+
         try {
             CDataStream ssValue(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
             ssValue.Xor(obfuscate_key);
@@ -219,17 +272,19 @@ public:
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
-        leveldb::Slice slKey(&ssKey[0], ssKey.size());
 
-        std::string strValue;
-        leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
-        if (!status.ok()) {
-            if (status.IsNotFound())
-                return false;
-            LogPrintf("LevelDB read failure: %s\n", status.ToString());
-            HandleError(status);
-        }
-        return true;
+        if (sqlite3_bind_blob(stmts[DBW_GET], 0, &ssKey[0], ssKey.size(),
+                              SQLITE_TRANSIENT) != SQLITE_OK)
+            throw dbwrapper_error("DB find failure");
+
+        int src = sqlite3_step(stmts[DBW_GET]);
+        sqlite3_reset(stmts[DBW_GET]);
+        if (src == SQLITE_DONE)                // zero results; not found
+            return false;
+        else if (src == SQLITE_ROW)
+            return true;
+        else
+            throw dbwrapper_error("DB read failure");
     }
 
     template <typename K>
@@ -256,7 +311,8 @@ public:
 
     CDBIterator *NewIterator()
     {
-        return new CDBIterator(pdb->NewIterator(iteroptions), &obfuscate_key);
+        unsigned int stmt_idx = DBW_SEEK_SORTED;
+        return new CDBIterator(stmts[stmt_idx], &obfuscate_key);
     }
 
     /**
