@@ -663,6 +663,8 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRE
 
 int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, int nBlockHeight, int64_t nBlockTime)
 {
+    AssertLockHeld(cs_main);
+
     CCoins coins;
 
     bool fEnforceBIP68 = static_cast<uint32_t>(tx.nVersion) >= 2
