@@ -7,10 +7,22 @@ git log "$DIR"
 
 VERIFIED_ROOT=$(cat "${DIR}/trusted-git-root")
 
+IS_REVSIG_ALLOWED () {
+	while read LINE; do
+		[ "$LINE" = "$1" ] && return 0
+	done < "${DIR}/allow-revsig-commits"
+	return 1
+}
+
 HAVE_FAILED=false
 IS_SIGNED () {
 	if [ $1 = $VERIFIED_ROOT ]; then
 		return 0;
+	fi
+	if IS_REVSIG_ALLOWED "$1"; then
+		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=1
+	else
+		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=0
 	fi
 	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit $1 > /dev/null 2>&1; then
 		return 1;
