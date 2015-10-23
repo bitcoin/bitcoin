@@ -108,6 +108,7 @@ bool fDaemon = false;
 bool fServer = false;
 string strMiscWarning;
 bool fLogTimestamps = false;
+int64_t nLogTimestampStart = -1;
 bool fLogIPs = false;
 volatile bool fReopenDebugLog = false;
 CTranslationInterface translationInterface;
@@ -263,8 +264,17 @@ static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine
     if (!fLogTimestamps)
         return str;
 
-    if (*fStartedNewLine)
-        strStamped =  DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()) + ' ' + str;
+    if (*fStartedNewLine) {
+        if (nLogTimestampStart != -1) {
+            // Relative times in seconds.milliseconds
+            int64_t t = GetTimeMillis()-nLogTimestampStart;
+            strStamped = strprintf("%d.%03d ", t/1000, t%1000) + str;
+        }
+        else {
+            // Absolute date/time
+            strStamped =  DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()) + ' ' + str;
+        }
+    }
     else
         strStamped = str;
 
