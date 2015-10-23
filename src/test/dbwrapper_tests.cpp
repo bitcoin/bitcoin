@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "leveldbwrapper.h"
+#include "dbwrapper.h"
 #include "uint256.h"
 #include "random.h"
 #include "test/test_bitcoin.h"
@@ -25,15 +25,15 @@ bool is_null_key(const vector<unsigned char>& key) {
     return isnull;
 }
  
-BOOST_FIXTURE_TEST_SUITE(leveldbwrapper_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(dbwrapper_tests, BasicTestingSetup)
                        
-BOOST_AUTO_TEST_CASE(leveldbwrapper)
+BOOST_AUTO_TEST_CASE(dbwrapper)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (int i = 0; i < 2; i++) {
         bool obfuscate = (bool)i;
         path ph = temp_directory_path() / unique_path();
-        CLevelDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
+        CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
         char key = 'k';
         uint256 in = GetRandHash();
         uint256 res;
@@ -48,13 +48,13 @@ BOOST_AUTO_TEST_CASE(leveldbwrapper)
 }
 
 // Test batch operations
-BOOST_AUTO_TEST_CASE(leveldbwrapper_batch)
+BOOST_AUTO_TEST_CASE(dbwrapper_batch)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (int i = 0; i < 2; i++) {
         bool obfuscate = (bool)i;
         path ph = temp_directory_path() / unique_path();
-        CLevelDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
+        CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
         char key = 'i';
         uint256 in = GetRandHash();
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(leveldbwrapper_batch)
         uint256 in3 = GetRandHash();
 
         uint256 res;
-        CLevelDBBatch batch(&dbw.GetObfuscateKey());
+        CDBBatch batch(&dbw.GetObfuscateKey());
 
         batch.Write(key, in);
         batch.Write(key2, in2);
@@ -85,13 +85,13 @@ BOOST_AUTO_TEST_CASE(leveldbwrapper_batch)
     }
 }
 
-BOOST_AUTO_TEST_CASE(leveldbwrapper_iterator)
+BOOST_AUTO_TEST_CASE(dbwrapper_iterator)
 {
     // Perform tests both obfuscated and non-obfuscated.
     for (int i = 0; i < 2; i++) {
         bool obfuscate = (bool)i;
         path ph = temp_directory_path() / unique_path();
-        CLevelDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
+        CDBWrapper dbw(ph, (1 << 20), true, false, obfuscate);
 
         // The two keys are intentionally chosen for ordering
         char key = 'j';
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(leveldbwrapper_iterator)
         uint256 in2 = GetRandHash();
         BOOST_CHECK(dbw.Write(key2, in2));
 
-        boost::scoped_ptr<CLevelDBIterator> it(const_cast<CLevelDBWrapper*>(&dbw)->NewIterator());
+        boost::scoped_ptr<CDBIterator> it(const_cast<CDBWrapper*>(&dbw)->NewIterator());
 
         // Be sure to seek past the obfuscation key (if it exists)
         it->Seek(key);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
-    CLevelDBWrapper* dbw = new CLevelDBWrapper(ph, (1 << 10), false, false, false);
+    CDBWrapper* dbw = new CDBWrapper(ph, (1 << 10), false, false, false);
     char key = 'k';
     uint256 in = GetRandHash();
     uint256 res;
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(existing_data_no_obfuscate)
     delete dbw;
 
     // Now, set up another wrapper that wants to obfuscate the same directory
-    CLevelDBWrapper odbw(ph, (1 << 10), false, false, true);
+    CDBWrapper odbw(ph, (1 << 10), false, false, true);
 
     // Check that the key/val we wrote with unobfuscated wrapper exists and 
     // is readable.
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     create_directories(ph);
 
     // Set up a non-obfuscated wrapper to write some initial data.
-    CLevelDBWrapper* dbw = new CLevelDBWrapper(ph, (1 << 10), false, false, false);
+    CDBWrapper* dbw = new CDBWrapper(ph, (1 << 10), false, false, false);
     char key = 'k';
     uint256 in = GetRandHash();
     uint256 res;
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(existing_data_reindex)
     delete dbw;
 
     // Simulate a -reindex by wiping the existing data store
-    CLevelDBWrapper odbw(ph, (1 << 10), false, true, true);
+    CDBWrapper odbw(ph, (1 << 10), false, true, true);
 
     // Check that the key/val we wrote with unobfuscated wrapper doesn't exist
     uint256 res2;
