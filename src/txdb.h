@@ -7,7 +7,7 @@
 #define BITCOIN_TXDB_H
 
 #include "coins.h"
-#include "leveldbwrapper.h"
+#include "dbwrapper.h"
 
 #include <map>
 #include <string>
