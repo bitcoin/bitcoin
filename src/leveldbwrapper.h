@@ -17,18 +17,18 @@
 #include <leveldb/db.h>
 #include <leveldb/write_batch.h>
 
-class leveldb_error : public std::runtime_error
+class dbwrapper_error : public std::runtime_error
 {
 public:
-    leveldb_error(const std::string& msg) : std::runtime_error(msg) {}
+    dbwrapper_error(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-void HandleError(const leveldb::Status& status) throw(leveldb_error);
+void HandleError(const leveldb::Status& status) throw(dbwrapper_error);
 
-/** Batch of changes queued to be written to a CLevelDBWrapper */
-class CLevelDBBatch
+/** Batch of changes queued to be written to a CDBWrapper */
+class CDBBatch
 {
-    friend class CLevelDBWrapper;
+    friend class CDBWrapper;
 
 private:
     leveldb::WriteBatch batch;
@@ -38,7 +38,7 @@ public:
     /**
      * @param[in] obfuscate_key    If passed, XOR data with this key.
      */
-    CLevelDBBatch(const std::vector<unsigned char> *obfuscate_key) : obfuscate_key(obfuscate_key) { };
+    CDBBatch(const std::vector<unsigned char> *obfuscate_key) : obfuscate_key(obfuscate_key) { };
 
     template <typename K, typename V>
     void Write(const K& key, const V& value)
@@ -69,7 +69,7 @@ public:
     }
 };
 
-class CLevelDBIterator
+class CDBIterator
 {
 private:
     leveldb::Iterator *piter;
@@ -81,9 +81,9 @@ public:
      * @param[in] piterIn          The original leveldb iterator.
      * @param[in] obfuscate_key    If passed, XOR data with this key.
      */
-    CLevelDBIterator(leveldb::Iterator *piterIn, const std::vector<unsigned char>* obfuscate_key) :
+    CDBIterator(leveldb::Iterator *piterIn, const std::vector<unsigned char>* obfuscate_key) :
         piter(piterIn), obfuscate_key(obfuscate_key) { };
-    ~CLevelDBIterator();
+    ~CDBIterator();
 
     bool Valid();
 
@@ -132,7 +132,7 @@ public:
 
 };
 
-class CLevelDBWrapper
+class CDBWrapper
 {
 private:
     //! custom environment this database is using (may be NULL in case of default environment)
@@ -176,11 +176,11 @@ public:
      * @param[in] obfuscate   If true, store data obfuscated via simple XOR. If false, XOR
      *                        with a zero'd byte array.
      */
-    CLevelDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
-    ~CLevelDBWrapper();
+    CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory = false, bool fWipe = false, bool obfuscate = false);
+    ~CDBWrapper();
 
     template <typename K, typename V>
-    bool Read(const K& key, V& value) const throw(leveldb_error)
+    bool Read(const K& key, V& value) const throw(dbwrapper_error)
     {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
@@ -206,15 +206,15 @@ public:
     }
 
     template <typename K, typename V>
-    bool Write(const K& key, const V& value, bool fSync = false) throw(leveldb_error)
+    bool Write(const K& key, const V& value, bool fSync = false) throw(dbwrapper_error)
     {
-        CLevelDBBatch batch(&obfuscate_key);
+        CDBBatch batch(&obfuscate_key);
         batch.Write(key, value);
         return WriteBatch(batch, fSync);
     }
 
     template <typename K>
-    bool Exists(const K& key) const throw(leveldb_error)
+    bool Exists(const K& key) const throw(dbwrapper_error)
     {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
@@ -233,14 +233,14 @@ public:
     }
 
     template <typename K>
-    bool Erase(const K& key, bool fSync = false) throw(leveldb_error)
+    bool Erase(const K& key, bool fSync = false) throw(dbwrapper_error)
     {
-        CLevelDBBatch batch(&obfuscate_key);
+        CDBBatch batch(&obfuscate_key);
         batch.Erase(key);
         return WriteBatch(batch, fSync);
     }
 
-    bool WriteBatch(CLevelDBBatch& batch, bool fSync = false) throw(leveldb_error);
+    bool WriteBatch(CDBBatch& batch, bool fSync = false) throw(dbwrapper_error);
 
     // not available for LevelDB; provide for compatibility with BDB
     bool Flush()
@@ -248,15 +248,15 @@ public:
         return true;
     }
 
-    bool Sync() throw(leveldb_error)
+    bool Sync() throw(dbwrapper_error)
     {
-        CLevelDBBatch batch(&obfuscate_key);
+        CDBBatch batch(&obfuscate_key);
         return WriteBatch(batch, true);
     }
 
-    CLevelDBIterator *NewIterator()
+    CDBIterator *NewIterator()
     {
-        return new CLevelDBIterator(pdb->NewIterator(iteroptions), &obfuscate_key);
+        return new CDBIterator(pdb->NewIterator(iteroptions), &obfuscate_key);
     }
 
     /**
