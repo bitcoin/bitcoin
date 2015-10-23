@@ -83,6 +83,8 @@ enum
     SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
 
     // support CHECKSEQUENCEVERIFY opcode
+    //
+    // See BIP112 for details
     SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10),
 };
 
