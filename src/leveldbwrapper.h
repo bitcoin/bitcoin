@@ -68,7 +68,7 @@ public:
         batch.Delete(slKey);
     }
 };
- 
+
 class CLevelDBIterator
 {
 private:
@@ -88,7 +88,6 @@ public:
     bool Valid();
 
     void SeekToFirst();
-    void SeekToLast();
 
     template<typename K> void Seek(const K& key) {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -99,7 +98,6 @@ public:
     }
 
     void Next();
-    void Prev();
 
     template<typename K> bool GetKey(K& key) {
         leveldb::Slice slKey = piter->key();
@@ -133,7 +131,7 @@ public:
     }
 
 };
- 
+
 class CLevelDBWrapper
 {
 private:
@@ -163,10 +161,10 @@ private:
 
     //! the key under which the obfuscation key is stored
     static const std::string OBFUSCATE_KEY_KEY;
-    
+
     //! the length of the obfuscate key in number of bytes
     static const unsigned int OBFUSCATE_KEY_NUM_BYTES;
-    
+
     std::vector<unsigned char> CreateObfuscateKey() const;
 
 public:
@@ -256,7 +254,7 @@ public:
         return WriteBatch(batch, true);
     }
 
-    CLevelDBIterator *NewIterator() 
+    CLevelDBIterator *NewIterator()
     {
         return new CLevelDBIterator(pdb->NewIterator(iteroptions), &obfuscate_key);
     }

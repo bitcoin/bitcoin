@@ -76,7 +76,7 @@ CLevelDBWrapper::CLevelDBWrapper(const boost::filesystem::path& path, size_t nCa
     bool key_exists = Read(OBFUSCATE_KEY_KEY, obfuscate_key);
 
     if (!key_exists && obfuscate && IsEmpty()) {
-        // Initialize non-degenerate obfuscation if it won't upset 
+        // Initialize non-degenerate obfuscation if it won't upset
         // existing, non-obfuscated data.
         std::vector<unsigned char> new_key = CreateObfuscateKey();
 
@@ -118,10 +118,10 @@ const std::string CLevelDBWrapper::OBFUSCATE_KEY_KEY("\000obfuscate_key", 14);
 const unsigned int CLevelDBWrapper::OBFUSCATE_KEY_NUM_BYTES = 8;
 
 /**
- * Returns a string (consisting of 8 random bytes) suitable for use as an 
- * obfuscating XOR key. 
+ * Returns a string (consisting of 8 random bytes) suitable for use as an
+ * obfuscating XOR key.
  */
-std::vector<unsigned char> CLevelDBWrapper::CreateObfuscateKey() const 
+std::vector<unsigned char> CLevelDBWrapper::CreateObfuscateKey() const
 {
     unsigned char buff[OBFUSCATE_KEY_NUM_BYTES];
     GetRandBytes(buff, OBFUSCATE_KEY_NUM_BYTES);
@@ -136,19 +136,17 @@ bool CLevelDBWrapper::IsEmpty()
     return !(it->Valid());
 }
 
-const std::vector<unsigned char>& CLevelDBWrapper::GetObfuscateKey() const 
-{ 
-    return obfuscate_key; 
+const std::vector<unsigned char>& CLevelDBWrapper::GetObfuscateKey() const
+{
+    return obfuscate_key;
 }
 
 std::string CLevelDBWrapper::GetObfuscateKeyHex() const
-{ 
-    return HexStr(obfuscate_key); 
+{
+    return HexStr(obfuscate_key);
 }
 
 CLevelDBIterator::~CLevelDBIterator() { delete piter; }
 bool CLevelDBIterator::Valid() { return piter->Valid(); }
 void CLevelDBIterator::SeekToFirst() { piter->SeekToFirst(); }
-void CLevelDBIterator::SeekToLast() { piter->SeekToLast(); }
 void CLevelDBIterator::Next() { piter->Next(); }
-void CLevelDBIterator::Prev() { piter->Prev(); }
