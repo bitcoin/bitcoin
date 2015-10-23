@@ -70,6 +70,8 @@ testScripts = [
     'blockchain.py',
 ]
 testScriptsExt = [
+    'bip65-cltv.py',
+    'bip65-cltv-p2p.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_longpoll.py',
