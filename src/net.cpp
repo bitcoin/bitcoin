@@ -388,6 +388,10 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
     if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nConnectTimeout, &proxyConnectionFailed) :
                   ConnectSocket(addrConnect, hSocket, nConnectTimeout, &proxyConnectionFailed))
     {
+#ifdef WIN32
+        setsockopt(hSocket, SOL_SOCKET, SO_SNDBUF, (const char*)&MAX_WINDOWS_TCP_BUFFER_SIZE, sizeof(MAX_WINDOWS_TCP_BUFFER_SIZE));
+        setsockopt(hSocket, SOL_SOCKET, SO_RCVBUF, (const char*)&MAX_WINDOWS_TCP_BUFFER_SIZE, sizeof(MAX_WINDOWS_TCP_BUFFER_SIZE));
+#endif
         if (!IsSelectableSocket(hSocket)) {
             LogPrintf("Cannot create connection: non-selectable socket created (fd >= FD_SETSIZE ?)\n");
             CloseSocket(hSocket);
@@ -1792,6 +1796,8 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
     setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (void*)&nOne, sizeof(int));
 #else
     setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&nOne, sizeof(int));
+    setsockopt(hListenSocket, SOL_SOCKET, SO_SNDBUF, (const char*)&MAX_WINDOWS_TCP_BUFFER_SIZE, sizeof(MAX_WINDOWS_TCP_BUFFER_SIZE));
+    setsockopt(hListenSocket, SOL_SOCKET, SO_RCVBUF, (const char*)&MAX_WINDOWS_TCP_BUFFER_SIZE, sizeof(MAX_WINDOWS_TCP_BUFFER_SIZE));
 #endif
 
     // Set to non-blocking, incoming connections will also inherit this
