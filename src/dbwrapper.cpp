@@ -31,9 +31,11 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
 {
     std::string fp;
     const char *filename = NULL;
+    bool need_init = false;
 
     if (fMemory) {
-            filename = ":memory:";
+        filename = ":memory:";
+        need_init = true;
     } else {
         fp = path.string();
         fp = fp + "/db";
@@ -51,12 +53,17 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
     // open existing sqlite db
     int orc = sqlite3_open_v2(filename, &psql, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, NULL);
 
-    // if open-existing failed, attempt to create & init new db
+    // if open-existing failed, attempt to create new db
     if (orc != SQLITE_OK) {
         orc = sqlite3_open_v2(filename, &psql, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL);
         if (orc != SQLITE_OK)
-                throw(dbwrapper_error("DB open failed"));
+            throw(dbwrapper_error("DB open failed"));
 
+        need_init = true;
+    }
+
+    // initialize new db
+    if (need_init) {
         for (unsigned int i = 0; i < ARRAYLEN(sql_db_init); i++)
             if (sqlite3_exec(psql, sql_db_init[i], NULL, NULL, NULL) != SQLITE_OK)
                 throw(dbwrapper_error("DB one-time setup failed"));
@@ -131,13 +138,13 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync) throw(dbwrapper_error)
             stmt = stmts[DBW_PUT];
 
         // bind column 0: key
-        if (sqlite3_bind_blob(stmt, 0, be.key.c_str(), be.key.size(),
+        if (sqlite3_bind_blob(stmt, 1, be.key.c_str(), be.key.size(),
                               SQLITE_TRANSIENT) != SQLITE_OK)
             throw dbwrapper_error("DB cannot bind blob key");
 
         // if inserting, bind column 1: value
         if (!be.isErase)
-            if (sqlite3_bind_blob(stmt, 1, be.value.c_str(), be.value.size(),
+            if (sqlite3_bind_blob(stmt, 2, be.value.c_str(), be.value.size(),
                                   SQLITE_TRANSIENT) != SQLITE_OK)
                 throw dbwrapper_error("DB cannot bind blob value");
 

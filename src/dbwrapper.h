@@ -124,9 +124,9 @@ public:
 
         std::string rawKey(&ssKey[0], ssKey.size());
 
-        if (sqlite3_bind_blob(pstmt, 0, rawKey.c_str(), rawKey.size(),
+        if (sqlite3_bind_blob(pstmt, 1, rawKey.c_str(), rawKey.size(),
                               SQLITE_TRANSIENT) != SQLITE_OK)
-            throw dbwrapper_error("DB find failure");
+            throw dbwrapper_error("DB seek failure");
 
         int src = sqlite3_step(pstmt);
         if (src == SQLITE_ROW)
@@ -227,9 +227,10 @@ public:
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
 
-        if (sqlite3_bind_blob(stmts[DBW_GET], 0, &ssKey[0], ssKey.size(),
-                              SQLITE_TRANSIENT) != SQLITE_OK)
-            throw dbwrapper_error("DB find failure");
+        int brc = sqlite3_bind_blob(stmts[DBW_GET], 1, &ssKey[0], ssKey.size(),
+                                    SQLITE_TRANSIENT);
+        if (brc != SQLITE_OK)
+            throw dbwrapper_error("DB find-read failure");
 
         int src = sqlite3_step(stmts[DBW_GET]);
         if (src != SQLITE_ROW) {
@@ -273,9 +274,9 @@ public:
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
 
-        if (sqlite3_bind_blob(stmts[DBW_GET], 0, &ssKey[0], ssKey.size(),
+        if (sqlite3_bind_blob(stmts[DBW_GET], 1, &ssKey[0], ssKey.size(),
                               SQLITE_TRANSIENT) != SQLITE_OK)
-            throw dbwrapper_error("DB find failure");
+            throw dbwrapper_error("DB find-exists failure");
 
         int src = sqlite3_step(stmts[DBW_GET]);
         sqlite3_reset(stmts[DBW_GET]);
