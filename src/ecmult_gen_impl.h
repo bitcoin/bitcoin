@@ -40,8 +40,13 @@ static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx
         static const unsigned char nums_b32[33] = "The scalar for this x is unknown";
         secp256k1_fe nums_x;
         secp256k1_ge nums_ge;
-        VERIFY_CHECK(secp256k1_fe_set_b32(&nums_x, nums_b32));
-        VERIFY_CHECK(secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0));
+        int r;
+        r = secp256k1_fe_set_b32(&nums_x, nums_b32);
+        (void)r;
+        VERIFY_CHECK(r);
+        r = secp256k1_ge_set_xo_var(&nums_ge, &nums_x, 0);
+        (void)r;
+        VERIFY_CHECK(r);
         secp256k1_gej_set_ge(&nums_gej, &nums_ge);
         /* Add G to make the bits in x uniformly distributed. */
         secp256k1_gej_add_ge_var(&nums_gej, &nums_gej, &secp256k1_ge_const_g, NULL);
@@ -182,7 +187,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
         secp256k1_rfc6979_hmac_sha256_generate(&rng, nonce32, 32);
         retry = !secp256k1_fe_set_b32(&s, nonce32);
         retry |= secp256k1_fe_is_zero(&s);
-    } while (retry);
+    } while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > Fp. */
     /* Randomize the projection to defend against multiplier sidechannels. */
     secp256k1_gej_rescale(&ctx->initial, &s);
     secp256k1_fe_clear(&s);
@@ -191,7 +196,7 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
         secp256k1_scalar_set_b32(&b, nonce32, &retry);
         /* A blinding value of 0 works, but would undermine the projection hardening. */
         retry |= secp256k1_scalar_is_zero(&b);
-    } while (retry);
+    } while (retry); /* This branch true is cryptographically unreachable. Requires sha256_hmac output > order. */
     secp256k1_rfc6979_hmac_sha256_finalize(&rng);
     memset(nonce32, 0, 32);
     secp256k1_ecmult_gen(ctx, &gb, &b);

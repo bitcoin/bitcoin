@@ -70,6 +70,7 @@ static void secp256k1_num_add_abs(secp256k1_num *r, const secp256k1_num *a, cons
 
 static void secp256k1_num_sub_abs(secp256k1_num *r, const secp256k1_num *a, const secp256k1_num *b) {
     mp_limb_t c = mpn_sub(r->data, a->data, a->limbs, b->data, b->limbs);
+    (void)c;
     VERIFY_CHECK(c == 0);
     r->limbs = a->limbs;
     while (r->limbs > 1 && r->data[r->limbs-1]==0) {
@@ -125,6 +126,7 @@ static void secp256k1_num_mod_inverse(secp256k1_num *r, const secp256k1_num *a, 
     }
     sn = NUM_LIMBS+1;
     gn = mpn_gcdext(g, r->data, &sn, u, m->limbs, v, m->limbs);
+    (void)gn;
     VERIFY_CHECK(gn == 1);
     VERIFY_CHECK(g[0] == 1);
     r->neg = a->neg ^ m->neg;

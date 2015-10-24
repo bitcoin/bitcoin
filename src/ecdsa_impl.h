@@ -238,11 +238,11 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
      *  secp256k1_gej_eq_x implements the (xr * pr.z^2 mod p == pr.x) test.
      */
     if (secp256k1_gej_eq_x_var(&xr, &pr)) {
-        /* xr.x == xr * xr.z^2 mod p, so the signature is valid. */
+        /* xr * pr.z^2 mod p == pr.x, so the signature is valid. */
         return 1;
     }
     if (secp256k1_fe_cmp_var(&xr, &secp256k1_ecdsa_const_p_minus_order) >= 0) {
-        /* xr + p >= n, so we can skip testing the second case. */
+        /* xr + n >= p, so we can skip testing the second case. */
         return 0;
     }
     secp256k1_fe_add(&xr, &secp256k1_ecdsa_const_order_as_fe);
@@ -251,39 +251,6 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
         return 1;
     }
     return 0;
-}
-
-static int secp256k1_ecdsa_sig_recover(const secp256k1_ecmult_context *ctx, const secp256k1_scalar *sigr, const secp256k1_scalar* sigs, secp256k1_ge *pubkey, const secp256k1_scalar *message, int recid) {
-    unsigned char brx[32];
-    secp256k1_fe fx;
-    secp256k1_ge x;
-    secp256k1_gej xj;
-    secp256k1_scalar rn, u1, u2;
-    secp256k1_gej qj;
-
-    if (secp256k1_scalar_is_zero(sigr) || secp256k1_scalar_is_zero(sigs)) {
-        return 0;
-    }
-
-    secp256k1_scalar_get_b32(brx, sigr);
-    VERIFY_CHECK(secp256k1_fe_set_b32(&fx, brx)); /* brx comes from a scalar, so is less than the order; certainly less than p */
-    if (recid & 2) {
-        if (secp256k1_fe_cmp_var(&fx, &secp256k1_ecdsa_const_p_minus_order) >= 0) {
-            return 0;
-        }
-        secp256k1_fe_add(&fx, &secp256k1_ecdsa_const_order_as_fe);
-    }
-    if (!secp256k1_ge_set_xo_var(&x, &fx, recid & 1)) {
-        return 0;
-    }
-    secp256k1_gej_set_ge(&xj, &x);
-    secp256k1_scalar_inverse_var(&rn, sigr);
-    secp256k1_scalar_mul(&u1, &rn, message);
-    secp256k1_scalar_negate(&u1, &u1);
-    secp256k1_scalar_mul(&u2, &rn, sigs);
-    secp256k1_ecmult(ctx, &qj, &xj, &u2, &u1);
-    secp256k1_ge_set_gej_var(pubkey, &qj);
-    return !secp256k1_gej_is_infinity(&qj);
 }
 
 static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid) {
@@ -301,6 +268,7 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_scalar_set_b32(sigr, b, &overflow);
     if (secp256k1_scalar_is_zero(sigr)) {
         /* P.x = order is on the curve, so technically sig->r could end up zero, which would be an invalid signature. */
+        /* This branch is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N. */
         secp256k1_gej_clear(&rp);
         secp256k1_ge_clear(&r);
         return 0;
