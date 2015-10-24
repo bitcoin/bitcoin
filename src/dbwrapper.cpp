@@ -24,13 +24,13 @@ static const char *sql_db_configure[] = {
 };
 
 static const char *sql_stmt_text[] = {
-    "REPLACE INTO tab(k, v) VALUES(:k, :v)",
-    "SELECT v FROM tab WHERE k = :k",
-    "DELETE FROM tab WHERE k = :k",
-    "BEGIN TRANSACTION",
-    "COMMIT TRANSACTION",
-    "SELECT COUNT(*) FROM tab",
-    "SELECT k, v FROM tab WHERE k >= :k ORDER BY k",
+    "REPLACE INTO tab(k, v) VALUES(:k, :v)",            // DBW_PUT
+    "SELECT v FROM tab WHERE k = :k",                   // DBW_GET
+    "DELETE FROM tab WHERE k = :k",                     // DBW_DELETE
+    "BEGIN TRANSACTION",                                // DBW_BEGIN
+    "COMMIT TRANSACTION",                               // DBW_COMMIT
+    "SELECT COUNT(*) FROM tab",                         // DBW_GET_ALL_COUNT
+    "SELECT k, v FROM tab WHERE k >= :k ORDER BY k",    // DBW_SEEK_SORTED
 };
 
 CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
@@ -63,7 +63,7 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
     if (orc != SQLITE_OK) {
         orc = sqlite3_open_v2(filename, &psql, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL);
         if (orc != SQLITE_OK)
-            throw(dbwrapper_error("DB open failed"));
+            throw(dbwrapper_error("DB open failed, err " + itostr(orc)));
 
         need_init = true;
     }
@@ -75,7 +75,7 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
                 throw(dbwrapper_error("DB configuration failed, stmt " + itostr(i)));
     }
 
-    // initialize new db
+    // first time: initialize new db schema
     if (need_init) {
         for (unsigned int i = 0; i < ARRAYLEN(sql_db_init); i++)
             if (sqlite3_exec(psql, sql_db_init[i], NULL, NULL, NULL) != SQLITE_OK)
@@ -91,7 +91,7 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
                                strlen(sql_stmt_text[sqlidx]),
                                &pstmt, NULL);
         if (src != SQLITE_OK)
-            throw(dbwrapper_error("DB compile failed(" + itostr(src) + "): " + std::string(sql_stmt_text[sqlidx])));
+            throw(dbwrapper_error("DB compile failed, err " + itostr(src) + ": " + std::string(sql_stmt_text[sqlidx])));
 
         stmts.push_back(pstmt);
     }
@@ -135,7 +135,7 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync) throw(dbwrapper_error)
     int rrc = sqlite3_reset(stmts[DBW_BEGIN]);
 
     if ((src != SQLITE_DONE) || (rrc != SQLITE_OK))
-        throw dbwrapper_error("DB cannot begin transaction");
+        throw dbwrapper_error("DB cannot begin transaction, err " + itostr(src) + "," + itostr(rrc));
 
     for (unsigned int wr = 0; wr < batch.entries.size(); wr++) {
         BatchEntry& be = batch.entries[wr];
@@ -163,14 +163,14 @@ bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync) throw(dbwrapper_error)
         rrc = sqlite3_reset(stmt);
 
         if ((src != SQLITE_DONE) || (rrc != SQLITE_OK))
-            throw dbwrapper_error("DB failed update");
+            throw dbwrapper_error("DB failed update, err " + itostr(src) + "," + itostr(rrc));
     }
 
     src = sqlite3_step(stmts[DBW_COMMIT]);
     rrc = sqlite3_reset(stmts[DBW_COMMIT]);
 
     if ((src != SQLITE_DONE) || (rrc != SQLITE_OK))
-        throw dbwrapper_error("DB cannot commit transaction");
+        throw dbwrapper_error("DB cannot commit transaction, err" + itostr(src) + "," + itostr(rrc));
 
     return true;
 }

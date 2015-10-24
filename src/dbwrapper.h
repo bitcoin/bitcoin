@@ -120,7 +120,7 @@ public:
 
         int rrc = sqlite3_reset(pstmt);
         if (rrc != SQLITE_OK)
-            throw dbwrapper_error("DB reset failure");
+            throw dbwrapper_error("DB reset failure, err " + itostr(rrc));
 
         std::string rawKey(&ssKey[0], ssKey.size());
 
@@ -230,7 +230,7 @@ public:
         int brc = sqlite3_bind_blob(stmts[DBW_GET], 1, &ssKey[0], ssKey.size(),
                                     SQLITE_TRANSIENT);
         if (brc != SQLITE_OK)
-            throw dbwrapper_error("DB find-read failure");
+            throw dbwrapper_error("DB find-read failure, err " + itostr(brc));
 
         int src = sqlite3_step(stmts[DBW_GET]);
         if (src != SQLITE_ROW) {
@@ -240,7 +240,7 @@ public:
                 return false;
 
             // exceptional error
-            throw dbwrapper_error("DB read failure");
+            throw dbwrapper_error("DB read failure, err " + itostr(src));
         }
 
         // SQLITE_ROW - we have a result
@@ -285,7 +285,7 @@ public:
         else if (src == SQLITE_ROW)
             return true;
         else
-            throw dbwrapper_error("DB read failure");
+            throw dbwrapper_error("DB read failure, err " + itostr(src));
     }
 
     template <typename K>
