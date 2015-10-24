@@ -22,6 +22,7 @@ static const char *sql_db_configure[] = {
     "PRAGMA page_size=4096",
     "PRAGMA cache_size=-4000",    // max cache size; negative = # of kibibytes
     "PRAGMA journal_mode=WAL",
+    "PRAGMA wal_autocheckpoint=10000",
 };
 
 static const char *sql_stmt_text[] = {
