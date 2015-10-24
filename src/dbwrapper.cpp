@@ -14,6 +14,8 @@
 #include <stdint.h>
 
 static const char *sql_db_init[] = {
+    "PRAGMA page_size=4096",
+    "PRAGMA cache_size=-4000",    // max cache size; negative = # of kibibytes
     "CREATE TABLE tab(k BLOB PRIMARY KEY, v BLOB)",
 };
 
