@@ -6,6 +6,7 @@
 
 #include "util.h"
 #include "random.h"
+#include "utilstrencodings.h"
 
 #include <boost/filesystem.hpp>
 
@@ -14,9 +15,12 @@
 #include <stdint.h>
 
 static const char *sql_db_init[] = {
+    "CREATE TABLE tab(k BLOB PRIMARY KEY, v BLOB)",
+};
+
+static const char *sql_db_configure[] = {
     "PRAGMA page_size=4096",
     "PRAGMA cache_size=-4000",    // max cache size; negative = # of kibibytes
-    "CREATE TABLE tab(k BLOB PRIMARY KEY, v BLOB)",
 };
 
 static const char *sql_stmt_text[] = {
@@ -64,11 +68,18 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
         need_init = true;
     }
 
+    // configure database params
+    if (need_init) {
+        for (unsigned int i = 0; i < ARRAYLEN(sql_db_init); i++)
+            if (sqlite3_exec(psql, sql_db_configure[i], NULL, NULL, NULL) != SQLITE_OK)
+                throw(dbwrapper_error("DB configuration failed, stmt " + itostr(i)));
+    }
+
     // initialize new db
     if (need_init) {
         for (unsigned int i = 0; i < ARRAYLEN(sql_db_init); i++)
             if (sqlite3_exec(psql, sql_db_init[i], NULL, NULL, NULL) != SQLITE_OK)
-                throw(dbwrapper_error("DB one-time setup failed"));
+                throw(dbwrapper_error("DB one-time setup failed, stmt " + itostr(i)));
     }
 
     // pre-compile SQL statements
@@ -79,11 +90,8 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
                                sql_stmt_text[sqlidx],
                                strlen(sql_stmt_text[sqlidx]),
                                &pstmt, NULL);
-        if (src != SQLITE_OK) {
-            char numstr[32];
-            snprintf(numstr, sizeof(numstr), "(%d)", src);
-            throw(dbwrapper_error("DB compile failed" + std::string(numstr) + ": " + std::string(sql_stmt_text[sqlidx])));
-        }
+        if (src != SQLITE_OK)
+            throw(dbwrapper_error("DB compile failed(" + itostr(src) + "): " + std::string(sql_stmt_text[sqlidx])));
 
         stmts.push_back(pstmt);
     }
