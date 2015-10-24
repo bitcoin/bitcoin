@@ -45,7 +45,7 @@ NOTE: Building with Qt4 is still supported, however, could result in a broken UI
 
 2.  Make the Homebrew OpenSSL headers visible to the configure script  (do ```brew info openssl``` to find out why this is necessary, or if you use Homebrew with installation folders different from the default).
 
-        export LDFLAG=-L/usr/local/opt/openssl/lib
+        export LDFLAGS=-L/usr/local/opt/openssl/lib
         export CPPFLAGS=-I/usr/local/opt/openssl/include
 
 3.  Build bitcoind:
