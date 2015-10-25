@@ -14,6 +14,7 @@
 #include "consensus/blockruleindex.h"
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
+#include "consensus/softforks.h"
 #include "consensus/validation.h"
 #include "hash.h"
 #include "init.h"
@@ -2287,6 +2288,7 @@ void PruneAndFlush() {
 /** Update chainActive and related internal data structures. */
 void static UpdateTip(CBlockIndex *pindexNew) {
     const CChainParams& chainParams = Params();
+    const Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex;
     chainActive.SetTip(pindexNew);
 
     // New best block
@@ -2308,18 +2310,22 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         const CBlockIndex* pindex = chainActive.Tip();
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
-            if (pindex->nVersion > CBlock::CURRENT_VERSION)
-                ++nUpgraded;
+            if (Consensus::SoftForks::CheckVersion(*pindex, blockRuleIndex, chainParams.GetConsensus()) ==
+                Consensus::SoftForks::UNRECOGNIZED)
+                    ++nUpgraded;
             pindex = pindex->pprev;
         }
         if (nUpgraded > 0)
-            LogPrintf("%s: %d of last 100 blocks above version %d\n", __func__, nUpgraded, (int)CBlock::CURRENT_VERSION);
+            LogPrintf("%s: %d of last 100 blocks have unrecognized version.\n", __func__, nUpgraded);
+
         if (nUpgraded > 100/2)
+            fWarned = true;
+
+        if (fWarned)
         {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
             CAlert::Notify(strMiscWarning, true);
-            fWarned = true;
         }
     }
 }
