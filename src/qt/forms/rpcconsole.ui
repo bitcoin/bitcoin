@@ -1068,7 +1068,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>90</y>
+         <y>100</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1087,7 +1087,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>140</y>
+         <y>150</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1106,7 +1106,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>190</y>
+         <y>200</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1125,7 +1125,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>240</y>
+         <y>250</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1144,7 +1144,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>290</y>
+         <y>300</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1185,7 +1185,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>80</y>
+         <y>90</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1201,7 +1201,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>129</y>
+         <y>140</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1217,7 +1217,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>179</y>
+         <y>190</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1233,7 +1233,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>229</y>
+         <y>240</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1249,7 +1249,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>279</y>
+         <y>290</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1288,7 +1288,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>340</y>
+         <y>350</y>
          <width>301</width>
          <height>23</height>
         </rect>
@@ -1301,7 +1301,7 @@
        <property name="geometry">
         <rect>
          <x>330</x>
-         <y>330</y>
+         <y>340</y>
          <width>411</width>
          <height>41</height>
         </rect>
@@ -1311,6 +1311,19 @@
        </property>
        <property name="wordWrap">
         <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QLabel" name="wallet_path">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>70</y>
+         <width>731</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Wallet Path</string>
        </property>
       </widget>
      </widget>
