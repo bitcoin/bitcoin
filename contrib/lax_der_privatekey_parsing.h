@@ -34,22 +34,22 @@
  *       privkeylen:  Pointer to an int where the length of the private key in
  *                    privkey will be stored.
  *  In:  seckey:      pointer to a 32-byte secret key to export.
- *       flags:       SECP256K1_EC_COMPRESSED if the key should be exported in
- *                    compressed format.
+ *       compressed:  1 if the key should be exported in
+ *                    compressed format, 0 otherwise
  *
  *  This function is purely meant for compatibility with applications that
  *  require BER encoded keys. When working with secp256k1-specific code, the
  *  simple 32-byte private keys are sufficient.
  *
  *  Note that this function does not guarantee correct DER output. It is
- *  guaranteed to be parsable by secp256k1_ec_privkey_import.
+ *  guaranteed to be parsable by secp256k1_ec_privkey_import_der
  */
 static SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_export_der(
     const secp256k1_context* ctx,
     unsigned char *privkey,
     size_t *privkeylen,
     const unsigned char *seckey,
-    unsigned int flags
+    int compressed
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 /** Import a private key in DER format.
@@ -116,13 +116,13 @@ static int secp256k1_eckey_privkey_parse(secp256k1_scalar *key, const unsigned c
     return !overflow;
 }
 
-static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context *ctx, unsigned char *privkey, size_t *privkeylen, const secp256k1_scalar *key, unsigned int flags) {
+static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context *ctx, unsigned char *privkey, size_t *privkeylen, const secp256k1_scalar *key, int compressed) {
     secp256k1_gej rp;
     secp256k1_ge r;
     size_t pubkeylen = 0;
     secp256k1_ecmult_gen(ctx, &rp, key);
     secp256k1_ge_set_gej(&r, &rp);
-    if (flags & SECP256K1_EC_COMPRESSED) {
+    if (compressed) {
         static const unsigned char begin[] = {
             0x30,0x81,0xD3,0x02,0x01,0x01,0x04,0x20
         };
@@ -176,7 +176,7 @@ static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context 
     return 1;
 }
 
-static int secp256k1_ec_privkey_export_der(const secp256k1_context* ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *seckey, unsigned int flags) {
+static int secp256k1_ec_privkey_export_der(const secp256k1_context* ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *seckey, int compressed) {
     secp256k1_scalar key;
     int ret = 0;
     VERIFY_CHECK(ctx != NULL);
@@ -186,7 +186,7 @@ static int secp256k1_ec_privkey_export_der(const secp256k1_context* ctx, unsigne
     ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
 
     secp256k1_scalar_set_b32(&key, seckey, NULL);
-    ret = secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, privkeylen, &key, flags);
+    ret = secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, privkeylen, &key, compressed);
     secp256k1_scalar_clear(&key);
     return ret;
 }
