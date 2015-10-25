@@ -10,6 +10,11 @@ using namespace std;
 
 #ifdef USE_ASM
 
+#ifdef _MSC_VER
+#include <stdlib.h>
+#define __builtin_bswap32 _byteswap_ulong
+#endif
+
 #if defined(__i386__) || defined(__x86_64__)
 #include <immintrin.h>
 #endif
@@ -139,9 +144,15 @@ void KernelWorker::Do_8way()
     bnTargetPerCoinDay.SetCompact(nBits);
     uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256();
 
+#ifdef _MSC_VER
+    __declspec(align(16)) uint32_t blocks1[8 * 16];
+    __declspec(align(16)) uint32_t blocks2[8 * 16];
+    __declspec(align(16)) uint32_t candidates[8 * 8];
+#else
     uint32_t blocks1[8 * 16] __attribute__((aligned(16)));
     uint32_t blocks2[8 * 16] __attribute__((aligned(16)));
     uint32_t candidates[8 * 8] __attribute__((aligned(16)));
+#endif
 
     vector<uint32_t> vRow = vector<uint32_t>(8);
     uint32_t *pnKernel = (uint32_t *) kernel;
@@ -210,9 +221,15 @@ void KernelWorker::Do_4way()
     bnTargetPerCoinDay.SetCompact(nBits);
     uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256();
 
+#ifdef _MSC_VER
+    __declspec(align(16)) uint32_t blocks1[4 * 16];
+    __declspec(align(16)) uint32_t blocks2[4 * 16];
+    __declspec(align(16)) uint32_t candidates[4 * 8];
+#else
     uint32_t blocks1[4 * 16] __attribute__((aligned(16)));
     uint32_t blocks2[4 * 16] __attribute__((aligned(16)));
     uint32_t candidates[4 * 8] __attribute__((aligned(16)));
+#endif
 
     vector<uint32_t> vRow = vector<uint32_t>(4);
     uint32_t *pnKernel = (uint32_t *) kernel;
@@ -315,9 +332,16 @@ void KernelWorker::Do_generic()
             solutions.push_back(std::pair<uint256,uint32_t>(*pnHashProofOfStake, nTimeTx));
     }
 #else
+
+#ifdef _MSC_VER
+    __declspec(align(16)) uint32_t block1[16];
+    __declspec(align(16)) uint32_t block2[16];
+    __declspec(align(16)) uint32_t candidate[8];
+#else
     uint32_t block1[16] __attribute__((aligned(16)));
     uint32_t block2[16] __attribute__((aligned(16)));
     uint32_t candidate[8] __attribute__((aligned(16)));
+#endif
 
     memcpy(&block1[7], &block1_suffix[0], 36);   // sha256 padding
     memcpy(&block2[8], &block2_suffix[0], 32);
@@ -400,9 +424,15 @@ bool ScanKernelBackward_8Way(unsigned char *kernel, uint32_t nBits, uint32_t nIn
     // Get maximum possible target to filter out the majority of obviously insufficient hashes
     uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256();
 
+#ifdef _MSC_VER
+    __declspec(align(16)) uint32_t blocks1[8 * 16];
+    __declspec(align(16)) uint32_t blocks2[8 * 16];
+    __declspec(align(16)) uint32_t candidates[8 * 8];
+#else
     uint32_t blocks1[8 * 16] __attribute__((aligned(16)));
     uint32_t blocks2[8 * 16] __attribute__((aligned(16)));
     uint32_t candidates[8 * 8] __attribute__((aligned(16)));
+#endif
 
     vector<uint32_t> vRow = vector<uint32_t>(8);
     uint32_t *pnKernel = (uint32_t *) kernel;
@@ -479,9 +509,15 @@ bool ScanKernelBackward_4Way(unsigned char *kernel, uint32_t nBits, uint32_t nIn
     // Get maximum possible target to filter out the majority of obviously insufficient hashes
     uint256 nMaxTarget = (bnTargetPerCoinDay * bnValueIn * nStakeMaxAge / COIN / nOneDay).getuint256();
 
+#ifdef _MSC_VER
+    __declspec(align(16)) uint32_t blocks1[4 * 16];
+    __declspec(align(16)) uint32_t blocks2[4 * 16];
+    __declspec(align(16)) uint32_t candidates[4 * 8];
+#else
     uint32_t blocks1[4 * 16] __attribute__((aligned(16)));
     uint32_t blocks2[4 * 16] __attribute__((aligned(16)));
     uint32_t candidates[4 * 8] __attribute__((aligned(16)));
+#endif
 
     vector<uint32_t> vRow = vector<uint32_t>(4);
     uint32_t *pnKernel = (uint32_t *) kernel;
