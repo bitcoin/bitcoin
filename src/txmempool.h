@@ -375,6 +375,8 @@ public:
     };
     typedef std::set<txiter, CompareIteratorByHash> setEntries;
 
+    const setEntries & GetMemPoolParents(txiter entry) const;
+    const setEntries & GetMemPoolChildren(txiter entry) const;
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
 
@@ -386,8 +388,6 @@ private:
     typedef std::map<txiter, TxLinks, CompareIteratorByHash> txlinksMap;
     txlinksMap mapLinks;
 
-    const setEntries & GetMemPoolParents(txiter entry) const;
-    const setEntries & GetMemPoolChildren(txiter entry) const;
     void UpdateParent(txiter entry, txiter parent, bool add);
     void UpdateChild(txiter entry, txiter child, bool add);
 
