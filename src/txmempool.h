@@ -66,6 +66,7 @@ private:
     double dPriority; //! Priority when entering the mempool
     unsigned int nHeight; //! Chain height when entering the mempool
     bool hadNoDependencies; //! Not dependent on any other txs when it entered the mempool
+    int64_t score; //! Used for determining the priority of the transaction for mining in a block
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
@@ -88,10 +89,13 @@ public:
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return nHeight; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
+    int64_t GetScore() const { return score; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
 
     // Adjusts the descendant state, if this entry is not dirty.
     void UpdateState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);
+    // Updates the mining priority score
+    void UpdateScore(int64_t newScore);
 
     /** We can set the entry to be dirty if doing the full calculation of in-
      *  mempool descendants will be too expensive, which can potentially happen
@@ -125,6 +129,18 @@ struct set_dirty
 {
     void operator() (CTxMemPoolEntry &e)
         { e.SetDirty(); }
+};
+
+struct update_score
+{
+    update_score(int64_t _newScore) : newScore(_newScore)
+    {}
+
+    void operator() (CTxMemPoolEntry &e)
+    { e.UpdateScore(newScore); }
+
+private:
+    int64_t newScore;
 };
 
 // extracts a TxMemPoolEntry's transaction hash
@@ -171,6 +187,22 @@ public:
         double f1 = (double)a.GetFee() * a.GetSizeWithDescendants();
         double f2 = (double)a.GetFeesWithDescendants() * a.GetTxSize();
         return f2 > f1;
+    }
+};
+
+/** \class CompareTxMemPoolEntryByScore
+ *
+ *  Sort by score of entry in descending order
+ */
+class CompareTxMemPoolEntryByScore
+{
+public:
+    bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
+    {
+        if (a.GetScore() == b.GetScore()) {
+            return b.GetTx().GetHash() < a.GetTx().GetHash();
+        }
+        return a.GetScore() > b.GetScore();
     }
 };
 
@@ -311,6 +343,11 @@ public:
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::identity<CTxMemPoolEntry>,
                 CompareTxMemPoolEntryByEntryTime
+                >,
+            // sorted by fee rate
+            boost::multi_index::ordered_non_unique<
+                boost::multi_index::identity<CTxMemPoolEntry>,
+                CompareTxMemPoolEntryByScore
             >
         >
     > indexed_transaction_set;
