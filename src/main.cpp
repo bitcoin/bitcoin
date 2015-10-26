@@ -4830,6 +4830,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
         }
+        FlushStateToDisk(state, FLUSH_STATE_PERIODIC);
     }
 
 
