@@ -3410,13 +3410,13 @@ void run_ecdsa_edge_cases(void) {
 }
 
 #ifdef ENABLE_OPENSSL_TESTS
-EC_KEY *get_openssl_key(const secp256k1_scalar *key) {
+EC_KEY *get_openssl_key(const unsigned char *key32) {
     unsigned char privkey[300];
     size_t privkeylen;
     const unsigned char* pbegin = privkey;
     int compr = secp256k1_rand_bits(1);
     EC_KEY *ec_key = EC_KEY_new_by_curve_name(NID_secp256k1);
-    CHECK(secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, &privkeylen, key, compr));
+    CHECK(secp256k1_ec_privkey_export_der(ctx, privkey, &privkeylen, key32, compr));
     CHECK(d2i_ECPrivateKey(&ec_key, &pbegin, privkeylen));
     CHECK(EC_KEY_check_key(ec_key));
     return ec_key;
@@ -3434,12 +3434,14 @@ void test_ecdsa_openssl(void) {
     size_t secp_sigsize = 80;
     unsigned char message[32];
     unsigned char signature[80];
+    unsigned char key32[32];
     secp256k1_rand256_test(message);
     secp256k1_scalar_set_b32(&msg, message, NULL);
     random_scalar_order_test(&key);
+    secp256k1_scalar_get_b32(key32, &key);
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &qj, &key);
     secp256k1_ge_set_gej(&q, &qj);
-    ec_key = get_openssl_key(&key);
+    ec_key = get_openssl_key(key32);
     CHECK(ec_key != NULL);
     CHECK(ECDSA_sign(0, message, sizeof(message), signature, &sigsize, ec_key));
     CHECK(secp256k1_ecdsa_sig_parse(&sigr, &sigs, signature, sigsize));
