@@ -58,6 +58,7 @@ AC_PATH_TOOL(STRIP, strip)
 AC_PATH_TOOL(GCOV, gcov)
 AC_PATH_PROG(LCOV, lcov)
 AC_PATH_PROG(JAVA, java)
+AC_PATH_PROG(PYTHON, python)
 AC_PATH_PROG(GENHTML, genhtml)
 AC_PATH_PROG([GIT], [git])
 AC_PATH_PROG(CCACHE,ccache)
@@ -105,6 +106,11 @@ AC_ARG_ENABLE([comparison-tool-reorg-tests],
     AS_HELP_STRING([--enable-comparison-tool-reorg-tests],[enable expensive reorg tests in the comparison tool (default no)]),
     [use_comparison_tool_reorg_tests=$enableval],
     [use_comparison_tool_reorg_tests=no])
+
+AC_ARG_ENABLE([extended-rpc-tests],
+    AS_HELP_STRING([--enable-extended-rpc-tests],[enable expensive RPC tests when using lcov (default no)]),
+    [use_extended_rpc_tests=$enableval],
+    [use_extended_rpc_tests=no])
 
 AC_ARG_WITH([qrencode],
   [AS_HELP_STRING([--with-qrencode],
@@ -341,6 +347,10 @@ else
   AC_SUBST(COMPARISON_TOOL_REORG_TESTS, 0)
 fi
 
+if test x$use_extended_rpc_tests != xno; then
+  AC_SUBST(EXTENDED_RPC_TESTS, -extended)
+fi
+
 if test x$use_lcov = xyes; then
   if test x$LCOV = x; then
     AC_MSG_ERROR("lcov testing requested but lcov not found")
@@ -350,6 +360,9 @@ if test x$use_lcov = xyes; then
   fi
   if test x$JAVA = x; then
     AC_MSG_ERROR("lcov testing requested but java not found")
+  fi
+  if test x$PYTHON = x; then
+    AC_MSG_ERROR("lcov testing requested but python not found")
   fi
   if test x$GENHTML = x; then
     AC_MSG_ERROR("lcov testing requested but genhtml not found")
