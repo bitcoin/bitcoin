@@ -73,12 +73,11 @@ static SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_import_der(
     size_t privkeylen
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
-static int secp256k1_eckey_privkey_parse(secp256k1_scalar *key, const unsigned char *privkey, size_t privkeylen) {
-    unsigned char c[32] = {0};
+static int secp256k1_ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *out32, const unsigned char *privkey, size_t privkeylen) {
     const unsigned char *end = privkey + privkeylen;
     int lenb = 0;
     int len = 0;
-    int overflow = 0;
+    memset(out32, 0, 32);
     /* sequence header */
     if (end < privkey+1 || *privkey != 0x30) {
         return 0;
@@ -110,18 +109,21 @@ static int secp256k1_eckey_privkey_parse(secp256k1_scalar *key, const unsigned c
     if (end < privkey+2 || privkey[0] != 0x04 || privkey[1] > 0x20 || end < privkey+2+privkey[1]) {
         return 0;
     }
-    memcpy(c + 32 - privkey[1], privkey + 2, privkey[1]);
-    secp256k1_scalar_set_b32(key, c, &overflow);
-    memset(c, 0, 32);
-    return !overflow;
+    memcpy(out32 + 32 - privkey[1], privkey + 2, privkey[1]);
+    if (!secp256k1_ec_seckey_verify(ctx, out32)) {
+        memset(out32, 0, 32);
+        return 0;
+    }
+    return 1;
 }
 
-static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context *ctx, unsigned char *privkey, size_t *privkeylen, const secp256k1_scalar *key, int compressed) {
-    secp256k1_gej rp;
-    secp256k1_ge r;
+static int secp256k1_ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *key32, int compressed) {
+    secp256k1_pubkey pubkey;
     size_t pubkeylen = 0;
-    secp256k1_ecmult_gen(ctx, &rp, key);
-    secp256k1_ge_set_gej(&r, &rp);
+    if (!secp256k1_ec_pubkey_create(ctx, &pubkey, key32)) {
+        *privkeylen = 0;
+        return 0;
+    }
     if (compressed) {
         static const unsigned char begin[] = {
             0x30,0x81,0xD3,0x02,0x01,0x01,0x04,0x20
@@ -139,11 +141,9 @@ static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context 
         };
         unsigned char *ptr = privkey;
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
-        secp256k1_scalar_get_b32(ptr, key); ptr += 32;
+        memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
-        if (!secp256k1_eckey_pubkey_serialize(&r, ptr, &pubkeylen, 1)) {
-            return 0;
-        }
+        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
     } else {
@@ -165,45 +165,13 @@ static int secp256k1_eckey_privkey_serialize(const secp256k1_ecmult_gen_context 
         };
         unsigned char *ptr = privkey;
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
-        secp256k1_scalar_get_b32(ptr, key); ptr += 32;
+        memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
-        if (!secp256k1_eckey_pubkey_serialize(&r, ptr, &pubkeylen, 0)) {
-            return 0;
-        }
+        secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
     }
     return 1;
-}
-
-static int secp256k1_ec_privkey_export_der(const secp256k1_context* ctx, unsigned char *privkey, size_t *privkeylen, const unsigned char *seckey, int compressed) {
-    secp256k1_scalar key;
-    int ret = 0;
-    VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(seckey != NULL);
-    ARG_CHECK(privkey != NULL);
-    ARG_CHECK(privkeylen != NULL);
-    ARG_CHECK(secp256k1_ecmult_gen_context_is_built(&ctx->ecmult_gen_ctx));
-
-    secp256k1_scalar_set_b32(&key, seckey, NULL);
-    ret = secp256k1_eckey_privkey_serialize(&ctx->ecmult_gen_ctx, privkey, privkeylen, &key, compressed);
-    secp256k1_scalar_clear(&key);
-    return ret;
-}
-
-static int secp256k1_ec_privkey_import_der(const secp256k1_context* ctx, unsigned char *seckey, const unsigned char *privkey, size_t privkeylen) {
-    secp256k1_scalar key;
-    int ret = 0;
-    ARG_CHECK(seckey != NULL);
-    ARG_CHECK(privkey != NULL);
-    (void)ctx;
-
-    ret = secp256k1_eckey_privkey_parse(&key, privkey, privkeylen);
-    if (ret) {
-        secp256k1_scalar_get_b32(seckey, &key);
-    }
-    secp256k1_scalar_clear(&key);
-    return ret;
 }
 
 #endif
