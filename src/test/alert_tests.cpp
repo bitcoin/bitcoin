@@ -217,10 +217,12 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
         // use them
     }
 
+    strMiscWarning = "";
+
     // Test 1: chain with blocks every nPowTargetSpacing seconds,
     // as normal, no worries:
     PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
-    BOOST_CHECK(strMiscWarning.empty());
+    BOOST_CHECK_MESSAGE(strMiscWarning.empty(), strMiscWarning);
 
     // Test 2: go 3.5 hours without a block, expect a warning:
     now += 3*60*60+30*60;
