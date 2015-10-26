@@ -13,8 +13,9 @@ can be found in the contrib/init folder.
 1. Service User
 ---------------------------------
 
-All three startup configurations assume the existence of a "bitcoin" user
+All three Linux startup configurations assume the existence of a "bitcoin" user
 and group.  They must be created before attempting to use these scripts.
+The OS X configuration assumes bitcoind will be set up for the current user.
 
 2. Configuration
 ---------------------------------
@@ -48,6 +49,8 @@ see `contrib/debian/examples/bitcoin.conf`.
 3. Paths
 ---------------------------------
 
+3a) Linux
+
 All three configurations assume several paths that might need to be adjusted.
 
 Binary:              `/usr/bin/bitcoind`  
@@ -61,6 +64,13 @@ should all be owned by the bitcoin user and group.  It is advised for security
 reasons to make the configuration file and data directory only readable by the
 bitcoin user and group.  Access to bitcoin-cli and other bitcoind rpc clients
 can then be controlled by group membership.
+
+3b) Mac OS X
+
+Binary:              `/usr/local/bin/bitcoind`  
+Configuration file:  `~/Library/Application Support/Bitcoin/bitcoin.conf`  
+Data directory:      `~/Library/Application Support/Bitcoin`
+Lock file:           `~/Library/Application Support/Bitcoin/.lock`
 
 4. Installing Service Configuration
 -----------------------------------
@@ -96,6 +106,17 @@ Copy bitcoind.init to /etc/init.d/bitcoind. Test by running `service bitcoind st
 Using this script, you can adjust the path and flags to the bitcoind program by
 setting the BITCOIND and FLAGS environment variables in the file
 /etc/sysconfig/bitcoind. You can also use the DAEMONOPTS environment variable here.
+
+4e) Mac OS X
+
+Copy org.bitcoin.bitcoind.plist into ~/Library/LaunchAgents. Load the launch agent by
+running `launchctl load ~/Library/LaunchAgents/org.bitcoin.bitcoind.plist`.
+
+This Launch Agent will cause bitcoind to start whenever the user logs in.
+
+NOTE: This approach is intended for those wanting to run bitcoind as the current user.
+You will need to modify org.bitcoin.bitcoind.plist if you intend to use it as a
+Launch Daemon with a dedicated bitcoin user.
 
 5. Auto-respawn
 -----------------------------------
