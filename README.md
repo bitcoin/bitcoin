@@ -17,11 +17,6 @@ License
 Statoshi is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see http://opensource.org/licenses/MIT.
 
-Installation & Configuration
--------------------
-
-Installation instructions can be found [here](https://jlopp.github.io/statoshi/).
-
 A system metrics daemon is available [here](https://github.com/jlopp/bitcoin-utils/blob/master/systemMetricsDaemon.py)
 
 Statoshi also supports running multiple nodes that emit metrics to a single graphite instance. 

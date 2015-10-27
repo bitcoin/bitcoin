@@ -12,6 +12,7 @@
 #include "protocol.h"
 #include "sync.h"
 #include "timedata.h"
+#include "ui_interface.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #include "version.h"
@@ -19,7 +20,7 @@
 #include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
 
-#include "univalue/univalue.h"
+#include <univalue.h>
 
 using namespace std;
 
@@ -379,6 +380,15 @@ UniValue getnettotals(const UniValue& params, bool fHelp)
     obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
     obj.push_back(Pair("totalbytessent", CNode::GetTotalBytesSent()));
     obj.push_back(Pair("timemillis", GetTimeMillis()));
+
+    UniValue outboundLimit(UniValue::VOBJ);
+    outboundLimit.push_back(Pair("timeframe", CNode::GetMaxOutboundTimeframe()));
+    outboundLimit.push_back(Pair("target", CNode::GetMaxOutboundTarget()));
+    outboundLimit.push_back(Pair("target_reached", CNode::OutboundTargetReached(false)));
+    outboundLimit.push_back(Pair("serve_historical_blocks", !CNode::OutboundTargetReached(true)));
+    outboundLimit.push_back(Pair("bytes_left_in_cycle", CNode::GetOutboundTargetBytesLeft()));
+    outboundLimit.push_back(Pair("time_left_in_cycle", CNode::GetMaxOutboundTimeLeftInCycle()));
+    obj.push_back(Pair("uploadtarget", outboundLimit));
     return obj;
 }
 
@@ -532,6 +542,8 @@ UniValue setban(const UniValue& params, bool fHelp)
     }
 
     DumpBanlist(); //store banlist to disk
+    uiInterface.BannedListChanged();
+
     return NullUniValue;
 }
 
@@ -578,6 +590,7 @@ UniValue clearbanned(const UniValue& params, bool fHelp)
 
     CNode::ClearBanned();
     DumpBanlist(); //store banlist to disk
+    uiInterface.BannedListChanged();
 
     return NullUniValue;
 }

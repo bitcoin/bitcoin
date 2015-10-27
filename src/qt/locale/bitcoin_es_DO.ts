@@ -1,4 +1,4 @@
-<TS language="es_DO" version="2.1">
+<TS language="es_DO" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2269,10 +2269,6 @@
     <message>
         <source>RPC server options:</source>
         <translation>Opciones del sservidor RPC:</translation>
-    </message>
-    <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Descartar aleatoriamente 1 de cada &lt;n&gt; mensajes de red</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

@@ -148,6 +148,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         CBlockIndex* pindexPrev = chainActive.Tip();
         const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
+        const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
         CCoinsViewCache view(pcoinsTip);
 
         // Priority order to process transactions
@@ -158,11 +159,16 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         // This vector will be sorted into a priority queue:
         vector<TxPriority> vecPriority;
         vecPriority.reserve(mempool.mapTx.size());
-        for (map<uint256, CTxMemPoolEntry>::iterator mi = mempool.mapTx.begin();
+        for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
              mi != mempool.mapTx.end(); ++mi)
         {
-            const CTransaction& tx = mi->second.GetTx();
-            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight, pblock->nTime))
+            const CTransaction& tx = mi->GetTx();
+
+            int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
+                                    ? nMedianTimePast
+                                    : pblock->GetBlockTime();
+
+            if (tx.IsCoinBase() || !IsFinalTx(tx, nHeight, nLockTimeCutoff))
                 continue;
 
             COrphan* porphan = NULL;
@@ -196,7 +202,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                     }
                     mapDependers[txin.prevout.hash].push_back(porphan);
                     porphan->setDependsOn.insert(txin.prevout.hash);
-                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
+                    nTotalIn += mempool.mapTx.find(txin.prevout.hash)->GetTx().vout[txin.prevout.n].nValue;
                     continue;
                 }
                 const CCoins* coins = view.AccessCoins(txin.prevout.hash);
@@ -226,7 +232,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                 porphan->feeRate = feeRate;
             }
             else
-                vecPriority.push_back(TxPriority(dPriority, feeRate, &mi->second.GetTx()));
+                vecPriority.push_back(TxPriority(dPriority, feeRate, &(mi->GetTx())));
         }
 
         // Collect transactions into block
@@ -368,7 +374,7 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = txCoinbase;
-    pblock->hashMerkleRoot = pblock->BuildMerkleTree();
+    pblock->hashMerkleRoot = pblock->ComputeMerkleRoot();
 }
 
 //////////////////////////////////////////////////////////////////////////////

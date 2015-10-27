@@ -1,4 +1,4 @@
-<TS language="sq" version="2.1">
+<TS language="sq" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -46,14 +46,38 @@
         <translation>Duke marr adresen</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Këto janë Bitcoin adresat e juaja për të dërguar pagesa. Gjithmon kontrolloni shumën dhe adresën pranuese para se të dërgoni monedha.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
+        <translation>Këto janë Bitcoin adresat e juaja për të pranuar pagesa. Rekomandohet që gjithmon të përdorni një adresë të re për çdo transaksion.</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Kopjo &amp;Etiketë</translation>
+    </message>
+    <message>
         <source>&amp;Edit</source>
         <translation>&amp;Ndrysho</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Eksporto listën e adresave</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Skedar i ndarë me pikëpresje(*.csv)</translation>
     </message>
-    </context>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportimi dështoj</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Gabim gjatë ruajtjes së listës së adresave në %1. Ju lutem provoni prapë.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -686,6 +710,10 @@
     <message>
         <source>Copy address</source>
         <translation>Kopjo adresën</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Eksportimi dështoj</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>

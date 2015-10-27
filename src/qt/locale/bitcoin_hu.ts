@@ -1,4 +1,4 @@
-<TS language="hu" version="2.1">
+<TS language="hu" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -414,6 +414,10 @@
         <source>No block source available...</source>
         <translation>Blokk forrása ismeretlen...</translation>
     </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n óra</numerusform><numerusform>%n óra</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 és %2</translation>
@@ -449,6 +453,18 @@
     <message>
         <source>Catching up...</source>
         <translation>Frissítés...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Dátum:  %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Típus: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -789,6 +805,10 @@
         <translation>Üdvözlünk a Bitcoin Core-ban.</translation>
     </message>
     <message>
+        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>A Bitcoin Core le fogja tölteni és tárolni fogja a Bitcoin blokklánc egy másolatát. Legalább %1GB adat lesz tárolva ebben a mappában, és ez folyamatosan nőni fog. A tárca szintén itt lesz tárolva.</translation>
+    </message>
+    <message>
         <source>Use the default data directory</source>
         <translation>Az alapértelmezett adat könyvtár használata</translation>
     </message>
@@ -871,12 +891,24 @@
         <translation>&amp;Hálózat</translation>
     </message>
     <message>
+        <source>&amp;Start Bitcoin Core on system login</source>
+        <translation>A Bitcoin elindítása bejelentkezéskor</translation>
+    </message>
+    <message>
+        <source>Expert</source>
+        <translation>szakértő</translation>
+    </message>
+    <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>A Bitcoin-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
         <translation>&amp;UPnP port-feltérképezés</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a SOCKS5 proxy.</source>
+        <translation>Csatlakozás a Bitcoin hálózatához SOCKS5 proxyn keresztül</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1016,6 +1048,10 @@
 <context>
     <name>PeerTableModel</name>
     <message>
+        <source>User Agent</source>
+        <translation>User Agent</translation>
+    </message>
+    <message>
         <source>Ping Time</source>
         <translation>Ping idő</translation>
     </message>
@@ -1137,8 +1173,28 @@
         <translation>Verzió</translation>
     </message>
     <message>
+        <source>User Agent</source>
+        <translation>User Agent</translation>
+    </message>
+    <message>
         <source>Services</source>
         <translation>Szolgáltatások</translation>
+    </message>
+    <message>
+        <source>Last Send</source>
+        <translation>Legutóbbi küldés</translation>
+    </message>
+    <message>
+        <source>Last Receive</source>
+        <translation>Legutóbbi fogadás</translation>
+    </message>
+    <message>
+        <source>Bytes Sent</source>
+        <translation>Küldött bájtok</translation>
+    </message>
+    <message>
+        <source>Bytes Received</source>
+        <translation>Fogadott bájtok</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1212,12 +1268,20 @@
         <source>never</source>
         <translation>soha</translation>
     </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Ismeretlen</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
         <source>&amp;Label:</source>
         <translation>Címke:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>&amp;Üzenet:</translation>
     </message>
     <message>
         <source>Clear</source>
@@ -1351,6 +1415,14 @@
     <message>
         <source>Change:</source>
         <translation>Visszajáró:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Tranzakciós díj</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>Elrejtés</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1750,6 +1822,10 @@
         <translation>Címke</translation>
     </message>
     <message>
+        <source>Unconfirmed</source>
+        <translation>Megerősítetlen:</translation>
+    </message>
+    <message>
         <source>Received with</source>
         <translation>Erre a címre</translation>
     </message>
@@ -1875,6 +1951,10 @@
     <message>
         <source>Exporting Failed</source>
         <translation>Az exportálás sikertelen volt</translation>
+    </message>
+    <message>
+        <source>Exporting Successful</source>
+        <translation>Sikeres exportálás</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -2057,12 +2137,24 @@
         <translation>Tárca ellenőrzése...</translation>
     </message>
     <message>
+        <source>Wallet options:</source>
+        <translation>Tárca beállítások:</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Az adatbázist újra kell építeni -reindex használatával (módosítás -tindex).</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>Adatkönyvtár kiválasztása induláskor (alapbeállítás: 0)</translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
+        <translation>Copyright (C) 2009-%i A Bitcoin Core Fejlesztői</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Hiba az adatbázis olvasásakor, leállítás</translation>
     </message>
     <message>
         <source>Information</source>

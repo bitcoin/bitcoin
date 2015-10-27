@@ -1,9 +1,9 @@
-<TS language="fi" version="2.1">
+<TS language="fi" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Klikkaa hiiren oikealla painikkeella muokataksesi osoitetta tai nimikettä</translation>
+        <translation>Valitse hiiren oikealla painikkeella muokataksesi osoitetta tai nimikettä</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;Kopioi Osoite</translation>
+        <translation>&amp;Kopioi osoite</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -168,6 +168,10 @@
         <translation>Haluatko varmasti salata lompakkosi?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Bitcoin Core sammuu nyt viimeistelläkseen kryptaamisen. Muista että lompakon kryptaaminen ei voi täysin suojata bitcoinejasi varkaudelta malwaren saastuttamalla tietokoneella.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>TÄRKEÄÄ: Kaikki vanhat lompakon varmuuskopiot pitäisi korvata uusilla suojatuilla varmuuskopioilla. Turvallisuussyistä edelliset varmuuskopiot muuttuvat turhiksi, kun aloitat suojatun lompakon käytön.</translation>
     </message>
@@ -182,6 +186,10 @@
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
         <translation>Anna salauslause lompakkoon. &lt;br/&gt;Ole hyvä ja käytä lausetta jossa on &lt;b&gt;kymmenen tai enemmän satunnaista merkkiä&lt;/b&gt; tai &lt;b&gt;kahdeksan tai useampi sanaa&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Syötä vanha ja uusi salasana lompakolle.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -256,7 +264,7 @@
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>Näytä tietoja QT:ta</translation>
+        <translation>Näytä tietoja Qt:ta</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
@@ -391,6 +399,10 @@
         <translation>&amp;Tietoja Bitcoin Core</translation>
     </message>
     <message>
+        <source>Modify configuration options for Bitcoin Core</source>
+        <translation>Muokkaa kokoonpanoasetuksia Bitcoin Corelle</translation>
+    </message>
+    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>Näytä lähettämiseen käytettyjen osoitteiden ja nimien lista</translation>
     </message>
@@ -417,6 +429,10 @@
     <message>
         <source>No block source available...</source>
         <translation>Lohkojen lähdettä ei saatavilla...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Prosessoitu %n lohko rahansiirtohistoriasta.</numerusform><numerusform>Prosessoitu %n lohkoa rahansiirtohistoriasta.</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -469,6 +485,36 @@
     <message>
         <source>Catching up...</source>
         <translation>Saavutetaan verkkoa...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Päivämäärä: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Määrä: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Tyyppi: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Nimike: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Osoite: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -667,6 +713,18 @@
     <message>
         <source>none</source>
         <translation>ei mitään</translation>
+    </message>
+    <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>Tämä nimi muuttuu punaiseksi mikäli rahansiirron koko on suurempi kuin 1000 tavua.</translation>
+    </message>
+    <message>
+        <source>This label turns red if the priority is smaller than "medium".</source>
+        <translation>Tämä nimi muuttuu punaiseksi mikäli prioriteetti on pienempi kuin "medium".</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than %1.</source>
+        <translation>Tämä nimike muuttuu punaiseksi mikäli mikä tahansa saaja vastaanottaa pienemmän määrän kuin %1.</translation>
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
@@ -943,6 +1001,14 @@
         <translation>&amp;Verkko</translation>
     </message>
     <message>
+        <source>Automatically start Bitcoin Core after logging in to the system.</source>
+        <translation>Käynnistä Bitcoin Core automaattisesti järjestelmään kirjautumisen jälkeen.</translation>
+    </message>
+    <message>
+        <source>&amp;Start Bitcoin Core on system login</source>
+        <translation>&amp;Käynnistä Bitcoin Core järjestelmään kirjautuessa</translation>
+    </message>
+    <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
         <translation>(0 = auto, &lt;0 = jätä näin monta ydintä vapaaksi)</translation>
     </message>
@@ -1053,6 +1119,10 @@
     <message>
         <source>Client restart required to activate changes.</source>
         <translation>Ohjelman uudelleenkäynnistys aktivoi muutokset.</translation>
+    </message>
+    <message>
+        <source>Client will be shut down. Do you want to proceed?</source>
+        <translation>Asiakasohjelma sammutetaan. Haluatko jatkaa?</translation>
     </message>
     <message>
         <source>This change would require a client restart.</source>
@@ -1185,12 +1255,28 @@
         <translation>Maksupyynnön tiedoston käsittely</translation>
     </message>
     <message>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation>Maksupyynnön tiedostoa ei voida lukea! Tämä voi aiheutua sopimattomasta maksupyyntötiedostosta.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Maksupyyntö on vanhentunut.</translation>
+    </message>
+    <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
         <translation>Varmistamattomia maksupyyntöjä kustomoituun maksupalveluun ei tueta.</translation>
     </message>
     <message>
+        <source>Invalid payment request.</source>
+        <translation>Epäkelpo maksupyyntö.</translation>
+    </message>
+    <message>
         <source>Refund from %1</source>
         <translation>Maksupalautus %1:sta</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Maksupyyntö %1 on liian suuri (%2 tavua, sallittu %3 tavua).</translation>
     </message>
     <message>
         <source>Payment request DoS protection</source>
@@ -1199,6 +1285,10 @@
     <message>
         <source>Error communicating with %1: %2</source>
         <translation>Virhe kommunikoidessa %1n kanssa: %2</translation>
+    </message>
+    <message>
+        <source>Payment request cannot be parsed!</source>
+        <translation>Maksupyyntöä ei voida jäsentää!</translation>
     </message>
     <message>
         <source>Bad response from server %1</source>
@@ -1218,6 +1308,10 @@
     <message>
         <source>User Agent</source>
         <translation>Käyttöliittymä</translation>
+    </message>
+    <message>
+        <source>Node/Service</source>
+        <translation>Noodi/Palvelu</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1409,6 +1503,10 @@
         <translation>Vasteaika</translation>
     </message>
     <message>
+        <source>Time Offset</source>
+        <translation>Ajan poikkeama</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Viimeisimmän lohkon aika</translation>
     </message>
@@ -1451,6 +1549,10 @@
     <message>
         <source>Clear console</source>
         <translation>Tyhjennä konsoli</translation>
+    </message>
+    <message>
+        <source>Welcome to the Bitcoin Core RPC console.</source>
+        <translation>Tervetuloa Bitcoin Coren RPC-konsoliin.</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1745,6 +1847,10 @@
         <translation>per kilotavu</translation>
     </message>
     <message>
+        <source>Hide</source>
+        <translation>Piilota</translation>
+    </message>
+    <message>
         <source>total at least</source>
         <translation>yhteensä ainakin</translation>
     </message>
@@ -1877,8 +1983,20 @@
         <translation>Rahansiirto hylättiin! Tämä saattaa tapahtua jos lompakossa olevat kolikot on jo kulutettu, kuten jos käytät kopioita wallet.dat tiedostosta ja kolikot oli jos käytetty mutta ei merkattu täällä.</translation>
     </message>
     <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>Rahansiirtokulua %1 ja sitä suurempia määriä pidetään järjenvastaisen korkeana kuluna.</translation>
+    </message>
+    <message>
+        <source>Payment request expired.</source>
+        <translation>Maksupyyntö on vanhentunut.</translation>
+    </message>
+    <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>Maksa vain vähimmäiskulu %1</translation>
+    </message>
+    <message>
+        <source>The recipient address is not valid. Please recheck.</source>
+        <translation>Vastaanottajan osoite ei ole kelvollinen. Tarkistathan uudelleen.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -1952,8 +2070,20 @@
         <translation>Poista tämä alkio</translation>
     </message>
     <message>
+        <source>S&amp;ubtract fee from amount</source>
+        <translation>V&amp;ähennä maksukulu määrästä</translation>
+    </message>
+    <message>
         <source>Message:</source>
         <translation>Viesti:</translation>
+    </message>
+    <message>
+        <source>This is an unauthenticated payment request.</source>
+        <translation>Tämä on todentamaton maksupyyntö.</translation>
+    </message>
+    <message>
+        <source>This is an authenticated payment request.</source>
+        <translation>Tämä on todennettu maksupyyntö.</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2393,6 +2523,10 @@
         <translation>Rahansiirron laatu.</translation>
     </message>
     <message>
+        <source>Whether or not a watch-only address is involved in this transaction.</source>
+        <translation>Onko rahansiirrossa mukana ainoastaan katseltava osoite vai ei.</translation>
+    </message>
+    <message>
         <source>Amount removed from or added to balance.</source>
         <translation>Saldoon lisätty tai siitä vähennetty määrä.</translation>
     </message>
@@ -2635,16 +2769,8 @@
         <translation>Kytkeydy annettuun osoitteeseen ja pidä linja aina auki. Käytä [host]:portin merkintätapaa IPv6:lle.</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>Aloita regression testimoodi joka käyttää erikoisketjua jossa lohkoja voidaan ratkaista välittömästi.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Suorita käsky kun lompakossa rahansiirto muuttuu (%s cmd on vaihdettu TxID kanssa)</translation>
-    </message>
-    <message>
-        <source>In this mode -genproclimit controls how many blocks are generated immediately.</source>
-        <translation>Tässä moodissa -genproclimit ohjaa kuinka monta lohkoa luodaan välittömästi.</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2735,6 +2861,10 @@
         <translation>Virhe avattaessa lohkoindeksiä</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occured, see debug.log for details</source>
+        <translation>Virhe: Sisäinen kriittinen virhe kohdattiin, katso debug.log:sta lisätietoja</translation>
+    </message>
+    <message>
         <source>Error: Disk space is low!</source>
         <translation>Varoitus: Levytila on vähissä!</translation>
     </message>
@@ -2763,6 +2893,14 @@
         <translation>Ei tarpeeksi tiedostomerkintöjä vapaana.</translation>
     </message>
     <message>
+        <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
+        <translation>Yhdistä vain solmukohtiin &lt;net&gt;-verkossa (ipv4, ipv6 tai onion)</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -txindex.</source>
+        <translation>Karsittu tila ei ole yhteensopiva -txindex:n kanssa.</translation>
+    </message>
+    <message>
         <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
         <translation>Aseta tietokannan välimuistin koko megatavuissa (%d - %d, oletus: %d</translation>
     </message>
@@ -2773,10 +2911,6 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Aseta lompakkotiedosto (data-hakemiston sisällä)</translation>
-    </message>
-    <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>Tämä on tarkoitettu regression testityökaluille ja ohjelman kehittämiseen.</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -2797,6 +2931,10 @@
     <message>
         <source>Wallet options:</source>
         <translation>Lompakon valinnat:</translation>
+    </message>
+    <message>
+        <source>Warning: This version is obsolete; upgrade required!</source>
+        <translation>Varoitus: Tämä versio on vanhentunut; päivittämistä vaaditaan!</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
@@ -2823,6 +2961,26 @@
         <translation>Aseta kolikoiden luomiseen tarkoitettujen säikeiden lukumäärä (-1 = kaikki ytimet, oletus: %d)</translation>
     </message>
     <message>
+        <source>(default: %u)</source>
+        <translation>(oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Accept public REST requests (default: %u)</source>
+        <translation>Hyväksy julkisia REST-pyyntöjä (oletus: %u)</translation>
+    </message>
+    <message>
+        <source>Activating best chain...</source>
+        <translation>Aktivoidaan parhainta ketjua...</translation>
+    </message>
+    <message>
+        <source>Can't run with a wallet in prune mode.</source>
+        <translation>Lompakkoa ei voida ajaa karsitussa tilassa.</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>-whitebind -osoitetta '%s' ei voida jäsentää</translation>
+    </message>
+    <message>
         <source>Choose data directory on startup (default: 0)</source>
         <translation>Valitse data-hakemisto käynnistyksessä (oletus: 0)</translation>
     </message>
@@ -2837,6 +2995,10 @@
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Tarvitset uudemman version Bitcoinista</translation>
+    </message>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>Virheitä tietokantaa luettaessa, ohjelma pysäytetään.</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2863,12 +3025,12 @@
         <translation>RPC-palvelimen valinnat:</translation>
     </message>
     <message>
-        <source>Randomly drop 1 of every &lt;n&gt; network messages</source>
-        <translation>Satunnaisesti pudota 1 joka &lt;n&gt; verkkoviestistä</translation>
+        <source>RPC support for HTTP persistent connections (default: %d)</source>
+        <translation>RPC-tuki pysyville HTTP-yhteyksille (oletus: %d)</translation>
     </message>
     <message>
-        <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
-        <translation>Satunnaisesti sekoita 1 joka &lt;n&gt; verkkoviestistä</translation>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Vastaanota ja näytä P2P-verkon hälytyksiä (oletus: %u)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -2917,6 +3079,10 @@
     <message>
         <source>Transaction too large</source>
         <translation>Siirtosumma liian iso</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Ulkoasun asetukset:</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: 1 when listening)</source>
@@ -2983,6 +3149,10 @@
         <translation>Virhe ladattaessa wallet.dat-tiedostoa: Lompakko vioittunut</translation>
     </message>
     <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
+        <translation>Käytä erillistä SOCKS5-proxyä tavoittaaksesi vertaisia Tor-piilopalveluiden kautta (oletus: %s)</translation>
+    </message>
+    <message>
         <source>(default: %s)</source>
         <translation>(oletus: %s)</translation>
     </message>
@@ -2993,10 +3163,6 @@
     <message>
         <source>Error loading wallet.dat</source>
         <translation>Virhe ladattaessa wallet.dat-tiedostoa</translation>
-    </message>
-    <message>
-        <source>Force safe mode (default: %u)</source>
-        <translation>Pakota yhteensopivuustila (oletus: %u)</translation>
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
@@ -3013,6 +3179,14 @@
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Virheellinen proxy-osoite '%s'</translation>
+    </message>
+    <message>
+        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
+        <translation>Kuuntele yhteyksiä portissa &lt;port&gt; (oletus: %u tai testnet: %u)</translation>
+    </message>
+    <message>
+        <source>Make the wallet broadcast transactions</source>
+        <translation>Aseta lompakko kuuluttamaan rahansiirtoja</translation>
     </message>
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
@@ -3045,6 +3219,10 @@
     <message>
         <source>Specify pid file (default: %s)</source>
         <translation>Määritä pid-tiedosto (oletus: %s)</translation>
+    </message>
+    <message>
+        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
+        <translation>Käytä vahvistamattomia vaihtorahoja lähetettäessä rahansiirtoja (oletus: %u)</translation>
     </message>
     <message>
         <source>Unknown network specified in -onlynet: '%s'</source>

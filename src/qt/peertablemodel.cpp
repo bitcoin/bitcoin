@@ -8,7 +8,6 @@
 #include "guiconstants.h"
 #include "guiutil.h"
 
-#include "net.h"
 #include "sync.h"
 
 #include <QDebug>
@@ -96,18 +95,17 @@ public:
             mapNodeRows.insert(std::pair<NodeId, int>(stats.nodeStats.nodeid, row++));
     }
 
-    int size()
+    int size() const
     {
         return cachedNodeStats.size();
     }
 
     CNodeCombinedStats *index(int idx)
     {
-        if(idx >= 0 && idx < cachedNodeStats.size()) {
+        if (idx >= 0 && idx < cachedNodeStats.size())
             return &cachedNodeStats[idx];
-        } else {
-            return 0;
-        }
+
+        return 0;
     }
 };
 
@@ -171,7 +169,7 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         }
     } else if (role == Qt::TextAlignmentRole) {
         if (index.column() == Ping)
-            return (int)(Qt::AlignRight | Qt::AlignVCenter);
+            return (QVariant)(Qt::AlignRight | Qt::AlignVCenter);
     }
 
     return QVariant();
@@ -204,13 +202,8 @@ QModelIndex PeerTableModel::index(int row, int column, const QModelIndex &parent
     CNodeCombinedStats *data = priv->index(row);
 
     if (data)
-    {
         return createIndex(row, column, data);
-    }
-    else
-    {
-        return QModelIndex();
-    }
+    return QModelIndex();
 }
 
 const CNodeCombinedStats *PeerTableModel::getNodeStats(int idx)

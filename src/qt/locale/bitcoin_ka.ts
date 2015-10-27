@@ -1,4 +1,4 @@
-<TS language="ka" version="2.1">
+<TS language="ka" version="2.0">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -2215,10 +2215,6 @@
         <translation>მოცემულ მისამართზე მიჯაჭვა მუდმივად მასზე მიყურადებით. გამოიყენეთ [host]:port ფორმა IPv6-სათვის</translation>
     </message>
     <message>
-        <source>Enter regression test mode, which uses a special chain in which blocks can be solved instantly.</source>
-        <translation>გადასვლა რეგრესული ტესტირების რეჟიმში, რომელიც იყენებს სპეციალურ ჯაჭვს ბლოკების დაუყოვნებლივი პოვნის შესაძლებლობით.</translation>
-    </message>
-    <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>კომანდის შესრულება საფულის ტრანსაქციის ცვლილებისას (%s კომანდაში ჩანაცვლდება TxID-ით)</translation>
     </message>
@@ -2321,10 +2317,6 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>მიუთითეთ საფულის ფაილი (კატალოგში)</translation>
-    </message>
-    <message>
-        <source>This is intended for regression testing tools and app development.</source>
-        <translation>გამოიყენება რეგრესული ტესტირების ინსტრუმენტებისა და პროგრამების შემუშავებისას.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>

@@ -15,15 +15,15 @@ outgoing connections be anonymized, but more is possible.
 
 	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
 	                server will be used to try to reach .onion addresses as well.
-	
+
 	-onion=ip:port  Set the proxy server to use for tor hidden services. You do not
 	                need to set this if it's the same as -proxy. You can use -noonion
 	                to explicitly disable access to hidden service.
-	
+
 	-listen         When using -proxy, listening is disabled by default. If you want
 	                to run a hidden service (see next section), you'll need to enable
 	                it explicitly.
-	
+
 	-connect=X      When behind a Tor proxy, you can specify .onion addresses instead
 	-addnode=X      of IP addresses or hostnames in these parameters. It requires
 	-seednode=X     SOCKS5. In Tor mode, such addresses can also be exchanged with
@@ -55,10 +55,10 @@ your bitcoind's P2P listen port (8333 by default).
 	                preference for your node to advertize itself with, for connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
 	                Tor proxy typically runs).
-	
+
 	-listen         You'll need to enable listening for incoming connections, as this
 	                is off by default behind a proxy.
-	
+
 	-discover       When -externalip is specified, no attempt is made to discover local
 	                IPv4 or IPv6 addresses. If you want to run a dual stack, reachable
 	                from both Tor and IPv4 (or IPv6), you'll need to either pass your
@@ -87,4 +87,3 @@ If you only want to use Tor to reach onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
 	./bitcoin -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
-

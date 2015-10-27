@@ -702,9 +702,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
                 wtx.hashBlock = wtxIn.hashBlock;
                 fUpdated = true;
             }
-            if (wtxIn.nIndex != -1 && (wtxIn.vMerkleBranch != wtx.vMerkleBranch || wtxIn.nIndex != wtx.nIndex))
+            if (wtxIn.nIndex != -1 && (wtxIn.nIndex != wtx.nIndex))
             {
-                wtx.vMerkleBranch = wtxIn.vMerkleBranch;
                 wtx.nIndex = wtxIn.nIndex;
                 fUpdated = true;
             }
@@ -1853,9 +1852,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 nChangePosRet = -1;
                 bool fFirst = true;
 
-                CAmount nTotalValue = nValue;
+                CAmount nValueToSelect = nValue;
                 if (nSubtractFeeFromAmount == 0)
-                    nTotalValue += nFeeRet;
+                    nValueToSelect += nFeeRet;
                 double dPriority = 0;
                 // vouts to the payees
                 BOOST_FOREACH (const CRecipient& recipient, vecSend)
@@ -1892,7 +1891,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
-                if (!SelectCoins(nTotalValue, setCoins, nValueIn, coinControl))
+                if (!SelectCoins(nValueToSelect, setCoins, nValueIn, coinControl))
                 {
                     strFailReason = _("Insufficient funds");
                     return false;
@@ -1910,10 +1909,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     dPriority += (double)nCredit * age;
                 }
 
-                CAmount nChange = nValueIn - nValue;
-                if (nSubtractFeeFromAmount == 0)
-                    nChange -= nFeeRet;
-
+                const CAmount nChange = nValueIn - nValueToSelect;
                 if (nChange > 0)
                 {
                     // Fill a vout to ourself
@@ -2812,14 +2808,10 @@ int CMerkleTx::SetMerkleBranch(const CBlock& block)
             break;
     if (nIndex == (int)block.vtx.size())
     {
-        vMerkleBranch.clear();
         nIndex = -1;
         LogPrintf("ERROR: SetMerkleBranch(): couldn't find tx in block\n");
         return 0;
     }
-
-    // Fill in merkle branch
-    vMerkleBranch = block.GetMerkleBranch(nIndex);
 
     // Is the tx in a block that's in the main chain
     BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
@@ -2846,14 +2838,6 @@ int CMerkleTx::GetDepthInMainChainINTERNAL(const CBlockIndex* &pindexRet) const
     if (!pindex || !chainActive.Contains(pindex))
         return 0;
 
-    // Make sure the merkle branch connects to this block
-    if (!fMerkleVerified)
-    {
-        if (CBlock::CheckMerkleBranch(GetHash(), vMerkleBranch, nIndex) != pindex->hashMerkleRoot)
-            return 0;
-        fMerkleVerified = true;
-    }
-
     pindexRet = pindex;
     return chainActive.Height() - pindex->nHeight + 1;
 }
@@ -2879,6 +2863,6 @@ int CMerkleTx::GetBlocksToMaturity() const
 bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectAbsurdFee)
 {
     CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, fRejectAbsurdFee);
+    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, false, fRejectAbsurdFee);
 }
 

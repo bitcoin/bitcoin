@@ -161,7 +161,11 @@ if [[ "d$REPLY" =~ ^d[Ss]$ ]]; then
     cleanup
     exit 1
   else
-    git commit -q --gpg-sign --amend --no-edit
+    if ! git commit -q --gpg-sign --amend --no-edit; then
+        echo "Error signing, exiting."
+        cleanup
+        exit 1
+    fi
   fi
 else
   echo "Not signing off on merge, exiting."

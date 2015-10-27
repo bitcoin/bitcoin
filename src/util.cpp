@@ -108,6 +108,7 @@ bool fDaemon = false;
 bool fServer = false;
 string strMiscWarning;
 bool fLogTimestamps = false;
+bool fLogTimeMicros = DEFAULT_LOGTIMEMICROS;
 bool fLogIPs = false;
 volatile bool fReopenDebugLog = false;
 CTranslationInterface translationInterface;
@@ -263,9 +264,13 @@ static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine
     if (!fLogTimestamps)
         return str;
 
-    if (*fStartedNewLine)
-        strStamped =  DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()) + ' ' + str;
-    else
+    if (*fStartedNewLine) {
+        int64_t nTimeMicros = GetLogTimeMicros();
+        strStamped = DateTimeStrFormat("%Y-%m-%d %H:%M:%S", nTimeMicros/1000000);
+        if (fLogTimeMicros)
+            strStamped += strprintf(".%06d", nTimeMicros%1000000);
+        strStamped += ' ' + str;
+    } else
         strStamped = str;
 
     if (!str.empty() && str[str.size()-1] == '\n')
@@ -280,18 +285,19 @@ int LogPrintStr(const std::string &str)
 {
     int ret = 0; // Returns total number of characters written
     static bool fStartedNewLine = true;
+
+    string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
+
     if (fPrintToConsole)
     {
         // print to console
-        ret = fwrite(str.data(), 1, str.size(), stdout);
+        ret = fwrite(strTimestamped.data(), 1, strTimestamped.size(), stdout);
         fflush(stdout);
     }
     else if (fPrintToDebugLog)
     {
         boost::call_once(&DebugPrintInit, debugPrintInitFlag);
         boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
-
-        string strTimestamped = LogTimestampStr(str, &fStartedNewLine);
 
         // buffer if we haven't opened the log yet
         if (fileout == NULL) {

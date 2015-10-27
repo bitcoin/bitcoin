@@ -1,4 +1,4 @@
-BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.10.0**):
+BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.12.0**):
 
 * [`BIP 11`](https://github.com/bitcoin/bips/blob/master/bip-0011.mediawiki): Multisig outputs are standard since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
 * [`BIP 13`](https://github.com/bitcoin/bips/blob/master/bip-0013.mediawiki): The address format for P2SH addresses has been implemented since **v0.6.0** ([PR #669](https://github.com/bitcoin/bitcoin/pull/669)).
@@ -14,5 +14,7 @@ BIPs that are implemented by Bitcoin Core (up-to-date up to **v0.10.0**):
 * [`BIP 37`](https://github.com/bitcoin/bips/blob/master/bip-0037.mediawiki): The bloom filtering for transaction relaying, partial merkle trees for blocks, and the protocol version bump to 70001 (enabling low-bandwidth SPV clients) has been implemented since **v0.8.0** ([PR #1795](https://github.com/bitcoin/bitcoin/pull/1795)).
 * [`BIP 42`](https://github.com/bitcoin/bips/blob/master/bip-0042.mediawiki): The bug that would have caused the subsidy schedule to resume after block 13440000 was fixed in **v0.9.2** ([PR #3842](https://github.com/bitcoin/bitcoin/pull/3842)).
 * [`BIP 61`](https://github.com/bitcoin/bips/blob/master/bip-0061.mediawiki): The 'reject' protocol message (and the protocol version bump to 70002) was added in **v0.9.0** ([PR #3185](https://github.com/bitcoin/bitcoin/pull/3185)).
+* [`BIP 65`](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki): The CHECKLOCKTIMEVERIFY softfork was merged in **v0.12.0** ([PR #6351](https://github.com/bitcoin/bitcoin/pull/6351)), and backported to **v0.11.2** and **v0.10.4**. Mempool-only CLTV was added in [PR #6124](https://github.com/bitcoin/bitcoin/pull/6124).
 * [`BIP 66`](https://github.com/bitcoin/bips/blob/master/bip-0066.mediawiki): The strict DER rules and associated version 3 blocks have been implemented since **v0.10.0** ([PR #5713](https://github.com/bitcoin/bitcoin/pull/5713)).
 * [`BIP 70`](https://github.com/bitcoin/bips/blob/master/bip-0070.mediawiki) [`71`](https://github.com/bitcoin/bips/blob/master/bip-0071.mediawiki) [`72`](https://github.com/bitcoin/bips/blob/master/bip-0072.mediawiki): Payment Protocol support has been available in Bitcoin Core GUI since **v0.9.0** ([PR #5216](https://github.com/bitcoin/bitcoin/pull/5216)).
+* [`BIP 111`](https://github.com/bitcoin/bips/blob/master/bip-0111.mediawiki): `NODE_BLOOM` service bit added, but only enforced for peer versions `>=70011` as of **v0.12.0** ([PR #6579](https://github.com/bitcoin/bitcoin/pull/6579)).

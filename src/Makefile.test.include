@@ -36,6 +36,7 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 BITCOIN_TESTS =\
   test/arith_uint256_tests.cpp \
   test/bignum.h \
+  test/addrman_tests.cpp \
   test/alert_tests.cpp \
   test/allocator_tests.cpp \
   test/base32_tests.cpp \
@@ -53,6 +54,7 @@ BITCOIN_TESTS =\
   test/hash_tests.cpp \
   test/key_tests.cpp \
   test/limitedmap_tests.cpp \
+  test/dbwrapper_tests.cpp \
   test/main_tests.cpp \
   test/mempool_tests.cpp \
   test/miner_tests.cpp \
@@ -73,6 +75,7 @@ BITCOIN_TESTS =\
   test/sighash_tests.cpp \
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
+  test/streams_tests.cpp \
   test/test_bitcoin.cpp \
   test/test_bitcoin.h \
   test/timedata_tests.cpp \
@@ -91,7 +94,7 @@ endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_bitcoin_CPPFLAGS = $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS)
-test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBBITCOIN_UNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1)
 if ENABLE_WALLET
 test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
@@ -99,6 +102,10 @@ endif
 
 test_test_bitcoin_LDADD += $(LIBBITCOIN_CONSENSUS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
 test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -static
+
+if ENABLE_ZMQ
+test_test_bitcoin_LDADD += $(ZMQ_LIBS)
+endif
 
 nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
 
@@ -120,6 +127,7 @@ check-local:
 	@echo "Running test/bitcoin-util-test.py..."
 	$(AM_V_at)srcdir=$(srcdir) PYTHONPATH=$(builddir)/test $(srcdir)/test/bitcoin-util-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)
