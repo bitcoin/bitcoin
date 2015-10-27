@@ -6,7 +6,10 @@
 #ifndef BITCOIN_RPCCLIENT_H
 #define BITCOIN_RPCCLIENT_H
 
-#include <univalue.h>
+#include <string>
+#include <vector>
+
+class UniValue;
 
 UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 /** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
