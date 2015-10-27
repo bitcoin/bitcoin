@@ -343,7 +343,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -keepasskey=<key>        " + _("KeePassHttp key for AES encrypted communication with KeePass") + "\n";
     strUsage += "  -keepassid=<name>        " + _("KeePassHttp id for the established association") + "\n";
     strUsage += "  -keepassname=<name>      " + _("Name to construct url for KeePass entry that stores the wallet passphrase") + "\n";
-    strUsage += "  -keypool=<n>             " + strprintf(_("Set key pool size to <n> (default: %u)"), 100) + "\n";
+    strUsage += "  -keypool=<n>             " + strprintf(_("Set key pool size to <n> (default: %u). Run 'keypoolrefill' to apply this to already existing wallets"), DEFAULT_KEYPOOL_SIZE) + "\n";
     if (GetBoolArg("-help-debug", false))
         strUsage += "  -mintxfee=<amt>          " + strprintf(_("Fees (in DASH/Kb) smaller than this are considered zero fee for transaction creation (default: %s)"), FormatMoney(CWallet::minTxFee.GetFeePerK())) + "\n";
     strUsage += "  -paytxfee=<amt>          " + strprintf(_("Fee (in DASH/kB) to add to transactions you send (default: %s)"), FormatMoney(payTxFee.GetFeePerK())) + "\n";
