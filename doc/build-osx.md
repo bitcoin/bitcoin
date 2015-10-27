@@ -38,22 +38,27 @@ NOTE: Building with Qt4 is still supported, however, could result in a broken UI
 
 ### Building `bitcoind`
 
-1. Clone the GitHub tree to get the source code and go into the directory.
+1.  Clone the GitHub tree to get the source code and go into the directory.
 
         git clone https://github.com/bitcoin/bitcoin.git
         cd bitcoin
 
-2.  Build bitcoind:
+2.  Make the Homebrew OpenSSL headers visible to the configure script  (do ```brew info openssl``` to find out why this is necessary, or if you use Homebrew with installation folders different from the default).
+
+        export LDFLAGS=-L/usr/local/opt/openssl/lib
+        export CPPFLAGS=-I/usr/local/opt/openssl/include
+
+3.  Build bitcoind:
 
         ./autogen.sh
         ./configure --with-gui=qt5
         make
 
-3.  It is also a good idea to build and run the unit tests:
+4.  It is also a good idea to build and run the unit tests:
 
         make check
 
-4.  (Optional) You can also install bitcoind to your path:
+5.  (Optional) You can also install bitcoind to your path:
 
         make install
 
