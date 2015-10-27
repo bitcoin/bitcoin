@@ -104,7 +104,7 @@ public:
         try {
             CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
             ssKey >> key;
-        } catch(std::exception &e) {
+        } catch (const std::exception&) {
             return false;
         }
         return true;
@@ -120,7 +120,7 @@ public:
             CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
             ssValue.Xor(*obfuscate_key);
             ssValue >> value;
-        } catch(std::exception &e) {
+        } catch (const std::exception&) {
             return false;
         }
         return true;
