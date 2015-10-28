@@ -49,7 +49,24 @@ IGNORE_EXPORTS = {
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
 # Allowed NEEDED libraries
-ALLOWED_LIBRARIES = {'librt.so.1','libpthread.so.0','libanl.so.1','libm.so.6','libgcc_s.so.1','libc.so.6','ld-linux-x86-64.so.2'}
+ALLOWED_LIBRARIES = {
+# bitcoind and bitcoin-qt
+'libgcc_s.so.1', # GCC base support
+'libc.so.6', # C library
+'libpthread.so.0', # threading
+'libanl.so.1', # DNS resolve
+'libm.so.6', # math library
+'librt.so.1', # real-time (clock)
+'ld-linux-x86-64.so.2', # 64-bit dynamic linker
+'ld-linux.so.2', # 32-bit dynamic linker
+# bitcoin-qt only
+'libX11-xcb.so.1', # part of X11
+'libX11.so.6', # part of X11
+'libxcb.so.1', # part of X11
+'libfontconfig.so.1', # font support
+'libfreetype.so.6', # font parsing
+'libdl.so.2' # programming interface to dynamic linker
+}
 
 class CPPFilt(object):
     '''
