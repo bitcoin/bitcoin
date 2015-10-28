@@ -121,4 +121,4 @@ static inline size_t DynamicUsage(const boost::unordered_map<X, Y, Z>& m)
 
 }
 
-#endif
+#endif // BITCOIN_MEMUSAGE_H
