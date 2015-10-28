@@ -112,12 +112,12 @@ Create new tokens as crowdsale.
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
 | `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
-| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new crowdsales)                                |
-| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
-| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `previousid`        | number  | required | an identifier of a predecessor token (`0` for new crowdsales)                                |
+| `category`          | string  | required | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
-| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
-| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
+| `url`               | string  | required | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | required | a description for the new tokens (can be `""`)                                               |
 | `propertyiddesired` | number  | required | the identifier of a token eligible to participate in the crowdsale                           |
 | `tokensperunit`     | string  | required | the amount of tokens granted per unit invested in the crowdsale                              |
 | `deadline`          | number  | required | the deadline of the crowdsale as Unix timestamp                                              |
@@ -150,12 +150,12 @@ Create new tokens with fixed supply.
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
 | `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
-| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new tokens)                                    |
-| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
-| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `previousid`        | number  | required | an identifier of a predecessor token (`0` for new tokens)                                    |
+| `category`          | string  | required | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
-| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
-| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
+| `url`               | string  | required | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | required | a description for the new tokens (can be `""`)                                               |
 | `amount`            | string  | required | the number of tokens to create                                                               |
 | `tokensperunit`     | string  | required | the amount of tokens granted per unit invested in the crowdsale                              |
 | `deadline`          | number  | required | the deadline of the crowdsale as Unix timestamp                                              |
@@ -188,12 +188,12 @@ Create new tokens with manageable supply.
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
 | `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
-| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new tokens)                                    |
-| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
-| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `previousid`        | number  | required | an identifier of a predecessor token (`0` for new tokens)                                    |
+| `category`          | string  | required | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
-| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
-| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
+| `url`               | string  | required | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | required | a description for the new tokens (can be `""`)                                               |
 
 **Result:**
 ```js
@@ -245,7 +245,7 @@ Issue or grant new units of managed tokens.
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
-| `toaddress`         | string  | optional | the receiver of the tokens (sender by default)                                               |
+| `toaddress`         | string  | required | the receiver of the tokens (sender by default, can be `""`)                                  |
 | `propertyid`        | number  | required | the identifier of the tokens to grant                                                        |
 | `amount`            | string  | required | the amount of tokens to create                                                               |
 | `memo`              | string  | optional | a text note attached to this transaction (none by default)                                   |
