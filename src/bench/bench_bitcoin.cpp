@@ -8,8 +8,7 @@
 #include "main.h"
 #include "util.h"
 
-int
-main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     ECC_Start();
     SetupEnvironment();

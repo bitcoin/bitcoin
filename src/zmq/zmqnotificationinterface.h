@@ -17,19 +17,19 @@ class CZMQNotificationInterface : public CValidationInterface
 public:
     virtual ~CZMQNotificationInterface();
 
-    static CZMQNotificationInterface* CreateWithArguments(const std::map<std::string, std::string> &args);
+    static CZMQNotificationInterface* CreateWithArguments(const std::map<std::string, std::string>& args);
 
     bool Initialize();
     void Shutdown();
 
 protected: // CValidationInterface
-    void SyncTransaction(const CTransaction &tx, const CBlock *pblock);
-    void UpdatedBlockTip(const CBlockIndex *pindex);
+    void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+    void UpdatedBlockTip(const CBlockIndex* pindex);
 
 private:
     CZMQNotificationInterface();
 
-    void *pcontext;
+    void* pcontext;
     std::list<CZMQAbstractNotifier*> notifiers;
 };
 
