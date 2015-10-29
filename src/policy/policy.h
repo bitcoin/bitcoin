@@ -26,6 +26,12 @@ static const unsigned int MAX_P2SH_SIGOPS = 15;
 /** The maximum number of sigops we're willing to relay/mine in a single tx */
 static const unsigned int MAX_STANDARD_TX_SIGOPS = MAX_BLOCK_SIGOPS/5;
 /**
+ * The maximum number of public keys allowed in a multi-signature transaction
+ * output script to be considered standard.
+ */
+static const unsigned int MAX_STANDARD_MULTISIG_KEYS = 3;
+
+/**
  * Standard script verification flags that standard transactions will comply
  * with. However scripts violating these flags may still be present in valid
  * blocks and we must accept those blocks.
