@@ -1,10 +1,16 @@
 #ifndef OMNICORE_RPCVALUES_H
 #define OMNICORE_RPCVALUES_H
 
+class CPubKey;
+class CTransaction;
+struct CMutableTransaction;
+struct PrevTxsEntry;
+
 #include "json/json_spirit_value.h"
 
 #include <stdint.h>
 #include <string>
+#include <vector>
 
 std::string ParseAddress(const json_spirit::Value& value);
 std::string ParseAddressOrEmpty(const json_spirit::Value& value);
@@ -23,6 +29,12 @@ int64_t ParseDeadline(const json_spirit::Value& value);
 uint8_t ParseEarlyBirdBonus(const json_spirit::Value& value);
 uint8_t ParseIssuerBonus(const json_spirit::Value& value);
 uint8_t ParseMetaDExAction(const json_spirit::Value& value);
+CTransaction ParseTransaction(const json_spirit::Value& value);
+CMutableTransaction ParseMutableTransaction(const json_spirit::Value& value);
+CPubKey ParsePubKeyOrAddress(const json_spirit::Value& value);
+uint32_t ParseOutputIndex(const json_spirit::Value& value);
+/** Parses previous transaction outputs. */
+std::vector<PrevTxsEntry> ParsePrevTxs(const json_spirit::Value& value);
 
 
 #endif // OMNICORE_RPCVALUES_H

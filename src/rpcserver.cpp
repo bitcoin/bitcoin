@@ -414,6 +414,11 @@ static const CRPCCommand vRPCCommands[] =
     /* Omni Core raw transaction calls */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
     { "omni layer (raw transactions)",       "omni_decodetransaction",          &omni_decodetransaction,          true,       true,       false },
+    { "omni layer (raw transactions)",       "omni_createrawtx_opreturn",       &omni_createrawtx_opreturn,       true,       true,       false },
+    { "omni layer (raw transactions)",       "omni_createrawtx_multisig",       &omni_createrawtx_multisig,       true,       true,       false },
+    { "omni layer (raw transactions)",       "omni_createrawtx_input",          &omni_createrawtx_input,          true,       true,       false },
+    { "omni layer (raw transactions)",       "omni_createrawtx_reference",      &omni_createrawtx_reference,      true,       true,       false },
+    { "omni layer (raw transactions)",       "omni_createrawtx_change",         &omni_createrawtx_change,         true,       true,       false },
 
     /* Omni Core hidden calls - aliased calls for backwards compatibiltiy - to be depreciated (not shown in help) */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */

@@ -112,12 +112,12 @@ Create new tokens as crowdsale.
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
 | `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
-| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new crowdsales)                                |
-| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
-| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `previousid`        | number  | required | an identifier of a predecessor token (`0` for new crowdsales)                                |
+| `category`          | string  | required | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
-| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
-| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
+| `url`               | string  | required | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | required | a description for the new tokens (can be `""`)                                               |
 | `propertyiddesired` | number  | required | the identifier of a token eligible to participate in the crowdsale                           |
 | `tokensperunit`     | string  | required | the amount of tokens granted per unit invested in the crowdsale                              |
 | `deadline`          | number  | required | the deadline of the crowdsale as Unix timestamp                                              |
@@ -150,12 +150,12 @@ Create new tokens with fixed supply.
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
 | `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
-| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new tokens)                                    |
-| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
-| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `previousid`        | number  | required | an identifier of a predecessor token (`0` for new tokens)                                    |
+| `category`          | string  | required | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
-| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
-| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
+| `url`               | string  | required | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | required | a description for the new tokens (can be `""`)                                               |
 | `amount`            | string  | required | the number of tokens to create                                                               |
 | `tokensperunit`     | string  | required | the amount of tokens granted per unit invested in the crowdsale                              |
 | `deadline`          | number  | required | the deadline of the crowdsale as Unix timestamp                                              |
@@ -188,12 +188,12 @@ Create new tokens with manageable supply.
 | `fromaddress`       | string  | required | the address to send from                                                                     |
 | `ecosystem`         | number  | required | the ecosystem to create the tokens in (`1` for main ecosystem, `2` for test ecosystem)       |
 | `type`              | number  | required | the type of the tokens to create: (`1` for indivisible tokens, `2` for divisible tokens)     |
-| `previousid`        | number  | optional | an identifier of a predecessor token (`0` for new tokens)                                    |
-| `category`          | string  | optional | a category for the new tokens (can be `""`)                                                  |
-| `subcategory`       | string  | optional | a subcategory for the new tokens (can be `""`)                                               |
+| `previousid`        | number  | required | an identifier of a predecessor token (`0` for new tokens)                                    |
+| `category`          | string  | required | a category for the new tokens (can be `""`)                                                  |
+| `subcategory`       | string  | required | a subcategory for the new tokens (can be `""`)                                               |
 | `name`              | string  | required | the name of the new tokens to create                                                         |
-| `url`               | string  | optional | an URL for further information about the new tokens (can be `""`)                            |
-| `data`              | string  | optional | a description for the new tokens (can be `""`)                                               |
+| `url`               | string  | required | an URL for further information about the new tokens (can be `""`)                            |
+| `data`              | string  | required | a description for the new tokens (can be `""`)                                               |
 
 **Result:**
 ```js
@@ -245,7 +245,7 @@ Issue or grant new units of managed tokens.
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `fromaddress`       | string  | required | the address to send from                                                                     |
-| `toaddress`         | string  | optional | the receiver of the tokens (sender by default)                                               |
+| `toaddress`         | string  | required | the receiver of the tokens (sender by default, can be `""`)                                  |
 | `propertyid`        | number  | required | the identifier of the tokens to grant                                                        |
 | `amount`            | string  | required | the amount of tokens to create                                                               |
 | `memo`              | string  | optional | a text note attached to this transaction (none by default)                                   |
@@ -1251,6 +1251,42 @@ $ omnicore-cli "omni_gettradehistoryforaddress" "1MCHESTptvd2LnNp7wmr2sGTpRomteA
 
 ---
 
+### omni_getactivations
+
+Returns pending and completed feature activations.
+
+**Result:**
+```js
+{
+  "pendingactivations": [      // (array of JSON objects) a list of pending feature activations
+    {
+      "featureid" : n,             // (number) the id of the feature
+      "featurename" : "xxxxxxxx",  // (string) the name of the feature
+      "activationblock" : n,       // (number) the block the feature will be activated
+      "minimumversion" : n         // (number) the minimum client version needed to support this feature
+    },
+    ...
+  ]
+  "completedactivations": [    // (array of JSON objects) a list of completed feature activations
+    {
+      "featureid" : n,             // (number) the id of the feature
+      "featurename" : "xxxxxxxx",  // (string) the name of the feature
+      "activationblock" : n,       // (number) the block the feature will be activated
+      "minimumversion" : n         // (number) the minimum client version needed to support this feature
+    },
+    ...
+  ]
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getactivations"
+```
+
+---
+
 ## Raw transactions
 
 The RPCs for raw transactions can be used to decode or create raw Omni transactions.
@@ -1265,7 +1301,7 @@ If the inputs of the transaction are not in the chain, then they must be provide
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
-| `txhex`             | string  | required | the raw transaction to decode                                                                |
+| `rawtx`             | string  | required | the raw transaction to decode                                                                |
 | `prevtxs`           | string  | optional | a JSON array of transaction inputs (default: none)                                           |
 
 The format of `prevtxs` is as following:
@@ -1310,38 +1346,182 @@ $ omnicore-cli "omni_decodetransaction" "010000000163af14ce6d477e1c793507e32a5b7
 
 ---
 
-### omni_getactivations
+### omni_createrawtx_opreturn
 
-Returns pending and completed feature activations.
+Adds a payload with class C (op-return) encoding to the transaction.
+
+If no raw transaction is provided, a new transaction is created.
+
+If the data encoding fails, then the transaction is not modified.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `rawtx`             | string  | required | the raw transaction to extend (can be `null`)                                                |
+| `payload`           | string  | required | the hex-encoded payload to add                                                               |
 
 **Result:**
 ```js
-{
-  "pendingactivations": [      // (array of JSON objects) a list of pending feature activations
-    {
-      "featureid" : n,             // (number) the id of the feature
-      "featurename" : "xxxxxxxx",  // (string) the name of the feature
-      "activationblock" : n,       // (number) the block the feature will be activated
-      "minimumversion" : n         // (number) the minimum client version needed to support this feature
-    },
-    ...
-  ]
-  "completedactivations": [    // (array of JSON objects) a list of completed feature activations
-    {
-      "featureid" : n,             // (number) the id of the feature
-      "featurename" : "xxxxxxxx",  // (string) the name of the feature
-      "activationblock" : n,       // (number) the block the feature will be activated
-      "minimumversion" : n         // (number) the minimum client version needed to support this feature
-    },
-    ...
-  ]
-}
+"rawtx"  // (string) the hex-encoded modified raw transaction
 ```
 
 **Example:**
 
 ```bash
-$ omnicore-cli "omni_getactivations"
+$ omnicore-cli "omni_createrawtx_opreturn" "01000000000000000000" "00000000000000020000000006dac2c0"
+```
+
+---
+
+### omni_createrawtx_multisig
+
+Adds a payload with class B (bare-multisig) encoding to the transaction.
+
+If no raw transaction is provided, a new transaction is created.
+
+If the data encoding fails, then the transaction is not modified.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `rawtx`             | string  | required | the raw transaction to extend (can be `null`)                                                |
+| `payload`           | string  | required | the hex-encoded payload to add                                                               |
+| `seed`              | string  | required | the seed for obfuscation                                                                     |
+| `payload`           | string  | required | a public key or address for dust redemption                                                  |
+
+**Result:**
+```js
+"rawtx"  // (string) the hex-encoded modified raw transaction
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createrawtx_multisig" \
+    "0100000001a7a9402ecd77f3c9f745793c9ec805bfa2e14b89877581c734c774864247e6f50400000000ffffffff01aa0a00000 \
+    00000001976a9146d18edfe073d53f84dd491dae1379f8fb0dfe5d488ac00000000" \
+    "00000000000000020000000000989680"
+    "1LifmeXYHeUe2qdKWBGVwfbUCMMrwYtoMm" \
+    "0252ce4bdd3ce38b4ebbc5a6e1343608230da508ff12d23d85b58c964204c4cef3"
+```
+
+---
+
+### omni_createrawtx_input
+
+Adds a transaction input to the transaction.
+
+If no raw transaction is provided, a new transaction is created.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `rawtx`             | string  | required | the raw transaction to extend (can be `null`)                                                |
+| `txid`              | string  | required | the hash of the input transaction                                                            |
+| `n`                 | number  | required | the index of the transaction output used as input                                            |
+
+**Result:**
+```js
+"rawtx"  // (string) the hex-encoded modified raw transaction
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createrawtx_input" \
+    "01000000000000000000" "b006729017df05eda586df9ad3f8ccfee5be340aadf88155b784d1fc0e8342ee" 0
+```
+
+---
+
+### omni_createrawtx_reference
+
+Adds a reference output to the transaction.
+
+If no raw transaction is provided, a new transaction is created.
+
+The output value is set to at least the dust threshold.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `rawtx`             | string  | required | the raw transaction to extend (can be `null`)                                                |
+| `destination`       | string  | required | the reference address or destination                                                         |
+| `amount`            | number  | optional | the optional reference amount (minimal by default)                                           |
+
+**Result:**
+```js
+"rawtx"  // (string) the hex-encoded modified raw transaction
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createrawtx_reference" \
+    "0100000001a7a9402ecd77f3c9f745793c9ec805bfa2e14b89877581c734c774864247e6f50400000000ffffffff03aa0a00000
+    00000001976a9146d18edfe073d53f84dd491dae1379f8fb0dfe5d488ac5c0d0000000000004751210252ce4bdd3ce38b4ebbc5a
+    6e1343608230da508ff12d23d85b58c964204c4cef3210294cc195fc096f87d0f813a337ae7e5f961b1c8a18f1f8604a909b3a51
+    21f065b52aeaa0a0000000000001976a914946cb2e08075bcbaf157e47bcb67eb2b2339d24288ac00000000" \
+    "1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB" \
+    0.005
+```
+
+---
+
+### omni_createrawtx_change
+
+Adds a change output to the transaction.
+
+The provided inputs are not added to the transaction, but only used to determine the change. It is assumed that the inputs were previously added, for example via `"createrawtransaction"`.
+
+Optionally a position can be provided, where the change output should be inserted, starting with `0`. If the number of outputs is smaller than the position, then the change output is added to the end. Change outputs should be inserted before reference outputs, and as per default, the change output is added to the`first position.
+
+If the change amount would be considered as dust, then no change output is added.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `rawtx`             | string  | required | the raw transaction to extend                                                                |
+| `prevtxs`           | string  | required | a JSON array of transaction inputs                                                           |
+| `destination`       | string  | required | the destination for the change                                                               |
+| `fee`               | number  | required | the desired transaction fees                                                                 |
+| `position`          | number  | optional | the position of the change output (default: first position)                                  |
+
+The format of `prevtxs` is as following:
+
+```js
+[
+  {
+    "txid" : "hash",         // (string, required) the transaction hash
+    "vout" : n,              // (number, required) the output number
+    "scriptPubKey" : "hex",  // (string, required) the output script
+    "value" : n.nnnnnnnn     // (number, required) the output value
+  }
+  ,...
+]
+```
+
+**Result:**
+```js
+"rawtx"  // (string) the hex-encoded modified raw transaction
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createrawtx_change" \
+    "0100000001b15ee60431ef57ec682790dec5a3c0d83a0c360633ea8308fbf6d5fc10a779670400000000ffffffff025c0d00000 \
+    000000047512102f3e471222bb57a7d416c82bf81c627bfcd2bdc47f36e763ae69935bba4601ece21021580b888ff56feb27f17f \
+    08802ebed26258c23697d6a462d43fc13b565fda2dd52aeaa0a0000000000001976a914946cb2e08075bcbaf157e47bcb67eb2b2 \
+    339d24288ac00000000" \
+    "[{\"txid\":\"6779a710fcd5f6fb0883ea3306360c3ad8c0a3c5de902768ec57ef3104e65eb1\",\"vout\":4, \
+    \"scriptPubKey\":\"76a9147b25205fd98d462880a3e5b0541235831ae959e588ac\",\"value\":0.00068257}]" \
+    "1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB" 0.000035 1
 ```
 
 ---

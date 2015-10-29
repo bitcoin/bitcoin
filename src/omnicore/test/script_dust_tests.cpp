@@ -13,6 +13,7 @@
 
 // Is resetted to a norm value in each test
 extern CFeeRate minRelayTxFee;
+static CFeeRate minRelayTxFeeOriginal = minRelayTxFee;
 
 BOOST_AUTO_TEST_SUITE(omnicore_script_dust_tests)
 
@@ -34,6 +35,8 @@ BOOST_AUTO_TEST_CASE(dust_threshold_pubkey_hash)
     BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
     // ... but an output, spending one satoshi less, is indeed
     BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+
+    minRelayTxFee = minRelayTxFeeOriginal;
 }
 
 BOOST_AUTO_TEST_CASE(dust_threshold_script_hash)
@@ -51,6 +54,8 @@ BOOST_AUTO_TEST_CASE(dust_threshold_script_hash)
     BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
     BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
     BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+
+    minRelayTxFee = minRelayTxFeeOriginal;
 }
 
 BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed)
@@ -70,6 +75,8 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed)
     BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
     BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
     BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+
+    minRelayTxFee = minRelayTxFeeOriginal;
 }
 
 BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed)
@@ -89,6 +96,8 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed)
     BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
     BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
     BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+
+    minRelayTxFee = minRelayTxFeeOriginal;
 }
 
 BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed_compressed)
@@ -108,6 +117,8 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_compressed_compressed_compressed)
     BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
     BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
     BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+
+    minRelayTxFee = minRelayTxFeeOriginal;
 }
 
 BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed_compressed)
@@ -128,6 +139,8 @@ BOOST_AUTO_TEST_CASE(dust_threshold_multisig_uncompressed_compressed_compressed)
     BOOST_CHECK_EQUAL(GetDustThreshold(script), nExpected);
     BOOST_CHECK_EQUAL(CTxOut(nExpected, script).IsDust(minRelayTxFee), false);
     BOOST_CHECK_EQUAL(CTxOut(nExpected - 1, script).IsDust(minRelayTxFee), true);
+
+    minRelayTxFee = minRelayTxFeeOriginal;
 }
 
 

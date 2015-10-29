@@ -278,6 +278,11 @@ extern json_spirit::Value omni_sendalert(const json_spirit::Array& params, bool 
 
 /* Omni Core raw transaction calls */
 extern json_spirit::Value omni_decodetransaction(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createrawtx_opreturn(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createrawtx_multisig(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createrawtx_input(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createrawtx_reference(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createrawtx_change(const json_spirit::Array& params, bool fHelp);
 
 /* Omni Core hidden calls - aliased calls for backwards compatibiltiy - to be depreciated (not shown in help) */
 extern json_spirit::Value trade_MP(const json_spirit::Array& params, bool fHelp);
