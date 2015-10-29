@@ -111,6 +111,7 @@ BITCOIN_CORE_H = \
   net.h \
   noui.h \
   pow.h \
+  prevector.h \
   primitives/block.h \
   primitives/pureheader.h \
   primitives/transaction.h \
