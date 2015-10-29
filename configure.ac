@@ -742,6 +742,9 @@ else
   fi
 fi
 
+AC_CHECK_HEADER([sqlite3.h],,AC_MSG_ERROR(sqlite3 headers missing))
+AC_CHECK_LIB([sqlite3],      [sqlite3_open],SQLITE3_LIBS=-lsqlite3, AC_MSG_ERROR(libsqlite3 missing))
+
 CXXFLAGS_TEMP="$CXXFLAGS"
 LIBS_TEMP="$LIBS"
 CXXFLAGS="$CXXFLAGS $SSL_CFLAGS $CRYPTO_CFLAGS"
@@ -926,6 +929,7 @@ AC_SUBST(BUILD_QT)
 AC_SUBST(BUILD_TEST_QT)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
+AC_SUBST(SQLITE3_LIBS)
 AC_CONFIG_FILES([Makefile src/Makefile share/setup.nsi share/qt/Info.plist src/test/buildenv.py])
 AC_CONFIG_FILES([qa/pull-tester/run-bitcoind-for-test.sh],[chmod +x qa/pull-tester/run-bitcoind-for-test.sh])
 AC_CONFIG_FILES([qa/pull-tester/tests_config.py],[chmod +x qa/pull-tester/tests_config.py])

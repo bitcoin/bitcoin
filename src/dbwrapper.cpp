@@ -6,69 +6,99 @@
 
 #include "util.h"
 #include "random.h"
+#include "utilstrencodings.h"
 
 #include <boost/filesystem.hpp>
 
-#include <leveldb/cache.h>
-#include <leveldb/env.h>
-#include <leveldb/filter_policy.h>
 #include <memenv.h>
+#include <stdio.h>
 #include <stdint.h>
 
-void HandleError(const leveldb::Status& status) throw(dbwrapper_error)
-{
-    if (status.ok())
-        return;
-    LogPrintf("%s\n", status.ToString());
-    if (status.IsCorruption())
-        throw dbwrapper_error("Database corrupted");
-    if (status.IsIOError())
-        throw dbwrapper_error("Database I/O error");
-    if (status.IsNotFound())
-        throw dbwrapper_error("Database entry missing");
-    throw dbwrapper_error("Unknown database error");
-}
+static const char *sql_db_init[] = {
+    "CREATE TABLE tab(k BLOB PRIMARY KEY, v BLOB)",
+};
 
-static leveldb::Options GetOptions(size_t nCacheSize)
-{
-    leveldb::Options options;
-    options.block_cache = leveldb::NewLRUCache(nCacheSize / 2);
-    options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
-    options.filter_policy = leveldb::NewBloomFilterPolicy(10);
-    options.compression = leveldb::kNoCompression;
-    options.max_open_files = 64;
-    if (leveldb::kMajorVersion > 1 || (leveldb::kMajorVersion == 1 && leveldb::kMinorVersion >= 16)) {
-        // LevelDB versions before 1.16 consider short writes to be corruption. Only trigger error
-        // on corruption in later versions.
-        options.paranoid_checks = true;
-    }
-    return options;
-}
+static const char *sql_db_configure[] = {
+    "PRAGMA page_size=4096",
+    "PRAGMA cache_size=-4000",    // max cache size; negative = # of kibibytes
+    "PRAGMA journal_mode=WAL",
+    "PRAGMA wal_autocheckpoint=10000",
+};
+
+static const char *sql_stmt_text[] = {
+    "REPLACE INTO tab(k, v) VALUES(:k, :v)",            // DBW_PUT
+    "SELECT v FROM tab WHERE k = :k",                   // DBW_GET
+    "DELETE FROM tab WHERE k = :k",                     // DBW_DELETE
+    "BEGIN TRANSACTION",                                // DBW_BEGIN
+    "COMMIT TRANSACTION",                               // DBW_COMMIT
+    "SELECT COUNT(*) FROM tab",                         // DBW_GET_ALL_COUNT
+    "SELECT k, v FROM tab WHERE k >= :k ORDER BY k",    // DBW_SEEK_SORTED
+};
 
 CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
 {
-    penv = NULL;
-    readoptions.verify_checksums = true;
-    iteroptions.verify_checksums = true;
-    iteroptions.fill_cache = false;
-    syncoptions.sync = true;
-    options = GetOptions(nCacheSize);
-    options.create_if_missing = true;
+    std::string fp;
+    const char *filename = NULL;
+    bool need_init = false;
+
     if (fMemory) {
-        penv = leveldb::NewMemEnv(leveldb::Env::Default());
-        options.env = penv;
+        filename = ":memory:";
+        need_init = true;
     } else {
+        fp = path.string();
+        fp = fp + "/db";
+
         if (fWipe) {
-            LogPrintf("Wiping LevelDB in %s\n", path.string());
-            leveldb::Status result = leveldb::DestroyDB(path.string(), options);
-            HandleError(result);
+            LogPrintf("Wiping DB %s\n", fp);
+            boost::filesystem::remove(fp);
         }
         TryCreateDirectory(path);
-        LogPrintf("Opening LevelDB in %s\n", path.string());
+        LogPrintf("Opening DB in %s\n", path.string());
+
+        filename = fp.c_str();
     }
-    leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
-    HandleError(status);
-    LogPrintf("Opened LevelDB successfully\n");
+
+    // open existing sqlite db
+    int orc = sqlite3_open_v2(filename, &psql, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, NULL);
+
+    // if open-existing failed, attempt to create new db
+    if (orc != SQLITE_OK) {
+        orc = sqlite3_open_v2(filename, &psql, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL);
+        if (orc != SQLITE_OK)
+            throw(dbwrapper_error("DB open failed, err " + itostr(orc)));
+
+        need_init = true;
+    }
+
+    // configure database params
+    if (need_init) {
+        for (unsigned int i = 0; i < ARRAYLEN(sql_db_init); i++)
+            if (sqlite3_exec(psql, sql_db_configure[i], NULL, NULL, NULL) != SQLITE_OK)
+                throw(dbwrapper_error("DB configuration failed, stmt " + itostr(i)));
+    }
+
+    // first time: initialize new db schema
+    if (need_init) {
+        for (unsigned int i = 0; i < ARRAYLEN(sql_db_init); i++)
+            if (sqlite3_exec(psql, sql_db_init[i], NULL, NULL, NULL) != SQLITE_OK)
+                throw(dbwrapper_error("DB one-time setup failed, stmt " + itostr(i)));
+    }
+
+    // pre-compile SQL statements
+    for (unsigned sqlidx = 0; sqlidx < ARRAYLEN(sql_stmt_text); sqlidx++) {
+        sqlite3_stmt *pstmt = NULL;
+
+        int src = sqlite3_prepare_v2(psql,
+                               sql_stmt_text[sqlidx],
+                               strlen(sql_stmt_text[sqlidx]),
+                               &pstmt, NULL);
+        if (src != SQLITE_OK)
+            throw(dbwrapper_error("DB compile failed, err " + itostr(src) + ": " + std::string(sql_stmt_text[sqlidx])));
+
+        stmts.push_back(pstmt);
+    }
+
+    LogPrintf("Opened DB successfully\n");
 
     // The base-case obfuscation key, which is a noop.
     obfuscate_key = std::vector<unsigned char>(OBFUSCATE_KEY_NUM_BYTES, '\000');
@@ -92,20 +122,58 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
 
 CDBWrapper::~CDBWrapper()
 {
-    delete pdb;
-    pdb = NULL;
-    delete options.filter_policy;
-    options.filter_policy = NULL;
-    delete options.block_cache;
-    options.block_cache = NULL;
-    delete penv;
-    options.env = NULL;
+    for (unsigned int i = 0; i < stmts.size(); i++)
+        sqlite3_finalize(stmts[i]);
+    stmts.clear();
+
+    sqlite3_close(psql);
+    psql = NULL;
 }
 
 bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync) throw(dbwrapper_error)
 {
-    leveldb::Status status = pdb->Write(fSync ? syncoptions : writeoptions, &batch.batch);
-    HandleError(status);
+    // begin DB transaction
+    int src = sqlite3_step(stmts[DBW_BEGIN]);
+    int rrc = sqlite3_reset(stmts[DBW_BEGIN]);
+
+    if ((src != SQLITE_DONE) || (rrc != SQLITE_OK))
+        throw dbwrapper_error("DB cannot begin transaction, err " + itostr(src) + "," + itostr(rrc));
+
+    for (unsigned int wr = 0; wr < batch.entries.size(); wr++) {
+        BatchEntry& be = batch.entries[wr];
+        sqlite3_stmt *stmt = NULL;
+
+        // get the SQL stmt to exec
+        if (be.isErase)
+            stmt = stmts[DBW_DELETE];
+        else
+            stmt = stmts[DBW_PUT];
+
+        // bind column 0: key
+        if (sqlite3_bind_blob(stmt, 1, be.key.c_str(), be.key.size(),
+                              SQLITE_TRANSIENT) != SQLITE_OK)
+            throw dbwrapper_error("DB cannot bind blob key");
+
+        // if inserting, bind column 1: value
+        if (!be.isErase)
+            if (sqlite3_bind_blob(stmt, 2, be.value.c_str(), be.value.size(),
+                                  SQLITE_TRANSIENT) != SQLITE_OK)
+                throw dbwrapper_error("DB cannot bind blob value");
+
+        // exec INSERT/DELETE
+        src = sqlite3_step(stmt);
+        rrc = sqlite3_reset(stmt);
+
+        if ((src != SQLITE_DONE) || (rrc != SQLITE_OK))
+            throw dbwrapper_error("DB failed update, err " + itostr(src) + "," + itostr(rrc));
+    }
+
+    src = sqlite3_step(stmts[DBW_COMMIT]);
+    rrc = sqlite3_reset(stmts[DBW_COMMIT]);
+
+    if ((src != SQLITE_DONE) || (rrc != SQLITE_OK))
+        throw dbwrapper_error("DB cannot commit transaction, err" + itostr(src) + "," + itostr(rrc));
+
     return true;
 }
 
@@ -131,9 +199,16 @@ std::vector<unsigned char> CDBWrapper::CreateObfuscateKey() const
 
 bool CDBWrapper::IsEmpty()
 {
-    boost::scoped_ptr<CDBIterator> it(NewIterator());
-    it->SeekToFirst();
-    return !(it->Valid());
+    int src = sqlite3_step(stmts[DBW_GET_ALL_COUNT]);
+    if (src != SQLITE_ROW) {
+        sqlite3_reset(stmts[DBW_GET_ALL_COUNT]);
+        throw dbwrapper_error("DB read count failure");
+    }
+
+    int64_t count = sqlite3_column_int64(stmts[DBW_GET_ALL_COUNT], 0);
+    sqlite3_reset(stmts[DBW_GET_ALL_COUNT]);
+
+    return (count == 0);
 }
 
 const std::vector<unsigned char>& CDBWrapper::GetObfuscateKey() const
@@ -146,7 +221,5 @@ std::string CDBWrapper::GetObfuscateKeyHex() const
     return HexStr(obfuscate_key);
 }
 
-CDBIterator::~CDBIterator() { delete piter; }
-bool CDBIterator::Valid() { return piter->Valid(); }
-void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
-void CDBIterator::Next() { piter->Next(); }
+CDBIterator::~CDBIterator() { sqlite3_reset(pstmt); }
+
