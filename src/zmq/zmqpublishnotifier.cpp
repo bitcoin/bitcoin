@@ -5,6 +5,8 @@
 #include "zmqpublishnotifier.h"
 #include "main.h"
 #include "util.h"
+#include "init.h"
+#include "wallet/wallet.h"
 
 static std::multimap<std::string, CZMQAbstractPublishNotifier*> mapPublishNotifiers;
 
@@ -135,6 +137,30 @@ bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &t
     for (unsigned int i = 0; i < 32; i++)
         data[31 - i] = hash.begin()[i];
     int rc = zmq_send_multipart(psocket, "hashtx", 6, data, 32, 0);
+    return rc == 0;
+}
+
+bool CZMQPublishOwnedHashTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+{
+    int i, numOuts = transaction.vout.size();
+    bool owned = false;
+    for(i=0; i<numOuts; i++){
+        const CTxOut out = transaction.vout[i];
+        if(pwalletMain->IsMine(out)){
+            owned = true;
+            break;
+        }
+    }
+    if (!owned){
+        return 1;
+    }
+
+    uint256 hash = transaction.GetHash();
+    LogPrint("zmq", "Publish Owned hash transaction %s\n", hash.GetHex());
+    char data[32];
+    for (unsigned int i = 0; i < 32; i++)
+        data[31 - i] = hash.begin()[i];
+    int rc = zmq_send_multipart(psocket, "hashownedtx", 11, data, 32, 0);
     return rc == 0;
 }
 
