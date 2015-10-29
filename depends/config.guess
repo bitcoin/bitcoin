@@ -2,7 +2,7 @@
 # Attempt to guess a canonical system name.
 #   Copyright 1992-2015 Free Software Foundation, Inc.
 
-timestamp='2015-09-14'
+timestamp='2015-10-21'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -1123,7 +1123,7 @@ EOF
 	# uname -m prints for DJGPP always 'pc', but it prints nothing about
 	# the processor, so we play safe by assuming i586.
 	# Note: whatever this is, it MUST be the same as what config.sub
-	# prints for the "djgpp" host, or else GDB configury will decide that
+	# prints for the "djgpp" host, or else GDB configure will decide that
 	# this is a cross-build.
 	echo i586-pc-msdosdjgpp
 	exit ;;
