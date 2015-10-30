@@ -1004,17 +1004,38 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // than the ones it replaces.
         CAmount nConflictingFees = 0;
         size_t nConflictingSize = 0;
+        uint64_t nConflictingCount = 0;
+        CTxMemPool::setEntries allConflicting;
         if (setConflicts.size())
         {
             LOCK(pool.cs);
 
             CFeeRate newFeeRate(nFees, nSize);
             set<uint256> setConflictsParents;
-            BOOST_FOREACH(const uint256 hashConflicting, setConflicts)
+            const int maxDescendantsToVisit = 100;
+            CTxMemPool::setEntries setIterConflicting;
+            BOOST_FOREACH(const uint256 &hashConflicting, setConflicts)
             {
                 CTxMemPool::txiter mi = pool.mapTx.find(hashConflicting);
                 if (mi == pool.mapTx.end())
                     continue;
+
+                // Save these to avoid repeated lookups
+                setIterConflicting.insert(mi);
+
+                // If this entry is "dirty", then we don't have descendant
+                // state for this transaction, which means we probably have
+                // lots of in-mempool descendants.
+                // Don't allow replacements of dirty transactions, to ensure
+                // that we don't spend too much time walking descendants.
+                // This should be rare.
+                if (mi->IsDirty()) {
+                    return state.DoS(0,
+                            error("AcceptToMemoryPool: rejecting replacement %s; cannot replace tx %s with untracked descendants",
+                                hash.ToString(),
+                                mi->GetTx().GetHash().ToString()),
+                            REJECT_NONSTANDARD, "too many potential replacements");
+                }
 
                 // Don't allow the replacement to reduce the feerate of the
                 // mempool.
@@ -1048,12 +1069,28 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                     setConflictsParents.insert(txin.prevout.hash);
                 }
 
-                // For efficiency we simply sum up the pre-calculated
-                // fees/size-with-descendants values from the mempool package
-                // tracking; this does mean the pathological case of diamond tx
-                // graphs will be overcounted.
-                nConflictingFees += mi->GetFeesWithDescendants();
-                nConflictingSize += mi->GetSizeWithDescendants();
+                nConflictingCount += mi->GetCountWithDescendants();
+            }
+            // This potentially overestimates the number of actual descendants
+            // but we just want to be conservative to avoid doing too much
+            // work.
+            if (nConflictingCount <= maxDescendantsToVisit) {
+                // If not too many to replace, then calculate the set of
+                // transactions that would have to be evicted
+                BOOST_FOREACH(CTxMemPool::txiter it, setIterConflicting) {
+                    pool.CalculateDescendants(it, allConflicting);
+                }
+                BOOST_FOREACH(CTxMemPool::txiter it, allConflicting) {
+                    nConflictingFees += it->GetFee();
+                    nConflictingSize += it->GetTxSize();
+                }
+            } else {
+                return state.DoS(0,
+                        error("AcceptToMemoryPool: rejecting replacement %s; too many potential replacements (%d > %d)\n",
+                            hash.ToString(),
+                            nConflictingCount,
+                            maxDescendantsToVisit),
+                        REJECT_NONSTANDARD, "too many potential replacements");
             }
 
             for (unsigned int j = 0; j < tx.vin.size(); j++)
@@ -1119,17 +1156,15 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         }
 
         // Remove conflicting transactions from the mempool
-        list<CTransaction> ltxConflicted;
-        pool.removeConflicts(tx, ltxConflicted);
-
-        BOOST_FOREACH(const CTransaction &txConflicted, ltxConflicted)
+        BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
         {
             LogPrint("mempool", "replacing tx %s with %s for %s BTC additional fees, %d delta bytes\n",
-                    txConflicted.GetHash().ToString(),
+                    it->GetTx().GetHash().ToString(),
                     hash.ToString(),
                     FormatMoney(nFees - nConflictingFees),
                     (int)nSize - (int)nConflictingSize);
         }
+        pool.RemoveStaged(allConflicting);
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
