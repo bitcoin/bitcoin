@@ -307,5 +307,53 @@ class Test_ReplaceByFee(unittest.TestCase):
         else:
             self.fail()
 
+    def test_too_many_replacements(self):
+        """Replacements that evict too many transactions are rejected"""
+        # Try directly replacing more than MAX_REPLACEMENT_LIMIT
+        # transactions
+
+        # Start by creating a single transaction with many outputs
+        initial_nValue = 10*COIN
+        utxo = self.make_txout(initial_nValue)
+        fee = 0.0001*COIN
+        split_value = int((initial_nValue-fee)/(MAX_REPLACEMENT_LIMIT+1))
+        actual_fee = initial_nValue - split_value*(MAX_REPLACEMENT_LIMIT+1)
+
+        outputs = []
+        for i in range(MAX_REPLACEMENT_LIMIT+1):
+            outputs.append(CTxOut(split_value, CScript([1])))
+
+        splitting_tx = CTransaction([CTxIn(utxo, nSequence=0)], outputs)
+        txid = self.proxy.sendrawtransaction(splitting_tx, True)
+
+        # Now spend each of those outputs individually
+        for i in range(MAX_REPLACEMENT_LIMIT+1):
+            tx_i = CTransaction([CTxIn(COutPoint(txid, i), nSequence=0)],
+                                [CTxOut(split_value-fee, CScript([b'a']))])
+            self.proxy.sendrawtransaction(tx_i, True)
+
+        # Now create doublespend of the whole lot, should fail
+        # Need a big enough fee to cover all spending transactions and have
+        # a higher fee rate
+        double_spend_value = (split_value-100*fee)*(MAX_REPLACEMENT_LIMIT+1)
+        inputs = []
+        for i in range(MAX_REPLACEMENT_LIMIT+1):
+            inputs.append(CTxIn(COutPoint(txid, i), nSequence=0))
+        double_tx = CTransaction(inputs, [CTxOut(double_spend_value, CScript([b'a']))])
+
+        try:
+            self.proxy.sendrawtransaction(double_tx, True)
+        except bitcoin.rpc.JSONRPCException as exp:
+            self.assertEqual(exp.error['code'], -26)
+            self.assertEqual("too many potential replacements" in exp.error['message'], True)
+        else:
+            self.fail()
+
+        # If we remove an input, it should pass
+        double_tx = CTransaction(inputs[0:-1],
+                                 [CTxOut(double_spend_value, CScript([b'a']))])
+
+        self.proxy.sendrawtransaction(double_tx, True)
+
 if __name__ == '__main__':
     unittest.main()
