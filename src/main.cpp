@@ -1008,23 +1008,51 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         {
             LOCK(pool.cs);
 
-            // For efficiency we simply sum up the pre-calculated
-            // fees/size-with-descendants values from the mempool package
-            // tracking; this does mean the pathological case of diamond tx
-            // graphs will be overcounted.
+            CFeeRate newFeeRate(nFees, nSize);
             BOOST_FOREACH(const uint256 hashConflicting, setConflicts)
             {
                 CTxMemPool::txiter mi = pool.mapTx.find(hashConflicting);
                 if (mi == pool.mapTx.end())
                     continue;
+
+                // Don't allow the replacement to reduce the feerate of the
+                // mempool.
+                //
+                // We usually don't want to accept replacements with lower
+                // feerates than what they replaced as that would lower the
+                // feerate of the next block. Requiring that the feerate always
+                // be increased is also an easy-to-reason about way to prevent
+                // DoS attacks via replacements.
+                //
+                // The mining code doesn't (currently) take children into
+                // account (CPFP) so we only consider the feerates of
+                // transactions being directly replaced, not their indirect
+                // descendants. While that does mean high feerate children are
+                // ignored when deciding whether or not to replace, we do
+                // require the replacement to pay more overall fees too,
+                // mitigating most cases.
+                CFeeRate oldFeeRate(mi->GetFee(), mi->GetTxSize());
+                if (newFeeRate <= oldFeeRate)
+                {
+                    return state.DoS(0,
+                            error("AcceptToMemoryPool: rejecting replacement %s; new feerate %s <= old feerate %s",
+                                  hash.ToString(),
+                                  newFeeRate.ToString(),
+                                  oldFeeRate.ToString()),
+                            REJECT_INSUFFICIENTFEE, "insufficient fee");
+                }
+
+                // For efficiency we simply sum up the pre-calculated
+                // fees/size-with-descendants values from the mempool package
+                // tracking; this does mean the pathological case of diamond tx
+                // graphs will be overcounted.
                 nConflictingFees += mi->GetFeesWithDescendants();
                 nConflictingSize += mi->GetSizeWithDescendants();
             }
 
-            // First of all we can't allow a replacement unless it pays greater
-            // fees than the transactions it conflicts with - if we did the
-            // bandwidth used by those conflicting transactions would not be
-            // paid for
+            // The replacement must pay greater fees than the transactions it
+            // replaces - if we did the bandwidth used by those conflicting
+            // transactions would not be paid for.
             if (nFees < nConflictingFees)
             {
                 return state.DoS(0, error("AcceptToMemoryPool: rejecting replacement %s, less fees than conflicting txs; %s < %s",
@@ -1032,8 +1060,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                                  REJECT_INSUFFICIENTFEE, "insufficient fee");
             }
 
-            // Secondly in addition to paying more fees than the conflicts the
-            // new transaction must additionally pay for its own bandwidth.
+            // Finally in addition to paying more fees than the conflicts the
+            // new transaction must pay for its own bandwidth.
             CAmount nDeltaFees = nFees - nConflictingFees;
             if (nDeltaFees < ::minRelayTxFee.GetFee(nSize))
             {
@@ -1042,20 +1070,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                               hash.ToString(),
                               FormatMoney(nDeltaFees),
                               FormatMoney(::minRelayTxFee.GetFee(nSize))),
-                        REJECT_INSUFFICIENTFEE, "insufficient fee");
-            }
-
-            // Finally replace only if we end up with a larger fees-per-kb than
-            // the replacements.
-            CFeeRate oldFeeRate(nConflictingFees, nConflictingSize);
-            CFeeRate newFeeRate(nFees, nSize);
-            if (newFeeRate <= oldFeeRate)
-            {
-                return state.DoS(0,
-                        error("AcceptToMemoryPool: rejecting replacement %s; new feerate %s <= old feerate %s",
-                              hash.ToString(),
-                              newFeeRate.ToString(),
-                              oldFeeRate.ToString()),
                         REJECT_INSUFFICIENTFEE, "insufficient fee");
             }
         }

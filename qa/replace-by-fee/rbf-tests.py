@@ -219,7 +219,7 @@ class Test_ReplaceByFee(unittest.TestCase):
                 self.proxy.getrawtransaction(tx.GetHash())
 
     def test_replacement_feeperkb(self):
-        """Replacement requires overall fee-per-KB to be higher"""
+        """Replacement requires fee-per-KB to be higher"""
         tx0_outpoint = self.make_txout(1.1*COIN)
 
         tx1a = CTransaction([CTxIn(tx0_outpoint, nSequence=0)],
