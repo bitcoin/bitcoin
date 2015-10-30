@@ -232,6 +232,8 @@ void run_context_tests(void) {
     secp256k1_context_destroy(sign);
     secp256k1_context_destroy(vrfy);
     secp256k1_context_destroy(both);
+    /* Defined as no-op. */
+    secp256k1_context_destroy(NULL);
 }
 
 /***** HASH TESTS *****/
@@ -2166,9 +2168,11 @@ void run_ec_pubkey_parse_test(void) {
         0xA8, 0xFD, 0x17, 0xB4, 0x48, 0xA6, 0x85, 0x54, 0x19, 0x9C, 0x47, 0xD0, 0x8F, 0xFB, 0x10, 0xD4,
         0xB8, 0x00
     };
+    unsigned char sout[65];
     unsigned char shortkey[2];
     secp256k1_ge ge;
     secp256k1_pubkey pubkey;
+    size_t len;
     int32_t i;
     int32_t ecount;
     int32_t ecount2;
@@ -2265,6 +2269,30 @@ void run_ec_pubkey_parse_test(void) {
     VG_CHECK(&ge.infinity, sizeof(ge.infinity));
     ge_equals_ge(&secp256k1_ge_const_g, &ge);
     CHECK(ecount == 0);
+    /* secp256k1_ec_pubkey_serialize illegal args. */
+    ecount = 0;
+    len = 65;
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, NULL, &len, &pubkey, SECP256K1_EC_UNCOMPRESSED) == 0);
+    CHECK(ecount == 1);
+    CHECK(len == 0);
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, sout, NULL, &pubkey, SECP256K1_EC_UNCOMPRESSED) == 0);
+    CHECK(ecount == 2);
+    len = 65;
+    VG_UNDEF(sout, 65);
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, sout, &len, NULL, SECP256K1_EC_UNCOMPRESSED) == 0);
+    VG_CHECK(sout, 65);
+    CHECK(ecount == 3);
+    CHECK(len == 0);
+    len = 65;
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, sout, &len, &pubkey, ~0) == 0);
+    CHECK(ecount == 4);
+    CHECK(len == 0);
+    len = 65;
+    VG_UNDEF(sout, 65);
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, sout, &len, &pubkey, SECP256K1_EC_UNCOMPRESSED) == 1);
+    VG_CHECK(sout, 65);
+    CHECK(ecount == 4);
+    CHECK(len == 65);
     /* Multiple illegal args. Should still set arg error only once. */
     ecount = 0;
     ecount2 = 11;
@@ -2453,7 +2481,7 @@ void run_eckey_edge_case_test(void) {
     memset(&pubkey, 1, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
     CHECK(ecount == 2);
-    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
+    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
     secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
 }
 
@@ -2648,6 +2676,7 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
     CHECK(secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
     CHECK(!secp256k1_ecdsa_signature_normalize(ctx, NULL, &signature[5]));
+    CHECK(!secp256k1_ecdsa_signature_normalize(ctx, &signature[5], &signature[5]));
     CHECK(secp256k1_ecdsa_verify(ctx, &signature[5], message, &pubkey) == 1);
     secp256k1_scalar_negate(&s, &s);
     secp256k1_ecdsa_signature_save(&signature[5], &r, &s);
@@ -3286,17 +3315,46 @@ void test_ecdsa_edge_cases(void) {
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg, NULL) == 0);
         CHECK(ecount == 6);
         CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 1);
+        CHECK(ecount == 6);
+        CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
+        CHECK(ecount == 7);
+        /* That pubkeyload fails via an ARGCHECK is a little odd but makes sense because pubkeys are an opaque data type. */
+        CHECK(secp256k1_ecdsa_verify(ctx, &sig, msg, &pubkey) == 0);
+        CHECK(ecount == 8);
         siglen = 72;
         CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, NULL, &siglen, &sig) == 0);
-        CHECK(ecount == 7);
+        CHECK(ecount == 9);
         CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, NULL, &sig) == 0);
-        CHECK(ecount == 8);
+        CHECK(ecount == 10);
         CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, NULL) == 0);
-        CHECK(ecount == 9);
+        CHECK(ecount == 11);
         CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, &sig) == 1);
+        CHECK(ecount == 11);
+        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, NULL, signature, siglen) == 0);
+        CHECK(ecount == 12);
+        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, NULL, siglen) == 0);
+        CHECK(ecount == 13);
+        CHECK(secp256k1_ecdsa_signature_parse_der(ctx, &sig, signature, siglen) == 1);
+        CHECK(ecount == 13);
         siglen = 10;
+        /* Too little room for a signature does not fail via ARGCHECK. */
         CHECK(secp256k1_ecdsa_signature_serialize_der(ctx, signature, &siglen, &sig) == 0);
-        CHECK(ecount == 9);
+        CHECK(ecount == 13);
+        ecount = 0;
+        CHECK(secp256k1_ecdsa_signature_normalize(ctx, NULL, NULL) == 0);
+        CHECK(ecount == 1);
+        CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, NULL, &sig) == 0);
+        CHECK(ecount == 2);
+        CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, signature, NULL) == 0);
+        CHECK(ecount == 3);
+        CHECK(secp256k1_ecdsa_signature_serialize_compact(ctx, signature, &sig) == 1);
+        CHECK(ecount == 3);
+        CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, NULL, signature) == 0);
+        CHECK(ecount == 4);
+        CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, &sig, NULL) == 0);
+        CHECK(ecount == 5);
+        CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, &sig, signature) == 1);
+        CHECK(ecount == 5);
         secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
     }
 
