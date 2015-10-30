@@ -35,11 +35,11 @@ class Test_ReplaceByFee(unittest.TestCase):
             cls.proxy = bitcoin.rpc.Proxy()
 
     @classmethod
-    def tearDownClass(cls):
-        # Make sure mining works
+    def mine_mempool(cls):
+        """Mine until mempool is empty"""
         mempool_size = 1
         while mempool_size:
-            cls.proxy.call('generate',1)
+            cls.proxy.call('generate', 1)
             new_mempool_size = len(cls.proxy.getrawmempool())
 
             # It's possible to get stuck in a loop here if the mempool has
@@ -47,10 +47,18 @@ class Test_ReplaceByFee(unittest.TestCase):
             assert(new_mempool_size != mempool_size)
             mempool_size = new_mempool_size
 
-    def make_txout(self, amount, scriptPubKey=CScript([1])):
+    @classmethod
+    def tearDownClass(cls):
+        # Make sure mining works
+        cls.mine_mempool()
+
+    def make_txout(self, amount, confirmed=True, scriptPubKey=CScript([1])):
         """Create a txout with a given amount and scriptPubKey
 
         Mines coins as needed.
+
+        confirmed - txouts created will be confirmed in the blockchain;
+                    unconfirmed otherwise.
         """
         fee = 1*COIN
         while self.proxy.getbalance() < amount + fee:
@@ -71,6 +79,10 @@ class Test_ReplaceByFee(unittest.TestCase):
                            [CTxOut(amount, scriptPubKey)])
 
         tx2_txid = self.proxy.sendrawtransaction(tx2, True)
+
+        # If requested, ensure txouts are confirmed.
+        if confirmed:
+            self.mine_mempool()
 
         return COutPoint(tx2_txid, 0)
 
@@ -268,6 +280,25 @@ class Test_ReplaceByFee(unittest.TestCase):
         tx2 = CTransaction([CTxIn(utxo1, nSequence=0), CTxIn(utxo2, nSequence=0),
                             CTxIn(COutPoint(tx1b_txid, 0))],
                            tx1a.vout)
+
+        try:
+            tx2_txid = self.proxy.sendrawtransaction(tx2, True)
+        except bitcoin.rpc.JSONRPCException as exp:
+            self.assertEqual(exp.error['code'], -26)
+        else:
+            self.fail()
+
+    def test_new_unconfirmed_inputs(self):
+        """Replacements that add new unconfirmed inputs are rejected"""
+        confirmed_utxo = self.make_txout(1.1*COIN)
+        unconfirmed_utxo = self.make_txout(0.1*COIN, False)
+
+        tx1 = CTransaction([CTxIn(confirmed_utxo)],
+                           [CTxOut(1.0*COIN, CScript([b'a']))])
+        tx1_txid = self.proxy.sendrawtransaction(tx1, True)
+
+        tx2 = CTransaction([CTxIn(confirmed_utxo), CTxIn(unconfirmed_utxo)],
+                           tx1.vout)
 
         try:
             tx2_txid = self.proxy.sendrawtransaction(tx2, True)
