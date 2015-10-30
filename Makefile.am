@@ -41,7 +41,9 @@ noinst_HEADERS += src/field.h
 noinst_HEADERS += src/field_impl.h
 noinst_HEADERS += src/bench.h
 noinst_HEADERS += contrib/lax_der_parsing.h
+noinst_HEADERS += contrib/lax_der_parsing.c
 noinst_HEADERS += contrib/lax_der_privatekey_parsing.h
+noinst_HEADERS += contrib/lax_der_privatekey_parsing.c
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = libsecp256k1.pc
