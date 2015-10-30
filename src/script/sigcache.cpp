@@ -62,6 +62,12 @@ public:
         return setValid.count(entry);
     }
 
+    void Erase(const uint256& entry)
+    {
+        boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
+        setValid.erase(entry);
+    }
+
     void Set(const uint256& entry)
     {
         size_t nMaxCacheSize = GetArg("-maxsigcachesize", DEFAULT_MAX_SIG_CACHE_SIZE) * ((size_t) 1 << 20);
@@ -90,13 +96,18 @@ bool CachingTransactionSignatureChecker::VerifySignature(const std::vector<unsig
     uint256 entry;
     signatureCache.ComputeEntry(entry, sighash, vchSig, pubkey);
 
-    if (signatureCache.Get(entry))
+    if (signatureCache.Get(entry)) {
+        if (!store) {
+            signatureCache.Erase(entry);
+        }
         return true;
+    }
 
     if (!TransactionSignatureChecker::VerifySignature(vchSig, pubkey, sighash))
         return false;
 
-    if (store)
+    if (store) {
         signatureCache.Set(entry);
+    }
     return true;
 }
