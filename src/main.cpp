@@ -1009,6 +1009,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             LOCK(pool.cs);
 
             CFeeRate newFeeRate(nFees, nSize);
+            set<uint256> setConflictsParents;
             BOOST_FOREACH(const uint256 hashConflicting, setConflicts)
             {
                 CTxMemPool::txiter mi = pool.mapTx.find(hashConflicting);
@@ -1042,12 +1043,35 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                             REJECT_INSUFFICIENTFEE, "insufficient fee");
                 }
 
+                BOOST_FOREACH(const CTxIn &txin, mi->GetTx().vin)
+                {
+                    setConflictsParents.insert(txin.prevout.hash);
+                }
+
                 // For efficiency we simply sum up the pre-calculated
                 // fees/size-with-descendants values from the mempool package
                 // tracking; this does mean the pathological case of diamond tx
                 // graphs will be overcounted.
                 nConflictingFees += mi->GetFeesWithDescendants();
                 nConflictingSize += mi->GetSizeWithDescendants();
+            }
+
+            for (unsigned int j = 0; j < tx.vin.size(); j++)
+            {
+                // We don't want to accept replacements that require low
+                // feerate junk to be mined first. Ideally we'd keep track of
+                // the ancestor feerates and make the decision based on that,
+                // but for now requiring all new inputs to be confirmed works.
+                if (!setConflictsParents.count(tx.vin[j].prevout.hash))
+                {
+                    // Rather than check the UTXO set - potentially expensive -
+                    // it's cheaper to just check if the new input refers to a
+                    // tx that's in the mempool.
+                    if (pool.mapTx.find(tx.vin[j].prevout.hash) != pool.mapTx.end())
+                        return state.DoS(0, error("AcceptToMemoryPool: replacement %s adds unconfirmed input, idx %d",
+                                                  hash.ToString(), j),
+                                         REJECT_NONSTANDARD, "replacement-adds-unconfirmed");
+                }
             }
 
             // The replacement must pay greater fees than the transactions it
