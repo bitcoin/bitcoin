@@ -156,7 +156,7 @@ public:
 
     bool Lock();
 
-    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, const std::vector<unsigned char> &vchHash);
     bool AddKeyPubKey(const CKey& key, const CPubKey &pubkey);
     bool HaveKey(const CKeyID &address) const
     {
@@ -184,6 +184,15 @@ public:
             setAddress.insert((*mi).first);
             mi++;
         }
+    }
+
+    static void CalculateCryptedHash(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, std::vector<unsigned char> &vchHash) {
+        vchHash.clear();
+        vchHash.reserve(32);
+        CSHA256().
+        Write(&vchPubKey[0], vchPubKey.size()).
+        Write(&vchCryptedSecret[0], vchCryptedSecret.size()).
+        Finalize(&vchHash[0]);
     }
 
     /**

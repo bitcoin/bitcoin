@@ -213,21 +213,24 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
         if (!EncryptSecret(vMasterKey, vchSecret, pubkey.GetHash(), vchCryptedSecret))
             return false;
 
-        if (!AddCryptedKey(pubkey, vchCryptedSecret))
+        std::vector<unsigned char> vchHash;
+        CalculateCryptedHash(pubkey, vchCryptedSecret, vchHash);
+
+        if (!AddCryptedKey(pubkey, vchCryptedSecret, vchHash))
             return false;
     }
     return true;
 }
 
 
-bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret)
+bool CCryptoKeyStore::AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, const std::vector<unsigned char> &vchHash)
 {
     {
         LOCK(cs_KeyStore);
         if (!SetCrypted())
             return false;
 
-        mapCryptedKeys[vchPubKey.GetID()] = boost::make_tuple(vchPubKey, vchCryptedSecret, std::vector<unsigned char>());
+        mapCryptedKeys[vchPubKey.GetID()] = boost::make_tuple(vchPubKey, vchCryptedSecret, vchHash);
     }
     return true;
 }
@@ -285,7 +288,9 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
             std::vector<unsigned char> vchCryptedSecret;
             if (!EncryptSecret(vMasterKeyIn, vchSecret, vchPubKey.GetHash(), vchCryptedSecret))
                 return false;
-            if (!AddCryptedKey(vchPubKey, vchCryptedSecret))
+            std::vector<unsigned char> vchHash;
+            CalculateCryptedHash(vchPubKey, vchCryptedSecret, vchHash);
+            if (!AddCryptedKey(vchPubKey, vchCryptedSecret, vchHash))
                 return false;
         }
         mapKeys.clear();
