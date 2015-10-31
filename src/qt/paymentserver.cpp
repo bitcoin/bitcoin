@@ -550,7 +550,10 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
     recipient.paymentRequest = request;
     recipient.message = GUIUtil::HtmlEscape(request.getDetails().memo());
 
-    request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant);
+    // Allowed to silently fail! Treat invalid authenticated payment request as valid unauthenticated payment request.
+    if (request.getMerchant(PaymentServer::certStore, recipient.authenticatedMerchant) & PR_ERROR) {
+        qDebug() << QString("PaymentServer::%1: Invalid authenticated payment request now treated as valid unauthenticated payment request.").arg(__func__);
+    }
 
     QList<std::pair<CScript, CAmount> > sendingTos = request.getPayTo();
     QStringList addresses;
