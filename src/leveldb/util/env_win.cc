@@ -465,9 +465,7 @@ Status Win32WritableFile::Close()
 
 Status Win32WritableFile::Flush()
 {
-    if (!FlushFileBuffers(_hFile)) {
-        return Status::IOError("Win32WritableFile.Flush::FlushFileBuffers ", Win32::GetLastErrSz());
-    }
+    // Nothing to do here, there are no application-side buffers
     return Status::OK();
 }
 
