@@ -10,6 +10,7 @@
 
 #include "sync.h"
 #include "utiltime.h"
+#include "utilstrencodings.h"
 
 #include <QDebug>
 #include <QList>
@@ -54,11 +55,11 @@ public:
 #if QT_VERSION >= 0x040700
         cachedBanlist.reserve(banMap.size());
 #endif
-        for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
+        Q_FOREACH (const PAIRTYPE(CSubNet, CBanEntry)& banentry, banMap)
         {
             CCombinedBan banEntry;
-            banEntry.subnet = (*it).first;
-            banEntry.banEntry = (*it).second;
+            banEntry.subnet = banentry.first;
+            banEntry.banEntry = banentry.second;
             cachedBanlist.append(banEntry);
         }
 

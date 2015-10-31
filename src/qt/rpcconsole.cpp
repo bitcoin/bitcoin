@@ -9,7 +9,6 @@
 #include "clientmodel.h"
 #include "guiutil.h"
 #include "platformstyle.h"
-#include "bantablemodel.h"
 
 #include "chainparams.h"
 #include "rpcserver.h"
@@ -357,10 +356,10 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         // create peer table context menu actions
         QAction* disconnectAction = new QAction(tr("&Disconnect Node"), this);
-        QAction* banAction1h      = new QAction(tr("Ban Node for") + " " + tr("1 &hour"), this);
-        QAction* banAction24h     = new QAction(tr("Ban Node for") + " " + tr("1 &day"), this);
-        QAction* banAction7d      = new QAction(tr("Ban Node for") + " " + tr("1 &week"), this);
-        QAction* banAction365d    = new QAction(tr("Ban Node for") + " " + tr("1 &year"), this);
+        QAction* banAction1h      = new QAction(tr("Ban Node for") + " " + tr("1 hour"), this);
+        QAction* banAction24h     = new QAction(tr("Ban Node for") + " " + tr("1 day"), this);
+        QAction* banAction7d      = new QAction(tr("Ban Node for") + " " + tr("1 week"), this);
+        QAction* banAction365d    = new QAction(tr("Ban Node for") + " " + tr("1 year"), this);
 
         // create peer table context menu
         peersTableContextMenu = new QMenu();
@@ -809,10 +808,8 @@ void RPCConsole::banSelectedNode(int bantime)
 
         CNode::Ban(CNetAddr(addr), BanReasonManuallyAdded, bantime);
         bannedNode->fDisconnect = true;
-        DumpBanlist();
-
         clearSelectedNode();
-        clientModel->getBanTableModel()->refresh();
+        DumpBanlist(); // store banlist to disk
     }
 }
 
@@ -828,8 +825,7 @@ void RPCConsole::unbanSelectedNode()
     if (possibleSubnet.IsValid())
     {
         CNode::Unban(possibleSubnet);
-        DumpBanlist();
-        clientModel->getBanTableModel()->refresh();
+        DumpBanlist(); // store banlist to disk
     }
 }
 
