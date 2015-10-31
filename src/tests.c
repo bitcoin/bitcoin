@@ -594,7 +594,7 @@ void scalar_test(void) {
     }
 
     {
-        /* Test that multipying the scalars is equal to multiplying their numbers modulo the order. */
+        /* Test that multiplying the scalars is equal to multiplying their numbers modulo the order. */
         secp256k1_scalar r;
         secp256k1_num r2num;
         secp256k1_num rnum;
@@ -840,7 +840,7 @@ void run_scalar_tests(void) {
 
     {
         /* Static test vectors.
-         * These were reduced from ~10^12 random vectors based on comparision-decision
+         * These were reduced from ~10^12 random vectors based on comparison-decision
          *  and edge-case coverage on 32-bit and 64-bit implementations.
          * The responses were generated with Sage 5.9.
          */
@@ -1737,7 +1737,7 @@ void test_ge(void) {
     /* Points: (infinity, p1, p1, -p1, -p1, p2, p2, -p2, -p2, p3, p3, -p3, -p3, p4, p4, -p4, -p4).
      * The second in each pair of identical points uses a random Z coordinate in the Jacobian form.
      * All magnitudes are randomized.
-     * All 17*17 combinations of points are added to eachother, using all applicable methods.
+     * All 17*17 combinations of points are added to each other, using all applicable methods.
      *
      * When the endomorphism code is compiled in, p5 = lambda*p1 and p6 = lambda^2*p1 are added as well.
      */
@@ -2420,7 +2420,7 @@ void run_ecmult_constants(void) {
 }
 
 void test_ecmult_gen_blind(void) {
-    /* Test ecmult_gen() blinding and confirm that the blinding changes, the affline points match, and the z's don't match. */
+    /* Test ecmult_gen() blinding and confirm that the blinding changes, the affine points match, and the z's don't match. */
     secp256k1_scalar key;
     secp256k1_scalar b;
     unsigned char seed32[32];
@@ -3139,7 +3139,7 @@ static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char
        }
        return 1;
    }
-   /* Retry rate of 6979 is negligible esp. as we only call this in determinstic tests. */
+   /* Retry rate of 6979 is negligible esp. as we only call this in deterministic tests. */
    /* If someone does fine a case where it retries for secp256k1, we'd like to know. */
    if (counter > 5) {
        return 0;
@@ -3966,7 +3966,7 @@ void test_ecdsa_edge_cases(void) {
         CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, nonce_function_rfc6979, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
-        /* The default nonce function is determinstic. */
+        /* The default nonce function is deterministic. */
         CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
@@ -3998,7 +3998,7 @@ void test_ecdsa_edge_cases(void) {
     }
 
     {
-        /* Check that optional nonce arguments do not have equivilent effect. */
+        /* Check that optional nonce arguments do not have equivalent effect. */
         const unsigned char zeros[32] = {0};
         unsigned char nonce[32];
         unsigned char nonce2[32];

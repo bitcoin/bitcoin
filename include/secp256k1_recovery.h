@@ -92,7 +92,7 @@ SECP256K1_API int secp256k1_ecdsa_sign_recoverable(
  *  Returns: 1: public key successfully recovered (which guarantees a correct signature).
  *           0: otherwise.
  *  Args:    ctx:        pointer to a context object, initialized for verification (cannot be NULL)
- *  Out:     pubkey:     pointer to the recoved public key (cannot be NULL)
+ *  Out:     pubkey:     pointer to the recovered public key (cannot be NULL)
  *  In:      sig:        pointer to initialized signature that supports pubkey recovery (cannot be NULL)
  *           msg32:      the 32-byte message hash assumed to be signed (cannot be NULL)
  */

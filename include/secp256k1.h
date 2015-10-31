@@ -229,7 +229,7 @@ SECP256K1_API void secp256k1_context_set_illegal_callback(
  *  crashing.
  *
  *  Args: ctx:  an existing context object (cannot be NULL)
- *  In:   fun:  a pointer to a function to call when an interal error occurs,
+ *  In:   fun:  a pointer to a function to call when an internal error occurs,
  *              taking a message and an opaque pointer (NULL restores a default
  *              handler that calls abort).
  *        data: the opaque pointer to pass to fun above.

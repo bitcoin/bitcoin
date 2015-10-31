@@ -99,7 +99,7 @@ SECP256K1_API int secp256k1_schnorr_generate_nonce_pair(
 /** Produce a partial Schnorr signature, which can be combined using
  *  secp256k1_schnorr_partial_combine, to end up with a full signature that is
  *  verifiable using secp256k1_schnorr_verify.
- *  Returns: 1: signature created succesfully.
+ *  Returns: 1: signature created successfully.
  *           0: no valid signature exists with this combination of keys, nonces
  *              and message (chance around 1 in 2^128)
  *          -1: invalid private key, nonce, or public nonces.
@@ -148,7 +148,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_schnorr_partial_sign(
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4) SECP256K1_ARG_NONNULL(5) SECP256K1_ARG_NONNULL(6);
 
 /** Combine multiple Schnorr partial signatures.
- * Returns: 1: the passed signatures were succesfully combined.
+ * Returns: 1: the passed signatures were successfully combined.
  *          0: the resulting signature is not valid (chance of 1 in 2^256)
  *         -1: some inputs were invalid, or the signatures were not created
  *             using the same set of nonces
