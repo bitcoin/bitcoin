@@ -36,8 +36,7 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
     *this = other;
 }
 
-double
-CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
+double CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {
     CAmount nValueIn = tx.GetValueOut()+nFee;
     double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nModSize;
@@ -705,8 +704,7 @@ double CTxMemPool::estimatePriority(int nBlocks) const
     return minerPolicyEstimator->estimatePriority(nBlocks);
 }
 
-bool
-CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
+bool CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
 {
     try {
         LOCK(cs);
@@ -721,8 +719,7 @@ CTxMemPool::WriteFeeEstimates(CAutoFile& fileout) const
     return true;
 }
 
-bool
-CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
+bool CTxMemPool::ReadFeeEstimates(CAutoFile& filein)
 {
     try {
         int nVersionRequired, nVersionThatWrote;
@@ -778,7 +775,8 @@ bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
 
 CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
-bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
+bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const
+{
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
@@ -790,17 +788,20 @@ bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     return (base->GetCoins(txid, coins) && !coins.IsPruned());
 }
 
-bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {
+bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const
+{
     return mempool.exists(txid) || base->HaveCoins(txid);
 }
 
-size_t CTxMemPool::DynamicMemoryUsage() const {
+size_t CTxMemPool::DynamicMemoryUsage() const
+{
     LOCK(cs);
     // Estimate the overhead of mapTx to be 9 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
     return memusage::MallocUsage(sizeof(CTxMemPoolEntry) + 9 * sizeof(void*)) * mapTx.size() + memusage::DynamicUsage(mapNextTx) + memusage::DynamicUsage(mapDeltas) + memusage::DynamicUsage(mapLinks) + cachedInnerUsage;
 }
 
-void CTxMemPool::RemoveStaged(setEntries &stage) {
+void CTxMemPool::RemoveStaged(setEntries &stage)
+{
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage);
     BOOST_FOREACH(const txiter& it, stage) {
