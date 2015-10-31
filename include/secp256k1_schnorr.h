@@ -163,7 +163,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_schnorr_partial_combine
   const secp256k1_context* ctx,
   unsigned char *sig64,
   const unsigned char * const * sig64sin,
-  int n
+  size_t n
 ) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 # ifdef __cplusplus
