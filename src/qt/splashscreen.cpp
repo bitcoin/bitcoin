@@ -35,7 +35,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
 
     // define text to place
     QString titleText       = tr("Omni Core");
-    QString versionText     = QString("Experimental UI %1").arg(QString::fromStdString(OmniCoreVersion()));
+    QString versionText     = QString("v%1").arg(QString::fromStdString(OmniCoreVersion()));
     QString copyrightText   = QChar(0xA9)+QString(" 2009-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin Core developers"));
             copyrightText  += QString(", ");
             copyrightText  += QChar(0xA9)+QString(" 2013-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Omni Core developers"));
