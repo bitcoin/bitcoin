@@ -530,12 +530,13 @@ int secp256k1_context_randomize(secp256k1_context* ctx, const unsigned char *see
     return 1;
 }
 
-int secp256k1_ec_pubkey_combine(const secp256k1_context* ctx, secp256k1_pubkey *pubnonce, const secp256k1_pubkey * const *pubnonces, int n) {
-    int i;
+int secp256k1_ec_pubkey_combine(const secp256k1_context* ctx, secp256k1_pubkey *pubnonce, const secp256k1_pubkey * const *pubnonces, size_t n) {
+    size_t i;
     secp256k1_gej Qj;
     secp256k1_ge Q;
 
     ARG_CHECK(pubnonce != NULL);
+    memset(pubnonce, 0, sizeof(*pubnonce));
     ARG_CHECK(n >= 1);
     ARG_CHECK(pubnonces != NULL);
 
@@ -546,7 +547,6 @@ int secp256k1_ec_pubkey_combine(const secp256k1_context* ctx, secp256k1_pubkey *
         secp256k1_gej_add_ge(&Qj, &Qj, &Q);
     }
     if (secp256k1_gej_is_infinity(&Qj)) {
-        memset(pubnonce, 0, sizeof(*pubnonce));
         return 0;
     }
     secp256k1_ge_set_gej(&Q, &Qj);

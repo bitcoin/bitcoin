@@ -594,7 +594,7 @@ void scalar_test(void) {
     }
 
     {
-        /* Test that multipying the scalars is equal to multiplying their numbers modulo the order. */
+        /* Test that multiplying the scalars is equal to multiplying their numbers modulo the order. */
         secp256k1_scalar r;
         secp256k1_num r2num;
         secp256k1_num rnum;
@@ -840,7 +840,7 @@ void run_scalar_tests(void) {
 
     {
         /* Static test vectors.
-         * These were reduced from ~10^12 random vectors based on comparision-decision
+         * These were reduced from ~10^12 random vectors based on comparison-decision
          *  and edge-case coverage on 32-bit and 64-bit implementations.
          * The responses were generated with Sage 5.9.
          */
@@ -1737,7 +1737,7 @@ void test_ge(void) {
     /* Points: (infinity, p1, p1, -p1, -p1, p2, p2, -p2, -p2, p3, p3, -p3, -p3, p4, p4, -p4, -p4).
      * The second in each pair of identical points uses a random Z coordinate in the Jacobian form.
      * All magnitudes are randomized.
-     * All 17*17 combinations of points are added to eachother, using all applicable methods.
+     * All 17*17 combinations of points are added to each other, using all applicable methods.
      *
      * When the endomorphism code is compiled in, p5 = lambda*p1 and p6 = lambda^2*p1 are added as well.
      */
@@ -2420,7 +2420,7 @@ void run_ecmult_constants(void) {
 }
 
 void test_ecmult_gen_blind(void) {
-    /* Test ecmult_gen() blinding and confirm that the blinding changes, the affline points match, and the z's don't match. */
+    /* Test ecmult_gen() blinding and confirm that the blinding changes, the affine points match, and the z's don't match. */
     secp256k1_scalar key;
     secp256k1_scalar b;
     unsigned char seed32[32];
@@ -2902,10 +2902,14 @@ void run_eckey_edge_case_test(void) {
         0xbf, 0xd2, 0x5e, 0x8c, 0xd0, 0x36, 0x41, 0x41
     };
     const unsigned char zeros[sizeof(secp256k1_pubkey)] = {0x00};
-    unsigned char ctmp[32];
-    unsigned char ctmp2[32];
+    unsigned char ctmp[33];
+    unsigned char ctmp2[33];
     secp256k1_pubkey pubkey;
     secp256k1_pubkey pubkey2;
+    secp256k1_pubkey pubkey_one;
+    secp256k1_pubkey pubkey_negone;
+    const secp256k1_pubkey *pubkeys[3];
+    size_t len;
     int32_t ecount;
     /* Group order is too large, reject. */
     CHECK(secp256k1_ec_seckey_verify(ctx, orderc) == 0);
@@ -2937,6 +2941,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 1);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
+    pubkey_one = pubkey;
     /* Group order + 1 is too large, reject. */
     memcpy(ctmp, orderc, 32);
     ctmp[31] = 0x42;
@@ -2954,6 +2959,7 @@ void run_eckey_edge_case_test(void) {
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, ctmp) == 1);
     VG_CHECK(&pubkey, sizeof(pubkey));
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
+    pubkey_negone = pubkey;
     /* Tweak of zero leaves the value changed. */
     memset(ctmp2, 0, 32);
     CHECK(secp256k1_ec_privkey_tweak_add(ctx, ctmp, ctmp2) == 1);
@@ -3060,6 +3066,67 @@ void run_eckey_edge_case_test(void) {
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, NULL) == 0);
     CHECK(ecount == 2);
     CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
+    /* secp256k1_ec_pubkey_combine tests. */
+    ecount = 0;
+    pubkeys[0] = &pubkey_one;
+    VG_UNDEF(&pubkeys[0], sizeof(secp256k1_pubkey *));
+    VG_UNDEF(&pubkeys[1], sizeof(secp256k1_pubkey *));
+    VG_UNDEF(&pubkeys[2], sizeof(secp256k1_pubkey *));
+    memset(&pubkey, 255, sizeof(secp256k1_pubkey));
+    VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 0) == 0);
+    VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
+    CHECK(ecount == 1);
+    CHECK(secp256k1_ec_pubkey_combine(ctx, NULL, pubkeys, 1) == 0);
+    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
+    CHECK(ecount == 2);
+    memset(&pubkey, 255, sizeof(secp256k1_pubkey));
+    VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, NULL, 1) == 0);
+    VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
+    CHECK(ecount == 3);
+    pubkeys[0] = &pubkey_negone;
+    memset(&pubkey, 255, sizeof(secp256k1_pubkey));
+    VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 1) == 1);
+    VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
+    CHECK(ecount == 3);
+    len = 33;
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, ctmp, &len, &pubkey, SECP256K1_EC_COMPRESSED) == 1);
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, ctmp2, &len, &pubkey_negone, SECP256K1_EC_COMPRESSED) == 1);
+    CHECK(memcmp(ctmp, ctmp2, 33) == 0);
+    /* Result is infinity. */
+    pubkeys[0] = &pubkey_one;
+    pubkeys[1] = &pubkey_negone;
+    memset(&pubkey, 255, sizeof(secp256k1_pubkey));
+    VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 2) == 0);
+    VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) == 0);
+    CHECK(ecount == 3);
+    /* Passes through infinity but comes out one. */
+    pubkeys[2] = &pubkey_one;
+    memset(&pubkey, 255, sizeof(secp256k1_pubkey));
+    VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 3) == 1);
+    VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
+    CHECK(ecount == 3);
+    len = 33;
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, ctmp, &len, &pubkey, SECP256K1_EC_COMPRESSED) == 1);
+    CHECK(secp256k1_ec_pubkey_serialize(ctx, ctmp2, &len, &pubkey_one, SECP256K1_EC_COMPRESSED) == 1);
+    CHECK(memcmp(ctmp, ctmp2, 33) == 0);
+    /* Adds to two. */
+    pubkeys[1] = &pubkey_one;
+    memset(&pubkey, 255, sizeof(secp256k1_pubkey));
+    VG_UNDEF(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(secp256k1_ec_pubkey_combine(ctx, &pubkey, pubkeys, 2) == 1);
+    VG_CHECK(&pubkey, sizeof(secp256k1_pubkey));
+    CHECK(memcmp(&pubkey, zeros, sizeof(secp256k1_pubkey)) > 0);
+    CHECK(ecount == 3);
     secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
 }
 
@@ -3139,7 +3206,7 @@ static int nonce_function_test_retry(unsigned char *nonce32, const unsigned char
        }
        return 1;
    }
-   /* Retry rate of 6979 is negligible esp. as we only call this in determinstic tests. */
+   /* Retry rate of 6979 is negligible esp. as we only call this in deterministic tests. */
    /* If someone does fine a case where it retries for secp256k1, we'd like to know. */
    if (counter > 5) {
        return 0;
@@ -3933,6 +4000,9 @@ void test_ecdsa_edge_cases(void) {
         CHECK(ecount == 5);
         CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, &sig, signature) == 1);
         CHECK(ecount == 5);
+        memset(signature, 255, 64);
+        CHECK(secp256k1_ecdsa_signature_parse_compact(ctx, &sig, signature) == 0);
+        CHECK(ecount == 5);
         secp256k1_context_set_illegal_callback(ctx, NULL, NULL);
     }
 
@@ -3966,7 +4036,7 @@ void test_ecdsa_edge_cases(void) {
         CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, nonce_function_rfc6979, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
-        /* The default nonce function is determinstic. */
+        /* The default nonce function is deterministic. */
         CHECK(secp256k1_ecdsa_sign(ctx, &sig2, msg, key, NULL, extra) == 1);
         CHECK(!is_empty_signature(&sig2));
         CHECK(memcmp(&sig, &sig2, sizeof(sig)) == 0);
@@ -3998,7 +4068,7 @@ void test_ecdsa_edge_cases(void) {
     }
 
     {
-        /* Check that optional nonce arguments do not have equivilent effect. */
+        /* Check that optional nonce arguments do not have equivalent effect. */
         const unsigned char zeros[32] = {0};
         unsigned char nonce[32];
         unsigned char nonce2[32];

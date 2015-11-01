@@ -229,7 +229,7 @@ SECP256K1_API void secp256k1_context_set_illegal_callback(
  *  crashing.
  *
  *  Args: ctx:  an existing context object (cannot be NULL)
- *  In:   fun:  a pointer to a function to call when an interal error occurs,
+ *  In:   fun:  a pointer to a function to call when an internal error occurs,
  *              taking a message and an opaque pointer (NULL restores a default
  *              handler that calls abort).
  *        data: the opaque pointer to pass to fun above.
@@ -562,18 +562,16 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
  *  Returns: 1: the sum of the public keys is valid.
  *           0: the sum of the public keys is not valid.
  *  Args:   ctx:        pointer to a context object
- *  Out:    out:        pointer to pubkey for placing the resulting public key
+ *  Out:    out:        pointer to a public key object for placing the resulting public key
  *                      (cannot be NULL)
  *  In:     ins:        pointer to array of pointers to public keys (cannot be NULL)
  *          n:          the number of public keys to add together (must be at least 1)
- *  Use secp256k1_ec_pubkey_compress and secp256k1_ec_pubkey_decompress if the
- *  uncompressed format is needed.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
     const secp256k1_context* ctx,
     secp256k1_pubkey *out,
     const secp256k1_pubkey * const * ins,
-    int n
+    size_t n
 ) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3);
 
 # ifdef __cplusplus

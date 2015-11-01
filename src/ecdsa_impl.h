@@ -75,8 +75,9 @@ static int secp256k1_der_read_len(const unsigned char **sigp, const unsigned cha
         return -1;
     }
     if ((size_t)lenleft > sizeof(size_t)) {
-        /* The resulthing length would exceed the range of a size_t, so
-           certainly longer than the passed array size. */
+        /* The resulting length would exceed the range of a size_t, so
+         * certainly longer than the passed array size.
+         */
         return -1;
     }
     while (lenleft > 0) {
@@ -267,13 +268,17 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_fe_get_b32(b, &r.x);
     secp256k1_scalar_set_b32(sigr, b, &overflow);
     if (secp256k1_scalar_is_zero(sigr)) {
-        /* P.x = order is on the curve, so technically sig->r could end up zero, which would be an invalid signature. */
-        /* This branch is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N. */
+        /* P.x = order is on the curve, so technically sig->r could end up zero, which would be an invalid signature.
+         * This branch is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N.
+         */
         secp256k1_gej_clear(&rp);
         secp256k1_ge_clear(&r);
         return 0;
     }
     if (recid) {
+        /* The overflow condition is cryptographically unreachable as hitting it requires finding the discrete log
+         * of some P where P.x >= order, and only 1 in about 2^127 points meet this criteria.
+         */
         *recid = (overflow ? 2 : 0) | (secp256k1_fe_is_odd(&r.y) ? 1 : 0);
     }
     secp256k1_scalar_mul(&n, sigr, seckey);

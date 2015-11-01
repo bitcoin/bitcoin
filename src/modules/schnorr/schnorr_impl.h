@@ -178,9 +178,9 @@ static int secp256k1_schnorr_sig_recover(const secp256k1_ecmult_context* ctx, co
     return 1;
 }
 
-static int secp256k1_schnorr_sig_combine(unsigned char *sig64, int n, const unsigned char * const *sig64ins) {
+static int secp256k1_schnorr_sig_combine(unsigned char *sig64, size_t n, const unsigned char * const *sig64ins) {
     secp256k1_scalar s = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
-    int i;
+    size_t i;
     for (i = 0; i < n; i++) {
         secp256k1_scalar si;
         int overflow;

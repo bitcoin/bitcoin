@@ -154,7 +154,7 @@ int secp256k1_schnorr_partial_sign(const secp256k1_context* ctx, unsigned char *
     return secp256k1_schnorr_sig_sign(&ctx->ecmult_gen_ctx, sig64, &sec, &non, &pubnon, secp256k1_schnorr_msghash_sha256, msg32);
 }
 
-int secp256k1_schnorr_partial_combine(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char * const *sig64sin, int n) {
+int secp256k1_schnorr_partial_combine(const secp256k1_context* ctx, unsigned char *sig64, const unsigned char * const *sig64sin, size_t n) {
     ARG_CHECK(sig64 != NULL);
     ARG_CHECK(n >= 1);
     ARG_CHECK(sig64sin != NULL);

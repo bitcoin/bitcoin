@@ -10,7 +10,7 @@
 /** Field element module.
  *
  *  Field elements can be represented in several ways, but code accessing
- *  it (and implementations) need to take certain properaties into account:
+ *  it (and implementations) need to take certain properties into account:
  *  - Each field element can be normalized or not.
  *  - Each field element has a magnitude, which represents how far away
  *    its representation is away from normalization. Normalized elements
