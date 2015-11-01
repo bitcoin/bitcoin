@@ -650,35 +650,10 @@ bool IsFinalTx(const CTransaction &tx, int nBlockHeight, int64_t nBlockTime)
     return true;
 }
 
-bool CheckFinalTx(const CTransaction &tx, int flags)
+bool CheckFinalTx(const CTransaction &tx)
 {
     AssertLockHeld(cs_main);
-
-    // By convention a negative value for flags indicates that the
-    // current network-enforced consensus rules should be used. In
-    // a future soft-fork scenario that would mean checking which
-    // rules would be enforced for the next block and setting the
-    // appropriate flags. At the present time no soft-forks are
-    // scheduled, so no flags are set.
-    flags = std::max(flags, 0);
-
-    // CheckFinalTx() uses chainActive.Height()+1 to evaluate
-    // nLockTime because when IsFinalTx() is called within
-    // CBlock::AcceptBlock(), the height of the block *being*
-    // evaluated is what is used. Thus if we want to know if a
-    // transaction can be part of the *next* block, we need to call
-    // IsFinalTx() with one more than chainActive.Height().
-    const int nBlockHeight = chainActive.Height() + 1;
-
-    // Timestamps on the other hand don't get any special treatment,
-    // because we can't know what timestamp the next block will have,
-    // and there aren't timestamp applications where it matters.
-    // However this changes once median past time-locks are enforced:
-    const int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
-                             ? chainActive.Tip()->GetMedianTimePast()
-                             : GetAdjustedTime();
-
-    return IsFinalTx(tx, nBlockHeight, nBlockTime);
+    return IsFinalTx(tx, chainActive.Height() + 1, GetAdjustedTime());
 }
 
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
@@ -822,7 +797,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
-    if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
+    if (!CheckFinalTx(tx))
         return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
 
     // is it already in the memory pool?
@@ -2748,15 +2723,10 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     const Consensus::Params& consensusParams = Params().GetConsensus();
 
     // Check that all transactions are finalized
-    BOOST_FOREACH(const CTransaction& tx, block.vtx) {
-        int nLockTimeFlags = 0;
-        int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? pindexPrev->GetMedianTimePast()
-                                : block.GetBlockTime();
-        if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
+    BOOST_FOREACH(const CTransaction& tx, block.vtx)
+        if (!IsFinalTx(tx, nHeight, block.GetBlockTime())) {
             return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
         }
-    }
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
