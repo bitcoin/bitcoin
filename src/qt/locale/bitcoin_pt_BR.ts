@@ -1236,6 +1236,10 @@ Endereço: %4</translation>
         <translation>Solicitação de pagamento rejeitada</translation>
     </message>
     <message>
+        <source>Payment request network doesn't match client network.</source>
+        <translation>Rede de pedido de pagamento não corresponde rede do cliente.</translation>
+    </message>
+    <message>
         <source>Payment request has expired.</source>
         <translation>Solicitação de pagamento expirou.</translation>
     </message>
@@ -1260,8 +1264,16 @@ Endereço: %4</translation>
         <translation>URL de cobrança é inválida: %1</translation>
     </message>
     <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation>URI não pode ser analisado ! Isto pode ser causado por um endereço Bitcoin inválido ou parâmetros URI informados incorretamente.</translation>
+    </message>
+    <message>
         <source>Payment request file handling</source>
         <translation>Manipulação de arquivo de cobrança</translation>
+    </message>
+    <message>
+        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
+        <translation>Arquivo de pedido de pagamento não pode ser lido ! Isto pode ser causado por uma requisição de pagamento inválida.</translation>
     </message>
     <message>
         <source>Unverified payment requests to custom payment scripts are unsupported.</source>
@@ -3308,6 +3320,10 @@ por exemplo: alertnotify=echo %%s | mail -s "Alerta do Bitcoin" admin@foo.com.br
     <message>
         <source>Set minimum block size in bytes (default: %u)</source>
         <translation>Definir tamanho mínimo do bloco, em bytes (padrão: %u)</translation>
+    </message>
+    <message>
+        <source>Set the number of threads to service RPC calls (default: %d)</source>
+        <translation>Defina o número de threads para chamadas do serviço RPC (padrão: %d)</translation>
     </message>
     <message>
         <source>Specify configuration file (default: %s)</source>
