@@ -1736,6 +1736,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     bool fEnforceBIP30 = (!pindex->phashBlock) || // Enforce on CreateNewBlock invocations which don't have a hash.
                           !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
                            (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
+
+    // Once BIP34 activated it was not possible to create new duplicate coinbases and thus other than starting
+    // with the 2 existing duplicate coinbase pairs, not possible to create overwriting txs.  But by the
+    // time BIP34 activated, in each of the existing pairs the duplicate coinbase had overwritten the first
+    // before the first had been spent.  Since those coinbases are sufficiently buried its no longer possible to create further
+    // duplicate transactions descending from the known pairs either.
+    // If we're on the known chain at height greater than 227931 where BIP34 activated, we can save the db accesses needed for the BIP30 check.
+    CBlockIndex *pindexBIP34height = pindex->pprev->GetAncestor(227931);
+    //Only continue to enforce if we're below height 227931 or the block hash at that height doesn't correspond.
+    fEnforceBIP30 = fEnforceBIP30 && (!pindexBIP34height || !(pindexBIP34height->GetBlockHash() == uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8")));
+
     if (fEnforceBIP30) {
         BOOST_FOREACH(const CTransaction& tx, block.vtx) {
             const CCoins* coins = view.AccessCoins(tx.GetHash());
