@@ -118,6 +118,8 @@ std::vector<ConsensusCheckpoint> CMainConsensusParams::GetCheckpoints() const
                   uint256("943732e46304fc30099c6a728616c998efe689384f81b7108a65b051381656a6") },
         { 370000, uint256("000000000000000002cad3026f68357229dd6eaa6bcef6fe5166e1e53b039b8c"),
                   uint256("31e126664805d1f5d994584eb9cdce0bb6a650f6ed494ec281b335b34b49d2b9") },
+        { 380000, uint256("00000000000000000b06cee3cee10d2617e2024a996f5c613f7d786b15a571ff"),
+                  uint256("537d79015914c49bc60b294fbe14c9f31fd158707f34b5b32ec1d331f4429d91") },
     };
 
     const size_t nSize = sizeof(vCheckpoints) / sizeof(vCheckpoints[0]);
