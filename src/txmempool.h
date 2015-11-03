@@ -502,6 +502,7 @@ public:
     bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
+    void FindHotHashes(size_t prioritySize, size_t scoreSize, std::set<uint256> &hotHashes, unsigned int chainHeight);
 
 private:
     /** UpdateForDescendants is used by UpdateTransactionsFromBlock to update

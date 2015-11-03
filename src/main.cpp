@@ -1910,6 +1910,18 @@ enum FlushStateMode {
     FLUSH_STATE_ALWAYS
 };
 
+void static CalculateHotCache(std::set<uint256> &hotHashes) {
+    // Try to keep the txins needed for the next 3 anticipated blocks hot in the cache
+    // Don't examine txs whose total bytes are more than 0.5% of nCoinCacheUsage, because
+    // there can be a signficant expansion factor for all the txins required.
+    size_t totalSize = std::min((size_t)(3 * MAX_BLOCK_SIZE), nCoinCacheUsage / 200);
+    unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
+    nBlockPrioritySize = std::min(MAX_BLOCK_SIZE, nBlockPrioritySize);
+    size_t prioritySize = (size_t)(((uint64_t)nBlockPrioritySize * totalSize)/MAX_BLOCK_SIZE);
+    size_t scoreSize = totalSize - prioritySize;
+    mempool.FindHotHashes(prioritySize, scoreSize, hotHashes, chainActive.Height());
+}
+
 /**
  * Update the on-disk chain state.
  * The caches and indexes are flushed depending on the mode we're called with
@@ -1996,8 +2008,11 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode) {
         // overwrite one. Still, use a conservative safety factor of 2.
         if (!CheckDiskSpace(128 * 2 * 2 * pcoinsTip->GetCacheSize()))
             return state.Error("out of disk space");
+        // Calculate which coins to leave in the pcoinsTip cache
+        std::set<uint256> hotHashes;
+        CalculateHotCache(hotHashes);
         // Flush the chainstate (which may refer to block index entries).
-        if (!pcoinsTip->Flush())
+        if (!pcoinsTip->Flush(&hotHashes))
             return AbortNode(state, "Failed to write to coin database");
         nLastFlush = nNow;
     }
