@@ -327,7 +327,9 @@ public:
 
     //! Do a bulk modification (multiple CCoins changes + BestBlock change).
     //! The passed mapCoins can be modified.
-    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    //! Any coins contained in hotHashes may not be erased from mapCoins (only used by CCoinsViewDB)
+    //! Usage of non-erased coins returned in hotUsage
+    virtual bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &hotUsage, const std::set<uint256> *hotHashes);
 
     //! Calculate statistics about the unspent transaction output set
     virtual bool GetStats(CCoinsStats &stats) const;
@@ -349,7 +351,7 @@ public:
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &hotUsage, const std::set<uint256> *hotHashes);
     bool GetStats(CCoinsStats &stats) const;
 };
 
@@ -403,7 +405,7 @@ public:
     bool HaveCoins(const uint256 &txid) const;
     uint256 GetBestBlock() const;
     void SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &hotUsage, const std::set<uint256> *hotHashes);
 
     /**
      * Return a pointer to CCoins in the cache, or NULL if not found. This is
@@ -423,8 +425,9 @@ public:
      * Push the modifications applied to this cache to its base.
      * Failure to call this method before destruction will cause the changes to be forgotten.
      * If false is returned, the state of this cache (and its backing view) will be undefined.
+     * This cache will be cleared of all entries not contained in hotHashes
      */
-    bool Flush();
+    bool Flush(const std::set<uint256> *hotHashes = NULL);
 
     //! Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize() const;
