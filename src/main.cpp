@@ -1285,10 +1285,17 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
                 undo.nVersion = coins->nVersion;
             }
         }
+        // add outputs
+        inputs.ModifyNewCoins(tx.GetHash())->FromTx(tx, nHeight);
     }
-
-    // add outputs
-    inputs.ModifyCoins(tx.GetHash())->FromTx(tx, nHeight);
+    else {
+        // add outputs for coinbase tx
+        // In this case call the full ModifyCoins which will do a database
+        // lookup to be sure the coins do not already exist otherwise we do not
+        // know whether to mark them fresh or not.  We want the duplicate coinbases
+        // before BIP30 to still be properly overwritten.
+        inputs.ModifyCoins(tx.GetHash())->FromTx(tx, nHeight);
+    }
 }
 
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight)

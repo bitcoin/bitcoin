@@ -420,6 +420,17 @@ public:
     CCoinsModifier ModifyCoins(const uint256 &txid);
 
     /**
+     * Return a modifiable reference to a CCoins. Assumes that no entry with the given
+     * txid exists and creates a new one. This saves a database access in the case where
+     * the coins were to be wiped out by FromTx anyway.  This should not be called with
+     * the 2 historical coinbase duplicate pairs because the new coins are marked fresh, and
+     * in the event the duplicate coinbase was spent before a flush, the now pruned coins
+     * would not properly overwrite the first coinbase of the pair. Simultaneous modifications
+     * are not allowed.
+     */
+    CCoinsModifier ModifyNewCoins(const uint256 &txid);
+
+    /**
      * Push the modifications applied to this cache to its base.
      * Failure to call this method before destruction will cause the changes to be forgotten.
      * If false is returned, the state of this cache (and its backing view) will be undefined.

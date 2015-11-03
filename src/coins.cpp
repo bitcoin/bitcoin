@@ -117,6 +117,15 @@ CCoinsModifier CCoinsViewCache::ModifyCoins(const uint256 &txid) {
     return CCoinsModifier(*this, ret.first, cachedCoinUsage);
 }
 
+CCoinsModifier CCoinsViewCache::ModifyNewCoins(const uint256 &txid) {
+    assert(!hasModifier);
+    std::pair<CCoinsMap::iterator, bool> ret = cacheCoins.insert(std::make_pair(txid, CCoinsCacheEntry()));
+    ret.first->second.coins.Clear();
+    ret.first->second.flags = CCoinsCacheEntry::FRESH;
+    ret.first->second.flags |= CCoinsCacheEntry::DIRTY;
+    return CCoinsModifier(*this, ret.first, 0);
+}
+
 const CCoins* CCoinsViewCache::AccessCoins(const uint256 &txid) const {
     CCoinsMap::const_iterator it = FetchCoins(txid);
     if (it == cacheCoins.end()) {
