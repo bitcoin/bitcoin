@@ -113,6 +113,7 @@ public:
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
 
         fMiningRequiresPeers = true;
+        fMiningRequiresConfiguration = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fMineBlocksOnDemand = false;
@@ -188,6 +189,7 @@ public:
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_test, pnSeed6_test + ARRAYLEN(pnSeed6_test));
 
         fMiningRequiresPeers = true;
+        fMiningRequiresConfiguration = false;
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
         fMineBlocksOnDemand = false;
@@ -239,6 +241,7 @@ public:
         vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
 
         fMiningRequiresPeers = false;
+        fMiningRequiresConfiguration = false;
         fDefaultConsistencyChecks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;

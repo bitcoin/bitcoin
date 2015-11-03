@@ -455,9 +455,9 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY));
 
     strUsage += HelpMessageGroup(_("Block creation options:"));
-    strUsage += HelpMessageOpt("-blockminsize=<n>", strprintf(_("Set minimum block size in bytes (default: %u)"), 0));
-    strUsage += HelpMessageOpt("-blockmaxsize=<n>", strprintf(_("Set maximum block size in bytes (default: %d)"), DEFAULT_BLOCK_MAX_SIZE));
-    strUsage += HelpMessageOpt("-blockprioritysize=<n>", strprintf(_("Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"), DEFAULT_BLOCK_PRIORITY_SIZE));
+    strUsage += HelpMessageOpt("-blockminsize=<n>", _("Minimum block size in bytes"));
+    strUsage += HelpMessageOpt("-blockmaxsize=<n>", _("Maximum block size in bytes"));
+    strUsage += HelpMessageOpt("-blockprioritysize=<n>", _("Maximum size of high-priority/low-fee transactions in bytes"));
     if (showDebug)
         strUsage += HelpMessageOpt("-blockversion=<n>", strprintf("Override block version to test forking scenarios (default: %d)", (int)CBlock::CURRENT_VERSION));
 
