@@ -463,8 +463,8 @@ void RPCConsole::clear()
 
     // Set default style sheet
     QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont());
-    // Try to make font equally large on different OS.
-    QString ptSize = QString("%1pt").arg(QFontInfo(QFont()).pointSize());
+    // Try to make fixed font adequately large on different OS
+    QString ptSize = QString("%1pt").arg(QFontInfo(QFont()).pointSize() * 8.5 / 9);
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"
