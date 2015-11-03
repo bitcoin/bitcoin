@@ -1,6 +1,6 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Bitcoin in Unix.
+Some notes on how to build Bitcoin Core in Unix.
 
 (for OpenBSD specific instructions, see [build-openbsd.md](build-openbsd.md))
 
@@ -61,49 +61,55 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-	sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libevent-dev
+        sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libevent-dev
 
-For Ubuntu 12.04 and later or Debian 7 and later libboost-all-dev has to be installed:
+On Ubuntu 15.10+ there are generic names for the individual boost development
+packages, so the following can be used to only install necessary parts of
+boost:
 
-	sudo apt-get install libboost-all-dev
+        apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libboost-base-dev
 
- db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
- You can add the repository using the following command:
+For Ubuntu before 15.10, or Debian 7 and later libboost-all-dev has to be installed:
+
+        sudo apt-get install libboost-all-dev
+
+BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
+You can add the repository and install using the following commands:
 
         sudo add-apt-repository ppa:bitcoin/bitcoin
         sudo apt-get update
+        sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
- Ubuntu 12.04 and later have packages for libdb5.1-dev and libdb5.1++-dev,
- but using these will break binary wallet compatibility, and is not recommended.
+Ubuntu and Debian have their own libdb-dev and libdb++-dev packages, but these will install
+BerkeleyDB 5.1 or later, which break binary wallet compatibility with the distributed executables which
+are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
+pass `--with-incompatible-bdb` to configure.
 
-For other Debian & Ubuntu (with ppa):
-
-	sudo apt-get install libdb4.8-dev libdb4.8++-dev
+See the section "Disable-wallet mode" to build Bitcoin Core without wallet.
 
 Optional:
 
-	sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
+        sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
 
 ZMQ dependencies:
 
         sudo apt-get install libzmq3-dev (provides ZMQ API 4.x)
 
-
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
 
 If you want to build Bitcoin-Qt, make sure that the required packages for Qt development
-are installed. Either Qt 4 or Qt 5 are necessary to build the GUI.
+are installed. Either Qt 5 or Qt 4 are necessary to build the GUI.
 If both Qt 4 and Qt 5 are installed, Qt 4 will be used. Pass `--with-gui=qt5` to configure to choose Qt5.
 To build without GUI pass `--without-gui`.
 
-To build with Qt 4 you need the following:
-
-    sudo apt-get install libqt4-dev libprotobuf-dev protobuf-compiler
-
-For Qt 5 you need the following:
+To build with Qt 5 (recommended) you need the following:
 
     sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler
+
+Alternatively, to build with Qt 4 you need the following:
+
+    sudo apt-get install libqt4-dev libprotobuf-dev protobuf-compiler
 
 libqrencode (optional) can be installed with:
 
