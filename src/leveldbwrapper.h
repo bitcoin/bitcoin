@@ -82,7 +82,7 @@ public:
     CLevelDBWrapper(const boost::filesystem::path &path, size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     ~CLevelDBWrapper();
 
-    template<typename K, typename V> bool Read(const K& key, V& value) throw(leveldb_error) {
+    template<typename K, typename V> bool Read(const K& key, V& value) const throw(leveldb_error) {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;
@@ -111,7 +111,7 @@ public:
         return WriteBatch(batch, fSync);
     }
 
-    template<typename K> bool Exists(const K& key) throw(leveldb_error) {
+    template<typename K> bool Exists(const K& key) const throw(leveldb_error) {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(ssKey.GetSerializeSize(key));
         ssKey << key;

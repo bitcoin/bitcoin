@@ -108,7 +108,7 @@ bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
         return false;
 
     SendCoinsRecipient rv;
-    rv.address = uri.path();
+    rv.recipient = uri.path();
     rv.amount = 0;
 
 #if QT_VERSION < 0x050000
@@ -174,7 +174,7 @@ bool parseBitcoinURI(QString uri, SendCoinsRecipient *out)
 
 QString formatBitcoinURI(const SendCoinsRecipient &info)
 {
-    QString ret = QString("crowncoin:%1").arg(info.address);
+    QString ret = QString("crowncoin:%1").arg(info.recipient);
     int paramCount = 0;
 
     if (info.amount)

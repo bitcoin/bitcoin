@@ -268,6 +268,13 @@ static const CRPCCommand vRPCCommands[] =
     { "validateaddress",        &validateaddress,        true,      false,      false }, /* uses wallet if enabled */
     { "verifymessage",          &verifymessage,          false,     false,      false },
 
+    /* Names */
+    { "name_getaddress",        &name_getaddress,        true,      false,      false },
+#ifdef ENABLE_WALLET
+    { "name_register",          &name_register,          false,     false,      true },
+    { "sendtoname",             &sendtoname,             false,     false,      true },
+#endif /* ENABLE_WALLET?  */
+
 #ifdef ENABLE_WALLET
     /* Wallet */
     { "addmultisigaddress",     &addmultisigaddress,     false,     false,      true },

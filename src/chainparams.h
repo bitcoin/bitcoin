@@ -68,6 +68,14 @@ public:
     int RPCPort() const { return nRPCPort; }
     int AuxpowChainId() const { return 20; }
     int AuxpowStartHeight() const { return nAuxpowStartHeight; }
+
+    /* Height at which names are enabled as a softfork.  */
+    inline int
+    GetNamesForkHeight() const
+    {
+        return namesForkHeight;
+    }
+
 protected:
     CChainParams() {}
 
@@ -83,6 +91,7 @@ protected:
     string strDataDir;
     vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
+    int namesForkHeight;
 };
 
 /**

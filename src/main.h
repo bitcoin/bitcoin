@@ -14,6 +14,7 @@
 #include "chainparams.h"
 #include "coins.h"
 #include "core.h"
+#include "names.h"
 #include "net.h"
 #include "script.h"
 #include "sync.h"
@@ -331,8 +332,27 @@ class CBlockUndo
 public:
     std::vector<CTxUndo> vtxundo; // for all but the coinbase
 
+    /**
+     * Determine whether or not to read/write the names information.
+     * This flag is set depending on whether the block this corresponds to
+     * is before or after the fork point.
+     */
+    bool supportsNames;
+    /** Undo information for names.  */
+    CNameUndo names;
+
+    /* Construct the undo object empty.  It uses the CBlockIndex object
+       (and in particular the block height) to initialise the
+       "supportsNames" field appropriately.  */
+    explicit CBlockUndo (const CBlockIndex* pindex);
+
     IMPLEMENT_SERIALIZE(
         READWRITE(vtxundo);
+
+        if (supportsNames)
+          READWRITE (names);
+        else
+          assert (names.IsNull ());
     )
 
     bool WriteToDisk(CDiskBlockPos &pos, const uint256 &hashBlock)

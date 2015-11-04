@@ -53,7 +53,27 @@ bool CCoinsViewDB::SetBestBlock(const uint256 &hashBlock) {
     return db.WriteBatch(batch);
 }
 
-bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock) {
+bool CCoinsViewDB::GetName (const CName& name, CNameData& data) const {
+    return db.Read (std::make_pair ('n', name), data);
+}
+
+bool CCoinsViewDB::SetName (const CName& name, const CNameData& data) {
+    CLevelDBBatch batch;
+    CNameCache cache;
+    cache.Set (name, data);
+    cache.WriteBatch (batch);
+    return db.WriteBatch (batch);
+}
+
+bool CCoinsViewDB::DeleteName (const CName& name) {
+    CLevelDBBatch batch;
+    CNameCache cache;
+    cache.Delete (name);
+    cache.WriteBatch (batch);
+    return db.WriteBatch (batch);
+}
+
+bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names) {
     LogPrint("coindb", "Committing %u changed transactions to coin database...\n", (unsigned int)mapCoins.size());
 
     CLevelDBBatch batch;
@@ -61,6 +81,7 @@ bool CCoinsViewDB::BatchWrite(const std::map<uint256, CCoins> &mapCoins, const u
         BatchWriteCoins(batch, it->first, it->second);
     if (hashBlock != uint256(0))
         BatchWriteHashBestChain(batch, hashBlock);
+    names.WriteBatch (batch);
 
     return db.WriteBatch(batch);
 }

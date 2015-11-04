@@ -39,6 +39,8 @@ public:
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
         nSubsidyHalvingInterval = 2100000;
         nAuxpowStartHeight = 453273;
+        /* TODO: Decide about fork height.  */
+        namesForkHeight = 1000000;
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -123,6 +125,8 @@ public:
         nRPCPort = 19341;
         nAuxpowStartHeight = 453273;
         strDataDir = "testnet3";
+        /* TODO: Decide about fork height.  */
+        namesForkHeight = 1000000;
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1405338325;
@@ -165,10 +169,16 @@ public:
         nDefaultPort = 19444;
         nRPCPort = 19445;
         nAuxpowStartHeight = 250;
+        namesForkHeight = 250;
         strDataDir = "regtest";
 
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x231de73ec08234a4adff3c71e57271a13fa73f5ae1ca6b0ded89275e557a6207"));
+
+        /* Fork height for names:  The regtest framework constructs initial
+           chains of height 200.  Use 250 here so that we can test both
+           before and after the fork.  */
+        namesForkHeight = 250;
 
         vSeeds.clear();  // Regtest mode doesn't have any DNS seeds.
     }

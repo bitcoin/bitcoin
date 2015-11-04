@@ -145,8 +145,21 @@ void SendCoinsDialog::on_sendButton_clicked()
         QString amount = "<b>" + BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         amount.append("</b>");
         // generate monospace address string
-        QString address = "<span style='font-family: monospace;'>" + rcp.address;
-        address.append("</span>");
+        QString addrOrName = "<span style='font-family: monospace;'>";
+        if (model->validateAddress (rcp.recipient))
+          addrOrName += rcp.recipient;
+        else
+          {
+            CTxDestination dest;
+            if (!model->checkRecipientName (rcp.recipient, dest))
+              return;
+            CBitcoinAddress addr;
+            if (!addr.Set (dest))
+              return;
+            const QString strAddr(QString::fromStdString (addr.ToString ()));
+            addrOrName += QString("%1: %2").arg (rcp.recipient, strAddr);
+          }
+        addrOrName.append("</span>");
 
         QString recipientElement;
 
@@ -155,11 +168,11 @@ void SendCoinsDialog::on_sendButton_clicked()
             if(rcp.label.length() > 0) // label with address
             {
                 recipientElement = tr("%1 to %2").arg(amount, GUIUtil::HtmlEscape(rcp.label));
-                recipientElement.append(QString(" (%1)").arg(address));
+                recipientElement.append(QString(" (%1)").arg(addrOrName));
             }
             else // just address
             {
-                recipientElement = tr("%1 to %2").arg(amount, address);
+                recipientElement = tr("%1 to %2").arg(amount, addrOrName);
             }
         }
         else if(!rcp.authenticatedMerchant.isEmpty()) // secure payment request
@@ -168,7 +181,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         }
         else // insecure payment request
         {
-            recipientElement = tr("%1 to %2").arg(amount, address);
+            recipientElement = tr("%1 to %2").arg(amount, addrOrName);
         }
 
         formatted.append(recipientElement);
@@ -389,9 +402,9 @@ bool SendCoinsDialog::handlePaymentRequest(const SendCoinsRecipient &rv)
         }
     }
     else {
-        CBitcoinAddress address(rv.address.toStdString());
+        CBitcoinAddress address(rv.recipient.toStdString());
         if (!address.IsValid()) {
-            emit message(strSendCoins, tr("Invalid payment address %1").arg(rv.address),
+            emit message(strSendCoins, tr("Invalid payment address %1").arg(rv.recipient),
                 CClientUIInterface::MSG_WARNING);
             return false;
         }

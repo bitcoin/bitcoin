@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin developers
+// Copyright (c) 2009-2014 The Bitcoin developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef BITCOIN_COINS_H
 #define BITCOIN_COINS_H
 
 #include "core.h"
+#include "names.h"
 #include "serialize.h"
 #include "uint256.h"
 
@@ -274,8 +275,16 @@ public:
     // Modify the currently active block hash
     virtual bool SetBestBlock(const uint256 &hashBlock);
 
-    // Do a bulk modification (multiple SetCoins + one SetBestBlock)
-    virtual bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock);
+    // Get a name (if it exists)
+    virtual bool GetName (const CName& name, CNameData& data) const;
+    // Set a name (or add it if not exists)
+    virtual bool SetName (const CName& name, const CNameData& data);
+    // Delete a name.
+    virtual bool DeleteName (const CName& name);
+
+    // Do a bulk modification (multiple SetCoins, one SetBestBlock
+    // and name updates)
+    virtual bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names);
 
     // Calculate statistics about the unspent transaction output set
     virtual bool GetStats(CCoinsStats &stats);
@@ -298,8 +307,11 @@ public:
     bool HaveCoins(const uint256 &txid);
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
+    bool GetName (const CName& name, CNameData& data) const;
+    bool SetName (const CName& name, const CNameData& data);
+    bool DeleteName (const CName& name);
     void SetBackend(CCoinsView &viewIn);
-    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock);
+    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names);
     bool GetStats(CCoinsStats &stats);
 };
 
@@ -310,6 +322,7 @@ class CCoinsViewCache : public CCoinsViewBacked
 protected:
     uint256 hashBlock;
     std::map<uint256,CCoins> cacheCoins;
+    CNameCache cacheNames;
 
 public:
     CCoinsViewCache(CCoinsView &baseIn, bool fDummy = false);
@@ -320,7 +333,10 @@ public:
     bool HaveCoins(const uint256 &txid);
     uint256 GetBestBlock();
     bool SetBestBlock(const uint256 &hashBlock);
-    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock);
+    bool GetName (const CName& name, CNameData& data) const;
+    bool SetName (const CName& name, const CNameData& data);
+    bool DeleteName (const CName& name);
+    bool BatchWrite(const std::map<uint256, CCoins> &mapCoins, const uint256 &hashBlock, const CNameCache& names);
 
     // Return a modifiable reference to a CCoins. Check HaveCoins first.
     // Many methods explicitly require a CCoinsViewCache because of this method, to reduce
@@ -332,6 +348,7 @@ public:
     bool Flush();
 
     // Calculate the size of the cache (in number of transactions)
+    // This doesn't take name operations into account.
     unsigned int GetCacheSize();
 
     /** Amount of bitcoins coming in to a transaction
