@@ -95,6 +95,9 @@ void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart, unsigned nRequired, const Consensus::Params& consensusParams);
 static void CheckBlockIndex(const Consensus::Params& consensusParams);
 
+void SendBlob(CNode* pfrom, string blobType, int nElements, CDataStream& blob);
+
+
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
@@ -3640,7 +3643,7 @@ bool LoadBlockIndex()
     return true;
 }
 
-bool InitBlockIndex(const CChainParams& chainparams) 
+bool InitBlockIndex(const CChainParams& chainparams)
 {
     LOCK(cs_main);
 
@@ -4076,6 +4079,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
     LOCK(cs_main);
 
+    int nBlocksBlobbed = 0;
+    int nTxBlobbed = 0;
+    CDataStream txblob(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream blockblob(SER_NETWORK, PROTOCOL_VERSION);
     while (it != pfrom->vRecvGetData.end()) {
         // Don't bother if send buffer is too full to respond anyway
         if (pfrom->nSendSize >= SendBufferSize())
@@ -4127,7 +4134,21 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
                         assert(!"cannot load block from disk");
                     if (inv.type == MSG_BLOCK)
-                        pfrom->PushMessage("block", block);
+                    {
+                        if ((pfrom->nServices & NODE_COMPRESS) &&
+                            (nLocalServices & NODE_COMPRESS))
+                        {
+                            blockblob << block;
+                            nBlocksBlobbed++;
+                            if (blockblob.size() > (MAX_PROTOCOL_MESSAGE_LENGTH - MAX_BLOCK_SIZE))
+                            {
+                                SendBlob(pfrom,"blockblob",nBlocksBlobbed, blockblob);
+                                nBlocksBlobbed = 0;
+                            }
+                        }
+                        else
+                            pfrom->PushMessage("block", block);
+                    }
                     else // MSG_FILTERED_BLOCK)
                     {
                         LOCK(pfrom->cs_filter);
@@ -4143,8 +4164,26 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                             // however we MUST always provide at least what the remote peer needs
                             typedef std::pair<unsigned int, uint256> PairType;
                             BOOST_FOREACH(PairType& pair, merkleBlock.vMatchedTxn)
+                            {
                                 if (!pfrom->setInventoryKnown.count(CInv(MSG_TX, pair.second)))
-                                    pfrom->PushMessage("tx", block.vtx[pair.first]);
+                                {
+                                    if ((pfrom->nServices & NODE_COMPRESS) && (nLocalServices & NODE_COMPRESS))
+                                    {
+                                        // Don't check if txblob size > MAX_PROTOCOL_MESSAGE_LENGTH. It could never happen here.
+                                        txblob << block.vtx[pair.first];
+                                        nTxBlobbed++;
+                                    }
+                                    else
+                                        pfrom->PushMessage("tx", block.vtx[pair.first]);
+                                }
+                            }
+                            if ((pfrom->nServices & NODE_COMPRESS) &&
+                                (nLocalServices & NODE_COMPRESS) &&
+                                (nTxBlobbed > 0))
+                            {
+                                SendBlob(pfrom,"txblob",nTxBlobbed, txblob);
+                                nTxBlobbed = 0;
+                            }
                         }
                         // else
                             // no response
@@ -4171,8 +4210,21 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     LOCK(cs_mapRelay);
                     map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
                     if (mi != mapRelay.end()) {
-                        pfrom->PushMessage(inv.GetCommand(), (*mi).second);
-                        pushed = true;
+                        if ((pfrom->nServices & NODE_COMPRESS) &&
+                              (nLocalServices & NODE_COMPRESS) &&
+                              ((std::string)inv.GetCommand() == "tx")) {
+                            txblob << (*mi).second;
+                            nTxBlobbed++;
+                            pushed = true;
+                            if (txblob.size() > (MAX_PROTOCOL_MESSAGE_LENGTH - MAX_STANDARD_TX_SIZE)) {
+                                SendBlob(pfrom,"txblob",nTxBlobbed, txblob);
+                                nTxBlobbed = 0;
+                            }
+                        }
+                        else {
+                            pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                            pushed = true;
+                        }
                     }
                 }
                 if (!pushed && inv.type == MSG_TX) {
@@ -4181,21 +4233,42 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
                         ss << tx;
-                        pfrom->PushMessage("tx", ss);
-                        pushed = true;
+                        if ((pfrom->nServices & NODE_COMPRESS) &&
+                            (nLocalServices & NODE_COMPRESS)) {
+                            txblob << ss;
+                            nTxBlobbed++;
+                            pushed = true;
+                            if (txblob.size() > (MAX_PROTOCOL_MESSAGE_LENGTH - MAX_STANDARD_TX_SIZE)) {
+                                SendBlob(pfrom,"txblob",nTxBlobbed, txblob);
+                                nTxBlobbed = 0;
+                            }
+                        }
+                        else {
+                            pfrom->PushMessage("tx", ss);
+                            pushed = true;
+                        }
                     }
                 }
-                if (!pushed) {
+                if (!pushed)
                     vNotFound.push_back(inv);
-                }
             }
 
             // Track requests for our stuff.
             GetMainSignals().Inventory(inv.hash);
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
-                break;
+            if ((!(pfrom->nServices & NODE_COMPRESS) ||
+                   !(nLocalServices & NODE_COMPRESS)) &&
+                   (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK))
+                break; //Break only when compression is not enabled
         }
+    }
+
+    if ((pfrom->nServices & NODE_COMPRESS) && (nLocalServices & NODE_COMPRESS))
+    {
+        if(nTxBlobbed > 0)
+            SendBlob(pfrom, "txblob", nTxBlobbed, txblob);
+        if(nBlocksBlobbed > 0)
+            SendBlob(pfrom, "blockblob", nBlocksBlobbed, blockblob);
     }
 
     pfrom->vRecvGetData.erase(pfrom->vRecvGetData.begin(), it);
@@ -4211,6 +4284,47 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
         pfrom->PushMessage("notfound", vNotFound);
     }
 }
+
+
+void SendBlob(CNode* pfrom, string blobType, int nElements, CDataStream& blob)
+{
+    LogPrint("compress","Blob %s has %d elements\n", blobType, nElements);
+
+    // Send only if compression is turned on
+    if ((pfrom->nServices & NODE_COMPRESS) &&
+        (nLocalServices & NODE_COMPRESS)) {
+        if(nElements > 0 && blobType == "txblob") {
+            //Do not compress if too Small
+            if (blob.size() < MIN_TX_COMPRESS_SIZE)
+                pfrom->PushMessage("txblob", blob);
+            else {
+                // Compress
+                CDataStream cxblob(SER_NETWORK, PROTOCOL_VERSION);
+                if (blob.compress(cxblob,
+                    GetArg("-compressionlevel", DEFAULT_COMPRESSION_LEVEL))) {
+                    if(cxblob.size() < blob.size())
+                        pfrom->PushMessage("cxblob", cxblob);
+                    else
+                        //Send uncompressed if smaller than compressed
+                        pfrom->PushMessage("txblob", blob);
+                }
+                else
+                    pfrom->PushMessage("txblob", blob);
+            }
+        }
+        else if(nElements > 0 && blobType == "blockblob") {
+            // Compress
+            CDataStream cblockblob(SER_NETWORK, PROTOCOL_VERSION);
+            if (blob.compress(cblockblob,
+                GetArg("-compressionlevel", DEFAULT_COMPRESSION_LEVEL)))
+                pfrom->PushMessage("cblockblob", cblockblob);
+            else
+                pfrom->PushMessage("blockblob", blob);
+        }
+    }
+    blob.clear();
+}
+
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
 {
@@ -4651,7 +4765,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->PushMessage("headers", vHeaders);
     }
 
-
     else if (strCommand == "tx")
     {
         // Stop processing the transaction early if
@@ -4665,6 +4778,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vector<uint256> vWorkQueue;
         vector<uint256> vEraseQueue;
         CTransaction tx;
+
         vRecv >> tx;
 
         CInv inv(MSG_TX, tx.GetHash());
@@ -4889,6 +5003,85 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CheckBlockIndex(chainparams.GetConsensus());
     }
 
+    else if ((strCommand == "blockblob") || (strCommand == "cblockblob") ||
+             (strCommand == "txblob") || (strCommand == "cxblob"))
+    {
+        if ((pfrom->nServices & NODE_COMPRESS) &&
+            (nLocalServices & NODE_COMPRESS))
+        {
+            CDataStream ssRecv(SER_NETWORK,PROTOCOL_VERSION);
+            CTransaction tx;
+            CBlock block;
+
+            // Decompress first
+            if(strCommand == "cxblob" || strCommand == "cblockblob") {
+                if (vRecv.decompress(ssRecv, MAX_PROTOCOL_MESSAGE_LENGTH)) {
+                    if (strCommand == "cxblob")
+                        strCommand = "txblob";
+                    else
+                        strCommand = "blockblob";
+                }
+                else {
+                    // They sent us data which could not be decompressed.
+                    //   Decompression failed - unlikely
+                    //   They are attacking in some way
+                    LOCK(cs_main);
+                    Misbehaving(pfrom->GetId(), 20);
+                    LogPrintf("ERROR: blob decompression failed");
+                    return false;
+                }
+            }
+            // Then Process messages
+            if(strCommand == "txblob") {
+                while(ssRecv.size() > 0) {
+                    CDataStream ss(SER_NETWORK,PROTOCOL_VERSION);
+                    ssRecv >> tx;
+                    ss << tx;
+                    ProcessMessage(pfrom, "tx", ss, nTimeReceived);
+               }
+            }
+
+            if(strCommand == "blockblob") {
+                if(ssRecv.size() > 0)
+                    vRecv.clear();
+                while(ssRecv.size() > 0 || vRecv.size() > 0) {
+                    //CDataStream ss(SER_NETWORK,PROTOCOL_VERSION);
+                    if(ssRecv.size() > 0)
+                        ssRecv >> block;
+                    else
+                        vRecv >> block;
+
+                    CInv inv(MSG_BLOCK, block.GetHash());
+                    LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
+
+                    pfrom->AddInventoryKnown(inv);
+
+                    CValidationState state;
+                    // Process all blocks from whitelisted peers, even if not requested,
+                    // unless we're still syncing with the network.
+                    // Such an unrequested block may still be processed, subject to the
+                    // conditions in AcceptBlock().
+                    bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
+                    ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL);
+                    int nDoS;
+                    if (state.IsInvalid(nDoS)) {
+                        assert (state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
+                        pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+                                           state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
+                        if (nDoS > 0) {
+                            LOCK(cs_main);
+                            Misbehaving(pfrom->GetId(), nDoS);
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 50);
+            return false;
+        }
+    }
     else if (strCommand == "block" && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlock block;

@@ -92,6 +92,7 @@ testScripts = [
     'blockchain.py',
     'disablewallet.py',
     'sendheaders.py',
+    'compression.py',
 ]
 testScriptsExt = [
     'bip65-cltv.py',
