@@ -449,7 +449,7 @@ Status Win32WritableFile::Append(const Slice& data)
 {
     DWORD r = 0;
     if (!WriteFile(_hFile, data.data(), data.size(), &r, NULL) || r != data.size()) {
-        return Status::IOError("Win32WritableFile.Append::WriteFile: ", Win32::GetLastErrSz());
+        return Status::IOError("Win32WritableFile.Append::WriteFile: "+filename_, Win32::GetLastErrSz());
     }
     return Status::OK();
 }
@@ -457,7 +457,7 @@ Status Win32WritableFile::Append(const Slice& data)
 Status Win32WritableFile::Close()
 {
     if (!CloseHandle(_hFile)) {
-        return Status::IOError("Win32WritableFile.Close::CloseHandle: ", Win32::GetLastErrSz());
+        return Status::IOError("Win32WritableFile.Close::CloseHandle: "+filename_, Win32::GetLastErrSz());
     }
     _hFile = INVALID_HANDLE_VALUE;
     return Status::OK();
@@ -472,7 +472,7 @@ Status Win32WritableFile::Flush()
 Status Win32WritableFile::Sync()
 {
     if (!FlushFileBuffers(_hFile)) {
-        return Status::IOError("Win32WritableFile.Sync::FlushFileBuffers ", Win32::GetLastErrSz());
+        return Status::IOError("Win32WritableFile.Sync::FlushFileBuffers "+filename_, Win32::GetLastErrSz());
     }
     return Status::OK();
 }
