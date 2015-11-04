@@ -124,14 +124,9 @@ Current feature set:
 
 * Support for class B (multisig) and class C (op-return) encoded transactions
 
-Pending additions:
-------------------
-
-* Full support of unconfirmed transactions
+* Support of unconfirmed transactions
 
 * Creation of raw transactions with non-wallet inputs
-
-* Bitcoin based crowdsales
 
 Related projects:
 -----------------
