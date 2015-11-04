@@ -88,7 +88,7 @@ QString dateTimeStr(qint64 nTime)
     return dateTimeStr(QDateTime::fromTime_t((qint32)nTime));
 }
 
-QFont bitcoinAddressFont()
+QFont fixedPitchFont()
 {
     QFont font("Monospace");
 #if QT_VERSION >= 0x040800
@@ -103,7 +103,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 {
     parent->setFocusProxy(widget);
 
-    widget->setFont(bitcoinAddressFont());
+    widget->setFont(fixedPitchFont());
 #if QT_VERSION >= 0x040700
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.

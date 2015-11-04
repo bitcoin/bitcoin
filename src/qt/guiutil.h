@@ -37,8 +37,8 @@ namespace GUIUtil
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
-    // Render Bitcoin addresses in monospace font
-    QFont bitcoinAddressFont();
+    // Return a monospace font
+    QFont fixedPitchFont();
 
     // Set up widgets for address and amounts
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
