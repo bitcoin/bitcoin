@@ -3,6 +3,7 @@ $(package)_version=1_58_0
 $(package)_download_path=http://sourceforge.net/projects/boost/files/boost/1.58.0
 $(package)_file_name=$(package)_$($(package)_version).tar.bz2
 $(package)_sha256_hash=fdfc204fc33ec79c99b9a74944c3e54bd78be4f7f15e260c0e2700a36dc7d3e5
+$(package)_patches=mips-options-fix.patch
 
 define $(package)_set_vars
 $(package)_config_opts_release=variant=release
@@ -25,6 +26,7 @@ $(package)_cxxflags_linux=-fPIC
 endef
 
 define $(package)_preprocess_cmds
+  patch -d ./tools/build -p1 < $($(package)_patch_dir)/mips-options-fix.patch && \
   echo "using $(boost_toolset_$(host_os)) : : $($(package)_cxx) : <cxxflags>\"$($(package)_cxxflags) $($(package)_cppflags)\" <linkflags>\"$($(package)_ldflags)\" <archiver>\"$(boost_archiver_$(host_os))\" <striper>\"$(host_STRIP)\"  <ranlib>\"$(host_RANLIB)\" <rc>\"$(host_WINDRES)\" : ;" > user-config.jam
 endef
 
