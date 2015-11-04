@@ -39,8 +39,7 @@ public:
         bnProofOfWorkLimit = CBigNum(~uint256(0) >> 32);
         nSubsidyHalvingInterval = 2100000;
         nAuxpowStartHeight = 453273;
-        /* TODO: Decide about fork height.  */
-        namesForkHeight = 1000000;
+        namesForkHeight = 600000;
 
         // Build the genesis block. Note that the output of the genesis coinbase cannot
         // be spent as it did not originally exist in the database.
@@ -125,8 +124,7 @@ public:
         nRPCPort = 19341;
         nAuxpowStartHeight = 453273;
         strDataDir = "testnet3";
-        /* TODO: Decide about fork height.  */
-        namesForkHeight = 1000000;
+        namesForkHeight = 600000;
 
         // Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1405338325;
