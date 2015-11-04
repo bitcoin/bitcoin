@@ -462,13 +462,19 @@ void RPCConsole::clear()
     }
 
     // Set default style sheet
+    QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont());
+    // Try to make fixed font adequately large on different OS
+    QString ptSize = QString("%1pt").arg(QFontInfo(QFont()).pointSize() * 8.5 / 9);
     ui->messagesWidget->document()->setDefaultStyleSheet(
+        QString(
                 "table { }"
                 "td.time { color: #808080; padding-top: 3px; } "
+                "td.message { font-family: %1; font-size: %2; white-space:pre-wrap; } "
                 "td.cmd-request { color: #006060; } "
                 "td.cmd-error { color: red; } "
                 "b { color: #006060; } "
-                );
+            ).arg(fixedFontInfo.family(), ptSize)
+        );
 
     message(CMD_REPLY, (tr("Welcome to the Bitcoin Core RPC console.") + "<br>" +
                         tr("Use up and down arrows to navigate history, and <b>Ctrl-L</b> to clear screen.") + "<br>" +
@@ -494,7 +500,7 @@ void RPCConsole::message(int category, const QString &message, bool html)
     if(html)
         out += message;
     else
-        out += GUIUtil::HtmlEscape(message, true);
+        out += GUIUtil::HtmlEscape(message, false);
     out += "</td></tr></table>";
     ui->messagesWidget->append(out);
 }
