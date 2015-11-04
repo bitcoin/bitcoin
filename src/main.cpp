@@ -2372,8 +2372,6 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
 
     if (!fKnown) {
         while (vinfoBlockFile[nFile].nSize + nAddSize >= MAX_BLOCKFILE_SIZE) {
-            LogPrintf("Leaving block file %i: %s\n", nFile, vinfoBlockFile[nFile].ToString());
-            FlushBlockFile(true);
             nFile++;
             if (vinfoBlockFile.size() <= nFile) {
                 vinfoBlockFile.resize(nFile + 1);
@@ -2383,7 +2381,14 @@ bool FindBlockPos(CValidationState &state, CDiskBlockPos &pos, unsigned int nAdd
         pos.nPos = vinfoBlockFile[nFile].nSize;
     }
 
-    nLastBlockFile = nFile;
+    if (nFile != nLastBlockFile) {
+        if (!fKnown) {
+            LogPrintf("Leaving block file %i: %s\n", nFile, vinfoBlockFile[nFile].ToString());
+        }
+        FlushBlockFile(!fKnown);
+        nLastBlockFile = nFile;
+    }
+
     vinfoBlockFile[nFile].AddBlock(nHeight, nTime);
     if (fKnown)
         vinfoBlockFile[nFile].nSize = std::max(pos.nPos + nAddSize, vinfoBlockFile[nFile].nSize);
