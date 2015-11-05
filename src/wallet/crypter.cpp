@@ -174,15 +174,25 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
         {
             const CPubKey &vchPubKey = (*mi).second.get<0>();
             const std::vector<unsigned char> &vchCryptedSecret = (*mi).second.get<1>();
-            CKey key;
-            if (!DecryptKey(vMasterKeyIn, vchCryptedSecret, vchPubKey, key))
+            const uint256 &hash = (*mi).second.get<2>();
+
+            if (!hash.IsNull()) {
+                uint256 check_hash = Hash(vchPubKey.begin(), vchPubKey.end(), vchCryptedSecret.begin(), vchCryptedSecret.end());
+                if (hash != check_hash) {
+                    keyFail = true;
+                    break;
+                }
+            }
+            else
             {
-                keyFail = true;
-                break;
+                CKey key;
+                if (!DecryptKey(vMasterKeyIn, vchCryptedSecret, vchPubKey, key))
+                {
+                    keyFail = true;
+                    break;
+                }
             }
             keyPass = true;
-            if (fDecryptionThoroughlyChecked)
-                break;
         }
         if (keyPass && keyFail)
         {
@@ -192,7 +202,6 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
         if (keyFail || !keyPass)
             return false;
         vMasterKey = vMasterKeyIn;
-        fDecryptionThoroughlyChecked = true;
     }
     NotifyStatusChanged(this);
     return true;
