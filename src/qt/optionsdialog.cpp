@@ -18,7 +18,7 @@
 #include "txdb.h" // for -dbcache defaults
 
 #ifdef ENABLE_WALLET
-#include "wallet/wallet.h" // for CWallet::minTxFee
+#include "wallet/wallet.h" // for CWallet::GetRequiredFee()
 #endif
 
 #include <boost/thread.hpp>
