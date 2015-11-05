@@ -79,6 +79,7 @@ int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, 
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
+        pubkeylen = 33;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_COMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
@@ -103,10 +104,10 @@ int ec_privkey_export_der(const secp256k1_context *ctx, unsigned char *privkey, 
         memcpy(ptr, begin, sizeof(begin)); ptr += sizeof(begin);
         memcpy(ptr, key32, 32); ptr += 32;
         memcpy(ptr, middle, sizeof(middle)); ptr += sizeof(middle);
+        pubkeylen = 65;
         secp256k1_ec_pubkey_serialize(ctx, ptr, &pubkeylen, &pubkey, SECP256K1_EC_UNCOMPRESSED);
         ptr += pubkeylen;
         *privkeylen = ptr - privkey;
     }
     return 1;
 }
-

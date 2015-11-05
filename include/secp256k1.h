@@ -264,15 +264,17 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_parse(
 /** Serialize a pubkey object into a serialized byte sequence.
  *
  *  Returns: 1 always.
- *  Args: ctx:        a secp256k1 context object.
- *  Out:  output:     a pointer to a 65-byte (if compressed==0) or 33-byte (if
- *                    compressed==1) byte array to place the serialized key in.
- *        outputlen:  a pointer to an integer which will contain the serialized
- *                    size.
- *  In:   pubkey:     a pointer to a secp256k1_pubkey containing an initialized
- *                    public key.
- *        flags:      SECP256K1_EC_COMPRESSED if serialization should be in
- *                    compressed format, otherwise SECP256K1_EC_UNCOMPRESSED.
+ *  Args:   ctx:        a secp256k1 context object.
+ *  Out:    output:     a pointer to a 65-byte (if compressed==0) or 33-byte (if
+ *                      compressed==1) byte array to place the serialized key
+ *                      in.
+ *  In/Out: outputlen:  a pointer to an integer which is initially set to the
+ *                      size of output, and is overwritten with the written
+ *                      size.
+ *  In:     pubkey:     a pointer to a secp256k1_pubkey containing an
+ *                      initialized public key.
+ *          flags:      SECP256K1_EC_COMPRESSED if serialization should be in
+ *                      compressed format, otherwise SECP256K1_EC_UNCOMPRESSED.
  */
 SECP256K1_API int secp256k1_ec_pubkey_serialize(
     const secp256k1_context* ctx,
