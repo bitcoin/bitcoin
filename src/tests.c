@@ -1420,6 +1420,16 @@ void random_fe(secp256k1_fe *x) {
     } while(1);
 }
 
+void random_fe_test(secp256k1_fe *x) {
+    unsigned char bin[32];
+    do {
+        secp256k1_rand256_test(bin);
+        if (secp256k1_fe_set_b32(x, bin)) {
+            return;
+        }
+    } while(1);
+}
+
 void random_fe_non_zero(secp256k1_fe *nz) {
     int tries = 10;
     while (--tries >= 0) {
@@ -2035,6 +2045,62 @@ void run_ec_combine(void) {
     int i;
     for (i = 0; i < count * 8; i++) {
          test_ec_combine();
+    }
+}
+
+void test_group_decompress(const secp256k1_fe* x) {
+    /* The input itself, normalized. */
+    secp256k1_fe fex = *x;
+    secp256k1_fe tmp;
+    /* Results of set_xquad_var, set_xo_var(..., 0), set_xo_var(..., 1). */
+    secp256k1_ge ge_quad, ge_even, ge_odd;
+    /* Return values of the above calls. */
+    int res_quad, res_even, res_odd;
+
+    secp256k1_fe_normalize_var(&fex);
+
+    res_quad = secp256k1_ge_set_xquad_var(&ge_quad, &fex);
+    res_even = secp256k1_ge_set_xo_var(&ge_even, &fex, 0);
+    res_odd = secp256k1_ge_set_xo_var(&ge_odd, &fex, 1);
+
+    CHECK(res_quad == res_even);
+    CHECK(res_quad == res_odd);
+
+    if (res_quad) {
+        secp256k1_fe_normalize_var(&ge_quad.x);
+        secp256k1_fe_normalize_var(&ge_odd.x);
+        secp256k1_fe_normalize_var(&ge_even.x);
+        secp256k1_fe_normalize_var(&ge_quad.y);
+        secp256k1_fe_normalize_var(&ge_odd.y);
+        secp256k1_fe_normalize_var(&ge_even.y);
+
+        /* No infinity allowed. */
+        CHECK(!ge_quad.infinity);
+        CHECK(!ge_even.infinity);
+        CHECK(!ge_odd.infinity);
+
+        /* Check that the x coordinates check out. */
+        CHECK(secp256k1_fe_equal_var(&ge_quad.x, x));
+        CHECK(secp256k1_fe_equal_var(&ge_even.x, x));
+        CHECK(secp256k1_fe_equal_var(&ge_odd.x, x));
+
+        /* Check that the Y coordinate result in ge_quad is a square. */
+        CHECK(secp256k1_fe_sqrt_var(&tmp, &ge_quad.y));
+        secp256k1_fe_sqr(&tmp, &tmp);
+        CHECK(secp256k1_fe_equal_var(&tmp, &ge_quad.y));
+
+        /* Check odd/even Y in ge_odd, ge_even. */
+        CHECK(secp256k1_fe_is_odd(&ge_odd.y));
+        CHECK(!secp256k1_fe_is_odd(&ge_even.y));
+    }
+}
+
+void run_group_decompress(void) {
+    int i;
+    for (i = 0; i < count * 4; i++) {
+        secp256k1_fe fe;
+        random_fe_test(&fe);
+        test_group_decompress(&fe);
     }
 }
 
@@ -4259,6 +4325,7 @@ int main(int argc, char **argv) {
 
     /* group tests */
     run_ge();
+    run_group_decompress();
 
     /* ecmult tests */
     run_wnaf();

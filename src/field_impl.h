@@ -29,6 +29,15 @@ SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe *a, const 
 }
 
 static int secp256k1_fe_sqrt_var(secp256k1_fe *r, const secp256k1_fe *a) {
+    /** Given that p is congruent to 3 mod 4, we can compute the square root of
+     *  a mod p as the (p+1)/4'th power of a.
+     *
+     *  As (p+1)/4 is an even number, it will have the same result for a and for
+     *  (-a). Only one of these two numbers actually has a square root however,
+     *  so we test at the end by squaring and comparing to the input.
+     *  Also because (p+1)/4 is an even number, the computed square root is
+     *  itself always a square (a ** ((p+1)/4) is the square of a ** ((p+1)/8)).
+     */
     secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
     int j;
 
