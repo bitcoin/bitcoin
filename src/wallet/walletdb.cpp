@@ -85,7 +85,7 @@ bool CWalletDB::WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, c
 
 bool CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
                                 const std::vector<unsigned char>& vchCryptedSecret,
-                                const vector<unsigned char> &vchHash,
+                                const uint256 &hash,
                                 const CKeyMetadata &keyMeta)
 {
     const bool fEraseUnencryptedKey = true;
@@ -95,7 +95,7 @@ bool CWalletDB::WriteCryptedKey(const CPubKey& vchPubKey,
             keyMeta))
         return false;
 
-    if (!Write(std::make_pair(std::string("ckey"), vchPubKey), std::make_pair(vchCryptedSecret, vchHash), false))
+    if (!Write(std::make_pair(std::string("ckey"), vchPubKey), std::make_pair(vchCryptedSecret, hash), false))
         return false;
     if (fEraseUnencryptedKey)
     {
@@ -524,7 +524,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> vchPrivKey;
             wss.nCKeys++;
 
-            vector<unsigned char> vchHash;
+            uint256 hash;
 
             // Old wallets store keys as "key" [pubkey] => [privkey]
             // ... which was slow for wallets with lots of keys, because the public key is re-derived from the private key
@@ -533,11 +533,11 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             // remaining backwards-compatible.
             try
             {
-                ssValue >> vchHash;
+                ssValue >> hash;
             }
             catch (...) {}
 
-            if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey, vchHash))
+            if (!pwallet->LoadCryptedKey(vchPubKey, vchPrivKey, hash))
             {
                 strErr = "Error reading wallet database: LoadCryptedKey failed";
                 return false;

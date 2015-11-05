@@ -130,9 +130,9 @@ bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
 
 bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
                             const vector<unsigned char> &vchCryptedSecret,
-                            const vector<unsigned char> &vchHash)
+                            const uint256 &hash)
 {
-    if (!CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret, vchHash))
+    if (!CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret, hash))
         return false;
     if (!fFileBacked)
         return true;
@@ -141,12 +141,12 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
         if (pwalletdbEncryption)
             return pwalletdbEncryption->WriteCryptedKey(vchPubKey,
                                                         vchCryptedSecret,
-                                                        vchHash,
+                                                        hash,
                                                         mapKeyMetadata[vchPubKey.GetID()]);
         else
             return CWalletDB(strWalletFile).WriteCryptedKey(vchPubKey,
                                                             vchCryptedSecret,
-                                                            vchHash,
+                                                            hash,
                                                             mapKeyMetadata[vchPubKey.GetID()]);
     }
     return false;
@@ -162,13 +162,12 @@ bool CWallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta)
     return true;
 }
 
-bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, const std::vector<unsigned char> &vchHash)
+bool CWallet::LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret, const uint256 &hash)
 {
-    std::vector<unsigned char> vchCheckHash;
-    CCryptoKeyStore::CalculateCryptedHash(vchPubKey, vchCryptedSecret, vchCheckHash);
-    if (!std::equal(vchHash.begin(), vchHash.end(), vchCheckHash.begin()))
+    uint256 check_hash = Hash(vchPubKey.begin(), vchPubKey.end(), vchCryptedSecret.begin(), vchCryptedSecret.end());
+    if (!hash.IsNull() && check_hash != hash)
         return false;
-    return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret, vchHash);
+    return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret, hash);
 }
 
 bool CWallet::AddCScript(const CScript& redeemScript)
