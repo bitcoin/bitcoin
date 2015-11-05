@@ -61,24 +61,24 @@ Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-        sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libevent-dev
+    sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libevent-dev
 
 On Ubuntu 15.10+ there are generic names for the individual boost development
 packages, so the following can be used to only install necessary parts of
 boost:
 
-        apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libboost-base-dev
+    apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libboost-base-dev
 
 For Ubuntu before 15.10, or Debian 7 and later libboost-all-dev has to be installed:
 
-        sudo apt-get install libboost-all-dev
+    sudo apt-get install libboost-all-dev
 
 BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
 You can add the repository and install using the following commands:
 
-        sudo add-apt-repository ppa:bitcoin/bitcoin
-        sudo apt-get update
-        sudo apt-get install libdb4.8-dev libdb4.8++-dev
+    sudo add-apt-repository ppa:bitcoin/bitcoin
+    sudo apt-get update
+    sudo apt-get install libdb4.8-dev libdb4.8++-dev
 
 Ubuntu and Debian have their own libdb-dev and libdb++-dev packages, but these will install
 BerkeleyDB 5.1 or later, which break binary wallet compatibility with the distributed executables which
@@ -89,11 +89,11 @@ See the section "Disable-wallet mode" to build Bitcoin Core without wallet.
 
 Optional:
 
-        sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
+    sudo apt-get install libminiupnpc-dev (see --with-miniupnpc and --enable-upnp-default)
 
 ZMQ dependencies:
 
-        sudo apt-get install libzmq3-dev (provides ZMQ API 4.x)
+    sudo apt-get install libzmq3-dev (provides ZMQ API 4.x)
 
 Dependencies for the GUI: Ubuntu & Debian
 -----------------------------------------
@@ -213,6 +213,7 @@ Hardening enables the following features:
     	scanelf -e ./bitcoin
 
     The output should contain:
+
      TYPE
     ET_DYN
 
