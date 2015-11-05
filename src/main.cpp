@@ -830,27 +830,12 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     if (pool.exists(hash))
         return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
 
-    // Check for conflicts with in-memory transactions
-    {
-    LOCK(pool.cs); // protect pool.mapNextTx
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
-        COutPoint outpoint = tx.vin[i].prevout;
-        if (pool.mapNextTx.count(outpoint))
-        {
-            // Disable replacement feature for now
-            return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
-        }
-    }
-    }
-
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
 
         CAmount nValueIn = 0;
         {
-        LOCK(pool.cs);
         CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
         view.SetBackend(viewMemPool);
 

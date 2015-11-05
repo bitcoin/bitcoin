@@ -778,18 +778,22 @@ bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
     return true;
 }
 
-CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
+CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn)
+    : CCoinsViewBacked(baseIn),
+      criticalBlock(mempoolIn.cs, "CCoinsViewMemPool_lock", __FILE__, __LINE__),
+      mempool(mempoolIn) {}
 
 bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never
     // conflict with the underlying cache, and it cannot have pruned entries (as it contains full)
     // transactions. First checking the underlying cache risks returning a pruned entry instead.
     CTransaction tx;
-    if (mempool.lookup(txid, tx)) {
+    if (mempool.lookup(txid, tx))
         coins = CCoins(tx, MEMPOOL_HEIGHT);
-        return true;
-    }
-    return (base->GetCoins(txid, coins) && !coins.IsPruned());
+    else if (!base->GetCoins(txid, coins) || coins.IsPruned())
+        return false;
+    mempool.pruneSpent(txid, coins);
+    return true;
 }
 
 bool CCoinsViewMemPool::HaveCoins(const uint256 &txid) const {

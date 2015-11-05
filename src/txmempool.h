@@ -327,6 +327,7 @@ public:
 
 private:
     typedef std::map<txiter, setEntries, CompareIteratorByHash> cacheMap;
+    std::map<COutPoint, CInPoint> mapNextTx;
 
     struct TxLinks {
         setEntries parents;
@@ -342,7 +343,6 @@ private:
     void UpdateChild(txiter entry, txiter child, bool add);
 
 public:
-    std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
     /** Create a new CTxMemPool.
@@ -516,6 +516,7 @@ private:
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
 protected:
+    CCriticalBlock criticalBlock;
     CTxMemPool &mempool;
 
 public:

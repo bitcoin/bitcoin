@@ -508,11 +508,9 @@ UniValue gettxout(const UniValue& params, bool fHelp)
 
     CCoins coins;
     if (fMempool) {
-        LOCK(mempool.cs);
         CCoinsViewMemPool view(pcoinsTip, mempool);
         if (!view.GetCoins(hash, coins))
             return NullUniValue;
-        mempool.pruneSpent(hash, coins); // TODO: this should be done by the CCoinsViewMemPool
     } else {
         if (!pcoinsTip->GetCoins(hash, coins))
             return NullUniValue;
