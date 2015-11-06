@@ -121,6 +121,7 @@ Value generate(const Array& params, bool fHelp)
             "generate numblocks\n"
             "\nMine blocks immediately (before the RPC call returns)\n"
             "\nNote: this function can only be used on the regtest network\n"
+            "\nArguments:\n"
             "1. numblocks    (numeric) How many blocks are generated immediately.\n"
             "\nResult\n"
             "[ blockhashes ]     (array) hashes of blocks generated\n"

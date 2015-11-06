@@ -1,3 +1,33 @@
+bitcoin (0.11.0-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 14 Jul 2015 14:39:00 -1000
+
+bitcoin (0.10.2-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Mon, 29 Jun 2015 17:33:00 -1000
+
+bitcoin (0.10.1-precise3) precise; urgency=medium
+
+  * Fix build dep (include python).
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 09:28:00 -1000
+
+bitcoin (0.10.1-precise2) precise; urgency=medium
+
+  * Fix miniupnpc dep.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 00:33:00 -1000
+
+bitcoin (0.10.1-precise1) precise; urgency=medium
+
+  * New upstream release.
+
+ -- Matt Corallo (BlueMatt) <matt@mattcorallo.com>  Tue, 5 May 2015 00:07:00 -1000
+
 bitcoin (0.10.0-precise1) precise; urgency=medium
 
   * New upstream releases.
