@@ -183,8 +183,8 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
                     break;
                 }
             }
-            else
-            {
+
+            if (hash.IsNull() || !keyPass) {
                 CKey key;
                 if (!DecryptKey(vMasterKeyIn, vchCryptedSecret, vchPubKey, key))
                 {
