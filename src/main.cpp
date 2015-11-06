@@ -4103,7 +4103,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             boost::this_thread::interruption_point();
             it++;
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
+            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_WITNESS_BLOCK)
             {
                 bool send = false;
                 BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
@@ -4145,6 +4145,8 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         assert(!"cannot load block from disk");
                     if (inv.type == MSG_BLOCK)
                         pfrom->PushMessage(NetMsgType::BLOCK, block);
+                    if (inv.type == MSG_WITNESS_BLOCK)
+                        pfrom->PushMessageWithFlag(SERIALIZE_TRANSACTION_WITNESS, NetMsgType::BLOCK, block);
                     else // MSG_FILTERED_BLOCK)
                     {
                         LOCK(pfrom->cs_filter);
@@ -4179,25 +4181,23 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
             }
-            else if (inv.IsKnownType())
+            else if (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)
             {
                 // Send stream from relay memory
                 bool pushed = false;
                 {
-                    LOCK(cs_mapRelay);
-                    map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
-                    if (mi != mapRelay.end()) {
-                        pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                    LOCK(cs_mapRelayTx);
+                    map<uint256, CTransaction>::iterator mi = mapRelayTx.find(inv.hash);
+                    if (mi != mapRelayTx.end()) {
+                        pfrom->PushMessageWithFlag(inv.type == MSG_WITNESS_TX ? SERIALIZE_TRANSACTION_WITNESS : 0, NetMsgType::TX, (*mi).second);
                         pushed = true;
                     }
                 }
-                if (!pushed && inv.type == MSG_TX) {
+                if (!pushed && (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)) {
                     CTransaction tx;
                     if (mempool.lookup(inv.hash, tx)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << tx;
-                        pfrom->PushMessage(NetMsgType::TX, ss);
+                        pfrom->PushMessageWithFlag(inv.type == MSG_WITNESS_TX ? SERIALIZE_TRANSACTION_WITNESS : 0, NetMsgType::TX, tx);
                         pushed = true;
                     }
                 }
@@ -4209,7 +4209,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
             // Track requests for our stuff.
             GetMainSignals().Inventory(inv.hash);
 
-            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK)
+            if (inv.type == MSG_BLOCK || inv.type == MSG_FILTERED_BLOCK || inv.type == MSG_WITNESS_BLOCK)
                 break;
         }
     }
@@ -4681,7 +4681,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vector<uint256> vWorkQueue;
         vector<uint256> vEraseQueue;
         CTransaction tx;
-        vRecv >> tx;
+        WithOrVersion(&vRecv, SERIALIZE_TRANSACTION_WITNESS) >> tx;
 
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
@@ -4910,7 +4910,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CBlock block;
-        vRecv >> block;
+        WithOrVersion(&vRecv, SERIALIZE_TRANSACTION_WITNESS) >> block;
 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);

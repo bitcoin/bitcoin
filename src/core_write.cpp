@@ -118,7 +118,7 @@ string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode)
 
 string EncodeHexTx(const CTransaction& tx)
 {
-    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_WITNESS);
     ssTx << tx;
     return HexStr(ssTx.begin(), ssTx.end());
 }

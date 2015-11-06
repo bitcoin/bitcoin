@@ -91,9 +91,9 @@ std::string strSubVersion;
 
 vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;
-map<CInv, CDataStream> mapRelay;
-deque<pair<int64_t, CInv> > vRelayExpiration;
-CCriticalSection cs_mapRelay;
+map<uint256, CTransaction> mapRelayTx;
+deque<pair<int64_t, uint256> > vRelayTxExpiration;
+CCriticalSection cs_mapRelayTx;
 limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
 static deque<string> vOneShots;
@@ -2061,27 +2061,19 @@ instance_of_cnetcleanup;
 
 void RelayTransaction(const CTransaction& tx)
 {
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss.reserve(10000);
-    ss << tx;
-    RelayTransaction(tx, ss);
-}
-
-void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
-{
     CInv inv(MSG_TX, tx.GetHash());
     {
-        LOCK(cs_mapRelay);
+        LOCK(cs_mapRelayTx);
         // Expire old relay messages
-        while (!vRelayExpiration.empty() && vRelayExpiration.front().first < GetTime())
+        while (!vRelayTxExpiration.empty() && vRelayTxExpiration.front().first < GetTime())
         {
-            mapRelay.erase(vRelayExpiration.front().second);
-            vRelayExpiration.pop_front();
+            mapRelayTx.erase(vRelayTxExpiration.front().second);
+            vRelayTxExpiration.pop_front();
         }
 
         // Save original serialized message so newer versions are preserved
-        mapRelay.insert(std::make_pair(inv, ss));
-        vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv));
+        mapRelayTx.insert(std::make_pair(inv.hash, tx));
+        vRelayTxExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv.hash));
     }
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
