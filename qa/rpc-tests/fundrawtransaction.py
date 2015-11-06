@@ -554,7 +554,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # test fundrawtransaction with OP_RETURN and no vin #
         #####################################################
 
-        rawtx   = "0100000000010000000000000000066a047465737400000000"
+        rawtx   = "01000000000000010000000000000000066a047465737400000000"
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
 
         assert_equal(len(dec_tx['vin']), 0)
