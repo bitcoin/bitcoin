@@ -15,6 +15,7 @@
 #include "version.h"
 
 #include <boost/foreach.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "json/json_spirit_value.h"
 
@@ -47,15 +48,13 @@ Value ping(const Array& params, bool fHelp)
             "\nRequests that a ping be sent to all other nodes, to measure ping time.\n"
             "Results provided in getpeerinfo, pingtime and pingwait fields are decimal seconds.\n"
             "Ping command is handled in queue with all other commands, so it measures processing backlog, not just network ping.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("ping", "")
-            + HelpExampleRpc("ping", "")
-        );
+            "\nExamples:\n" +
+            HelpExampleCli("ping", "") + HelpExampleRpc("ping", ""));
 
     // Request that each node send a ping during next message processing pass
     LOCK2(cs_main, cs_vNodes);
 
-    BOOST_FOREACH(CNode* pNode, vNodes) {
+    BOOST_FOREACH (CNode* pNode, vNodes) {
         pNode->fPingQueued = true;
     }
 
@@ -68,7 +67,7 @@ static void CopyNodeStats(std::vector<CNodeStats>& vstats)
 
     LOCK(cs_vNodes);
     vstats.reserve(vNodes.size());
-    BOOST_FOREACH(CNode* pnode, vNodes) {
+    BOOST_FOREACH (CNode* pnode, vNodes) {
         CNodeStats stats;
         pnode->copyStats(stats);
         vstats.push_back(stats);
@@ -110,10 +109,8 @@ Value getpeerinfo(const Array& params, bool fHelp)
             "  }\n"
             "  ,...\n"
             "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getpeerinfo", "")
-            + HelpExampleRpc("getpeerinfo", "")
-        );
+            "\nExamples:\n" +
+            HelpExampleCli("getpeerinfo", "") + HelpExampleRpc("getpeerinfo", ""));
 
     LOCK(cs_main);
 
@@ -179,15 +176,12 @@ Value addnode(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
             "2. \"command\"  (string, required) 'add' to add a node to the list, 'remove' to remove a node from the list, 'onetry' to try a connection to the node once\n"
-            "\nExamples:\n"
-            + HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"")
-            + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
-        );
+            "\nExamples:\n" +
+            HelpExampleCli("addnode", "\"192.168.0.6:8333\" \"onetry\"") + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\""));
 
     string strNode = params[0].get_str();
 
-    if (strCommand == "onetry")
-    {
+    if (strCommand == "onetry") {
         CAddress addr;
         OpenNetworkConnection(addr, NULL, strNode.c_str());
         return Value::null;
@@ -195,18 +189,15 @@ Value addnode(const Array& params, bool fHelp)
 
     LOCK(cs_vAddedNodes);
     vector<string>::iterator it = vAddedNodes.begin();
-    for(; it != vAddedNodes.end(); it++)
+    for (; it != vAddedNodes.end(); it++)
         if (strNode == *it)
             break;
 
-    if (strCommand == "add")
-    {
+    if (strCommand == "add") {
         if (it != vAddedNodes.end())
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: Node already added");
         vAddedNodes.push_back(strNode);
-    }
-    else if(strCommand == "remove")
-    {
+    } else if (strCommand == "remove") {
         if (it == vAddedNodes.end())
             throw JSONRPCError(RPC_CLIENT_NODE_NOT_ADDED, "Error: Node has not been added.");
         vAddedNodes.erase(it);
@@ -345,10 +336,8 @@ Value getnettotals(const Array& params, bool fHelp)
             "  \"totalbytessent\": n,   (numeric) Total bytes sent\n"
             "  \"timemillis\": t        (numeric) Total cpu time\n"
             "}\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getnettotals", "")
-            + HelpExampleRpc("getnettotals", "")
-       );
+            "\nExamples:\n" +
+            HelpExampleCli("getnettotals", "") + HelpExampleRpc("getnettotals", ""));
 
     Object obj;
     obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
