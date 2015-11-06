@@ -2451,7 +2451,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
     // parse hex string from parameter
     CTransaction origTx;
-    if (!DecodeHexTx(origTx, params[0].get_str()))
+    if (!DecodeHexTx(origTx, params[0].get_str(), true))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
     if (origTx.vout.size() == 0)

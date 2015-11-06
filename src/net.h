@@ -598,6 +598,23 @@ public:
         }
     }
 
+    /** Send a message containing a1, serialized with flag flag. */
+    template<typename T1>
+    void PushMessageWithFlag(int flag, const char* pszCommand, const T1& a1)
+    {
+        try
+        {
+            BeginMessage(pszCommand);
+            WithOrVersion(&ssSend, flag) << a1;
+            EndMessage(pszCommand);
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
     template<typename T1, typename T2>
     void PushMessage(const char* pszCommand, const T1& a1, const T2& a2)
     {
