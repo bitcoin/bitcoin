@@ -82,7 +82,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
     }
 
     // Serialize and hash
-    CHashWriter ss(SER_GETHASH, 0);
+    CHashWriter ss(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
     ss << txTmp << nHashType;
     return ss.GetHash();
 }
