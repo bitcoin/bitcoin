@@ -3003,6 +3003,44 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
     return true;
 }
 
+static bool CheckCoinbaseCommitment(const CScript& script, const uint256& leaf, const std::vector<unsigned char> pathdata, const unsigned char typ[16])
+{
+    CScript::const_iterator it = script.begin();
+    std::vector<unsigned char> data;
+    while (it != script.end()) {
+        opcodetype op;
+        if (!script.GetOp(it, op, data) || op != 41 || data.size() != 41) {
+            continue;
+        }
+        if (data[0] != 0xaa || data[1] != 0x21 || data[2] != 0xa9 || data[3] != 0xed) {
+            continue;
+        }
+        uint256 result;
+        CSHA256().Write(typ, 16).Write(&data[4], 4).Finalize(result.begin());
+        uint32_t result32 = ReadLE32(result.begin());
+        unsigned int countbits = data[8];
+        if (countbits > 32) {
+            return false;
+        }
+        if (pathdata.size() != 32 * countbits) {
+            return false;
+        }
+        if (countbits < 32) {
+            result32 &= (1UL << countbits) - 1;
+        }
+        std::vector<uint256> path;
+        path.resize(countbits);
+        for (unsigned int i = 0; i < countbits; i++) {
+             memcpy(path[i].begin(), &pathdata[32 * i], 32);
+        }
+        uint256 root1 = ComputeMerkleRootFromBranch(leaf, path, result32);
+        uint256 root2;
+        memcpy(root2.begin(), &data[9], 32);
+        return root1 == root2;
+    }
+    return false;
+}
+
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, CBlockIndex * const pindexPrev)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
@@ -3031,8 +3069,16 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.Invalid(error("%s : rejected nVersion=3 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
 
+    // Reject block.nVersion=4 blocks when 95% (75% on testnet) of the network has upgraded:
+    if (block.nVersion < 5 && pindexPrev->nHeight + 1 >= consensusParams.SegWitHeight && IsSuperMajority(5, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+        return state.Invalid(error("%s : rejected nVersion=4 block", __func__),
+                             REJECT_OBSOLETE, "bad-version");
+
+
     return true;
 }
+
+static const unsigned char vTypeWitnessCommitment[16] = {'W', 'i', 't', 'n', 'e', 's', 's', 'V', '1'};
 
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex * const pindexPrev)
 {
@@ -3058,6 +3104,43 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
             return state.DoS(100, error("%s: block height mismatch in coinbase", __func__), REJECT_INVALID, "bad-cb-height");
+        }
+    }
+
+    // Validation for witness commitments.
+    // * We compute the witness hash (which is the hash including witnesses) of all the block's transactions, except the
+    //   coinbase (where 0x0000....0000 is used instead).
+    // * We build a merkle tree with all those witness hashes as leaves (similar to the hashMerkleRoot in the block header).
+    // * The first coinbase scriptSig minimal push of 41 bytes for which the first 4 bytes are {0xaa, 0x21, 0xa9, 0xed} is
+    //   treated as a commitment header. If no such push is present, the block is invalid. If multiple are present, the first
+    //   is used.
+    //   * The first 4 bytes of the commitment header are just magic identifier bytes, and have no further meaning.
+    //   * The next 4 bytes describe a nonce.
+    //   * The next 1 byte describes the number of levels in a Merkle tree.
+    //   * locator = SHA256('WitnessV1\x00\x00\x00\x00\x00\x00\x00' || nonce). The first levels bits of locator, interpreted
+    //     in little endian, are assumed to be the position in the leaves of this Merkle tree where the witness commitment
+    //     goes.
+    //   * The last 32 bytes of the commitment header are its root hash.
+    //   * The coinbase's input's witness must consist of a single byte array of 32 * levels bytes, and are assumed to be
+    //     the Merkle path to connect the witness root hash to the commitment root hash.
+    if (block.nVersion >= 5 && pindexPrev->nHeight + 1 >= consensusParams.SegWitHeight && IsSuperMajority(5, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)) {
+        bool malleated = false;
+        uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
+        if (malleated) {
+            return state.DoS(100, error("%s : witness merkle root duplication", __func__), REJECT_INVALID, "bad-witness-duplicate", true);
+        }
+        if (block.vtx[0].wit.vtxinwit.size() == 0 || block.vtx[0].wit.vtxinwit[0].scriptWitness.stack.size() != 1) {
+             return state.DoS(100, error("%s : invalid witness merkle path length", __func__), REJECT_INVALID, "bad-witness-merkle-len", true);
+        }
+        if (!CheckCoinbaseCommitment(block.vtx[0].vin[0].scriptSig, hashWitness, block.vtx[0].wit.vtxinwit[0].scriptWitness.stack[0], vTypeWitnessCommitment)) {
+            return state.DoS(100, error("%s : witness merkle commitment mismatch", __func__), REJECT_INVALID, "bad-witness-merkle-match", true);
+        }
+    } else {
+        // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room from spam.
+        for (size_t i = 0; i < block.vtx.size(); i++) {
+            if (block.vtx[i].wit.vtxinwit.size() > 0) {
+                return state.DoS(100, error("%s : unexpected witness data found", __func__), REJECT_INVALID, "unexpected-witness", true);
+            }
         }
     }
 
