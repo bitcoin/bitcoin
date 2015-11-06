@@ -99,6 +99,7 @@ private:
     QAction *receiveCoinsAction;
     QAction *receiveCoinsMenuAction;
     QAction *optionsAction;
+    QAction *unlimitedAction;
     QAction *toggleHideAction;
     QAction *encryptWalletAction;
     QAction *backupWalletAction;
@@ -189,6 +190,8 @@ private Q_SLOTS:
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();
+    /** Show Bitcoin Unlimited dialog */
+    void unlimitedClicked();
     /** Show about dialog */
     void aboutClicked();
     /** Show debug window */

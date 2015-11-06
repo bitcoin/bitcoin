@@ -16,6 +16,7 @@
 #include "rpcconsole.h"
 #include "scicon.h"
 #include "utilitydialog.h"
+#include "unlimiteddialog.h"
 
 #ifdef ENABLE_WALLET
 #include "walletframe.h"
@@ -85,6 +86,7 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     receiveCoinsAction(0),
     receiveCoinsMenuAction(0),
     optionsAction(0),
+    unlimitedAction(0),             
     toggleHideAction(0),
     encryptWalletAction(0),
     backupWalletAction(0),
@@ -308,6 +310,9 @@ void BitcoinGUI::createActions()
     optionsAction = new QAction(TextColorIcon(":/icons/options"), tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for Bitcoin Core"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
+    unlimitedAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Unlimited..."), this);
+    unlimitedAction->setStatusTip(tr("Modify Bitcoin Unlimited Options"));
+    unlimitedAction->setMenuRole(QAction::PreferencesRole);
     toggleHideAction = new QAction(TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
     toggleHideAction->setStatusTip(tr("Show or hide the main Window"));
 
@@ -342,6 +347,7 @@ void BitcoinGUI::createActions()
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
     connect(aboutQtAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
     connect(optionsAction, SIGNAL(triggered()), this, SLOT(optionsClicked()));
+    connect(unlimitedAction, SIGNAL(triggered()), this, SLOT(unlimitedClicked()));
     connect(toggleHideAction, SIGNAL(triggered()), this, SLOT(toggleHidden()));
     connect(showHelpMessageAction, SIGNAL(triggered()), this, SLOT(showHelpMessageClicked()));
     connect(openRPCConsoleAction, SIGNAL(triggered()), this, SLOT(showDebugWindow()));
@@ -396,6 +402,7 @@ void BitcoinGUI::createMenuBar()
         settings->addSeparator();
     }
     settings->addAction(optionsAction);
+    settings->addAction(unlimitedAction);
 
     QMenu *help = appMenuBar->addMenu(tr("&Help"));
     if(walletFrame)
@@ -549,6 +556,7 @@ void BitcoinGUI::createTrayIconMenu()
     trayIconMenu->addAction(verifyMessageAction);
     trayIconMenu->addSeparator();
     trayIconMenu->addAction(optionsAction);
+    trayIconMenu->addAction(unlimitedAction);
     trayIconMenu->addAction(openRPCConsoleAction);
 #ifndef Q_OS_MAC // This is built-in on Mac
     trayIconMenu->addSeparator();
@@ -1120,4 +1128,14 @@ void UnitDisplayStatusBarControl::onMenuSelection(QAction* action)
     {
         optionsModel->setDisplayUnit(action->data());
     }
+}
+
+void BitcoinGUI::unlimitedClicked()
+{
+    if(!clientModel || !clientModel->getOptionsModel())
+        return;
+
+    UnlimitedDialog dlg(this);
+    //dlg.setModel(clientModel->getOptionsModel());
+    dlg.exec();
 }
