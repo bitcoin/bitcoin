@@ -631,6 +631,18 @@ public:
     }
 };
 
+struct CScriptWitness
+{
+    std::vector<std::vector<unsigned char> > stack;
+
+    // Some compilers complain without a default constructor
+    CScriptWitness() { }
+
+    bool IsNull() const { return stack.empty(); }
+
+    std::string ToString() const;
+};
+
 class CReserveScript
 {
 public:

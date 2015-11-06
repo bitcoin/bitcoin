@@ -520,7 +520,7 @@ public:
     {
         {
             LOCK(cs_inventory);
-            if (inv.type == MSG_TX && filterInventoryKnown.contains(inv.hash))
+            if ((inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) && filterInventoryKnown.contains(inv.hash))
                 return;
             vInventoryToSend.push_back(inv);
         }
@@ -567,6 +567,23 @@ public:
         {
             BeginMessage(pszCommand);
             ssSend << a1;
+            EndMessage(pszCommand);
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    /** Send a message containing a1, serialized with flag flag. */
+    template<typename T1>
+    void PushMessageWithFlag(int flag, const char* pszCommand, const T1& a1)
+    {
+        try
+        {
+            BeginMessage(pszCommand);
+            WithOrVersion(&ssSend, flag) << a1;
             EndMessage(pszCommand);
         }
         catch (...)
