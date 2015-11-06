@@ -14,6 +14,10 @@ const struct BIP9DeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION
     {
         /*.name =*/ "csv",
         /*.gbt_force =*/ true,
+    },
+    {
+        /*.name =*/ "segwit",
+        /*.gbt_force =*/ false,
     }
 };
 
