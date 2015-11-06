@@ -93,6 +93,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1462060800; // May 1st, 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
 
+        // Deployment of SegWit.
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nStartTime = 2000000000; // Far in the future
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nTimeout = 2100000000;
+
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -186,6 +191,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1456790400; // March 1st, 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
 
+        // Deployment of SegWit.
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nStartTime = 2000000000; // Far in the future
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nTimeout = 2100000000;
+
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x09;
@@ -266,6 +276,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nTimeout = 999999999999ULL;
 
         genesis = CreateGenesisBlock(1452831101, 0, UintToArith256(consensus.powLimit).GetCompact(), 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -318,6 +331,9 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 0;
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 999999999999ULL;
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].bit = 1;
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nStartTime = 0;
+        consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nTimeout = 999999999999ULL;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -383,3 +399,4 @@ void SelectParams(const std::string& network)
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
 }
+ 
