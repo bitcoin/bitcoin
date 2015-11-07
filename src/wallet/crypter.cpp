@@ -223,7 +223,6 @@ bool CCryptoKeyStore::AddKeyPubKey(const CKey& key, const CPubKey &pubkey)
             return false;
 
         uint256 hash = Hash(pubkey.begin(), pubkey.end(), vchCryptedSecret.begin(), vchCryptedSecret.end());
-
         if (!AddCryptedKey(pubkey, vchCryptedSecret, hash))
             return false;
     }
