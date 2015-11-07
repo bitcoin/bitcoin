@@ -661,10 +661,8 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRE
     return nEvicted;
 }
 
-int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, int nBlockHeight, int64_t nBlockTime)
+int64_t LockTime(const CTransaction &tx, int flags, const CBlockIndex& tip, const std::vector<CCoins>& prevCoins, int nBlockHeight, int64_t nBlockTime)
 {
-    AssertLockHeld(cs_main);
-
     CCoins coins;
 
     bool fEnforceBIP68 = static_cast<uint32_t>(tx.nVersion) >= 2
@@ -678,8 +676,9 @@ int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView
     // Will remain equal to true if all inputs are finalized
     // (CTxIn::SEQUENCE_FINAL).
     bool fFinalized = true;
-
+    int txinIndex = -1;
     BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+        txinIndex++;
         // Set a flag if we witness an input that isn't finalized.
         if (txin.nSequence == CTxIn::SEQUENCE_FINAL)
             continue;
@@ -689,7 +688,7 @@ int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView
         // Do not enforce sequence numbers as a relative lock time
         // unless we have been instructed to, and a view has been
         // provided.
-        if (!(fEnforceBIP68 && pCoinsView))
+        if (!fEnforceBIP68)
             continue;
 
         // Sequence numbers with the most significant bit set are not
@@ -698,19 +697,7 @@ int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLED_FLAG)
             continue;
 
-        // Fetch the UTXO corresponding to this input.
-        //
-        // If the UTXO is not found, proceed to the next because we
-        // will not be able to do the relative lock-time calculation.
-        // This should never happen in consensus code.
-        //
-        // The better solution would be to fail, but that requires
-        // rewriting many pieces of non-consensus code that call
-        // LockTime or CheckLockTime to collect this information
-        // and pass it in somehow. This would not be simple to
-        // back-port for the soft-fork, however.
-        if (!pCoinsView->GetCoins(txin.prevout.hash, coins))
-            continue;
+        coins = prevCoins.at(txinIndex);
 
         // coins.nHeight is MEMPOOL_HEIGHT (an absurdly high value)
         // if the parent transaction was from the mempool. We can't
@@ -719,22 +706,13 @@ int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView
         int nCoinHeight = std::min(coins.nHeight, nBlockHeight);
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_SECONDS_FLAG) {
-            // In two locations that follow we make reference to
-            // chainActive.Tip(). To prevent a race condition, we
-            // store a reference to the current tip.
-            //
-            // Note that it is not guaranteed that indexBestBlock will
-            // be consistent with the passed in view. The proper thing
-            // to do is to have the view return time information about
-            // UTXOs.
-            const CBlockIndex& indexBestBlock = *chainActive.Tip();
 
             // The only time the negative branch of this conditional
             // is executed is when the prior output was taken from the
             // mempool, in which case we assume it makes it into the
             // same block (see above).
-            int64_t nCoinTime = (nCoinHeight <= (indexBestBlock.nHeight+1))
-                              ? indexBestBlock.GetAncestor(nCoinHeight-1)->GetMedianTimePast()
+            int64_t nCoinTime = (nCoinHeight <= (tip.nHeight+1))
+                              ? tip.GetAncestor(std::max(nCoinHeight-1, 0))->GetMedianTimePast()
                               : nBlockTime;
 
             // Time-based relative lock-times are measured from the
@@ -768,6 +746,26 @@ int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView
         return nMinTime;
 
     return 0;
+}
+
+int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, int nBlockHeight, int64_t nBlockTime)
+{
+    AssertLockHeld(cs_main);
+    CCoins coins;
+    std::vector<CCoins> prevCoins (tx.vin.size());
+    int txinIndex = -1;
+    BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+        txinIndex++;
+        if (!pCoinsView || !pCoinsView->GetCoins(txin.prevout.hash, coins))
+        {
+            coins = CCoins();
+            //If previous coin is not found in the CCoinsView, 
+            //assume the coin is anormally old, so it does not change the minheight and nMinTime later
+            coins.nHeight = -100000000;
+        }
+        prevCoins.at(txinIndex) = coins;
+    }
+    return LockTime(tx, flags, *chainActive.Tip(), prevCoins, nBlockHeight, nBlockTime);
 }
 
 int64_t CheckLockTime(const CTransaction &tx, int flags)
