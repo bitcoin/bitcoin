@@ -56,8 +56,8 @@ public:
     void setRestartRequired(bool fRequired);
     bool isRestartRequired();
 
-private:
     int maxGeneratedBlock;
+private:
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;
 

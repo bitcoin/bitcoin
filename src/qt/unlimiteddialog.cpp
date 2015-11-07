@@ -37,10 +37,14 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
   model(mdl)
 {
   ui.setupUi(this);
-
+  //ui.maxMinedBlock->setRange(0, 0xffffffffUL);
   mapper.setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
   mapper.setOrientation(Qt::Vertical);
   setMapper();
+
+  connect(ui.okButton, SIGNAL(clicked(bool)), this, SLOT(on_okButton_clicked()));
+
+  ui.miningMaxBlock->setText(QString(boost::lexical_cast<std::string>(model->maxGeneratedBlock).c_str()));
 }
 
 
