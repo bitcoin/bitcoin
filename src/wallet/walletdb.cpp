@@ -510,6 +510,11 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             pwallet->mapMasterKeys[nID] = kMasterKey;
             if (pwallet->nMasterKeyMaxID < nID)
                 pwallet->nMasterKeyMaxID = nID;
+            if(pwallet->mapMasterKeys.size() > 1)
+            {
+                strErr = "Error reading wallet database: multiple CMasterKey entries";
+                return false;
+            }
         }
         else if (strType == "ckey")
         {
