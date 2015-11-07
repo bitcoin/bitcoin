@@ -1132,10 +1132,9 @@ void UnitDisplayStatusBarControl::onMenuSelection(QAction* action)
 
 void BitcoinGUI::unlimitedClicked()
 {
-    if(!clientModel || !clientModel->getOptionsModel())
+    if(!clientModel || !clientModel->unlimitedModel)
         return;
 
-    UnlimitedDialog dlg(this);
-    //dlg.setModel(clientModel->getOptionsModel());
+    UnlimitedDialog dlg(this,clientModel->unlimitedModel);
     dlg.exec();
 }

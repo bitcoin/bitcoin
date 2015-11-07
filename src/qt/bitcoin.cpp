@@ -14,6 +14,7 @@
 #include "intro.h"
 #include "networkstyle.h"
 #include "optionsmodel.h"
+#include "unlimitedmodel.h"
 #include "splashscreen.h"
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
@@ -233,6 +234,7 @@ Q_SIGNALS:
 private:
     QThread *coreThread;
     OptionsModel *optionsModel;
+    UnlimitedModel *unlimitedModel;
     ClientModel *clientModel;
     BitcoinGUI *window;
     QTimer *pollShutdownTimer;
@@ -300,6 +302,7 @@ BitcoinApplication::BitcoinApplication(int &argc, char **argv):
     QApplication(argc, argv),
     coreThread(0),
     optionsModel(0),
+    unlimitedModel(0),
     clientModel(0),
     window(0),
     pollShutdownTimer(0),
@@ -330,6 +333,13 @@ BitcoinApplication::~BitcoinApplication()
 #endif
     delete optionsModel;
     optionsModel = 0;
+<<<<<<< HEAD
+=======
+    delete platformStyle;
+    platformStyle = 0;
+    delete unlimitedModel;
+    unlimitedModel=0;
+>>>>>>> add data model for unlimited dialog
 }
 
 #ifdef ENABLE_WALLET
@@ -342,6 +352,7 @@ void BitcoinApplication::createPaymentServer()
 void BitcoinApplication::createOptionsModel()
 {
     optionsModel = new OptionsModel();
+    unlimitedModel = new UnlimitedModel();
 }
 
 void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
@@ -426,7 +437,7 @@ void BitcoinApplication::initializeResult(int retval)
         paymentServer->setOptionsModel(optionsModel);
 #endif
 
-        clientModel = new ClientModel(optionsModel);
+        clientModel = new ClientModel(optionsModel,unlimitedModel);
         window->setClientModel(clientModel);
 
 #ifdef ENABLE_WALLET

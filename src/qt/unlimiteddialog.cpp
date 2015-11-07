@@ -7,6 +7,7 @@
 #endif
 
 #include "unlimiteddialog.h"
+#include "unlimitedmodel.h"
 
 #include "bitcoinunits.h"
 #include "guiutil.h"
@@ -31,12 +32,67 @@
 #include <QTimer>
 
 
-UnlimitedDialog::UnlimitedDialog(QWidget* parent):
-  QDialog(parent)  
+UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
+  QDialog(parent),
+  model(mdl)
 {
-  ui.setupUi(this);  
+  ui.setupUi(this);
+
+  mapper.setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
+  mapper.setOrientation(Qt::Vertical);
+  setMapper();
 }
+
 
 UnlimitedDialog::~UnlimitedDialog()
 {
+}
+
+#if 0
+void UnlimitedDialog::setModel(UnlimitedModel* mdl)
+{
+    model = mdl;
+
+    if (model)
+      {
+        /* check if client restart is needed and show persistent message */
+        //if (model->isRestartRequired())
+        //    showRestartWarning(true);
+
+        QString strLabel; //  = model->getOverriddenByCommandLine();
+        if (strLabel.isEmpty())
+            strLabel = tr("none");
+        ui.overriddenByCommandLineLabel->setText(strLabel);
+
+        mapper.setModel(model);
+        setMapper();
+        mapper.toFirst();
+    }
+#endif    
+
+void UnlimitedDialog::setMapper()
+{
+    mapper.setModel(model);
+    /* Network */
+
+    mapper.addMapping(ui.sendShapingEnable, UnlimitedModel::UseSendShaping);
+    mapper.addMapping(ui.sendBurstEdit, UnlimitedModel::SendBurst);
+    mapper.addMapping(ui.sendAveEdit, UnlimitedModel::SendAve);
+    mapper.addMapping(ui.recvShapingEnable, UnlimitedModel::UseReceiveShaping);
+    mapper.addMapping(ui.recvBurstEdit, UnlimitedModel::ReceiveBurst);
+    mapper.addMapping(ui.recvAveEdit, UnlimitedModel::ReceiveAve);
+
+    mapper.addMapping(ui.miningMaxBlock,UnlimitedModel::MaxGeneratedBlock);
+}
+    
+
+void UnlimitedDialog::on_okButton_clicked()
+{
+    mapper.submit();
+    accept();
+}
+
+void UnlimitedDialog::on_cancelButton_clicked()
+{
+    reject();
 }

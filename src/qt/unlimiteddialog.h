@@ -7,15 +7,12 @@
 
 #include <QDialog>
 #include <QIntValidator>
-
+#include <QDataWidgetMapper>
 class OptionsModel;
 class QValidatedLineEdit;
 class QLineEdit;
 class QLabel;
-
-QT_BEGIN_NAMESPACE
-class QDataWidgetMapper;
-QT_END_NAMESPACE
+class UnlimitedModel;
 
 #include "ui_unlimited.h"
 
@@ -25,15 +22,20 @@ class UnlimitedDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit UnlimitedDialog(QWidget* parent);
+    explicit UnlimitedDialog(QWidget* parent,UnlimitedModel* model);
     virtual ~UnlimitedDialog();
+    void setMapper();
     
 private Q_SLOTS:
+    void on_okButton_clicked();
+    void on_cancelButton_clicked();
 
 Q_SIGNALS:
     
 private:
     Ui_UnlimitedDialog ui;
+    QDataWidgetMapper mapper;
+    UnlimitedModel* model;
     
 };
 
