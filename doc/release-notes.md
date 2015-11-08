@@ -1,8 +1,8 @@
-Bitcoin Core version 0.11.1 is now available from:
+Bitcoin Core version 0.11.2 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.11.1/>
+  <https://bitcoin.org/bin/bitcoin-core-0.11.2/>
 
-This is a new minor version release, bringing security fixes. It is recommended
+This is a new minor version release, bringing new features and bug fixes. It is recommended
 to upgrade to this version as soon as possible.
 
 Please report bugs using the issue tracker at github:
@@ -44,72 +44,93 @@ supported and may break as soon as the older version attempts to reindex.
 This does not affect wallet forward or backward compatibility. There are no
 known problems when downgrading from 0.11.x to 0.10.x.
 
-Notable changes
-===============
+Notable changes since 0.11.1
+============================
 
-Fix buffer overflow in bundled upnp
-------------------------------------
+BIP65 soft fork to enforce OP_CHECKLOCKTIMEVERIFY opcode
+--------------------------------------------------------
 
-Bundled miniupnpc was updated to 1.9.20151008. This fixes a buffer overflow in
-the XML parser during initial network discovery.
+This release includes several changes related to the [BIP65][] soft fork
+which redefines the existing OP_NOP2 opcode as OP_CHECKLOCKTIMEVERIFY
+(CLTV) so that a transaction output can be made unspendable until a
+specified point in the future.
 
-Details can be found here: http://talosintel.com/reports/TALOS-2015-0035/
+1. This release will only relay and mine transactions spending a CLTV
+   output if they comply with the BIP65 rules as provided in code.
 
-This applies to the distributed executables only, not when building from source or
-using distribution provided packages.
+2. This release will produce version 4 blocks by default. Please see the
+   *notice to miners below*.
 
-Additionally, upnp has been disabled by default. This may result in a lower
-number of reachable nodes on IPv4, however this prevents future libupnpc
-vulnerabilities from being a structural risk to the network
-(see https://github.com/bitcoin/bitcoin/pull/6795).
+3. Once 951 out of a sequence of 1,001 blocks on the local node's best block
+   chain contain version 4 (or higher) blocks, this release will no
+   longer accept new version 3 blocks and it will only accept version 4
+   blocks if they comply with the BIP65 rules for CLTV.
 
-Test for LowS signatures before relaying
------------------------------------------
+For more information about the soft-forking change, please see
+<https://github.com/bitcoin/bitcoin/pull/6351>
 
-Make the node require the canonical 'low-s' encoding for ECDSA signatures when
-relaying or mining.  This removes a nuisance malleability vector.
+**Notice to miners:** Bitcoin Core’s block templates are now for
+version 4 blocks only, and any mining software relying on its
+getblocktemplate must be updated in parallel to use libblkmaker either
+version FIXME or any version from FIXME onward.
 
-Consensus behavior is unchanged.
+- If you are solo mining, this will affect you the moment you upgrade
+  Bitcoin Core, which must be done prior to BIP65 achieving its 951/1001
+  status.
 
-If widely deployed this change would eliminate the last remaining known vector
-for nuisance malleability on SIGHASH_ALL P2PKH transactions. On the down-side
-it will block most transactions made by sufficiently out of date software.
+- If you are mining with the stratum mining protocol: this does not
+  affect you.
 
-Unlike the other avenues to change txids on transactions this
-one was randomly violated by all deployed bitcoin software prior to
-its discovery. So, while other malleability vectors where made
-non-standard as soon as they were discovered, this one has remained
-permitted. Even BIP62 did not propose applying this rule to
-old version transactions, but conforming implementations have become
-much more common since BIP62 was initially written.
+- If you are mining with the getblocktemplate protocol to a pool: this
+  will affect you at the pool operator’s discretion, which must be no
+  later than BIP66 achieving its 951/1001 status.
 
-Bitcoin Core has produced compatible signatures since a28fb70e in
-September 2013, but this didn't make it into a release until 0.9
-in March 2014; Bitcoinj has done so for a similar span of time.
-Bitcoinjs and electrum have been more recently updated.
+[BIP65]: https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki
 
-This does not replace the need for BIP62 or similar, as miners can
-still cooperate to break transactions.  Nor does it replace the
-need for wallet software to handle malleability sanely[1]. This
-only eliminates the cheap and irritating DOS attack.
+BIP113 mempool-only locktime enforment using GetMedianTimePast()
+----------------------------------------------------------------
 
-[1] On the Malleability of Bitcoin Transactions
-Marcin Andrychowicz, Stefan Dziembowski, Daniel Malinowski, Łukasz Mazurek
-http://fc15.ifca.ai/preproceedings/bitcoin/paper_9.pdf
+Bitcoin transactions currently may specify a locktime indicating when
+they may be added to a valid block.  Current consensus rules require
+that blocks have a block header time greater than the locktime specified
+in any transaction in that block.
 
-Minimum relay fee default increase
------------------------------------
+Miners get to choose what time they use for their header time, with the
+consensus rule being that no node will accept a block whose time is more
+than two hours in the future.  This creates a incentive for miners to
+set their header times to future values in order to include locktimed
+transactions which weren't supposed to be included for up to two more
+hours.
 
-The default for the `-minrelaytxfee` setting has been increased from `0.00001`
-to `0.00005`.
+The consensus rules also specify that valid blocks may have a header
+time greater than that of the median of the 11 previous blocks.  This
+GetMedianTimePast() time has a key feature we generally associate with
+time: it can't go backwards.
 
-This is necessitated by the current transaction flooding, causing
-outrageous memory usage on nodes due to the mempool ballooning. This is a
-temporary measure, bridging the time until a dynamic method for determining
-this fee is merged (which will be in 0.12).
+[BIP113][] specifies a soft fork (**not enforced in this release**) that
+weakens this perverse incentive for individual miners to use a future
+time by requiring that valid blocks have a computed GetMedianTimePast()
+greater than the locktime specified in any transaction in that block.
 
-(see https://github.com/bitcoin/bitcoin/pull/6793, as well as the 0.11
-release notes, in which this value was suggested)
+Mempool inclusion rules currently require transactions to be valid for
+immediate inclusion in a block in order to be accepted into the mempool.
+This release begins applying the BIP113 rule to received transactions,
+so transaction whose time is greater than the GetMedianTimePast() will
+no longer be accepted into the mempool.
+
+**Implication for miners:** you may begin rejecting locktime
+transactions that could be included under the current consensus rules.
+Rejecting those transactions now means that you don't have to worry
+about producing invalid blocks when BIP113 becomes consensus enforced.
+
+**Implication for users:** GetMedianTimePast() always trails behind the
+current time, so a transaction locktime set to the present time will be
+rejected by nodes running this release until the median time moves
+forward. To compensate, subtract one hour (3,600) seconds from your
+locktimes to allow those transactions to be included in mempools at
+approximately the expected time.
+
+[BIP113]: https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
 
 0.11.1 Change log
 =================
@@ -119,54 +140,50 @@ behavior, not code moves, refactors and string updates. For convenience in locat
 the code changes and accompanying discussion, both the pull request and
 git merge commit are mentioned.
 
-- #6438 `2531438` openssl: avoid config file load/race
-- #6439 `980f820` Updated URL location of netinstall for Debian
-- #6384 `8e5a969` qt: Force TLS1.0+ for SSL connections
-- #6471 `92401c2` Depends: bump to qt 5.5
-- #6224 `93b606a` Be even stricter in processing unrequested blocks
-- #6571 `100ac4e` libbitcoinconsensus: avoid a crash in multi-threaded environments
-- #6545 `649f5d9` Do not store more than 200 timedata samples.
-- #6694 `834e299` [QT] fix thin space word wrap line break issue
-- #6703 `1cd7952` Backport bugfixes to 0.11
-- #6750 `5ed8d0b` Recent rejects backport to v0.11
-- #6769 `71cc9d9` Test LowS in standardness, removes nuisance malleability vector.
-- #6789 `b4ad73f` Update miniupnpc to 1.9.20151008
-- #6785 `b4dc33e` Backport to v0.11: In (strCommand == "tx"), return if AlreadyHave()
-- #6412 `0095b9a` Test whether created sockets are select()able
-- #6795 `4dbcec0` net: Disable upnp by default
-- #6793 `e7bcc4a` Bump minrelaytxfee default
+- #6707 `684636b` Make CScriptNum() take nMaxNumSize as an argument
+- #6707 `4fa7a04` Replace NOP2 with CHECKLOCKTIMEVERIFY (BIP65)
+- #6707 `6ea5ca4` Enable CHECKLOCKTIMEVERIFY as a standard script verify flag
+- #6707 `5e82e1c` Add CHECKLOCKTIMEVERIFY (BIP65) soft-fork logic
+- #6707 `ba1da90` Show softfork status in getblockchaininfo
+- #6707 `6af25b0` Add BIP65 to getblockchaininfo softforks list
+- #6825 `01878c9` Fix locking in GetTransaction
+- #6825 `b3eaa30` [Qt] Raise debug window when requested
+- #6825 `1e672ae` Debian/Ubuntu: Include bitcoin-tx binary
+- #6825 `2394f4d` Debian/Ubuntu: Split bitcoin-tx into its own package
+- #6825 `33d6825` Bugfix: Allow mining on top of old tip blocks for testnet
+- #6945 `21e58b8` build: make sure OpenSSL heeds noexecstack
+- #6825 `af6edac` alias `-h` for `--help`
+- #6945 `95a5039` Set TCP_NODELAY on P2P sockets.
+- #6945 `dfe55bd` Do not allow blockfile pruning during reindex.
+- #6884 `a1d3c6f` Add rules--presently disabled--for using GetMedianTimePast as end point for lock-time calculations
+- #6884 `f720c5f` Enable policy enforcing GetMedianTimePast as the end point of lock-time constraints
+- #6917 `0af5b8e` leveldb: Win32WritableFile without memory mapping
+- #6945 `70de437` Update LevelDB
+- #6948 `4e895b0` Always flush block and undo when switching to new file
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Adam Weiss
 - Alex Morcos
-- Casey Rodarmor
-- Cory Fields
-- fanquake
+- Chris Kleeschulte
+- Daniel Cousens
+- Diego Viola
+- Eric Lombrozo
+- Esteban Ordano
 - Gregory Maxwell
-- Jonas Schnelli
-- J Ross Nicoll
 - Luke Dashjr
-- Pavel Janík
-- Pavel Vasin
+- Marco Falke
+- Mark Friedenbach
+- Matt Corallo
+- Micha
+- Mitchell Cash
 - Peter Todd
 - Pieter Wuille
-- randy-waterhouse
-- Ross Nicoll
-- Suhas Daftuar
-- tailsjoin
-- ฿tcDrak
-- Tom Harding
-- Veres Lajos
 - Wladimir J. van der Laan
+- Zak Wilcox
 
-And those who contributed additional code review and/or security research:
-
-- timothy on IRC for reporting the issue
-- Vulnerability in miniupnp discovered by Aleksandar Nikolic of Cisco Talos
+And those who contributed additional code review and/or security research.
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
-
