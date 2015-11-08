@@ -60,7 +60,7 @@ specified point in the future.
    output if they comply with the BIP65 rules as provided in code.
 
 2. This release will produce version 4 blocks by default. Please see the
-   *notice to miners below*.
+   *notice to miners* below.
 
 3. Once 951 out of a sequence of 1,001 blocks on the local node's best block
    chain contain version 4 (or higher) blocks, this release will no
@@ -69,6 +69,15 @@ specified point in the future.
 
 For more information about the soft-forking change, please see
 <https://github.com/bitcoin/bitcoin/pull/6351>
+
+Graphs showing the progress towards block version 4 adoption may be
+found at the URLs below:
+
+- Block versions over the last 50,000 blocks as progress towards BIP65
+  consensus enforcement: <http://bitcoin.sipa.be/ver-50k.png>
+
+- Block versions over the last 2,000 blocks showing the days to the
+  earliest possible BIP65 consensus-enforced block: <http://bitcoin.sipa.be/ver-2k.png>
 
 **Notice to miners:** Bitcoin Core’s block templates are now for
 version 4 blocks only, and any mining software relying on its
@@ -84,7 +93,7 @@ version FIXME or any version from FIXME onward.
 
 - If you are mining with the getblocktemplate protocol to a pool: this
   will affect you at the pool operator’s discretion, which must be no
-  later than BIP66 achieving its 951/1001 status.
+  later than BIP65 achieving its 951/1001 status.
 
 [BIP65]: https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki
 
@@ -130,11 +139,26 @@ locktime transactions are more or less unseen on the network currently.
 **Implication for users:** GetMedianTimePast() always trails behind the
 current time, so a transaction locktime set to the present time will be
 rejected by nodes running this release until the median time moves
-forward. To compensate, subtract one hour (3,600) seconds from your
+forward. To compensate, subtract one hour (3,600 seconds) from your
 locktimes to allow those transactions to be included in mempools at
 approximately the expected time.
 
 [BIP113]: https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
+
+Windows bug fix for corrupted UTXO database on unclean shutdowns
+----------------------------------------------------------------
+
+Several Windows users reported that they often need to reindex the
+entire blockchain after an unclean shutdown of Bitcoin Core on Windows
+(or an unclean shutdown of Windows itself). Although unclean shutdowns
+remain unsafe, this release no longer relies on memory-mapped files for
+the UTXO database, which significantly reduced the frequency of unclean
+shutdowns leading to required reindexes during testing.
+
+For more information, see: <https://github.com/bitcoin/bitcoin/pull/6917>
+
+Other fixes for database corruption on Windows are expected in the
+next major release.
 
 0.11.1 Change log
 =================
