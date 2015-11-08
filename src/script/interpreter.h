@@ -74,13 +74,17 @@ enum
     // "At least one stack element must remain, and when interpreted as a boolean, it must be true" to
     // "Exactly one stack element must remain, and when interpreted as a boolean, it must be true".
     // (softfork safe, BIP62 rule 6)
-    // Note: CLEANSTACK should never be used without P2SH.
+    // Note: CLEANSTACK should never be used without P2SH or WITNESS.
     SCRIPT_VERIFY_CLEANSTACK = (1U << 8),
 
     // Verify CHECKLOCKTIMEVERIFY
     //
     // See BIP65 for details.
     SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
+
+    // Support segregated witness
+    //
+    SCRIPT_VERIFY_WITNESS = (1U << 10),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
@@ -128,6 +132,6 @@ public:
 };
 
 bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& script, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL);
-bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* error = NULL);
+bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror = NULL);
 
 #endif // BITCOIN_SCRIPT_INTERPRETER_H
