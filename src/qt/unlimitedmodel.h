@@ -1,4 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Unlimited developers
+// Copyright (c) 2015 G. Andrew Stone
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #define BITCOIN_QT_UNLIMITEDMODEL_H
 
 #include "amount.h"
-
+#include "unlimited.h"
 #include <QAbstractListModel>
 
 QT_BEGIN_NAMESPACE
@@ -26,15 +26,15 @@ class UnlimitedModel : public QAbstractListModel
 public:
     explicit UnlimitedModel(QObject *parent = 0);
 
-    enum OptionID {
+    enum UOptionID {
+        MaxGeneratedBlock,      // int
         UseReceiveShaping,      // bool
         UseSendShaping,         // bool
         ReceiveBurst,           // int
         ReceiveAve,             // int
         SendBurst,              // int
         SendAve,                // int
-        MaxGeneratedBlock,      // int
-        OptionIDRowCount,
+        UOptIDRowCount,
     };
 
     void Init();
@@ -49,14 +49,18 @@ public:
     
 
     /* Explicit getters */
+    uint64_t getMaxGeneratedBlock() 
+    {
+        return ::maxGeneratedBlock;
+    }
+    
     
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
     /* Restart flag helper */
     void setRestartRequired(bool fRequired);
     bool isRestartRequired();
-
-    int maxGeneratedBlock;
+    
 private:
     /* settings that were overriden by command-line */
     QString strOverriddenByCommandLine;

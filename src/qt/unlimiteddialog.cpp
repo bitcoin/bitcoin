@@ -43,8 +43,10 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
   setMapper();
 
   connect(ui.okButton, SIGNAL(clicked(bool)), this, SLOT(on_okButton_clicked()));
+  connect(ui.miningMaxBlock, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
 
-  ui.miningMaxBlock->setText(QString(boost::lexical_cast<std::string>(model->maxGeneratedBlock).c_str()));
+  //ui.miningMaxBlock->setText(QString(boost::lexical_cast<std::string>(model->getMaxGeneratedBlock).c_str()));
+  ui.miningMaxBlock->setText(QString::number(model->getMaxGeneratedBlock()));
 }
 
 
@@ -52,33 +54,12 @@ UnlimitedDialog::~UnlimitedDialog()
 {
 }
 
-#if 0
-void UnlimitedDialog::setModel(UnlimitedModel* mdl)
-{
-    model = mdl;
-
-    if (model)
-      {
-        /* check if client restart is needed and show persistent message */
-        //if (model->isRestartRequired())
-        //    showRestartWarning(true);
-
-        QString strLabel; //  = model->getOverriddenByCommandLine();
-        if (strLabel.isEmpty())
-            strLabel = tr("none");
-        ui.overriddenByCommandLineLabel->setText(strLabel);
-
-        mapper.setModel(model);
-        setMapper();
-        mapper.toFirst();
-    }
-#endif    
 
 void UnlimitedDialog::setMapper()
 {
     mapper.setModel(model);
-    /* Network */
 
+    /* Network */
     mapper.addMapping(ui.sendShapingEnable, UnlimitedModel::UseSendShaping);
     mapper.addMapping(ui.sendBurstEdit, UnlimitedModel::SendBurst);
     mapper.addMapping(ui.sendAveEdit, UnlimitedModel::SendAve);
@@ -87,16 +68,22 @@ void UnlimitedDialog::setMapper()
     mapper.addMapping(ui.recvAveEdit, UnlimitedModel::ReceiveAve);
 
     mapper.addMapping(ui.miningMaxBlock,UnlimitedModel::MaxGeneratedBlock);
+    mapper.toFirst();
 }
     
 
 void UnlimitedDialog::on_okButton_clicked()
 {
-    mapper.submit();
+  if (!mapper.submit())
+    {    
+      assert(0);
+    }
+
     accept();
 }
 
 void UnlimitedDialog::on_cancelButton_clicked()
 {
-    reject();
+  mapper.revert();
+  reject();
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Unlimited developers
+// Copyright (c) 2015 G. Andrew Stone
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -48,9 +48,7 @@ void UnlimitedModel::Init()
 
 
     if (!settings.contains("maxGeneratedBlock"))
-        settings.setValue("maxGeneratedBlock", "1000000");
-    maxGeneratedBlock = settings.value("maxGeneratedBlock", "").toInt();
-
+      settings.setValue("maxGeneratedBlock", QString::number(maxGeneratedBlock));
 
     bool inUse = settings.value("fUseReceiveShaping").toBool();
     int64_t burstKB = settings.value("nReceiveBurst").toLongLong();
@@ -91,7 +89,7 @@ void UnlimitedModel::Reset()
 
 int UnlimitedModel::rowCount(const QModelIndex& parent) const
 {
-    return OptionIDRowCount;
+    return UOptIDRowCount;
 }
 
 // read QSettings values and return them
