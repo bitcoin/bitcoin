@@ -12,4 +12,7 @@ enum
 
 extern uint64_t maxGeneratedBlock;
 
+extern void UnlimitedSetup(void);
+
+
 #endif

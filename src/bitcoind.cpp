@@ -10,6 +10,7 @@
 #include "noui.h"
 #include "scheduler.h"
 #include "util.h"
+#include "unlimited.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -152,6 +153,8 @@ bool AppInit(int argc, char* argv[])
         PrintExceptionContinue(NULL, "AppInit()");
     }
 
+    UnlimitedSetup();
+    
     if (!fRet)
     {
         threadGroup.interrupt_all();
