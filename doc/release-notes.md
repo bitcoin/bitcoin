@@ -2,8 +2,9 @@ Bitcoin Core version 0.11.2 is now available from:
 
   <https://bitcoin.org/bin/bitcoin-core-0.11.2/>
 
-This is a new minor version release, bringing new features and bug fixes. It is recommended
-to upgrade to this version as soon as possible.
+This is a new minor version release, bringing bug fixes, the BIP65
+(CLTV) consensus change, and relay policy preparation for BIP113. It is
+recommended to upgrade to this version as soon as possible.
 
 Please report bugs using the issue tracker at github:
 
@@ -87,7 +88,7 @@ version FIXME or any version from FIXME onward.
 
 [BIP65]: https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki
 
-BIP113 mempool-only locktime enforment using GetMedianTimePast()
+BIP113 mempool-only locktime enforcement using GetMedianTimePast()
 ----------------------------------------------------------------
 
 Bitcoin transactions currently may specify a locktime indicating when
@@ -118,10 +119,13 @@ This release begins applying the BIP113 rule to received transactions,
 so transaction whose time is greater than the GetMedianTimePast() will
 no longer be accepted into the mempool.
 
-**Implication for miners:** you may begin rejecting locktime
-transactions that could be included under the current consensus rules.
-Rejecting those transactions now means that you don't have to worry
-about producing invalid blocks when BIP113 becomes consensus enforced.
+**Implication for miners:** you will begin rejecting transactions that
+would not be valid under BIP113, which will prevent you from producing
+invalid blocks if/when BIP113 is enforced on the network. Any
+transactions which are valid under the current rules but not yet valid
+under the BIP113 rules will either be mined by other miners or delayed
+until they are valid under BIP113. Note, however, that time-based
+locktime transactions are more or less unseen on the network currently.
 
 **Implication for users:** GetMedianTimePast() always trails behind the
 current time, so a transaction locktime set to the present time will be
@@ -167,6 +171,7 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - Alex Morcos
+- ฿tcDrak
 - Chris Kleeschulte
 - Daniel Cousens
 - Diego Viola
