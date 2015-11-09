@@ -23,7 +23,7 @@
       <attribute name="title">
        <string>&amp;Information</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout" columnstretch="0,1">
+      <layout class="QGridLayout" name="gridLayout" columnstretch="0,1,0">
        <property name="horizontalSpacing">
         <number>12</number>
        </property>
@@ -47,7 +47,7 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
+       <item row="1" column="1" colspan="2">
         <widget class="QLabel" name="clientName">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -70,7 +70,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="2" column="1" colspan="2">
         <widget class="QLabel" name="clientVersion">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -96,7 +96,7 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="3" column="1" colspan="2">
         <widget class="QLabel" name="clientUserAgent">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -122,7 +122,7 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="4" column="1" colspan="2">
         <widget class="QLabel" name="openSSLVersion">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -148,7 +148,7 @@
          </property>
         </widget>
        </item>
-       <item row="5" column="1">
+       <item row="5" column="1" colspan="2">
         <widget class="QLabel" name="berkeleyDBVersion">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -171,7 +171,7 @@
          </property>
         </widget>
        </item>
-       <item row="6" column="1">
+       <item row="6" column="1" colspan="2">
         <widget class="QLabel" name="buildDate">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -194,7 +194,7 @@
          </property>
         </widget>
        </item>
-       <item row="7" column="1">
+       <item row="7" column="1" colspan="2">
         <widget class="QLabel" name="startupTime">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -210,19 +210,6 @@
          </property>
         </widget>
        </item>
-       <item row="8" column="0">
-        <widget class="QLabel" name="label_11">
-         <property name="font">
-          <font>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
-         <property name="text">
-          <string>Network</string>
-         </property>
-        </widget>
-       </item>
        <item row="9" column="0">
         <widget class="QLabel" name="label_8">
          <property name="text">
@@ -230,7 +217,7 @@
          </property>
         </widget>
        </item>
-       <item row="9" column="1">
+       <item row="9" column="1" colspan="2">
         <widget class="QLabel" name="networkName">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -253,7 +240,7 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="1">
+       <item row="10" column="1" colspan="2">
         <widget class="QLabel" name="numberOfConnections">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -289,7 +276,7 @@
          </property>
         </widget>
        </item>
-       <item row="12" column="1">
+       <item row="12" column="1" colspan="2">
         <widget class="QLabel" name="numberOfBlocks">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -306,13 +293,13 @@
         </widget>
        </item>
        <item row="13" column="0">
-        <widget class="QLabel" name="label_2">
+        <widget class="QLabel" name="labelLastBlockTime">
          <property name="text">
           <string>Last block time</string>
          </property>
         </widget>
        </item>
-       <item row="13" column="1">
+       <item row="13" column="1" colspan="2">
         <widget class="QLabel" name="lastBlockTime">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
@@ -329,20 +316,7 @@
         </widget>
        </item>
        <item row="14" column="0">
-        <spacer name="verticalSpacer_2">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="15" column="0">
-        <widget class="QLabel" name="labelDebugLogfile">
+        <widget class="QLabel" name="labelMempoolTitle">
          <property name="font">
           <font>
            <weight>75</weight>
@@ -350,24 +324,110 @@
           </font>
          </property>
          <property name="text">
-          <string>Debug log file</string>
+          <string>Memory Pool</string>
+         </property>
+        </widget>
+       </item>
+       <item row="15" column="0">
+        <widget class="QLabel" name="labelNumberOfTransactions">
+         <property name="text">
+          <string>Current number of transactions</string>
+         </property>
+        </widget>
+       </item>
+       <item row="15" column="1">
+        <widget class="QLabel" name="mempoolNumberTxs">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>N/A</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+       <item row="8" column="0">
+        <widget class="QLabel" name="labelNetwork">
+         <property name="font">
+          <font>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Network</string>
          </property>
         </widget>
        </item>
        <item row="16" column="0">
-        <widget class="QPushButton" name="openDebugLogfileButton">
-         <property name="toolTip">
-          <string>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</string>
-         </property>
+        <widget class="QLabel" name="labelMemoryUsage">
          <property name="text">
-          <string>&amp;Open</string>
-         </property>
-         <property name="autoDefault">
-          <bool>false</bool>
+          <string>Memory usage</string>
          </property>
         </widget>
        </item>
-       <item row="17" column="0">
+       <item row="16" column="1">
+        <widget class="QLabel" name="mempoolSize">
+         <property name="cursor">
+          <cursorShape>IBeamCursor</cursorShape>
+         </property>
+         <property name="text">
+          <string>N/A</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="textInteractionFlags">
+          <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+         </property>
+        </widget>
+       </item>
+       <item row="14" column="2" rowspan="3">
+        <layout class="QVBoxLayout" name="verticalLayoutDebugButton">
+         <property name="spacing">
+          <number>3</number>
+         </property>
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>10</width>
+             <height>5</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="labelDebugLogfile">
+           <property name="text">
+            <string>Debug log file</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="openDebugLogfileButton">
+           <property name="toolTip">
+            <string>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</string>
+           </property>
+           <property name="text">
+            <string>&amp;Open</string>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="18" column="0">
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
