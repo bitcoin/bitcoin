@@ -27,7 +27,7 @@ public:
     explicit UnlimitedModel(QObject *parent = 0);
 
     enum UOptionID {
-        MaxGeneratedBlock,      // int
+        MaxGeneratedBlock,      // uint64_t
         UseReceiveShaping,      // bool
         UseSendShaping,         // bool
         ReceiveBurst,           // int
