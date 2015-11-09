@@ -56,10 +56,6 @@ extern CTranslationInterface translationInterface;
 extern const char * const BITCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
 
-static const bool DEFAULT_SELFSIGNED_ROOTCERTS = false;
-static const bool DEFAULT_CHOOSE_DATADIR = false;
-static const bool DEFAULT_SPLASHSCREEN = true;
-
 /**
  * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
  * If no translation slot is registered, nothing is returned, and simply return the input.
