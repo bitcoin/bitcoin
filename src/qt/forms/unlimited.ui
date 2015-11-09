@@ -231,7 +231,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>Block Acceptancel</string>
+          <string>Block Acceptance</string>
          </property>
         </widget>
        </item>
