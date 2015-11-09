@@ -82,7 +82,7 @@ found at the URLs below:
 **Notice to miners:** Bitcoin Core’s block templates are now for
 version 4 blocks only, and any mining software relying on its
 getblocktemplate must be updated in parallel to use libblkmaker either
-version FIXME or any version from FIXME onward.
+version 0.4.3 or any version from 0.5.2 onward.
 
 - If you are solo mining, this will affect you the moment you upgrade
   Bitcoin Core, which must be done prior to BIP65 achieving its 951/1001
@@ -160,7 +160,7 @@ For more information, see: <https://github.com/bitcoin/bitcoin/pull/6917>
 Other fixes for database corruption on Windows are expected in the
 next major release.
 
-0.11.1 Change log
+0.11.2 Change log
 =================
 
 Detailed release notes follow. This overview includes changes that affect
@@ -168,25 +168,24 @@ behavior, not code moves, refactors and string updates. For convenience in locat
 the code changes and accompanying discussion, both the pull request and
 git merge commit are mentioned.
 
-- #6707 `684636b` Make CScriptNum() take nMaxNumSize as an argument
-- #6707 `4fa7a04` Replace NOP2 with CHECKLOCKTIMEVERIFY (BIP65)
-- #6707 `6ea5ca4` Enable CHECKLOCKTIMEVERIFY as a standard script verify flag
-- #6707 `5e82e1c` Add CHECKLOCKTIMEVERIFY (BIP65) soft-fork logic
-- #6707 `ba1da90` Show softfork status in getblockchaininfo
-- #6707 `6af25b0` Add BIP65 to getblockchaininfo softforks list
-- #6825 `01878c9` Fix locking in GetTransaction
-- #6825 `b3eaa30` [Qt] Raise debug window when requested
-- #6825 `1e672ae` Debian/Ubuntu: Include bitcoin-tx binary
-- #6825 `2394f4d` Debian/Ubuntu: Split bitcoin-tx into its own package
-- #6825 `33d6825` Bugfix: Allow mining on top of old tip blocks for testnet
-- #6945 `21e58b8` build: make sure OpenSSL heeds noexecstack
-- #6825 `af6edac` alias `-h` for `--help`
-- #6945 `95a5039` Set TCP_NODELAY on P2P sockets.
-- #6945 `dfe55bd` Do not allow blockfile pruning during reindex.
-- #6884 `a1d3c6f` Add rules--presently disabled--for using GetMedianTimePast as end point for lock-time calculations
-- #6884 `f720c5f` Enable policy enforcing GetMedianTimePast as the end point of lock-time constraints
+- #6124 `684636b` Make CScriptNum() take nMaxNumSize as an argument
+- #6124 `4fa7a04` Replace NOP2 with CHECKLOCKTIMEVERIFY (BIP65)
+- #6124 `6ea5ca4` Enable CHECKLOCKTIMEVERIFY as a standard script verify flag
+- #6351 `5e82e1c` Add CHECKLOCKTIMEVERIFY (BIP65) soft-fork logic
+- #6353 `ba1da90` Show softfork status in getblockchaininfo
+- #6351 `6af25b0` Add BIP65 to getblockchaininfo softforks list
+- #6688 `01878c9` Fix locking in GetTransaction
+- #6653 `b3eaa30` [Qt] Raise debug window when requested
+- #6600 `1e672ae` Debian/Ubuntu: Include bitcoin-tx binary
+- #6600 `2394f4d` Debian/Ubuntu: Split bitcoin-tx into its own package
+- #5987 `33d6825` Bugfix: Allow mining on top of old tip blocks for testnet
+- #6852 `21e58b8` build: make sure OpenSSL heeds noexecstack
+- #6846 `af6edac` alias `-h` for `--help`
+- #6867 `95a5039` Set TCP_NODELAY on P2P sockets.
+- #6856 `dfe55bd` Do not allow blockfile pruning during reindex.
+- #6566 `a1d3c6f` Add rules--presently disabled--for using GetMedianTimePast as end point for lock-time calculations
+- #6566 `f720c5f` Enable policy enforcing GetMedianTimePast as the end point of lock-time constraints
 - #6917 `0af5b8e` leveldb: Win32WritableFile without memory mapping
-- #6945 `70de437` Update LevelDB
 - #6948 `4e895b0` Always flush block and undo when switching to new file
 
 Credits
