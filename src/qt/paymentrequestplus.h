@@ -15,6 +15,8 @@
 #include <QList>
 #include <QString>
 
+static const bool DEFAULT_SELFSIGNED_ROOTCERTS = false;
+
 //
 // Wraps dumb protocol buffer paymentRequest
 // with extra methods

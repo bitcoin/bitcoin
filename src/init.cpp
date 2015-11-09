@@ -499,23 +499,6 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcservertimeout=<n>", strprintf("Timeout during HTTP requests (default: %d)", DEFAULT_HTTP_SERVER_TIMEOUT));
     }
 
-    if (mode == HMM_BITCOIN_QT)
-    {
-        strUsage += HelpMessageGroup(_("UI Options:"));
-        if (showDebug) {
-            strUsage += HelpMessageOpt("-allowselfsignedrootcertificates", strprintf("Allow self signed root certificates (default: %u)", DEFAULT_SELFSIGNED_ROOTCERTS));
-        }
-        strUsage += HelpMessageOpt("-choosedatadir", strprintf(_("Choose data directory on startup (default: %u)"), DEFAULT_CHOOSE_DATADIR));
-        strUsage += HelpMessageOpt("-lang=<lang>", _("Set language, for example \"de_DE\" (default: system locale)"));
-        strUsage += HelpMessageOpt("-min", _("Start minimized"));
-        strUsage += HelpMessageOpt("-rootcertificates=<file>", _("Set SSL root certificates for payment request (default: -system-)"));
-        strUsage += HelpMessageOpt("-splash", strprintf(_("Show splash screen on startup (default: %u)"), DEFAULT_SPLASHSCREEN));
-        strUsage += HelpMessageOpt("-resetguisettings", _("Reset all settings changes made over the GUI"));
-        if (showDebug) {
-            strUsage += HelpMessageOpt("-uiplatform", "Select platform to customize UI for (one of windows, macosx, other; default: platform compiled on)");
-        }
-    }
-
     return strUsage;
 }
 
