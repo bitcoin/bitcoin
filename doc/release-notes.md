@@ -1,9 +1,10 @@
-Bitcoin Core version 0.10.3 is now available from:
+Bitcoin Core version 0.10.4 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.10.3/>
+  <https://bitcoin.org/bin/bitcoin-core-0.10.4/>
 
-This is a new minor version release, bringing security fixes and translation 
-updates. It is recommended to upgrade to this version as soon as possible.
+This is a new minor version release, bringing bug fixes, the BIP65
+(CLTV) consensus change, and relay policy preparation for BIP113. It is
+recommended to upgrade to this version as soon as possible.
 
 Please report bugs using the issue tracker at github:
 
@@ -41,125 +42,131 @@ bootstrap.dat) anew afterwards. It is possible that the data from a completely
 synchronised 0.10 node may be usable in older versions as-is, but this is not
 supported and may break as soon as the older version attempts to reindex.
 
-This does not affect wallet forward or backward compatibility.
+This does not affect wallet forward or backward compatibility. There are no
+known problems when downgrading from 0.11.x to 0.10.x.
 
-Notable changes
-===============
+Notable changes since 0.10.3
+============================
 
-Fix buffer overflow in bundled upnp
-------------------------------------
+BIP65 soft fork to enforce OP_CHECKLOCKTIMEVERIFY opcode
+--------------------------------------------------------
 
-Bundled miniupnpc was updated to 1.9.20151008. This fixes a buffer overflow in
-the XML parser during initial network discovery.
+This release includes several changes related to the [BIP65][] soft fork
+which redefines the existing OP_NOP2 opcode as OP_CHECKLOCKTIMEVERIFY
+(CLTV) so that a transaction output can be made unspendable until a
+specified point in the future.
 
-Details can be found here: http://talosintel.com/reports/TALOS-2015-0035/
+1. This release will only relay and mine transactions spending a CLTV
+   output if they comply with the BIP65 rules as provided in code.
 
-This applies to the distributed executables only, not when building from source or
-using distribution provided packages.
+2. This release will produce version 4 blocks by default. Please see the
+   *notice to miners* below.
 
-Additionally, upnp has been disabled by default. This may result in a lower
-number of reachable nodes on IPv4, however this prevents future libupnpc
-vulnerabilities from being a structural risk to the network
-(see https://github.com/bitcoin/bitcoin/pull/6795).
+3. Once 951 out of a sequence of 1,001 blocks on the local node's best block
+   chain contain version 4 (or higher) blocks, this release will no
+   longer accept new version 3 blocks and it will only accept version 4
+   blocks if they comply with the BIP65 rules for CLTV.
 
-Test for LowS signatures before relaying
------------------------------------------
+For more information about the soft-forking change, please see
+<https://github.com/bitcoin/bitcoin/pull/6351>
 
-Make the node require the canonical 'low-s' encoding for ECDSA signatures when
-relaying or mining.  This removes a nuisance malleability vector.
+Graphs showing the progress towards block version 4 adoption may be
+found at the URLs below:
 
-Consensus behavior is unchanged.
+- Block versions over the last 50,000 blocks as progress towards BIP65
+  consensus enforcement: <http://bitcoin.sipa.be/ver-50k.png>
 
-If widely deployed this change would eliminate the last remaining known vector
-for nuisance malleability on SIGHASH_ALL P2PKH transactions. On the down-side
-it will block most transactions made by sufficiently out of date software.
+- Block versions over the last 2,000 blocks showing the days to the
+  earliest possible BIP65 consensus-enforced block: <http://bitcoin.sipa.be/ver-2k.png>
 
-Unlike the other avenues to change txids on transactions this
-one was randomly violated by all deployed bitcoin software prior to
-its discovery. So, while other malleability vectors where made
-non-standard as soon as they were discovered, this one has remained
-permitted. Even BIP62 did not propose applying this rule to
-old version transactions, but conforming implementations have become
-much more common since BIP62 was initially written.
+**Notice to miners:** Bitcoin Core’s block templates are now for
+version 4 blocks only, and any mining software relying on its
+getblocktemplate must be updated in parallel to use libblkmaker either
+version FIXME or any version from FIXME onward.
 
-Bitcoin Core has produced compatible signatures since a28fb70e in
-September 2013, but this didn't make it into a release until 0.9
-in March 2014; Bitcoinj has done so for a similar span of time.
-Bitcoinjs and electrum have been more recently updated.
+- If you are solo mining, this will affect you the moment you upgrade
+  Bitcoin Core, which must be done prior to BIP65 achieving its 951/1001
+  status.
 
-This does not replace the need for BIP62 or similar, as miners can
-still cooperate to break transactions.  Nor does it replace the
-need for wallet software to handle malleability sanely[1]. This
-only eliminates the cheap and irritating DOS attack.
+- If you are mining with the stratum mining protocol: this does not
+  affect you.
 
-[1] On the Malleability of Bitcoin Transactions
-Marcin Andrychowicz, Stefan Dziembowski, Daniel Malinowski, Łukasz Mazurek
-http://fc15.ifca.ai/preproceedings/bitcoin/paper_9.pdf
+- If you are mining with the getblocktemplate protocol to a pool: this
+  will affect you at the pool operator’s discretion, which must be no
+  later than BIP65 achieving its 951/1001 status.
 
-Minimum relay fee default increase
------------------------------------
+[BIP65]: https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki
 
-The default for the `-minrelaytxfee` setting has been increased from `0.00001`
-to `0.00005`.
+Windows bug fix for corrupted UTXO database on unclean shutdowns
+----------------------------------------------------------------
 
-This is necessitated by the current transaction flooding, causing
-outrageous memory usage on nodes due to the mempool ballooning. This is a
-temporary measure, bridging the time until a dynamic method for determining
-this fee is merged (which will be in 0.12).
+Several Windows users reported that they often need to reindex the
+entire blockchain after an unclean shutdown of Bitcoin Core on Windows
+(or an unclean shutdown of Windows itself). Although unclean shutdowns
+remain unsafe, this release no longer relies on memory-mapped files for
+the UTXO database, which significantly reduced the frequency of unclean
+shutdowns leading to required reindexes during testing.
 
-(see https://github.com/bitcoin/bitcoin/pull/6793, as well as the 0.11.0
-release notes, in which this value was suggested)
+For more information, see: <https://github.com/bitcoin/bitcoin/pull/6917>
 
-0.10.3 Change log
+Other fixes for database corruption on Windows are expected in the
+next major release.
+
+0.10.4 Change log
 =================
 
-Detailed release notes follow. This overview includes changes that affect external
-behavior, not code moves, refactors or string updates.
+Detailed release notes follow. This overview includes changes that affect
+behavior, not code moves, refactors and string updates. For convenience in locating
+the code changes and accompanying discussion, both the pull request and
+git merge commit are mentioned.
 
-- #6186 `e4a7d51` Fix two problems in CSubnet parsing
-- #6153 `ebd7d8d` Parameter interaction: disable upnp if -proxy set
-- #6203 `ecc96f5` Remove P2SH coinbase flag, no longer interesting
-- #6226 `181771b` json: fail read_string if string contains trailing garbage
-- #6244 `09334e0` configure: Detect (and reject) LibreSSL
-- #6276 `0fd8464` Fix getbalance * 0
-- #6274 `be64204` Add option `-alerts` to opt out of alert system
-- #6319 `3f55638` doc: update mailing list address
-- #6438 `7e66e9c` openssl: avoid config file load/race
-- #6439 `255eced` Updated URL location of netinstall for Debian
-- #6412 `0739e6e` Test whether created sockets are select()able
-- #6694 `f696ea1` [QT] fix thin space word wrap line brake issue
-- #6704 `743cc9e` Backport bugfixes to 0.10
-- #6769 `1cea6b0` Test LowS in standardness, removes nuisance malleability vector.
-- #6789 `093d7b5` Update miniupnpc to 1.9.20151008
-- #6795 `f2778e0` net: Disable upnp by default
-- #6797 `91ef4d9` Do not store more than 200 timedata samples
-- #6793 `842c48d` Bump minrelaytxfee default
+- #6953 `8b3311f` alias -h for --help
+- #6953 `97546fc` Change URLs to https in debian/control
+- #6953 `38671bf` Update debian/changelog and slight tweak to debian/control
+- #6953 `256321e` Correct spelling mistakes in doc folder
+- #6953 `eae0350` Clarification of unit test build instructions
+- #6953 `90897ab` Update bluematt-key, the old one is long-since revoked
+- #6953 `a2f2fb6` build: disable -Wself-assign
+- #6953 `cf67d8b` Bugfix: Allow mining on top of old tip blocks for testnet (fixes testnet-in-a-box use case)
+- #6953 `b3964e3` Drop "with minimal dependencies" from description
+- #6953 `43c2789` Split bitcoin-tx into its own package
+- #6953 `dfe0d4d` Include bitcoin-tx binary on Debian/Ubuntu
+- #6953 `612efe8` [Qt] Raise debug window when requested
+- #6953 `3ad96bd` Fix locking in GetTransaction
+- #6953 `9c81005` Fix spelling of Qt
+- #6946 `94b67e5` Update LevelDB
+- #6706 `5dc72f8` CLTV: Add more tests to improve coverage
+- #6706 `6a1343b` Add RPC tests for the CHECKLOCKTIMEVERIFY (BIP65) soft-fork
+- #6706 `4137248` Add CHECKLOCKTIMEVERIFY (BIP65) soft-fork logic
+- #6706 `0e01d0f` Enable CHECKLOCKTIMEVERIFY as a standard script verify flag
+- #6706 `6d01325` Replace NOP2 with CHECKLOCKTIMEVERIFY (BIP65)
+- #6706 `750d54f` Move LOCKTIME_THRESHOLD to src/script/script.h
+- #6706 `6897468` Make CScriptNum() take nMaxNumSize as an argument
+- #6867 `5297194` Set TCP_NODELAY on P2P sockets
+- #6836 `fb818b6` Bring historical release notes up to date
+- #6852 `0b3fd07` build: make sure OpenSSL heeds noexecstack
 
 Credits
 =======
 
 Thanks to everyone who directly contributed to this release:
 
-- Adam Weiss
 - Alex Morcos
-- Casey Rodarmor
-- Cory Fields
-- fanquake
+- Daniel Cousens
+- Diego Viola
+- Eric Lombrozo
+- Esteban Ordano
 - Gregory Maxwell
-- Jonas Schnelli
-- J Ross Nicoll
 - Luke Dashjr
-- Pavel Vasin
+- MarcoFalke
+- Matt Corallo
+- Micha
+- Mitchell Cash
+- Peter Todd
 - Pieter Wuille
-- randy-waterhouse
-- ฿tcDrak
-- Tom Harding
-- Veres Lajos
 - Wladimir J. van der Laan
+- Zak Wilcox
 
-And all those who contributed additional code review and/or security research:
-
-- timothy on IRC for reporting the issue
-- Vulnerability in miniupnp discovered by Aleksandar Nikolic of Cisco Talos
+And those who contributed additional code review and/or security research.
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
