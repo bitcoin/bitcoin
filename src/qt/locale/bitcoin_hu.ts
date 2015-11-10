@@ -521,6 +521,10 @@ Cím: %4
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Coin Selection</source>
+        <translation>Érme Választás</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Mennyiség:</translation>
     </message>
@@ -567,6 +571,14 @@ Cím: %4
     <message>
         <source>Amount</source>
         <translation>Összeg</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>Címkével érkezett</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>Címmel érkezett</translation>
     </message>
     <message>
         <source>Date</source>
@@ -936,6 +948,10 @@ Cím: %4
         <translation>&amp;Induljon el a számítógép bekapcsolásakor</translation>
     </message>
     <message>
+        <source>Size of &amp;database cache</source>
+        <translation>A&amp;datbázis gyorsítótár mérete</translation>
+    </message>
+    <message>
         <source>MB</source>
         <translation>MB</translation>
     </message>
@@ -962,6 +978,10 @@ Cím: %4
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Hálózat</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>T&amp;árca</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1071,6 +1091,10 @@ Cím: %4
         <translation>A kijelzett információ lehet, hogy elavult. A pénztárcája automatikusan szinkronizálja magát a Bitcoin hálózattal miután a kapcsolat létrejön, de ez e folyamat még nem fejeződött be.</translation>
     </message>
     <message>
+        <source>Watch-only:</source>
+        <translation>Csak megfigyelés</translation>
+    </message>
+    <message>
         <source>Available:</source>
         <translation>Elérhető:</translation>
     </message>
@@ -1093,6 +1117,10 @@ Cím: %4
     <message>
         <source>Mined balance that has not yet matured</source>
         <translation>Bányászott egyenleg amely még nem érett be.</translation>
+    </message>
+    <message>
+        <source>Balances</source>
+        <translation>Egyenlegek</translation>
     </message>
     <message>
         <source>Total:</source>
@@ -1133,6 +1161,10 @@ Cím: %4
         <translation>User Agent</translation>
     </message>
     <message>
+        <source>Address/Hostname</source>
+        <translation>Cím/Hosztnév</translation>
+    </message>
+    <message>
         <source>Ping Time</source>
         <translation>Ping idő</translation>
     </message>
@@ -1142,6 +1174,10 @@ Cím: %4
     <message>
         <source>Amount</source>
         <translation>Összeg</translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>Ad meg egy Bitcoin címet (pl: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1164,10 +1200,22 @@ Cím: %4
         <translation>HÁLÓZAT</translation>
     </message>
     <message>
+        <source>UNKNOWN</source>
+        <translation>ISMERETLEN</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Semmi</translation>
+    </message>
+    <message>
         <source>N/A</source>
         <translation>Nem elérhető</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1218,6 +1266,10 @@ Cím: %4
         <translation>Használt OpenSSL verzió</translation>
     </message>
     <message>
+        <source>Using BerkeleyDB version</source>
+        <translation>Használt BerkeleyDB verzió</translation>
+    </message>
+    <message>
         <source>Startup time</source>
         <translation>Bekapcsolás ideje</translation>
     </message>
@@ -1254,6 +1306,10 @@ Cím: %4
         <translation>&amp;Peerek</translation>
     </message>
     <message>
+        <source>Select a peer to view detailed information.</source>
+        <translation>Peer kijelölése a részletes információkért</translation>
+    </message>
+    <message>
         <source>Version</source>
         <translation>Verzió</translation>
     </message>
@@ -1264,6 +1320,10 @@ Cím: %4
     <message>
         <source>Services</source>
         <translation>Szolgáltatások</translation>
+    </message>
+    <message>
+        <source>Connection Time</source>
+        <translation>Csatlakozás ideje</translation>
     </message>
     <message>
         <source>Last Send</source>
@@ -1300,6 +1360,10 @@ Cím: %4
     <message>
         <source>&amp;Network Traffic</source>
         <translation>&amp;Hálózati forgalom</translation>
+    </message>
+    <message>
+        <source>&amp;Clear</source>
+        <translation>&amp;Törlés</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -1354,16 +1418,36 @@ Cím: %4
         <translation>%1 GB</translation>
     </message>
     <message>
+        <source>via %1</source>
+        <translation>által %1</translation>
+    </message>
+    <message>
         <source>never</source>
         <translation>soha</translation>
+    </message>
+    <message>
+        <source>Inbound</source>
+        <translation>Bejövő</translation>
+    </message>
+    <message>
+        <source>Outbound</source>
+        <translation>Kimenő</translation>
     </message>
     <message>
         <source>Unknown</source>
         <translation>Ismeretlen</translation>
     </message>
-    </context>
+    <message>
+        <source>Fetching...</source>
+        <translation>Begyüjtés</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>&amp;Összeg:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>Címke:</translation>
@@ -1373,12 +1457,28 @@ Cím: %4
         <translation>&amp;Üzenet:</translation>
     </message>
     <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Minden mező törlése</translation>
+    </message>
+    <message>
         <source>Clear</source>
         <translation>Törlés</translation>
     </message>
     <message>
+        <source>Requested payments history</source>
+        <translation>A kért kifizetések története</translation>
+    </message>
+    <message>
+        <source>&amp;Request payment</source>
+        <translation>&amp;Fizetés kérése</translation>
+    </message>
+    <message>
         <source>Show</source>
         <translation>Mutat</translation>
+    </message>
+    <message>
+        <source>Remove the selected entries from the list</source>
+        <translation>A kijelölt elemek törlése a listáról</translation>
     </message>
     <message>
         <source>Remove</source>
@@ -1414,6 +1514,14 @@ Cím: %4
     <message>
         <source>&amp;Save Image...</source>
         <translation>&amp;Kép mentése</translation>
+    </message>
+    <message>
+        <source>Request payment to %1</source>
+        <translation>Fizetés kérése a %1-hez</translation>
+    </message>
+    <message>
+        <source>Payment information</source>
+        <translation>Kifizetés információ</translation>
     </message>
     <message>
         <source>URI</source>
@@ -1466,7 +1574,15 @@ Cím: %4
         <source>(no label)</source>
         <translation>(nincs címke)</translation>
     </message>
-    </context>
+    <message>
+        <source>(no message)</source>
+        <translation>(nincs üzenet)</translation>
+    </message>
+    <message>
+        <source>(no amount)</source>
+        <translation>(nincs összeg)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsDialog</name>
     <message>
@@ -1476,6 +1592,14 @@ Cím: %4
     <message>
         <source>Inputs...</source>
         <translation>Bemenetek...</translation>
+    </message>
+    <message>
+        <source>automatically selected</source>
+        <translation>automatikusan kiválasztva</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Fedezethiány!</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1510,12 +1634,36 @@ Cím: %4
         <translation>Tranzakciós díj</translation>
     </message>
     <message>
+        <source>Choose...</source>
+        <translation>Válassz...</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>Kicsinyítés</translation>
+    </message>
+    <message>
+        <source>per kilobyte</source>
+        <translation>kilobájtonként</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>normal</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>gyors</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Küldés több címzettnek egyszerre</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
         <translation>&amp;Címzett hozzáadása</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Minden mező törlése</translation>
     </message>
     <message>
         <source>Dust:</source>
@@ -1594,12 +1742,20 @@ Cím: %4
         <translation>Többször szerepel ugyanaz a cím. Egy küldési műveletben egy címre csak egyszer lehet küldeni.</translation>
     </message>
     <message>
+        <source>Warning: Invalid Bitcoin address</source>
+        <translation>Figyelmeztetés: Érvénytelen Bitcoin cím</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(nincs címke)</translation>
     </message>
     <message>
         <source>Copy dust</source>
         <translation>Visszajáró másolása</translation>
+    </message>
+    <message>
+        <source>Are you sure you want to send?</source>
+        <translation>Biztos, hogy el akarod küldeni?</translation>
     </message>
     </context>
 <context>
@@ -1622,6 +1778,10 @@ Cím: %4
         <translation>Címke:</translation>
     </message>
     <message>
+        <source>Choose previously used address</source>
+        <translation>Válassz egy korábban már használt címet</translation>
+    </message>
+    <message>
         <source>Alt+A</source>
         <translation>Alt+A</translation>
     </message>
@@ -1632,6 +1792,10 @@ Cím: %4
     <message>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Remove this entry</source>
+        <translation>Ez a bejegyzés eltávolítása</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -1648,7 +1812,11 @@ Cím: %4
         <source>Bitcoin Core is shutting down...</source>
         <translation>A Bitcoin Core leáll...</translation>
     </message>
-    </context>
+    <message>
+        <source>Do not shut down the computer until this window disappears.</source>
+        <translation>Ne álljon le a számítógép amíg ez az ablak el nem tűnik.</translation>
+    </message>
+</context>
 <context>
     <name>SignVerifyMessageDialog</name>
     <message>
@@ -1662,6 +1830,10 @@ Cím: %4
     <message>
         <source>You can sign messages with your addresses to prove you own them. Be careful not to sign anything vague, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>Aláírhat a címeivel üzeneteket, amivel bizonyíthatja, hogy a címek az önéi. Vigyázzon, hogy ne írjon alá semmi félreérthetőt, mivel a phising támadásokkal megpróbálhatják becsapni, hogy az azonosságát átírja másokra. Csak olyan részletes állításokat írjon alá, amivel egyetért.</translation>
+    </message>
+    <message>
+        <source>Choose previously used address</source>
+        <translation>Válassz egy korábban már használt címet</translation>
     </message>
     <message>
         <source>Alt+A</source>

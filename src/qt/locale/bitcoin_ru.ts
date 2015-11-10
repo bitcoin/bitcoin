@@ -437,6 +437,14 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Change:</source>
+        <translation>Размен:</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Копировать размен</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(нет метки)</translation>
     </message>
@@ -487,6 +495,10 @@
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Очистить все поля формы</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -512,6 +524,18 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Change:</source>
+        <translation>Размен:</translation>
+    </message>
+    <message>
+        <source>Clear all fields of the form.</source>
+        <translation>Очистить все поля формы</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>Копировать размен</translation>
+    </message>
     <message>
         <source>(no label)</source>
         <translation>(нет метки)</translation>
@@ -548,9 +572,33 @@
         <source>Address</source>
         <translation>Адрес</translation>
     </message>
+    <message>
+        <source>Received with</source>
+        <translation>Получено на</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Отправлено на</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Добытые</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Received with</source>
+        <translation>Получено на</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Отправлено на</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Добытые</translation>
+    </message>
     <message>
         <source>Exporting Failed</source>
         <translation>Экспорт не удался</translation>

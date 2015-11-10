@@ -1989,6 +1989,10 @@ Adresse : %4
         <translation>Copier la monnaie</translation>
     </message>
     <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>Montant total %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>ou</translation>
     </message>
@@ -3151,6 +3155,10 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
         <translation>Erreur de lecture de la base de données, fermeture en cours.</translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Erreur : une erreur interne fatale s'est produite. Voir debug.log pour plus de détails</translation>
+    </message>
+    <message>
         <source>Error: Unsupported argument -tor found, use -onion.</source>
         <translation>Erreur : argument non pris en charge -tor trouvé, utiliser -onion.</translation>
     </message>
@@ -3217,6 +3225,10 @@ par exemple : alertnotify=echo %%s | mail -s "Alerte Bitcoin" admin@foo.com
     <message>
         <source>Randomly fuzz 1 of every &lt;n&gt; network messages</source>
         <translation>Tester aléatoirement 1 message du réseau sur &lt;n&gt;</translation>
+    </message>
+    <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>Recevoir et afficher les alertes du réseau poste à poste (%u par défaut)</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
