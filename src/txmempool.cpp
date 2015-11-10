@@ -31,6 +31,9 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
     nCountWithDescendants = 1;
     nSizeWithDescendants = nTxSize;
     nFeesWithDescendants = nFee;
+
+    // Assume priority-eligible if no in-mempool parents
+    fPriorityTx = hadNoDependencies;
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
@@ -386,6 +389,11 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     }
     UpdateAncestorsOf(true, newit, setAncestors);
 
+    if (newit->IsPriorityTx()) {
+        assert(setAncestors.empty());
+        priorityUsage += sizeof(*newit) + newit->DynamicMemoryUsage();
+    }
+
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
@@ -544,7 +552,9 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
     // After the txs in the new block have been removed from the mempool, update policy estimates
     minerPolicyEstimator->processBlock(nBlockHeight, entries, fCurrentEstimate);
     lastRollingFeeUpdate = GetTime();
+    lastRollingPriorityUpdate = lastRollingFeeUpdate;
     blockSinceLastRollingFeeBump = true;
+    blockSinceLastRollingPriorityBump = true;
 }
 
 void CTxMemPool::_clear()
@@ -555,9 +565,13 @@ void CTxMemPool::_clear()
     totalTxSize = 0;
     cachedInnerUsage = 0;
     lastRollingFeeUpdate = GetTime();
+    lastRollingPriorityUpdate = lastRollingFeeUpdate;
     blockSinceLastRollingFeeBump = false;
+    blockSinceLastRollingPriorityBump = false;
     rollingMinimumFeeRate = 0;
+    rollingMinimumPriority = 0;
     ++nTransactionsUpdated;
+    priorityUsage = 0;
 }
 
 void CTxMemPool::clear()
@@ -578,6 +592,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     uint64_t checkTotal = 0;
     uint64_t innerUsage = 0;
+    uint64_t checkPriorityUsage = 0;
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
 
@@ -587,6 +602,8 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         unsigned int i = 0;
         checkTotal += it->GetTxSize();
         innerUsage += it->DynamicMemoryUsage();
+        if (it->IsPriorityTx())
+            checkPriorityUsage += sizeof(*it) + it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
         txlinksMap::const_iterator linksiter = mapLinks.find(it);
         assert(linksiter != mapLinks.end());
@@ -675,6 +692,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     assert(totalTxSize == checkTotal);
     assert(innerUsage == cachedInnerUsage);
+    assert(priorityUsage == checkPriorityUsage);
 }
 
 void CTxMemPool::queryHashes(vector<uint256>& vtxid)
@@ -806,6 +824,9 @@ void CTxMemPool::RemoveStaged(setEntries &stage) {
     AssertLockHeld(cs);
     UpdateForRemoveFromMempool(stage);
     BOOST_FOREACH(const txiter& it, stage) {
+        if (it->IsPriorityTx()) {
+            priorityUsage -= sizeof(*it) + it->DynamicMemoryUsage();
+        }
         removeUnchecked(it);
     }
 }
@@ -904,11 +925,38 @@ void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
     }
 }
 
-void CTxMemPool::TrimToSize(size_t sizelimit) {
+void CTxMemPool::trackPriorityRemoved(double priority) {
+    AssertLockHeld(cs);
+    if (priority > rollingMinimumPriority) {
+        rollingMinimumPriority = priority;
+        blockSinceLastRollingPriorityBump = false;
+    }
+}
+
+void CTxMemPool::TrimToSize(size_t sizelimit, size_t priorityLimit) {
     LOCK(cs);
 
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);
+    while (priorityUsage > priorityLimit) {
+        // First move transactions from priority space to fee space
+        indexed_transaction_set::nth_index<1>::type::iterator lastPriTx;
+        lastPriTx = mapTx.get<1>().end();
+        assert(lastPriTx != mapTx.get<1>().begin()); // must have something to evict!
+        lastPriTx--;
+        assert(lastPriTx->IsPriorityTx());
+
+        trackPriorityRemoved(lastPriTx->GetPriority());
+        LogPrint("mempool", "TrimToSize: priority usage too high (%d > %d); moving tx %s (%lu bytes %f priority; rolling min priority=%f)\n",
+                priorityUsage, priorityLimit,
+                lastPriTx->GetTx().GetHash().ToString(), 
+                lastPriTx->DynamicMemoryUsage(),
+                lastPriTx->GetPriority(),
+                rollingMinimumPriority);
+
+        priorityUsage -= sizeof(*lastPriTx) + lastPriTx->DynamicMemoryUsage();
+        mapTx.modify(mapTx.project<0>(lastPriTx), set_prioritytx(false));
+    }
     while (DynamicMemoryUsage() > sizelimit) {
         indexed_transaction_set::nth_index<1>::type::iterator it = mapTx.get<1>().begin();
 
@@ -929,4 +977,27 @@ void CTxMemPool::TrimToSize(size_t sizelimit) {
 
     if (maxFeeRateRemoved > CFeeRate(0))
         LogPrint("mempool", "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
+}
+
+double CTxMemPool::GetMinPriority(size_t priorityLimit) const {
+    if (priorityLimit == 0)
+        return INF_PRIORITY;
+
+    LOCK(cs);
+    if (!blockSinceLastRollingPriorityBump || rollingMinimumPriority < AllowFreeThreshold())
+        return std::max(rollingMinimumPriority, AllowFreeThreshold());
+
+    // Check to see if it's time to decay, and then return the updated value.
+    int64_t time = GetTime();
+    if (time > lastRollingPriorityUpdate + 10) {
+        double halflife = ROLLING_FEE_HALFLIFE; // use the same halflife as for fee
+        if (priorityUsage < priorityLimit / 4)
+            halflife /= 4;
+        else if (priorityUsage < priorityLimit / 2)
+            halflife /= 2;
+
+        rollingMinimumPriority = rollingMinimumPriority / pow(2.0, (time - lastRollingPriorityUpdate) / halflife);
+        lastRollingPriorityUpdate = time;
+    }
+    return std::max(rollingMinimumPriority, AllowFreeThreshold());
 }

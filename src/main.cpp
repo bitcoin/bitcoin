@@ -911,7 +911,16 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 strprintf("%d < %d", nFees, txMinFee));
 
         CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
-        if (mempoolRejectFee > 0 && nFees < mempoolRejectFee) {
+
+        size_t mempoolLimit = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+        const double defaultPriorityLimit = (double)GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE) / (double) GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+        size_t priorityLimit = GetArg("-prioritylimit", mempoolLimit * defaultPriorityLimit);
+
+        // If the fee is below the minimum fee and it doesn't qualify to enter
+        // the priority space, reject it.
+        if (mempoolRejectFee > 0 && nFees < mempoolRejectFee &&
+            (!entry.IsPriorityTx() || dPriority < pool.GetMinPriority(priorityLimit)))
+        {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
         } else if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
             // Require that free transactions have sufficient priority to be mined in the next block.
@@ -921,7 +930,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         // Continuously rate-limit free (really, very-low-fee) transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
-        if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize))
+        if (fLimitFree && (nFees < ::minRelayTxFee.GetFee(nSize) ||
+                    (mempoolRejectFee > 0 && nFees < mempoolRejectFee)))
         {
             static CCriticalSection csFreeLimiter;
             static double dFreeCount;
@@ -986,7 +996,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             if (expired != 0)
                 LogPrint("mempool", "Expired %i transactions from the memory pool\n", expired);
 
-            pool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+            pool.TrimToSize(mempoolLimit, priorityLimit);
             if (!pool.exists(tx.GetHash()))
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
         }
@@ -2316,8 +2326,13 @@ static bool ActivateBestChainStep(CValidationState &state, CBlockIndex *pindexMo
     }
     }
 
-    if (fBlocksDisconnected)
-        mempool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+    if (fBlocksDisconnected) {
+        size_t mempoolLimit = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+        const double defaultPriorityLimit = (double) GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE) / (double) GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+        size_t priorityLimit = GetArg("-prioritylimit", defaultPriorityLimit * mempoolLimit);
+        mempool.TrimToSize(mempoolLimit, priorityLimit);
+    }
+
 
     // Callbacks/notifications for a new best chain.
     if (fInvalidFound)
@@ -2406,7 +2421,10 @@ bool InvalidateBlock(CValidationState& state, const Consensus::Params& consensus
         }
     }
 
-    mempool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+    size_t mempoolLimit = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
+    const double defaultPriorityLimit = (double) GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE) / (double) GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+    size_t priorityLimit = GetArg("-prioritylimit", defaultPriorityLimit * mempoolLimit);
+    mempool.TrimToSize(mempoolLimit, priorityLimit);
 
     // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
     // add it again.
