@@ -918,28 +918,77 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
 
-        // Continuously rate-limit free (really, very-low-fee) transactions
-        // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
-        // be annoying or make others' transactions take longer to confirm.
+        /* Continuously rate-limit free (really, very-low-fee) transactions
+         * This mitigates 'penny-flooding' -- sending thousands of free transactions just to
+         * be annoying or make others' transactions take longer to confirm. */
+        static const double maxFeeCutoff = boost::lexical_cast<double>(GetArg("-maxrelaytxfee",FormatMoney(::minRelayTxFee.GetFeePerK() * 5))) * 100000000/1000; /* maximum feeCutoff in satoshi per byte */
+	static const double initFeeCutoff = boost::lexical_cast<double>(GetArg("-minrelaytxfee",FormatMoney(::minRelayTxFee.GetFeePerK()))) * 100000000/1000; /* starting value for feeCutoff in satoshi per byte*/
+        static const uint64_t maxBlockSize = GetArg("-blockmaxsize", MAX_BLOCK_SIZE); 
+        static const int nLimitFreeRelay = GetArg("-limitfreerelay", DEFAULT_LIMIT_FREE_RELAY); 
+
+        // get current memory pool size
+        uint64_t poolBytes = pool.GetTotalTxSize();
+
+	// Calculate feeCutoff in satoshis per byte:
+	//   When the feeCutoff is larger than the satoshiPerByte of the 
+	//   current transaction then spam blocking will be in effect. However
+	//   Some free transactions will still get through based on -limitfreerelay
+        static double feeCutoff;
+        static double nFreeLimit = nLimitFreeRelay;
+        static int64_t nLastTime;
+        int64_t nNow = GetTime();
+
+        // When the mempool starts falling use an exponentially decaying ~24 hour window:
+        //nFreeLimit = nFreeLimit + ((double)(DEFAULT_LIMIT_FREE_RELAY - nFreeLimit)/pow(1.0 - 1.0/86400, (double)(nNow - nLastTime)));
+        nFreeLimit /= pow(1.0 - 1.0/86400, (double)(nNow - nLastTime));
+
+        // When the mempool starts falling use an exponentially decaying ~24 hour window:
+        feeCutoff *= pow(1.0 - 1.0/86400, (double)(nNow - nLastTime));
+
+        if (poolBytes < maxBlockSize) {
+            feeCutoff = std::max(feeCutoff,initFeeCutoff);
+            nFreeLimit = std::min(nFreeLimit,(double)nLimitFreeRelay);
+        }
+        else if(poolBytes < (maxBlockSize * MAX_BLOCK_SIZE_MULTIPLYER)) {
+            // Gradually choke off what is considered a free transaction
+            feeCutoff = std::max(feeCutoff,initFeeCutoff + ((maxFeeCutoff - initFeeCutoff) * (poolBytes - maxBlockSize) / (maxBlockSize * (MAX_BLOCK_SIZE_MULTIPLYER-1))));
+
+            // Gradually choke off the nFreeLimit as well but leave at least MIN_LIMIT_FREE_RELAY
+            // So that some free transactions can still get through
+            nFreeLimit = std::min(nFreeLimit,((double)nLimitFreeRelay - ((double)(nLimitFreeRelay - MIN_LIMIT_FREE_RELAY) * (double)(poolBytes - maxBlockSize) / (maxBlockSize * (MAX_BLOCK_SIZE_MULTIPLYER-1)))));
+            if(nFreeLimit < MIN_LIMIT_FREE_RELAY)
+                nFreeLimit = MIN_LIMIT_FREE_RELAY;
+        }
+        else {
+            feeCutoff = maxFeeCutoff;
+            nFreeLimit = MIN_LIMIT_FREE_RELAY;
+        }
+
+        minRelayTxFee = CFeeRate(feeCutoff * 1000); 
+        LogPrint("mempool",
+                 "MempoolBytes:%d  LimitFreeRelay:%.5g  FeeCutOff:%.4g  FeesSatoshiPerByte:%.4g  TxBytes:%d  TxFees:%d\n",
+                  poolBytes,nFreeLimit,((double)::minRelayTxFee.GetFee(nSize))/nSize, ((double)nFees)/nSize,nSize, nFees);
         if (fLimitFree && nFees < ::minRelayTxFee.GetFee(nSize))
         {
             static CCriticalSection csFreeLimiter;
             static double dFreeCount;
-            static int64_t nLastTime;
-            int64_t nNow = GetTime();
 
             LOCK(csFreeLimiter);
 
             // Use an exponentially decaying ~10-minute window:
             dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
             nLastTime = nNow;
+
             // -limitfreerelay unit is thousand-bytes-per-minute
             // At default rate it would take over a month to fill 1GB
-            if (dFreeCount >= GetArg("-limitfreerelay", 15)*10*1000)
-                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "rate limited free transaction");
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+            if ((dFreeCount + nSize) >= nFreeLimit*10*1000)
+                return state.DoS(0, 
+                       error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
+                       REJECT_INSUFFICIENTFEE, "rate limited free transaction");
             dFreeCount += nSize;
         }
+        nLastTime = nNow;
 
         if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
             return state.Invalid(false,
