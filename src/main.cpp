@@ -661,9 +661,12 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRE
     return nEvicted;
 }
 
-int64_t LockTime(const CTransaction &tx, int flags, const CBlockIndex& tip, const std::vector<CCoins>& prevCoins, int nBlockHeight, int64_t nBlockTime)
+int64_t LockTime(const CTransaction &tx, int flags, const std::vector<CCoins>& prevCoins, const CBlockIndex& block)
 {
-    CCoins coins;
+    assert(prevCoins.size() == tx.vin.size());
+    int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
+                                    ? block.GetAncestor(std::max(block.nHeight-1, 0))->GetMedianTimePast()
+                                    : block.GetBlockTime();
 
     bool fEnforceBIP68 = static_cast<uint32_t>(tx.nVersion) >= 2
                       && flags & LOCKTIME_VERIFY_SEQUENCE;
@@ -676,9 +679,8 @@ int64_t LockTime(const CTransaction &tx, int flags, const CBlockIndex& tip, cons
     // Will remain equal to true if all inputs are finalized
     // (CTxIn::SEQUENCE_FINAL).
     bool fFinalized = true;
-    int txinIndex = -1;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin) {
-        txinIndex++;
+    for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
+        const CTxIn& txin = tx.vin[txinIndex];
         // Set a flag if we witness an input that isn't finalized.
         if (txin.nSequence == CTxIn::SEQUENCE_FINAL)
             continue;
@@ -697,23 +699,26 @@ int64_t LockTime(const CTransaction &tx, int flags, const CBlockIndex& tip, cons
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLED_FLAG)
             continue;
 
-        coins = prevCoins.at(txinIndex);
+        const CCoins& coins = prevCoins[txinIndex];
 
-        // coins.nHeight is MEMPOOL_HEIGHT (an absurdly high value)
+        // If the coin height is unknown, ignore it in the calculation
+        // of the LockTime
+        if(coins.nHeight < 0)
+            continue;
+
+        // Spending a coin from a future block should be impossible, skip the input
+        if(coins.nHeight != MEMPOOL_HEIGHT && coins.nHeight > block.nHeight)
+            continue;
+
+        // coins.nHeight is MEMPOOL_HEIGHT
         // if the parent transaction was from the mempool. We can't
         // know what height it will have once confirmed, but we
         // assume it makes it in the same block.
-        int nCoinHeight = std::min(coins.nHeight, nBlockHeight);
+        int nCoinHeight = coins.nHeight == MEMPOOL_HEIGHT ? block.nHeight : coins.nHeight;
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_SECONDS_FLAG) {
 
-            // The only time the negative branch of this conditional
-            // is executed is when the prior output was taken from the
-            // mempool, in which case we assume it makes it into the
-            // same block (see above).
-            int64_t nCoinTime = (nCoinHeight <= (tip.nHeight+1))
-                              ? tip.GetAncestor(std::max(nCoinHeight-1, 0))->GetMedianTimePast()
-                              : nBlockTime;
+            int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight-1, 0))->GetMedianTimePast();
 
             // Time-based relative lock-times are measured from the
             // smallest allowed timestamp of the block containing the
@@ -740,7 +745,7 @@ int64_t LockTime(const CTransaction &tx, int flags, const CBlockIndex& tip, cons
     else
         nMinTime = std::max(nMinTime, (int64_t)tx.nLockTime);
 
-    if (nMinHeight >= nBlockHeight)
+    if (nMinHeight >= block.nHeight)
         return nMinHeight;
     if (nMinTime >= nBlockTime)
         return nMinTime;
@@ -748,24 +753,23 @@ int64_t LockTime(const CTransaction &tx, int flags, const CBlockIndex& tip, cons
     return 0;
 }
 
-int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, int nBlockHeight, int64_t nBlockTime)
+int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, const CBlockIndex& block)
 {
-    AssertLockHeld(cs_main);
     CCoins coins;
     std::vector<CCoins> prevCoins (tx.vin.size());
-    int txinIndex = -1;
-    BOOST_FOREACH(const CTxIn& txin, tx.vin) {
-        txinIndex++;
+    for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
+        const CTxIn& txin = tx.vin[txinIndex];
         if (!pCoinsView || !pCoinsView->GetCoins(txin.prevout.hash, coins))
         {
             coins = CCoins();
-            //If previous coin is not found in the CCoinsView, 
-            //assume the coin is anormally old, so it does not change the minheight and nMinTime later
-            coins.nHeight = -100000000;
+            // If previous coin is not found in the CCoinsView,
+            // the next overload will just skip the input
+            // for lockTime calculation
+            coins.nHeight = -1;
         }
         prevCoins.at(txinIndex) = coins;
     }
-    return LockTime(tx, flags, *chainActive.Tip(), prevCoins, nBlockHeight, nBlockTime);
+    return LockTime(tx, flags, prevCoins, block);
 }
 
 int64_t CheckLockTime(const CTransaction &tx, int flags)
@@ -784,24 +788,24 @@ int64_t CheckLockTime(const CTransaction &tx, int flags)
     CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
     const CCoinsView *pCoinsView = &viewMemPool;
 
+    CBlockIndex* tip = chainActive.Tip();
+    CBlockIndex index;
+    index.pprev = tip;
     // CheckLockTime() uses chainActive.Height()+1 to evaluate
     // nLockTime because when LockTime() is called within
     // CBlock::AcceptBlock(), the height of the block *being*
     // evaluated is what is used. Thus if we want to know if a
     // transaction can be part of the *next* block, we need to call
     // LockTime() with one more than chainActive.Height().
-    const int nBlockHeight = chainActive.Height() + 1;
+    index.nHeight = tip->nHeight + 1;
 
-    // BIP113 will require that time-locked transactions have nLockTime set to
-    // less than the median time of the previous block they're contained in.
-    // When the next block is created its previous block will be the current
-    // chain tip, so we use that to calculate the median time passed to
-    // LockTime() if LOCKTIME_MEDIAN_TIME_PAST is set.
-    const int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
-                             ? chainActive.Tip()->GetMedianTimePast()
-                             : GetAdjustedTime();
+    // Timestamps on the other hand don't get any special treatment,
+    // because we can't know what timestamp the next block will have,
+    // and there aren't timestamp applications where it matters.
+    // However this changes once median past time-locks are enforced:
+    index.nTime = GetAdjustedTime();
 
-    return LockTime(tx, flags, pCoinsView, nBlockHeight, nBlockTime);
+    return LockTime(tx, flags, pCoinsView, index);
 }
 
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
@@ -2175,11 +2179,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
     int nLockTimeFlags = 0;
-    int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
-                            ? pindex->pprev->GetMedianTimePast()
-                            : pindex->GetBlockTime();
-
-    int64_t nTimeStart = GetTimeMicros();
     CAmount nFees = 0;
     int nInputs = 0;
     unsigned int nSigOps = 0;
@@ -2204,7 +2203,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                  REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
             // Check that transaction is finalized
-            if (LockTime(tx, nLockTimeFlags, &view, pindex->nHeight, nLockTimeCutoff))
+            if (LockTime(tx, nLockTimeFlags, &view, *pindex))
                 return state.DoS(100, error("ConnectBlock(): contains a non-final transaction", __func__),
                                  REJECT_INVALID, "bad-txns-nonfinal");
 
@@ -3170,16 +3169,17 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
 bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIndex * const pindexPrev)
 {
-    const int nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
     const Consensus::Params& consensusParams = Params().GetConsensus();
+
+    int nLockTimeFlags = 0;
+    CBlockIndex blockIndex;
+    blockIndex.nTime = block.nTime;
+    blockIndex.nHeight = pindexPrev == NULL ? 0 : pindexPrev->nHeight + 1;
+    blockIndex.pprev = pindexPrev;
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, block.vtx) {
-        int nLockTimeFlags = 0;
-        int64_t nLockTimeCutoff = (nLockTimeFlags & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? pindexPrev->GetMedianTimePast()
-                                : block.GetBlockTime();
-        if (LockTime(tx, nLockTimeFlags, NULL, nHeight, nLockTimeCutoff))
+        if (LockTime(tx, nLockTimeFlags, NULL, blockIndex))
             return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
     }
 
@@ -3187,7 +3187,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
     if (block.nVersion >= 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams))
     {
-        CScript expect = CScript() << nHeight;
+        CScript expect = CScript() << blockIndex.nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
             return state.DoS(100, error("%s: block height mismatch in coinbase", __func__), REJECT_INVALID, "bad-cb-height");

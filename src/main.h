@@ -327,10 +327,9 @@ void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCach
 bool CheckTransaction(const CTransaction& tx, CValidationState& state);
 
 /**
- * Check if transaction is final and can be included in a block with the
- * specified height and time. Consensus critical.
+ * Check if transaction is final and can be included in a block. Consensus critical.
  */
-int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, int nBlockHeight, int64_t nBlockTime);
+int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, const CBlockIndex& block);
 
 /**
  * Check if transaction will be final in the next block to be created.
