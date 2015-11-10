@@ -1117,7 +1117,7 @@
           <item row="12" column="0">
            <widget class="QLabel" name="label_18">
             <property name="text">
-             <string>Bytes Sent</string>
+             <string>Sent</string>
             </property>
            </widget>
           </item>
@@ -1140,7 +1140,7 @@
           <item row="13" column="0">
            <widget class="QLabel" name="label_20">
             <property name="text">
-             <string>Bytes Received</string>
+             <string>Received</string>
             </property>
            </widget>
           </item>
