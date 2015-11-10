@@ -1,4 +1,4 @@
-<TS language="th_TH" version="2.0">
+<TS language="th_TH" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -103,6 +103,9 @@
         <source>Wallet decryption failed</source>
         <translation>ถอดรหัสกระเป๋าเงินล้มเหลว</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>

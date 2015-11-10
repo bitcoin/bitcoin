@@ -1,4 +1,4 @@
-<TS language="he" version="2.0">
+<TS language="he" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -208,6 +208,9 @@
         <translation>מילת הצופן של הארנק שונתה בהצלחה.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1313,14 +1316,6 @@
         <translation>שירותים</translation>
     </message>
     <message>
-        <source>Starting Height</source>
-        <translation>גובה התחלתי</translation>
-    </message>
-    <message>
-        <source>Sync Height</source>
-        <translation>גובה הסנכרון</translation>
-    </message>
-    <message>
         <source>Ban Score</source>
         <translation>דירוג חסימה</translation>
     </message>
@@ -1433,12 +1428,16 @@
         <translation>תעבורה יוצאת</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>לא ידוע</translation>
+        <source>Yes</source>
+        <translation>כן</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>מתקבל…</translation>
+        <source>No</source>
+        <translation>לא</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>לא ידוע</translation>
     </message>
 </context>
 <context>
@@ -1735,10 +1734,6 @@
     <message>
         <source>Copy change</source>
         <translation>העתקת עודף</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>הסכום הכולל %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
@@ -2495,10 +2490,6 @@
         <translation>ריצה כסוכן ברקע וקבלת פקודות</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>שימוש ברשת הבדיקה</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>קבלת חיבורים מבחוץ (בררת מחדל: 1 ללא ‎-proxy או ‎-connect)</translation>
     </message>
@@ -2523,20 +2514,12 @@
         <translation>לא ניתן להתאגד אל %s במחשב זה. כנראה שליבת ביטקוין כבר פועלת.</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>אזהרה: ‎-paytxfee נקבע לערך מאד גבוה! זוהי עמלת הפעולה שתשולם בעת העברת שליחה.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>אזהרה: נראה שלא כל הרשת מסכימה! נראה שישנם כורים שנתקלים בבעיות.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>אזהרה: נראה שישנה אי־הסכמה בינינו לבין שאר העמיתים שלנו! יתכן שעדיף לשדרג או שכל שאר העמיתים צריכים לשדרג.</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>אזהרה: שגיאה בקריאת wallet.dat! כל המפתחות נקראו באופן תקין, אך נתוני ההעברות או ספר הכתובות עלולים להיות חסרים או שגויים.</translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -2607,10 +2590,6 @@
         <translation>האזנה נכשלה בכל פורט. השתמש ב- -listen=0 אם ברצונך בכך.</translation>
     </message>
     <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>אם לא סופקה &lt;קטגוריה&gt; יש לייצא את כל פרטי הניפוי.</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>מתבצע יבוא…</translation>
     </message>
@@ -2671,10 +2650,6 @@
         <translation>הרץ פקודה כאשר ההתראה הרלוונטית מתקבלת או כשאנחנו עדים לפיצול ארוך מאוד (%s בשורת הפקודה יוחלף ע"י ההודעה)</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>אזהרה: נא לבדוק שהתאריך והשעה של המחשב שלך נכונים! אם השעון שלך שגוי ליבת ביטקוין לא תעבוד כראוי.</translation>
-    </message>
-    <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>לא ניתן לפתור את הכתובת ‎-whitebind:‏ '%s'</translation>
     </message>
@@ -2691,20 +2666,8 @@
         <translation>כל הזכויות שמורות (C)‏ 2009‏-%i מתכנתי ליבת ביטקוין</translation>
     </message>
     <message>
-        <source>Could not parse -rpcbind value %s as network address</source>
-        <translation>לא ניתן לנתח את הערך של ‎-rpcbind שצוין בתור %s ככתובת רשת</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
         <translation>אירעה שגיאה בטעינת wallet.dat: הארנק דורש גרסה חדשה יותר של ליבת ביטקוין</translation>
-    </message>
-    <message>
-        <source>Error: Unsupported argument -tor found, use -onion.</source>
-        <translation>שגיאה: נמצא ארגומנט בלתי נתמך ‎-tor, יש להשתמש ב־‎-onion.</translation>
-    </message>
-    <message>
-        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
-        <translation>עמלה (ב־BTC/ק״ב) להוספה להעברות שנשלחות ממך (בררת מחדל: %s)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2737,10 +2700,6 @@
     <message>
         <source>Node relay options:</source>
         <translation>אפשרויות ממסר מפרק:</translation>
-    </message>
-    <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>אפשרויות RPC SSL: (נא לעיין בוויקי של ביטקוין לקבלת הנחיות על הגדרת SSL)</translation>
     </message>
     <message>
         <source>RPC server options:</source>
@@ -2799,10 +2758,6 @@
         <translation>לא ניתן להתאגד עם הפתחה %s במחשב זה (פעולת האיגוד החזירה את השגיאה %s)</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>יש להשתמש ב־UPnP כדי למפות את הפתחה להאזנה (בררת מחדל: 1 בעת האזנה)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>שם משתמש לחיבורי JSON-RPC</translation>
     </message>
@@ -2813,14 +2768,6 @@
     <message>
         <source>Warning</source>
         <translation>אזהרה</translation>
-    </message>
-    <message>
-        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>אזהרה: הארגומנט שאינו נתמך עוד ‎-benchmark לא הופעל, נא להשתמש ב־‎-debug=bench.</translation>
-    </message>
-    <message>
-        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>אזהרה: הארגומנט שאינו נתמך עוד ‎-debugnet לא הופעל, נא להשתמש ב־‎-debug=net.</translation>
     </message>
     <message>
         <source>on startup</source>
@@ -2845,10 +2792,6 @@
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>יש לסרוק מחדש את שרשרת המקטעים למציאת העברות חסרות בארנק</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>שימוש ב־OpenSSL (https)‎ עבור חיבורי JSON-RPC</translation>
     </message>
     <message>
         <source>This help message</source>

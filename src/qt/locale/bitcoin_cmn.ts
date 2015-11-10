@@ -1,4 +1,4 @@
-<TS language="cmn" version="2.0">
+<TS language="cmn" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -11,6 +11,9 @@
     </context>
 <context>
     <name>AskPassphraseDialog</name>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>

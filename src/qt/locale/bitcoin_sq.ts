@@ -1,4 +1,4 @@
-<TS language="sq" version="2.0">
+<TS language="sq" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -167,6 +167,9 @@
         <source>Wallet decryption failed</source>
         <translation>Dekriptimi i portofolit dështoi</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -460,7 +463,7 @@
         <source>Unknown</source>
         <translation>i/e panjohur</translation>
     </message>
-    </context>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
