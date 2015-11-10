@@ -186,7 +186,7 @@ UniValue getrawtransaction(const UniValue& params, bool fHelp)
 
     CTransaction tx;
     uint256 hashBlock;
-    if (!GetTransaction(hash, tx, hashBlock, true))
+    if (!GetTransaction(hash, tx, Params().GetConsensus(), hashBlock, true))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available about transaction");
 
     string strHex = EncodeHexTx(tx);
@@ -256,7 +256,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
     if (pblockindex == NULL)
     {
         CTransaction tx;
-        if (!GetTransaction(oneTxid, tx, hashBlock, false) || hashBlock.IsNull())
+        if (!GetTransaction(oneTxid, tx, Params().GetConsensus(), hashBlock, false) || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         if (!mapBlockIndex.count(hashBlock))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
@@ -264,7 +264,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
     }
 
     CBlock block;
-    if(!ReadBlockFromDisk(block, pblockindex))
+    if(!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
 
     unsigned int ntxFound = 0;

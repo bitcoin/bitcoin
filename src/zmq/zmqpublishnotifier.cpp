@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "chainparams.h"
 #include "zmqpublishnotifier.h"
 #include "main.h"
 #include "util.h"
@@ -142,11 +143,12 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
 {
     LogPrint("zmq", "Publish raw block %s\n", pindex->GetBlockHash().GetHex());
 
+    const Consensus::Params& consensusParams = Params().GetConsensus();
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     {
         LOCK(cs_main);
         CBlock block;
-        if(!ReadBlockFromDisk(block, pindex))
+        if(!ReadBlockFromDisk(block, pindex, consensusParams))
         {
             zmqError("Can't read block from disk");
             return false;
