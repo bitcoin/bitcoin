@@ -1006,10 +1006,13 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         size_t nConflictingSize = 0;
         uint64_t nConflictingCount = 0;
         CTxMemPool::setEntries allConflicting;
+
+        // If we don't hold the lock allConflicting might be incomplete; the
+        // subsequent RemoveStaged() and addUnchecked() calls don't guarantee
+        // mempool consistency for us.
+        LOCK(pool.cs);
         if (setConflicts.size())
         {
-            LOCK(pool.cs);
-
             CFeeRate newFeeRate(nFees, nSize);
             set<uint256> setConflictsParents;
             const int maxDescendantsToVisit = 100;
