@@ -204,3 +204,17 @@ If a set of tools is used by the build system or scripts the repository (for
 example, lcov) it is perfectly acceptable to add its files to `.gitignore`
 and commit them.
 
+Use of SI units
+-----------------
+
+In Bitcoin core we use SI units and prefixes consistently where possible. This
+is of most importance in user-facing code. This means:
+
+- `k` (kilo) prefix for 1,000, `M` (mega) prefix for 1,000,000, and so on. 
+  The other way goes `m` (milli) for 1/1,000, `μ` (micro) for 1/1,000,000, ...
+  See [list of SI prefixes](https://en.wikipedia.org/wiki/Metric_prefix#List_of_SI_prefixes).
+
+- Data sizes are specified in `kB` (1000 bytes) or `MB` (1,000,000 bytes), `GB` (1,000,000,000) bytes, etc.
+  Preferably do not use `kiB` (1024 bytes), `MiB` (1,048,576) and so on.
+  Under no circumstances use 'KB' 'MB' for these respective quantities.
+
