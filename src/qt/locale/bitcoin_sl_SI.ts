@@ -63,15 +63,15 @@
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Seznam naslovov prejemanja ...</translation>
+        <translation>Prejemni naslovi</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Seznam naslovov za pošiljanje plačil. Vedno preverite znesek in prejemnikov naslov pred pošiljanjem.</translation>
+        <translation>Tukaj so vaši Bitcoin naslovi za pošiljanje plačil. Vedno preverite znesek in prejemnikov naslov pred pošiljanjem kovancev.</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>Seznam vaših bitcoin naslovov za prejemanje plačil. Priporočljivo je uporabiti nov naslov za vsako novo plačilo.</translation>
+        <translation>Tukaj so vaši Bitcoin naslovi za prejemanje plačil. Priporočljivo je uporabiti nov naslov za vsako novo plačilo.</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -91,7 +91,7 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Neuspešen izvoz</translation>
+        <translation>Izvoz neuspešen</translation>
     </message>
     </context>
 <context>
@@ -149,7 +149,7 @@
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Zamenjaj geslo</translation>
+        <translation>Spremeni geslo</translation>
     </message>
     <message>
         <source>Enter the old and new passphrase to the wallet.</source>

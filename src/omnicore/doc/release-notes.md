@@ -16,7 +16,7 @@ Table of contents
   - [Downgrading](#downgrading)
   - [Compatibility with Bitcoin Core](#compatibility-with-bitcoin-core)
 - [Imported changes and notes](#imported-changes-and-notes)
-  - [Upgrade to Bitcoin Core 0.10.3](#upgrade-to-bitcoin-core-0103)
+  - [Upgrade to Bitcoin Core 0.10.4](#upgrade-to-bitcoin-core-0104)
   - [Headers-first synchronization](#headers-first-synchronization)
   - [Dust threshold values](#dust-threshold-values)
   - [Rebranding to Omni Core](#rebranding-to-omni-core)
@@ -59,24 +59,25 @@ Downgrading to an Omni Core version prior 0.0.10 is generally not supported as o
 Compatibility with Bitcoin Core
 -------------------------------
 
-Omni Core is based on Bitcoin Core 0.10.3 and can be used as replacement for Bitcoin Core. Switching between Omni Core and Bitcoin Core is fully supported at any time.
+Omni Core is based on Bitcoin Core 0.10.4 and can be used as replacement for Bitcoin Core. Switching between Omni Core and Bitcoin Core is fully supported at any time.
 
 Downgrading to a Bitcoin Core version prior 0.10 is not supported due to the new headers-first synchronization.
 
 Imported changes and notes
 ==========================
 
-Upgrade to Bitcoin Core 0.10.3
+Upgrade to Bitcoin Core 0.10.4
 ------------------------------
 
-The underlying base of Omni Core was upgraded from Bitcoin Core 0.9.5 to Bitcoin Core 0.10.3.
+The underlying base of Omni Core was upgraded from Bitcoin Core 0.9.5 to Bitcoin Core 0.10.4.
 
 Please see the following release notes for further details:
 
-- [Release notes for Bitcoin Core 0.10.0](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.10.0.md)
-- [Release notes for Bitcoin Core 0.10.1](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.10.1.md)
-- [Release notes for Bitcoin Core 0.10.2](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.10.2.md)
-- [Release notes for Bitcoin Core 0.10.3](https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.10.3.md)
+- [Release notes for Bitcoin Core 0.10.0](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/doc/release-notes/release-notes-0.10.0.md)
+- [Release notes for Bitcoin Core 0.10.1](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/doc/release-notes/release-notes-0.10.1.md)
+- [Release notes for Bitcoin Core 0.10.2](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/doc/release-notes/release-notes-0.10.2.md)
+- [Release notes for Bitcoin Core 0.10.3](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/doc/release-notes/release-notes-0.10.3.md)
+- [Release notes for Bitcoin Core 0.10.4](https://github.com/OmniLayer/omnicore/blob/omnicore-0.0.10/doc/release-notes.md)
 
 Headers-first synchronization
 -----------------------------
@@ -519,6 +520,7 @@ The following list includes relevant pull requests merged into this release:
 - #278 Replace splashes to remove OmniWallet branding
 - #269 Add release notes for Omni Core 0.0.10
 - #162 Bump version to 0.0.10.0-rc1
+- #282 Update base to Bitcoin Core 0.10.4
 ```
 
 Credits

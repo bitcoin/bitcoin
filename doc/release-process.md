@@ -23,15 +23,15 @@ Release Process
 
 * * *
 
-###update gitian
+###update Gitian
 
- In order to take advantage of the new caching features in gitian, be sure to update to a recent version (e9741525c or higher is recommended)
+ In order to take advantage of the new caching features in Gitian, be sure to update to a recent version (e9741525c or higher is recommended)
 
-###perform gitian builds
+###perform Gitian builds
 
  From a directory containing the bitcoin source, gitian-builder and gitian.sigs
   
-	export SIGNER=(your gitian key, ie bluematt, sipa, etc)
+    export SIGNER=(your Gitian key, ie bluematt, sipa, etc)
 	export VERSION=(new version, e.g. 0.8.0)
 	pushd ./bitcoin
 	git checkout v${VERSION}
@@ -39,27 +39,27 @@ Release Process
 	pushd ./gitian-builder
 
 ###fetch and build inputs: (first time, or when dependency versions change)
- 
+
 	mkdir -p inputs
 
- Register and download the Apple SDK: (see OSX Readme for details)
- 
+ Register and download the Apple SDK: (see OS X Readme for details)
+
  https://developer.apple.com/downloads/download.action?path=Developer_Tools/xcode_4.6.3/xcode4630916281a.dmg
- 
+
  Using a Mac, create a tarball for the 10.7 SDK and copy it to the inputs directory:
- 
+
 	tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.7.sdk.tar.gz MacOSX10.7.sdk
 
 ###Optional: Seed the Gitian sources cache
 
-  By default, gitian will fetch source files as needed. For offline builds, they can be fetched ahead of time:
+  By default, Gitian will fetch source files as needed. For offline builds, they can be fetched ahead of time:
 
 	make -C ../bitcoin/depends download SOURCES_PATH=`pwd`/cache/common
 
   Only missing files will be fetched, so this is safe to re-run for each build.
 
 ###Build Bitcoin Core for Linux, Windows, and OS X:
-  
+
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../
@@ -76,8 +76,8 @@ Release Process
   1. source tarball (bitcoin-${VERSION}.tar.gz)
   2. linux 32-bit and 64-bit binaries dist tarballs (bitcoin-${VERSION}-linux[32|64].tar.gz)
   3. windows 32-bit and 64-bit installers and dist zips (bitcoin-${VERSION}-win[32|64]-setup.exe, bitcoin-${VERSION}-win[32|64].zip)
-  4. OSX unsigned installer (bitcoin-${VERSION}-osx-unsigned.dmg)
-  5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx-unsigned>/(your gitian key)/
+  4. OS X unsigned installer (bitcoin-${VERSION}-osx-unsigned.dmg)
+  5. Gitian signatures (in gitian.sigs/${VERSION}-<linux|win|osx-unsigned>/(your Gitian key)/
 
 ###Next steps:
 
@@ -91,11 +91,11 @@ Commit your signature to gitian.sigs:
 	git push  # Assuming you can push to the gitian.sigs tree
 	popd
 
-  Wait for OSX detached signature:
-	Once the OSX build has 3 matching signatures, Gavin will sign it with the apple App-Store key.
+  Wait for OS X detached signature:
+	Once the OS X build has 3 matching signatures, Gavin will sign it with the apple App-Store key.
 	He will then upload a detached signature to be combined with the unsigned app to create a signed binary.
 
-  Create the signed OSX binary:
+  Create the signed OS X binary:
 
 	pushd ./gitian-builder
 	# Fetch the signature as instructed by Gavin
@@ -105,7 +105,7 @@ Commit your signature to gitian.sigs:
 	mv build/out/bitcoin-osx-signed.dmg ../bitcoin-${VERSION}-osx.dmg
 	popd
 
-Commit your signature for the signed OSX binary:
+Commit your signature for the signed OS X binary:
 
 	pushd gitian.sigs
 	git add ${VERSION}-osx-signed/${SIGNER}

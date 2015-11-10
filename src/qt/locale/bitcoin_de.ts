@@ -3234,6 +3234,10 @@ Beispiel: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Zufällig eine von &lt;n&gt; Netzwerknachrichten verwürfeln</translation>
     </message>
     <message>
+        <source>Receive and display P2P network alerts (default: %u)</source>
+        <translation>P2P-Netzwerk-Alarme empfangen und anzeigen (Standard: %u)</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Rückverfolgungs- und Debuginformationen an die Konsole senden, anstatt sie in debug.log zu schreiben</translation>
     </message>

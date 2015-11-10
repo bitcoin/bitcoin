@@ -1,7 +1,7 @@
 Gitian building
 ================
 
-*Setup instructions for a gitian build of Bitcoin using a Debian VM or physical system.*
+*Setup instructions for a Gitian build of Bitcoin using a Debian VM or physical system.*
 
 Gitian is the deterministic build process that is used to build the Bitcoin
 Core executables. It provides a way to be reasonably sure that the
@@ -13,7 +13,7 @@ Multiple developers build the source code by following a specific descriptor
 These results are compared and only if they match, the build is accepted and uploaded
 to bitcoin.org.
 
-More independent gitian builders are needed, which is why I wrote this
+More independent Gitian builders are needed, which is why I wrote this
 guide. It is preferred to follow these steps yourself instead of using someone else's
 VM image to avoid 'contaminating' the build.
 
@@ -22,9 +22,9 @@ Table of Contents
 
 - [Create a new VirtualBox VM](#create-a-new-virtualbox-vm)
 - [Connecting to the VM](#connecting-to-the-vm)
-- [Setting up Debian for gitian building](#setting-up-debian-for-gitian-building)
-- [Installing gitian](#installing-gitian)
-- [Setting up gitian images](#setting-up-gitian-images)
+- [Setting up Debian for Gitian building](#setting-up-debian-for-gitian-building)
+- [Installing Gitian](#installing-gitian)
+- [Setting up Gitian images](#setting-up-gitian-images)
 - [Getting and building the inputs](#getting-and-building-the-inputs)
 - [Building Bitcoin](#building-bitcoin)
 - [Building an alternative repository](#building-an-alternative-repository)
@@ -60,18 +60,18 @@ In the VirtualBox GUI click "Create" and choose the following parameters in the 
 ![](gitian-building/create_vm_hard_drive.png)
 
 - Hard Drive: Create a virtual hard drive now
-    
+
 ![](gitian-building/create_vm_hard_drive_file_type.png)
 
-- Hard Drive file type: Use the default, VDI (VirtualBox Disk Image) 
+- Hard Drive file type: Use the default, VDI (VirtualBox Disk Image)
 
 ![](gitian-building/create_vm_storage_physical_hard_drive.png)
-    
-- Storage on Physical hard drive: Dynamically Allocated 
-    
+
+- Storage on Physical hard drive: Dynamically Allocated
+
 ![](gitian-building/create_vm_file_location_size.png)
 
-- Disk size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side 
+- Disk size: at least 40GB; as low as 20GB *may* be possible, but better to err on the safe side
 - Push the `Create` button
 
 Get the [Debian 7.8 net installer](http://cdimage.debian.org/cdimage/archive/7.8.0/amd64/iso-cd/debian-7.8.0-amd64-netinst.iso) (a more recent minor version should also work, see also [Debian Network installation](https://www.debian.org/CD/netinst/)).
@@ -81,7 +81,7 @@ Unixy OSes by entering the following in a terminal:
     echo "b712a141bc60269db217d3b3e456179bd6b181645f90e4aac9c42ed63de492e9  debian-7.4.0-amd64-netinst.iso" | sha256sum -c
     # (must return OK)
 
-After creating the VM, we need to configure it. 
+After creating the VM, we need to configure it.
 
 - Click the `Settings` button, then go to the `Network` tab. Adapter 1 should be attacked to `NAT`.
 
@@ -125,22 +125,22 @@ and proceed, just press `Enter`. To select a different button, press `Tab`.
 ![](gitian-building/debian_install_4_configure_keyboard.png)
 
 - The VM will detect network settings using DHCP, this should all proceed automatically
-- Configure the network: 
+- Configure the network:
   - System name `debian`.
   - Leave domain name empty.
 
 ![](gitian-building/debian_install_5_configure_the_network.png)
 
-- Choose a root password and enter it twice (remember it for later) 
+- Choose a root password and enter it twice (remember it for later)
 
 ![](gitian-building/debian_install_6a_set_up_root_password.png)
 
-- Name the new user `debian` (the full name doesn't matter, you can leave it empty) 
+- Name the new user `debian` (the full name doesn't matter, you can leave it empty)
 
 ![](gitian-building/debian_install_7_set_up_user_fullname.png)
 ![](gitian-building/debian_install_8_set_up_username.png)
 
-- Choose a user password and enter it twice (remember it for later) 
+- Choose a user password and enter it twice (remember it for later)
 
 ![](gitian-building/debian_install_9_user_password.png)
 
@@ -150,11 +150,11 @@ and proceed, just press `Enter`. To select a different button, press `Tab`.
 ![](gitian-building/debian_install_10_configure_clock.png)
 
 - Disk setup
-  - Partitioning method: Guided - Use the entire disk 
-  
+  - Partitioning method: Guided - Use the entire disk
+
 ![](gitian-building/debian_install_11_partition_disks.png)
 
-  - Select disk to partition: SCSI1 (0,0,0) 
+  - Select disk to partition: SCSI1 (0,0,0)
 
 ![](gitian-building/debian_install_12_choose_disk.png)
 
@@ -168,7 +168,7 @@ and proceed, just press `Enter`. To select a different button, press `Tab`.
 ![](gitian-building/debian_install_15_write_changes.png)
 
 - The base system will be installed, this will take a minute or so
-- Choose a mirror (any will do) 
+- Choose a mirror (any will do)
 
 ![](gitian-building/debian_install_16_choose_a_mirror.png)
 
@@ -217,7 +217,7 @@ Replace `root` with `debian` to log in as user.
 [1] http://www.chiark.greenend.org.uk/~sgtatham/putty/download.html
 [2] http://winscp.net/eng/index.php
 
-Setting up Debian for gitian building
+Setting up Debian for Gitian building
 --------------------------------------
 
 In this section we will be setting up the Debian installation for Gitian building.
@@ -237,7 +237,7 @@ Then set up LXC and the rest with the following, which is a complex jumble of se
 
 ```bash
 # the version of lxc-start in Debian 7.4 needs to run as root, so make sure
-# that the build script can exectute it without providing a password
+# that the build script can execute it without providing a password
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc
 # add cgroup for LXC
 echo "cgroup  /sys/fs/cgroup  cgroup  defaults  0   0" >> /etc/fstab
@@ -257,7 +257,7 @@ reboot
 At the end the VM is rebooted to make sure that the changes take effect. The steps in this
 section need only to be performed once.
 
-Installing gitian
+Installing Gitian
 ------------------
 
 Re-login as the user `debian` that was created during installation.
@@ -277,7 +277,7 @@ cd ..
 
 **Note**: When sudo asks for a password, enter the password for the user *debian* not for *root*.
 
-Clone the git repositories for bitcoin and gitian and then checkout the bitcoin version that you want to build.
+Clone the git repositories for bitcoin and Gitian and then checkout the bitcoin version that you want to build.
 
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
@@ -287,7 +287,7 @@ git checkout v${VERSION}
 cd ..
 ```
 
-Setting up gitian images
+Setting up Gitian images
 -------------------------
 
 Gitian needs virtual images of the operating system to build in.
@@ -313,13 +313,13 @@ Getting and building the inputs
 Follow the instructions in [doc/release-process.md](release-process.md) in the bitcoin repository
 under 'Fetch and build inputs' to install sources which require manual intervention. Also follow
 the next step: 'Seed the Gitian sources cache', which will fetch all necessary source files allowing
-for gitian to work offline.
+for Gitian to work offline.
 
 Building Bitcoin
 ----------------
 
-To build Bitcoin (for Linux, OSX and Windows) just follow the steps under 'perform
-gitian builds' in [doc/release-process.md](release-process.md) in the bitcoin repository.
+To build Bitcoin (for Linux, OS X and Windows) just follow the steps under 'perform
+Gitian builds' in [doc/release-process.md](release-process.md) in the bitcoin repository.
 
 This may take a long time as it also builds the dependencies needed for each descriptor.
 These dependencies will be cached after a successful build to avoid rebuilding them when possible.
@@ -358,7 +358,7 @@ Building an alternative repository
 -----------------------------------
 
 If you want to do a test build of a pull on GitHub it can be useful to point
-the gitian builder at an alternative repository, using the same descriptors
+the Gitian builder at an alternative repository, using the same descriptors
 and inputs.
 
 For example:
@@ -388,7 +388,7 @@ in `gitian.sigs` to your signing machine and do
 ```
 
 This will create the `.sig` files that can be committed together with the `.assert` files to assert your
-gitian build.
+Gitian build.
 
 Uploading signatures
 ---------------------

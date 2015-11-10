@@ -2,7 +2,7 @@ dnl require autoconf 2.60 (AS_ECHO/AS_ECHO_N)
 AC_PREREQ([2.60])
 define(_CLIENT_VERSION_MAJOR, 0)
 define(_CLIENT_VERSION_MINOR, 10)
-define(_CLIENT_VERSION_REVISION, 3)
+define(_CLIENT_VERSION_REVISION, 4)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, true)
 define(_COPYRIGHT_YEAR, 2015)
@@ -11,7 +11,7 @@ define(_OMNICORE_VERSION_MAJOR, 0)
 define(_OMNICORE_VERSION_MINOR, 10)
 define(_OMNICORE_VERSION_PATCH, 0)
 define(_OMNICORE_VERSION_BUILD, 0)
-define(_OMNICORE_VERSION_STATUS, rc1)
+define(_OMNICORE_VERSION_STATUS, rc2)
 AC_INIT([Omni Core],[_OMNICORE_VERSION_MILESTONE._OMNICORE_VERSION_MAJOR._OMNICORE_VERSION_MINOR._OMNICORE_VERSION_PATCH-_OMNICORE_VERSION_STATUS],[https://github.com/OmniLayer/omnicore/issues],[omnicore],[http://www.omnilayer.org/])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
@@ -173,7 +173,7 @@ fi
 ##       compatibility with the legacy buildsystem.
 ##
 if test "x$CXXFLAGS_overridden" = "xno"; then
-  CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter"
+  CXXFLAGS="$CXXFLAGS -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter -Wno-self-assign"
 fi
 CPPFLAGS="$CPPFLAGS -DBOOST_SPIRIT_THREADSAFE -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
