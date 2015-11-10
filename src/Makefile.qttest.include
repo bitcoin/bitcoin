@@ -28,6 +28,7 @@ qt_test_ppcoin_qt_LDADD += $(LIBPPCOIN_CLI) $(LIBPPCOIN_COMMON) $(LIBLEVELDB) \
   $(LIBMEMENV) $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QT_TEST_LIBS) \
   $(QR_LIBS) $(BDB_LIBS)
 
+qt_test_ppcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
 CLEAN_PPCOIN_QT_TEST = $(TEST_QT_MOC_CPP) qt/test/*.gcda qt/test/*.gcno
 

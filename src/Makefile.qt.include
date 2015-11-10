@@ -260,6 +260,7 @@ PPCOIN_RC = qt/res/bitcoin-qt-res.rc
 
 qt_libppcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms $(QT_DBUS_INCLUDES)
+qt_libppcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_libppcoinqt_a_SOURCES = $(PPCOIN_QT_CPP) $(PPCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_TS) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
@@ -282,6 +283,7 @@ $(QT_MOC_CPP): $(PROTOBUF_H)
 # peercoin-qt binary #
 qt_peercoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(QT_INCLUDES) \
   -I$(top_srcdir)/src/qt/forms
+qt_peercoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 qt_peercoin_qt_SOURCES = qt/bitcoin.cpp
 if TARGET_DARWIN
   qt_peercoin_qt_SOURCES += $(PPCOIN_MM)
