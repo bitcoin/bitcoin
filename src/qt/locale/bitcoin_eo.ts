@@ -1,4 +1,4 @@
-<TS language="eo" version="2.0">
+<TS language="eo" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -208,6 +208,9 @@
         <translation>Vi sukcese ŝanĝis la pasfrazon de la monujo.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1445,10 +1448,6 @@
         <translation>Kopii restmonon</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Totala Sumo %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>aŭ</translation>
     </message>
@@ -2103,10 +2102,6 @@
         <translation>Ruli fone kiel demono kaj akcepti komandojn</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Uzi la test-reton</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Akcepti konektojn el ekstere (defaŭlte: 1 se ne estas -proxy nek -connect)</translation>
     </message>
@@ -2123,20 +2118,12 @@
         <translation>Tiu ĉi estas antaŭeldona testa versio - uzu laŭ via propra risko - ne uzu por minado aŭ por aplikaĵoj por vendistoj</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Averto: -paytxfee estas agordita per tre alta valoro! Tio estas la krompago, kion vi pagos se vi sendas la transakcion.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Averto: La reto ne tute konsentas! Kelkaj minantoj ŝajne spertas problemojn aktuale.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Averto: ŝajne ni ne tute konsentas kun niaj samtavolanoj! Eble vi devas ĝisdatigi vian klienton, aŭ eble aliaj nodoj faru same.</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Averto: okazis eraro dum lego de wallet.dat! Ĉiuj ŝlosiloj sukcese legiĝis, sed la transakciaj datumoj aŭ la adresaro eble mankas aŭ malĝustas.</translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -2291,10 +2278,6 @@
         <translation>Transakcio estas tro granda</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Uzi UPnP por mapi la aŭskultan pordon (defaŭlte: 1 dum aŭskultado)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Salutnomo por konektoj JSON-RPC</translation>
     </message>
@@ -2321,10 +2304,6 @@
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Reskani la blokĉenon por mankantaj monujaj transakcioj</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Uzi OpenSSL (https) por konektoj JSON-RPC</translation>
     </message>
     <message>
         <source>This help message</source>

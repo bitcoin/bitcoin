@@ -1,4 +1,4 @@
-<TS language="fr_CA" version="2.0">
+<TS language="fr_CA" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -63,6 +63,9 @@
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
         <translation>Cette opération nécessite le mot de passe de votre porte-feuille pour le décrypter.</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>

@@ -1,4 +1,4 @@
-<TS language="bg" version="2.0">
+<TS language="bg" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -208,6 +208,9 @@
         <translation>Паролата на портфейла беше променена успешно.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1049,10 +1052,6 @@
         <translation>Възстановяване на сума от %1</translation>
     </message>
     <message>
-        <source>Payment request DoS protection</source>
-        <translation>Дос защита на заявката за плащане</translation>
-    </message>
-    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Грешка при комуникацията с %1: %2</translation>
     </message>
@@ -1225,10 +1224,6 @@
         <translation>Услуги</translation>
     </message>
     <message>
-        <source>Starting Height</source>
-        <translation>Стартова височина</translation>
-    </message>
-    <message>
         <source>Connection Time</source>
         <translation>Продължителност на връзката</translation>
     </message>
@@ -1339,10 +1334,6 @@
     <message>
         <source>Unknown</source>
         <translation>Неизвестен</translation>
-    </message>
-    <message>
-        <source>Fetching...</source>
-        <translation>Прихващане...</translation>
     </message>
 </context>
 <context>
@@ -1631,10 +1622,6 @@
     <message>
         <source>Copy change</source>
         <translation>Копирай рестото</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Пълна сума %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
@@ -2327,16 +2314,8 @@
         <translation>Въведете Ваш публичен адрес</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Използвайте тестовата мрежа</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Приемайте връзки отвън.(по подразбиране:1 в противен случай -proxy или -connect)</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Внимание: -paytxfee е с мното голяма зададена стойност! Това е транзакционната такса, която ще платите ако направите транзакция.</translation>
     </message>
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
@@ -2389,10 +2368,6 @@
     <message>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
         <translation>Заложете броя на нишки за генерация на монети ако е включено(-1 = всички ядра, по подразбиране: %d)</translation>
-    </message>
-    <message>
-        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>Внимание: -maxtxfee има много висока стойност! Толкова високи такси могат да бъдат заплатени на една транзакция.</translation>
     </message>
     <message>
         <source>Choose data directory on startup (default: 0)</source>
@@ -2469,10 +2444,6 @@
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Повторно сканиране на блок-връзка за липсващи портфейлни транзакции</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Използвайте OpenSSL (https) за JSON-RPC връзките</translation>
     </message>
     <message>
         <source>This help message</source>

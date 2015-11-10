@@ -1,4 +1,4 @@
-<TS language="sr" version="2.0">
+<TS language="sr" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -132,6 +132,9 @@
         <translation>Лозинка за приступ новчанику је успешно промењена.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -751,10 +754,6 @@
         <translation>Radi u pozadini kao daemon servis i prihvati komande</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Koristi testnu mrežu</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Korisničko ime za JSON-RPC konekcije</translation>
     </message>
@@ -765,10 +764,6 @@
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Ponovo skeniraj lanac blokova za nedostajuće transakcije iz novčanika</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Koristi OpenSSL (https) za  JSON-RPC konekcije</translation>
     </message>
     <message>
         <source>This help message</source>

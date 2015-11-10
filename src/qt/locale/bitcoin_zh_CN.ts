@@ -1,4 +1,4 @@
-<TS language="zh_CN" version="2.0">
+<TS language="zh_CN" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -35,7 +35,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>导出当前数据到文件</translation>
+        <translation>导出当前分页里的数据到文件</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -47,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>选择发款地址</translation>
+        <translation>选择发币地址</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>选择收款地址</translation>
+        <translation>选择收币地址</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -185,7 +185,7 @@
     </message>
     <message>
         <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>请输入新的钱包密码. &lt;br/&gt;密码须包含&lt;b&gt;10个以上字符&lt;/b&gt;,或&lt;b&gt;8个以上单词&lt;/b&gt;.</translation>
+        <translation>请输入新的钱包密码. &lt;br/&gt;密码须包含&lt;b&gt;10个以上随机字符&lt;/b&gt;,或&lt;b&gt;8个以上单词&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
@@ -220,6 +220,13 @@
         <translation>修改钱包密码成功。</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/网络掩码</translation>
+    </message>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1034,7 +1041,7 @@
     </message>
     <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction cannot be used until that transaction has at least one confirmation. This also affects how your balance is computed.</source>
-        <translation>如果禁用未确认的零钱，则零钱至少需要1个确认才能使用。同时账户余额显示会受到影响。</translation>
+        <translation>如果禁用未确认的零钱，则零钱至少需要1个确认才能使用。同时账户余额计算会受到影响。</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1067,6 +1074,18 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>代理端口（例如 9050）</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1287,10 +1306,6 @@
         <translation>支付请求 %1 太大 (%2 字节。只允许 %3 字节)。</translation>
     </message>
     <message>
-        <source>Payment request DoS protection</source>
-        <translation>支付请求防滥用保护</translation>
-    </message>
-    <message>
         <source>Error communicating with %1: %2</source>
         <translation>%1: %2 通讯出错</translation>
     </message>
@@ -1463,6 +1478,10 @@
         <translation>选择节点查看详细信息。</translation>
     </message>
     <message>
+        <source>Whitelisted</source>
+        <translation>白名单</translation>
+    </message>
+    <message>
         <source>Direction</source>
         <translation>方向</translation>
     </message>
@@ -1471,20 +1490,20 @@
         <translation>版本</translation>
     </message>
     <message>
+        <source>Synced Headers</source>
+        <translation>同步区块头</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>同步区块链</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>用户代理</translation>
     </message>
     <message>
         <source>Services</source>
         <translation>服务</translation>
-    </message>
-    <message>
-        <source>Starting Height</source>
-        <translation>开始高度</translation>
-    </message>
-    <message>
-        <source>Sync Height</source>
-        <translation>同步高度</translation>
     </message>
     <message>
         <source>Ban Score</source>
@@ -1563,6 +1582,22 @@
         <translation>清空控制台</translation>
     </message>
     <message>
+        <source>1 &amp;hour</source>
+        <translation>1 小时(&amp;H)</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 天(&amp;D)</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 周(&amp;W)</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 年(&amp;Y)</translation>
+    </message>
+    <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
         <translation>欢迎使用 比特币核心 RPC 控制台。</translation>
     </message>
@@ -1591,6 +1626,10 @@
         <translation>%1 GB</translation>
     </message>
     <message>
+        <source>(node id: %1)</source>
+        <translation>(节点ID: %1)</translation>
+    </message>
+    <message>
         <source>via %1</source>
         <translation>通过 %1</translation>
     </message>
@@ -1607,12 +1646,16 @@
         <translation>传出</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>未知</translation>
+        <source>Yes</source>
+        <translation>是</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>获取中...</translation>
+        <source>No</source>
+        <translation>否</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>未知</translation>
     </message>
 </context>
 <context>
@@ -1872,7 +1915,7 @@
     </message>
     <message>
         <source>Paying only the minimum fee is just fine as long as there is less transaction volume than space in the blocks. But be aware that this can end up in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
-        <translation>交易量小时只支付最小交易费是可以的。但是请注意，当交易量大时您的交易可能永远无法确认。</translation>
+        <translation>交易量小时只支付最小交易费是可以的。但是请注意，当交易量大到超出网络可处理时您的交易可能永远无法确认。</translation>
     </message>
     <message>
         <source>(read the tooltip)</source>
@@ -1936,7 +1979,7 @@
     </message>
     <message>
         <source>Confirm the send action</source>
-        <translation>确认并发送货币</translation>
+        <translation>确认发送货币</translation>
     </message>
     <message>
         <source>S&amp;end</source>
@@ -1979,10 +2022,6 @@
         <translation>复制零钱</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>总额 %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>或</translation>
     </message>
@@ -2021,6 +2060,10 @@
     <message>
         <source>Pay only the minimum fee of %1</source>
         <translation>只支付最小费用 %1</translation>
+    </message>
+    <message>
+        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
+        <translation>总金额 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2804,14 +2847,17 @@
 </translation>
     </message>
     <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>错误：发生了致命的内部错误，详情见 debug.log 文件</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>正在修剪区块存储...</translation>
+    </message>
+    <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>在后台运行并接受命令
 
-</translation>
-    </message>
-    <message>
-        <source>Use the test network</source>
-        <translation>使用测试网络
 </translation>
     </message>
     <message>
@@ -2835,14 +2881,6 @@
         <translation>当最佳区块变化时执行命令 (命令行中的 %s 会被替换成区块哈希值)</translation>
     </message>
     <message>
-        <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>单次交易最多使用交易费；设置太低可能导致大宗交易中止 (默认: %s)</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>通过修剪（删除）旧数据块减少存储需求。此模式将禁用钱包支持，并与 -txindex 不兼容。警告：还原此设置需要重新下载整个数据链。(默认: 0 = 禁用修剪数据块， &gt;%u = 数据块文件目标大小，单位 MiB)</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>设置脚本验证的程序 (%u 到 %d, 0 = 自动, &lt;0 = 保留自由的核心, 默认值: %d)</translation>
     </message>
@@ -2863,20 +2901,12 @@
         <translation>警告：请检查您的网络连接，最近 %d 小时收到了 %d 个数据块（预期为 %d 个）</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>警告：-paytxfee 交易费设置得太高了！每笔交易都将支付交易费。</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>警告：网络似乎并不完全同意！有些矿工似乎遇到了问题。</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>警告：我们的同行似乎不完全同意！您可能需要升级，或者其他节点可能需要升级。</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>警告：钱包文件wallet.dat读取失败！最重要的公钥、私钥数据都没有问题，但是交易记录或地址簿数据不正确，或者存在数据丢失。</translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -2943,20 +2973,12 @@
         <translation>导入数据块数据库出错</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>错误：发生了致命的内部错误，请打开debug.log查看详细信息 </translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>错误：磁盘剩余空间低!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>监听端口失败。请使用 -listen=0 参数。</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>如果&lt;category&gt;未提供，将输出所有调试信息。</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3035,10 +3057,6 @@
         <translation>允许来自指定地址的 JSON-RPC 连接。 &lt;ip&gt;为单一IP (如: 1.2.3.4), 网络/掩码 (如: 1.2.3.4/255.255.255.0), 网络/CIDR (如:  1.2.3.4/24)。该选项可多次指定。</translation>
     </message>
     <message>
-        <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
-        <translation>设置RPC监听端口 %s:%u 时发生错误: %s</translation>
-    </message>
-    <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>绑定到指定地址和连接的白名单节点。 IPv6使用  [主机]:端口 格式 </translation>
     </message>
@@ -3063,16 +3081,8 @@
         <translation>错误：监听外部连接失败 (监听返回错误 %s) </translation>
     </message>
     <message>
-        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>错误：不支持的 -socks 参数。不再支持设置SOCKS版本，现在只支持 SOCKS5代理。</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>当收到相关提醒或者我们看到一个长分叉时执行命令（%s 将替换为消息）</translation>
-    </message>
-    <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>交易费(BTC/kb)比这更小的交易在转发时将被视为零费交易 (默认: %s) </translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3085,10 +3095,6 @@
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maximum size of data in data carrier transactions we relay and mine (default: %u)</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MB.  Please use a higher number.</source>
-        <translation>修剪被配置为比最小值 %d MB 更低。请使用更大的数字。</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
@@ -3115,38 +3121,6 @@
         <translation>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</translation>
     </message>
     <message>
-        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>要使用 bitcoind 或者 bitcoin-qt 中的 -server 选项，您必须在配置文件中设置一个密码：
-%s
-建议您使用下列随机密码：
-rpcuser=bitcoinrpc
-rpcpassword=%s
-（您不需要记住这个密码）
-用户名和密码不能相同。
-如果该文件不存在，创建一个文件并设置权限为仅创建者可读。
-此外，还建议您设置 alertnotify 以便您能注意到问题：
-例如 alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</translation>
-    </message>
-    <message>
-        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>警告：-maxtxfee 设置的太高了！每进行一笔交易时您都要花费这么多费用。</translation>
-    </message>
-    <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>警告：请检查电脑的日期时间设置是否正确！时间错误可能会导致比特币客户端运行异常。</translation>
-    </message>
-    <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>白名单节点不能被DoS banned ，且转发所有来自他们的交易(即便这些交易已经存在于mempool中)，常用于网关 </translation>
     </message>
@@ -3167,10 +3141,6 @@ rpcpassword=%s
         <translation>正在激活最佳数据链...</translation>
     </message>
     <message>
-        <source>Can't run with a wallet in prune mode.</source>
-        <translation>不能在修剪模式下运行一个钱包。</translation>
-    </message>
-    <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>无法解析 -whitebind 地址: '%s'</translation>
     </message>
@@ -3187,24 +3157,12 @@ rpcpassword=%s
         <translation>版权所有 (C) 2009-%i Bitcoin Core 开发者</translation>
     </message>
     <message>
-        <source>Could not parse -rpcbind value %s as network address</source>
-        <translation>无法解析 -rpcbind 的值 %s 为网络地址</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
         <translation>加载wallet.dat错误：需要新版的比特币核心钱包</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>读取数据库出错，关闭中。</translation>
-    </message>
-    <message>
-        <source>Error: Unsupported argument -tor found, use -onion.</source>
-        <translation>错误：发现了不支持的参数 -tor，请使用 -onion。</translation>
-    </message>
-    <message>
-        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
-        <translation>为付款交易添加交易费 (BTC/kb) (默认: %s) </translation>
     </message>
     <message>
         <source>Information</source>
@@ -3243,16 +3201,8 @@ rpcpassword=%s
         <translation>节点中继选项:</translation>
     </message>
     <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>RPC SSL选项：(见有关比特币设置用于SSL说明的维基百科)</translation>
-    </message>
-    <message>
         <source>RPC server options:</source>
         <translation>RPC 服务器选项：</translation>
-    </message>
-    <message>
-        <source>RPC support for HTTP persistent connections (default: %d)</source>
-        <translation>RPC 支持 HTTP 持久连接 (默认: %d)</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
@@ -3332,10 +3282,6 @@ rpcpassword=%s
         <translation>无法在此计算机上绑定 %s (绑定返回错误 %s)</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>使用UPnp映射监听端口(缺省: 监听状态设为1)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC 连接用户名</translation>
     </message>
@@ -3348,16 +3294,12 @@ rpcpassword=%s
         <translation>警告</translation>
     </message>
     <message>
-        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>警告：不支持的参数 -benchmark 已忽略，请使用 -debug=bench。</translation>
-    </message>
-    <message>
-        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>警告：不支持的参数 -debugnet 已忽略，请使用 -debug=net。</translation>
-    </message>
-    <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Zapping all transactions from wallet...</translation>
+    </message>
+    <message>
+        <source>ZeroMQ notification options:</source>
+        <translation>ZeroMQ 通知选项：</translation>
     </message>
     <message>
         <source>on startup</source>
@@ -3383,10 +3325,6 @@ rpcpassword=%s
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>重新扫描区块链以查找遗漏的钱包交易</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>为 JSON-RPC 连接使用 OpenSSL (https) 连接</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3432,10 +3370,6 @@ rpcpassword=%s
     <message>
         <source>(default: %s)</source>
         <translation>(默认: %s) </translation>
-    </message>
-    <message>
-        <source>Acceptable ciphers (default: %s)</source>
-        <translation>可接受的密码算法 (默认: %s) </translation>
     </message>
     <message>
         <source>Error loading wallet.dat</source>
@@ -3492,14 +3426,6 @@ rpcpassword=%s
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>是否转发 非P2SH格式的多签名交易 (默认: %u) </translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: %s)</source>
-        <translation>服务器证书文件 (默认: %s) </translation>
-    </message>
-    <message>
-        <source>Server private key (default: %s)</source>
-        <translation>服务器私钥 (默认: %s) </translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>

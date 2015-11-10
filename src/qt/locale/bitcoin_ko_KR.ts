@@ -1,4 +1,4 @@
-<TS language="ko_KR" version="2.0">
+<TS language="ko_KR" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -209,6 +209,9 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
@@ -344,11 +347,11 @@
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>주 창 보이기 또는 숨기기</translation>
+        <translation>메인창 보이기 또는 숨기기</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>소유 지갑 개인키 암호화</translation>
+        <translation>지갑에 포함된 개인키 암호화하기</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -396,7 +399,7 @@
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>비트코인: URI 또는 지불요청 열기</translation>
+        <translation>bitcoin: URI 또는 지불요청 열기</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -425,6 +428,10 @@
     <message>
         <source>%1 and %2</source>
         <translation>%1 그리고 %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n년</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -457,6 +464,36 @@
     <message>
         <source>Catching up...</source>
         <translation>블록 따라잡기...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>날짜: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>금액: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>종류: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>라벨: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>주소: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -498,7 +535,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>거래량:</translation>
+        <translation>금액:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -1525,10 +1562,6 @@
         <translation>우선도 복사</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>총 액수 %1(=%2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>또는</translation>
     </message>
@@ -2239,10 +2272,6 @@
         <translation>데몬으로 백그라운드에서 실행하고 명령을 허용</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>테스트 네트워크 사용</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>외부 접속을 승인합니다</translation>
     </message>
@@ -2259,20 +2288,12 @@
         <translation>이 빌드 버전은 정식 출시 전 테스트의 목적이며, 예기치 않은 위험과 오류가 발생할 수 있습니다. 채굴과 상점용 소프트웨어로 사용하는 것을 권하지 않습니다.</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>경고: -paytxfee값이 너무 큽니다! 이 값은 송금할때 지불할 송금 수수료입니다.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>경고 : 모든 네트워크가 동의해야 하나, 일부 채굴자들에게 문제가 있는 것으로 보입니다. </translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>경고: 현재 비트코인 버전이 다른 네트워크 참여자들과 동일하지 않는 것 같습니다. 당신 또는 다른 참여자들이 동일한 비트코인 버전으로 업그레이드 할 필요가 있습니다.</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>경고 : wallet.dat 파일을 읽는 중 에러가 발생했습니다. 주소 키는 모두 정확하게 로딩되었으나 거래 데이터와 주소록 필드에서 누락이나 오류가 존재할 수 있습니다. </translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -2333,10 +2354,6 @@
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>어떤 포트도 반응하지 않습니다. 사용자 반응=0 만약 원한다면</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>&lt;카테고리&gt;가 제공되지 않을 경우, 모든 디버깅 정보를 출력</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2419,10 +2436,6 @@
         <translation>최저 거래 수수료가 부족합니다. -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>RPC SSL 옵션: (비트코인 위키의 SSL 설정 설명서 참고)</translation>
-    </message>
-    <message>
         <source>RPC server options:</source>
         <translation>RPC 서버 설정</translation>
     </message>
@@ -2471,10 +2484,6 @@
         <translation>너무 큰 거래</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>UPnP사용하여 지도에서 포트 반응기다리는 중  (기본값: 1 반응이 생기면)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC 연결에 사용할 사용자 이름</translation>
     </message>
@@ -2509,10 +2518,6 @@
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>누락된 지갑 송금에 대한 블록 체인 다시 검색</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>JSON-RPC 연결에 OpenSSL(https) 사용</translation>
     </message>
     <message>
         <source>This help message</source>

@@ -1,4 +1,4 @@
-<TS language="es_CL" version="2.0">
+<TS language="es_CL" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -164,6 +164,9 @@
         <translation>La contraseña de billetera ha sido cambiada con éxito.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1289,15 +1292,6 @@
 </translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Usa la red de pruebas
-</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Precaución: -paytxfee es muy alta. Esta es la comisión que pagarás si envias una transacción.</translation>
-    </message>
-    <message>
         <source>Connect only to the specified node(s)</source>
         <translation>Conecta solo al nodo especificado
 </translation>
@@ -1328,10 +1322,6 @@
 </translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Intenta usar UPnP para mapear el puerto de escucha (default: 1 when listening)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Usuario para las conexiones JSON-RPC
 </translation>
@@ -1356,11 +1346,6 @@
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>Rescanea la cadena de bloques para transacciones perdidas de la cartera
-</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Usa OpenSSL (https) para las conexiones JSON-RPC
 </translation>
     </message>
     <message>

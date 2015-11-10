@@ -1,4 +1,4 @@
-<TS language="hi_IN" version="2.0">
+<TS language="hi_IN" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -115,6 +115,9 @@
         <source>Wallet decryption failed</source>
         <translation>वॉलेट का डीक्रिप्ट-ष्ण असफल !</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -812,10 +815,6 @@
     <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>बैकग्राउंड में डेमॉन बन कर रन करे तथा कमांड्स स्वीकार करें </translation>
-    </message>
-    <message>
-        <source>Use the test network</source>
-        <translation>टेस्ट नेटवर्क का इस्तेमाल करे </translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
