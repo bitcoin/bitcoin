@@ -1,4 +1,4 @@
-<TS language="sl_SI" version="2.0">
+<TS language="sl_SI" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -220,6 +220,9 @@
         <translation>Geslo za dostop do denarnice je bilo uspešno zamenjano.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1283,10 +1286,6 @@
         <translation>Zahtevek za plačilo %1 je prevelik (%2 bajtov, dovoljenih je %3 bajtov.)</translation>
     </message>
     <message>
-        <source>Payment request DoS protection</source>
-        <translation>Zaščita pred napadom denial-of-service zahtevka za plačilo</translation>
-    </message>
-    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Napaka pri povezavi z  %1: %2</translation>
     </message>
@@ -1475,14 +1474,6 @@
         <translation>Storitve</translation>
     </message>
     <message>
-        <source>Starting Height</source>
-        <translation>Začetna višina</translation>
-    </message>
-    <message>
-        <source>Sync Height</source>
-        <translation>Trenutna višina</translation>
-    </message>
-    <message>
         <source>Ban Score</source>
         <translation>Kazenske točke</translation>
     </message>
@@ -1603,12 +1594,16 @@
         <translation>Odhodna</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>Neznano</translation>
+        <source>Yes</source>
+        <translation>Da</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>Pridobivam ...</translation>
+        <source>No</source>
+        <translation>Ne</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Neznano</translation>
     </message>
 </context>
 <context>
@@ -1973,10 +1968,6 @@
     <message>
         <source>Copy change</source>
         <translation>Kopiraj vračilo</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Skupni znesek %1 (= %2)</translation>
     </message>
     <message>
         <source>or</source>
@@ -2801,10 +2792,6 @@
         <translation>Teci v ozadju in sprejemaj ukaze</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Uporabi testno omrežje</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Sprejemaj zunanje povezave (privzeto: 1, razen če ste vklopili opciji -proxy ali -connect)</translation>
     </message>
@@ -2819,14 +2806,6 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Izvedi ukaz, ko bo transakcija denarnice se spremenila (V cmd je bil TxID zamenjan za %s)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Največji še veljavni skupni znesek provizij pri transakcijah z uporabo ene denarnice. Prenizka nastavitev lahko povzroči izločitev večjih transakcij (privzeto %s)</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Omogoči obrezovanje (brisanje) starejših blokov in s tem prihrani pri prostoru za shranjevanje. Ta način delovanja onemogoči uporabo denarnice in ni združljivo z opcijo -txindex. Opozorilo: Če kasneje to opcijo povrnete na privzeto vrednost, boste morali ponovno prenesti celotno verigo. (privzeto: 0 = onemogoči obrezovanje, &gt;%u = ciljna velikost datotek blokov v MiB)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2849,20 +2828,12 @@
         <translation>OPOZORILO: Preverite vašo omrežno povezavo. Št. prejetih blokov: %d v št. ur: %d (pričakovanih je %d blokov)</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Opozorilo: Vrednost opcije -paytxfee je zelo visoka. To je provizija, ki jo boste plačali, če izvedete plačilo.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Opozorilo: Trenutno na omrežju ni videti konsenza! Videti je, kot da bi imeli nekateri rudarji težave.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Opozorilo: Trenutno se s soležniki ne strinjam v popolnosti! Mogoče bi morali vi ali drugi udeleženci posodobiti odjemalce.</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Opozorilo: napaka pri branju datoteke wallet.dat! Vsi ključi so bili pravilno prebrani, podatki o transakciji ali imenik vnešenih naslovov so morda izgubljeni ali nepravilni.</translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -2929,20 +2900,12 @@
         <translation>Napaka pri odpiranju podatkovne baze blokov</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Napaka: Med izvajanjem je prišlo do nepopravljive napake. Podrobnosti so v datoteki debug.log</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Opozorilo: Premalo prostora na disku!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Ni mogoče poslušati na nobenih vratih. Če to zares želite, uporabite opcijo -listen=0.</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>Če element &lt;category&gt; ni naveden, izpisuje vse informacije za razhroščevanje.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3021,10 +2984,6 @@
         <translation>Iz navedenega vira dovoli povezave na JSON-RPC. Veljavne oblike vrednosti parametra &lt;ip&gt; so: edinstven naslov IP (npr.: 1.2.3.4), kombinacija omrežje/netmask (npr.: 1.2.3.4/255.255.255.0), ali pa kombinacija omrežje/CIDR (1.2.3.4/24). To opcijo lahko navedete večkrat.</translation>
     </message>
     <message>
-        <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
-        <translation>Prišlo je do napake med zagonom poslušalca RPC na naslovu %s in vratih %u: %s</translation>
-    </message>
-    <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
         <translation>Veži dani naslov in sprejemaj povezave samo od navedenih soležnikov. Za naslove protokola IPv6 uporabite zapis [gostitelj]:vrata.</translation>
     </message>
@@ -3049,16 +3008,8 @@
         <translation>Napaka: Ni mogoče sprejemati dohodnih povezav (vrnjena napaka: %s)</translation>
     </message>
     <message>
-        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Napaka: Navedli ste nepodprto vrednost opcije -socks. Različice protokola SOCKS ni več mogoče navesti, podprti so samo posredniški strežniki tipa SOCKS5.</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Ko bo prejeto ustrezno opozorilo, ali ko bo opažena zelo dolga razvejitev, izvedi navedeni ukazni niz. (Niz %s bo nadomeščen z vsebino sporočila.)</translation>
-    </message>
-    <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>Provizije (v BTC/KiB), ki so manjše od te vrednosti, se pri posredovanju smatrajo za nične (privzeto: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3069,20 +3020,12 @@
         <translation>Na vsak posredniški strežnik se prijavi z drugimi naključnimi podatki. Tako je omogočena osamitev tokov v omrežju Tor (privzeto: %u)</translation>
     </message>
     <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>Opozorilo: Preverite, če sta datum in ura na vašem računalniku točna! Bitcoin Core ne bo dobro deloval, če je nastavljeni čas nepravilen.</translation>
-    </message>
-    <message>
         <source>(default: %u)</source>
         <translation>(privzeto: %u)</translation>
     </message>
     <message>
         <source>Activating best chain...</source>
         <translation>Preklapljam na najboljšo verigo ...</translation>
-    </message>
-    <message>
-        <source>Can't run with a wallet in prune mode.</source>
-        <translation>Če je omogočena funkcija obrezovanja, ni mogoče uporabljati denarnice.</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3099,10 +3042,6 @@
     <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i The Bitcoin Core Developers</translation>
-    </message>
-    <message>
-        <source>Could not parse -rpcbind value %s as network address</source>
-        <translation>Vrednost %s opcije -rpcbind ni prepoznaven omrežni naslov</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3201,10 +3140,6 @@
         <translation>S ponovnim pregledom verige blokov poišči manjkajoče transakcije iz denarnice</translation>
     </message>
     <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Uporabi OpenSSL (https) za povezave na JSON-RPC</translation>
-    </message>
-    <message>
         <source>This help message</source>
         <translation>To sporočilo pomoči</translation>
     </message>
@@ -3227,10 +3162,6 @@
     <message>
         <source>(default: %s)</source>
         <translation>(privzeto: %s)</translation>
-    </message>
-    <message>
-        <source>Acceptable ciphers (default: %s)</source>
-        <translation>Sprejemljivi tipi šifriranja (privzeto: %s)</translation>
     </message>
     <message>
         <source>Error loading wallet.dat</source>

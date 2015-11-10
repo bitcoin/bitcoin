@@ -1,4 +1,4 @@
-<TS language="es_MX" version="2.0">
+<TS language="es_MX" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -192,6 +192,9 @@
         <translation>La contraseña de la cartera ha sido exitosamente cambiada.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -671,10 +674,6 @@
     <message>
         <source>Copy change</source>
         <translation>copiar cambio</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Monto total %1(=%2)</translation>
     </message>
     <message>
         <source>or</source>

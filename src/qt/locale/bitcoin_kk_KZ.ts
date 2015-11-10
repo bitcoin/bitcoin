@@ -1,4 +1,4 @@
-<TS language="kk_KZ" version="2.0">
+<TS language="kk_KZ" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -83,6 +83,9 @@
         <source>Change passphrase</source>
         <translation>Құпия сөзді өзгерту</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>

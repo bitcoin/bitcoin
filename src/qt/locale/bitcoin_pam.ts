@@ -1,4 +1,4 @@
-<TS language="pam" version="2.0">
+<TS language="pam" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -188,6 +188,9 @@
         <translation>Mi-alilan ne ing passphrase na ning wallet.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1327,16 +1330,8 @@
         <translation>Gumana king gulut bilang daemon at tumanggap commands</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Gamitan ing test network</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Tumanggap koneksion menibat king kilwal (default: 1 if no -proxy or -connect)</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Kapabaluan: Sobra ya katas ing makalage king -paytxfee. Ini ing maging bayad mu para king bayad na ning transaksion istung pepadala me ing transaksion a ini.</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1417,10 +1412,6 @@
     <message>
         <source>Rescan the block chain for missing wallet transactions</source>
         <translation>I-scan pasibayu ing block chain para kareng mauaualang transaksion</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Gumamit OpenSSL(https) para king JSON-RPC koneksion</translation>
     </message>
     <message>
         <source>This help message</source>

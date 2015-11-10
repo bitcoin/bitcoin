@@ -1,4 +1,4 @@
-<TS language="af_ZA" version="2.0">
+<TS language="af_ZA" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -99,6 +99,9 @@
         <source>Wallet decryption failed</source>
         <translation>Beursie dekripsie het misluk</translation>
     </message>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -629,10 +632,6 @@
     <message>
         <source>Options:</source>
         <translation>Opsies:</translation>
-    </message>
-    <message>
-        <source>Use the test network</source>
-        <translation>Gebruik die toets netwerk</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
