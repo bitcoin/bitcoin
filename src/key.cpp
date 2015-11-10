@@ -374,8 +374,25 @@ bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& v
     return false;
 }
 
-bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
+bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSigParam)
 {
+    // Prevent the problem described here: https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2015-July/009697.html
+    // by removing the extra length bytes
+    std::vector<unsigned char> vchSig(vchSigParam.begin(), vchSigParam.end());
+    if (vchSig.size() > 1 && vchSig[1] & 0x80)
+    {
+        unsigned char nLengthBytes = vchSig[1] & 0x7f;
+        if (nLengthBytes > 4)
+        {
+            unsigned char nExtraBytes = nLengthBytes - 4;
+            for (unsigned char i = 0; i < nExtraBytes; i++)
+                if (vchSig[2 + i])
+                    return false;
+            vchSig.erase(vchSig.begin() + 2, vchSig.begin() + 2 + nExtraBytes);
+            vchSig[1] = 0x80 | (nLengthBytes - nExtraBytes);
+        }
+    }
+
     if (vchSig.empty())
         return false;
 
