@@ -143,7 +143,7 @@ higher, it becomes mandatory for all blocks and blocks with versions less than
 
 Bitcoin Core's block templates are now for version 4 blocks only, and any
 mining software relying on its `getblocktemplate` must be updated in parallel
-to use either libblkmaker version FIXME or any version from 0.5.1 onward. If
+to use either libblkmaker version 0.4.3 or any version from 0.5.2 onward. If
 you are solo mining, this will affect you the moment you upgrade Bitcoin Core,
 which must be done prior to BIP65 achieving its 951/1001 status.  If you are
 mining with the stratum mining protocol: this does not affect you.  If you are
