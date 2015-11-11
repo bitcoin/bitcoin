@@ -195,7 +195,7 @@ class MaxUploadTest(BitcoinTestFramework):
         daily_buffer = 144 * 1000000
         max_bytes_available = max_bytes_per_day - daily_buffer
         success_count = max_bytes_available / old_block_size
-        
+
         # 144MB will be reserved for relaying new blocks, so expect this to
         # succeed for ~70 tries.
         for i in xrange(success_count):
@@ -228,7 +228,7 @@ class MaxUploadTest(BitcoinTestFramework):
         test_nodes[1].send_message(getdata_request)
         test_nodes[1].wait_for_disconnect()
         assert_equal(len(self.nodes[0].getpeerinfo()), 1)
-        
+
         print "Peer 1 disconnected after trying to download old block"
 
         print "Advancing system time on node to clear counters..."
@@ -242,6 +242,39 @@ class MaxUploadTest(BitcoinTestFramework):
         assert_equal(test_nodes[2].block_receive_map[big_old_block], 1)
 
         print "Peer 2 able to download old block"
+
+        [c.disconnect_node() for c in connections]
+
+        #stop and start node 0 with 1MB maxuploadtarget, whitelist 127.0.0.1
+        print "Restarting nodes with -whitelist=127.0.0.1"
+        stop_node(self.nodes[0], 0)
+        self.nodes[0] = start_node(0, self.options.tmpdir, ["-debug", "-whitelist=127.0.0.1", "-maxuploadtarget=1", "-blockmaxsize=999000"])
+
+        #recreate/reconnect 3 test nodes
+        test_nodes = []
+        connections = []
+
+        for i in xrange(3):
+            test_nodes.append(TestNode())
+            connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], test_nodes[i]))
+            test_nodes[i].add_connection(connections[i])
+
+        NetworkThread().start() # Start up network handling in another thread
+        [x.wait_for_verack() for x in test_nodes]
+
+        #retrieve 20 blocks which should be enough to break the 1MB limit
+        getdata_request.inv = [CInv(2, big_new_block)]
+        for i in xrange(20):
+            test_nodes[1].send_message(getdata_request)
+            test_nodes[1].sync_with_ping()
+            assert_equal(test_nodes[1].block_receive_map[big_new_block], i+1)
+
+        getdata_request.inv = [CInv(2, big_old_block)]
+        test_nodes[1].send_message(getdata_request)
+        test_nodes[1].wait_for_disconnect()
+        assert_equal(len(self.nodes[0].getpeerinfo()), 3) #node is still connected because of the whitelist
+
+        print "Peer 1 still connected after trying to download old block (whitelisted)"
 
         [c.disconnect_node() for c in connections]
 
