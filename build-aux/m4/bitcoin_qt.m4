@@ -106,7 +106,9 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   dnl results to QT_LIBS.
   BITCOIN_QT_CHECK([
   TEMP_CPPFLAGS=$CPPFLAGS
+  TEMP_CXXFLAGS=$CXXFLAGS
   CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
+  CXXFLAGS="$PIC_FLAGS $CXXFLAGS"
   if test x$bitcoin_qt_got_major_vers = x5; then
     _BITCOIN_QT_IS_STATIC
     if test x$bitcoin_cv_static_qt = xyes; then
@@ -149,12 +151,50 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     fi
   fi
   CPPFLAGS=$TEMP_CPPFLAGS
+  CXXFLAGS=$TEMP_CXXFLAGS
   ])
 
   if test x$use_pkgconfig$qt_bin_path = xyes; then
     if test x$bitcoin_qt_got_major_vers = x5; then
       qt_bin_path="`$PKG_CONFIG --variable=host_bins Qt5Core 2>/dev/null`"
     fi
+  fi
+
+  if test x$use_hardening != xno; then
+    BITCOIN_QT_CHECK([
+    AC_MSG_CHECKING(whether -fPIE can be used with this Qt config)
+    TEMP_CPPFLAGS=$CPPFLAGS
+    TEMP_CXXFLAGS=$CXXFLAGS
+    CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
+    CXXFLAGS="$PIE_FLAGS $CXXFLAGS"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <QtCore/qconfig.h>]],
+      [[
+          #if defined(QT_REDUCE_RELOCATIONS)
+              choke;
+          #endif
+      ]])],
+      [ AC_MSG_RESULT(yes); QT_PIE_FLAGS=$PIE_FLAGS ],
+      [ AC_MSG_RESULT(no); QT_PIE_FLAGS=$PIC_FLAGS]
+    )
+    CPPFLAGS=$TEMP_CPPFLAGS
+    CXXFLAGS=$TEMP_CXXFLAGS
+    ])
+  else
+    BITCOIN_QT_CHECK([
+    AC_MSG_CHECKING(whether -fPIC is needed with this Qt config)
+    TEMP_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS="$QT_INCLUDES $CPPFLAGS"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <QtCore/qconfig.h>]],
+      [[
+          #if defined(QT_REDUCE_RELOCATIONS)
+              choke;
+          #endif
+      ]])],
+      [ AC_MSG_RESULT(no)],
+      [ AC_MSG_RESULT(yes); QT_PIE_FLAGS=$PIC_FLAGS]
+    )
+    CPPFLAGS=$TEMP_CPPFLAGS
+    ])
   fi
 
   BITCOIN_QT_PATH_PROGS([MOC], [moc-qt${bitcoin_qt_got_major_vers} moc${bitcoin_qt_got_major_vers} moc], $qt_bin_path)
@@ -202,6 +242,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   ])
   AC_MSG_RESULT([$bitcoin_enable_qt (Qt${bitcoin_qt_got_major_vers})])
 
+  AC_SUBST(QT_PIE_FLAGS)
   AC_SUBST(QT_INCLUDES)
   AC_SUBST(QT_LIBS)
   AC_SUBST(QT_LDFLAGS)
@@ -373,6 +414,8 @@ dnl Outputs: bitcoin_qt_got_major_vers is set to "4" or "5".
 dnl Outputs: have_qt_test and have_qt_dbus are set (if applicable) to yes|no.
 AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
   TEMP_CPPFLAGS="$CPPFLAGS"
+  TEMP_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$PIC_FLAGS $CXXFLAGS"
   TEMP_LIBS="$LIBS"
   BITCOIN_QT_CHECK([
     if test x$qt_include_path != x; then
@@ -442,6 +485,7 @@ AC_DEFUN([_BITCOIN_QT_FIND_LIBS_WITHOUT_PKGCONFIG],[
     fi
   ])
   CPPFLAGS="$TEMP_CPPFLAGS"
+  CXXFLAGS="$TEMP_CXXFLAGS"
   LIBS="$TEMP_LIBS"
 ])
 
