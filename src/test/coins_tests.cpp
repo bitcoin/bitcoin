@@ -45,15 +45,18 @@ public:
     bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock)
     {
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
-            map_[it->first] = it->second.coins;
-            if (it->second.coins.IsPruned() && insecure_rand() % 3 == 0) {
-                // Randomly delete empty entries on write.
-                map_.erase(it->first);
+            if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+                // Same optimization used in CCoinsViewDB is to only write dirty entries.
+                map_[it->first] = it->second.coins;
+                if (it->second.coins.IsPruned() && insecure_rand() % 3 == 0) {
+                    // Randomly delete empty entries on write.
+                    map_.erase(it->first);
+                }
             }
             mapCoins.erase(it++);
         }
-        mapCoins.clear();
-        hashBestBlock_ = hashBlock;
+        if (!hashBlock.IsNull())
+            hashBestBlock_ = hashBlock;
         return true;
     }
 
