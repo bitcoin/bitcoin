@@ -198,6 +198,8 @@ private Q_SLOTS:
     void aboutClicked();
     /** Show debug window */
     void showDebugWindow();
+    /** Show debug window and set focus to the console */
+    void showDebugWindowActivateConsole();
     /** Show help message dialog */
     void showHelpMessageClicked();
 #ifndef Q_OS_MAC
