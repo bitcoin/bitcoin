@@ -76,13 +76,17 @@ private:
     uint64_t nSizeWithDescendants;  //! ... and size
     CAmount nFeesWithDescendants;  //! ... and total fees (all including us)
 
+    bool fPriorityTx; //! ...whether to store this in the priority space
+
 public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
-                    int64_t _nTime, double _dPriority, unsigned int _nHeight, bool poolHasNoInputsOf = false);
+                    int64_t _nTime, double _dPriority, unsigned int _nHeight,
+                    bool poolHasNoInputsOf = false);
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
     const CTransaction& GetTx() const { return this->tx; }
     double GetPriority(unsigned int currentHeight) const;
+    double GetPriority() const { return dPriority; }
     const CAmount& GetFee() const { return nFee; }
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
@@ -103,6 +107,9 @@ public:
     uint64_t GetCountWithDescendants() const { return nCountWithDescendants; }
     uint64_t GetSizeWithDescendants() const { return nSizeWithDescendants; }
     CAmount GetFeesWithDescendants() const { return nFeesWithDescendants; }
+
+    bool IsPriorityTx() const { return fPriorityTx; }
+    void SetPriorityTx(bool flag) { fPriorityTx = flag; }
 };
 
 // Helpers for modifying CTxMemPool::mapTx, which is a boost multi_index.
@@ -127,6 +134,16 @@ struct set_dirty
         { e.SetDirty(); }
 };
 
+struct set_prioritytx
+{
+    set_prioritytx(bool flag) : fPriorityTx(flag) {}
+
+    void operator() (CTxMemPoolEntry &e)
+        { e.SetPriorityTx(fPriorityTx); }
+
+    bool fPriorityTx;
+};
+
 // extracts a TxMemPoolEntry's transaction hash
 struct mempoolentry_txid
 {
@@ -137,32 +154,50 @@ struct mempoolentry_txid
     }
 };
 
-/** \class CompareTxMemPoolEntryByFee
+/** \class CompareTxMemPoolEntryByPriorityAndFee
  *
- *  Sort an entry by max(feerate of entry's tx, feerate with all descendants).
+ *  Sort an entry by:
+ *   1) priority > non-priority
+ *   2) If both priority: sort by priority (in reverse)
+ *   3) If both non-priority: sort by max(feerate of entry's tx, feerate with all descendants).
+ *  We sort the priority space in reverse so it is easy to remove the
+ *  worst priority elements (something we do in TrimToSize()).
  */
-class CompareTxMemPoolEntryByFee
+class CompareTxMemPoolEntryByPriorityAndFee
 {
 public:
     bool operator()(const CTxMemPoolEntry& a, const CTxMemPoolEntry& b)
     {
-        bool fUseADescendants = UseDescendantFeeRate(a);
-        bool fUseBDescendants = UseDescendantFeeRate(b);
+        if (a.IsPriorityTx() && b.IsPriorityTx()) {
+            // Sort by reverse priority -- so end of the multi_index
+            // is the worst priority item that is in the priority space
+            if (a.GetPriority() == b.GetPriority()) {
+                return a.GetTime() <= b.GetTime();
+            }
+            return a.GetPriority() > b.GetPriority();
+        } else if (!a.IsPriorityTx() && !b.IsPriorityTx()) {
+            // sort by feerate
+            bool fUseADescendants = UseDescendantFeeRate(a);
+            bool fUseBDescendants = UseDescendantFeeRate(b);
 
-        double aFees = fUseADescendants ? a.GetFeesWithDescendants() : a.GetFee();
-        double aSize = fUseADescendants ? a.GetSizeWithDescendants() : a.GetTxSize();
+            double aFees = fUseADescendants ? a.GetFeesWithDescendants() : a.GetFee();
+            double aSize = fUseADescendants ? a.GetSizeWithDescendants() : a.GetTxSize();
 
-        double bFees = fUseBDescendants ? b.GetFeesWithDescendants() : b.GetFee();
-        double bSize = fUseBDescendants ? b.GetSizeWithDescendants() : b.GetTxSize();
+            double bFees = fUseBDescendants ? b.GetFeesWithDescendants() : b.GetFee();
+            double bSize = fUseBDescendants ? b.GetSizeWithDescendants() : b.GetTxSize();
 
-        // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
-        double f1 = aFees * bSize;
-        double f2 = aSize * bFees;
+            // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
+            double f1 = aFees * bSize;
+            double f2 = aSize * bFees;
 
-        if (f1 == f2) {
-            return a.GetTime() >= b.GetTime();
+            if (f1 == f2) {
+                return a.GetTime() >= b.GetTime();
+            }
+            return f1 < f2;
+        } else {
+            // One of the entries is a priority one
+            return b.IsPriorityTx();
         }
-        return f1 < f2;
     }
 
     // Calculate which feerate to use for an entry (avoiding division).
@@ -213,12 +248,21 @@ public:
  *
  * mapTx is a boost::multi_index that sorts the mempool on 3 criteria:
  * - transaction hash
- * - feerate [we use max(feerate of tx, feerate of tx with all descendants)]
+ * - priority & feerate
  * - time in mempool
  *
  * Note: the term "descendant" refers to in-mempool transactions that depend on
  * this one, while "ancestor" refers to in-mempool transactions that a given
  * transaction depends on.
+ *
+ * The second index that uses priority and feerate works as follows:
+ * - Transactions that have no in-mempool ancestors are eligible to be sorted
+ *   based on priority.
+ * - Priority transactions all sort better than non-priority transactions.
+ * - Between priority transactions, we sort based on priority upon entry into
+ *   the mempool (in reverse order, so that the worst priority tx is at the end).
+ * - Between non-priority transactions, we sort based on
+ *   max(feerate, feerate with descendants).
  *
  * In order for the feerate sort to remain correct, we must update transactions
  * in the mempool when new descendants arrive.  To facilitate this, we track
@@ -291,7 +335,12 @@ private:
     mutable bool blockSinceLastRollingFeeBump;
     mutable double rollingMinimumFeeRate; //! minimum fee to get into the pool, decreases exponentially
 
+    mutable int64_t lastRollingPriorityUpdate;
+    mutable bool blockSinceLastRollingPriorityBump;
+    mutable double rollingMinimumPriority; //! minimum priority to get into mempool, decreases exponentially
+
     void trackPackageRemoved(const CFeeRate& rate);
+    void trackPriorityRemoved(double priority);
 
 public:
 
@@ -305,7 +354,7 @@ public:
             // sorted by fee rate
             boost::multi_index::ordered_non_unique<
                 boost::multi_index::identity<CTxMemPoolEntry>,
-                CompareTxMemPoolEntryByFee
+                CompareTxMemPoolEntryByPriorityAndFee
             >,
             // sorted by entry time
             boost::multi_index::ordered_non_unique<
@@ -340,6 +389,8 @@ private:
     const setEntries & GetMemPoolChildren(txiter entry) const;
     void UpdateParent(txiter entry, txiter parent, bool add);
     void UpdateChild(txiter entry, txiter child, bool add);
+
+    size_t priorityUsage; // memory used by priority transactions
 
 public:
     std::map<COutPoint, CInPoint> mapNextTx;
@@ -427,9 +478,14 @@ public:
       *  would otherwise be half of this, it is set to 0 instead.
       */
     CFeeRate GetMinFee(size_t sizelimit) const;
+    double GetMinPriority(size_t priorityLimit) const;
+    size_t GetPriorityUsage() const { return priorityUsage; }
 
-    /** Remove transactions from the mempool until its dynamic size is <= sizelimit. */
-    void TrimToSize(size_t sizelimit);
+    /**
+     * Remove transactions from the mempool until its dynamic size is <= sizelimit.
+     * Also moves transactions out of the priority space if priorityUsage exceeds limit.
+     */
+    void TrimToSize(size_t sizelimit, size_t priorityLimit);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(int64_t time);

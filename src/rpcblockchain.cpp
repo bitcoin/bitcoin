@@ -17,6 +17,7 @@
 #include "txmempool.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "policy/policy.h"
 
 #include <stdint.h>
 
@@ -776,6 +777,10 @@ UniValue mempoolInfoToJSON()
     size_t maxmempool = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     ret.push_back(Pair("maxmempool", (int64_t) maxmempool));
     ret.push_back(Pair("mempoolminfee", ValueFromAmount(mempool.GetMinFee(maxmempool).GetFeePerK())));
+    double defaultPriorityLimit = (double) GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE) / (double) GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+    size_t priorityLimit = GetArg("-prioritylimit", defaultPriorityLimit * maxmempool);
+    ret.push_back(Pair("mempoolminpriority", mempool.GetMinPriority(priorityLimit)));
+    ret.push_back(Pair("priorityusage", (int64_t) mempool.GetPriorityUsage()));
 
     return ret;
 }
@@ -791,6 +796,11 @@ UniValue getmempoolinfo(const UniValue& params, bool fHelp)
             "  \"size\": xxxxx                (numeric) Current tx count\n"
             "  \"bytes\": xxxxx               (numeric) Sum of all tx sizes\n"
             "  \"usage\": xxxxx               (numeric) Total memory usage for the mempool\n"
+            "  \"maxmempool\": xxxxx          (numeric) Mempool usage limit\n"
+            "  \"mempoolminfee\": xxxxx       (numeric) Fee required to enter mempool\n"
+            "  \"prioritylimit\": xxxxx       (numeric) Priority usage limit\n"
+            "  \"mempoolminpriority\": xxxxx  (numeric) Priority required to enter mempool\n"
+            "  \"priorityusage\": xxxxx       (numeric) Total memory usage of priority txs\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getmempoolinfo", "")
