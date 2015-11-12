@@ -101,7 +101,7 @@ QVariant UnlimitedModel::data(const QModelIndex& index, int role) const
       switch (index.row())
         {
         case MaxGeneratedBlock:
-          return maxGeneratedBlock;
+          return QVariant((qulonglong)maxGeneratedBlock);
         case UseReceiveShaping:
           return settings.value("fUseReceiveShaping");
         case UseSendShaping:
@@ -133,8 +133,8 @@ bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, in
       switch (index.row())
         {
         case MaxGeneratedBlock:
-          maxGeneratedBlock = value.toInt();
-          settings.setValue("maxGeneratedBlock", maxGeneratedBlock);
+          maxGeneratedBlock = value.toULongLong();
+          settings.setValue("maxGeneratedBlock", (qlonglong) maxGeneratedBlock);
           break;
         case UseReceiveShaping:
           if (settings.value("fUseReceiveShaping") != value)
@@ -217,7 +217,7 @@ void UnlimitedModel::setMaxGeneratedBlock(const QVariant& value)
     {
       QSettings settings;
       maxGeneratedBlock = value.toInt();
-      settings.setValue("maxGeneratedBlock",maxGeneratedBlock);
+      settings.setValue("maxGeneratedBlock",(qulonglong) maxGeneratedBlock);
       // Q_EMIT your signal if you need one
     }
 }

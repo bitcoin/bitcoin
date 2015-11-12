@@ -193,7 +193,7 @@ static void MutateTxAddInput(CMutableTransaction& tx, const string& strInput)
     // extract and validate vout
     string strVout = strInput.substr(pos + 1, string::npos);
     int vout = atoi(strVout);
-    if ((vout < 0) || (vout > (int)maxVout))
+    if (vout < 0) // || (vout > (int)maxVout))
         throw runtime_error("invalid TX input vout");
 
     // append to transaction input list

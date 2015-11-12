@@ -6,6 +6,7 @@
 
 #include "util.h"
 #include "unlimited.h"
+#include "rpcserver.h"
 
 uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 
@@ -14,3 +15,6 @@ void UnlimitedSetup(void)
 {
    maxGeneratedBlock = GetArg("-blockmaxsize", DEFAULT_MAX_GENERATED_BLOCK_SIZE);
 }
+
+
+
