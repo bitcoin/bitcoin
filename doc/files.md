@@ -12,6 +12,8 @@
 * fee_estimates.dat: stores statistics used to estimate minimum transaction fees and priorities required for confirmation; since 0.10.0
 * peers.dat: peer IP address database (custom format); since 0.7.0
 * wallet.dat: personal wallet (BDB) with keys and transactions
+* .cookie: session RPC authentication cookie (written at start when cookie authentication is used, deleted on shutdown): since 0.12.0
+* onion_private_key: cached Tor hidden service private key for `-listenonion`: since 0.12.0
 
 Only used in pre-0.8.0
 ---------------------
