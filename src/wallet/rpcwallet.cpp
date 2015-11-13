@@ -2420,7 +2420,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
     bool includeWatching = false;
     if (params.size() > 1)
-        includeWatching = true;
+        includeWatching = params[1].get_bool();
 
     CMutableTransaction tx(origTx);
     CAmount nFee;
