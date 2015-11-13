@@ -377,8 +377,8 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     tx7.vout.resize(2);
     tx7.vout[0].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
     tx7.vout[0].nValue = 10 * COIN;
-    tx7.vout[0].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
-    tx7.vout[0].nValue = 10 * COIN;
+    tx7.vout[1].scriptPubKey = CScript() << OP_7 << OP_EQUAL;
+    tx7.vout[1].nValue = 10 * COIN;
 
     pool.addUnchecked(tx4.GetHash(), CTxMemPoolEntry(tx4, 7000LL, 0, 10.0, 1, pool.HasNoInputsOf(tx4)));
     pool.addUnchecked(tx5.GetHash(), CTxMemPoolEntry(tx5, 1000LL, 0, 10.0, 1, pool.HasNoInputsOf(tx5)));
