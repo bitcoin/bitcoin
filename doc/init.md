@@ -35,9 +35,8 @@ generate one from the shell yourself like this:
 
 bash -c 'tr -dc a-zA-Z0-9 < /dev/urandom | head -c32 && echo'
 
-Once you have a password in hand, set rpcpassword= in /etc/bitcoin/bitcoin.conf
 
-For an example configuration file that describes the configuration settings, 
+For an example configuration file that describes the configuration settings,
 see contrib/debian/examples/bitcoin.conf.
 
 3. Paths
@@ -89,8 +88,8 @@ use old versions of Upstart and do not supply the start-stop-daemon utility.
 
 Copy bitcoind.init to /etc/init.d/bitcoind. Test by running "service bitcoind start".
 
-Using this script, you can adjust the path and flags to the bitcoind program by 
-setting the BITCOIND and FLAGS environment variables in the file 
+Using this script, you can adjust the path and flags to the bitcoind program by
+setting the BITCOIND and FLAGS environment variables in the file
 /etc/sysconfig/bitcoind. You can also use the DAEMONOPTS environment variable here.
 
 5. Auto-respawn
@@ -98,5 +97,4 @@ setting the BITCOIND and FLAGS environment variables in the file
 
 Auto respawning is currently only configured for Upstart and systemd.
 Reasonable defaults have been chosen but YMMV.
-
 

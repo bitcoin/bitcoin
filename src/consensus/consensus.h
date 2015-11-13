@@ -12,7 +12,14 @@ static const unsigned int MAX_BLOCK_SIZE = 1000000;
 static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
-/** Threshold for nLockTime: below this value it is interpreted as block number, otherwise as UNIX timestamp. */
-static const unsigned int LOCKTIME_THRESHOLD = 500000000; // Tue Nov  5 00:53:20 1985 UTC
+
+/** Flags for LockTime() */
+enum {
+    /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
+    LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
+};
+
+/** Used as the flags parameter to CheckFinalTx() in non-consensus code */
+static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_MEDIAN_TIME_PAST;
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H

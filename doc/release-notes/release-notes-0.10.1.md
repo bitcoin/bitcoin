@@ -101,7 +101,7 @@ Tests:
 Miscellaneous:
 - `c9e022b` Initialization: set Boost path locale in main thread
 - `23126a0` Sanitize command strings before logging them.
-- `323de27` Initialization: setup environment before starting QT tests
+- `323de27` Initialization: setup environment before starting Qt tests
 - `7494e09` Initialization: setup environment before starting tests
 - `df45564` Initialization: set fallback locale as environment variable
 
