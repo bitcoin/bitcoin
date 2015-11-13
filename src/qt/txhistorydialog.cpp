@@ -240,8 +240,7 @@ int TXHistoryDialog::PopulateHistoryMap()
             bool fundsMoved = true;
             htxo.txType = shrinkTxType(pending.type, &fundsMoved);
             if (pending.type == MSC_TYPE_METADEX_CANCEL_PRICE || pending.type == MSC_TYPE_METADEX_CANCEL_PAIR ||
-                pending.type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || pending.type == MSC_TYPE_SEND_ALL ||
-                pending.type == 0 /* Unknown */) {
+                pending.type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || pending.type == MSC_TYPE_SEND_ALL) {
                 htxo.amount = "N/A";
             }
             txHistoryMap.insert(std::make_pair(txHash, htxo));

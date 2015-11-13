@@ -130,8 +130,7 @@ public:
                 }
                 // override amount for cancels
                 if (p_pending->type == MSC_TYPE_METADEX_CANCEL_PRICE || p_pending->type == MSC_TYPE_METADEX_CANCEL_PAIR ||
-                    p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || p_pending->type == MSC_TYPE_SEND_ALL ||
-                    p_pending->type == 0 /* Unknown */) {
+                    p_pending->type == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || p_pending->type == MSC_TYPE_SEND_ALL) {
                     omniAmountStr = QString::fromStdString("N/A");
                 }
             }
@@ -208,8 +207,7 @@ public:
 
                             // override amount for cancels
                             if (mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PRICE || mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_PAIR ||
-                                mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || mp_obj.getType() == MSC_TYPE_SEND_ALL ||
-                                mp_obj.getType() == 0 /* Unknown */) {
+                                mp_obj.getType() == MSC_TYPE_METADEX_CANCEL_ECOSYSTEM || mp_obj.getType() == MSC_TYPE_SEND_ALL) {
                                 omniAmountStr = QString::fromStdString("N/A");
                             }
 
