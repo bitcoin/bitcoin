@@ -144,8 +144,13 @@ TestChain100Setup::~TestChain100Setup()
 
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(CMutableTransaction &tx, CTxMemPool *pool) {
-    return CTxMemPoolEntry(tx, nFee, nTime, dPriority, nHeight,
-                           pool ? pool->HasNoInputsOf(tx) : hadNoDependencies);
+    CTransaction txn(tx);
+    bool hasNoDependencies = pool ? pool->HasNoInputsOf(tx) : hadNoDependencies;
+    // Hack to assume either its completely dependent on other mempool txs or not at all
+    CAmount inChainValue = hasNoDependencies ? txn.GetValueOut() : 0;
+
+    return CTxMemPoolEntry(txn, nFee, nTime, dPriority, nHeight,
+                           hasNoDependencies, inChainValue);
 }
 
 void Shutdown(void* parg)
