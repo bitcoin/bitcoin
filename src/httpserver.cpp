@@ -438,15 +438,17 @@ bool InitHTTPServer()
     return true;
 }
 
-bool StartHTTPServer(boost::thread_group& threadGroup)
+boost::thread threadHTTP;
+
+bool StartHTTPServer()
 {
     LogPrint("http", "Starting HTTP server\n");
     int rpcThreads = std::max((long)GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
     LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
-    threadGroup.create_thread(boost::bind(&ThreadHTTP, eventBase, eventHTTP));
+    threadHTTP = boost::thread(boost::bind(&ThreadHTTP, eventBase, eventHTTP));
 
     for (int i = 0; i < rpcThreads; i++)
-        threadGroup.create_thread(boost::bind(&HTTPWorkQueueRun, workQueue));
+        boost::thread(boost::bind(&HTTPWorkQueueRun, workQueue));
     return true;
 }
 
@@ -461,13 +463,6 @@ void InterruptHTTPServer()
         // Reject requests on current connections
         evhttp_set_gencb(eventHTTP, http_reject_request_cb, NULL);
     }
-    if (eventBase) {
-        // Force-exit event loop after predefined time
-        struct timeval tv;
-        tv.tv_sec = 10;
-        tv.tv_usec = 0;
-        event_base_loopexit(eventBase, &tv);
-    }
     if (workQueue)
         workQueue->Interrupt();
 }
@@ -480,6 +475,20 @@ void StopHTTPServer()
         workQueue->WaitExit();
         delete workQueue;
     }
+    if (eventBase) {
+        LogPrint("http", "Waiting for HTTP event thread to exit\n");
+        // Give event loop a few seconds to exit (to send back last RPC responses), then break it
+        // Before this was solved with event_base_loopexit, but that didn't work as expected in
+        // at least libevent 2.0.21 and always introduced a delay. In libevent
+        // master that appears to be solved, so in the future that solution
+        // could be used again (if desirable).
+        // (see discussion in https://github.com/bitcoin/bitcoin/pull/6990)
+        if (!threadHTTP.try_join_for(boost::chrono::milliseconds(2000))) {
+            LogPrintf("HTTP event loop did not exit within allotted time, sending loopbreak\n");
+            event_base_loopbreak(eventBase);
+            threadHTTP.join();
+        }
+    }
     if (eventHTTP) {
         evhttp_free(eventHTTP);
         eventHTTP = 0;
@@ -488,6 +497,7 @@ void StopHTTPServer()
         event_base_free(eventBase);
         eventBase = 0;
     }
+    LogPrint("http", "Stopped HTTP server\n");
 }
 
 struct event_base* EventBase()
