@@ -229,8 +229,9 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
     return true;
 }
 
-double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight) const
+double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight, CAmount &inChainInputValue) const
 {
+    inChainInputValue = 0;
     if (tx.IsCoinBase())
         return 0.0;
     double dResult = 0.0;
@@ -239,8 +240,9 @@ double CCoinsViewCache::GetPriority(const CTransaction &tx, int nHeight) const
         const CCoins* coins = AccessCoins(txin.prevout.hash);
         assert(coins);
         if (!coins->IsAvailable(txin.prevout.n)) continue;
-        if (coins->nHeight < nHeight) {
+        if (coins->nHeight <= nHeight) {
             dResult += coins->vout[txin.prevout.n].nValue * (nHeight-coins->nHeight);
+            inChainInputValue += coins->vout[txin.prevout.n].nValue;
         }
     }
     return tx.ComputePriority(dResult);
