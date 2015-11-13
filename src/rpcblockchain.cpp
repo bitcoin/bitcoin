@@ -608,6 +608,7 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
             "  \"headers\": xxxxxx,        (numeric) the current number of headers we have validated\n"
             "  \"bestblockhash\": \"...\", (string) the hash of the currently best block\n"
             "  \"difficulty\": xxxxxx,     (numeric) the current difficulty\n"
+            "  \"mediantime\": xxxxxx,     (numeric) median time for the current best block\n"
             "  \"verificationprogress\": xxxx, (numeric) estimate of verification progress [0..1]\n"
             "  \"chainwork\": \"xxxx\"     (string) total amount of work in active chain, in hexadecimal\n"
             "  \"pruned\": xx,             (boolean) if the blocks are subject to pruning\n"
