@@ -23,6 +23,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
+#include "unlimited.h" // This is here because many files include util, so hopefully it will minimize diffs
 
 #include <sstream>
 
@@ -2290,6 +2291,7 @@ static CBlockIndex* FindMostWorkChain() {
         // Just going until the active chain is an optimization, as we know all blocks in it are valid already.
         CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
+        int depth=0;
         while (pindexTest && !chainActive.Contains(pindexTest)) {
             assert(pindexTest->nChainTx || pindexTest->nHeight == 0);
 
@@ -2299,7 +2301,8 @@ static CBlockIndex* FindMostWorkChain() {
             // to a chain unless we have all the non-active-chain parent blocks.
             bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
             bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
-            if (fFailedChain || fMissingData) {
+            bool fExcessive = (depth < excessiveAcceptDepth) && (pindexTest->nStatus & BLOCK_EXCESSIVE);  // Unlimited: deny this candidate chain if there's a recent excessive block
+            if (fFailedChain || fMissingData || fExcessive) {
                 // Candidate chain is not usable (either invalid or missing data)
                 if (fFailedChain && (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
                     pindexBestInvalid = pindexNew;
@@ -2308,7 +2311,7 @@ static CBlockIndex* FindMostWorkChain() {
                 while (pindexTest != pindexFailed) {
                     if (fFailedChain) {
                         pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
-                    } else if (fMissingData) {
+                    } else if (fMissingData || fExcessive) {
                         // If we're missing data, then add back to mapBlocksUnlinked,
                         // so that if the block arrives in the future we can try adding
                         // to setBlockIndexCandidates again.
@@ -2322,6 +2325,7 @@ static CBlockIndex* FindMostWorkChain() {
                 break;
             }
             pindexTest = pindexTest->pprev;
+            depth++;
         }
         if (!fInvalidAncestor)
             return pindexNew;
@@ -2576,6 +2580,7 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
+    if (block.fExcessive) pindexNew->nStatus |= BLOCK_EXCESSIVE;
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -2746,6 +2751,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // because we receive the wrong transactions for it.
 
     // Size limits
+    uint64_t blockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
     if (block.vtx.empty()) // || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return state.DoS(100, error("CheckBlock(): size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
@@ -2764,15 +2770,21 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         if (!CheckTransaction(tx, state))
             return error("CheckBlock(): CheckTransaction failed");
 
-    unsigned int nSigOps = 0;
+    uint64_t nSigOps = 0;
+    uint64_t nTx = 0;
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
+        nTx++;
         nSigOps += GetLegacySigOpCount(tx);
     }
     // if (nSigOps > MAX_BLOCK_SIGOPS)
     //    return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
     //                     REJECT_INVALID, "bad-blk-sigops", true);
 
+    block.fExcessive = CheckExcessive(block,blockSize, nSigOps,nTx);  // Check whether this block exceeds what we want to relay.
+
+    if (fCheckPOW && fCheckMerkleRoot)
+        block.fChecked = true;
     return true;
 }
 
@@ -2903,6 +2915,17 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     return true;
 }
 
+void UnlimitedAcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CDiskBlockPos* dbp)
+{
+#if 0
+  if (!isChainExcessive(pindex))  // && isChainExcessive(pindex,excessiveAcceptDepth+20))  // It WAS excessive but is not any longer
+    {
+    if (setBlockIndexCandidates.count(pindex) == 0) setBlockIndexCandidates.insert(pindex);
+    }
+#endif
+}
+
+
 bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, bool fRequested, CDiskBlockPos* dbp)
 {
     const CChainParams& chainparams = Params();
@@ -3004,6 +3027,7 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, bool
         if (pindex && pfrom) {
             mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
         }
+        UnlimitedAcceptBlock(*pblock, state, pindex, dbp);
         CheckBlockIndex();
         if (!ret)
             return error("%s: AcceptBlock FAILED", __func__);
@@ -3688,9 +3712,8 @@ void static CheckBlockIndex()
                 // is valid and we have all data for its parents, it must be in
                 // setBlockIndexCandidates.  chainActive.Tip() must also be there
                 // even if some data has been pruned.
-                if (pindexFirstMissing == NULL || pindex == chainActive.Tip()) {
-                    assert(setBlockIndexCandidates.count(pindex));
-                }
+              if (!isChainExcessive(pindex) && pindexFirstMissing == NULL || pindex == chainActive.Tip() )
+                assert(setBlockIndexCandidates.count(pindex));
                 // If some parent is missing, then it could be that this block was in
                 // setBlockIndexCandidates but had to be removed because of the missing data.
                 // In this case it must be in mapBlocksUnlinked -- see test below.
@@ -3714,7 +3737,10 @@ void static CheckBlockIndex()
             assert(foundInUnlinked);
         }
         if (!(pindex->nStatus & BLOCK_HAVE_DATA)) assert(!foundInUnlinked); // Can't be in mapBlocksUnlinked if we don't HAVE_DATA
-        if (pindexFirstMissing == NULL) assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked.
+        if ((pindexFirstMissing == NULL)&&(!isChainExcessive(pindex)))
+          {
+          assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked.
+          }
         if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverProcessed == NULL && pindexFirstMissing != NULL) {
             // We HAVE_DATA for this block, have received data for all parents at some point, but we're currently missing data for some parent.
             assert(fHavePruned); // We must have pruned.
@@ -3918,6 +3944,11 @@ void static ProcessGetData(CNode* pfrom)
                         if (!send) {
                             LogPrintf("%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom->GetId());
                         }
+                        else {  // Unlimited -- don't relay excessive blocks
+                          if (mi->second->nStatus & BLOCK_EXCESSIVE) send=false;
+                          if (!send) LogPrintf("%s: ignoring request from peer=%i for excessive block of height %d not on the main chain\n", __func__, pfrom->GetId(), mi->second->nHeight);
+                          }
+                        // Unlimited: ancientBlockThrottle for bandwidth shaping here
                     }
                 }
                 // Pruned nodes may have deleted the block, so check whether

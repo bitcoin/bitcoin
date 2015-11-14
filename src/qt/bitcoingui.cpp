@@ -778,34 +778,42 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate)
     progressBar->setToolTip(tooltip);
 }
 
+CLeakyBucket infoShowTime(20000, 10); 
+
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
     QString strTitle = tr("Bitcoin"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
+    int showTime = 10000;
 
     QString msgType;
+
+    switch (style) {
+        case CClientUIInterface::MSG_ERROR:
+            showTime = 20000;
+            msgType = tr("Error");
+            break;
+        case CClientUIInterface::MSG_WARNING:
+            showTime = 15000;
+            msgType = tr("Warning");
+            break;
+        case CClientUIInterface::MSG_INFORMATION:
+            showTime = infoShowTime.available();
+            infoShowTime.try_leak(std::min(showTime,1000));
+            //if (showTime == 0) showTime = 10;  // 10ms minimum showing time
+            msgType = tr("Information");            
+            break;
+        default:
+            break;
+        }
 
     // Prefer supplied title over style based title
     if (!title.isEmpty()) {
         msgType = title;
     }
-    else {
-        switch (style) {
-        case CClientUIInterface::MSG_ERROR:
-            msgType = tr("Error");
-            break;
-        case CClientUIInterface::MSG_WARNING:
-            msgType = tr("Warning");
-            break;
-        case CClientUIInterface::MSG_INFORMATION:
-            msgType = tr("Information");
-            break;
-        default:
-            break;
-        }
-    }
+
     // Append title to "Bitcoin - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
@@ -834,7 +842,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             *ret = r == QMessageBox::Ok;
     }
     else
-        notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message);
+      if (showTime>10) notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message, QIcon(), showTime);
 }
 
 void BitcoinGUI::changeEvent(QEvent *e)
@@ -873,6 +881,8 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
 #endif
     QMainWindow::closeEvent(event);
 }
+
+
 
 #ifdef ENABLE_WALLET
 void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label)

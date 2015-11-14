@@ -8,7 +8,6 @@
 #endif
 
 #include "net.h"
-#include "leakybucket.h"
 
 #include "addrman.h"
 #include "chainparams.h"
@@ -1564,24 +1563,6 @@ void static Discover(boost::thread_group& threadGroup)
 
 void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
-    //  Init network shapers
-    int64_t rb = GetArg("-receiveburst", DEFAULT_MAX_RECV_BURST);
-    // parameter is in KBytes/sec, leaky bucket is in bytes/sec.  But if it is "off" then don't multiply
-    if (rb != LONG_LONG_MAX)
-        rb *= 1024;
-    int64_t ra = GetArg("-receiveavg", DEFAULT_MAX_RECV_BURST);
-    if (ra != LONG_LONG_MAX)
-        ra *= 1024;
-    int64_t sb = GetArg("-sendburst", DEFAULT_MAX_RECV_BURST);
-    if (sb != LONG_LONG_MAX)
-        sb *= 1024;
-    int64_t sa = GetArg("-sendavg", DEFAULT_MAX_RECV_BURST);
-    if (sa != LONG_LONG_MAX)
-        sa *= 1024;
-
-    receiveShaper.set(rb, ra);
-    sendShaper.set(sb, sa);
-
     uiInterface.InitMessage(_("Loading addresses..."));
     // Load addresses for peers.dat
     int64_t nStart = GetTimeMillis();

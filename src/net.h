@@ -30,7 +30,7 @@
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 
-#include "leakybucket.h"
+#include "unlimited.h"
 
 class CAddrMan;
 class CBlockIndex;
@@ -64,10 +64,6 @@ static const bool DEFAULT_UPNP = false;
 #endif
 /** The maximum number of entries in mapAskFor */
 static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
-
-// These variables for traffic shaping need to be globally scoped so the GUI and CLI can adjust the parameters
-extern CLeakyBucket receiveShaper;
-extern CLeakyBucket sendShaper;
 
 
 unsigned int ReceiveFloodSize();

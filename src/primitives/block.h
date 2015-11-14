@@ -79,6 +79,8 @@ public:
 
     // memory only
     mutable std::vector<uint256> vMerkleTree;
+    mutable bool fChecked;
+    mutable bool fExcessive;
 
     CBlock()
     {
@@ -104,6 +106,8 @@ public:
         CBlockHeader::SetNull();
         vtx.clear();
         vMerkleTree.clear();
+        fChecked = false;
+        fExcessive = false;
     }
 
     CBlockHeader GetBlockHeader() const

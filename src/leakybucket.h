@@ -9,6 +9,8 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include <boost/chrono/chrono.hpp>
+
 /** Default value for the maximum amount of data that can be received in a burst */
 static const int64_t DEFAULT_MAX_RECV_BURST = LONG_LONG_MAX;
 /** Default value for the maximum amount of data that can be sent in a burst */
