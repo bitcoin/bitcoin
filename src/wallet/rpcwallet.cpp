@@ -2418,9 +2418,12 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     if (!DecodeHexTx(origTx, params[0].get_str()))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
+    if (origTx.vout.size() == 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
+
     bool includeWatching = false;
     if (params.size() > 1)
-        includeWatching = true;
+        includeWatching = params[1].get_bool();
 
     CMutableTransaction tx(origTx);
     CAmount nFee;
