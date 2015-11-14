@@ -821,7 +821,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // disable walletbroadcast in blocksonly mode
-    if (GetBoolArg("-blocksonly", false)) {
+    if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
         if (SoftSetBoolArg("-whitelistalwaysrelay", false))
             LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -whitelistalwaysrelay=0\n", __func__);
 #ifdef ENABLE_WALLET
