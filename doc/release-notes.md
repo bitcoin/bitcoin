@@ -184,6 +184,9 @@ This option can be specified in MiB per day and is turned off by default
 (`-maxuploadtarget=0`).
 The recommended minimum is 144 * MAX_BLOCK_SIZE (currently 144MB) per day.
 
+Whitelisted peers will never be disconnected, although their traffic counts for
+calculating the target.
+
 A more detailed documentation about keeping traffic low can be found in
 [/doc/reducetraffic.md](/doc/reducetraffic.md).
 
