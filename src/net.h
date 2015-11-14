@@ -62,6 +62,8 @@ static const size_t MAPASKFOR_MAX_SZ = MAX_INV_SZ;
 static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 /** The default for -maxuploadtarget. 0 = Unlimited */
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
+/** Default for blocks only*/
+static const bool DEFAULT_BLOCKSONLY = false;
 
 unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
