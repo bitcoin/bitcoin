@@ -4219,7 +4219,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             bool fAlreadyHave = AlreadyHave(inv);
             LogPrint("net", "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->id);
 
-            if (!fAlreadyHave && !fImporting && !fReindex && inv.type != MSG_BLOCK)
+            if (!fAlreadyHave && !fImporting && !fReindex && inv.type != MSG_BLOCK && !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY))
                 pfrom->AskFor(inv);
 
             if (inv.type == MSG_BLOCK) {
@@ -4466,7 +4466,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             assert(recentRejects);
             recentRejects->insert(tx.GetHash());
 
-            if (pfrom->fWhitelisted) {
+            if (pfrom->fWhitelisted && GetBoolArg("-whitelistalwaysrelay", DEFAULT_WHITELISTALWAYSRELAY)) {
                 // Always relay transactions received from whitelisted peers, even
                 // if they were rejected from the mempool, allowing the node to
                 // function as a gateway for nodes hidden behind it.
