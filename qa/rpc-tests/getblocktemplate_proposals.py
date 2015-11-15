@@ -120,10 +120,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
         # Test 3: Truncated final tx
         lastbyte = txlist[-1].pop()
-        try:
-            assert_template(node, tmpl, txlist, 'n/a')
-        except JSONRPCException:
-            pass  # Expected
+        assert_raises(JSONRPCException, assert_template, node, tmpl, txlist, 'n/a')
         txlist[-1].append(lastbyte)
 
         # Test 4: Add an invalid tx to the end (duplicate of gen tx)
@@ -144,10 +141,7 @@ class GetBlockTemplateProposalTest(BitcoinTestFramework):
 
         # Test 7: Bad tx count
         txlist.append(b'')
-        try:
-            assert_template(node, tmpl, txlist, 'n/a')
-        except JSONRPCException:
-            pass  # Expected
+        assert_raises(JSONRPCException, assert_template, node, tmpl, txlist, 'n/a')
         txlist.pop()
 
         # Test 8: Bad bits
