@@ -71,7 +71,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         fee = rawtxfund['fee']
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
-        assert_equal(len(dec_tx['vin']) > 0, True) #test if we have enought inputs
+        assert(len(dec_tx['vin']) > 0) #test if we have enought inputs
 
         ##############################
         # simple test with two coins #
@@ -84,7 +84,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         fee = rawtxfund['fee']
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
-        assert_equal(len(dec_tx['vin']) > 0, True) #test if we have enough inputs
+        assert(len(dec_tx['vin']) > 0) #test if we have enough inputs
 
         ##############################
         # simple test with two coins #
@@ -97,7 +97,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
         fee = rawtxfund['fee']
         dec_tx  = self.nodes[2].decoderawtransaction(rawtxfund['hex'])
-        assert_equal(len(dec_tx['vin']) > 0, True)
+        assert(len(dec_tx['vin']) > 0)
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
 
 
@@ -116,7 +116,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for out in dec_tx['vout']:
             totalOut += out['value']
 
-        assert_equal(len(dec_tx['vin']) > 0, True)
+        assert(len(dec_tx['vin']) > 0)
         assert_equal(dec_tx['vin'][0]['scriptSig']['hex'], '')
 
 
@@ -130,7 +130,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 utx = aUtx
                 break
 
-        assert_equal(utx!=False, True)
+        assert(utx!=False)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
         outputs = { self.nodes[0].getnewaddress() : 1.0 }
@@ -159,7 +159,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 utx = aUtx
                 break
 
-        assert_equal(utx!=False, True)
+        assert(utx!=False)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
         outputs = { self.nodes[0].getnewaddress() : Decimal(5.0) - fee - feeTolerance }
@@ -189,7 +189,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 utx = aUtx
                 break
 
-        assert_equal(utx!=False, True)
+        assert(utx!=False)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']}]
         outputs = { self.nodes[0].getnewaddress() : 1.0 }
@@ -234,7 +234,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 utx2 = aUtx
 
 
-        assert_equal(utx!=False, True)
+        assert(utx!=False)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']},{'txid' : utx2['txid'], 'vout' : utx2['vout']} ]
         outputs = { self.nodes[0].getnewaddress() : 6.0 }
@@ -276,7 +276,7 @@ class RawTransactionsTest(BitcoinTestFramework):
                 utx2 = aUtx
 
 
-        assert_equal(utx!=False, True)
+        assert(utx!=False)
 
         inputs  = [ {'txid' : utx['txid'], 'vout' : utx['vout']},{'txid' : utx2['txid'], 'vout' : utx2['vout']} ]
         outputs = { self.nodes[0].getnewaddress() : 6.0, self.nodes[0].getnewaddress() : 1.0 }
@@ -306,14 +306,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         dec_tx  = self.nodes[2].decoderawtransaction(rawtx)
 
-        errorString = ""
         try:
             rawtxfund = self.nodes[2].fundrawtransaction(rawtx)
+            raise AssertionError("Spent more than available")
         except JSONRPCException,e:
-            errorString = e.error['message']
-
-        assert("Insufficient" in errorString)
-
+            assert("Insufficient" in e.error['message'])
 
 
         ############################################################
@@ -462,12 +459,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.is_network_split=False
         self.sync_all()
 
-        error = False
         try:
             self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.2)
-        except:
-            error = True
-        assert(error)
+            raise AssertionError("Wallet unlocked without passphrase")
+        except JSONRPCException as e:
+            assert('walletpassphrase' in e.error['message'])
 
         oldBalance = self.nodes[0].getbalance()
 
@@ -580,7 +576,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(len(res_dec["vin"]), 1)
         assert_equal(res_dec["vin"][0]["txid"], watchonly_txid)
 
-        assert_equal("fee" in result.keys(), True)
+        assert("fee" in result.keys())
         assert_greater_than(result["changepos"], -1)
 
         ###############################################################
