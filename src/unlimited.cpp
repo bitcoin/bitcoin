@@ -18,7 +18,7 @@
 
 using namespace std;
 
-enum { DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 6, DEFAULT_EXCESSIVE_BLOCK_SIZE = 100000 };  // 16*1024*1024 };
+enum { DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4, DEFAULT_EXCESSIVE_BLOCK_SIZE = 1000000 };  // 16*1024*1024 };
 
 uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
@@ -33,6 +33,8 @@ boost::chrono::steady_clock CLeakyBucket::clock;
 void UnlimitedSetup(void)
 {
   maxGeneratedBlock = GetArg("-blockmaxsize", DEFAULT_MAX_GENERATED_BLOCK_SIZE);
+  excessiveBlockSize = GetArg("-blockexcessivesize", DEFAULT_EXCESSIVE_BLOCK_SIZE);
+  excessiveAcceptDepth = GetArg("-blockacceptdepth", DEFAULT_EXCESSIVE_ACCEPT_DEPTH);
 
   //  Init network shapers
   int64_t rb = GetArg("-receiveburst", DEFAULT_MAX_RECV_BURST);

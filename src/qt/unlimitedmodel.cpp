@@ -46,7 +46,10 @@ void UnlimitedModel::Init()
     // Ensure restart flag is unset on client startup
     setRestartRequired(false);
 
-
+    if (!settings.contains("excessiveBlockSize"))
+      settings.setValue("excessiveBlockSize", QString::number(excessiveBlockSize));
+    if (!settings.contains("excessiveAcceptDepth"))
+      settings.setValue("excessiveAcceptDepth", QString::number(excessiveAcceptDepth));
     if (!settings.contains("maxGeneratedBlock"))
       settings.setValue("maxGeneratedBlock", QString::number(maxGeneratedBlock));
 
@@ -102,6 +105,10 @@ QVariant UnlimitedModel::data(const QModelIndex& index, int role) const
         {
         case MaxGeneratedBlock:
           return static_cast<qlonglong>(maxGeneratedBlock);
+        case ExcessiveBlockSize:
+          return QVariant(excessiveBlockSize);
+        case ExcessiveAcceptDepth:
+          return QVariant(excessiveAcceptDepth);
         case UseReceiveShaping:
           return settings.value("fUseReceiveShaping");
         case UseSendShaping:
@@ -136,6 +143,14 @@ bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, in
           maxGeneratedBlock = value.toULongLong();
           settings.setValue("maxGeneratedBlock",
                             static_cast<qlonglong>(maxGeneratedBlock));
+          break;
+        case ExcessiveBlockSize:
+          excessiveBlockSize = value.toUInt();
+          settings.setValue("excessiveBlockSize", excessiveBlockSize);
+          break;
+        case ExcessiveAcceptDepth:
+          excessiveAcceptDepth = value.toUInt();
+          settings.setValue("excessiveAcceptDepth",excessiveAcceptDepth);
           break;
         case UseReceiveShaping:
           if (settings.value("fUseReceiveShaping") != value)

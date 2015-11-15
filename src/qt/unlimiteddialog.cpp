@@ -46,7 +46,9 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
   connect(ui.miningMaxBlock, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
 
   //ui.miningMaxBlock->setText(QString(boost::lexical_cast<std::string>(model->getMaxGeneratedBlock).c_str()));
-  ui.miningMaxBlock->setText(QString::number(model->getMaxGeneratedBlock()));
+  //ui.miningMaxBlock->setText(QString::number(model->getMaxGeneratedBlock()));
+  //ui.excessiveBlockSize->setText(QString::number(excessiveBlockSize));
+  //ui.excessiveAcceptDepth->setText(QString::number(excessiveAcceptDepth));
 }
 
 
@@ -68,6 +70,8 @@ void UnlimitedDialog::setMapper()
     mapper.addMapping(ui.recvAveEdit, UnlimitedModel::ReceiveAve);
 
     mapper.addMapping(ui.miningMaxBlock,UnlimitedModel::MaxGeneratedBlock);
+    mapper.addMapping(ui.excessiveBlockSize,UnlimitedModel::ExcessiveBlockSize);
+    mapper.addMapping(ui.excessiveAcceptDepth,UnlimitedModel::ExcessiveAcceptDepth);
     mapper.toFirst();
 }
     

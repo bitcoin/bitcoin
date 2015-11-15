@@ -2291,7 +2291,7 @@ static CBlockIndex* FindMostWorkChain() {
         // Just going until the active chain is an optimization, as we know all blocks in it are valid already.
         CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
-        int depth=0;
+        uint64_t depth=0;
         while (pindexTest && !chainActive.Contains(pindexTest)) {
             assert(pindexTest->nChainTx || pindexTest->nHeight == 0);
 
@@ -2917,12 +2917,7 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
 
 void UnlimitedAcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CDiskBlockPos* dbp)
 {
-#if 0
-  if (!isChainExcessive(pindex))  // && isChainExcessive(pindex,excessiveAcceptDepth+20))  // It WAS excessive but is not any longer
-    {
-    if (setBlockIndexCandidates.count(pindex) == 0) setBlockIndexCandidates.insert(pindex);
-    }
-#endif
+  // It is not necessary to put the chain on the candidates list here.  It will be added by AcceptBlock if it is valid.
 }
 
 
@@ -3712,7 +3707,7 @@ void static CheckBlockIndex()
                 // is valid and we have all data for its parents, it must be in
                 // setBlockIndexCandidates.  chainActive.Tip() must also be there
                 // even if some data has been pruned.
-              if (!isChainExcessive(pindex) && pindexFirstMissing == NULL || pindex == chainActive.Tip() )
+              if ((!isChainExcessive(pindex)) && (pindexFirstMissing == NULL || pindex == chainActive.Tip()) )
                 assert(setBlockIndexCandidates.count(pindex));
                 // If some parent is missing, then it could be that this block was in
                 // setBlockIndexCandidates but had to be removed because of the missing data.
