@@ -17,9 +17,9 @@ static const struct {
     const int iconColorHueShift;
     const int iconColorSaturationReduction;
 } network_styles[] = {
-    {"main", QAPP_APP_NAME_DEFAULT, 0, 0},
-    {"test", QAPP_APP_NAME_TESTNET, 70, 30},
-    {"regtest", QAPP_APP_NAME_TESTNET, 160, 30}
+    {CHAINPARAMS_MAIN, QAPP_APP_NAME_DEFAULT, 0, 0},
+    {CHAINPARAMS_TESTNET, QAPP_APP_NAME_TESTNET, 70, 30},
+    {CHAINPARAMS_REGTEST, QAPP_APP_NAME_TESTNET, 160, 30}
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 

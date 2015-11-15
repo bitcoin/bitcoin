@@ -8,6 +8,10 @@
 #include <string>
 #include <vector>
 
+#define CHAINPARAMS_MAIN "main"
+#define CHAINPARAMS_TESTNET "testnet"
+#define CHAINPARAMS_REGTEST "regtest"
+
 /**
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
  * of a given instance of the Bitcoin system.

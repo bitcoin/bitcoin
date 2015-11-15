@@ -10,9 +10,9 @@
 
 #include <boost/scoped_ptr.hpp>
 
-const std::string CBaseChainParams::MAIN = "main";
-const std::string CBaseChainParams::TESTNET = "test";
-const std::string CBaseChainParams::REGTEST = "regtest";
+const std::string CBaseChainParams::MAIN = CHAINPARAMS_MAIN;
+const std::string CBaseChainParams::TESTNET = CHAINPARAMS_TESTNET;
+const std::string CBaseChainParams::REGTEST = CHAINPARAMS_REGTEST;
 const std::string CBaseChainParams::SIZETEST = "sizetest";
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
@@ -36,6 +36,7 @@ public:
     CBaseMainParams()
     {
         nRPCPort = 8332;
+        strDataDir = "";
     }
 };
 
@@ -48,7 +49,7 @@ public:
     CBaseTestNetParams()
     {
         nRPCPort = 18332;
-        strDataDir = "testnet3";
+        strDataDir = CHAINPARAMS_TESTNET;
     }
 };
 
@@ -61,7 +62,7 @@ public:
     CBaseRegTestParams()
     {
         nRPCPort = 18332;
-        strDataDir = "regtest";
+        strDataDir = CHAINPARAMS_REGTEST;
     }
 };
 
