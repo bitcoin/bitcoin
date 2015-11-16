@@ -218,6 +218,11 @@ extern const char *REJECT;
  * @see https://bitcoin.org/en/developer-reference#sendheaders
  */
 extern const char *SENDHEADERS;
+/**
+ * Indicates that a node can be asked for blocks and transactions including
+ * witness data.
+ */
+extern const char *HAVEWITNESS;
 
 };
 

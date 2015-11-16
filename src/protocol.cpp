@@ -35,6 +35,7 @@ const char *FILTERADD="filteradd";
 const char *FILTERCLEAR="filterclear";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
+const char *HAVEWITNESS="havewitness";
 };
 
 static const char* ppszTypeName[] =
