@@ -15,6 +15,7 @@
 class CAutoFile;
 class CFeeRate;
 class CTxMemPoolEntry;
+class CTxMemPool;
 
 /** \class CBlockPolicyEstimator
  * The BlockPolicyEstimator is used for estimating the fee or priority needed
@@ -246,7 +247,7 @@ public:
      *  confTarget blocks. If no answer can be given at confTarget, return an
      *  estimate at the lowest target where one can be given.
      */
-    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget);
+    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool *pool);
 
     /** Return a priority estimate */
     double estimatePriority(int confTarget);
@@ -255,7 +256,7 @@ public:
      *  confTarget blocks. If no answer can be given at confTarget, return an
      *  estimate at the lowest target where one can be given.
      */
-    double estimateSmartPriority(int confTarget, int *answerFoundAtTarget);
+    double estimateSmartPriority(int confTarget, int *answerFoundAtTarget, const CTxMemPool *pool);
 
     /** Write estimation data to a file */
     void Write(CAutoFile& fileout);
