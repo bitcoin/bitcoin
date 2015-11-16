@@ -34,8 +34,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
     model(0),
-    mapper(0),
-    fProxyIpsValid(true)
+    mapper(0)
 {
     ui->setupUi(this);
 
@@ -63,9 +62,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), ui->proxyIpTor, SLOT(setEnabled(bool)));
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), ui->proxyPortTor, SLOT(setEnabled(bool)));
-
-    ui->proxyIp->installEventFilter(this);
-    ui->proxyIpTor->installEventFilter(this);
 
     /* Window elements init */
 #ifdef Q_OS_MAC
@@ -119,7 +115,10 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     mapper->setOrientation(Qt::Vertical);
 
     /* setup/change UI elements when proxy IPs are invalid/valid */
-    connect(this, SIGNAL(proxyIpChecks(QValidatedLineEdit *, int)), this, SLOT(doProxyIpChecks(QValidatedLineEdit *, int)));
+    ui->proxyIp->setCheckValidator(new ProxyAddressValidator(parent));
+    ui->proxyIpTor->setCheckValidator(new ProxyAddressValidator(parent));
+    connect(ui->proxyIp, SIGNAL(validationDidChange(QValidatedLineEdit *)), this, SLOT(updateProxyValidationState(QValidatedLineEdit *)));
+    connect(ui->proxyIpTor, SIGNAL(validationDidChange(QValidatedLineEdit *)), this, SLOT(updateProxyValidationState(QValidatedLineEdit *)));
 }
 
 OptionsDialog::~OptionsDialog()
@@ -200,18 +199,6 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->thirdPartyTxUrls, OptionsModel::ThirdPartyTxUrls);
 }
 
-void OptionsDialog::enableOkButton()
-{
-    /* prevent enabling of the OK button when data modified, if there is an invalid proxy address present */
-    if(fProxyIpsValid)
-        setOkButtonState(true);
-}
-
-void OptionsDialog::disableOkButton()
-{
-    setOkButtonState(false);
-}
-
 void OptionsDialog::setOkButtonState(bool fState)
 {
     ui->okButton->setEnabled(fState);
@@ -269,24 +256,19 @@ void OptionsDialog::clearStatusLabel()
     ui->statusLabel->clear();
 }
 
-void OptionsDialog::doProxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort)
+void OptionsDialog::updateProxyValidationState(QValidatedLineEdit *pUiProxyIp)
 {
-    Q_UNUSED(nProxyPort);
-
-    CService addrProxy;
-
-    /* Check for a valid IPv4 / IPv6 address */
-    if (!(fProxyIpsValid = LookupNumeric(pUiProxyIp->text().toStdString().c_str(), addrProxy)))
+    QValidatedLineEdit *otherProxyWidget = (pUiProxyIp == ui->proxyIpTor) ? ui->proxyIp : ui->proxyIpTor;
+    if (pUiProxyIp->isValid())
     {
-        disableOkButton();
-        pUiProxyIp->setValid(false);
-        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
-        ui->statusLabel->setText(tr("The supplied proxy address is invalid."));
+        setOkButtonState(otherProxyWidget->isValid()); //only enable ok button if both proxys are valid
+        ui->statusLabel->clear();
     }
     else
     {
-        enableOkButton();
-        ui->statusLabel->clear();
+        setOkButtonState(false);
+        ui->statusLabel->setStyleSheet("QLabel { color: red; }");
+        ui->statusLabel->setText(tr("The supplied proxy address is invalid."));
     }
 }
 
@@ -312,18 +294,18 @@ void OptionsDialog::updateDefaultProxyNets()
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
 }
 
-bool OptionsDialog::eventFilter(QObject *object, QEvent *event)
+ProxyAddressValidator::ProxyAddressValidator(QObject *parent) :
+QValidator(parent)
 {
-    if(event->type() == QEvent::FocusOut)
-    {
-        if(object == ui->proxyIp)
-        {
-            Q_EMIT proxyIpChecks(ui->proxyIp, ui->proxyPort->text().toInt());
-        }
-        else if(object == ui->proxyIpTor)
-        {
-            Q_EMIT proxyIpChecks(ui->proxyIpTor, ui->proxyPortTor->text().toInt());
-        }
-    }
-    return QDialog::eventFilter(object, event);
+}
+
+QValidator::State ProxyAddressValidator::validate(QString &input, int &pos) const
+{
+    Q_UNUSED(pos);
+    // Validate the proxy
+    proxyType addrProxy = proxyType(CService(input.toStdString(), 9050), true);
+    if (addrProxy.IsValid())
+        return QValidator::Acceptable;
+
+    return QValidator::Invalid;
 }
