@@ -182,8 +182,8 @@ static const unsigned int MAX_BLOCK_CONFIRMS = 25;
 /** Decay of .998 is a half-life of 346 blocks or about 2.4 days */
 static const double DEFAULT_DECAY = .998;
 
-/** Require greater than 85% of X fee transactions to be confirmed within Y blocks for X to be big enough */
-static const double MIN_SUCCESS_PCT = .85;
+/** Require greater than 95% of X fee transactions to be confirmed within Y blocks for X to be big enough */
+static const double MIN_SUCCESS_PCT = .95;
 static const double UNLIKELY_PCT = .5;
 
 /** Require an avg of 1 tx in the combined fee bucket per block to have stat significance */
