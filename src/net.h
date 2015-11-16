@@ -156,6 +156,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
 extern bool fDiscover;
 extern bool fListen;
 extern ServiceFlags nLocalServices;
+extern ServiceFlags nRelevantServices;
 extern bool fRelayTxes;
 extern uint64_t nLocalHostNonce;
 extern CAddrMan addrman;

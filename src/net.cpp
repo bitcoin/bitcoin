@@ -72,7 +72,7 @@ namespace {
 const static std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
 /** Services this node implementation cares about */
-static const ServiceFlags nRelevantServices = NODE_NETWORK;
+ServiceFlags nRelevantServices = NODE_NETWORK;
 
 //
 // Global state variables
@@ -1674,6 +1674,10 @@ void ThreadOpenConnections()
 
             // only consider very recently tried nodes after 30 failed attempts
             if (nANow - addr.nLastTry < 600 && nTries < 30)
+                continue;
+
+            // only consider nodes missing relevant services after 40 failed attemps
+            if ((addr.nServices & nRelevantServices) != nRelevantServices && nTries < 40)
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
