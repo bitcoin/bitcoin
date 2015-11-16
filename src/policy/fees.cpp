@@ -504,6 +504,28 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
     return CFeeRate(median);
 }
 
+CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoundAtTarget)
+{
+    if (answerFoundAtTarget)
+        *answerFoundAtTarget = confTarget;
+    // Return failure if trying to analyze a target we're not tracking
+    if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
+        return CFeeRate(0);
+
+    double median = -1;
+    while (median < 0 && (unsigned int)confTarget <= feeStats.GetMaxConfirms()) {
+        median = feeStats.EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    }
+
+    if (answerFoundAtTarget)
+        *answerFoundAtTarget = confTarget - 1;
+
+    if (median < 0)
+        return CFeeRate(0);
+
+    return CFeeRate(median);
+}
+
 double CBlockPolicyEstimator::estimatePriority(int confTarget)
 {
     // Return failure if trying to analyze a target we're not tracking
@@ -511,6 +533,25 @@ double CBlockPolicyEstimator::estimatePriority(int confTarget)
         return -1;
 
     return priStats.EstimateMedianVal(confTarget, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+}
+
+double CBlockPolicyEstimator::estimateSmartPriority(int confTarget, int *answerFoundAtTarget)
+{
+    if (answerFoundAtTarget)
+        *answerFoundAtTarget = confTarget;
+    // Return failure if trying to analyze a target we're not tracking
+    if (confTarget <= 0 || (unsigned int)confTarget > priStats.GetMaxConfirms())
+        return -1;
+
+    double median = -1;
+    while (median < 0 && (unsigned int)confTarget <= priStats.GetMaxConfirms()) {
+        median = priStats.EstimateMedianVal(confTarget++, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    }
+
+    if (answerFoundAtTarget)
+        *answerFoundAtTarget = confTarget - 1;
+
+    return median;
 }
 
 void CBlockPolicyEstimator::Write(CAutoFile& fileout)
