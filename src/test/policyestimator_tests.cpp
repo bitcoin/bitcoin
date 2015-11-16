@@ -90,6 +90,11 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
             BOOST_CHECK(mpool.estimateFee(3) == CFeeRate(0));
             BOOST_CHECK(mpool.estimateFee(4).GetFeePerK() < 8*baseRate.GetFeePerK() + deltaFee);
             BOOST_CHECK(mpool.estimateFee(4).GetFeePerK() > 8*baseRate.GetFeePerK() - deltaFee);
+            int answerFound;
+            BOOST_CHECK(mpool.estimateSmartFee(1, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(mpool.estimateSmartFee(3, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(mpool.estimateSmartFee(4, &answerFound) == mpool.estimateFee(4) && answerFound == 4);
+            BOOST_CHECK(mpool.estimateSmartFee(8, &answerFound) == mpool.estimateFee(8) && answerFound == 8);
         }
     }
 
@@ -142,9 +147,12 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
         mpool.removeForBlock(block, ++blocknum, dummyConflicted);
     }
 
+    int answerFound;
     for (int i = 1; i < 10;i++) {
         BOOST_CHECK(mpool.estimateFee(i) == CFeeRate(0) || mpool.estimateFee(i).GetFeePerK() > origFeeEst[i-1] - deltaFee);
+        BOOST_CHECK(mpool.estimateSmartFee(i, &answerFound).GetFeePerK() > origFeeEst[answerFound-1] - deltaFee);
         BOOST_CHECK(mpool.estimatePriority(i) == -1 || mpool.estimatePriority(i) > origPriEst[i-1] - deltaPri);
+        BOOST_CHECK(mpool.estimateSmartPriority(i, &answerFound) > origPriEst[answerFound-1] - deltaPri);
     }
 
     // Mine all those transactions
@@ -183,6 +191,18 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     for (int i = 1; i < 10; i++) {
         BOOST_CHECK(mpool.estimateFee(i).GetFeePerK() < origFeeEst[i-1] - deltaFee);
         BOOST_CHECK(mpool.estimatePriority(i) < origPriEst[i-1] - deltaPri);
+    }
+
+    // Test that if the mempool is limited, estimateSmartFee won't return a value below the mempool min fee
+    // and that estimateSmartPriority returns essentially an infinite value
+    mpool.addUnchecked(tx.GetHash(),  CTxMemPoolEntry(tx, feeV[0][5], GetTime(), priV[1][5], blocknum, mpool.HasNoInputsOf(tx)));
+    // evict that transaction which should set a mempool min fee of minRelayTxFee + feeV[0][5]
+    mpool.TrimToSize(1);
+    BOOST_CHECK(mpool.GetMinFee(1).GetFeePerK() > feeV[0][5]);
+    for (int i = 1; i < 10; i++) {
+        BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.estimateFee(i).GetFeePerK());
+        BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
+        BOOST_CHECK(mpool.estimateSmartPriority(i) == INF_PRIORITY);
     }
 }
 
