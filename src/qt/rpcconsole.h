@@ -44,6 +44,13 @@ public:
         CMD_ERROR
     };
 
+    enum TabTypes {
+        TAB_INFO = 0,
+        TAB_CONSOLE = 1,
+        TAB_GRAPH = 2,
+        TAB_PEERS = 3
+    };
+
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event);
     void keyPressEvent(QKeyEvent *);
@@ -91,6 +98,8 @@ public Q_SLOTS:
     void banSelectedNode(int bantime);
     /** Unban a selected node on the Bans tab */
     void unbanSelectedNode();
+    /** set which tab has the focus (is visible) */
+    void setTabFocus(enum TabTypes tabType);
 
 Q_SIGNALS:
     // For RPC command executor
