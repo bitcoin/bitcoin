@@ -22,27 +22,6 @@ namespace Ui
 class OptionsDialog;
 }
 
-/** Ensures that one edit box is always less than another */
-class LessThanValidator : public QIntValidator
-{
-    QLineEdit* other;
-    QLabel* errorDisplay;
-
-public:
-    LessThanValidator(int minimum, int maximum, QObject* parent = 0) : QIntValidator(minimum, maximum, parent), other(NULL), errorDisplay(NULL)
-    {
-    }
-    
-    // This cannot be part of the constructor because these widgets may not be created at construction time.
-    void initialize(QLineEdit* otherp, QLabel* errorDisplayp)
-    {
-        other = otherp;
-        errorDisplay = errorDisplayp;
-    }
-
-
-    virtual State validate(QString& input, int& pos) const;
-};
 
 /** Preferences dialog. */
 class OptionsDialog : public QDialog
@@ -79,6 +58,7 @@ Q_SIGNALS:
 
 private:
     Ui::OptionsDialog *ui;
+    QIntValidator portValidator;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
     bool fProxyIpValid;

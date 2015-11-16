@@ -32,45 +32,15 @@
 #include <QMessageBox>
 #include <QTimer>
 
-inline int64_t bwEdit2Slider(int64_t x) { return sqrt(x * 100); }
-inline int64_t bwSlider2Edit(int64_t x) { return x * x / 100; }
-
-
-QValidator::State LessThanValidator::validate(QString& input, int& pos) const
-{
-    QValidator::State ret = QIntValidator::validate(input, pos);
-    bool clearError = true;
-    if (ret == QValidator::Acceptable) {
-        if (other) {
-            bool ok, ok2 = false;
-            int otherVal = other->text().toInt(&ok); // try to convert to an int
-            int myVal = input.toInt(&ok2);
-            if (ok && ok2) {
-                if (myVal > otherVal) {
-                    clearError = false;
-                    if (errorDisplay)
-                        errorDisplay->setText("<span style=\"color:#aa0000;\">Average must be less than or equal Maximum</span>");
-                }
-            }
-        }
-    }
-    if (clearError && errorDisplay)
-        errorDisplay->setText("");
-    return ret;
-}
-
-
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
+    portValidator(1, 65536, this),
     model(0),
     mapper(0),
     fProxyIpValid(true)
-    torPortValidator(1, 65536, this),
 {
     ui->setupUi(this);
-    sendAveValidator.initialize(ui->sendBurstEdit, ui->errorText);
-    recvAveValidator.initialize(ui->recvBurstEdit, ui->errorText);
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
@@ -143,57 +113,6 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     /* setup/change UI elements when proxy IP is invalid/valid */
     connect(this, SIGNAL(proxyIpChecks(QValidatedLineEdit *, int)), this, SLOT(doProxyIpChecks(QValidatedLineEdit *, int)));
 
-    int64_t max, ave;
-    sendShaper.get(&max, &ave);
-    int64_t longMax = LONG_LONG_MAX;
-    bool enabled = (ave != longMax);
-    ui->sendShapingEnable->setChecked(enabled);
-    ui->sendBurstSlider->setRange(0, 1000); // The slider is just for convenience so setting their ranges to what is commonly chosen
-    ui->sendAveSlider->setRange(0, 1000);
-    ui->recvBurstSlider->setRange(0, 1000);
-    ui->recvAveSlider->setRange(0, 1000);
-
-    ui->sendBurstEdit->setValidator(&burstValidator);
-    ui->recvBurstEdit->setValidator(&burstValidator);
-    ui->sendAveEdit->setValidator(&sendAveValidator);
-    ui->recvAveEdit->setValidator(&recvAveValidator);
-
-    connect(ui->sendShapingEnable, SIGNAL(clicked(bool)), this, SLOT(shapingEnableChanged(bool)));
-    connect(ui->recvShapingEnable, SIGNAL(clicked(bool)), this, SLOT(shapingEnableChanged(bool)));
-
-    connect(ui->sendBurstSlider, SIGNAL(valueChanged(int)), this, SLOT(shapingSliderChanged()));
-    connect(ui->sendAveSlider, SIGNAL(valueChanged(int)), this, SLOT(shapingSliderChanged()));
-    connect(ui->recvBurstSlider, SIGNAL(valueChanged(int)), this, SLOT(shapingSliderChanged()));
-    connect(ui->recvAveSlider, SIGNAL(valueChanged(int)), this, SLOT(shapingSliderChanged()));
-
-    connect(ui->recvAveEdit, SIGNAL(editingFinished()), this, SLOT(shapingAveEditFinished()));
-    connect(ui->sendAveEdit, SIGNAL(editingFinished()), this, SLOT(shapingAveEditFinished()));
-    connect(ui->recvBurstEdit, SIGNAL(editingFinished()), this, SLOT(shapingMaxEditFinished()));
-    connect(ui->sendBurstEdit, SIGNAL(editingFinished()), this, SLOT(shapingMaxEditFinished()));
-
-    if (enabled) {
-        ui->sendBurstEdit->setText(QString(boost::lexical_cast<std::string>(max / 1024).c_str()));
-        ui->sendAveEdit->setText(QString(boost::lexical_cast<std::string>(ave / 1024).c_str()));
-        ui->sendBurstSlider->setValue(bwEdit2Slider(max / 1024));
-        ui->sendAveSlider->setValue(bwEdit2Slider(ave / 1024));
-    } else {
-        ui->sendBurstEdit->setText("");
-        ui->sendAveEdit->setText("");
-    }
-
-    receiveShaper.get(&max, &ave);
-    enabled = (ave != LONG_LONG_MAX);
-    ui->recvShapingEnable->setChecked(enabled);
-    if (enabled) {
-        ui->recvBurstEdit->setText(QString(boost::lexical_cast<std::string>(max / 1024).c_str()));
-        ui->recvAveEdit->setText(QString(boost::lexical_cast<std::string>(ave / 1024).c_str()));
-        ui->recvBurstSlider->setValue(bwEdit2Slider(max / 1024));
-        ui->recvAveSlider->setValue(bwEdit2Slider(ave / 1024));
-    } else {
-        ui->recvBurstEdit->setText("");
-        ui->recvAveEdit->setText("");
-    }
-    shapingEnableChanged(false);
 }
 
 OptionsDialog::~OptionsDialog()
@@ -202,150 +121,6 @@ OptionsDialog::~OptionsDialog()
 }
 
 
-void OptionsDialog::shapingAveEditFinished(void)
-{
-    bool ok, ok2 = false;
-
-    if (ui->sendShapingEnable->isChecked()) {
-        // If the user adjusted the average to be higher than the max, then auto-bump the max up to = the average
-        int maxVal = ui->sendBurstEdit->text().toInt(&ok);
-        int aveVal = ui->sendAveEdit->text().toInt(&ok2);
-
-        if (ok && ok2) {
-            ui->sendAveSlider->setValue(bwEdit2Slider(aveVal));
-            if (maxVal < aveVal) {
-                ui->sendBurstEdit->setText(ui->sendAveEdit->text());
-                ui->sendBurstSlider->setValue(bwEdit2Slider(aveVal));
-            }
-        }
-    }
-
-    if (ui->recvShapingEnable->isChecked()) {
-        int maxVal = ui->recvBurstEdit->text().toInt(&ok);
-        int aveVal = ui->recvAveEdit->text().toInt(&ok2);
-        if (ok && ok2) {
-            ui->recvAveSlider->setValue(bwEdit2Slider(aveVal));
-            if (maxVal < aveVal) {
-                ui->recvBurstEdit->setText(ui->recvAveEdit->text());
-                ui->recvBurstSlider->setValue(bwEdit2Slider(aveVal));
-            }
-        }
-    }
-}
-
-void OptionsDialog::shapingMaxEditFinished(void)
-{
-    bool ok, ok2 = false;
-
-    if (ui->sendShapingEnable->isChecked()) {
-        // If the user adjusted the max to be lower than the average, then move the average down
-        int maxVal = ui->sendBurstEdit->text().toInt(&ok);
-        int aveVal = ui->sendAveEdit->text().toInt(&ok2);
-        if (ok && ok2) {
-            ui->sendBurstSlider->setValue(bwEdit2Slider(maxVal)); // Move the slider based on the edit box change
-            if (maxVal < aveVal)                                  // If the max was changed to be lower than the average, bump the average down to the maximum, because having an ave > the max makes no sense.
-            {
-                ui->sendAveEdit->setText(ui->sendBurstEdit->text()); // I use the string text here just so I don't have to convert back from int to string
-                ui->sendAveSlider->setValue(bwEdit2Slider(maxVal));
-            }
-        }
-    }
-
-
-    if (ui->recvShapingEnable->isChecked()) {
-        int maxVal = ui->recvBurstEdit->text().toInt(&ok);
-        int aveVal = ui->recvAveEdit->text().toInt(&ok2);
-        if (ok && ok2) {
-            ui->recvBurstSlider->setValue(bwEdit2Slider(maxVal)); // Move the slider based on the edit box change
-            if (maxVal < aveVal) {
-                ui->recvAveEdit->setText(ui->recvBurstEdit->text()); // I use the string text here just so I don't have to convert back from int to string
-                ui->recvAveSlider->setValue(bwEdit2Slider(maxVal));
-            }
-        }
-    }
-}
-
-void OptionsDialog::shapingEnableChanged(bool val)
-{
-    bool enabled = ui->sendShapingEnable->isChecked();
-
-    ui->sendBurstSlider->setEnabled(enabled);
-    ui->sendAveSlider->setEnabled(enabled);
-    ui->sendBurstEdit->setEnabled(enabled);
-    ui->sendAveEdit->setEnabled(enabled);
-
-    enabled = ui->recvShapingEnable->isChecked();
-    ui->recvBurstSlider->setEnabled(enabled);
-    ui->recvAveSlider->setEnabled(enabled);
-    ui->recvBurstEdit->setEnabled(enabled);
-    ui->recvAveEdit->setEnabled(enabled);
-}
-
-void OptionsDialog::shapingSliderChanged(void)
-{
-    // When the sliders change, I want to update the edit box.  Rather then have the pain of making a separate function for every slider, I just set them all whenever one changes.
-    int64_t sval;
-    int64_t val;
-    int64_t cur;
-
-    if (ui->sendShapingEnable->isChecked()) {
-        sval = ui->sendBurstSlider->value();
-        val = bwSlider2Edit(sval); // Transform the slider linear position into a bandwidth in Kb
-        cur = ui->sendBurstEdit->text().toLongLong();
-
-        // The slider is imprecise compared to the edit box.  So we only want to change the edit box if the slider's change is larger than its imprecision.
-        if (bwEdit2Slider(cur) != sval) {
-            ui->sendBurstEdit->setText(QString::number(val));
-            int64_t other = ui->sendAveEdit->text().toLongLong();
-            if (other > val) // Set average to burst if its greater
-            {
-                ui->sendAveEdit->setText(QString::number(val));
-                ui->sendAveSlider->setValue(bwEdit2Slider(val));
-            }
-        }
-
-        sval = ui->sendAveSlider->value();
-        val = bwSlider2Edit(sval); // Transform the slider linear position into a bandwidth
-        cur = ui->sendAveEdit->text().toLongLong();
-        if (bwEdit2Slider(cur) != sval) {
-            ui->sendAveEdit->setText(QString(boost::lexical_cast<std::string>(val).c_str()));
-            int64_t burst = ui->sendBurstEdit->text().toLongLong();
-            if (burst < val) // Set burst to average if it is less
-            {
-                ui->sendBurstEdit->setText(QString::number(val));
-                ui->sendBurstSlider->setValue(bwEdit2Slider(val));
-            }
-        }
-    }
-
-    if (ui->recvShapingEnable->isChecked()) {
-        sval = ui->recvBurstSlider->value();
-        val = bwSlider2Edit(sval); // Transform the slider linear position into a bandwidth
-        cur = ui->recvBurstEdit->text().toLongLong();
-        if (bwEdit2Slider(cur) != sval) {
-            ui->recvBurstEdit->setText(QString(boost::lexical_cast<std::string>(val).c_str()));
-            int64_t other = ui->recvAveEdit->text().toLongLong();
-            if (other > val) // Set average to burst if its greater
-            {
-                ui->recvAveEdit->setText(QString::number(val));
-                ui->recvAveSlider->setValue(bwEdit2Slider(val));
-            }
-        }
-
-        sval = ui->recvAveSlider->value();
-        val = bwSlider2Edit(sval); // Transform the slider linear position into a bandwidth
-        cur = ui->recvAveEdit->text().toLongLong();
-        if (bwEdit2Slider(cur) != sval) {
-            ui->recvAveEdit->setText(QString(boost::lexical_cast<std::string>(val).c_str()));
-            int64_t burst = ui->recvBurstEdit->text().toLongLong();
-            if (burst < val) // Set burst to average if it is less
-            {
-                ui->recvBurstEdit->setText(QString::number(val));
-                ui->recvBurstSlider->setValue(bwEdit2Slider(val));
-            }
-        }
-    }
-}
 
 void OptionsDialog::setModel(OptionsModel* model)
 {

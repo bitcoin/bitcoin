@@ -17,6 +17,7 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
+using namespace json_spirit;
 
 enum { DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4, DEFAULT_EXCESSIVE_BLOCK_SIZE = 1000000 };  // 16*1024*1024 };
 
@@ -94,7 +95,107 @@ bool CheckExcessive(const CBlock& block,uint64_t blockSize, uint64_t nSigOps,uin
   return false;
 }
 
+Value gettrafficshaping(const Array& params, bool fHelp)
+{
+    string strCommand;
+    if (params.size() == 1) {
+        strCommand = params[0].get_str();
+    }
 
+    if (fHelp || (params.size() != 0))
+        throw runtime_error(
+            "gettrafficshaping"
+            "\nReturns the current settings for the network send and receive bandwidth and burst in kilobytes per second.\n"
+            "\nArguments: None\n"
+            "\nResult:\n"
+            "  {\n"
+            "    \"sendBurst\" : 40,   (string) The maximum send bandwidth in Kbytes/sec\n"
+            "    \"sendAve\" : 30,   (string) The average send bandwidth in Kbytes/sec\n"
+            "    \"recvBurst\" : 20,   (string) The maximum receive bandwidth in Kbytes/sec\n"
+            "    \"recvAve\" : 10,   (string) The average receive bandwidth in Kbytes/sec\n"
+            "  }\n"
+            "\n NOTE: if the send and/or recv parameters do not exist, shaping in that direction is disabled.\n"
+            "\nExamples:\n" +
+            HelpExampleCli("gettrafficshaping", "") + HelpExampleRpc("gettrafficshaping", ""));
+    Object ret;
+    int64_t max, ave;
+    sendShaper.get(&max, &ave);
+    if (ave != LONG_MAX) {
+        ret.push_back(Pair("sendBurst", max / 1024));
+        ret.push_back(Pair("sendAve", ave / 1024));
+    }
+    receiveShaper.get(&max, &ave);
+    if (ave != LONG_MAX) {
+        ret.push_back(Pair("recvBurst", max / 1024));
+        ret.push_back(Pair("recvAve", ave / 1024));
+    }
+    return ret;
+}
+
+Value settrafficshaping(const Array& params, bool fHelp)
+{
+    bool disable = false;
+    bool badArg = false;
+    string strCommand;
+    CLeakyBucket* bucket = NULL;
+    if (params.size() >= 2) {
+        strCommand = params[0].get_str();
+        if (strCommand == "send")
+            bucket = &sendShaper;
+        if (strCommand == "receive")
+            bucket = &receiveShaper;
+        if (strCommand == "recv")
+            bucket = &receiveShaper;
+    }
+    if (params.size() == 2) {
+        if (params[1].get_str() == "disable")
+            disable = true;
+        else
+            badArg = true;
+    } else if (params.size() != 3)
+        badArg = true;
+
+    if (fHelp || badArg || bucket == NULL)
+        throw runtime_error(
+            "settrafficshaping \"send|receive\" \"burstKB\" \"averageKB\""
+            "\nSets the network send or receive bandwidth and burst in kilobytes per second.\n"
+            "\nArguments:\n"
+            "1. \"send|receive\"     (string, required) Are you setting the transmit or receive bandwidth\n"
+            "2. \"burst\"  (integer, required) Specify the maximum burst size in Kbytes/sec (actual max will be 1 packet larger than this number)\n"
+            "2. \"average\"  (integer, required) Specify the average throughput in Kbytes/sec\n"
+            "\nExamples:\n" +
+            HelpExampleCli("settrafficshaping", "\"receive\" 10000 1024") + HelpExampleCli("settrafficshaping", "\"receive\" disable") + HelpExampleRpc("settrafficshaping", "\"receive\" 10000 1024"));
+
+    if (disable) {
+        if (bucket)
+            bucket->disable();
+    } else {
+        uint64_t burst;
+        uint64_t ave;
+        if (params[1].is_uint64())
+            burst = params[1].get_uint64();
+        else {
+            string temp = params[1].get_str();
+            burst = boost::lexical_cast<uint64_t>(temp);
+        }
+        if (params[2].is_uint64())
+            ave = params[2].get_uint64();
+        else {
+            string temp = params[2].get_str();
+            ave = boost::lexical_cast<uint64_t>(temp);
+        }
+        if (burst < ave) {
+            throw runtime_error("Burst rate must be greater than the average rate"
+                                "\nsettrafficshaping \"send|receive\" \"burst\" \"average\"");
+        }
+
+        bucket->set(burst * 1024, ave * 1024);
+    }
+
+    return Value::null;
+}
+
+#if 0  // for when we move to UniValue
 UniValue gettrafficshaping(const UniValue& params, bool fHelp)
 {
     string strCommand;
@@ -195,3 +296,4 @@ UniValue settrafficshaping(const UniValue& params, bool fHelp)
 
     return NullUniValue;
 }
+#endif 

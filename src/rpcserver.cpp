@@ -15,6 +15,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
+#include "unlimited.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>

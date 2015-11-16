@@ -7,6 +7,10 @@
 
 #include "leakybucket.h"
 
+#include "json/json_spirit_reader_template.h"
+#include "json/json_spirit_utils.h"
+#include "json/json_spirit_writer_template.h"
+
 enum
 {
     DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000
@@ -31,6 +35,11 @@ extern bool CheckExcessive(const CBlock& block,uint64_t blockSize, uint64_t nSig
 
 // Check whether any block N back in this chain is an excessive block
 extern int isChainExcessive(const CBlockIndex* blk,unsigned int checkDepth = excessiveAcceptDepth);
+
+// RPC calls
+extern json_spirit::Value settrafficshaping(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value gettrafficshaping(const json_spirit::Array& params, bool fHelp);
+
 
 // These variables for traffic shaping need to be globally scoped so the GUI and CLI can adjust the parameters
 extern CLeakyBucket receiveShaper;

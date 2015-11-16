@@ -333,13 +333,8 @@ BitcoinApplication::~BitcoinApplication()
 #endif
     delete optionsModel;
     optionsModel = 0;
-<<<<<<< HEAD
-=======
-    delete platformStyle;
-    platformStyle = 0;
     delete unlimitedModel;
     unlimitedModel=0;
->>>>>>> add data model for unlimited dialog
 }
 
 #ifdef ENABLE_WALLET

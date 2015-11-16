@@ -310,7 +310,7 @@ void BitcoinGUI::createActions()
     optionsAction = new QAction(TextColorIcon(":/icons/options"), tr("&Options..."), this);
     optionsAction->setStatusTip(tr("Modify configuration options for Bitcoin Core"));
     optionsAction->setMenuRole(QAction::PreferencesRole);
-    unlimitedAction = new QAction(platformStyle->TextColorIcon(":/icons/options"), tr("&Unlimited..."), this);
+    unlimitedAction = new QAction(TextColorIcon(":/icons/options"), tr("&Unlimited..."), this);
     unlimitedAction->setStatusTip(tr("Modify Bitcoin Unlimited Options"));
     unlimitedAction->setMenuRole(QAction::PreferencesRole);
     toggleHideAction = new QAction(TextColorIcon(":/icons/about"), tr("&Show / Hide"), this);
