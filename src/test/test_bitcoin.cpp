@@ -15,6 +15,7 @@
 #include "pubkey.h"
 #include "random.h"
 #include "txdb.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
@@ -138,6 +139,12 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
 
 TestChain100Setup::~TestChain100Setup()
 {
+}
+
+
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(CMutableTransaction &tx, CTxMemPool *pool) {
+    return CTxMemPoolEntry(tx, nFee, nTime, dPriority, nHeight,
+                           pool ? pool->HasNoInputsOf(tx) : hadNoDependencies);
 }
 
 void Shutdown(void* parg)
