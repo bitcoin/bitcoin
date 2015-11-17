@@ -9,6 +9,8 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+import os
+import shutil
 
 class BIP65Test(BitcoinTestFramework):
 
@@ -26,61 +28,60 @@ class BIP65Test(BitcoinTestFramework):
         cnt = self.nodes[0].getblockcount()
 
         # Mine some old-version blocks
-        self.nodes[1].generate(100)
+        self.nodes[1].generate(10)
         self.sync_all()
-        if (self.nodes[0].getblockcount() != cnt + 100):
-            raise AssertionError("Failed to mine 100 version=3 blocks")
+        if (self.nodes[0].getblockcount() != cnt + 10):
+            raise AssertionError("Failed to mine 10 version=3 blocks")
 
-        # Mine 750 new-version blocks
+        # Mine 75 new-version blocks
         for i in xrange(15):
-            self.nodes[2].generate(50)
+            self.nodes[2].generate(5)
         self.sync_all()
-        if (self.nodes[0].getblockcount() != cnt + 850):
-            raise AssertionError("Failed to mine 750 version=4 blocks")
+        if (self.nodes[0].getblockcount() != cnt + 85):
+            raise AssertionError("Failed to mine 75 version=4 blocks")
 
         # TODO: check that new CHECKLOCKTIMEVERIFY rules are not enforced
 
         # Mine 1 new-version block
         self.nodes[2].generate(1)
         self.sync_all()
-        if (self.nodes[0].getblockcount() != cnt + 851):
-            raise AssertionError("Failed to mine a version=4 blocks")
+        if (self.nodes[0].getblockcount() != cnt + 86):
+            raise AssertionFailure("Failed to mine a version=4 block")
 
         # TODO: check that new CHECKLOCKTIMEVERIFY rules are enforced
 
-        # Mine 198 new-version blocks
-        for i in xrange(2):
-            self.nodes[2].generate(99)
+        # Mine 18 new-version blocks
+        self.nodes[2].generate(18)
         self.sync_all()
-        if (self.nodes[0].getblockcount() != cnt + 1049):
-            raise AssertionError("Failed to mine 198 version=4 blocks")
+        if (self.nodes[0].getblockcount() != cnt + 104):
+            raise AssertionError("Failed to mine 18 version=4 blocks")
 
         # Mine 1 old-version block
         self.nodes[1].generate(1)
         self.sync_all()
-        if (self.nodes[0].getblockcount() != cnt + 1050):
-            raise AssertionError("Failed to mine a version=3 block after 949 version=4 blocks")
+        if (self.nodes[0].getblockcount() != cnt + 105):
+            raise AssertionError("Failed to mine a version=3 block after 94 version=4 blocks")
 
         # Mine 1 new-version blocks
         self.nodes[2].generate(1)
         self.sync_all()
-        if (self.nodes[0].getblockcount() != cnt + 1051):
-            raise AssertionError("Failed to mine a version=4 block")
+        if (self.nodes[0].getblockcount() != cnt + 106):
+            raise AssertionError("Failed to mine a version=3 block")
 
         # Mine 1 old-version blocks
         try:
             self.nodes[1].generate(1)
-            raise AssertionError("Succeeded to mine a version=3 block after 950 version=4 blocks")
+            raise AssertionError("Succeeded to mine a version=3 block after 95 version=4 blocks")
         except JSONRPCException:
             pass
         self.sync_all()
-        if (self.nodes[0].getblockcount() != cnt + 1051):
-            raise AssertionError("Accepted a version=3 block after 950 version=4 blocks")
+        if (self.nodes[0].getblockcount() != cnt + 106):
+            raise AssertionError("Accepted a version=3 block after 95 version=4 blocks")
 
         # Mine 1 new-version blocks
         self.nodes[2].generate(1)
         self.sync_all()
-        if (self.nodes[0].getblockcount() != cnt + 1052):
+        if (self.nodes[0].getblockcount() != cnt + 107):
             raise AssertionError("Failed to mine a version=4 block")
 
 if __name__ == '__main__':
