@@ -1,5 +1,12 @@
-Notes
-=====
+The [pull-tester](/qa/pull-tester/) folder contains a script to call
+multiple tests from the [rpc-tests](/qa/rpc-tests/) folder.
+
+Every pull request to the bitcoin repository is built and run through
+the regression test suite. You can also run all or only individual
+tests locally.
+
+Running tests
+=============
 
 You can run any single test by calling `qa/pull-tester/rpc-tests.py <testname>`.
 
@@ -23,7 +30,8 @@ Possible options:
                         Write tested RPC commands into this directory
 ```
 
-If you set the environment variable `PYTHON_DEBUG=1` you will get some debug output (example: `PYTHON_DEBUG=1 qa/pull-tester/rpc-tests.py wallet`). 
+If you set the environment variable `PYTHON_DEBUG=1` you will get some debug
+output (example: `PYTHON_DEBUG=1 qa/pull-tester/rpc-tests.py wallet`).
 
 A 200-block -regtest blockchain and wallets for four nodes
 is created the first time a regression test is run and
@@ -42,5 +50,8 @@ rm -rf cache
 killall bitcoind
 ```
 
+Writing tests
+=============
+You are encouraged to write tests for new or existing features.
 Further information about the test framework and individual rpc
-tests is found in [qa/rpc-tests/README.md](/qa/rpc-tests/README.md).
+tests is found in [qa/rpc-tests](/qa/rpc-tests).
