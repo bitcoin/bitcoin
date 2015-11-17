@@ -78,7 +78,7 @@ private:
 
 public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
-                    int64_t _nTime, double _dPriority, unsigned int _nHeight, bool poolHasNoInputsOf = false);
+                    int64_t _nTime, double _dPriority, unsigned int _nHeight, bool poolHasNoInputsOf);
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
     const CTransaction& GetTx() const { return this->tx; }
