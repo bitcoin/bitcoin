@@ -49,9 +49,10 @@ lots of money.
 ### Automated Testing
 
 Developers are strongly encouraged to write unit tests for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run (assuming they weren't disabled in configure) with: `make check`
+submit new unit tests for old code. Unit tests can be compiled and run
+(assuming they weren't disabled in configure) with: `make check`
 
-There are also regression and integration tests of the RPC interface, written
+There are also [regression and integration tests](/qa) of the RPC interface, written
 in Python, that are run automatically on the build server.
 These tests can be run with: `qa/pull-tester/rpc-tests.py`
 
