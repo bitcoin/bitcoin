@@ -404,3 +404,6 @@ def assert_raises(exc, fun, *args, **kwds):
         raise AssertionError("Unexpected exception raised: "+type(e).__name__)
     else:
         raise AssertionError("No exception raised")
+
+def satoshi_round(amount):
+    return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
