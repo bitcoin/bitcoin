@@ -52,7 +52,7 @@ private Q_SLOTS:
 
     void showRestartWarning(bool fPersistent = false);
     void clearStatusLabel();
-    void updateProxyValidationState(QValidatedLineEdit *pUiProxyIp);
+    void updateProxyValidationState();
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
 
