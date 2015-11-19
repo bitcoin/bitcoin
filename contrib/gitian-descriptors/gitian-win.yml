@@ -18,6 +18,8 @@ packages:
 - "g++-mingw-w64"
 - "nsis"
 - "zip"
+- "ca-certificates"
+- "python"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
