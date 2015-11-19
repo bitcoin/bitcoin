@@ -1389,14 +1389,6 @@
         <translation>Τελευταία λήψη</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Σταλθέντα bytes</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Ληφθέντα bytes</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Χρόνος καθυστέρησης</translation>
     </message>
@@ -2555,10 +2547,6 @@
         <translation>(προεπιλογή: 1)</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Προσπάθεια για ανακτησει ιδιωτικων κλειδιων από ενα διεφθαρμένο αρχειο wallet.dat </translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Αποκλεισμός επιλογων δημιουργίας: </translation>
     </message>
@@ -2637,10 +2625,6 @@
     <message>
         <source>Wallet options:</source>
         <translation>Επιλογές πορτοφολιού:</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Εισαγωγή μπλοκ από εξωτερικό αρχείο blk000?.dat</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
@@ -2747,10 +2731,6 @@
         <translation>Μεταφορά όλων των συναλλαγών απο το πορτοφόλι</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>κατά την εκκίνηση</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>Το αρχειο wallet.dat ειναι διεφθαρμένο, η διάσωση απέτυχε</translation>
     </message>
@@ -2761,14 +2741,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Εκτέλεσε την εντολή όταν το καλύτερο μπλοκ αλλάξει(%s στην εντολή αντικαθίσταται από το hash του μπλοκ)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Αναβάθμισε το πορτοφόλι στην τελευταία έκδοση</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Επανέλεγχος της αλυσίδας μπλοκ για απούσες συναλλαγές</translation>
     </message>
     <message>
         <source>This help message</source>

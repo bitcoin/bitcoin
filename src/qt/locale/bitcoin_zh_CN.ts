@@ -1522,14 +1522,6 @@
         <translation>最后接收</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>发送字节</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>接收字节</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping 时间</translation>
     </message>
@@ -2056,14 +2048,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>预计 %n 个数据块后被确认。</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>只支付最小费用 %1</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>总金额 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2925,10 +2909,6 @@
         <translation>&lt;category&gt; 可能是：</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>尝试从损坏的钱包文件wallet.dat中恢复私钥</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>数据块创建选项：</translation>
     </message>
@@ -3047,10 +3027,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>您需要将 -reindex 改为 -txindex 以重建数据库</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>从blk000??.dat文件导入数据块</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3302,10 +3278,6 @@
         <translation>ZeroMQ 通知选项：</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>启动中</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>钱包文件wallet.dat损坏，抢救备份失败</translation>
     </message>
@@ -3317,14 +3289,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>当最佳数据块变化时执行命令 (命令行中的 %s 会被替换成数据块哈希值)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>将钱包升级到最新的格式</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>重新扫描区块链以查找遗漏的钱包交易</translation>
     </message>
     <message>
         <source>This help message</source>

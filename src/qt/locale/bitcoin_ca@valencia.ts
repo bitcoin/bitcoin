@@ -1490,14 +1490,6 @@
         <translation>Darrera recepció</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bytes enviats</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bytes rebuts</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Temps de ping</translation>
     </message>
@@ -2004,10 +1996,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Estimat per començar la confirmació en %n bloc.</numerusform><numerusform>Estimat per començar la confirmació en %n blocs.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Paga només la comissió mínima de %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2856,10 +2844,6 @@
         <translation>&lt;category&gt; pot ser:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Intenta recuperar les claus privades d'un fitxer wallet.dat corrupte</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Opcions de la creació de blocs:</translation>
     </message>
@@ -2978,10 +2962,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Cal que reconstruïu la base de dades fent servir -reindex per canviar -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importa blocs d'un fitxer blk000??.dat extern</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3232,10 +3212,6 @@
         <translation>Se suprimeixen totes les transaccions del moneder...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>a l'inici de l'aplicació</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>El fitxer wallet.data és corrupte. El rescat de les dades ha fallat</translation>
     </message>
@@ -3246,14 +3222,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Executa l'orde quan el millor bloc canvie (%s en cmd es reemplaça per un resum de bloc)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Actualitza el moneder a l'últim format</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Reescaneja la cadena de blocs en les transaccions de moneder perdudes</translation>
     </message>
     <message>
         <source>This help message</source>

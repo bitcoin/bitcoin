@@ -1318,14 +1318,6 @@
         <translation>Legutóbbi fogadás</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Küldött bájtok</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Fogadott bájtok</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping idő</translation>
     </message>
@@ -2466,15 +2458,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Parancs, amit akkor hajt végre, amikor a legjobb blokk megváltozik (%s a cmd-ban lecserélődik a blokk hash-re)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>A Tárca frissítése a legfrissebb formátumra</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Blokklánc újraszkennelése hiányzó tárca-tranzakciók után
-</translation>
     </message>
     <message>
         <source>This help message</source>

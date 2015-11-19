@@ -1680,10 +1680,6 @@
         <translation>Hoiatus: toimus wallet.dat faili andmete päästmine! Originaal wallet.dat nimetati kaustas %s ümber wallet.{ajatempel}.bak'iks, jäägi või tehingute ebakõlade puhul tuleks teha backup'ist taastamine.</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Püüa vigasest wallet.dat failist taastada turvavõtmed</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Blokeeri loomise valikud:</translation>
     </message>
@@ -1734,10 +1730,6 @@
     <message>
         <source>Wallet options:</source>
         <translation>Rahakoti valikud:</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Impordi blokid välisest blk000??.dat failist</translation>
     </message>
     <message>
         <source>Information</source>
@@ -1796,10 +1788,6 @@
         <translation>Hoiatus</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>käivitamisel</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat fail on katki, päästmine ebaõnnestus</translation>
     </message>
@@ -1810,14 +1798,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Käivita käsklus, kui parim plokk muutub (käskluse %s asendatakse ploki hash'iga)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Uuenda rahakott uusimasse vormingusse</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Otsi ploki jadast rahakoti kadunud tehinguid</translation>
     </message>
     <message>
         <source>This help message</source>

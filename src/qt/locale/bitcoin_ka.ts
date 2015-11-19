@@ -2234,10 +2234,6 @@
         <translation>&lt;category&gt; შეიძლება იყოს:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>პირადი გასაღებების აღდგენის მცდელობა wallet.dat-იდან</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>ბლოკის შექმნის ოპციები:</translation>
     </message>
@@ -2322,10 +2318,6 @@
         <translation>საჭიროა ბაზის ხელახალი აგება, გამოიყენეთ -reindex რათა შეცვალოთ -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>ბლოკების იმპორტი გარე blk000??.dat ფაილიდან</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>ბრძანების შესრულება შესაბამისი უწყების მიღებისას ან როცა შეინიშნება საგრძნობი გახლეჩა (cmd-ში %s შეიცვლება მესიჯით)</translation>
     </message>
@@ -2408,14 +2400,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>კომანდის შესრულება უკეთესი ბლოკის გამოჩენისას (%s კომანდაში ჩანაცვლდება ბლოკის ჰეშით)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>საფულის ფორმატის განახლება</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>ბლოკების ჯაჭვის გადამოწმება საფულეში გამორჩენილ ტრანსაქციებზე</translation>
     </message>
     <message>
         <source>This help message</source>

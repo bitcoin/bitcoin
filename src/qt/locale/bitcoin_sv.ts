@@ -1547,14 +1547,6 @@ Var vänlig och försök igen.</translation>
         <translation>Senast mottagen</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bytes sänt</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bytes mottaget</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Pingtid</translation>
     </message>
@@ -2097,14 +2089,6 @@ Var vänlig och försök igen.</translation>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Uppskattas till att påbörja bekräftelse inom %n block.</numerusform><numerusform>Uppskattas till att påbörja bekräftelse inom %n block.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Betala endast den minimala avgiften på %1</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Total summa %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2881,10 +2865,6 @@ Var vänlig och försök igen.</translation>
         <translation>Tillåt kommandon från kommandotolken och JSON-RPC-kommandon</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>Avgift (i %s/kB) mindre än detta betraktas som nollavgift för vidarebefordran(standard: %s)</translation>
-    </message>
-    <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>Om &lt;kategori&gt; inte anges eller om &lt;category&gt; = 1, visa all avlusningsinformation.</translation>
     </message>
@@ -3007,10 +2987,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; Kan vara:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Försök att rädda de privata nycklarna från en korrupt wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3167,10 +3143,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Du måste återskapa databasen med -reindex för att ändra -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importerar block från extern blk000??.dat fil</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3425,10 +3397,6 @@ Var vänlig och försök igen.</translation>
         <translation>ZeroMQ-alternativ för notiser:</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>under uppstarten</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat korrupt, räddning misslyckades</translation>
     </message>
@@ -3439,14 +3407,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Exekvera kommando när det bästa blocket ändras (%s i cmd är utbytt av blockhash)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Uppgradera plånboken till senaste formatet</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Sök i blockkedjan efter saknade plånboks transaktioner</translation>
     </message>
     <message>
         <source>This help message</source>

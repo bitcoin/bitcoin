@@ -1616,8 +1616,16 @@
         <translation>تولید شده ولی قبول نشده</translation>
     </message>
     <message>
+        <source>Offline</source>
+        <translation>آفلاین</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>برچسب</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>تایید نشده</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1964,14 +1972,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>زمانی که بهترین بلاک تغییر کرد، دستور را اجرا کن (%s در cmd با block hash جایگزین شده است)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>wallet  را به جدیدترین فرمت روزآمد کنید</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>اسکان مجدد زنجیر بلوکها برای گم والت معامله</translation>
     </message>
     <message>
         <source>This help message</source>

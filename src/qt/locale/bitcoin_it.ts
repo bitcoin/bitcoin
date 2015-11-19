@@ -1487,14 +1487,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Ultima Ricezione</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Byte Inviati</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Byte Ricevuti</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Tempo di Ping</translation>
     </message>
@@ -1997,10 +1989,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Payment request expired.</source>
         <translation>Richiesta di pagamento scaduta.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Paga solamente la commissione minima di %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2853,10 +2841,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Valori possibili per &lt;category&gt;:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Tenta di recuperare le chiavi private da un wallet.dat corrotto</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Opzioni creazione blocco:</translation>
     </message>
@@ -2975,10 +2959,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>È necessario ricostruire il database usando -reindex per cambiare -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importa blocchi da un file blk000??.dat esterno</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3229,10 +3209,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Eliminazione dal portamonete di tutte le transazioni...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>all'avvio</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrotto, recupero fallito</translation>
     </message>
@@ -3243,14 +3219,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Esegue un comando quando il miglior blocco cambia (%s nel cmd è sostituito dall'hash del blocco)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Aggiorna il wallet all'ultimo formato</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Ripete la scansione della block chain per individuare le transazioni che mancano dal portamonete</translation>
     </message>
     <message>
         <source>This help message</source>
