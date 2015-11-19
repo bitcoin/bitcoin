@@ -140,6 +140,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         index.nHeight = pindexPrev->nHeight + 1;
         index.nTime = pblock->nTime;
         index.pprev = pindexPrev;
+        std::vector<int> prevheights;
 
         bool fPriorityBlock = nBlockPrioritySize > 0;
         if (fPriorityBlock) {
@@ -220,7 +221,24 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 continue;
             }
 
-            if (LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &view, index))
+            prevheights.resize(0);
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            {
+                // Read prev transaction
+                if (view.HaveCoins(txin.prevout.hash))
+                {
+                    const CCoins* coins = view.AccessCoins(txin.prevout.hash);
+                    assert(coins);
+                    prevheights.push_back(coins->nHeight);
+                }
+                else
+                {
+                    //Assume it is in mempool
+                    prevheights.push_back(index.nHeight);
+                }
+            }
+
+            if (LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &prevheights, index))
                 continue;
 
             unsigned int nTxSigOps = iter->GetSigOpCount();

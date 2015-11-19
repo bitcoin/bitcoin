@@ -661,9 +661,9 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRE
     return nEvicted;
 }
 
-int64_t LockTime(const CTransaction &tx, int flags, const std::vector<CCoins>& prevCoins, const CBlockIndex& block)
+int64_t LockTime(const CTransaction &tx, int flags, const std::vector<int>* prevHeights, const CBlockIndex& block)
 {
-    assert(prevCoins.size() == tx.vin.size());
+    assert(prevHeights == NULL || prevHeights->size() == tx.vin.size());
     int64_t nBlockTime = (flags & LOCKTIME_MEDIAN_TIME_PAST)
                                     ? block.GetAncestor(std::max(block.nHeight-1, 0))->GetMedianTimePast()
                                     : block.GetBlockTime();
@@ -699,22 +699,10 @@ int64_t LockTime(const CTransaction &tx, int flags, const std::vector<CCoins>& p
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLED_FLAG)
             continue;
 
-        const CCoins& coins = prevCoins[txinIndex];
-
-        // If the coin height is unknown, ignore it in the calculation
-        // of the LockTime
-        if(coins.nHeight < 0)
+        if (prevHeights == NULL)
             continue;
 
-        // Spending a coin from a future block should be impossible, skip the input
-        if(coins.nHeight != MEMPOOL_HEIGHT && coins.nHeight > block.nHeight)
-            continue;
-
-        // coins.nHeight is MEMPOOL_HEIGHT
-        // if the parent transaction was from the mempool. We can't
-        // know what height it will have once confirmed, but we
-        // assume it makes it in the same block.
-        int nCoinHeight = coins.nHeight == MEMPOOL_HEIGHT ? block.nHeight : coins.nHeight;
+        int nCoinHeight = (*prevHeights)[txinIndex];
 
         if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_SECONDS_FLAG) {
 
@@ -753,25 +741,6 @@ int64_t LockTime(const CTransaction &tx, int flags, const std::vector<CCoins>& p
     return 0;
 }
 
-int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, const CBlockIndex& block)
-{
-    CCoins coins;
-    std::vector<CCoins> prevCoins (tx.vin.size());
-    for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
-        const CTxIn& txin = tx.vin[txinIndex];
-        if (!pCoinsView || !pCoinsView->GetCoins(txin.prevout.hash, coins))
-        {
-            coins = CCoins();
-            // If previous coin is not found in the CCoinsView,
-            // the next overload will just skip the input
-            // for lockTime calculation
-            coins.nHeight = -1;
-        }
-        prevCoins.at(txinIndex) = coins;
-    }
-    return LockTime(tx, flags, prevCoins, block);
-}
-
 int64_t CheckLockTime(const CTransaction &tx, int flags)
 {
     AssertLockHeld(cs_main);
@@ -784,9 +753,6 @@ int64_t CheckLockTime(const CTransaction &tx, int flags)
     // scheduled, so no flags are set.
     flags = std::max(flags, 0);
 
-    // pcoinsTip contains the UTXO set for chainActive.Tip()
-    CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
-    const CCoinsView *pCoinsView = &viewMemPool;
 
     CBlockIndex* tip = chainActive.Tip();
     CBlockIndex index;
@@ -805,7 +771,27 @@ int64_t CheckLockTime(const CTransaction &tx, int flags)
     // However this changes once median past time-locks are enforced:
     index.nTime = GetAdjustedTime();
 
-    return LockTime(tx, flags, pCoinsView, index);
+    // pcoinsTip contains the UTXO set for chainActive.Tip()
+    CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
+    std::vector<int> prevheights;
+    prevheights.resize(tx.vin.size());
+    for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
+        const CTxIn& txin = tx.vin[txinIndex];
+        CCoins coins;
+        if (!viewMemPool.GetCoins(txin.prevout.hash, coins)) {
+            // Input not found. This can only occur for wallet transactions
+            // that are already confirmed. Assume it's all fine.
+            return 0;
+        }
+        if (coins.nHeight == MEMPOOL_HEIGHT) {
+            // Assume all mempool transaction confirm in the next block
+            prevheights[txinIndex] = tip->nHeight + 1;
+        } else {
+            prevheights[txinIndex] = coins.nHeight;
+        }
+    }
+
+    return LockTime(tx, flags, &prevheights, index);
 }
 
 unsigned int GetLegacySigOpCount(const CTransaction& tx)
@@ -2178,6 +2164,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     CCheckQueueControl<CScriptCheck> control(fScriptChecks && nScriptCheckThreads ? &scriptcheckqueue : NULL);
 
+    std::vector<int> prevheights;
     int nLockTimeFlags = 0;
     CAmount nFees = 0;
     int nInputs = 0;
@@ -2203,7 +2190,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                  REJECT_INVALID, "bad-txns-inputs-missingorspent");
 
             // Check that transaction is finalized
-            if (LockTime(tx, nLockTimeFlags, &view, *pindex))
+            prevheights.resize(tx.vin.size());
+            for (size_t j = 0; j < tx.vin.size(); j++) {
+                prevheights[j] = view.AccessCoins(tx.vin[j].prevout.hash)->nHeight;
+            }
+            if (LockTime(tx, nLockTimeFlags, &prevheights, *pindex))
                 return state.DoS(100, error("ConnectBlock(): contains a non-final transaction", __func__),
                                  REJECT_INVALID, "bad-txns-nonfinal");
 

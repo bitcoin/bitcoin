@@ -328,8 +328,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState& state);
 
 /**
  * Check if transaction is final and can be included in a block. Consensus critical.
+ * Takes as input a list of heights at which tx's inputs (in order) confirmed.
  */
-int64_t LockTime(const CTransaction &tx, int flags, const CCoinsView* pCoinsView, const CBlockIndex& block);
+int64_t LockTime(const CTransaction &tx, int flags, const std::vector<int>* prevheights, const CBlockIndex& block);
 
 /**
  * Check if transaction will be final in the next block to be created.
