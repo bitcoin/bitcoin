@@ -64,16 +64,40 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for x in reversed(chain):
             assert_equal(mempool[x]['descendantcount'], descendant_count)
             descendant_fees += mempool[x]['fee']
+            assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee'])
             assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees)
             descendant_size += mempool[x]['size']
             assert_equal(mempool[x]['descendantsize'], descendant_size)
             descendant_count += 1
+
+        # Check that descendant modified fees includes fee deltas from
+        # prioritisetransaction
+        self.nodes[0].prioritisetransaction(chain[-1], 0, 1000)
+        mempool = self.nodes[0].getrawmempool(True)
+
+        descendant_fees = 0
+        for x in reversed(chain):
+            descendant_fees += mempool[x]['fee']
+            assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees+1000)
 
         # Adding one more transaction on to the chain should fail.
         try:
             self.chain_transaction(self.nodes[0], txid, vout, value, fee, 1)
         except JSONRPCException as e:
             print "too-long-ancestor-chain successfully rejected"
+
+        # Check that prioritising a tx before it's added to the mempool works
+        self.nodes[0].generate(1)
+        self.nodes[0].prioritisetransaction(chain[-1], 0, 2000)
+        self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
+        mempool = self.nodes[0].getrawmempool(True)
+
+        descendant_fees = 0
+        for x in reversed(chain):
+            descendant_fees += mempool[x]['fee']
+            if (x == chain[-1]):
+                assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee']+satoshi_round(0.00002))
+            assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees+2000)
 
         # TODO: check that node1's mempool is as expected
 

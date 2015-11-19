@@ -300,8 +300,6 @@ struct CDiskTxPos : public CDiskBlockPos
 };
 
 
-CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowFree);
-
 /** 
  * Count ECDSA signature operations the old-fashioned (pre-0.6) way
  * @return number of sigops this transaction's outputs will produce when spent
