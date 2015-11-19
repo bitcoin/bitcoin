@@ -28,7 +28,7 @@ Unpack the files into a directory, and then run bitcoin-qt.exe.
 
 ### OS X
 
-Drag Bitcoin-Qt to your applications folder, and then run Bitcoin-Qt.
+Drag Bitcoin-Core to your applications folder, and then run Bitcoin-Core.
 
 ### Need Help?
 
