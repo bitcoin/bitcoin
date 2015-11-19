@@ -1494,14 +1494,6 @@
         <translation>Son Alma</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Yollanan Baytlar</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Alınan Baytlar</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping Süresi</translation>
     </message>
@@ -2004,10 +1996,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Ödeme talebinin ömrü doldu.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Sadece asgari ücret olan %1 tutarını öde</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2856,10 +2844,6 @@
         <translation>&lt;kategori&gt; şunlar olabilir:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Bozuk bir wallet.dat dosyasından özel anahtarları geri kazanmayı dene</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Blok oluşturma seçenekleri:</translation>
     </message>
@@ -2978,10 +2962,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>-txindex'i değiştirmek için veritabanını -reindex kullanarak tekrar inşa etmeniz gerekmektedir</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Harici blk000??.dat dosyasından blokları içe aktarır</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3232,10 +3212,6 @@
         <translation>Cüzdandaki tüm muameleler kaldırılıyor...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>başlangıçta</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat bozuk, geri kazanım başarısız oldu</translation>
     </message>
@@ -3246,14 +3222,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>En iyi blok değiştiğinde komutu çalıştır (komut için %s parametresi blok hash değeri ile değiştirilecektir)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Cüzdanı en yeni biçime güncelle</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Blok zincirini eksik cüzdan muameleleri için tekrar tara</translation>
     </message>
     <message>
         <source>This help message</source>

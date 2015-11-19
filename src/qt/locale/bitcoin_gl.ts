@@ -1966,10 +1966,6 @@
         <translation>&lt;categoría&gt; pode ser:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Tentar recuperar claves privadas dende un wallet.dat corrupto</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Opcións de creación de bloque:</translation>
     </message>
@@ -2040,10 +2036,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Precisas reconstruír a base de datos empregando -reindex para cambiar -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importa bloques dende arquivos blk000??.dat externos</translation>
     </message>
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
@@ -2120,14 +2112,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Executar comando cando o mellor bloque cambie (%s no comando é sustituído polo hash do bloque)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Actualizar moedeiro ao formato máis recente</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Rescanear transaccións ausentes na cadea de bloques</translation>
     </message>
     <message>
         <source>This help message</source>

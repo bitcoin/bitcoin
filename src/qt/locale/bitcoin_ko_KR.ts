@@ -2304,10 +2304,6 @@
         <translation>(기본값: 1)</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>손상된 wallet.dat에서 개인키 복원을 시도합니다</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>블록 생성 옵션:</translation>
     </message>
@@ -2404,10 +2400,6 @@
         <translation>-txindex를 바꾸기 위해서는 -reindex를 사용해서 데이터베이스를 재구성해야 합니다. </translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>외부 blk000??.dat 파일에서 블록을 가져옵니다.</translation>
-    </message>
-    <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation>데이터 디렉토리 %s에 락을 걸 수 없었습니다. 비트코인 코어가 이미 실행 중인 것으로 보입니다.</translation>
     </message>
@@ -2496,10 +2488,6 @@
         <translation>지갑의 모든거래내역 건너뛰기...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>구동 중</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat 파일이 손상되었고 복구가 실패하였습니다.</translation>
     </message>
@@ -2510,14 +2498,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>최고의 블럭이 변하면 명령을 실행(cmd 에 있는 %s 는 블럭 해시에 의해 대체되어 짐)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>지갑을 최근 형식으로 개선하시오</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>누락된 지갑 송금에 대한 블록 체인 다시 검색</translation>
     </message>
     <message>
         <source>This help message</source>

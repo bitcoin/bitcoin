@@ -1305,10 +1305,6 @@
         <translation>Atención: Poco espacio en el disco duro</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importar bloques desde el archivo externo blk000??.dat </translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Información</translation>
     </message>
@@ -1340,15 +1336,6 @@
 </translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Actualizar billetera al formato actual</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Rescanea la cadena de bloques para transacciones perdidas de la cartera
-</translation>
-    </message>
-    <message>
         <source>This help message</source>
         <translation>Este mensaje de ayuda
 </translation>
@@ -1375,6 +1362,14 @@
         <translation>Dirección -proxy invalida: '%s'</translation>
     </message>
     <message>
+        <source>Cannot resolve -bind address: '%s'</source>
+        <translation>No se pudo resolver la dirección fija: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -externalip address: '%s'</source>
+        <translation>No se pudo resolver la dirección ip: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s'</source>
         <translation>Cantidad inválida para -paytxfee=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -1393,6 +1388,14 @@
     <message>
         <source>Loading wallet...</source>
         <translation>Cargando cartera...</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>No es posible desactualizar la billetera</translation>
+    </message>
+    <message>
+        <source>Cannot write default address</source>
+        <translation>No se pudo escribir la dirección por defecto</translation>
     </message>
     <message>
         <source>Rescanning...</source>

@@ -686,10 +686,6 @@
         <translation>Chú ý</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>khi khởi động</translation>
-    </message>
-    <message>
         <source>This help message</source>
         <translation>Thông điệp trợ giúp này</translation>
     </message>

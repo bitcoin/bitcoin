@@ -1406,14 +1406,6 @@
         <translation>I-execute ing command istung mialilan ya ing best block (%s in cmd is replaced by block hash)</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>I-upgrade ing wallet king pekabayung porma</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>I-scan pasibayu ing block chain para kareng mauaualang transaksion</translation>
-    </message>
-    <message>
         <source>This help message</source>
         <translation>Ining saup a mensayi</translation>
     </message>

@@ -1482,14 +1482,6 @@
         <translation>Viimeisin vastaanotettu</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Tavua lähetetty</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Tavua vastaanotettu</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Vasteaika</translation>
     </message>
@@ -1980,10 +1972,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Maksupyyntö on vanhentunut.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Maksa vain vähimmäiskulu %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2792,10 +2780,6 @@
         <translation>&lt;category&gt; voi olla:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Yritetään palauttaa privaattiavaimia korruptoituneesta wallet.dat -lompakkotiedostosta</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Lohkon luonnin asetukset:</translation>
     </message>
@@ -2910,10 +2894,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Sinun tulee uudelleenrakentaa tietokanta käyttäen -reindex vaihtaen -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Tuodaan lohkoja ulkoisesta blk000??.dat tiedostosta</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
@@ -3060,10 +3040,6 @@
         <translation>Tyhjennetään kaikki rahansiirrot lompakosta....</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>käynnistyksessä</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat -lompakkotiedosto korruptoitunut, korjaaminen epäonnistui</translation>
     </message>
@@ -3074,14 +3050,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Suorita käsky kun paras lohko muuttuu (%s cmd on vaihdettu block hashin kanssa)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Päivitä lompakko uusimpaan formaattiin</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Skannaa uudelleen lohkoketju lompakon puuttuvien rahasiirtojen vuoksi</translation>
     </message>
     <message>
         <source>This help message</source>

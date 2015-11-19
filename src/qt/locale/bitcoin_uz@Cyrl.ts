@@ -1220,14 +1220,6 @@
         <translation>Сўнгги қабул қилинган</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Жўнатилган байтлар</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Қабул қилинган байтлар</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping вақти</translation>
     </message>

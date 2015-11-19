@@ -1490,14 +1490,6 @@
         <translation>Laatst ontvangen</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bytes Verzonden</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bytes Ontvangen</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping Tijd</translation>
     </message>
@@ -1992,10 +1984,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Betalingsverzoek verlopen.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Betaal alleen de minimale transactiekosten van %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2840,10 +2828,6 @@
         <translation>&lt;category&gt; kan zijn:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Poog de geheime sleutels uit een corrupt wallet.dat bestand terug te halen</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Blokcreatie-opties:</translation>
     </message>
@@ -2954,10 +2938,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Om -txindex te kunnen veranderen dient u de database opnieuw te bouwen met gebruik van -reindex.</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importeert blokken van extern blk000??.dat bestand</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3189,10 +3169,6 @@
         <translation>Bezig met het zappen van alle transacties van de portemonnee...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>bij opstarten</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrupt, veiligstellen mislukt</translation>
     </message>
@@ -3203,14 +3179,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Voer commando uit zodra het beste blok verandert (%s in cmd wordt vervangen door blockhash)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Vernieuw portemonnee naar nieuwste versie</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Doorzoek de blokketen op ontbrekende portemonnee-transacties</translation>
     </message>
     <message>
         <source>This help message</source>

@@ -1550,14 +1550,6 @@
         <translation>最終受信</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>送信済バイト数</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>受信済バイト数</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping時間</translation>
     </message>
@@ -2070,6 +2062,10 @@
         <translation>釣り銭をコピー</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>合計：　%1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>または</translation>
     </message>
@@ -2101,17 +2097,13 @@
         <source>Payment request expired.</source>
         <translation>支払いリクエストの期限が切れました。</translation>
     </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>要求手数料 %1 のみを支払う</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>%n ブロック以内に検証が開始されると予想されます。</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>最小手数料 %1 のみを支払う</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>総額 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2892,10 +2884,6 @@
         <translation>コマンドラインと JSON-RPC コマンドを許可</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>中継の際、この値未満の手数料 (%s/kB単位) はゼロであるとみなす (デフォルト: %s)</translation>
-    </message>
-    <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>&lt;category&gt; が与えられなかった場合や &lt;category&gt; = 1 の場合には、すべてのデバッグ情報が出力されます。</translation>
     </message>
@@ -3018,10 +3006,6 @@
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt;は以下の値を指定できます：</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>壊れた wallet.dat から秘密鍵を復旧することを試す</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3181,10 +3165,6 @@
         <translation>-txindex を変更するには -reindex を使用してデータベースを再構築する必要があります</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>外部の blk000??.dat ファイルからブロックをインポート</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>指定したアクセス元からのJSON-RPC接続を許可する。有効な&lt;ip&gt;は、単一のIP (例 1.2.3.4)、ネットワーク/ネットマスク (1.2.3.4/255.255.255.0)、またはネットワーク/CIDR (1.2.3.4/24)です。このオプションは複数回指定できます。</translation>
     </message>
@@ -3215,6 +3195,10 @@
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>関連のアラートをもらってもすごく長いのフォークを見てもコマンドを実行 (コマンドの中にあるの%sはメッセージから置き換えさせる)</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
+        <translation>トランザクションの中継、採掘および作成の際には、この値未満の手数料 (%s/kB単位) はゼロであるとみなす (デフォルト: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3273,6 +3257,10 @@
         <translation>最優良のチェインを有効化しています...</translation>
     </message>
     <message>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation>起動時に壊れた wallet.dat から秘密鍵を復旧することを試す</translation>
+    </message>
+    <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>-whitebind アドレス '%s' を解決できません</translation>
     </message>
@@ -3295,6 +3283,10 @@
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>データベースの読み込みエラー。シャットダウンします。</translation>
+    </message>
+    <message>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>起動時に外部の blk000??.dat ファイルからブロックをインポート</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3351,6 +3343,10 @@
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>システム上の制約から、-maxconnections を %d から %d に削減しました。</translation>
+    </message>
+    <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>起動時に失ったウォレットの取引のブロック チェーンを再スキャン</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3421,6 +3417,10 @@
         <translation>このコンピュータの %s にバインドすることができません (バインドが返したエラーは %s)</translation>
     </message>
     <message>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>起動時にウォレットを最新のフォーマットにアップグレード</translation>
+    </message>
+    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC 接続のユーザー名</translation>
     </message>
@@ -3441,10 +3441,6 @@
         <translation>ZeroMQ通知オプション:</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>起動時</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat が壊れ、復旧に失敗しました</translation>
     </message>
@@ -3455,14 +3451,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>最良のブロックに変更する際にコマンドを実行 (cmd の %s はブロック ハッシュに置換される)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>ウォレットを最新のフォーマットにアップグレード</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>失ったウォレットの取引のブロック チェーンを再スキャン</translation>
     </message>
     <message>
         <source>This help message</source>
