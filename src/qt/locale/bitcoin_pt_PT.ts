@@ -1491,14 +1491,6 @@
         <translation>Ultimo Recebimento</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bytes Enviados</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bytes Recebidos</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Tempo de Latência</translation>
     </message>
@@ -1985,10 +1977,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Pedido de pagamento expirou.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Pagar somente a taxa minima de %1</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2793,10 +2781,6 @@
         <translation>&lt;categoria&gt; pode ser:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Tentar recuperar chaves privadas de um wallet.dat corrupto</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Opções de criação de bloco:</translation>
     </message>
@@ -2907,10 +2891,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>É necessário reconstruir as bases de dados usando -reindex para mudar o -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importar blocos de um ficheiro blk000??.dat externo</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3031,14 +3011,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Executar comando quando o melhor bloco mudar (no comando, %s é substituído pela hash do bloco)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Atualize a carteira para o formato mais recente</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Procurar transações em falta na cadeia de blocos</translation>
     </message>
     <message>
         <source>This help message</source>

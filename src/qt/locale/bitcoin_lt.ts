@@ -872,14 +872,6 @@
         <translation>Versija</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Nusiųsti baitai</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Gauti baitai</translation>
-    </message>
-    <message>
         <source>Last block time</source>
         <translation>Paskutinio bloko laikas</translation>
     </message>
@@ -1660,14 +1652,6 @@
     <message>
         <source>Password for JSON-RPC connections</source>
         <translation>Slaptažodis JSON-RPC sujungimams</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Atnaujinti piniginę į naujausią formatą</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Ieškoti  prarastų piniginės sandorių blokų grandinėje</translation>
     </message>
     <message>
         <source>This help message</source>

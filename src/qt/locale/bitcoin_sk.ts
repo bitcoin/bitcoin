@@ -1494,14 +1494,6 @@
         <translation>Posledné prijatie</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Odoslaných bajtov</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Prijatých bajtov</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Čas odozvy</translation>
     </message>
@@ -1996,10 +1988,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Vypršala platnosť požiadavky na platbu.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Zaplatiť minimálny poplatok %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2818,10 +2806,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>&lt;category&gt; môže byť:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Pokus zachrániť súkromné kľúče z poškodeného wallet.dat</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Voľby vytvorenia bloku:</translation>
     </message>
@@ -2928,10 +2912,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importuje bloky z externého súboru blk000??.dat</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3146,10 +3126,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Zmazať všetky transakcie z peňaženky...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>pri štarte</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat je poškodený, záchrana zlyhala</translation>
     </message>
@@ -3160,14 +3136,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Vykonaj príkaz, ak zmeny v najlepšom bloku (%s v príkaze nahradí blok hash)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Aktualizuj peňaženku na najnovší formát.</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Znovu skenovať reťaz blokov pre chýbajúce transakcie</translation>
     </message>
     <message>
         <source>This help message</source>

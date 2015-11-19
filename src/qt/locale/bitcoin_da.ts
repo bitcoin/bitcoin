@@ -1129,7 +1129,7 @@
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>&amp;Enhed at vise beløb i:</translation>
+        <translation>&amp;Enhed, som beløb vises i:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
@@ -1141,7 +1141,7 @@
     </message>
     <message>
         <source>&amp;OK</source>
-        <translation>&amp;O.k.</translation>
+        <translation>&amp;Ok</translation>
     </message>
     <message>
         <source>&amp;Cancel</source>
@@ -1200,7 +1200,7 @@
     </message>
     <message>
         <source>Pending:</source>
-        <translation>Uafgjort:</translation>
+        <translation>Afventende:</translation>
     </message>
     <message>
         <source>Total of transactions that have yet to be confirmed, and do not yet count toward the spendable balance</source>
@@ -1544,14 +1544,6 @@
     <message>
         <source>Last Receive</source>
         <translation>Seneste modtagelse</translation>
-    </message>
-    <message>
-        <source>Bytes Sent</source>
-        <translation>Byte sendt</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Byte modtaget</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -2066,6 +2058,10 @@
         <translation>Kopiér byttepenge</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Totalbeløb %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>eller</translation>
     </message>
@@ -2097,17 +2093,13 @@
         <source>Payment request expired.</source>
         <translation>Betalingsanmodning er udløbet.</translation>
     </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Betal kun det påkrævede gebyr på %1</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Bekræftelse estimeres til at begynde inden for %n blok.</numerusform><numerusform>Bekræftelse estimeres til at begynde inden for %n blokke.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Betal kun det minimale gebyr på %1</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Totalbeløb %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2888,10 +2880,6 @@
         <translation>Acceptér kommandolinje- og JSON-RPC-kommandoer</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>Gebyrer (i %s/kB) mindre end dette opfattes som nul-gebyr under videresendelse (standard: %s)</translation>
-    </message>
-    <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>Hvis &lt;category&gt; ikke angives eller hvis &lt;category&gt; = 1, udskriv al fejlretningsinformation.</translation>
     </message>
@@ -3014,10 +3002,6 @@
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;kategori&gt; kan være:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Forsøg at genskabe private nøgler fra ødelagt wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3176,10 +3160,6 @@
         <translation>Du er nødt til at genopbygge databasen ved hjælp af -reindex for at ændre -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importerer blokke fra ekstern blk000??.dat fil</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Tillad JSON-RPC-forbindelser fra angivet kilde. Gyldig for &lt;ip&gt; er en enkelt IP (fx 1.2.3.4), et netværk/netmaske (fx 1.2.3.4/255.255.255.0) eller et netværk/CIDR (fx 1.2.3.4/24). Dette tilvalg kan angives flere gange</translation>
     </message>
@@ -3210,6 +3190,10 @@
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Udfør kommando, når en relevant alarm modtages eller vi ser en virkelig lang udsplitning (%s i cmd erstattes af besked)</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
+        <translation>Gebyrer (i %s/kB) mindre end dette opfattes som intet gebyr for videresendelse, mining og oprettelse af transaktioner (standard: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3268,6 +3252,10 @@
         <translation>Aktiverer bedste kæde…</translation>
     </message>
     <message>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation>Forsøg at genskabe private nøgler fra en ødelagt wallet.dat under opstart</translation>
+    </message>
+    <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>Kan ikke løse -whitebind adresse: "%s"</translation>
     </message>
@@ -3290,6 +3278,10 @@
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Fejl under læsning fra database; lukker ned.</translation>
+    </message>
+    <message>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>Importerer blokeringer fra ekstern blk000??.dat-fil under opstart</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3346,6 +3338,10 @@
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Reducerer -maxconnections fra %d til %d på grund af systembegrænsninger.</translation>
+    </message>
+    <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>Genindlæs blokkæden efter manglende tegnebogstransaktioner under opstart</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3416,6 +3412,10 @@
         <translation>Ikke i stand til at tildele til %s på denne computer (bind returnerede fejl %s)</translation>
     </message>
     <message>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>Opgradér tegnebog til seneste format under opstart</translation>
+    </message>
+    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Brugernavn til JSON-RPC-forbindelser</translation>
     </message>
@@ -3436,10 +3436,6 @@
         <translation>ZeroMQ-notifikationsindstillinger:</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>under opstart</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat ødelagt, redning af data mislykkedes</translation>
     </message>
@@ -3450,14 +3446,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Udfør kommando, når den bedste blok ændres (%s i kommandoen erstattes med blokhash)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Opgrader tegnebog til seneste format</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Gennemsøg blokkæden for manglende tegnebogstransaktioner</translation>
     </message>
     <message>
         <source>This help message</source>

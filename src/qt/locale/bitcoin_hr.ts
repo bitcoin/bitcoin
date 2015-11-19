@@ -1058,14 +1058,6 @@
         <translation>Trajanje veze</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bajtova poslano</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bajtova primljeno</translation>
-    </message>
-    <message>
         <source>Last block time</source>
         <translation>Posljednje vrijeme bloka</translation>
     </message>
@@ -1784,10 +1776,6 @@
         <translation>Pogreška: Nema dovoljno prostora na disku!</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Uvozi blokove sa vanjske blk000??.dat datoteke</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Informacija</translation>
     </message>
@@ -1814,14 +1802,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Izvršite naredbu kada se najbolji blok promjeni (%s u cmd je zamjenjen sa block hash)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Nadogradite novčanik u posljednji format.</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Ponovno pretraži lanac blokova za transakcije koje nedostaju</translation>
     </message>
     <message>
         <source>This help message</source>

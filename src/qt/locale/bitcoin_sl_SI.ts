@@ -1490,14 +1490,6 @@
         <translation>Nazadnje prejeto</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Oddanih bajtov</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Prejetih bajtov</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Odzivni čas</translation>
     </message>
@@ -2004,10 +1996,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Predviden začetek potrditev po %n najdenem bloku.</numerusform><numerusform>Predviden začetek potrditev po %n najdenih blokih.</numerusform><numerusform>Predviden začetek potrditev po %n najdenih blokih.</numerusform><numerusform>Predviden začetek potrditev po %n najdenih blokih.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Plačilo samo minimalne provizije v znesku %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2852,10 +2840,6 @@
         <translation>&lt;category&gt; je lahko:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Skušaj obnoviti zasebne ključe iz okvarjene datoteke wallet.dat</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Možnosti ustvarjanja blokov:</translation>
     </message>
@@ -2974,10 +2958,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Ob spremembi vrednosti opcije -txindex boste morali obnoviti bazo podatkov z uporabo opcije -reindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Uvozi bloke iz zunanje datoteke blk000??.dat</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3116,10 +3096,6 @@
         <translation>Brišem vse transakcije iz denarnice ...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>ob zagonu</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>Datoteka wallet.dat je poškodovana in je ni bilo mogoče obnoviti.</translation>
     </message>
@@ -3130,14 +3106,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Izvedi ukaz, ko je najden najboljši blok (niz %s v ukazu bo zamenjan s hash vrednostjo bloka)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Nadgradi denarnico na najnovejšo različico</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>S ponovnim pregledom verige blokov poišči manjkajoče transakcije iz denarnice</translation>
     </message>
     <message>
         <source>This help message</source>

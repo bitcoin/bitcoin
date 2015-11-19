@@ -1690,10 +1690,6 @@
         <translation>تحذير</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>تحديث المحفظة للنسخة الاخيرة</translation>
-    </message>
-    <message>
         <source>This help message</source>
         <translation>رسالة المساعدة هذه</translation>
     </message>

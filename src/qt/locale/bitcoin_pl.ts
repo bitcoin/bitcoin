@@ -1490,14 +1490,6 @@
         <translation>Ostatnio odebrano</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bajtów wysłano</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bajtów pobrano</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Czas odpowiedzi</translation>
     </message>
@@ -1992,14 +1984,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Płac tylko minimalna opłatę %1</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Całkowita kwota %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2852,10 +2836,6 @@
         <translation>&lt;category&gt; mogą być:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Próbuj odzyskać klucze prywatne z uszkodzonego wallet.dat</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Opcje tworzenia bloku:</translation>
     </message>
@@ -2974,10 +2954,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Musisz przebudować bazę używając parametru -reindex aby zmienić -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importuj bloki z zewnętrznego pliku blk000??.dat</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3216,10 +3192,6 @@
         <translation>Usuwam wszystkie transakcje z portfela...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>podczas uruchamiania</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat uszkodzony, odtworzenie się nie powiodło</translation>
     </message>
@@ -3230,14 +3202,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Wykonaj polecenie kiedy najlepszy blok ulegnie zmianie (%s w komendzie zastanie zastąpione przez hash bloku)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Zaktualizuj portfel do najnowszego formatu.</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Przeskanuj łańcuch bloków w poszukiwaniu zaginionych transakcji portfela</translation>
     </message>
     <message>
         <source>This help message</source>

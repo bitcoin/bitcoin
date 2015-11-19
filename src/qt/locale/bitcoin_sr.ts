@@ -762,10 +762,6 @@
         <translation>Lozinka za JSON-RPC konekcije</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Ponovo skeniraj lanac blokova za nedostajuće transakcije iz novčanika</translation>
-    </message>
-    <message>
         <source>This help message</source>
         <translation>Ova poruka Pomoći</translation>
     </message>

@@ -1486,14 +1486,6 @@
         <translation>Dernière réception</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Octets envoyés</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Octets reçus</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Temps de ping</translation>
     </message>
@@ -2000,14 +1992,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Il est estimé que la confirmation commencera dans %n bloc.</numerusform><numerusform>Il est estimé que la confirmation commencera dans %n blocs.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Payer seulement les frais minimum de %1</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Montant total %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2860,10 +2844,6 @@
         <translation>&lt;category&gt; peut être :</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Tenter de récupérer les clefs privées d'un wallet.dat corrompu</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Options de création de bloc :</translation>
     </message>
@@ -2982,10 +2962,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Vous devez reconstruire la base de données en utilisant -reindex afin de modifier -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importe des blocs depuis un fichier blk000??.dat externe</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3236,10 +3212,6 @@
         <translation>Supprimer toutes les transactions du portefeuille...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>au démarrage</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrompu, la récupération a échoué</translation>
     </message>
@@ -3250,14 +3222,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Exécuter la commande lorsque le meilleur bloc change (%s dans cmd est remplacé par le hachage du bloc)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Mettre à niveau le portefeuille vers le format le plus récent</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Réanalyser la chaîne de blocs pour les transactions de portefeuille manquantes</translation>
     </message>
     <message>
         <source>This help message</source>

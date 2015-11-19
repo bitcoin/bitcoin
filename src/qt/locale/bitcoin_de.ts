@@ -1518,14 +1518,6 @@
         <translation>Letzter Empfang</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Übertragene Byte</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Empfangene Byte</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Pingzeit</translation>
     </message>
@@ -2022,6 +2014,10 @@
         <translation>Wechselgeld kopieren</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Gesamtbetrag %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>oder</translation>
     </message>
@@ -2056,14 +2052,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Block.</numerusform><numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Blöcken.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Nur die minimale Gebühr in Höhe von %1 zahlen</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Gesamtbetrag %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2924,10 +2912,6 @@
         <translation>&lt;category&gt; kann sein:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Versuchen, private Schlüssel aus einer beschädigten wallet.dat wiederherzustellen</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Blockerzeugungsoptionen:</translation>
     </message>
@@ -3046,10 +3030,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um -txindex zu verändern</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Blöcke aus externer Datei blk000??.dat importieren</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3304,10 +3284,6 @@
         <translation>ZeroMQ-Benachrichtigungsoptionen:</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>beim Starten</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat beschädigt, Datenrettung fehlgeschlagen</translation>
     </message>
@@ -3318,14 +3294,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Befehl ausführen wenn der beste Block wechselt (%s im Befehl wird durch den Hash des Blocks ersetzt)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Wallet auf das neueste Format aktualisieren</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Blockkette erneut nach fehlenden Wallet-Transaktionen durchsuchen</translation>
     </message>
     <message>
         <source>This help message</source>

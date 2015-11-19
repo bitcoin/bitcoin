@@ -168,6 +168,10 @@
         <translation>Наистина ли желаете да шифрирате портфейла си?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Биткоин сега ще се затоври за да завърши процеса на криптиране. Запомнете, че криптирането на вашия портефейл не може напълно да предпази вашите монети от кражба чрез зловреден софтуер, инфектирал вашия компютър</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>ВАЖНО: Всички стари запазвания, които сте направили на Вашият портфейл трябва да замените с запазване на новополучения, шифриран портфейл. От съображения за сигурност, предишните запазвания на нешифрирани портфейли ще станат неизползваеми веднага, щом започнете да използвате новият, шифриран портфейл.</translation>
     </message>
@@ -414,6 +418,10 @@
         <translation>%1 зад</translation>
     </message>
     <message>
+        <source>Last received block was generated %1 ago.</source>
+        <translation>Последния получен блок е генериран преди %1.</translation>
+    </message>
+    <message>
         <source>Transactions after this will not yet be visible.</source>
         <translation>Транзакции след това няма все още да бъдат видими.</translation>
     </message>
@@ -636,6 +644,10 @@
         <translation>нищо</translation>
     </message>
     <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>Този етикет става червен, когато размера на транзакцията е по-голяма от 1000 бита.</translation>
+    </message>
+    <message>
         <source>yes</source>
         <translation>да</translation>
     </message>
@@ -850,6 +862,10 @@
         <translation>&amp;Мрежа</translation>
     </message>
     <message>
+        <source>Automatically start Bitcoin Core after logging in to the system.</source>
+        <translation>Автоматично стартиране на Bitcoin Core след влизане в системата.</translation>
+    </message>
+    <message>
         <source>W&amp;allet</source>
         <translation>По&amp;ртфейл</translation>
     </message>
@@ -1048,8 +1064,20 @@
         <translation>Файл за справяне със заявки</translation>
     </message>
     <message>
+        <source>Payment request expired.</source>
+        <translation>Заявката за плащане е изтекла.</translation>
+    </message>
+    <message>
+        <source>Invalid payment request.</source>
+        <translation>Невалидна заявка за плащане.</translation>
+    </message>
+    <message>
         <source>Refund from %1</source>
         <translation>Възстановяване на сума от %1</translation>
+    </message>
+    <message>
+        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
+        <translation>Заявката за плащане %1 е твърде голям (%2 байта, позволени %3 байта).</translation>
     </message>
     <message>
         <source>Error communicating with %1: %2</source>
@@ -1236,14 +1264,6 @@
         <translation>Получени за последно</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Изпратени байтове</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Получени байтове</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Време за отговор</translation>
     </message>
@@ -1330,6 +1350,14 @@
     <message>
         <source>Outbound</source>
         <translation>Изходящи</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Да</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Не</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -1536,6 +1564,10 @@
         <translation>за килобайт</translation>
     </message>
     <message>
+        <source>Hide</source>
+        <translation>Скрий</translation>
+    </message>
+    <message>
         <source>total at least</source>
         <translation>Крайна сума поне</translation>
     </message>
@@ -1644,8 +1676,8 @@
         <translation>Грешка при създаването на транзакция!</translation>
     </message>
     <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Платете минималната такса от %1</translation>
+        <source>Payment request expired.</source>
+        <translation>Заявката за плащане е изтекла.</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -1926,6 +1958,10 @@
         <translation>собствен адрес</translation>
     </message>
     <message>
+        <source>watch-only</source>
+        <translation>само гледане</translation>
+    </message>
+    <message>
         <source>label</source>
         <translation>име</translation>
     </message>
@@ -2086,6 +2122,10 @@
     <message>
         <source>Mined</source>
         <translation>Емитирани</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>само гледане</translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -2430,20 +2470,8 @@
         <translation>Предупреждение</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>по време на стартирането</translation>
-    </message>
-    <message>
         <source>Password for JSON-RPC connections</source>
         <translation>Парола за  JSON-RPC връзките</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Обновяване на портфейла до най-новия формат</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Повторно сканиране на блок-връзка за липсващи портфейлни транзакции</translation>
     </message>
     <message>
         <source>This help message</source>
