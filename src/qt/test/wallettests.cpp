@@ -164,7 +164,7 @@ void TestGUI()
         wallet.SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
         wallet.AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
     }
-    wallet.ScanForWalletTransactions(chainActive.Genesis(), true);
+    wallet.ScanForWalletTransactions(chainActive.Genesis(), nullptr, true);
     wallet.SetBroadcastTransactions(true);
 
     // Create widgets for sending coins and listing transactions.
