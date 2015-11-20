@@ -2299,25 +2299,37 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         if (IsLocked())
             return false;
 
-        CWalletDB walletdb(strWalletFile);
+        pwalletdb = new CWalletDB(strWalletFile);
+        pwalletdb->TxnBegin();
 
-        // Top up key pool
-        unsigned int nTargetSize;
-        if (kpSize > 0)
-            nTargetSize = kpSize;
-        else
-            nTargetSize = max(GetArg("-keypool", 100), (int64_t) 0);
-
-        while (setKeyPool.size() < (nTargetSize + 1))
+        try
         {
-            int64_t nEnd = 1;
-            if (!setKeyPool.empty())
-                nEnd = *(--setKeyPool.end()) + 1;
-            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
-                throw runtime_error("TopUpKeyPool(): writing generated key failed");
-            setKeyPool.insert(nEnd);
-            LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
+            // Top up key pool
+            unsigned int nTargetSize;
+            if (kpSize > 0)
+                nTargetSize = kpSize;
+            else
+                nTargetSize = max(GetArg("-keypool", 100), (int64_t) 0);
+
+            while (setKeyPool.size() < (nTargetSize + 1))
+            {
+                int64_t nEnd = 1;
+                if (!setKeyPool.empty())
+                    nEnd = *(--setKeyPool.end()) + 1;
+                if (!pwalletdb->WritePool(nEnd, CKeyPool(GenerateNewKey())))
+                    throw runtime_error("TopUpKeyPool(): writing generated key failed");
+                setKeyPool.insert(nEnd);
+                LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
+            }
+        } catch(...) {
+            pwalletdb->TxnAbort();
+            delete pwalletdb;
+            pwalletdb = NULL;
+            throw;
         }
+        pwalletdb->TxnCommit();
+        delete pwalletdb;
+        pwalletdb = NULL;
     }
     return true;
 }
