@@ -819,6 +819,10 @@ bool CheckForConflicts(const CTransaction &tx)
     CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
     view.SetBackend(viewMemPool);
 
+    // no conflict in case of the tx is already known
+    if (view.HaveCoins(tx.GetHash()))
+        return false;
+
     // are the actual inputs available?
     if (!view.HaveInputs(tx))
         return true;
