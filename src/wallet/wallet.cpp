@@ -121,9 +121,15 @@ bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     if (!fFileBacked)
         return true;
     if (!IsCrypted()) {
-        return CWalletDB(strWalletFile).WriteKey(pubkey,
-                                                 secret.GetPrivKey(),
-                                                 mapKeyMetadata[pubkey.GetID()]);
+        if (pwalletdb) {
+            pwalletdb->WriteKey(pubkey,
+                                 secret.GetPrivKey(),
+                                 mapKeyMetadata[pubkey.GetID()]);
+        } else {
+            return CWalletDB(strWalletFile).WriteKey(pubkey,
+                                                     secret.GetPrivKey(),
+                                                     mapKeyMetadata[pubkey.GetID()]);
+        }
     }
     return true;
 }
