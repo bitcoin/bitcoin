@@ -10,8 +10,9 @@
 import os
 import sys
 
-# Add python-bitcoinlib to module search path:
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinlib"))
+# Add python-bitcoinlib to module search path, prior to any system-wide
+# python-bitcoinlib.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinlib"))
 
 import unittest
 
