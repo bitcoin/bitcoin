@@ -813,7 +813,7 @@ std::string FormatStateMessage(const CValidationState &state)
 }
 
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                              bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
+                              bool* pfMissingInputs, bool fOverrideMempoolLimit, CAmount nAbsurdFee,
                               std::vector<uint256>& vHashTxnToUncache)
 {
     const uint256 hash = tx.GetHash();
@@ -1002,10 +1002,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             dFreeCount += nSize;
         }
 
-        if (fRejectAbsurdFee && nFees > maxTxFee)
+        if (nAbsurdFee && nFees > nAbsurdFee)
             return state.Invalid(false,
                 REJECT_HIGHFEE, "absurdly-high-fee",
-                strprintf("%d > %d", nFees, maxTxFee));
+                strprintf("%d > %d", nFees, nAbsurdFee));
 
         // Calculate in-mempool ancestors, up to a limit.
         CTxMemPool::setEntries setAncestors;
@@ -1220,10 +1220,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee)
+                        bool* pfMissingInputs, bool fOverrideMempoolLimit, const CAmount nAbsurdFee)
 {
     std::vector<uint256> vHashTxToUncache;
-    bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, fRejectAbsurdFee, vHashTxToUncache);
+    bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, fOverrideMempoolLimit, nAbsurdFee, vHashTxToUncache);
     if (!res) {
         BOOST_FOREACH(const uint256& hashTx, vHashTxToUncache)
             pcoinsTip->Uncache(hashTx);
