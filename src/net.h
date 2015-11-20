@@ -180,6 +180,7 @@ class CNodeStats
 public:
     NodeId nodeid;
     uint64_t nServices;
+    bool fRelayTxes;
     int64_t nLastSend;
     int64_t nLastRecv;
     int64_t nTimeConnected;
