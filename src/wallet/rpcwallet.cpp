@@ -829,7 +829,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
 
     // Debit
     CAccountingEntry debit;
-    debit.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
+    debit.nOrderPos = pwalletMain->IncOrderPosNext();
     debit.strAccount = strFrom;
     debit.nCreditDebit = -nAmount;
     debit.nTime = nNow;
@@ -839,7 +839,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
 
     // Credit
     CAccountingEntry credit;
-    credit.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
+    credit.nOrderPos = pwalletMain->IncOrderPosNext();
     credit.strAccount = strTo;
     credit.nCreditDebit = nAmount;
     credit.nTime = nNow;
