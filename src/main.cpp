@@ -696,7 +696,7 @@ int64_t LockTime(const CTransaction &tx, int flags, const std::vector<int>* prev
         // Sequence numbers with the most significant bit set are not
         // treated as relative lock-times, nor are they given any
         // consensus-enforced meaning at this point.
-        if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLED_FLAG)
+        if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG)
             continue;
 
         if (prevHeights == NULL)
@@ -704,7 +704,7 @@ int64_t LockTime(const CTransaction &tx, int flags, const std::vector<int>* prev
 
         int nCoinHeight = (*prevHeights)[txinIndex];
 
-        if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_SECONDS_FLAG) {
+        if (txin.nSequence & CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) {
 
             int64_t nCoinTime = block.GetAncestor(std::max(nCoinHeight-1, 0))->GetMedianTimePast();
 
