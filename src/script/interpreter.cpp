@@ -397,7 +397,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     // To provide for future soft-fork extensibility, if the
                     // operand has the disabled lock-time flag set,
                     // CHECKSEQUENCEVERIFY behaves as a NOP.
-                    if ((nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLED_FLAG) != 0)
+                    if ((nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0)
                         break;
 
                     // Actually compare the specified inverse sequence number
@@ -1215,15 +1215,15 @@ bool TransactionSignatureChecker::CheckSequence(const CScriptNum& nSequence) con
     // consensus constrained. Testing that the transaction's sequence
     // number do not have this bit set prevents using this property
     // to get around a CHECKSEQUENCEVERIFY check.
-    if (txToSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLED_FLAG)
+    if (txToSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG)
         return false;
 
     // Mask off any bits that do not have consensus-enforced meaning
     // before doing the integer comparisons of ::VerifyLockTime.
-    const uint32_t nLockTimeMask = CTxIn::SEQUENCE_LOCKTIME_SECONDS_FLAG
+    const uint32_t nLockTimeMask = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG
                                  | CTxIn::SEQUENCE_LOCKTIME_MASK;
 
-    if (!::VerifyLockTime(txToSequence & nLockTimeMask, CTxIn::SEQUENCE_LOCKTIME_SECONDS_FLAG, nSequence & nLockTimeMask))
+    if (!::VerifyLockTime(txToSequence & nLockTimeMask, CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG, nSequence & nLockTimeMask))
         return false;
 
     return true;
