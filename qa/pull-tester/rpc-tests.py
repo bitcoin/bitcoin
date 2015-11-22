@@ -106,7 +106,6 @@ testScriptsExt = [
     'invalidateblock.py',
     'keypool.py',
 #    'rpcbind_test.py', #temporary, bug in libevent, see #6655
-#    'script_test.py', #used for manual comparison of 2 binaries
     'smartfees.py',
     'maxblocksinflight.py',
     'invalidblockrequest.py',
