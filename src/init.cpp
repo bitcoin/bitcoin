@@ -874,6 +874,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
     fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = GetBoolArg("-checkpoints", true);
+    fScriptChecksEnabled = GetBoolArg("-checkscripts", true);
 
     // -mempoollimit limits
     int64_t nMempoolSizeLimit = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;

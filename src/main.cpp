@@ -70,6 +70,7 @@ bool fIsBareMultisigStd = true;
 bool fRequireStandard = true;
 bool fCheckBlockIndex = false;
 bool fCheckpointsEnabled = true;
+bool fScriptChecksEnabled = true;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
@@ -1750,8 +1751,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         return true;
     }
 
-    bool fScriptChecks = true;
-    if (fCheckpointsEnabled) {
+    bool fScriptChecks = fScriptChecksEnabled;
+    if (fScriptChecksEnabled && fCheckpointsEnabled) {
         CBlockIndex *pindexLastCheckpoint = Checkpoints::GetLastCheckpoint(chainparams.Checkpoints());
         if (pindexLastCheckpoint && pindexLastCheckpoint->GetAncestor(pindex->nHeight) == pindex) {
             // This block is an ancestor of a checkpoint: disable script checks
