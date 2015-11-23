@@ -929,15 +929,20 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
 
     if (vEvictionCandidates.empty()) return false;
 
-    // Identify the network group with the most connections
+    // Identify the network group with the most connections and youngest member.
+    // (vEvictionCandidates is already sorted by reverse connect time)
     std::vector<unsigned char> naMostConnections;
     unsigned int nMostConnections = 0;
+    int64_t nMostConnectionsTime = 0;
     std::map<std::vector<unsigned char>, std::vector<CNodeRef> > mapAddrCounts;
     BOOST_FOREACH(const CNodeRef &node, vEvictionCandidates) {
         mapAddrCounts[node->addr.GetGroup()].push_back(node);
+        int64_t grouptime = mapAddrCounts[node->addr.GetGroup()][0]->nTimeConnected;
+        size_t groupsize = mapAddrCounts[node->addr.GetGroup()].size();
 
-        if (mapAddrCounts[node->addr.GetGroup()].size() > nMostConnections) {
-            nMostConnections = mapAddrCounts[node->addr.GetGroup()].size();
+        if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
+            nMostConnections = groupsize;
+            nMostConnectionsTime = grouptime;
             naMostConnections = node->addr.GetGroup();
         }
     }
@@ -945,14 +950,13 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     // Reduce to the network group with the most connections
     vEvictionCandidates = mapAddrCounts[naMostConnections];
 
-    // Do not disconnect peers if there is only 1 connection from their network group
+    // Do not disconnect peers if there is only one unprotected connection from their network group.
     if (vEvictionCandidates.size() <= 1)
         // unless we prefer the new connection (for whitelisted peers)
         if (!fPreferNewConnection)
             return false;
 
-    // Disconnect the most recent connection from the network group with the most connections
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
+    // Disconnect from the network group with the most connections
     vEvictionCandidates[0]->fDisconnect = true;
 
     return true;
