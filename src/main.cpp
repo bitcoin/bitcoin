@@ -2570,7 +2570,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
     }
 
     if (fBlocksDisconnected) {
-        mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1);
+        mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
         mempool.TrimToSize(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
     }
     mempool.check(pcoinsTip);
@@ -2681,7 +2681,7 @@ bool InvalidateBlock(CValidationState& state, const Consensus::Params& consensus
         // ActivateBestChain considers blocks already in chainActive
         // unconditionally valid already, so force disconnect away from it.
         if (!DisconnectTip(state, consensusParams)) {
-            mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1);
+            mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
             return false;
         }
     }
@@ -2699,7 +2699,7 @@ bool InvalidateBlock(CValidationState& state, const Consensus::Params& consensus
     }
 
     InvalidChainFound(pindex);
-    mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1);
+    mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
     return true;
 }
 
