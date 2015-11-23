@@ -4414,9 +4414,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
+            LOCK(cs_cNodeStats);
+            pfrom->nTimeLastTX = GetTime();
             mempool.check(pcoinsTip);
             RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
+
 
             LogPrint("mempool", "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
                 pfrom->id,
@@ -4670,9 +4673,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         bool bPingFinished = false;
         std::string sProblem;
 
+        LOCK(cs_cNodeStats);
+
         if (nAvail >= sizeof(nonce)) {
             vRecv >> nonce;
-
             // Only process pong message if there is an outstanding ping (old ping without nonce should never pong)
             if (pfrom->nPingNonceSent != 0) {
                 if (nonce == pfrom->nPingNonceSent) {
@@ -4981,32 +4985,34 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         //
         // Message: ping
         //
-        bool pingSend = false;
-        if (pto->fPingQueued) {
-            // RPC ping request by user
-            pingSend = true;
-        }
-        if (pto->nPingNonceSent == 0 && pto->nPingUsecStart + PING_INTERVAL * 1000000 < GetTimeMicros()) {
-            // Ping automatically sent as a latency probe & keepalive.
-            pingSend = true;
-        }
-        if (pingSend) {
-            uint64_t nonce = 0;
-            while (nonce == 0) {
-                GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
+        {
+            LOCK(cs_cNodeStats);
+            bool pingSend = false;
+            if (pto->fPingQueued) {
+                // RPC ping request by user
+                pingSend = true;
             }
-            pto->fPingQueued = false;
-            pto->nPingUsecStart = GetTimeMicros();
-            if (pto->nVersion > BIP0031_VERSION) {
-                pto->nPingNonceSent = nonce;
-                pto->PushMessage("ping", nonce);
-            } else {
-                // Peer is too old to support ping command with nonce, pong will never arrive.
-                pto->nPingNonceSent = 0;
-                pto->PushMessage("ping");
+            if (pto->nPingNonceSent == 0 && pto->nPingUsecStart + PING_INTERVAL * 1000000 < GetTimeMicros()) {
+                // Ping automatically sent as a latency probe & keepalive.
+                pingSend = true;
+            }
+            if (pingSend) {
+                uint64_t nonce = 0;
+                while (nonce == 0) {
+                    GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
+                }
+                pto->fPingQueued = false;
+                pto->nPingUsecStart = GetTimeMicros();
+                if (pto->nVersion > BIP0031_VERSION) {
+                    pto->nPingNonceSent = nonce;
+                    pto->PushMessage("ping", nonce);
+                } else {
+                    // Peer is too old to support ping command with nonce, pong will never arrive.
+                    pto->nPingNonceSent = 0;
+                    pto->PushMessage("ping");
+                }
             }
         }
-
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
         if (!lockMain)
             return true;

@@ -91,6 +91,7 @@ map<CInv, CDataStream> mapRelay;
 deque<pair<int64_t, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
+CCriticalSection cs_cNodeStats;
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -615,6 +616,7 @@ void CNode::AddWhitelistedRange(const CSubNet &subnet) {
 #define X(name) stats.name = name
 void CNode::copyStats(CNodeStats &stats)
 {
+    LOCK(cs_cNodeStats);
     stats.nodeid = this->GetId();
     X(nServices);
     X(fRelayTxes);
@@ -829,6 +831,21 @@ private:
     CNode *_pnode;
 };
 
+static bool CompareNodeTxTime(const CNodeRef &a, const CNodeRef &b)
+{
+    // Prefer latest TX and on ties (e.g. 0) prefer fRelayTx, fNetworkNode, uptime.
+    if (a->nTimeLastTX != b->nTimeLastTX)
+        return a->nTimeLastTX < b->nTimeLastTX;
+
+    if (a->fRelayTxes != b->fRelayTxes)
+        return b->fRelayTxes;
+
+    if (a->fNetworkNode != b->fNetworkNode)
+        return b->fNetworkNode;
+
+    return a->nTimeConnected > b->nTimeConnected;
+}
+
 static bool ReverseCompareNodeMinPingTime(const CNodeRef &a, const CNodeRef &b)
 {
     return a->nMinPingUsecTime > b->nMinPingUsecTime;
@@ -891,6 +908,8 @@ static bool AttemptToEvictConnection(CNetAddr newaddr, bool fPreferNewConnection
 
     // Protect connections with certain characteristics
 
+    LOCK(cs_cNodeStats);
+
     // Deterministically select 4 peers to protect by netgroup.
     // An attacker cannot predict which netgroups will be protected.
     static CompareNetGroupKeyed comparerNetGroupKeyed;
@@ -906,8 +925,15 @@ static bool AttemptToEvictConnection(CNetAddr newaddr, bool fPreferNewConnection
 
     if (vEvictionCandidates.empty()) return false;
 
+    // Protect the 4 nodes which most recently sent us a TX we accepted.
+    // An attacker cannot manipulate this metric without sending us useful transactions.
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareNodeTxTime);
+    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(4, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+
+    if (vEvictionCandidates.empty()) return false;
+
     // Protect the half of the remaining nodes which have been connected the longest.
-    // This replicates the existing implicit behavior.
+    // An attacker cannot go back in time and begin their attack earlier. This is also the historic node behavior.
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
     vEvictionCandidates.erase(vEvictionCandidates.end() - static_cast<int>(vEvictionCandidates.size() / 2), vEvictionCandidates.end());
 
@@ -1256,6 +1282,7 @@ void ThreadSocketHandler()
             int64_t nTime = GetTime();
             if (nTime - pnode->nTimeConnected > 60)
             {
+                LOCK(cs_cNodeStats);
                 if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
                 {
                     LogPrint("net", "socket no message in first 60 seconds, %d %d from %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->id);
@@ -2356,6 +2383,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nRecvBytes = 0;
     nTimeConnected = GetTime();
     nTimeOffset = 0;
+    nTimeLastTX = 0;
     addr = addrIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     nVersion = 0;
