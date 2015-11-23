@@ -400,8 +400,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, un
                     if ((nSequence & CTxIn::SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0)
                         break;
 
-                    // Actually compare the specified inverse sequence number
-                    // with the input.
+                    // Compare the specified sequence number with the input.
                     if (!checker.CheckSequence(nSequence))
                         return set_error(serror, SCRIPT_ERR_UNSATISFIED_LOCKTIME);
 
@@ -1160,7 +1159,7 @@ static bool VerifyLockTime(int64_t txToLockTime, int64_t nThreshold, const CScri
     // There are two kinds of nLockTime: lock-by-blockheight
     // and lock-by-blocktime, distinguished by whether
     // nLockTime < nThreshold (either LOCKTIME_THRESHOLD or
-    // SEQUENCE_UNITS_THRESHOLD).
+    // CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG).
     //
     // We want to compare apples to apples, so fail the script
     // unless the type of nLockTime being tested is the same as
