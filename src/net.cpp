@@ -871,7 +871,7 @@ public:
     }
 };
 
-static bool AttemptToEvictConnection(bool fPreferNewConnection) {
+static bool AttemptToEvictConnection(CNetAddr newaddr, bool fPreferNewConnection) {
     std::vector<CNodeRef> vEvictionCandidates;
     {
         LOCK(cs_vNodes);
@@ -934,8 +934,8 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     // Reduce to the network group with the most connections
     vEvictionCandidates = mapAddrCounts[naMostConnections];
 
-    // Do not disconnect peers if there is only one unprotected connection from their network group.
-    if (vEvictionCandidates.size() <= 1)
+    // Do not disconnect a peer if doing so would reduce the number of unprotected netgroups connected.
+    if (vEvictionCandidates.size() <= 1 && mapAddrCounts.find(newaddr.GetGroup()) != mapAddrCounts.end())
         // unless we prefer the new connection (for whitelisted peers)
         if (!fPreferNewConnection)
             return false;
@@ -999,7 +999,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
 
     if (nInbound >= nMaxInbound)
     {
-        if (!AttemptToEvictConnection(whitelisted)) {
+        if (!AttemptToEvictConnection(addr, whitelisted)) {
             // No connection to evict, disconnect the new connection
             LogPrint("net", "failed to find an eviction candidate - connection dropped (full)\n");
             CloseSocket(hSocket);
