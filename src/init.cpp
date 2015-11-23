@@ -778,7 +778,12 @@ bool AppInit2(boost::thread_group& threadGroup)
         ShrinkDebugFile();
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
     LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
+#else
+    LogPrintf("Using OpenSSL version %s\n", OpenSSL_version(OPENSSL_VERSION));
+#endif
+
 #ifdef ENABLE_WALLET
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
 #endif
