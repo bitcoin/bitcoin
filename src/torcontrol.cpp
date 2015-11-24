@@ -449,6 +449,15 @@ void TorController::auth_cb(TorControlConnection& conn, const TorControlReply& r
 {
     if (reply.code == 250) {
         LogPrint("tor", "tor: Authentication succesful\n");
+
+        // Now that we know Tor is running setup the proxy for onion addresses
+        // if -onion isn't set to something else.
+        if (GetArg("-onion", "") == "") {
+            proxyType addrOnion = proxyType(CService("127.0.0.1", 9050), true);
+            SetProxy(NET_TOR, addrOnion);
+            SetReachable(NET_TOR);
+        }
+
         // Finally - now create the service
         if (private_key.empty()) // No private key, generate one
             private_key = "NEW:BEST";
