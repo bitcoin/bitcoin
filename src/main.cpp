@@ -3997,12 +3997,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->nVersion >= NO_BLOOM_VERSION) {
             Misbehaving(pfrom->GetId(), 100);
             return false;
+        } else if (GetBoolArg("-enforcenodebloom", false)) {
+            pfrom->fDisconnect = true;
+            return false;
         }
-        //TODO: Enable this after reasonable network upgrade
-        //else {
-        //    pfrom->fDisconnect = true;
-        //    return false;
-        //}
     }
 
 
