@@ -1,10 +1,8 @@
 Regression tests
 ================
 
-### [python-bitcoinrpc](https://github.com/jgarzik/python-bitcoinrpc)
-Git subtree of [https://github.com/jgarzik/python-bitcoinrpc](https://github.com/jgarzik/python-bitcoinrpc).
-Changes to python-bitcoinrpc should be made upstream, and then
-pulled here using git subtree.
+### [test_framework/authproxy.py](test_framework/authproxy.py)
+Taken from the [python-bitcoinrpc repository](https://github.com/jgarzik/python-bitcoinrpc).
 
 ### [test_framework/test_framework.py](test_framework/test_framework.py)
 Base class for new regression tests.
