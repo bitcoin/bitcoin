@@ -677,14 +677,20 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     assert(innerUsage == cachedInnerUsage);
 }
 
-void CTxMemPool::queryHashes(vector<uint256>& vtxid)
+void CTxMemPool::queryHashes(vector<uint256>& vtxid, size_t maxresults, int64_t maxtime)
 {
     vtxid.clear();
 
     LOCK(cs);
     vtxid.reserve(mapTx.size());
-    for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
-        vtxid.push_back(mi->GetTx().GetHash());
+    size_t count = 0;
+    //Doesn't use the time sorted index to avoid an information leak about when a transaction entered the mempool.
+    for (indexed_transaction_set::iterator mi = mapTx.begin(); count < maxresults && mi != mapTx.end(); ++mi) {
+        if (mi->GetTime() < maxtime) {
+            vtxid.push_back(mi->GetTx().GetHash());
+            count++;
+        }
+    }
 }
 
 bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const

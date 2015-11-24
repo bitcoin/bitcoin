@@ -4617,26 +4617,37 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
     else if (strCommand == "mempool")
     {
-        LOCK2(cs_main, pfrom->cs_filter);
 
-        std::vector<uint256> vtxid;
-        mempool.queryHashes(vtxid);
-        vector<CInv> vInv;
-        BOOST_FOREACH(uint256& hash, vtxid) {
-            CInv inv(MSG_TX, hash);
-            CTransaction tx;
-            bool fInMemPool = mempool.lookup(hash, tx);
-            if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
-            if ((pfrom->pfilter && pfrom->pfilter->IsRelevantAndUpdate(tx)) ||
-               (!pfrom->pfilter))
-                vInv.push_back(inv);
-            if (vInv.size() == MAX_INV_SZ) {
-                pfrom->PushMessage("inv", vInv);
-                vInv.clear();
+        //Put the mempool on a 16 to 32 second quantized time delay to suppress the arrival time information leak.
+        //nTimeLastMempool is reset on filter updates because some wallets will update the filter and fetch right away again..
+        int64_t rounded_time = (GetTime() - 16) & 0x7ffffffffffffff0LL;
+        if (rounded_time > pfrom->nTimeLastMempool) {
+            LOCK(cs_main);
+            std::vector<uint256> vtxid;
+            mempool.queryHashes(vtxid, 8192, rounded_time); // Limited to 8192 result before duplicate filtering.
+            pfrom->nTimeLastMempool = rounded_time;
+            LOCK2(pfrom->cs_filter, pfrom->cs_inventory);
+            vector<CInv> vInv;
+            BOOST_FOREACH(uint256& hash, vtxid) {
+                CInv inv(MSG_TX, hash);
+                if (!pfrom->setInventoryKnown.count(inv)) {
+                    CTransaction tx;
+                    bool fInMemPool = mempool.lookup(hash, tx);
+                    if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
+                    if ((pfrom->pfilter && pfrom->pfilter->IsRelevantAndUpdate(tx)) ||
+                       (!pfrom->pfilter)) {
+                        vInv.push_back(inv);
+                        pfrom->setInventoryKnown.insert(inv);
+                    }
+                    if (vInv.size() == MAX_INV_SZ) {
+                        pfrom->PushMessage("inv", vInv);
+                        vInv.clear();
+                    }
+                }
             }
+            if (vInv.size() > 0)
+                pfrom->PushMessage("inv", vInv);
         }
-        if (vInv.size() > 0)
-            pfrom->PushMessage("inv", vInv);
     }
 
 
@@ -4777,6 +4788,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             LOCK(pfrom->cs_filter);
             delete pfrom->pfilter;
+            pfrom->nTimeLastMempool = 0; //Reset last mempool time.
             pfrom->pfilter = new CBloomFilter(filter);
             pfrom->pfilter->UpdateEmptyFull();
         }
@@ -4795,6 +4807,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         {
             Misbehaving(pfrom->GetId(), 100);
         } else {
+            pfrom->nTimeLastMempool = 0; //Reset last mempool last time.
             LOCK(pfrom->cs_filter);
             if (pfrom->pfilter)
                 pfrom->pfilter->insert(vData);
@@ -4808,6 +4821,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         LOCK(pfrom->cs_filter);
         delete pfrom->pfilter;
+        pfrom->nTimeLastMempool = 0; //Reset last mempool time.
         pfrom->pfilter = new CBloomFilter();
         pfrom->fRelayTxes = true;
     }
