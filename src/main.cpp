@@ -802,16 +802,7 @@ static std::string FormatStateMessage(const CValidationState &state)
 
 bool CheckForConflicts(const CTransaction &tx)
 {
-    LOCK(mempool.cs); // protect pool.mapNextTx
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-    {
-        COutPoint outpoint = tx.vin[i].prevout;
-        if (mempool.mapNextTx.count(outpoint))
-        {
-            // Disable replacement feature for now
-            return true;
-        }
-    }
+    LOCK(mempool.cs);
 
     CCoinsView dummy;
     CCoinsViewCache view(&dummy);
@@ -822,6 +813,16 @@ bool CheckForConflicts(const CTransaction &tx)
     // no conflict in case of the tx is already known
     if (view.HaveCoins(tx.GetHash()))
         return false;
+
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        COutPoint outpoint = tx.vin[i].prevout;
+        if (mempool.mapNextTx.count(outpoint))
+        {
+            // Disable replacement feature for now
+            return true;
+        }
+    }
 
     // are the actual inputs available?
     if (!view.HaveInputs(tx))
