@@ -480,11 +480,11 @@ public:
     }
 
 
-    void AddInventoryKnown(const CInv& inv)
+    bool AddInventoryKnown(const CInv& inv)
     {
         {
             LOCK(cs_inventory);
-            setInventoryKnown.insert(inv);
+            return setInventoryKnown.insert(inv).second;
         }
     }
 
