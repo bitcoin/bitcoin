@@ -2179,9 +2179,10 @@ void run_ec_combine(void) {
 void test_group_decompress(const secp256k1_fe* x) {
     /* The input itself, normalized. */
     secp256k1_fe fex = *x;
-    secp256k1_fe tmp;
+    secp256k1_fe fez;
     /* Results of set_xquad_var, set_xo_var(..., 0), set_xo_var(..., 1). */
     secp256k1_ge ge_quad, ge_even, ge_odd;
+    secp256k1_gej gej_quad;
     /* Return values of the above calls. */
     int res_quad, res_even, res_odd;
 
@@ -2213,13 +2214,29 @@ void test_group_decompress(const secp256k1_fe* x) {
         CHECK(secp256k1_fe_equal_var(&ge_odd.x, x));
 
         /* Check that the Y coordinate result in ge_quad is a square. */
-        CHECK(secp256k1_fe_sqrt_var(&tmp, &ge_quad.y));
-        secp256k1_fe_sqr(&tmp, &tmp);
-        CHECK(secp256k1_fe_equal_var(&tmp, &ge_quad.y));
+        CHECK(secp256k1_fe_is_quad_var(&ge_quad.y));
 
         /* Check odd/even Y in ge_odd, ge_even. */
         CHECK(secp256k1_fe_is_odd(&ge_odd.y));
         CHECK(!secp256k1_fe_is_odd(&ge_even.y));
+
+        /* Check secp256k1_gej_has_quad_y_var. */
+        secp256k1_gej_set_ge(&gej_quad, &ge_quad);
+        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
+        do {
+            random_fe_test(&fez);
+        } while (secp256k1_fe_is_zero(&fez));
+        secp256k1_gej_rescale(&gej_quad, &fez);
+        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
+        secp256k1_gej_neg(&gej_quad, &gej_quad);
+        CHECK(!secp256k1_gej_has_quad_y_var(&gej_quad));
+        do {
+            random_fe_test(&fez);
+        } while (secp256k1_fe_is_zero(&fez));
+        secp256k1_gej_rescale(&gej_quad, &fez);
+        CHECK(!secp256k1_gej_has_quad_y_var(&gej_quad));
+        secp256k1_gej_neg(&gej_quad, &gej_quad);
+        CHECK(secp256k1_gej_has_quad_y_var(&gej_quad));
     }
 }
 

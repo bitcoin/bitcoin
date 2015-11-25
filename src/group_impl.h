@@ -629,4 +629,18 @@ static void secp256k1_ge_mul_lambda(secp256k1_ge *r, const secp256k1_ge *a) {
 }
 #endif
 
+static int secp256k1_gej_has_quad_y_var(const secp256k1_gej *a) {
+    secp256k1_fe yz;
+
+    if (a->infinity) {
+        return 0;
+    }
+
+    /* We rely on the fact that the Jacobi symbol of 1 / a->z^3 is the same as
+     * that of a->z. Thus a->y / a->z^3 is a quadratic residue iff a->y * a->z
+       is */
+    secp256k1_fe_mul(&yz, &a->y, &a->z);
+    return secp256k1_fe_is_quad_var(&yz);
+}
+
 #endif
