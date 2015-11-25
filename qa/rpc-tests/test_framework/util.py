@@ -67,6 +67,9 @@ def check_json_precision():
     if satoshis != 2000000000000003:
         raise RuntimeError("JSON encode/decode loses precision")
 
+def count_bytes(hex_string):
+    return len(bytearray.fromhex(hex_string))
+
 def sync_blocks(rpc_connections, wait=1):
     """
     Wait until everybody has the same block count
