@@ -932,7 +932,7 @@ CAmount GetMinRelayFee(const CTransaction& tx, unsigned int nBytes, bool fAllowF
 
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-                        bool* pfMissingInputs, bool fRejectAbsurdFee)
+                        bool* pfMissingInputs, bool fRejectAbsurdFee, bool thisIsReplayed)
 {
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
@@ -1053,6 +1053,8 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
 
+        if (!thisIsReplayed)  // BU: If this transaction is replayed (comes from a block we unwound) don't waste time reverifying it
+          {
         // Continuously rate-limit free (really, very-low-fee) transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
@@ -1102,7 +1104,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         {
             return error("AcceptToMemoryPool: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s", hash.ToString());
         }
-
+          }
         // Store transaction in memory
         pool.addUnchecked(hash, entry, !IsInitialBlockDownload());
     }
@@ -2187,7 +2189,7 @@ bool static DisconnectTip(CValidationState &state) {
         // ignore validation errors in resurrected transactions
         list<CTransaction> removed;
         CValidationState stateDummy;
-        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL))
+        if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL,false,true))
             mempool.remove(tx, removed, true);
     }
     mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
@@ -2771,7 +2773,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             return error("CheckBlock(): CheckTransaction failed");
 
     uint64_t nSigOps = 0;
-    uint64_t nTx = 0;
+    uint64_t nTx = 0;  // BU: count the number of transactions in case the CheckExcessive function wants to use this as criteria
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
         nTx++;
@@ -2781,7 +2783,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     //    return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
     //                     REJECT_INVALID, "bad-blk-sigops", true);
 
-    block.fExcessive = CheckExcessive(block,blockSize, nSigOps,nTx);  // Check whether this block exceeds what we want to relay.
+    block.fExcessive = CheckExcessive(block,blockSize, nSigOps,nTx);  // BU: Check whether this block exceeds what we want to relay.
 
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
@@ -2915,11 +2917,6 @@ bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, CBloc
     return true;
 }
 
-void UnlimitedAcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CDiskBlockPos* dbp)
-{
-  // It is not necessary to put the chain on the candidates list here.  It will be added by AcceptBlock if it is valid.
-}
-
 
 bool AcceptBlock(CBlock& block, CValidationState& state, CBlockIndex** ppindex, bool fRequested, CDiskBlockPos* dbp)
 {
@@ -3022,7 +3019,6 @@ bool ProcessNewBlock(CValidationState &state, CNode* pfrom, CBlock* pblock, bool
         if (pindex && pfrom) {
             mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
         }
-        UnlimitedAcceptBlock(*pblock, state, pindex, dbp);
         CheckBlockIndex();
         if (!ret)
             return error("%s: AcceptBlock FAILED", __func__);
@@ -3707,7 +3703,7 @@ void static CheckBlockIndex()
                 // is valid and we have all data for its parents, it must be in
                 // setBlockIndexCandidates.  chainActive.Tip() must also be there
                 // even if some data has been pruned.
-              if ((!isChainExcessive(pindex)) && (pindexFirstMissing == NULL || pindex == chainActive.Tip()) )
+              if ((!isChainExcessive(pindex)) && (pindexFirstMissing == NULL || pindex == chainActive.Tip()) )  // BU: if the chain is excessive it won't be on the list of active chain candidates
                 assert(setBlockIndexCandidates.count(pindex));
                 // If some parent is missing, then it could be that this block was in
                 // setBlockIndexCandidates but had to be removed because of the missing data.
@@ -3732,7 +3728,7 @@ void static CheckBlockIndex()
             assert(foundInUnlinked);
         }
         if (!(pindex->nStatus & BLOCK_HAVE_DATA)) assert(!foundInUnlinked); // Can't be in mapBlocksUnlinked if we don't HAVE_DATA
-        if ((pindexFirstMissing == NULL)&&(!isChainExcessive(pindex)))
+        if ((pindexFirstMissing == NULL)&&(!isChainExcessive(pindex))) // BU: why is this needed here?
           {
           assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked.
           }
@@ -3939,11 +3935,11 @@ void static ProcessGetData(CNode* pfrom)
                         if (!send) {
                             LogPrintf("%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom->GetId());
                         }
-                        else {  // Unlimited -- don't relay excessive blocks
+                        else {  // BU: don't relay excessive blocks
                           if (mi->second->nStatus & BLOCK_EXCESSIVE) send=false;
                           if (!send) LogPrintf("%s: ignoring request from peer=%i for excessive block of height %d not on the main chain\n", __func__, pfrom->GetId(), mi->second->nHeight);
                           }
-                        // Unlimited: ancientBlockThrottle for bandwidth shaping here
+                        // BU: in the future we can throttle old block requests by setting send=false if we are out of bandwidth
                     }
                 }
                 // Pruned nodes may have deleted the block, so check whether
@@ -4042,6 +4038,7 @@ void static ProcessGetData(CNode* pfrom)
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
 {
+    int64_t receiptTime = GetTime();
     const CChainParams& chainparams = Params();
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->id);
@@ -4611,6 +4608,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
+        UnlimitedLogBlock(block,inv.hash.ToString(),receiptTime);
 
         pfrom->AddInventoryKnown(inv);
 

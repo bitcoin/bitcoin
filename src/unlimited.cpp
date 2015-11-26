@@ -5,6 +5,7 @@
 #include <inttypes.h>
 
 #include "util.h"
+#include "version.h"
 #include "unlimited.h"
 #include "clientversion.h"
 #include "rpcserver.h"
@@ -13,23 +14,83 @@
 #include "leakybucket.h"
 #include "primitives/block.h"
 #include "chain.h"
+#include "net.h"
+#include "txmempool.h"
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace json_spirit;
 
-enum { DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4, DEFAULT_EXCESSIVE_BLOCK_SIZE = 1000000 };  // 16*1024*1024 };
+extern CTxMemPool mempool;  // from main.cpp
 
 uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
 unsigned int excessiveAcceptDepth =  DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
+unsigned int maxMessageSizeMultiplier = DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER;
 
 // Variables for traffic shaping
 CLeakyBucket receiveShaper(DEFAULT_MAX_RECV_BURST, DEFAULT_AVE_RECV);
 CLeakyBucket sendShaper(DEFAULT_MAX_SEND_BURST, DEFAULT_AVE_SEND);
 boost::chrono::steady_clock CLeakyBucket::clock;
 
+void UnlimitedPushTxns(CNode* dest);
+
+
+Value pushtx(const Array& params, bool fHelp)
+{
+    string strCommand;
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "pushtx \"node\"\n"
+            "\nPush uncommitted transactions to a node.\n"
+            "\nArguments:\n"
+            "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
+            "\nExamples:\n" +
+            HelpExampleCli("pushtx", "\"192.168.0.6:8333\" ") + HelpExampleRpc("pushtx", "\"192.168.0.6:8333\", "));
+
+    string strNode = params[0].get_str();
+
+    CNode* node = FindNode(strNode);
+    if (!node)
+      {
+#if 0
+    if (strCommand == "onetry") {
+        CAddress addr;
+        OpenNetworkConnection(addr, NULL, strNode.c_str());
+        return Value::null;
+    }
+#endif
+        throw runtime_error("Unknown node");
+      }
+    UnlimitedPushTxns(node);
+    return Value::null;
+}
+
+void UnlimitedPushTxns(CNode* dest)
+{
+  //LOCK2(cs_main, pfrom->cs_filter);
+  LOCK(dest->cs_filter);
+  std::vector<uint256> vtxid;
+  mempool.queryHashes(vtxid);
+  vector<CInv> vInv;
+  BOOST_FOREACH(uint256& hash, vtxid) {
+    CInv inv(MSG_TX, hash);
+    CTransaction tx;
+    bool fInMemPool = mempool.lookup(hash, tx);
+    if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
+    if ((dest->pfilter && dest->pfilter->IsRelevantAndUpdate(tx)) ||
+        (!dest->pfilter))
+      vInv.push_back(inv);
+    if (vInv.size() == MAX_INV_SZ) {
+      dest->PushMessage("inv", vInv);
+      vInv.clear();
+    }
+  }
+  if (vInv.size() > 0)
+    dest->PushMessage("inv", vInv);
+
+}
 
 void UnlimitedSetup(void)
 {
@@ -54,6 +115,21 @@ void UnlimitedSetup(void)
 
   receiveShaper.set(rb, ra);
   sendShaper.set(sb, sa);
+}
+
+
+FILE* blockReceiptLog=NULL;
+
+extern void UnlimitedLogBlock(const CBlock& block,const std::string& hash,uint64_t receiptTime)
+{
+  if (!blockReceiptLog) blockReceiptLog=fopen("blockReceiptLog.txt","a");
+  if (blockReceiptLog)
+    {
+      long int byteLen = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+      CBlockHeader bh = block.GetBlockHeader();
+      fprintf(blockReceiptLog, "%" PRIu64 ",%" PRIu64 ",%ld,%ld,%s\n",receiptTime, (uint64_t) bh.nTime,byteLen,block.vtx.size(),hash.c_str());
+      fflush(blockReceiptLog);
+    }
 }
 
 

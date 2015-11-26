@@ -284,6 +284,7 @@ static const CRPCCommand vRPCCommands[] =
     { "network",            "ping",                   &ping,                   true  },
     { "network",            "settrafficshaping",      &settrafficshaping,      true  },
     { "network",            "gettrafficshaping",      &gettrafficshaping,      true  },
+    { "network",            "pushtx",                 &pushtx,                 true  },  // BU
 
     /* Block chain and UTXO */
     { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },

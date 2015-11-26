@@ -548,8 +548,12 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes)
         if (handled < 0)
                 return false;
 
-        if (msg.in_data && msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
+        // BU: only reject the message if it is some multiple of the excessive 
+        // block size.  Since traffic shaping will keep the bandwidth in check
+        // this basically eliminates nodes that are deliberately trying to screw us up. 
+        if (maxMessageSizeMultiplier && msg.in_data && msg.hdr.nMessageSize > (maxMessageSizeMultiplier*excessiveBlockSize)) {
             LogPrint("net", "Oversized message from peer=%i, disconnecting\n", GetId());
+            //BU: todo warn if too many nodes are doing this
             return false;
         }
 

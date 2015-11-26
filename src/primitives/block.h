@@ -21,7 +21,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int32_t CURRENT_VERSION=4;
+    static const int32_t CURRENT_VERSION=0x40000007;
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -80,7 +80,7 @@ public:
     // memory only
     mutable std::vector<uint256> vMerkleTree;
     mutable bool fChecked;
-    mutable bool fExcessive;
+    mutable bool fExcessive;  // BU: is the block "excessive" (bigger than this node prefers to accept)
 
     CBlock()
     {

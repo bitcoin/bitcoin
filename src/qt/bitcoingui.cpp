@@ -778,7 +778,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate)
     progressBar->setToolTip(tooltip);
 }
 
-CLeakyBucket infoShowTime(20000, 10); 
+CLeakyBucket infoShowTime(20000, 10); // BU: This leaky bucket is used to skip GUI tray notifications if we are sending them too fast
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
@@ -792,17 +792,16 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
 
     switch (style) {
         case CClientUIInterface::MSG_ERROR:
-            showTime = 20000;
+            showTime = 20000; // BU: set display time to 20 seconds if its an error
             msgType = tr("Error");
             break;
         case CClientUIInterface::MSG_WARNING:
-            showTime = 15000;
+            showTime = 15000; // BU: set display time to 15 seconds if its an error
             msgType = tr("Warning");
             break;
         case CClientUIInterface::MSG_INFORMATION:
             showTime = infoShowTime.available();
-            infoShowTime.try_leak(std::min(showTime,1000));
-            //if (showTime == 0) showTime = 10;  // 10ms minimum showing time
+            if (showTime >= NOTIFY_MIN_SHOW_TIME) infoShowTime.try_leak(std::min(showTime,1000));  // BU: If we are going to show this notification, leak a second or more out of the bucket
             msgType = tr("Information");            
             break;
         default:
@@ -842,7 +841,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             *ret = r == QMessageBox::Ok;
     }
     else
-      if (showTime>10) notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message, QIcon(), showTime);
+      if (showTime>=NOTIFY_MIN_SHOW_TIME) notificator->notify((Notificator::Class)nNotifyIcon, strTitle, message, QIcon(), showTime);  // BU: If we want to display for at least 1 second then show it.  Actually, practice it looks like the system tray has a several second minimum.
 }
 
 void BitcoinGUI::changeEvent(QEvent *e)
@@ -881,8 +880,6 @@ void BitcoinGUI::closeEvent(QCloseEvent *event)
 #endif
     QMainWindow::closeEvent(event);
 }
-
-
 
 #ifdef ENABLE_WALLET
 void BitcoinGUI::incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label)

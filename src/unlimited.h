@@ -13,7 +13,10 @@
 
 enum
 {
-    DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000
+  DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,
+  DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4, 
+  DEFAULT_EXCESSIVE_BLOCK_SIZE = 16000000,
+  DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 10
 };
 
 class CBlock;
@@ -24,11 +27,14 @@ class CDiskBlockPos;
 extern uint64_t maxGeneratedBlock;
 extern unsigned int excessiveBlockSize;
 extern unsigned int excessiveAcceptDepth;
+extern unsigned int maxMessageSizeMultiplier;
 
 extern void UnlimitedSetup(void);
 
 // Called whenever a new block is accepted
 extern void UnlimitedAcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex* ppindex, CDiskBlockPos* dbp);
+
+extern void UnlimitedLogBlock(const CBlock& block,const std::string& hash,uint64_t receiptTime);
 
 // Check whether this block is bigger in some metric than we really want to accept
 extern bool CheckExcessive(const CBlock& block,uint64_t blockSize, uint64_t nSigOps,uint64_t nTx);
@@ -39,6 +45,7 @@ extern int isChainExcessive(const CBlockIndex* blk,unsigned int checkDepth = exc
 // RPC calls
 extern json_spirit::Value settrafficshaping(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value gettrafficshaping(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value pushtx(const json_spirit::Array& params, bool fHelp);
 
 
 // These variables for traffic shaping need to be globally scoped so the GUI and CLI can adjust the parameters
