@@ -2636,8 +2636,10 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             // Notify external listeners about the new tip.
             if (!vHashes.empty()) {
                 GetMainSignals().UpdatedBlockTip(pindexNewTip);
-                uiInterface.NotifyBlockTip(vHashes.front());
             }
+        }
+        if (!vHashes.empty()) {
+            uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
         }
     } while(pindexMostWork != chainActive.Tip());
     CheckBlockIndex(chainparams.GetConsensus());
