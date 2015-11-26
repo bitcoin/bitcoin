@@ -81,11 +81,6 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    int cachedNumBlocks;
-    QDateTime cachedBlockDate;
-    bool cachedReindexing;
-    bool cachedImporting;
-
     QTimer *pollTimer;
 
     void subscribeToCoreSignals();
