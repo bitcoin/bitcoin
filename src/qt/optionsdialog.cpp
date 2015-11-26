@@ -47,6 +47,8 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->pruneSize->setEnabled(false);
     connect(ui->prune, &QPushButton::toggled, ui->pruneSize, &QWidget::setEnabled);
 
+    ui->networkPort->setValidator(new QIntValidator(1, 65535, this));
+
     /* Network elements init */
 #ifndef USE_UPNP
     ui->mapPortUpnp->setEnabled(false);
@@ -209,6 +211,7 @@ void OptionsDialog::setModel(OptionsModel *_model)
     /* Wallet */
     connect(ui->spendZeroConfChange, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     /* Network */
+    connect(ui->networkPort, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
     connect(ui->allowIncoming, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocks, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
     connect(ui->connectSocksTor, &QCheckBox::clicked, this, &OptionsDialog::showRestartWarning);
@@ -242,6 +245,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->externalSignerPath, OptionsModel::ExternalSignerPath);
 
     /* Network */
+    mapper->addMapping(ui->networkPort, OptionsModel::NetworkPort);
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
     mapper->addMapping(ui->mapPortNatpmp, OptionsModel::MapPortNatpmp);
     mapper->addMapping(ui->allowIncoming, OptionsModel::Listen);
