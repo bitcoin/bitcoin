@@ -316,6 +316,55 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Network">
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_1_Network">
+         <item>
+          <widget class="QLabel" name="networkPortLabel">
+           <property name="text">
+            <string>Network &amp;port</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>networkPort</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="networkPort">
+           <property name="minimumSize">
+            <size>
+             <width>55</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>55</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="toolTip">
+            <string>Network port (e.g. 8333)</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_1_Network">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QCheckBox" name="mapPortUpnp">
          <property name="toolTip">
           <string>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</string>
@@ -356,7 +405,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_1_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_2_Network">
          <item>
           <widget class="QLabel" name="proxyIpLabel">
            <property name="text">
@@ -422,7 +471,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_1_Network">
+          <spacer name="horizontalSpacer_2_Network">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -437,7 +486,7 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_3_Network">
          <item>
           <widget class="QLabel" name="proxyActiveNets">
            <property name="text">
@@ -518,7 +567,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_2_Network">
+          <spacer name="horizontalSpacer_3_Network">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -543,7 +592,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_4_Network">
          <item>
           <widget class="QLabel" name="proxyIpTorLabel">
            <property name="text">
