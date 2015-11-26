@@ -136,7 +136,7 @@ class TxnMallTest(BitcoinTestFramework):
         tx2 = self.nodes[0].gettransaction(txid2)
         
         # Verify expected confirmations
-        assert_equal(tx1["confirmations"], -1)
+        assert_equal(tx1["confirmations"], -2)
         assert_equal(tx1_clone["confirmations"], 2)
         assert_equal(tx2["confirmations"], 1)
 
