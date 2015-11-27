@@ -98,9 +98,15 @@ size_t ClientModel::getMempoolDynamicUsage() const
     return mempool.DynamicMemoryUsage();
 }
 
-double ClientModel::getVerificationProgress(const CBlockIndex *tip) const
+double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 {
-    return Checkpoints::GuessVerificationProgress(Params().Checkpoints(), (CBlockIndex *)tip);
+    CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
+    if (!tip)
+    {
+        LOCK(cs_main);
+        tip = chainActive.Tip();
+    }
+    return Checkpoints::GuessVerificationProgress(Params().Checkpoints(), tip);
 }
 
 void ClientModel::updateTimer()
@@ -247,10 +253,9 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     // if we are in-sync, update the UI regardless of last update time
     if (!initialSync || now - nLastBlockTipUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass a async signal to the UI thread
-        Q_EMIT clientmodel->numBlocksChanged(pIndex->nHeight, QDateTime::fromTime_t(pIndex->GetBlockTime()), pIndex);
+        Q_EMIT clientmodel->numBlocksChanged(pIndex->nHeight, QDateTime::fromTime_t(pIndex->GetBlockTime()), clientmodel->getVerificationProgress(pIndex));
         nLastBlockTipUpdateNotification = now;
     }
-
 }
 
 void ClientModel::subscribeToCoreSignals()
