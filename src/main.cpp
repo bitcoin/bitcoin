@@ -2638,9 +2638,8 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
                 GetMainSignals().UpdatedBlockTip(pindexNewTip);
             }
         }
-        if (!vHashes.empty()) {
-            uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
-        }
+        // Always notify the UI if a new block tip was connected
+        uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
     } while(pindexMostWork != chainActive.Tip());
     CheckBlockIndex(chainparams.GetConsensus());
 
