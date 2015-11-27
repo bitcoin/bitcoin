@@ -19,10 +19,10 @@
 using namespace std;
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
-                                 int64_t _nTime, double _dPriority,
-                                 unsigned int _nHeight, bool poolHasNoInputsOf):
-    tx(_tx), nFee(_nFee), nTime(_nTime), dPriority(_dPriority), nHeight(_nHeight),
-    hadNoDependencies(poolHasNoInputsOf)
+                                 int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
+                                 bool poolHasNoInputsOf, CAmount _inChainInputValue):
+    tx(_tx), nFee(_nFee), nTime(_nTime), entryPriority(_entryPriority), entryHeight(_entryHeight),
+    hadNoDependencies(poolHasNoInputsOf), inChainInputValue(_inChainInputValue)
 {
     nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
     nModSize = tx.CalculateModifiedSize(nTxSize);
@@ -31,6 +31,10 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
     nCountWithDescendants = 1;
     nSizeWithDescendants = nTxSize;
     nFeesWithDescendants = nFee;
+    CAmount nValueIn = tx.GetValueOut()+nFee;
+    assert(inChainInputValue <= nValueIn);
+    cachedHeight = entryHeight;
+    cachedPriority = entryPriority;
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
@@ -41,9 +45,14 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
 double
 CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 {
-    CAmount nValueIn = tx.GetValueOut()+nFee;
-    double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nModSize;
-    double dResult = dPriority + deltaPriority;
+    // This will only return accurate results when currentHeight >= the heights
+    // at which all the in-chain inputs of the tx were included in blocks.
+    // Typical usage of GetPriority with chainActive.Height() will ensure this.
+    int heightDiff = currentHeight - cachedHeight;
+    double deltaPriority = ((double)heightDiff*inChainInputValue)/nModSize;
+    double dResult = cachedPriority + deltaPriority;
+    if (dResult < 0) // This should only happen if it was called with an invalid height
+        dResult = 0;
     return dResult;
 }
 
@@ -306,6 +315,16 @@ void CTxMemPoolEntry::UpdateState(int64_t modifySize, CAmount modifyFee, int64_t
     }
 }
 
+void CTxMemPoolEntry::UpdateCachedPriority(unsigned int currentHeight, CAmount valueInCurrentBlock)
+{
+    int heightDiff = currentHeight - cachedHeight;
+    double deltaPriority = ((double)heightDiff*inChainInputValue)/nModSize;
+    cachedPriority += deltaPriority;
+    cachedHeight = currentHeight;
+    inChainInputValue += valueInCurrentBlock;
+    assert(MoneyRange(inChainInputValue));
+}
+
 CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
     nTransactionsUpdated(0)
 {
@@ -518,6 +537,19 @@ void CTxMemPool::removeConflicts(const CTransaction &tx, std::list<CTransaction>
     }
 }
 
+void CTxMemPool::UpdateDependentPriorities(const CTransaction &tx, unsigned int nBlockHeight, bool addToChain)
+{
+    LOCK(cs);
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        std::map<COutPoint, CInPoint>::iterator it = mapNextTx.find(COutPoint(tx.GetHash(), i));
+        if (it == mapNextTx.end())
+            continue;
+        uint256 hash = it->second.ptx->GetHash();
+        txiter iter = mapTx.find(hash);
+        mapTx.modify(iter, update_priority(nBlockHeight, addToChain ? tx.vout[i].nValue : -tx.vout[i].nValue));
+    }
+}
+
 /**
  * Called when a block is connected. Removes from mempool and updates the miner fee estimator.
  */
@@ -536,6 +568,7 @@ void CTxMemPool::removeForBlock(const std::vector<CTransaction>& vtx, unsigned i
     }
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
+        UpdateDependentPriorities(tx, nBlockHeight, true);
         std::list<CTransaction> dummy;
         remove(tx, dummy, false);
         removeConflicts(tx, conflicts);
@@ -566,7 +599,7 @@ void CTxMemPool::clear()
     _clear();
 }
 
-void CTxMemPool::check(const CCoinsViewCache *pcoins) const
+void CTxMemPool::check(const CCoinsViewCache *pcoins, unsigned int nBlockHeight) const
 {
     if (nCheckFrequency == 0)
         return;
@@ -582,10 +615,19 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
 
     LOCK(cs);
+    CCoinsViewMemPool viewMemPool(pcoinsTip, *this);
+    CCoinsViewCache view(&viewMemPool);
     list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         unsigned int i = 0;
         checkTotal += it->GetTxSize();
+        CAmount dummyValue;
+        double freshPriority = view.GetPriority(it->GetTx(), nBlockHeight, dummyValue);
+        double cachePriority = it->GetPriority(nBlockHeight);
+        double priDiff = cachePriority > freshPriority ? cachePriority - freshPriority : freshPriority - cachePriority;
+        // Verify that the difference between the on the fly calculation and a fresh calculation
+        // is small enough to be a result of double imprecision.
+        assert(priDiff < .0001 * freshPriority + 1);
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
         txlinksMap::const_iterator linksiter = mapLinks.find(it);
@@ -788,7 +830,7 @@ bool CTxMemPool::HasNoInputsOf(const CTransaction &tx) const
     return true;
 }
 
-CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
+CCoinsViewMemPool::CCoinsViewMemPool(CCoinsView *baseIn, const CTxMemPool &mempoolIn) : CCoinsViewBacked(baseIn), mempool(mempoolIn) { }
 
 bool CCoinsViewMemPool::GetCoins(const uint256 &txid, CCoins &coins) const {
     // If an entry in the mempool exists, always return that one, as it's guaranteed to never

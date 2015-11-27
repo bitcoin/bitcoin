@@ -927,9 +927,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
-        double dPriority = view.GetPriority(tx, chainActive.Height());
+        CAmount inChainInputValue;
+        double dPriority = view.GetPriority(tx, chainActive.Height(), inChainInputValue);
 
-        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx));
+        CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue);
         unsigned int nSize = entry.GetTxSize();
 
         // Don't accept it if it can't get into a block
@@ -941,7 +942,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
         if (mempoolRejectFee > 0 && nFees < mempoolRejectFee) {
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
-        } else if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(view.GetPriority(tx, chainActive.Height() + 1))) {
+        } else if (GetBoolArg("-relaypriority", true) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(entry.GetPriority(chainActive.Height() + 1))) {
             // Require that free transactions have sufficient priority to be mined in the next block.
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
@@ -2291,7 +2292,7 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
 {
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, chainActive.Height());
     // Read block from disk.
     CBlock block;
     if (!ReadBlockFromDisk(block, pindexDelete, consensusParams))
@@ -2311,6 +2312,7 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
     // Resurrect mempool transactions from the disconnected block.
     std::vector<uint256> vHashUpdate;
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+        mempool.UpdateDependentPriorities(tx, pindexDelete->nHeight, false);
         // ignore validation errors in resurrected transactions
         list<CTransaction> removed;
         CValidationState stateDummy;
@@ -2327,7 +2329,7 @@ bool static DisconnectTip(CValidationState& state, const Consensus::Params& cons
     // block that were added back and cleans up the mempool state.
     mempool.UpdateTransactionsFromBlock(vHashUpdate);
     mempool.removeCoinbaseSpends(pcoinsTip, pindexDelete->nHeight);
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, pindexDelete->pprev->nHeight);
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev);
     // Let wallets know transactions went from 1-confirmed to
@@ -2351,7 +2353,7 @@ static int64_t nTimePostConnect = 0;
 bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const CBlock* pblock)
 {
     assert(pindexNew->pprev == chainActive.Tip());
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, chainActive.Height());
     // Read block from disk.
     int64_t nTime1 = GetTimeMicros();
     CBlock block;
@@ -2388,7 +2390,7 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     // Remove conflicting transactions from the mempool.
     list<CTransaction> txConflicted;
     mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted, !IsInitialBlockDownload());
-    mempool.check(pcoinsTip);
+    mempool.check(pcoinsTip, pindexNew->nHeight);
     // Update chainActive & related variables.
     UpdateTip(pindexNew);
     // Tell wallet about transactions that went from mempool
@@ -4615,7 +4617,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
-            mempool.check(pcoinsTip);
+            mempool.check(pcoinsTip, chainActive.Height());
             RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
 
@@ -4671,7 +4673,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         assert(recentRejects);
                         recentRejects->insert(orphanHash);
                     }
-                    mempool.check(pcoinsTip);
+                    mempool.check(pcoinsTip, chainActive.Height());
                 }
             }
 
