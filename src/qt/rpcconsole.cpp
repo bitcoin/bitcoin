@@ -343,8 +343,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         setNumConnections(model->getNumConnections());
         connect(model, SIGNAL(numConnectionsChanged(int)), this, SLOT(setNumConnections(int)));
 
-        setNumBlocks(model->getNumBlocks(), model->getLastBlockDate());
-        connect(model, SIGNAL(numBlocksChanged(int,QDateTime)), this, SLOT(setNumBlocks(int,QDateTime)));
+        setNumBlocks(model->getNumBlocks(), model->getLastBlockDate(), NULL);
+        connect(model, SIGNAL(numBlocksChanged(int,QDateTime,const CBlockIndex*)), this, SLOT(setNumBlocks(int,QDateTime,const CBlockIndex*)));
 
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
@@ -525,7 +525,7 @@ void RPCConsole::setNumConnections(int count)
     ui->numberOfConnections->setText(connections);
 }
 
-void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate)
+void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, const CBlockIndex* tip)
 {
     ui->numberOfBlocks->setText(QString::number(count));
     ui->lastBlockTime->setText(blockDate.toString());

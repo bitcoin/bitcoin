@@ -22,6 +22,8 @@
 #include <QDebug>
 #include <QTimer>
 
+class CBlockIndex;
+
 static const int64_t nClientStartupTime = GetTime();
 static int64_t nLastBlockTipUpdateNotification = 0;
 
@@ -96,10 +98,9 @@ size_t ClientModel::getMempoolDynamicUsage() const
     return mempool.DynamicMemoryUsage();
 }
 
-double ClientModel::getVerificationProgress() const
+double ClientModel::getVerificationProgress(const CBlockIndex *tip) const
 {
-    LOCK(cs_main);
-    return Checkpoints::GuessVerificationProgress(Params().Checkpoints(), chainActive.Tip());
+    return Checkpoints::GuessVerificationProgress(Params().Checkpoints(), (CBlockIndex *)tip);
 }
 
 void ClientModel::updateTimer()
@@ -246,7 +247,7 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     // if we are in-sync, update the UI regardless of last update time
     if (!initialSync || now - nLastBlockTipUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass a async signal to the UI thread
-        Q_EMIT clientmodel->numBlocksChanged(pIndex->nHeight, QDateTime::fromTime_t(pIndex->GetBlockTime()));
+        Q_EMIT clientmodel->numBlocksChanged(pIndex->nHeight, QDateTime::fromTime_t(pIndex->GetBlockTime()), pIndex);
         nLastBlockTipUpdateNotification = now;
     }
 
