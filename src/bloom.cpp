@@ -216,30 +216,54 @@ void CBloomFilter::UpdateEmptyFull()
     isEmpty = empty;
 }
 
-CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate) :
-    b1(nElements * 2, fpRate, 0), b2(nElements * 2, fpRate, 0)
+CRollingBloomFilter::CRollingBloomFilter(unsigned int nElements, double fpRate)
 {
-    // Implemented using two bloom filters of 2 * nElements each.
-    // We fill them up, and clear them, staggered, every nElements
-    // inserted, so at least one always contains the last nElements
-    // inserted.
-    nInsertions = 0;
-    nBloomSize = nElements * 2;
-
+    double logFpRate = log(fpRate);
+    /* The optimal number of hash functions is log(fpRate) / log(0.5), but
+     * restrict it to the range 1-50. */
+    nHashFuncs = std::max(1, std::min((int)round(logFpRate / log(0.5)), 50));
+    /* In this rolling bloom filter, we'll store between 2 and 3 generations of nElements / 2 entries. */
+    nEntriesPerGeneration = (nElements + 1) / 2;
+    uint32_t nMaxElements = nEntriesPerGeneration * 3;
+    /* The maximum fpRate = pow(1.0 - exp(-nHashFuncs * nMaxElements / nFilterBits), nHashFuncs)
+     * =>          pow(fpRate, 1.0 / nHashFuncs) = 1.0 - exp(-nHashFuncs * nMaxElements / nFilterBits)
+     * =>          1.0 - pow(fpRate, 1.0 / nHashFuncs) = exp(-nHashFuncs * nMaxElements / nFilterBits)
+     * =>          log(1.0 - pow(fpRate, 1.0 / nHashFuncs)) = -nHashFuncs * nMaxElements / nFilterBits
+     * =>          nFilterBits = -nHashFuncs * nMaxElements / log(1.0 - pow(fpRate, 1.0 / nHashFuncs))
+     * =>          nFilterBits = -nHashFuncs * nMaxElements / log(1.0 - exp(logFpRate / nHashFuncs))
+     */
+    uint32_t nFilterBits = (uint32_t)ceil(-1.0 * nHashFuncs * nMaxElements / log(1.0 - exp(logFpRate / nHashFuncs)));
+    data.clear();
+    /* We store up to 16 'bits' per data element. */
+    data.resize((nFilterBits + 15) / 16);
     reset();
+}
+
+/* Similar to CBloomFilter::Hash */
+inline unsigned int CRollingBloomFilter::Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const {
+    return MurmurHash3(nHashNum * 0xFBA4C795 + nTweak, vDataToHash) % (data.size() * 16);
 }
 
 void CRollingBloomFilter::insert(const std::vector<unsigned char>& vKey)
 {
-    if (nInsertions == 0) {
-        b1.clear();
-    } else if (nInsertions == nBloomSize / 2) {
-        b2.clear();
+    if (nEntriesThisGeneration == nEntriesPerGeneration) {
+        nEntriesThisGeneration = 0;
+        nGeneration++;
+        if (nGeneration == 4) {
+            nGeneration = 1;
+        }
+        /* Wipe old entries that used this generation number. */
+        for (uint32_t p = 0; p < data.size() * 16; p++) {
+            if (get(p) == nGeneration) {
+                put(p, 0);
+            }
+        }
     }
-    b1.insert(vKey);
-    b2.insert(vKey);
-    if (++nInsertions == nBloomSize) {
-        nInsertions = 0;
+    nEntriesThisGeneration++;
+
+    for (int n = 0; n < nHashFuncs; n++) {
+        uint32_t h = Hash(n, vKey);
+        put(h, nGeneration);
     }
 }
 
@@ -251,10 +275,13 @@ void CRollingBloomFilter::insert(const uint256& hash)
 
 bool CRollingBloomFilter::contains(const std::vector<unsigned char>& vKey) const
 {
-    if (nInsertions < nBloomSize / 2) {
-        return b2.contains(vKey);
+    for (int n = 0; n < nHashFuncs; n++) {
+        uint32_t h = Hash(n, vKey);
+        if (get(h) == 0) {
+            return false;
+        }
     }
-    return b1.contains(vKey);
+    return true;
 }
 
 bool CRollingBloomFilter::contains(const uint256& hash) const
@@ -265,8 +292,10 @@ bool CRollingBloomFilter::contains(const uint256& hash) const
 
 void CRollingBloomFilter::reset()
 {
-    unsigned int nNewTweak = GetRand(std::numeric_limits<unsigned int>::max());
-    b1.reset(nNewTweak);
-    b2.reset(nNewTweak);
-    nInsertions = 0;
+    nTweak = GetRand(std::numeric_limits<unsigned int>::max());
+    nEntriesThisGeneration = 0;
+    nGeneration = 1;
+    for (std::vector<uint32_t>::iterator it = data.begin(); it != data.end(); it++) {
+        *it = 0;
+    }
 }
