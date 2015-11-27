@@ -158,7 +158,7 @@ Value omni_getpayload(const Array& params, bool fHelp)
             "  \"payload\" : \"payloadmessage\",       (string) the decoded Omni payload message\n"
             "  \"payloadsize\" : n,                    (number) the size of the payload\n"
             "}\n"
-            "\nbExamples:\n"
+            "\nExamples:\n"
             + HelpExampleCli("omni_getpayload", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
             + HelpExampleRpc("omni_getpayload", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
         );
