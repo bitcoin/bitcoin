@@ -36,6 +36,7 @@ extern unsigned int nTxConfirmTarget;
 extern bool bSpendZeroConfChange;
 extern bool fSendFreeTransactions;
 extern bool fPayAtLeastCustomFee;
+extern bool fOptIntoFullRbf;
 
 //! -paytxfee default
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
@@ -49,6 +50,8 @@ static const CAmount DEFAULT_TRANSACTION_MAXFEE = 0.1 * COIN;
 static const CAmount MIN_CHANGE = CENT;
 //! -txconfirmtarget default
 static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 2;
+//! -optintofullrbf default
+static const bool DEFAULT_OPT_INTO_FULL_RBF = true;
 //! -maxtxfee will warn if called with a higher fee than this amount (in satoshis)
 static const CAmount nHighTransactionMaxFeeWarning = 100 * nHighTransactionFeeWarning;
 //! Largest (in bytes) free transaction we're willing to create
