@@ -10,6 +10,7 @@
 #include "coins.h"
 #include "consensus/validation.h"
 #include "main.h"
+#include "policy/policy.h"
 #include "primitives/transaction.h"
 #include "rpcserver.h"
 #include "streams.h"
