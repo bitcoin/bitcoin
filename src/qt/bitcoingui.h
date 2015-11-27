@@ -29,6 +29,7 @@ class UnitDisplayStatusBarControl;
 class WalletFrame;
 class WalletModel;
 class HelpMessageDialog;
+class CBlockIndex;
 
 class CWallet;
 
@@ -149,7 +150,7 @@ public Q_SLOTS:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate);
+    void setNumBlocks(int count, const QDateTime& blockDate, const CBlockIndex* tip);
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title     the message box / notification title
