@@ -110,8 +110,11 @@ public:
  * reset() is provided, which also changes nTweak to decrease the impact of
  * false-positives.
  *
- * contains(item) will always return true if item was one of the last N things
+ * contains(item) will always return true if item was one of the last N to 1.5*N
  * insert()'ed ... but may also return true for items that were not inserted.
+ *
+ * It needs around 1.8 bytes per element per factor 0.1 of false positive rate.
+ * (More accurately: 3/(log(256)*log(2)) * log(1/fpRate) * nElements bytes)
  */
 class CRollingBloomFilter
 {
@@ -129,10 +132,23 @@ public:
     void reset();
 
 private:
-    unsigned int nBloomSize;
-    unsigned int nInsertions;
-    CBloomFilter b1, b2;
-};
+    int nEntriesPerGeneration;
+    int nEntriesThisGeneration;
+    int nGeneration;
+    std::vector<uint32_t> data;
+    unsigned int nTweak;
+    int nHashFuncs;
 
+    unsigned int Hash(unsigned int nHashNum, const std::vector<unsigned char>& vDataToHash) const;
+
+    inline int get(uint32_t position) const {
+        return (data[(position >> 4) % data.size()] >> (2 * (position & 0xF))) & 0x3;
+    }
+
+    inline void put(uint32_t position, uint32_t val) {
+        uint32_t& cell = data[(position >> 4) % data.size()];
+        cell = (cell & ~(((uint32_t)3) << (2 * (position & 0xF)))) | (val << (2 * (position & 0xF)));
+    }
+};
 
 #endif // BITCOIN_BLOOM_H
