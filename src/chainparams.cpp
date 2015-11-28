@@ -333,7 +333,6 @@ public:
 };
 
 static std::unique_ptr<CChainParams> globalChainParams;
-static std::unique_ptr<CChainParams> globalSwitchingChainParams;
 
 const CChainParams &Params() {
     assert(globalChainParams);
@@ -349,12 +348,6 @@ std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain)
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams());
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
-}
-
-const CChainParams& Params(const std::string& chain)
-{
-    globalSwitchingChainParams = CreateChainParams(chain);
-    return *globalSwitchingChainParams;
 }
 
 void SelectParams(const std::string& network)
