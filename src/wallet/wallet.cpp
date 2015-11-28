@@ -121,9 +121,15 @@ bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     if (!fFileBacked)
         return true;
     if (!IsCrypted()) {
-        return CWalletDB(strWalletFile).WriteKey(pubkey,
-                                                 secret.GetPrivKey(),
-                                                 mapKeyMetadata[pubkey.GetID()]);
+        if (pwalletdb) {
+            pwalletdb->WriteKey(pubkey,
+                                 secret.GetPrivKey(),
+                                 mapKeyMetadata[pubkey.GetID()]);
+        } else {
+            return CWalletDB(strWalletFile).WriteKey(pubkey,
+                                                     secret.GetPrivKey(),
+                                                     mapKeyMetadata[pubkey.GetID()]);
+        }
     }
     return true;
 }
@@ -137,8 +143,8 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
         return true;
     {
         LOCK(cs_wallet);
-        if (pwalletdbEncryption)
-            return pwalletdbEncryption->WriteCryptedKey(vchPubKey,
+        if (pwalletdb)
+            return pwalletdb->WriteCryptedKey(vchPubKey,
                                                         vchCryptedSecret,
                                                         mapKeyMetadata[vchPubKey.GetID()]);
         else
@@ -524,21 +530,21 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         mapMasterKeys[++nMasterKeyMaxID] = kMasterKey;
         if (fFileBacked)
         {
-            assert(!pwalletdbEncryption);
-            pwalletdbEncryption = new CWalletDB(strWalletFile);
-            if (!pwalletdbEncryption->TxnBegin()) {
-                delete pwalletdbEncryption;
-                pwalletdbEncryption = NULL;
+            assert(!pwalletdb);
+            pwalletdb = new CWalletDB(strWalletFile);
+            if (!pwalletdb->TxnBegin()) {
+                delete pwalletdb;
+                pwalletdb = NULL;
                 return false;
             }
-            pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
+            pwalletdb->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
         }
 
         if (!EncryptKeys(vMasterKey))
         {
             if (fFileBacked) {
-                pwalletdbEncryption->TxnAbort();
-                delete pwalletdbEncryption;
+                pwalletdb->TxnAbort();
+                delete pwalletdb;
             }
             // We now probably have half of our keys encrypted in memory, and half not...
             // die and let the user reload the unencrypted wallet.
@@ -546,19 +552,19 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
 
         // Encryption was introduced in version 0.4.0
-        SetMinVersion(FEATURE_WALLETCRYPT, pwalletdbEncryption, true);
+        SetMinVersion(FEATURE_WALLETCRYPT, pwalletdb, true);
 
         if (fFileBacked)
         {
-            if (!pwalletdbEncryption->TxnCommit()) {
-                delete pwalletdbEncryption;
+            if (!pwalletdb->TxnCommit()) {
+                delete pwalletdb;
                 // We now have keys encrypted in memory, but not on disk...
                 // die to avoid confusion and let the user reload the unencrypted wallet.
                 assert(false);
             }
 
-            delete pwalletdbEncryption;
-            pwalletdbEncryption = NULL;
+            delete pwalletdb;
+            pwalletdb = NULL;
         }
 
         Lock();
@@ -2280,25 +2286,37 @@ bool CWallet::TopUpKeyPool(unsigned int kpSize)
         if (IsLocked())
             return false;
 
-        CWalletDB walletdb(strWalletFile);
+        pwalletdb = new CWalletDB(strWalletFile);
+        pwalletdb->TxnBegin();
 
-        // Top up key pool
-        unsigned int nTargetSize;
-        if (kpSize > 0)
-            nTargetSize = kpSize;
-        else
-            nTargetSize = max(GetArg("-keypool", 100), (int64_t) 0);
-
-        while (setKeyPool.size() < (nTargetSize + 1))
+        try
         {
-            int64_t nEnd = 1;
-            if (!setKeyPool.empty())
-                nEnd = *(--setKeyPool.end()) + 1;
-            if (!walletdb.WritePool(nEnd, CKeyPool(GenerateNewKey())))
-                throw runtime_error("TopUpKeyPool(): writing generated key failed");
-            setKeyPool.insert(nEnd);
-            LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
+            // Top up key pool
+            unsigned int nTargetSize;
+            if (kpSize > 0)
+                nTargetSize = kpSize;
+            else
+                nTargetSize = max(GetArg("-keypool", 100), (int64_t) 0);
+
+            while (setKeyPool.size() < (nTargetSize + 1))
+            {
+                int64_t nEnd = 1;
+                if (!setKeyPool.empty())
+                    nEnd = *(--setKeyPool.end()) + 1;
+                if (!pwalletdb->WritePool(nEnd, CKeyPool(GenerateNewKey())))
+                    throw runtime_error("TopUpKeyPool(): writing generated key failed");
+                setKeyPool.insert(nEnd);
+                LogPrintf("keypool added key %d, size=%u\n", nEnd, setKeyPool.size());
+            }
+        } catch(...) {
+            pwalletdb->TxnAbort();
+            delete pwalletdb;
+            pwalletdb = NULL;
+            throw;
         }
+        pwalletdb->TxnCommit();
+        delete pwalletdb;
+        pwalletdb = NULL;
     }
     return true;
 }

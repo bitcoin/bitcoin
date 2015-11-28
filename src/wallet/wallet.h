@@ -453,7 +453,7 @@ private:
      */
     bool SelectCoins(const CAmount& nTargetValue, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet, const CCoinControl *coinControl = NULL) const;
 
-    CWalletDB *pwalletdbEncryption;
+    CWalletDB *pwalletdb;
 
     //! the current wallet version: clients below this version are not able to load the wallet
     int nWalletVersion;
@@ -512,8 +512,8 @@ public:
 
     ~CWallet()
     {
-        delete pwalletdbEncryption;
-        pwalletdbEncryption = NULL;
+        delete pwalletdb;
+        pwalletdb = NULL;
     }
 
     void SetNull()
@@ -522,7 +522,7 @@ public:
         nWalletMaxVersion = FEATURE_BASE;
         fFileBacked = false;
         nMasterKeyMaxID = 0;
-        pwalletdbEncryption = NULL;
+        pwalletdb = NULL;
         nOrderPosNext = 0;
         nNextResend = 0;
         nLastResend = 0;
