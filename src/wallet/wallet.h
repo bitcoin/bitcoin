@@ -156,6 +156,7 @@ private:
 public:
     uint256 hashBlock;
     int nIndex;
+    bool conflicted; //memory only
 
     CMerkleTx()
     {
@@ -171,6 +172,7 @@ public:
     {
         hashBlock = uint256();
         nIndex = -1;
+        conflicted = false;
     }
 
     ADD_SERIALIZE_METHODS;
@@ -692,6 +694,8 @@ public:
     CAmount GetCredit(const CTransaction& tx, const isminefilter& filter) const;
     CAmount GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc);
+    void UpdatedBlockTip(const CBlockIndex *pindex);
+    void UpdateConflicted();
 
     DBErrors LoadWallet(bool& fFirstRunRet);
     DBErrors ZapWalletTx(std::vector<CWalletTx>& vWtx);

@@ -289,6 +289,27 @@ void CWallet::SetBestChain(const CBlockLocator& loc)
 {
     CWalletDB walletdb(strWalletFile);
     walletdb.WriteBestBlock(loc);
+
+    UpdateConflicted();
+}
+
+void CWallet::UpdatedBlockTip(const CBlockIndex *pindex)
+{
+    UpdateConflicted();
+}
+
+void CWallet::UpdateConflicted()
+{
+    //check for conflicted transactions
+    LOCK2(cs_main, cs_wallet);
+    for (map<uint256, CWalletTx>::iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+    {
+        CWalletTx* wtx = &((*it).second);
+
+        // update the conflicted cache flag
+        if (wtx->GetDepthInMainChain() <= 0)
+            wtx->conflicted = CheckForConflicts(*wtx);
+    }
 }
 
 bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn, bool fExplicit)
@@ -1089,7 +1110,7 @@ void CWallet::ReacceptWalletTransactions()
 
         int nDepth = wtx.GetDepthInMainChain();
 
-        if (!wtx.IsCoinBase() && nDepth < 0) {
+        if (!wtx.IsCoinBase() && nDepth <= 0) {
             mapSorted.insert(std::make_pair(wtx.nOrderPos, &wtx));
         }
     }
@@ -2836,8 +2857,8 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
 {
     AssertLockHeld(cs_main);
     int nResult = GetDepthInMainChainINTERNAL(pindexRet);
-    if (nResult == 0 && !mempool.exists(GetHash()))
-        return -1; // Not in chain, not in mempool
+    if (conflicted)
+        return -1;
 
     return nResult;
 }

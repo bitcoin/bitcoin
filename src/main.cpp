@@ -801,6 +801,37 @@ static std::string FormatStateMessage(const CValidationState &state)
         state.GetRejectCode());
 }
 
+bool CheckForConflicts(const CTransaction &tx)
+{
+    LOCK(mempool.cs);
+
+    CCoinsView dummy;
+    CCoinsViewCache view(&dummy);
+
+    CCoinsViewMemPool viewMemPool(pcoinsTip, mempool);
+    view.SetBackend(viewMemPool);
+
+    // no conflict in case of the tx is already known
+    if (view.HaveCoins(tx.GetHash()))
+        return false;
+
+    for (unsigned int i = 0; i < tx.vin.size(); i++)
+    {
+        COutPoint outpoint = tx.vin[i].prevout;
+        if (mempool.mapNextTx.count(outpoint))
+        {
+            // Disable replacement feature for now
+            return true;
+        }
+    }
+
+    // are the actual inputs available?
+    if (!view.HaveInputs(tx))
+        return true;
+
+    return false;
+}
+
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee)
 {
