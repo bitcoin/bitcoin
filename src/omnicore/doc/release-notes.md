@@ -523,6 +523,9 @@ The following list includes relevant pull requests merged into this release:
 - #282 Update base to Bitcoin Core 0.10.4
 - #285 Don't use "N/A" label for transactions with type 0
 - #286 Bump version to Omni Core 0.0.10-rc3
+- #288 Expose payload over RPC and add payload size
+- #291 Add error handlers for "omni_getpayload"
+- #292 Add API documentation for "omni_getpayload"
 ```
 
 Credits
