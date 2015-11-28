@@ -64,6 +64,7 @@ static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
 static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
+
 /** Maximum number of script-checking threads allowed */
 static const int MAX_SCRIPTCHECK_THREADS = 16;
 /** -par default (number of script-checking threads, 0 = auto) */
@@ -86,6 +87,16 @@ static const unsigned int DATABASE_WRITE_INTERVAL = 60 * 60;
 static const unsigned int DATABASE_FLUSH_INTERVAL = 24 * 60 * 60;
 /** Maximum length of reject messages. */
 static const unsigned int MAX_REJECT_MESSAGE_LENGTH = 111;
+static const unsigned int DEFAULT_LIMITFREERELAY = 15;
+static const bool DEFAULT_RELAYPRIORITY = true;
+
+/** Default for -permitbaremultisig */
+static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
+static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
+static const bool DEFAULT_TXINDEX = false;
+static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
+
+static const bool DEFAULT_TESTSAFEMODE = false;
 
 struct BlockHasher
 {

@@ -810,7 +810,7 @@ void ThreadFlushWalletDB(const string& strFile)
     if (fOneThread)
         return;
     fOneThread = true;
-    if (!GetBoolArg("-flushwallet", true))
+    if (!GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET))
         return;
 
     unsigned int nLastSeen = nWalletDBUpdated;
