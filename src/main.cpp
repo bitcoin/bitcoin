@@ -37,6 +37,7 @@
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/math/distributions/poisson.hpp>
@@ -86,6 +87,8 @@ struct COrphanTx {
 map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+static bool SanityCheckMessage(CNode* peer, const CNetMessage& msg);
 
 /**
  * Returns true if there are nRequired or more blocks of minVersion or above
@@ -271,16 +274,63 @@ struct CNodeState {
     }
 };
 
-/** Map maintaining per-node state. Requires cs_main. */
-map<NodeId, CNodeState> mapNodeState;
+// Class that maintains per-node state, and
+// acts as a RAII smart-pointer that make sure
+// the state stays consistent.
+class NodeStatePtr {
+private:
+    static CCriticalSection cs_mapNodeState;
+    static map<NodeId, CNodeState> mapNodeState;
+    CNodeState* s;
+    NodeId id;
+public:
+    static void insert(NodeId nodeid, const CNode *pnode) {
+        LOCK(cs_mapNodeState);
+        CNodeState &state = mapNodeState.insert(std::make_pair(nodeid, CNodeState())).first->second;
+        state.name = pnode->addrName;
+        state.address = pnode->addr;
+    }
 
-// Requires cs_main.
-CNodeState *State(NodeId pnode) {
-    map<NodeId, CNodeState>::iterator it = mapNodeState.find(pnode);
-    if (it == mapNodeState.end())
-        return NULL;
-    return &it->second;
-}
+    NodeStatePtr(NodeId nodeid) {
+        LOCK(cs_mapNodeState);
+        map<NodeId, CNodeState>::iterator it = mapNodeState.find(nodeid);
+        if (it == mapNodeState.end())
+            s = NULL;
+        else {
+            s = &it->second;
+            id = nodeid;
+            cs_mapNodeState.lock();
+        }
+    }
+    ~NodeStatePtr() {
+        if (s)
+            cs_mapNodeState.unlock();
+    }
+    bool IsNull() const { return s == NULL; }
+
+    CNodeState* operator ->() { return s; }
+    const CNodeState* operator ->() const { return s; }
+
+    void erase() {
+        if (s) {
+            mapNodeState.erase(id);
+            s = NULL;
+            cs_mapNodeState.unlock();
+        }
+    }
+
+    static void clear() {
+        LOCK(cs_mapNodeState);
+        mapNodeState.clear();
+    }
+
+private:
+    // disallow copy/assignment
+    NodeStatePtr(const NodeStatePtr&) {}
+    NodeStatePtr& operator=(const NodeStatePtr& p) { return *this; }
+};
+CCriticalSection NodeStatePtr::cs_mapNodeState;
+map<NodeId, CNodeState> NodeStatePtr::mapNodeState;
 
 int GetHeight()
 {
@@ -288,7 +338,7 @@ int GetHeight()
     return chainActive.Height();
 }
 
-void UpdatePreferredDownload(CNode* node, CNodeState* state)
+void UpdatePreferredDownload(CNode* node, NodeStatePtr& state)
 {
     nPreferredDownload -= state->fPreferredDownload;
 
@@ -305,15 +355,12 @@ int64_t GetBlockTimeout(int64_t nTime, int nValidatedQueuedBefore, const Consens
 }
 
 void InitializeNode(NodeId nodeid, const CNode *pnode) {
-    LOCK(cs_main);
-    CNodeState &state = mapNodeState.insert(std::make_pair(nodeid, CNodeState())).first->second;
-    state.name = pnode->addrName;
-    state.address = pnode->addr;
+    NodeStatePtr::insert(nodeid, pnode);
 }
 
 void FinalizeNode(NodeId nodeid) {
     LOCK(cs_main);
-    CNodeState *state = State(nodeid);
+    NodeStatePtr state(nodeid);
 
     if (state->fSyncStarted)
         nSyncStarted--;
@@ -327,15 +374,16 @@ void FinalizeNode(NodeId nodeid) {
     EraseOrphansFor(nodeid);
     nPreferredDownload -= state->fPreferredDownload;
 
-    mapNodeState.erase(nodeid);
+    state.erase();
 }
 
 // Requires cs_main.
 // Returns a bool indicating whether we requested this block.
 bool MarkBlockAsReceived(const uint256& hash) {
+    AssertLockHeld(cs_main);
     map<uint256, pair<NodeId, list<QueuedBlock>::iterator> >::iterator itInFlight = mapBlocksInFlight.find(hash);
     if (itInFlight != mapBlocksInFlight.end()) {
-        CNodeState *state = State(itInFlight->second.first);
+        NodeStatePtr state(itInFlight->second.first);
         nQueuedValidatedHeaders -= itInFlight->second.second->fValidatedHeaders;
         state->nBlocksInFlightValidHeaders -= itInFlight->second.second->fValidatedHeaders;
         state->vBlocksInFlight.erase(itInFlight->second.second);
@@ -349,11 +397,13 @@ bool MarkBlockAsReceived(const uint256& hash) {
 
 // Requires cs_main.
 void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Params& consensusParams, CBlockIndex *pindex = NULL) {
-    CNodeState *state = State(nodeid);
-    assert(state != NULL);
+    AssertLockHeld(cs_main);
 
     // Make sure it's not listed somewhere already.
     MarkBlockAsReceived(hash);
+
+    NodeStatePtr state(nodeid);
+    assert(!state.IsNull());
 
     int64_t nNow = GetTimeMicros();
     QueuedBlock newentry = {hash, pindex, nNow, pindex != NULL, GetBlockTimeout(nNow, nQueuedValidatedHeaders, consensusParams)};
@@ -365,9 +415,8 @@ void MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const Consensus::Pa
 }
 
 /** Check whether the last unknown block a peer advertized is not yet known. */
-void ProcessBlockAvailability(NodeId nodeid) {
-    CNodeState *state = State(nodeid);
-    assert(state != NULL);
+static void ProcessBlockAvailability(NodeStatePtr& state) {
+    AssertLockHeld(cs_main);
 
     if (!state->hashLastUnknownBlock.IsNull()) {
         BlockMap::iterator itOld = mapBlockIndex.find(state->hashLastUnknownBlock);
@@ -381,10 +430,11 @@ void ProcessBlockAvailability(NodeId nodeid) {
 
 /** Update tracking information about which blocks a peer is assumed to have. */
 void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
-    CNodeState *state = State(nodeid);
-    assert(state != NULL);
+    AssertLockHeld(cs_main);
+    NodeStatePtr state(nodeid);
+    assert(!state.IsNull());
 
-    ProcessBlockAvailability(nodeid);
+    ProcessBlockAvailability(state);
 
     BlockMap::iterator it = mapBlockIndex.find(hash);
     if (it != mapBlockIndex.end() && it->second->nChainWork > 0) {
@@ -422,12 +472,13 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
     if (count == 0)
         return;
 
+    AssertLockHeld(cs_main);
     vBlocks.reserve(vBlocks.size() + count);
-    CNodeState *state = State(nodeid);
-    assert(state != NULL);
+    NodeStatePtr state(nodeid);
+    assert(!state.IsNull());
 
     // Make sure pindexBestKnownBlock is up to date, we'll need it.
-    ProcessBlockAvailability(nodeid);
+    ProcessBlockAvailability(state);
 
     if (state->pindexBestKnownBlock == NULL || state->pindexBestKnownBlock->nChainWork < chainActive.Tip()->nChainWork) {
         // This peer has nothing interesting.
@@ -503,9 +554,8 @@ void FindNextBlocksToDownload(NodeId nodeid, unsigned int count, std::vector<CBl
 } // anon namespace
 
 bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
-    LOCK(cs_main);
-    CNodeState *state = State(nodeid);
-    if (state == NULL)
+    NodeStatePtr state(nodeid);
+    if (state.IsNull())
         return false;
     stats.nMisbehavior = state->nMisbehavior;
     stats.nSyncHeight = state->pindexBestKnownBlock ? state->pindexBestKnownBlock->nHeight : -1;
@@ -520,6 +570,7 @@ bool GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats) {
 void RegisterNodeSignals(CNodeSignals& nodeSignals)
 {
     nodeSignals.GetHeight.connect(&GetHeight);
+    nodeSignals.SanityCheckMessages.connect(&SanityCheckMessage);
     nodeSignals.ProcessMessages.connect(&ProcessMessages);
     nodeSignals.SendMessages.connect(&SendMessages);
     nodeSignals.InitializeNode.connect(&InitializeNode);
@@ -529,6 +580,7 @@ void RegisterNodeSignals(CNodeSignals& nodeSignals)
 void UnregisterNodeSignals(CNodeSignals& nodeSignals)
 {
     nodeSignals.GetHeight.disconnect(&GetHeight);
+    nodeSignals.SanityCheckMessages.disconnect(&SanityCheckMessage);
     nodeSignals.ProcessMessages.disconnect(&ProcessMessages);
     nodeSignals.SendMessages.disconnect(&SendMessages);
     nodeSignals.InitializeNode.disconnect(&InitializeNode);
@@ -1425,14 +1477,13 @@ void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip)
     CheckForkWarningConditions();
 }
 
-// Requires cs_main.
 void Misbehaving(NodeId pnode, int howmuch)
 {
     if (howmuch == 0)
         return;
 
-    CNodeState *state = State(pnode);
-    if (state == NULL)
+    NodeStatePtr state(pnode);
+    if (state.IsNull())
         return;
 
     state->nMisbehavior += howmuch;
@@ -1466,10 +1517,11 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
     int nDoS = 0;
     if (state.IsInvalid(nDoS)) {
         std::map<uint256, NodeId>::iterator it = mapBlockSource.find(pindex->GetBlockHash());
-        if (it != mapBlockSource.end() && State(it->second)) {
+        NodeStatePtr nodeState(it->second);
             assert (state.GetRejectCode() < REJECT_INTERNAL); // Blocks are never rejected with internal reject codes
+        if (it != mapBlockSource.end() && !nodeState.IsNull()) {
             CBlockReject reject = {(unsigned char)state.GetRejectCode(), state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), pindex->GetBlockHash()};
-            State(it->second)->rejects.push_back(reject);
+            nodeState->rejects.push_back(reject);
             if (nDoS > 0)
                 Misbehaving(it->second, nDoS);
         }
@@ -3575,7 +3627,7 @@ void UnloadBlockIndex()
     nPreferredDownload = 0;
     setDirtyBlockIndex.clear();
     setDirtyFileInfo.clear();
-    mapNodeState.clear();
+    NodeStatePtr::clear();
     recentRejects.reset(NULL);
 
     BOOST_FOREACH(BlockMap::value_type& entry, mapBlockIndex) {
@@ -3991,6 +4043,30 @@ std::string GetWarnings(const std::string& strFor)
 // Messages
 //
 
+static std::map<std::string, size_t> maxMessageSizes = boost::assign::map_list_of
+    ("getaddr",0)
+    ("mempool",0)
+    ("ping",8)
+    ("pong",8)
+    ("verack", 0)
+    ;
+
+bool static SanityCheckMessage(CNode* peer, const CNetMessage& msg)
+{
+    const std::string& strCommand = msg.hdr.GetCommand();
+    if (msg.hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH ||
+        (maxMessageSizes.count(strCommand) && msg.hdr.nMessageSize > maxMessageSizes[strCommand])) {
+        LogPrint("net", "Oversized %s message from peer=%i (%d bytes)\n",
+                 SanitizeString(strCommand), peer->GetId(), msg.hdr.nMessageSize);
+        Misbehaving(peer->GetId(), 20);
+        return msg.hdr.nMessageSize <= MAX_PROTOCOL_MESSAGE_LENGTH;
+    }
+    // This would be a good place for more sophisticated DoS detection/prevention.
+    // (e.g. disconnect a peer that is flooding us with excessive messages)
+
+    return true;
+}
+
 
 bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
@@ -4253,7 +4329,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->fClient = !(pfrom->nServices & NODE_NETWORK);
 
         // Potentially mark this peer as a preferred download peer.
-        UpdatePreferredDownload(pfrom, State(pfrom->GetId()));
+        {
+            NodeStatePtr nodeState(pfrom->GetId());
+            UpdatePreferredDownload(pfrom, nodeState);
+        }
 
         // Change version
         pfrom->PushMessage("verack");
@@ -4329,8 +4408,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         // Mark this node as currently connected, so we update its timestamp later.
         if (pfrom->fNetworkNode) {
-            LOCK(cs_main);
-            State(pfrom->GetId())->fCurrentlyConnected = true;
+            NodeStatePtr(pfrom->GetId())->fCurrentlyConnected = true;
         }
     }
 
@@ -4444,7 +4522,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     // doing this will result in the received block being rejected as an orphan in case it is
                     // not a direct successor.
                     pfrom->PushMessage("getheaders", chainActive.GetLocator(pindexBestHeader), inv.hash);
-                    CNodeState *nodestate = State(pfrom->GetId());
+                    NodeStatePtr nodestate(pfrom->GetId());
                     if (chainActive.Tip()->GetBlockTime() > GetAdjustedTime() - chainparams.GetConsensus().nPowTargetSpacing * 20 &&
                         nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
                         vToFetch.push_back(inv);
@@ -5241,8 +5319,8 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                 pto->PushMessage("addr", vAddr);
         }
 
-        CNodeState &state = *State(pto->GetId());
-        if (state.fShouldBan) {
+        NodeStatePtr statePtr(pto->GetId());
+        if (statePtr->fShouldBan) {
             if (pto->fWhitelisted)
                 LogPrintf("Warning: not punishing whitelisted peer %s!\n", pto->addr.ToString());
             else {
@@ -5254,21 +5332,21 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     CNode::Ban(pto->addr, BanReasonNodeMisbehaving);
                 }
             }
-            state.fShouldBan = false;
+            statePtr->fShouldBan = false;
         }
 
-        BOOST_FOREACH(const CBlockReject& reject, state.rejects)
+        BOOST_FOREACH(const CBlockReject& reject, statePtr->rejects)
             pto->PushMessage("reject", (string)"block", reject.chRejectCode, reject.strRejectReason, reject.hashBlock);
-        state.rejects.clear();
+        statePtr->rejects.clear();
 
         // Start block sync
         if (pindexBestHeader == NULL)
             pindexBestHeader = chainActive.Tip();
-        bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot); // Download if this is a nice peer, or we have no nice peers and this one might do.
-        if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
+        bool fFetch = statePtr->fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->fOneShot); // Download if this is a nice peer, or we have no nice peers and this one might do.
+        if (!statePtr->fSyncStarted && !pto->fClient && !fImporting && !fReindex) {
             // Only actively request headers from a single peer, unless we're close to today.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
-                state.fSyncStarted = true;
+                statePtr->fSyncStarted = true;
                 nSyncStarted++;
                 const CBlockIndex *pindexStart = pindexBestHeader;
                 /* If possible, start at the block preceding the currently
@@ -5343,7 +5421,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
 
         // Detect whether we're stalling
         int64_t nNow = GetTimeMicros();
-        if (!pto->fDisconnect && state.nStallingSince && state.nStallingSince < nNow - 1000000 * BLOCK_STALLING_TIMEOUT) {
+        if (!pto->fDisconnect && statePtr->nStallingSince && statePtr->nStallingSince < nNow - 1000000 * BLOCK_STALLING_TIMEOUT) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
             // should only happen during initial block download.
@@ -5360,9 +5438,9 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // only looking at this peer's oldest request).  This way a large queue in the past doesn't result in a
         // permanently large window for this block to be delivered (ie if the number of blocks in flight is decreasing
         // more quickly than once every 5 minutes, then we'll shorten the download window for this block).
-        if (!pto->fDisconnect && state.vBlocksInFlight.size() > 0) {
-            QueuedBlock &queuedBlock = state.vBlocksInFlight.front();
-            int64_t nTimeoutIfRequestedNow = GetBlockTimeout(nNow, nQueuedValidatedHeaders - state.nBlocksInFlightValidHeaders, consensusParams);
+        if (!pto->fDisconnect && statePtr->vBlocksInFlight.size() > 0) {
+            QueuedBlock &queuedBlock = statePtr->vBlocksInFlight.front();
+            int64_t nTimeoutIfRequestedNow = GetBlockTimeout(nNow, nQueuedValidatedHeaders - statePtr->nBlocksInFlightValidHeaders, consensusParams);
             if (queuedBlock.nTimeDisconnect > nTimeoutIfRequestedNow) {
                 LogPrint("net", "Reducing block download timeout for peer=%d block=%s, orig=%d new=%d\n", pto->id, queuedBlock.hash.ToString(), queuedBlock.nTimeDisconnect, nTimeoutIfRequestedNow);
                 queuedBlock.nTimeDisconnect = nTimeoutIfRequestedNow;
@@ -5377,19 +5455,19 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Message: getdata (blocks)
         //
         vector<CInv> vGetData;
-        if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fDisconnect && !pto->fClient && (fFetch || !IsInitialBlockDownload()) && statePtr->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             vector<CBlockIndex*> vToDownload;
             NodeId staller = -1;
-            FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller);
+            FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - statePtr->nBlocksInFlight, vToDownload, staller);
             BOOST_FOREACH(CBlockIndex *pindex, vToDownload) {
                 vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash()));
                 MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
                 LogPrint("net", "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
                     pindex->nHeight, pto->id);
             }
-            if (state.nBlocksInFlight == 0 && staller != -1) {
-                if (State(staller)->nStallingSince == 0) {
-                    State(staller)->nStallingSince = nNow;
+            if (statePtr->nBlocksInFlight == 0 && staller != -1) {
+                if (NodeStatePtr(staller)->nStallingSince == 0) {
+                    NodeStatePtr(staller)->nStallingSince = nNow;
                     LogPrint("net", "Stall started peer=%d\n", staller);
                 }
             }
