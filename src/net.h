@@ -9,7 +9,6 @@
 #include "bloom.h"
 #include "compat.h"
 #include "limitedmap.h"
-#include "mruset.h"
 #include "netbase.h"
 #include "protocol.h"
 #include "random.h"
