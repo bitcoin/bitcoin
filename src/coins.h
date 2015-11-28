@@ -29,11 +29,11 @@
  * - VARINT(nHeight)
  *
  * The nCode value consists of:
- * - bit 1: IsCoinBase()
- * - bit 2: vout[0] is not spent
- * - bit 4: vout[1] is not spent
+ * - bit 0: IsCoinBase()
+ * - bit 1: vout[0] is not spent
+ * - bit 2: vout[1] is not spent
  * - The higher bits encode N, the number of non-zero bytes in the following bitvector.
- *   - In case both bit 2 and bit 4 are unset, they encode N-1, as there must be at
+ *   - In case both bit 1 and bit 2 are unset, they encode N-1, as there must be at
  *     least one non-spent output).
  *
  * Example: 0104835800816115944e077fe7c803cfa57f29b36bf87c1d358bb85e
@@ -58,7 +58,7 @@
  *
  *  - version = 1
  *  - code = 9 (coinbase, neither vout[0] or vout[1] are unspent,
- *                2 (1, +1 because both bit 2 and bit 4 are unset) non-zero bitvector bytes follow)
+ *                2 (1, +1 because both bit 1 and bit 2 are unset) non-zero bitvector bytes follow)
  *  - unspentness bitvector: bits 2 (0x04) and 14 (0x4000) are set, so vout[2+2] and vout[14+2] are unspent
  *  - vout[4]: 86ef97d5790061b01caab50f1b8e9c50a5057eb43c2d9563a4ee
  *             * 86ef97d579: compact amount representation for 234925952 (2.35 BTC)
