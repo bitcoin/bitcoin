@@ -156,7 +156,7 @@ Value omni_getpayload(const Array& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"payload\" : \"payloadmessage\",       (string) the decoded Omni payload message\n"
-            "  \"payloadsize\" : n,                    (number) the size of the payload\n"
+            "  \"payloadsize\" : n                     (number) the size of the payload\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("omni_getpayload", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -168,7 +168,7 @@ Value omni_getpayload(const Array& params, bool fHelp)
     CTransaction tx;
     uint256 blockHash;
     if (!GetTransaction(txid, tx, blockHash, true)) {
-        return MP_TX_NOT_FOUND;
+        PopulateFailure(MP_TX_NOT_FOUND);
     }
 
     int blockTime = 0;
@@ -183,7 +183,7 @@ Value omni_getpayload(const Array& params, bool fHelp)
 
     CMPTransaction mp_obj;
     int parseRC = ParseTransaction(tx, blockHeight, 0, mp_obj, blockTime);
-    if (parseRC < 0) return MP_TX_IS_NOT_MASTER_PROTOCOL;
+    if (parseRC < 0) PopulateFailure(MP_TX_IS_NOT_MASTER_PROTOCOL);
 
     Object payloadObj;
     payloadObj.push_back(Pair("payload", mp_obj.getPayload()));
