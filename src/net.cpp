@@ -1702,6 +1702,29 @@ bool OpenNetworkConnection(const CAddress& addrConnect, CSemaphoreGrant *grantOu
     return true;
 }
 
+static bool CompareNodeMessageHandler(const CNodeRef &a, const CNodeRef &b)
+{
+   // Prefer nodes that want tx-realy, non-filtering nodes,
+   // nodes that have relayed tx to us, nodes that claim NodeNework,
+   // outbound peers, lower node ID.
+
+    if (a->fRelayTxes != b->fRelayTxes)
+        return a->fRelayTxes;
+
+    if ((a->pfilter == NULL) != (b->pfilter == NULL))
+        return a->pfilter == NULL;
+
+/*    if ((a->nTimeLastTX > 0) != (b->nTimeLastTX > 0))
+        return a->nTimeLastTX > 0;*/
+
+    if (a->fInbound != b->fInbound)
+        return b->fInbound;
+
+    if (a->fClient != b->fClient)
+        return b->fClient;
+
+    return a->id < b->id;
+}
 
 void ThreadMessageHandler()
 {
@@ -1709,24 +1732,49 @@ void ThreadMessageHandler()
     boost::unique_lock<boost::mutex> lock(condition_mutex);
 
     SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
+    int64_t nNextTrickleTime = 0;
+    CNode* pnodeTrickle1 = NULL;
+    CNode* pnodeTrickle2 = NULL;
     while (true)
     {
+        bool fHasTrickle1 = false;
+        bool fHasTrickle2 = false;
         vector<CNode*> vNodesCopy;
         {
             LOCK(cs_vNodes);
             vNodesCopy = vNodes;
+            std::sort(vNodesCopy.begin(), vNodesCopy.end(), CompareNodeMessageHandler);
             BOOST_FOREACH(CNode* pnode, vNodesCopy) {
                 pnode->AddRef();
+                fHasTrickle1 |= pnodeTrickle1 == pnode && !pnode->fDisconnect;
+                fHasTrickle2 |= pnodeTrickle2 == pnode && !pnode->fDisconnect;
             }
         }
 
-        // Poll the connected nodes for messages
-        CNode* pnodeTrickle = NULL;
-        if (!vNodesCopy.empty())
-            pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
+        if (!fHasTrickle1)
+            pnodeTrickle1 = NULL;
+
+        // Elect new trickle nodes from one of the best 4 peers.
+        if (pnodeTrickle1 == NULL && !vNodesCopy.empty())
+            pnodeTrickle1 = vNodesCopy[GetRand(min(vNodesCopy.size(), (size_t)4))];
+
+        if (!fHasTrickle2 || pnodeTrickle2 == pnodeTrickle1)
+            pnodeTrickle2 = NULL;
+
+        if (pnodeTrickle2 == NULL && vNodesCopy.size() > 1)
+        {
+            do {
+                pnodeTrickle2 = vNodesCopy[GetRand(min(vNodesCopy.size(), (size_t)4))];
+            } while(pnodeTrickle1 == pnodeTrickle2);
+        }
+
 
         bool fSleep = true;
+        bool fSendBatch = GetTimeMillis() > nNextTrickleTime;
 
+        LogPrintf("Trickle: Debug prints to be removed. batch: %d elected %d %d\n", fSendBatch, pnodeTrickle1 != NULL?pnodeTrickle1->id:-1, pnodeTrickle2 != NULL?pnodeTrickle2->id:-1);
+
+        // Poll the connected nodes for messages
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
             if (pnode->fDisconnect)
@@ -1755,9 +1803,19 @@ void ThreadMessageHandler()
             {
                 TRY_LOCK(pnode->cs_vSend, lockSend);
                 if (lockSend)
-                    g_signals.SendMessages(pnode, pnode == pnodeTrickle || pnode->fWhitelisted);
+                    g_signals.SendMessages(pnode, fSendBatch || pnode == pnodeTrickle1 || pnode == pnodeTrickle2 || pnode->fWhitelisted);
             }
             boost::this_thread::interruption_point();
+        }
+
+        if (fSendBatch)
+        {
+            nNextTrickleTime = GetTimeMillis() + 500 + GetRand(1000);
+            // Delay transaction INVs when we're out of bandwidth to reduce how often peers getdata from us.
+            if (CNode::OutboundTargetReached(true))
+                nNextTrickleTime += 1000;
+            pnodeTrickle1 = NULL;
+            pnodeTrickle2 = NULL;
         }
 
         {

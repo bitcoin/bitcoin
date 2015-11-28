@@ -5157,6 +5157,11 @@ bool ProcessMessages(CNode* pfrom)
 }
 
 
+static bool CompareInvHash(const CInv a, const CInv &b)
+{
+    return a.hash < b.hash;
+}
+
 bool SendMessages(CNode* pto, bool fSendTrickle)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
@@ -5309,26 +5314,26 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     continue;
 
                 // trickle out tx inv to protect privacy
-                if (inv.type == MSG_TX && !fSendTrickle)
+                if (inv.type == MSG_TX)
                 {
-                    // 1/4 of tx invs blast to all immediately
-                    static uint256 hashSalt;
-                    if (hashSalt.IsNull())
-                        hashSalt = GetRandHash();
-                    uint256 hashRand = ArithToUint256(UintToArith256(inv.hash) ^ UintToArith256(hashSalt));
-                    hashRand = Hash(BEGIN(hashRand), END(hashRand));
-                    bool fTrickleWait = ((UintToArith256(hashRand) & 3) != 0);
-
-                    if (fTrickleWait)
-                    {
-                        vInvWait.push_back(inv);
-                        continue;
-                    }
+                    vInvWait.push_back(inv);
+                    continue;
                 }
-
-                // returns true if wasn't already contained in the set
-                if (pto->setInventoryKnown.insert(inv).second)
+                pto->setInventoryKnown.insert(inv);
+                vInv.push_back(inv);
+                if (vInv.size() >= 1000)
                 {
+                    pto->PushMessage("inv", vInv);
+                    vInv.clear();
+                }
+            }
+
+            if(fSendTrickle)
+            {
+                std::sort(vInvWait.begin(), vInvWait.end(), CompareInvHash);
+                BOOST_FOREACH(const CInv& inv, vInvWait)
+                {
+                    pto->setInventoryKnown.insert(inv);
                     vInv.push_back(inv);
                     if (vInv.size() >= 1000)
                     {
@@ -5336,8 +5341,10 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                         vInv.clear();
                     }
                 }
+                pto->vInventoryToSend.clear();
+            } else {
+                pto->vInventoryToSend = vInvWait;
             }
-            pto->vInventoryToSend = vInvWait;
         }
         if (!vInv.empty())
             pto->PushMessage("inv", vInv);
