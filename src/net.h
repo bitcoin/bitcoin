@@ -65,6 +65,13 @@ static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
 
+static const bool DEFAULT_FORCEDNSSEED = false;
+static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
+static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
+
+// NOTE: When adjusting this, update rpcnet:setban's help ("24h")
+static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
+
 unsigned int ReceiveFloodSize();
 unsigned int SendBufferSize();
 
