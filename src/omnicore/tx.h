@@ -191,6 +191,7 @@ public:
     uint16_t getAlertType() const { return alert_type; }
     uint32_t getAlertExpiry() const { return alert_expiry; }
     std::string getAlertMessage() const { return alert_text; }
+    int getPayloadSize() const { return pkt_size; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
