@@ -1,13 +1,12 @@
-// Copyright (c) 2014-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
-// Copyright (c) 2014-2017 The Dash Core developers
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
 #include "validation.h"
 #include "net.h"
 
-#include "test/test_chaincoin.h"
+#include "test/test_bitcoin.h"
 
 #include <boost/signals2/signal.hpp>
 #include <boost/test/unit_test.hpp>
@@ -16,51 +15,47 @@ BOOST_FIXTURE_TEST_SUITE(main_tests, TestingSetup)
 
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
-    // tested in chaincoin_tests.cpp
-    //int maxHalvings = 64;
-    //CAmount nInitialSubsidy = 50 * COIN;
+    int maxHalvings = 64;
+    CAmount nInitialSubsidy = 50 * COIN;
 
-    //CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    //BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    //for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
-    //    int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
-    //    CAmount nSubsidy = GetBlockSubsidy(0, nHeight, consensusParams);
-    //    BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-    //    BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
-    //    nPreviousSubsidy = nSubsidy;
-    //}
-    //BOOST_CHECK_EQUAL(GetBlockSubsidy(0, maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
+    CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
+    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
+    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
+        int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
+        CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
+        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
+        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
+        nPreviousSubsidy = nSubsidy;
+    }
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
 }
 
 static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
 {
-    // tested in chaincoin_tests.cpp
-    //Consensus::Params consensusParams;
-    //consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
-    //TestBlockSubsidyHalvings(consensusParams);
+    Consensus::Params consensusParams;
+    consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
+    TestBlockSubsidyHalvings(consensusParams);
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
-    // tested in chaincoin_tests.cpp
-    //TestBlockSubsidyHalvings(Params(CBaseChainParams::MAIN).GetConsensus()); // As in main
-    //TestBlockSubsidyHalvings(150); // As in regtest
-    //TestBlockSubsidyHalvings(1000); // Just another interval
+    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    TestBlockSubsidyHalvings(chainParams->GetConsensus()); // As in main
+    TestBlockSubsidyHalvings(150); // As in regtest
+    TestBlockSubsidyHalvings(1000); // Just another interval
 }
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
-    // tested in chaincoin_tests.cpp
-    //const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
-    //CAmount nSum = 0;
-    //for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-    //    /* @TODO fix subsidity, add nBits */
-    //    CAmount nSubsidy = GetBlockSubsidy(0, nHeight, consensusParams);
-    //    BOOST_CHECK(nSubsidy <= 25 * COIN);
-    //    nSum += nSubsidy * 1000;
-    //    BOOST_CHECK(MoneyRange(nSum));
-    //}
-    //BOOST_CHECK_EQUAL(nSum, 1350824726649000ULL);
+    const auto chainParams = CreateChainParams(CBaseChainParams::MAIN);
+    CAmount nSum = 0;
+    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
+        CAmount nSubsidy = GetBlockSubsidy(nHeight, chainParams->GetConsensus());
+        BOOST_CHECK(nSubsidy <= 50 * COIN);
+        nSum += nSubsidy * 1000;
+        BOOST_CHECK(MoneyRange(nSum));
+    }
+    BOOST_CHECK_EQUAL(nSum, 2099999997690000ULL);
 }
 
 bool ReturnFalse() { return false; }
