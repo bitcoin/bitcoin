@@ -1287,6 +1287,32 @@ $ omnicore-cli "omni_getactivations"
 
 ---
 
+### omni_getpayload
+
+Get the payload for an Omni transaction.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `txid`              | string  | required | the hash of the transaction to retrieve payload                                              |
+
+**Result:**
+```js
+{
+  "payload" : "payloadmessage",  // (string) the decoded Omni payload message
+  "payloadsize" : n              // (number) the size of the payload
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getactivations" "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d"
+```
+
+---
+
 ## Raw transactions
 
 The RPCs for raw transactions can be used to decode or create raw Omni transactions.
