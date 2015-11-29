@@ -48,10 +48,12 @@ uint256 CCoinsViewDB::GetBestBlock() const {
     return hashBestChain;
 }
 
-bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
+bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock, size_t &hotUsage, const std::set<uint256> *hotHashes) {
     CDBBatch batch(&db.GetObfuscateKey());
     size_t count = 0;
     size_t changed = 0;
+    size_t left = 0;
+    hotUsage = 0;
     for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end();) {
         if (it->second.flags & CCoinsCacheEntry::DIRTY) {
             if (it->second.coins.IsPruned())
@@ -62,12 +64,20 @@ bool CCoinsViewDB::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) {
         }
         count++;
         CCoinsMap::iterator itOld = it++;
-        mapCoins.erase(itOld);
+        if (!hotHashes || !hotHashes->count(itOld->first)) {
+            mapCoins.erase(itOld);
+        }
+        else {
+            itOld->second.flags = 0; // The entry has been written to the database
+            hotUsage += itOld->second.coins.DynamicMemoryUsage();
+            left++;
+        }
     }
     if (!hashBlock.IsNull())
         batch.Write(DB_BEST_BLOCK, hashBlock);
 
-    LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database...\n", (unsigned int)changed, (unsigned int)count);
+    LogPrint("coindb", "Committing %u changed transactions (out of %u) to coin database, leaving %u tx cached for %u usage...\n",
+             (unsigned int)changed, (unsigned int)count, (unsigned int)left, (unsigned int)hotUsage);
     return db.WriteBatch(batch);
 }
 

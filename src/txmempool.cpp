@@ -31,6 +31,8 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
     nCountWithDescendants = 1;
     nSizeWithDescendants = nTxSize;
     nFeesWithDescendants = nFee;
+
+    score = CFeeRate(nFee,nTxSize).GetFeePerK();
 }
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTxMemPoolEntry& other)
@@ -45,6 +47,11 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
     double deltaPriority = ((double)(currentHeight-nHeight)*nValueIn)/nModSize;
     double dResult = dPriority + deltaPriority;
     return dResult;
+}
+
+void CTxMemPoolEntry::UpdateScore(int64_t newScore)
+{
+    score = newScore;
 }
 
 // Update the given tx for any in-mempool descendants.
@@ -759,6 +766,10 @@ void CTxMemPool::PrioritiseTransaction(const uint256 hash, const string strHash,
         std::pair<double, CAmount> &deltas = mapDeltas[hash];
         deltas.first += dPriorityDelta;
         deltas.second += nFeeDelta;
+        txiter it = mapTx.find(hash);
+        if (it != mapTx.end()) {
+            mapTx.modify(it, update_score(it->GetScore() + nFeeDelta));
+        }
     }
     LogPrintf("PrioritiseTransaction: %s priority += %f, fee += %d\n", strHash, dPriorityDelta, FormatMoney(nFeeDelta));
 }
@@ -939,4 +950,42 @@ void CTxMemPool::TrimToSize(size_t sizelimit) {
 
     if (maxFeeRateRemoved > CFeeRate(0))
         LogPrint("mempool", "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
+}
+
+void CTxMemPool::FindHotHashes(size_t prioritySize, size_t scoreSize, std::set<uint256> &hotHashes, unsigned int chainHeight) {
+    LOCK(cs);
+    vector<TxCoinAgePriority> vecPriority;
+    TxCoinAgePriorityCompare pricomparer;
+    size_t scoreBytesCovered = 0;
+    size_t priBytesCovered = 0;
+    vecPriority.reserve(mapTx.size());
+    CTxMemPool::indexed_transaction_set::nth_index<3>::type::iterator mi = mapTx.get<3>().begin();
+    while (mi != mapTx.get<3>().end())
+    {
+        if (scoreBytesCovered < scoreSize) {
+            BOOST_FOREACH(const CTxIn& txin, mi->GetTx().vin)
+            {
+                hotHashes.insert(txin.prevout.hash);
+            }
+            scoreBytesCovered += mi->GetTxSize();
+        }
+        double dPriority = mi->GetPriority(chainHeight);
+        CAmount dummy;
+        ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
+        vecPriority.push_back(TxCoinAgePriority(dPriority, mapTx.project<0>(mi)));
+        mi++;
+    }
+    std::make_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
+    while (priBytesCovered < prioritySize && !vecPriority.empty()) {
+        txiter iter = vecPriority.front().second;
+        std::pop_heap(vecPriority.begin(), vecPriority.end(), pricomparer);
+        vecPriority.pop_back();
+        BOOST_FOREACH(const CTxIn& txin, iter->GetTx().vin)
+        {
+            hotHashes.insert(txin.prevout.hash);
+        }
+        priBytesCovered += iter->GetTxSize();
+    }
+    return;
+
 }
