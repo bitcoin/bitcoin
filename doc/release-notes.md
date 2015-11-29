@@ -206,6 +206,15 @@ Libsecp256k1 has undergone very extensive testing and validation.
 
 A side effect of this change is that libconsensus no longer depends on OpenSSL.
 
+Direct headers announcement (BIP 130)
+-------------------------------------
+
+Between compatible peers, BIP 130 direct headers announcement is used. This
+means that blocks are advertized by announcing their headers directly, instead
+of just announcing the hash. In a reorganization, all new headers are sent,
+instead of just the new tip. This can often prevent an extra roundtrip before
+the actual block is downloaded.
+
 0.12.0 Change log
 =================
 
