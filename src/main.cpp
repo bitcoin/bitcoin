@@ -2584,6 +2584,8 @@ bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams,
         // Notifications/callbacks that can run without cs_main
         if (!fInitialDownload) {
             uint256 hashNewTip = pindexNewTip->GetBlockHash();
+            // Notify BlockNotify.
+            uiInterface.NotifyBlockTip(hashNewTip);
             // Relay inventory, but don't relay old inventory during initial block download.
             int nBlockEstimate = 0;
             if (fCheckpointsEnabled)
@@ -2596,7 +2598,6 @@ bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams,
             }
             // Notify external listeners about the new tip.
             GetMainSignals().UpdatedBlockTip(pindexNewTip);
-            uiInterface.NotifyBlockTip(hashNewTip);
         }
     } while(pindexMostWork != chainActive.Tip());
     CheckBlockIndex(chainparams.GetConsensus());
