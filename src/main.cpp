@@ -5510,7 +5510,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
             vInvWait.reserve(pto->vInventoryToSend.size());
             BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend)
             {
-                if (pto->filterInventoryKnown.contains(inv.hash))
+                if (inv.type == MSG_TX && pto->filterInventoryKnown.contains(inv.hash))
                     continue;
 
                 // trickle out tx inv to protect privacy
@@ -5531,15 +5531,13 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
                     }
                 }
 
-                if (!pto->filterInventoryKnown.contains(inv.hash))
+                pto->filterInventoryKnown.insert(inv.hash);
+
+                vInv.push_back(inv);
+                if (vInv.size() >= 1000)
                 {
-                    pto->filterInventoryKnown.insert(inv.hash);
-                    vInv.push_back(inv);
-                    if (vInv.size() >= 1000)
-                    {
-                        pto->PushMessage("inv", vInv);
-                        vInv.clear();
-                    }
+                    pto->PushMessage("inv", vInv);
+                    vInv.clear();
                 }
             }
             pto->vInventoryToSend = vInvWait;
