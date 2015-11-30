@@ -99,9 +99,25 @@ void QValidatedLineEdit::checkValidity()
     }
     else
         setValid(false);
+
+    Q_EMIT validationDidChange(this);
 }
 
 void QValidatedLineEdit::setCheckValidator(const QValidator *v)
 {
     checkValidator = v;
+}
+
+bool QValidatedLineEdit::isValid()
+{
+    // use checkValidator in case the QValidatedLineEdit is disabled
+    if (checkValidator)
+    {
+        QString address = text();
+        int pos = 0;
+        if (checkValidator->validate(address, pos) == QValidator::Acceptable)
+            return true;
+    }
+
+    return valid;
 }
