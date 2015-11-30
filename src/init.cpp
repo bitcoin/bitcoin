@@ -56,6 +56,8 @@
 #include <boost/thread.hpp>
 #include <openssl/crypto.h>
 
+#include <lzo/lzoconf.h>
+
 #if ENABLE_ZMQ
 #include "zmq/zmqnotificationinterface.h"
 #endif
@@ -477,6 +479,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-acceptnonstdtxn", strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", !Params(CBaseChainParams::TESTNET).RequireStandard()));
     strUsage += HelpMessageOpt("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), DEFAULT_ACCEPT_DATACARRIER));
     strUsage += HelpMessageOpt("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY));
+    strUsage += HelpMessageOpt("-compressionlevel=<n>", strprintf(_("Set compression level (0 to 2) 0 = no compression, 2 = max compression (default: %d)"), DEFAULT_COMPRESSION_LEVEL));
 
     strUsage += HelpMessageGroup(_("Block creation options:"));
     strUsage += HelpMessageOpt("-blockminsize=<n>", strprintf(_("Set minimum block size in bytes (default: %u)"), DEFAULT_BLOCK_MIN_SIZE));
@@ -885,6 +888,22 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     int64_t nMempoolSizeMin = GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
         return InitError(strprintf(_("-maxmempool must be at least %d MB"), std::ceil(nMempoolSizeMin / 1000000.0)));
+
+    // -compressionlevel limits
+    int nLevel = GetArg("-compressionlevel", DEFAULT_COMPRESSION_LEVEL);
+    if (nLevel < 0 || nLevel > 2)
+        return InitError(strprintf(_("Error: -compressionlevel must be between 0 and 2: current = %d"), nLevel));
+    else if (nLevel > 0) { 
+        // Advertise compression as a service
+        nLocalServices |= NODE_COMPRESS;
+
+        //initialize the LZO compression library
+        if (lzo_init() != LZO_E_OK) {
+            LogPrintf("Internal error - lzo_init() failed !!!\n");
+            LogPrintf("This usually indicates a compiler bug - try recompiling\nwithout optimizations, and enable '-DLZO_DEBUG' for diagnostics\n");
+            return InitError(_("internal error - lzo_init() failed !!!"));
+        }
+    }
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     nScriptCheckThreads = GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);

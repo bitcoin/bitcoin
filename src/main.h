@@ -64,6 +64,10 @@ static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for rev?????.dat files (since 0.8) */
 static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
+/** 0 = no compression, 2 = maximum compression. */
+static const unsigned int DEFAULT_COMPRESSION_LEVEL = 1;
+/** The size in Bytes below which we do not compress transactions */
+static const unsigned int MIN_TX_COMPRESS_SIZE = 500;
 
 /** Maximum number of script-checking threads allowed */
 static const int MAX_SCRIPTCHECK_THREADS = 16;

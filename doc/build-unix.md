@@ -36,6 +36,7 @@ These dependencies are required:
  libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
  libboost    | Utility          | Library for threading, data structures, etc
  libevent    | Networking       | OS independent asynchronous networking
+ liblzo2     | Compression      | LZO Library for compressing files
 
 Optional dependencies:
 
