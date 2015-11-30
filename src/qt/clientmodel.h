@@ -15,6 +15,7 @@ class PeerTableModel;
 class TransactionTableModel;
 
 class CWallet;
+class CBlockIndex;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -59,7 +60,7 @@ public:
     quint64 getTotalBytesRecv() const;
     quint64 getTotalBytesSent() const;
 
-    double getVerificationProgress() const;
+    double getVerificationProgress(const CBlockIndex *tip) const;
     QDateTime getLastBlockDate() const;
 
     //! Return true if core is doing initial block download
@@ -81,11 +82,6 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    int cachedNumBlocks;
-    QDateTime cachedBlockDate;
-    bool cachedReindexing;
-    bool cachedImporting;
-
     QTimer *pollTimer;
 
     void subscribeToCoreSignals();
@@ -93,7 +89,7 @@ private:
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count, const QDateTime& blockDate);
+    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
