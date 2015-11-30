@@ -79,6 +79,7 @@ testScripts = [
     'mempool_spendcoinbase.py',
     'mempool_coinbase_spends.py',
     'httpbasics.py',
+    'multi_rpc.py',
     'zapwallettxes.py',
     'proxy_test.py',
     'merkle_blocks.py',
