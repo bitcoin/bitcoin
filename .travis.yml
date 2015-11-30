@@ -2,7 +2,7 @@
 # - A travis bug causes caches to trample eachother when using the same
 #   compiler key (which we don't use anyway). This is worked around for now by
 #   replacing the "compilers" with a build name prefixed by the no-op ":"
-#   command. See: https://github.com/travis-ci/casher/issues/6
+#   command. See: https://github.com/travis-ci/travis-ci/issues/4393
 
 os: linux
 language: cpp
