@@ -820,7 +820,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 2: parameter interactions
     const CChainParams& chainparams = Params();
 
-
+    // also see: InitParameterInteraction()
 
     // if using block pruning, then disable txindex
     if (GetArg("-prune", 0)) {
@@ -830,16 +830,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (GetBoolArg("-rescan", false)) {
             return InitError(_("Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again."));
         }
-#endif
-    }
-
-    // disable walletbroadcast and whitelistalwaysrelay in blocksonly mode
-    if (GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)) {
-        if (SoftSetBoolArg("-whitelistalwaysrelay", false))
-            LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -whitelistalwaysrelay=0\n", __func__);
-#ifdef ENABLE_WALLET
-        if (SoftSetBoolArg("-walletbroadcast", false))
-            LogPrintf("%s: parameter interaction: -blocksonly=1 -> setting -walletbroadcast=0\n", __func__);
 #endif
     }
 
