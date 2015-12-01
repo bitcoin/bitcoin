@@ -362,7 +362,7 @@ public:
      *  around what it "costs" to relay a transaction around the network and
      *  below which we would reasonably say a transaction has 0-effective-fee.
      */
-    CTxMemPool(const CFeeRate& _minReasonableRelayFee);
+    CTxMemPool(CBlockPolicyEstimator& feePolicy, const CFeeRate& _minReasonableRelayFee);
     ~CTxMemPool();
 
     /**

@@ -29,6 +29,7 @@
 #include <boost/unordered_map.hpp>
 
 class CBlockIndex;
+class CBlockPolicyEstimator;
 class CBlockTreeDB;
 class CBloomFilter;
 class CChainParams;
@@ -108,6 +109,7 @@ struct BlockHasher
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
+extern CBlockPolicyEstimator globalFeePolicy;
 extern CTxMemPool mempool;
 typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;

@@ -312,7 +312,7 @@ void CTxMemPoolEntry::UpdateState(int64_t modifySize, CAmount modifyFee, int64_t
     }
 }
 
-CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
+CTxMemPool::CTxMemPool(CBlockPolicyEstimator& feePolicy, const CFeeRate& _minReasonableRelayFee) :
     nTransactionsUpdated(0)
 {
     _clear(); //lock free clear
@@ -322,13 +322,12 @@ CTxMemPool::CTxMemPool(const CFeeRate& _minReasonableRelayFee) :
     // of transactions in the pool
     nCheckFrequency = 0;
 
-    minerPolicyEstimator = new CBlockPolicyEstimator(_minReasonableRelayFee);
+    minerPolicyEstimator = &feePolicy;
     minReasonableRelayFee = _minReasonableRelayFee;
 }
 
 CTxMemPool::~CTxMemPool()
 {
-    delete minerPolicyEstimator;
 }
 
 void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
