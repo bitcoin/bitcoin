@@ -955,3 +955,8 @@ void CTxMemPool::TrimToSize(size_t sizelimit) {
     if (maxFeeRateRemoved > CFeeRate(0))
         LogPrint("mempool", "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
 }
+
+void CTxMemPool::TrimToSize()
+{
+    TrimToSize(nGlobalMempoolSizeLimit);
+}

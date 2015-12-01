@@ -1215,7 +1215,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             if (expired != 0)
                 LogPrint("mempool", "Expired %i transactions from the memory pool\n", expired);
 
-            pool.TrimToSize(nGlobalMempoolSizeLimit);
+            pool.TrimToSize();
             if (!pool.exists(tx.GetHash()))
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
         }
@@ -2573,7 +2573,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
 
     if (fBlocksDisconnected) {
         pool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
-        pool.TrimToSize(nGlobalMempoolSizeLimit);
+        pool.TrimToSize();
     }
     pool.check(pcoinsTip);
 
@@ -2689,7 +2689,7 @@ bool InvalidateBlock(CValidationState& state, const Consensus::Params& consensus
         }
     }
 
-    pool.TrimToSize(nGlobalMempoolSizeLimit);
+    pool.TrimToSize();
 
     // The resulting new best tip may not be in setBlockIndexCandidates anymore, so
     // add it again.

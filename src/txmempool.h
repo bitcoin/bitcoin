@@ -447,7 +447,9 @@ public:
     /** Additional version with sizelimit as parameter, useful for testing. */
     CFeeRate GetMinFee(size_t sizelimit) const;
 
-    /** Remove transactions from the mempool until its dynamic size is <= sizelimit. */
+    /** Remove transactions from the mempool until its dynamic size is <= nGlobalMempoolSizeLimit. */
+    void TrimToSize();
+    /** Additional version with sizelimit as parameter, useful for testing. */
     void TrimToSize(size_t sizelimit);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
