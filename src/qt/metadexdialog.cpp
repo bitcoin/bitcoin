@@ -544,7 +544,7 @@ void MetaDExDialog::recalcTotal(bool useBuyFields)
     uint256 totalPrice256 = amount256 * price256;
     if (divisible) totalPrice256 = totalPrice256 / COIN;
 
-    if (totalPrice256 > std::numeric_limits<int64_t>::max()) {
+    if (totalPrice256 > uint256_const::max_int64) {
         QMessageBox::critical( this, "Unable to calculate total",
         "The total amount for the entered trade details would exceed the maximum amount of tokens." );
         if (useBuyFields) {
@@ -621,7 +621,7 @@ void MetaDExDialog::sendTrade(bool sell)
         uint256 priceSell256 = ConvertTo256(price);
         uint256 totalPrice256 = amountSell256 * priceSell256;
         if (divisible) totalPrice256 = totalPrice256 / COIN;
-        if (totalPrice256 > std::numeric_limits<int64_t>::max()) {
+        if (totalPrice256 > uint256_const::max_int64) {
             QMessageBox::critical( this, "Unable to send MetaDEx trade",
             "The total amount for the entered trade details would exceed the maximum amount of tokens." );
             return;
@@ -636,7 +636,7 @@ void MetaDExDialog::sendTrade(bool sell)
         uint256 priceDes256 = ConvertTo256(price);
         uint256 totalPrice256 = amountDes256 * priceDes256;
         if (divisible) totalPrice256 = totalPrice256 / COIN;
-        if (totalPrice256 > std::numeric_limits<int64_t>::max()) {
+        if (totalPrice256 > uint256_const::max_int64) {
             QMessageBox::critical( this, "Unable to send MetaDEx trade",
             "The total amount for the entered trade details would exceed the maximum amount of tokens." );
             return;
