@@ -403,7 +403,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>要求付款(產生 QR Code 和位元幣付款協議的 URI)</translation>
+        <translation>要求付款(產生 QR Code 和位元幣付款協議的資源識別碼: URI)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
@@ -423,7 +423,7 @@
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>開啓 bitcoin 協議的 URI 或付款要求</translation>
+        <translation>開啓 bitcoin 協議的資源識別碼(URI)或付款要求</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -907,7 +907,7 @@
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>使用自定的資料目錄:</translation>
+        <translation>使用自訂的資料目錄:</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
@@ -997,7 +997,7 @@
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>在交易頁籤的情境選單出現的第三方(比如說區塊探索網站)網址連結。網址中的 %s 會被取代為交易的雜湊值。可以用直線符號 | 來分隔多個連結。</translation>
+        <translation>在交易頁籤的情境選單出現的第三方網址連結(URL)，比如說區塊探索網站。網址中的 %s 會被取代為交易的雜湊值。可以用直線符號 | 來分隔多個連結。</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
@@ -1291,11 +1291,11 @@
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation>取得付款要求的 URL 無效: %1</translation>
+        <translation>取得付款要求的網址連結(URL)無效: %1</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>沒辦法解析 URI 位址！可能是因為位元幣位址無效，或是 URI 參數格式錯誤。</translation>
+        <translation>沒辦法解析資源識別碼(URI)！可能是因為位元幣位址無效，或是 URI 參數格式錯誤。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1923,7 +1923,7 @@
     </message>
     <message>
         <source>Custom change address</source>
-        <translation>自定找零位址</translation>
+        <translation>自訂找零位址</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
@@ -2194,11 +2194,11 @@
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
-        <translation>這是個沒驗證過的付款要求。</translation>
+        <translation>這是個沒有驗證過身份的付款要求。</translation>
     </message>
     <message>
         <source>This is an authenticated payment request.</source>
-        <translation>這是個已驗證的付款要求。</translation>
+        <translation>這是個已經驗證過身份的付款要求。</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2206,7 +2206,7 @@
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>附加在位元幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到位元幣網路上。</translation>
+        <translation>附加在位元幣付款協議的資源識別碼(URI)中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到位元幣網路上。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2733,6 +2733,10 @@
         <translation>複製交易識別碼</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>複製交易原始資料</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>編輯標記</translation>
     </message>
@@ -3094,7 +3098,7 @@
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>只有連接到網絡節點 &lt;net&gt; （IPv4，IPv6或onion）</translation>
+        <translation>只和 &lt;net&gt; 網路上的節點連線(ipv4, ipv6, 或 onion)</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3249,8 +3253,16 @@
         <translation>啟用最佳鏈結...</translation>
     </message>
     <message>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>無條件轉發從白名點節點收到的交易(預設值: %d)</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
         <translation>啟動時嘗試從壞掉的錢包檔 wallet.dat 復原密鑰</translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>自動產生 Tor 隱藏服務(預設值: %d)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3385,6 +3397,14 @@
         <translation>這套軟體屬於實驗性質。</translation>
     </message>
     <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Tor 控制埠密碼(預設值: 空白)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>開啟聽候 onion 連線時的 Tor 控制埠號碼(預設值: %s)</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation>交易金額太小</translation>
     </message>
@@ -3423,6 +3443,10 @@
     <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>是否要用只要區塊模式運作(預設值: %u)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>

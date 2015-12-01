@@ -1097,7 +1097,7 @@
     </message>
     <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Forbind til Bitcoin-netværket gennem en separat SOCKS5-proxy for skjulte tjenester via Tor.</translation>
+        <translation>Forbind til Bitcoin-netværket gennem en separat SOCKS5-proxy for skjulte Tor-tjenester.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
@@ -2733,6 +2733,10 @@
         <translation>Kopiér transaktions-ID</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Kopiér rå transaktion</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Redigér mærkat</translation>
     </message>
@@ -3252,8 +3256,16 @@
         <translation>Aktiverer bedste kæde…</translation>
     </message>
     <message>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>Videresend altid transaktioner, der modtages fra hvidlistede knuder (standard: %d)</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
         <translation>Forsøg at genskabe private nøgler fra en ødelagt wallet.dat under opstart</translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Opret automatisk skjult Tor-tjeneste (standard: %d)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3388,6 +3400,14 @@
         <translation>Dette er eksperimentelt software.</translation>
     </message>
     <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Adgangskode for Tor kontrolport (standard: tom)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>Tor kontrolport, der skal bruges, hvis onion-lytning er slået til (standard: %s)</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation>Transaktionsbeløb er for lavt</translation>
     </message>
@@ -3426,6 +3446,10 @@
     <message>
         <source>Warning</source>
         <translation>Advarsel</translation>
+    </message>
+    <message>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>Hvorvidt der skal arbejdes i kun-blokke-tilstand (standard: %u)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -3513,7 +3537,7 @@
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Brug separat SOCS5-proxy for at nå andre knuder via Tor skjulte tjenester (standard: %s)</translation>
+        <translation>Brug separat SOCS5-proxy for at nå knuder via skjulte Tor-tjenester (standard: %s)</translation>
     </message>
     <message>
         <source>(default: %s)</source>

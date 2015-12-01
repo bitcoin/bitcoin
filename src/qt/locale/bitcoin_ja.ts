@@ -2737,6 +2737,10 @@
         <translation>取引 ID をコピー</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>生トランザクションをコピー</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>ラベルの編集</translation>
     </message>
@@ -3257,8 +3261,16 @@
         <translation>最優良のチェインを有効化しています...</translation>
     </message>
     <message>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>ホワイトリストにあるピアから受け取ったトランザクションを常にリレーする (初期値: %d)</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
         <translation>起動時に壊れた wallet.dat から秘密鍵を復旧することを試す</translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Tor秘匿サービスを自動的に作成する (初期値: %d)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3393,6 +3405,14 @@
         <translation>これは実験的なソフトウェアです。</translation>
     </message>
     <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Tor管理ポートのパスワード (初期値: 空文字)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>Onion のリッスンが有効になっている場合に使用するTor管理ポート (初期値: %s)</translation>
+    </message>
+    <message>
         <source>Transaction amount too small</source>
         <translation>取引の額が小さ過ぎます</translation>
     </message>
@@ -3431,6 +3451,10 @@
     <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>ブロック限定モードにおいて動作を行うかどうか (初期値: %u)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>

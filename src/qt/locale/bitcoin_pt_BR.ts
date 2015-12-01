@@ -1550,6 +1550,14 @@
         <translation>A duração de um ping excepcional no momento.</translation>
     </message>
     <message>
+        <source>Ping Wait</source>
+        <translation>Espera de ping</translation>
+    </message>
+    <message>
+        <source>Time Offset</source>
+        <translation>Offset de tempo</translation>
+    </message>
+    <message>
         <source>Last block time</source>
         <translation>Horário do último bloco</translation>
     </message>
@@ -2638,6 +2646,10 @@
         <translation>Mostrar ou não endereços Bitcoin na lista de transações.</translation>
     </message>
     <message>
+        <source>User-defined intent/purpose of the transaction.</source>
+        <translation>Intenção/Propósito definido pelo usuário para a transação</translation>
+    </message>
+    <message>
         <source>Amount removed from or added to balance.</source>
         <translation>Quantidade debitada ou creditada ao saldo.</translation>
     </message>
@@ -2715,6 +2727,10 @@
     <message>
         <source>Copy transaction ID</source>
         <translation>Copiar ID da transação</translation>
+    </message>
+    <message>
+        <source>Copy raw transaction</source>
+        <translation>Copia os dados brutos da transação</translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -2868,6 +2884,18 @@
         <translation>Se &lt;category&gt; não for suprida ou se &lt;category&gt; = 1, mostrar toda informação de depuração.</translation>
     </message>
     <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Por favor verifique se a data e horário estão corretos no seu computador! Se o seu relógio estiver incorreto, a Carteira Bitcoin não irá funcionar corretamente.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Corte: a ultima sincronização da carteira foi além do dado comprimido. Você precisa reindexar ( -reindex , faça o download de toda a blockchain novamente)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Rescans não são possíveis no modo de corte. Você precisa usar -reindex, que irá fazer o download de toda a blockchain novamente.</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Erro: Um erro interno fatal ocorreu, veja debug.log para detalhes</translation>
     </message>
@@ -2992,6 +3020,22 @@
         <translation>Você quer reconstruir o banco de dados de blocos agora?</translation>
     </message>
     <message>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation>Abilitar a publicação da hash do block em &lt;endereço&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish hash transaction in &lt;address&gt;</source>
+        <translation>Abilitar a publicação da hash da transação em &lt;endereço&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw block in &lt;address&gt;</source>
+        <translation>Abilitar a publicação dos dados brutos do block em &lt;endereço&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw transaction in &lt;address&gt;</source>
+        <translation>Abilitar a publicação dos dados brutos da transação em &lt;endereço&gt;</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Erro ao inicializar banco de dados de blocos</translation>
     </message>
@@ -3112,6 +3156,10 @@
         <translation>Vincular ao endereço fornecido e sempre escutar nele. Use a notação [host]:port para IPv6</translation>
     </message>
     <message>
+        <source>Bind to given address to listen for JSON-RPC connections. Use [host]:port notation for IPv6. This option can be specified multiple times (default: bind to all interfaces)</source>
+        <translation>Conecte ao endereço dado para receber conecções JSON-RPC. Use a notação [destino]:porta para IPv6. Essa opção pode ser especificada várias vezes (padrão: conecte a todas as interfaces)</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation>Não foi possível obter acesso exclusivo ao diretório de dados %s. Provavelmente Bitcoin já está sendo executado.</translation>
     </message>
@@ -3142,6 +3190,10 @@
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>A quantia da transação é muito pequena para mandar </translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit &lt;https://www.openssl.org/&gt; and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Esse produto inclui software desenvolvido pelo Open SSL Project para uso na OpenSSL Toolkit&lt;https://www.openssl.org/&gt; e software criptográfico escrito por Eric Young e software UPnP escrito por Thomas Bernard. </translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
