@@ -2915,6 +2915,10 @@
         <translation>(predeterminado: 1)</translation>
     </message>
     <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-maxmempool debe ser por lo menos de %d MB</translation>
+    </message>
+    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; puede ser:</translation>
     </message>
@@ -3125,6 +3129,10 @@
     <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
         <translation>Intento de recuperar claves privadas de un wallet.dat corrupto</translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Automáticamente crea el servicio Tor oculto (por defecto: %d)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
