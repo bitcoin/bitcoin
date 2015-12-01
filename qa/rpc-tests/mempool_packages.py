@@ -8,9 +8,6 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-def satoshi_round(amount):
-    return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
-
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
 
