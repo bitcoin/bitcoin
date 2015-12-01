@@ -19,9 +19,6 @@ P2SH_2 = "2NBdpwq8Aoo1EEKEXPNrKvr5xQr3M9UfcZA" # P2SH of "OP_2 OP_DROP"
 # 4 bytes of OP_TRUE and push 2-byte redeem script of "OP_1 OP_DROP" or "OP_2 OP_DROP"
 SCRIPT_SIG = ["0451025175", "0451025275"]
 
-def satoshi_round(amount):
-    return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
-
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
     '''
     Create and send a transaction with a random fee.
