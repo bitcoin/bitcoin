@@ -226,7 +226,11 @@
         <source>IP/Netmask</source>
         <translation>IP/Netzmaske</translation>
     </message>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Gesperrt bis</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
