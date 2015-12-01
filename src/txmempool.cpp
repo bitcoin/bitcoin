@@ -918,7 +918,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
 
 CFeeRate CTxMemPool::GetMinFee() const
 {
-    return GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
+    return GetMinFee(nGlobalMempoolSizeLimit);
 }
 
 void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
