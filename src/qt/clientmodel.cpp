@@ -253,7 +253,10 @@ static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CB
     // if we are in-sync, update the UI regardless of last update time
     if (!initialSync || now - nLastBlockTipUpdateNotification > MODEL_UPDATE_DELAY) {
         //pass a async signal to the UI thread
-        Q_EMIT clientmodel->numBlocksChanged(pIndex->nHeight, QDateTime::fromTime_t(pIndex->GetBlockTime()), clientmodel->getVerificationProgress(pIndex));
+        QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
+                                  Q_ARG(int, pIndex->nHeight),
+                                  Q_ARG(QDateTime, QDateTime::fromTime_t(pIndex->GetBlockTime())),
+                                  Q_ARG(double, clientmodel->getVerificationProgress(pIndex)));
         nLastBlockTipUpdateNotification = now;
     }
 }
