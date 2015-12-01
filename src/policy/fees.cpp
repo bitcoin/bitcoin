@@ -7,6 +7,7 @@
 #include "policy/policy.h"
 
 #include "amount.h"
+#include "clientversion.h"
 #include "primitives/transaction.h"
 #include "streams.h"
 #include "txmempool.h"
@@ -173,7 +174,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     return median;
 }
 
-void TxConfirmStats::Write(CAutoFile& fileout)
+void TxConfirmStats::Write(CAutoFile& fileout) const
 {
     fileout << decay;
     fileout << buckets;
@@ -573,20 +574,41 @@ double CBlockPolicyEstimator::estimateSmartPriority(int confTarget, int* answerF
     return median;
 }
 
-void CBlockPolicyEstimator::Write(CAutoFile& fileout)
+bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
 {
-    LOCK(cs);
-    fileout << nBestSeenHeight;
-    feeStats.Write(fileout);
-    priStats.Write(fileout);
+    try {
+        LOCK(cs);
+        fileout << 109900; // version required to read: 0.10.99 or later
+        fileout << CLIENT_VERSION; // version that wrote the file
+        fileout << nBestSeenHeight;
+        feeStats.Write(fileout);
+        priStats.Write(fileout);
+    }
+    catch (const std::exception&) {
+        LogPrintf("CTxMemPool::WriteFeeEstimates(): unable to write policy estimator data (non-fatal)\n");
+        return false;
+    }
+    return true;
 }
 
-void CBlockPolicyEstimator::Read(CAutoFile& filein)
+bool CBlockPolicyEstimator::Read(CAutoFile& filein)
 {
-    LOCK(cs);
-    int nFileBestSeenHeight;
-    filein >> nFileBestSeenHeight;
-    feeStats.Read(filein);
-    priStats.Read(filein);
-    nBestSeenHeight = nFileBestSeenHeight;
+    try {
+        int nVersionRequired, nVersionThatWrote;
+        filein >> nVersionRequired >> nVersionThatWrote;
+        if (nVersionRequired > CLIENT_VERSION)
+            return error("CTxMemPool::ReadFeeEstimates(): up-version (%d) fee estimate file", nVersionRequired);
+
+        LOCK(cs);
+        int nFileBestSeenHeight;
+        filein >> nFileBestSeenHeight;
+        feeStats.Read(filein);
+        priStats.Read(filein);
+        nBestSeenHeight = nFileBestSeenHeight;
+    }
+    catch (const std::exception&) {
+        LogPrintf("CTxMemPool::ReadFeeEstimates(): unable to read policy estimator data (non-fatal)\n");
+        return false;
+    }
+    return true;
 }

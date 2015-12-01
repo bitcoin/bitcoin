@@ -167,7 +167,7 @@ public:
     unsigned int GetMaxConfirms() { return confAvg.size(); }
 
     /** Write state of estimation data to a file*/
-    void Write(CAutoFile& fileout);
+    void Write(CAutoFile& fileout) const;
 
     /**
      * Read saved state of estimation data from a file and replace all internal data structures and
@@ -242,8 +242,8 @@ public:
     /** Is this transaction likely included in a block because of its priority?*/
     bool isPriDataPoint(const CFeeRate &fee, double pri);
 
-    /** Return a fee estimate */
-    CFeeRate estimateFee(int confTarget);
+    /** Estimate fee rate needed to get into the next nBlocks */
+    CFeeRate estimateFee(int nBlocks);
 
     /** Estimate fee rate needed to get be included in a block within
      *  confTarget blocks. If no answer can be given at confTarget, return an
@@ -251,8 +251,8 @@ public:
      */
     CFeeRate estimateSmartFee(int confTarget, int* answerFoundAtTarget, const CAmount& minPoolFee);
 
-    /** Return a priority estimate */
-    double estimatePriority(int confTarget);
+    /** @deprecated Estimate priority needed to get into the next nBlocks */
+    double estimatePriority(int nBlocks);
 
     /** Estimate priority needed to get be included in a block within
      *  confTarget blocks. If no answer can be given at confTarget, return an
@@ -261,10 +261,10 @@ public:
     double estimateSmartPriority(int confTarget, int* answerFoundAtTarget, const CAmount& minPoolFee);
 
     /** Write estimation data to a file */
-    void Write(CAutoFile& fileout);
+    bool Write(CAutoFile& fileout) const;
 
     /** Read estimation data from a file */
-    void Read(CAutoFile& filein);
+    bool Read(CAutoFile& filein);
 
 private:
     CFeeRate minTrackedFee; //! Passed to constructor to avoid dependency on main
