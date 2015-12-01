@@ -99,6 +99,7 @@ testScripts = [
     'disablewallet.py',
     'sendheaders.py',
     'keypool.py',
+    'prioritise_transaction.py',
 ]
 testScriptsExt = [
     'bip65-cltv.py',
