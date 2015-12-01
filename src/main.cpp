@@ -18,6 +18,7 @@
 #include "init.h"
 #include "merkleblock.h"
 #include "net.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/block.h"
@@ -77,8 +78,8 @@ bool fAlerts = DEFAULT_ALERTS;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
-
-CTxMemPool mempool(::minRelayTxFee);
+CBlockPolicyEstimator globalFeePolicy(::minRelayTxFee);
+CTxMemPool mempool(globalFeePolicy, ::minRelayTxFee);
 
 struct COrphanTx {
     CTransaction tx;

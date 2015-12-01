@@ -20,6 +20,9 @@
 
 class CAutoFile;
 
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
+
 inline double AllowFreeThreshold()
 {
     return COIN * 144 / 250;
@@ -359,7 +362,7 @@ public:
      *  around what it "costs" to relay a transaction around the network and
      *  below which we would reasonably say a transaction has 0-effective-fee.
      */
-    CTxMemPool(const CFeeRate& _minReasonableRelayFee);
+    CTxMemPool(CBlockPolicyEstimator& feePolicy, const CFeeRate& _minReasonableRelayFee);
     ~CTxMemPool();
 
     /**
@@ -474,21 +477,11 @@ public:
      */
     CFeeRate estimateSmartFee(int nBlocks, int *answerFoundAtBlocks = NULL) const;
 
-    /** Estimate fee rate needed to get into the next nBlocks */
-    CFeeRate estimateFee(int nBlocks) const;
-
     /** Estimate priority needed to get into the next nBlocks
      *  If no answer can be given at nBlocks, return an estimate
      *  at the lowest number of blocks where one can be given
      */
     double estimateSmartPriority(int nBlocks, int *answerFoundAtBlocks = NULL) const;
-
-    /** Estimate priority needed to get into the next nBlocks */
-    double estimatePriority(int nBlocks) const;
-    
-    /** Write/Read estimates to disk */
-    bool WriteFeeEstimates(CAutoFile& fileout) const;
-    bool ReadFeeEstimates(CAutoFile& filein);
 
     size_t DynamicMemoryUsage() const;
 

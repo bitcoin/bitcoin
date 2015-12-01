@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "policy/fees.h"
 #include "txmempool.h"
 #include "util.h"
 
@@ -52,8 +53,8 @@ BOOST_AUTO_TEST_CASE(MempoolRemoveTest)
         txGrandChild[i].vout[0].nValue = 11000LL;
     }
 
-
-    CTxMemPool testPool(CFeeRate(0));
+    CBlockPolicyEstimator testFeePolicy(CFeeRate(0));
+    CTxMemPool testPool(testFeePolicy, CFeeRate(0));
     std::list<CTransaction> removed;
 
     // Nothing in pool, remove should do nothing:
@@ -114,7 +115,8 @@ void CheckSort(CTxMemPool &pool, std::vector<std::string> &sortedOrder)
 
 BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 {
-    CTxMemPool pool(CFeeRate(0));
+    CBlockPolicyEstimator testFeePolicy(CFeeRate(0));
+    CTxMemPool pool(testFeePolicy, CFeeRate(0));
     TestMemPoolEntryHelper entry;
     entry.hadNoDependencies = true;
 
@@ -286,7 +288,8 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
 BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
 {
-    CTxMemPool pool(CFeeRate(1000));
+    CBlockPolicyEstimator testFeePolicy(CFeeRate(1000));
+    CTxMemPool pool(testFeePolicy, CFeeRate(1000));
     TestMemPoolEntryHelper entry;
     entry.dPriority = 10.0;
 

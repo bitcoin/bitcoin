@@ -6,6 +6,7 @@
 #define BITCOIN_POLICYESTIMATOR_H
 
 #include "amount.h"
+#include "sync.h"
 #include "uint256.h"
 
 #include <map>
@@ -166,7 +167,7 @@ public:
     unsigned int GetMaxConfirms() { return confAvg.size(); }
 
     /** Write state of estimation data to a file*/
-    void Write(CAutoFile& fileout);
+    void Write(CAutoFile& fileout) const;
 
     /**
      * Read saved state of estimation data from a file and replace all internal data structures and
@@ -217,6 +218,7 @@ static const double PRI_SPACING = 2;
  */
 class CBlockPolicyEstimator
 {
+    mutable CCriticalSection cs;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator(const CFeeRate& minRelayFee);
@@ -240,29 +242,29 @@ public:
     /** Is this transaction likely included in a block because of its priority?*/
     bool isPriDataPoint(const CFeeRate &fee, double pri);
 
-    /** Return a fee estimate */
-    CFeeRate estimateFee(int confTarget);
+    /** Estimate fee rate needed to get into the next nBlocks */
+    CFeeRate estimateFee(int nBlocks);
 
     /** Estimate fee rate needed to get be included in a block within
      *  confTarget blocks. If no answer can be given at confTarget, return an
      *  estimate at the lowest target where one can be given.
      */
-    CFeeRate estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool);
+    CFeeRate estimateSmartFee(int confTarget, int* answerFoundAtTarget, const CAmount& minPoolFee);
 
-    /** Return a priority estimate */
-    double estimatePriority(int confTarget);
+    /** @deprecated Estimate priority needed to get into the next nBlocks */
+    double estimatePriority(int nBlocks);
 
     /** Estimate priority needed to get be included in a block within
      *  confTarget blocks. If no answer can be given at confTarget, return an
      *  estimate at the lowest target where one can be given.
      */
-    double estimateSmartPriority(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool);
+    double estimateSmartPriority(int confTarget, int* answerFoundAtTarget, const CAmount& minPoolFee);
 
     /** Write estimation data to a file */
-    void Write(CAutoFile& fileout);
+    bool Write(CAutoFile& fileout) const;
 
     /** Read estimation data from a file */
-    void Read(CAutoFile& filein);
+    bool Read(CAutoFile& filein);
 
 private:
     CFeeRate minTrackedFee; //! Passed to constructor to avoid dependency on main

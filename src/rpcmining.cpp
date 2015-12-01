@@ -13,6 +13,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "policy/fees.h"
 #include "pow.h"
 #include "rpcserver.h"
 #include "txmempool.h"
@@ -693,7 +694,7 @@ UniValue estimatefee(const UniValue& params, bool fHelp)
     if (nBlocks < 1)
         nBlocks = 1;
 
-    CFeeRate feeRate = mempool.estimateFee(nBlocks);
+    CFeeRate feeRate = globalFeePolicy.estimateFee(nBlocks);
     if (feeRate == CFeeRate(0))
         return -1.0;
 
@@ -724,7 +725,7 @@ UniValue estimatepriority(const UniValue& params, bool fHelp)
     if (nBlocks < 1)
         nBlocks = 1;
 
-    return mempool.estimatePriority(nBlocks);
+    return globalFeePolicy.estimatePriority(nBlocks);
 }
 
 UniValue estimatesmartfee(const UniValue& params, bool fHelp)

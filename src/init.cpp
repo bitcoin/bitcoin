@@ -22,6 +22,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "policy/fees.h"
 #include "policy/policy.h"
 #include "rpcserver.h"
 #include "script/standard.h"
@@ -203,7 +204,7 @@ void Shutdown()
         boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
         CAutoFile est_fileout(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
         if (!est_fileout.IsNull())
-            mempool.WriteFeeEstimates(est_fileout);
+            globalFeePolicy.Write(est_fileout);
         else
             LogPrintf("%s: Failed to write fee estimates to %s\n", __func__, est_path.string());
         fFeeEstimatesInitialized = false;
@@ -1390,7 +1391,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     CAutoFile est_filein(fopen(est_path.string().c_str(), "rb"), SER_DISK, CLIENT_VERSION);
     // Allowed to fail as this file IS missing on first startup.
     if (!est_filein.IsNull())
-        mempool.ReadFeeEstimates(est_filein);
+        globalFeePolicy.Read(est_filein);
     fFeeEstimatesInitialized = true;
 
     // ********************************************************* Step 8: load wallet
