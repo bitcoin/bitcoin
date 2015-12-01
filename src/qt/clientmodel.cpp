@@ -158,7 +158,7 @@ enum BlockSource ClientModel::getBlockSource() const
 
 QString ClientModel::getStatusBarWarnings() const
 {
-    return QString::fromStdString(GetWarnings("statusbar"));
+    return QString::fromStdString(GetWarnings("gui"));
 }
 
 OptionsModel *ClientModel::getOptionsModel()
