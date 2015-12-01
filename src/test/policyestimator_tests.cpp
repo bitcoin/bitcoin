@@ -199,10 +199,10 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     mpool.addUnchecked(tx.GetHash(),  entry.Fee(feeV[0][5]).Time(GetTime()).Priority(priV[1][5]).Height(blocknum).FromTx(tx, &mpool));
     // evict that transaction which should set a mempool min fee of minRelayTxFee + feeV[0][5]
     mpool.TrimToSize(1);
-    BOOST_CHECK(mpool.GetMinFee(1).GetFeePerK() > feeV[0][5]);
+    BOOST_CHECK(mpool.GetMinFee().GetFeePerK() > feeV[0][5]);
     for (int i = 1; i < 10; i++) {
         BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.estimateFee(i).GetFeePerK());
-        BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.GetMinFee(1).GetFeePerK());
+        BOOST_CHECK(mpool.estimateSmartFee(i).GetFeePerK() >= mpool.GetMinFee().GetFeePerK());
         BOOST_CHECK(mpool.estimateSmartPriority(i) == INF_PRIORITY);
     }
 }

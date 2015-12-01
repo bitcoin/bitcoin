@@ -585,6 +585,7 @@ void CTxMemPool::_clear()
     lastRollingFeeUpdate = GetTime();
     blockSinceLastRollingFeeBump = false;
     rollingMinimumFeeRate = 0;
+    lastTrimmedSize = std::numeric_limits<size_t>::max();
     ++nTransactionsUpdated;
 }
 
@@ -919,7 +920,7 @@ const CTxMemPool::setEntries & CTxMemPool::GetMemPoolChildren(txiter entry) cons
     return it->second.children;
 }
 
-CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
+CFeeRate CTxMemPool::GetMinFee() const {
     LOCK(cs);
     if (!blockSinceLastRollingFeeBump || rollingMinimumFeeRate == 0)
         return CFeeRate(rollingMinimumFeeRate);
@@ -927,9 +928,9 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     int64_t time = GetTime();
     if (time > lastRollingFeeUpdate + 10) {
         double halflife = ROLLING_FEE_HALFLIFE;
-        if (DynamicMemoryUsage() < sizelimit / 4)
+        if (DynamicMemoryUsage() < lastTrimmedSize / 4)
             halflife /= 4;
-        else if (DynamicMemoryUsage() < sizelimit / 2)
+        else if (DynamicMemoryUsage() < lastTrimmedSize / 2)
             halflife /= 2;
 
         rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
@@ -954,6 +955,7 @@ void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
 void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRemaining) {
     LOCK(cs);
 
+    lastTrimmedSize = sizelimit;
     unsigned nTxnRemoved = 0;
     CFeeRate maxFeeRateRemoved(0);
     while (DynamicMemoryUsage() > sizelimit) {

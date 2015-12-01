@@ -522,7 +522,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoun
         *answerFoundAtTarget = confTarget - 1;
 
     // If mempool is limiting txs , return at least the min fee from the mempool
-    CAmount minPoolFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+    CAmount minPoolFee = pool.GetMinFee().GetFeePerK();
     if (minPoolFee > 0 && minPoolFee > median)
         return CFeeRate(minPoolFee);
 
@@ -550,7 +550,7 @@ double CBlockPolicyEstimator::estimateSmartPriority(int confTarget, int *answerF
         return -1;
 
     // If mempool is limiting txs, no priority txs are allowed
-    CAmount minPoolFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+    CAmount minPoolFee = pool.GetMinFee().GetFeePerK();
     if (minPoolFee > 0)
         return INF_PRIORITY;
 
