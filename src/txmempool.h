@@ -443,6 +443,8 @@ public:
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
+    CFeeRate GetMinFee() const;
+    /** Additional version with sizelimit as parameter, useful for testing. */
     CFeeRate GetMinFee(size_t sizelimit) const;
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit. */

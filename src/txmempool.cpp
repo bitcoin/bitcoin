@@ -714,7 +714,7 @@ CFeeRate CTxMemPool::estimateFee(int nBlocks) const
 CFeeRate CTxMemPool::estimateSmartFee(int nBlocks, int *answerFoundAtBlocks) const
 {
     LOCK(cs);
-    return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK());
+    return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, GetMinFee().GetFeePerK());
 }
 double CTxMemPool::estimatePriority(int nBlocks) const
 {
@@ -724,7 +724,7 @@ double CTxMemPool::estimatePriority(int nBlocks) const
 double CTxMemPool::estimateSmartPriority(int nBlocks, int *answerFoundAtBlocks) const
 {
     LOCK(cs);
-    return minerPolicyEstimator->estimateSmartPriority(nBlocks, answerFoundAtBlocks, GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK());
+    return minerPolicyEstimator->estimateSmartPriority(nBlocks, answerFoundAtBlocks, GetMinFee().GetFeePerK());
 }
 
 bool
@@ -914,6 +914,11 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
         }
     }
     return std::max(CFeeRate(rollingMinimumFeeRate), minReasonableRelayFee);
+}
+
+CFeeRate CTxMemPool::GetMinFee() const
+{
+    return GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000);
 }
 
 void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
