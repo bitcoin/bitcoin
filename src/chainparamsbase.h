@@ -11,6 +11,7 @@
 #define CHAINPARAMS_MAIN "main"
 #define CHAINPARAMS_TESTNET "testnet"
 #define CHAINPARAMS_REGTEST "regtest"
+#define CHAINPARAMS_SIZETEST "sizetest"
 
 /**
  * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
@@ -22,8 +23,6 @@ public:
     /** BIP70 chain name strings (main, test or regtest) */
     static const std::string MAIN;
     static const std::string TESTNET;
-    static const std::string REGTEST;
-    static const std::string SIZETEST;
 
     const std::string& DataDir() const { return strDataDir; }
     int RPCPort() const { return nRPCPort; }

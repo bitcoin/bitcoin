@@ -96,7 +96,7 @@ TestingSetup::~TestingSetup()
         boost::filesystem::remove_all(pathTemp);
 }
 
-TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
+TestChain100Setup::TestChain100Setup() : TestingSetup(CHAINPARAMS_REGTEST)
 {
     const Consensus::Params& consensusParams = Params().GetConsensus();
     // Generate a 100-block chain:

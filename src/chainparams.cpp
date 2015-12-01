@@ -292,7 +292,7 @@ class CSizeTestParams : public CChainParams {
 public:
     CSizeTestParams() {
         consensus.nMaxBlockSize = GetArg("-blocksize", 1000000);
-        strNetworkID = strprintf("sizetest%d", consensus.nMaxBlockSize);
+        strNetworkID = strprintf("%s%d", CHAINPARAMS_SIZETEST, consensus.nMaxBlockSize);
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -350,13 +350,13 @@ const CChainParams &Params() {
 
 CChainParams* CChainParams::Factory(const std::string& chain)
 {
-    if (chain == CBaseChainParams::MAIN)
+    if (chain == CHAINPARAMS_MAIN)
         return new CMainParams();
-    else if (chain == CBaseChainParams::TESTNET)
+    else if (chain == CHAINPARAMS_TESTNET)
         return new CTestNetParams();
-    else if (chain == CBaseChainParams::REGTEST)
+    else if (chain == CHAINPARAMS_REGTEST)
         return new CRegTestParams();
-    else if (chain == CBaseChainParams::SIZETEST)
+    else if (chain == CHAINPARAMS_SIZETEST)
         return new CSizeTestParams();
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));

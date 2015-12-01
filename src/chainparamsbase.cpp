@@ -12,8 +12,6 @@
 
 const std::string CBaseChainParams::MAIN = CHAINPARAMS_MAIN;
 const std::string CBaseChainParams::TESTNET = CHAINPARAMS_TESTNET;
-const std::string CBaseChainParams::REGTEST = CHAINPARAMS_REGTEST;
-const std::string CBaseChainParams::SIZETEST = "sizetest";
 
 void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp)
 {
@@ -72,7 +70,7 @@ public:
     CBaseSizeTestParams()
     {
         uint64_t nMaxBlockSize = GetArg("-blocksize", 1000000);
-        strDataDir = strprintf("sizetest%d", nMaxBlockSize);
+        strDataDir = strprintf("%s%d", CHAINPARAMS_SIZETEST, nMaxBlockSize);
         nRPCPort = 28333;
     }
 };
@@ -87,13 +85,13 @@ const CBaseChainParams& BaseParams()
 
 CBaseChainParams* CBaseChainParams::Factory(const std::string& chain)
 {
-    if (chain == CBaseChainParams::MAIN)
+    if (chain == CHAINPARAMS_MAIN)
         return new CBaseMainParams();
-    else if (chain == CBaseChainParams::TESTNET)
+    else if (chain == CHAINPARAMS_TESTNET)
         return new CBaseTestNetParams();
-    else if (chain == CBaseChainParams::REGTEST)
+    else if (chain == CHAINPARAMS_REGTEST)
         return new CBaseRegTestParams();
-    else if (chain == CBaseChainParams::SIZETEST)
+    else if (chain == CHAINPARAMS_SIZETEST)
         return new CBaseSizeTestParams();
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
@@ -112,10 +110,10 @@ std::string ChainNameFromCommandLine()
     if (fTestNet && fRegTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
     if (fRegTest)
-        return CBaseChainParams::REGTEST;
+        return CHAINPARAMS_REGTEST;
     if (fTestNet)
-        return CBaseChainParams::TESTNET;
-    return GetArg("-chain", CBaseChainParams::MAIN);
+        return CHAINPARAMS_TESTNET;
+    return GetArg("-chain", CHAINPARAMS_MAIN);
 }
 
 bool AreBaseParamsConfigured()
