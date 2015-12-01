@@ -20,6 +20,9 @@
 
 class CAutoFile;
 
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
+
 inline double AllowFreeThreshold()
 {
     return COIN * 144 / 250;
