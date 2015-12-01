@@ -206,7 +206,13 @@ void ThreadScriptCheck();
 void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const CBlockIndex *const &bestHeader, int64_t nPowTargetSpacing);
 /** Check whether we are doing an initial block download (synchronizing from disk or network) */
 bool IsInitialBlockDownload();
-/** Format a string that describes several potential problems detected by the core */
+/** Format a string that describes several potential problems detected by the core.
+ * strFor can have three values:
+ * - "rpc": get critical warnings, which should put the client in safe mode if non-empty
+ * - "statusbar": get all warnings
+ * - "gui": get all warnings, translated (where possible) for GUI
+ * This function only returns the highest priority warning of the set selected by strFor.
+ */
 std::string GetWarnings(const std::string& strFor);
 /** Retrieve a transaction (from memory pool, or from disk, if possible) */
 bool GetTransaction(const uint256 &hash, CTransaction &tx, const Consensus::Params& params, uint256 &hashBlock, bool fAllowSlow = false);
