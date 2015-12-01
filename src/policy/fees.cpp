@@ -284,6 +284,7 @@ void TxConfirmStats::removeTx(unsigned int entryHeight, unsigned int nBestSeenHe
 
 void CBlockPolicyEstimator::removeTx(uint256 hash)
 {
+    LOCK(cs);
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos == mapMemPoolTxs.end()) {
         LogPrint("estimatefee", "Blockpolicy error mempool tx %s not found for removeTx\n",
@@ -302,6 +303,7 @@ void CBlockPolicyEstimator::removeTx(uint256 hash)
 CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
     : nBestSeenHeight(0)
 {
+    LOCK(cs);
     minTrackedFee = _minRelayFee < CFeeRate(MIN_FEERATE) ? CFeeRate(MIN_FEERATE) : _minRelayFee;
     std::vector<double> vfeelist;
     for (double bucketBoundary = minTrackedFee.GetFeePerK(); bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
@@ -326,6 +328,7 @@ CBlockPolicyEstimator::CBlockPolicyEstimator(const CFeeRate& _minRelayFee)
 
 bool CBlockPolicyEstimator::isFeeDataPoint(const CFeeRate &fee, double pri)
 {
+    LOCK(cs);
     if ((pri < minTrackedPriority && fee >= minTrackedFee) ||
         (pri < priUnlikely && fee > feeLikely)) {
         return true;
@@ -335,6 +338,7 @@ bool CBlockPolicyEstimator::isFeeDataPoint(const CFeeRate &fee, double pri)
 
 bool CBlockPolicyEstimator::isPriDataPoint(const CFeeRate &fee, double pri)
 {
+    LOCK(cs);
     if ((fee < minTrackedFee && pri >= minTrackedPriority) ||
         (fee < feeUnlikely && pri > priLikely)) {
         return true;
@@ -344,6 +348,7 @@ bool CBlockPolicyEstimator::isPriDataPoint(const CFeeRate &fee, double pri)
 
 void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool fCurrentEstimate)
 {
+    LOCK(cs);
     unsigned int txHeight = entry.GetHeight();
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs[hash].stats != NULL) {
@@ -398,6 +403,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
 
 void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry)
 {
+    LOCK(cs);
     if (!entry.WasClearAtEntry()) {
         // This transaction depended on other transactions in the mempool to
         // be included in a block before it was able to be included, so
@@ -436,6 +442,7 @@ void CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
 void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
                                          std::vector<CTxMemPoolEntry>& entries, bool fCurrentEstimate)
 {
+    LOCK(cs);
     if (nBlockHeight <= nBestSeenHeight) {
         // Ignore side chains and re-orgs; assuming they are random
         // they don't affect the estimate.
@@ -493,6 +500,7 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
 
 CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
 {
+    LOCK(cs);
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
         return CFeeRate(0);
@@ -507,6 +515,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
 
 CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int* answerFoundAtTarget, const CAmount& minPoolFee)
 {
+    LOCK(cs);
     if (answerFoundAtTarget)
         *answerFoundAtTarget = confTarget;
     // Return failure if trying to analyze a target we're not tracking
@@ -533,6 +542,7 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int* answerFoun
 
 double CBlockPolicyEstimator::estimatePriority(int confTarget)
 {
+    LOCK(cs);
     // Return failure if trying to analyze a target we're not tracking
     if (confTarget <= 0 || (unsigned int)confTarget > priStats.GetMaxConfirms())
         return -1;
@@ -565,6 +575,7 @@ double CBlockPolicyEstimator::estimateSmartPriority(int confTarget, int* answerF
 
 void CBlockPolicyEstimator::Write(CAutoFile& fileout)
 {
+    LOCK(cs);
     fileout << nBestSeenHeight;
     feeStats.Write(fileout);
     priStats.Write(fileout);
@@ -572,6 +583,7 @@ void CBlockPolicyEstimator::Write(CAutoFile& fileout)
 
 void CBlockPolicyEstimator::Read(CAutoFile& filein)
 {
+    LOCK(cs);
     int nFileBestSeenHeight;
     filein >> nFileBestSeenHeight;
     feeStats.Read(filein);

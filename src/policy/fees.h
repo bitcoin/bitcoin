@@ -6,6 +6,7 @@
 #define BITCOIN_POLICYESTIMATOR_H
 
 #include "amount.h"
+#include "sync.h"
 #include "uint256.h"
 
 #include <map>
@@ -217,6 +218,7 @@ static const double PRI_SPACING = 2;
  */
 class CBlockPolicyEstimator
 {
+    mutable CCriticalSection cs;
 public:
     /** Create new BlockPolicyEstimator and initialize stats tracking classes with default values */
     CBlockPolicyEstimator(const CFeeRate& minRelayFee);
