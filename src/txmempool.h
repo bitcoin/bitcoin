@@ -20,6 +20,9 @@
 
 class CAutoFile;
 
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
+
 inline double AllowFreeThreshold()
 {
     return COIN * 144 / 250;
@@ -440,9 +443,13 @@ public:
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
+    CFeeRate GetMinFee() const;
+    /** Additional version with sizelimit as parameter, useful for testing. */
     CFeeRate GetMinFee(size_t sizelimit) const;
 
-    /** Remove transactions from the mempool until its dynamic size is <= sizelimit. */
+    /** Remove transactions from the mempool until its dynamic size is <= nGlobalMempoolSizeLimit. */
+    void TrimToSize();
+    /** Additional version with sizelimit as parameter, useful for testing. */
     void TrimToSize(size_t sizelimit);
 
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */

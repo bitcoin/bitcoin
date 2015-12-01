@@ -714,7 +714,7 @@ CFeeRate CTxMemPool::estimateFee(int nBlocks) const
 CFeeRate CTxMemPool::estimateSmartFee(int nBlocks, int *answerFoundAtBlocks) const
 {
     LOCK(cs);
-    return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, *this);
+    return minerPolicyEstimator->estimateSmartFee(nBlocks, answerFoundAtBlocks, GetMinFee().GetFeePerK());
 }
 double CTxMemPool::estimatePriority(int nBlocks) const
 {
@@ -724,7 +724,7 @@ double CTxMemPool::estimatePriority(int nBlocks) const
 double CTxMemPool::estimateSmartPriority(int nBlocks, int *answerFoundAtBlocks) const
 {
     LOCK(cs);
-    return minerPolicyEstimator->estimateSmartPriority(nBlocks, answerFoundAtBlocks, *this);
+    return minerPolicyEstimator->estimateSmartPriority(nBlocks, answerFoundAtBlocks, GetMinFee().GetFeePerK());
 }
 
 bool
@@ -916,6 +916,11 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     return std::max(CFeeRate(rollingMinimumFeeRate), minReasonableRelayFee);
 }
 
+CFeeRate CTxMemPool::GetMinFee() const
+{
+    return GetMinFee(nGlobalMempoolSizeLimit);
+}
+
 void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
     AssertLockHeld(cs);
     if (rate.GetFeePerK() > rollingMinimumFeeRate) {
@@ -949,4 +954,9 @@ void CTxMemPool::TrimToSize(size_t sizelimit) {
 
     if (maxFeeRateRemoved > CFeeRate(0))
         LogPrint("mempool", "Removed %u txn, rolling minimum fee bumped to %s\n", nTxnRemoved, maxFeeRateRemoved.ToString());
+}
+
+void CTxMemPool::TrimToSize()
+{
+    TrimToSize(nGlobalMempoolSizeLimit);
 }
