@@ -218,7 +218,7 @@ General Bitcoin Core
   - *Rationale*: RPC allows for better automatic testing. The test suite for
     the GUI is very limited
 
-- Make sure pulls pass Travis CI before merging
+- Make sure pull requests pass Travis CI before merging
 
   - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
      on the master branch. Otherwise all new pull requests will start failing the tests, resulting in
@@ -230,9 +230,9 @@ General Bitcoin Core
 Wallet
 -------
 
-- Make sure that that no crashes happen with run-time option `-disablewallet`.
+- Make sure that no crashes happen with run-time option `-disablewallet`.
 
-  - *Rationale*: In RPC code that conditionally use the wallet (such as
+  - *Rationale*: In RPC code that conditionally uses the wallet (such as
     `validateaddress`) it is easy to forget that global pointer `pwalletMain`
     can be NULL. See `qa/rpc-tests/disablewallet.py` for functional tests
     exercising the API with `-disablewallet`
@@ -250,9 +250,9 @@ General C++
     with assertions disabled, having side-effects in assertions is unexpected and
     makes the code harder to understand
 
-- If you use the .h, you must link the .cpp
+- If you use the `.h`, you must link the `.cpp`
 
-  - *Rationale*: Include files are the interface for the implementation file. Including one but
+  - *Rationale*: Include files define the interface for the code in implementation files. Including one but
       not linking the other is confusing. Please avoid that. Moving functions from
       the `.h` to the `.cpp` should not result in build errors
 
@@ -264,11 +264,11 @@ General C++
 C++ data structures
 --------------------
 
-- Never use the std::map [] syntax when reading from a map, but instead use .find()
+- Never use the `std::map []` syntax when reading from a map, but instead use `.find()`
 
-  - *Rationale*: [] does an insert (of the default element) if the item doesn't
+  - *Rationale*: `[]` does an insert (of the default element) if the item doesn't
     exist in the map yet. This has resulted in memory leaks in the past, as well as
-    race conditions (expecting read-read behavior). Using [] is fine for *writing* to a map
+    race conditions (expecting read-read behavior). Using `[]` is fine for *writing* to a map
 
 - Do not compare an iterator from one data structure with an iterator of
   another data structure (even if of the same type)
@@ -304,18 +304,18 @@ C++ data structures
 Strings and formatting
 ------------------------
 
-- Be careful of LogPrint versus LogPrintf. LogPrint takes a 'category' argument, LogPrintf does not.
+- Be careful of `LogPrint` versus `LogPrintf`. `LogPrint` takes a `category` argument, `LogPrintf` does not.
 
   - *Rationale*: Confusion of these can result in runtime exceptions due to
     formatting mismatch, and it is easy to get wrong because of subtly similar naming
 
-- Use std::string, avoid C string manipulation functions
+- Use `std::string`, avoid C string manipulation functions
 
   - *Rationale*: C++ string handling is marginally safer, less scope for
-    buffer overflows and surprises with \0 characters. Also some C string manipulations
+    buffer overflows and surprises with `\0` characters. Also some C string manipulations
     tend to act differently depending on platform, or even the user locale
 
-- Use ParseInt32, ParseInt64, ParseDouble from `utilstrencodings.h` for number parsing
+- Use `ParseInt32`, `ParseInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
 
   - *Rationale*: These functions do overflow checking, and avoid pesky locale issues
 
