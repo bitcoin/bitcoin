@@ -21,7 +21,7 @@
 #include "omnicore/tally.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/wallettxs.h"
-
+#include "omnicore/uint256_extensions.h"
 #include "amount.h"
 #include "sync.h"
 #include "uint256.h"
@@ -520,8 +520,7 @@ void MetaDExDialog::recalcTotal(bool useBuyFields)
     unsigned int propertyId = global_metadex_market;
     bool divisible = isPropertyDivisible(propertyId);
     bool testeco = isTestEcosystemProperty(propertyId);
-    int64_t price = 0, amount = 0;
-    int64_t totalPrice = 0;
+    int64_t price = 0, amount = 0, totalPrice = 0;
 
     if (useBuyFields) {
         amount = StrToInt64(ui->buyAmountLE->text().toStdString(),divisible);
@@ -530,14 +529,36 @@ void MetaDExDialog::recalcTotal(bool useBuyFields)
         amount = StrToInt64(ui->sellAmountLE->text().toStdString(),divisible);
         price = StrToInt64(ui->sellPriceLE->text().toStdString(),true);
     }
-    totalPrice = amount * price;
 
-    // error and overflow detection
-    if (0 >= amount || 0 >= price || totalPrice < amount || totalPrice < price || (totalPrice / amount != price)) {
-        if (useBuyFields) { ui->buyTotalLabel->setText("N/A"); return; } else { ui->sellTotalLabel->setText("N/A"); return; }
+    if (0 >= amount || 0 >= price) {
+        if (useBuyFields) {
+            ui->buyTotalLabel->setText("N/A");
+        } else {
+            ui->sellTotalLabel->setText("N/A");
+        }
+        return;
     }
 
-    if (divisible) totalPrice = totalPrice/COIN;
+    uint256 amount256 = ConvertTo256(amount);
+    uint256 price256 = ConvertTo256(price);
+    uint256 totalPrice256 = amount256 * price256;
+    if (divisible) totalPrice256 = totalPrice256 / COIN;
+
+    if (totalPrice256 > std::numeric_limits<int64_t>::max()) {
+        QMessageBox::critical( this, "Unable to calculate total",
+        "The total amount for the entered trade details would exceed the maximum amount of tokens." );
+        if (useBuyFields) {
+            ui->buyPriceLE->setText("");
+            ui->buyTotalLabel->setText("N/A");
+        } else {
+            ui->sellPriceLE->setText("");
+            ui->sellTotalLabel->setText("N/A");
+        }
+        return;
+    }
+
+    totalPrice = ConvertTo64(totalPrice256);
+
     QString totalLabel = QString::fromStdString(FormatDivisibleMP(totalPrice));
     if (testeco) {
         if (useBuyFields) { ui->buyTotalLabel->setText(totalLabel + " TOMNI"); } else { ui->sellTotalLabel->setText(totalLabel + " TOMNI"); }
@@ -596,13 +617,31 @@ void MetaDExDialog::sendTrade(bool sell)
     if(sell) {
         amountSell = StrToInt64(ui->sellAmountLE->text().toStdString(),divisible);
         price = StrToInt64(ui->sellPriceLE->text().toStdString(),true);
-        if(divisible) { amountDes = (amountSell * price)/COIN; } else { amountDes = amountSell * price; }
+        uint256 amountSell256 = ConvertTo256(amountSell);
+        uint256 priceSell256 = ConvertTo256(price);
+        uint256 totalPrice256 = amountSell256 * priceSell256;
+        if (divisible) totalPrice256 = totalPrice256 / COIN;
+        if (totalPrice256 > std::numeric_limits<int64_t>::max()) {
+            QMessageBox::critical( this, "Unable to send MetaDEx trade",
+            "The total amount for the entered trade details would exceed the maximum amount of tokens." );
+            return;
+        }
+        amountDes = ConvertTo64(totalPrice256);
         if(testeco) { propertyIdDes = 2; } else { propertyIdDes = 1; }
         propertyIdSell = global_metadex_market;
     } else {
         amountDes = StrToInt64(ui->buyAmountLE->text().toStdString(),divisible);
         price = StrToInt64(ui->buyPriceLE->text().toStdString(),true);
-        if(divisible) { amountSell = (amountDes * price)/COIN; } else { amountSell = amountDes * price; }
+        uint256 amountDes256 = ConvertTo256(amountDes);
+        uint256 priceDes256 = ConvertTo256(price);
+        uint256 totalPrice256 = amountDes256 * priceDes256;
+        if (divisible) totalPrice256 = totalPrice256 / COIN;
+        if (totalPrice256 > std::numeric_limits<int64_t>::max()) {
+            QMessageBox::critical( this, "Unable to send MetaDEx trade",
+            "The total amount for the entered trade details would exceed the maximum amount of tokens." );
+            return;
+        }
+        amountSell = ConvertTo64(totalPrice256);
         if(testeco) { propertyIdSell = 2; } else { propertyIdSell = 1; }
         propertyIdDes = global_metadex_market;
     }
