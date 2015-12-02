@@ -2178,6 +2178,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, CAmount> >& vecSend,
                     nFeeRet += nChange;
                     nChange = 0;
                     wtxNew.mapValue["DS"] = "1";
+                    // recheck skipped denominations during next mixing
+                    darkSendPool.ClearSkippedDenominations();
                 }
 
                 if (nChange > 0)
