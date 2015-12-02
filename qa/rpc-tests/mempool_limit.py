@@ -48,7 +48,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
         # by now, the tx should be evicted, check confirmation state
         assert(txid not in self.nodes[0].getrawmempool())
-        txdata = self.nodes[0].gettransaction(txid);
+        txdata = self.nodes[0].gettransaction(txid)
         assert(txdata['confirmations'] ==  0) #confirmation should still be 0
 
 if __name__ == '__main__':

@@ -5,13 +5,8 @@
 
 # Test for -rpcbind, as well as -rpcallowip and -rpcconnect
 
-# Add python-bitcoinrpc to module search path:
-import os
-import sys
+# TODO extend this test from the test framework (like all other tests)
 
-import json
-import shutil
-import subprocess
 import tempfile
 import traceback
 
