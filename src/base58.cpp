@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2014 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -203,13 +203,13 @@ int CBase58Data::CompareTo(const CBase58Data& b58) const
 
 namespace
 {
-class CBitcoinAddressVisitor : public boost::static_visitor<bool>
+class CSyscoinAddressVisitor : public boost::static_visitor<bool>
 {
 private:
-    CBitcoinAddress* addr;
+    CSyscoinAddress* addr;
 
 public:
-    CBitcoinAddressVisitor(CBitcoinAddress* addrIn) : addr(addrIn) {}
+    CSyscoinAddressVisitor(CSyscoinAddress* addrIn) : addr(addrIn) {}
 
     bool operator()(const CKeyID& id) const { return addr->Set(id); }
     bool operator()(const CScriptID& id) const { return addr->Set(id); }
@@ -218,29 +218,29 @@ public:
 
 } // anon namespace
 
-bool CBitcoinAddress::Set(const CKeyID& id)
+bool CSyscoinAddress::Set(const CKeyID& id)
 {
     SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
     return true;
 }
 
-bool CBitcoinAddress::Set(const CScriptID& id)
+bool CSyscoinAddress::Set(const CScriptID& id)
 {
     SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20);
     return true;
 }
 
-bool CBitcoinAddress::Set(const CTxDestination& dest)
+bool CSyscoinAddress::Set(const CTxDestination& dest)
 {
-    return boost::apply_visitor(CBitcoinAddressVisitor(this), dest);
+    return boost::apply_visitor(CSyscoinAddressVisitor(this), dest);
 }
 
-bool CBitcoinAddress::IsValid() const
+bool CSyscoinAddress::IsValid() const
 {
     return IsValid(Params());
 }
 
-bool CBitcoinAddress::IsValid(const CChainParams& params) const
+bool CSyscoinAddress::IsValid(const CChainParams& params) const
 {
     bool fCorrectSize = vchData.size() == 20;
     bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
@@ -248,7 +248,7 @@ bool CBitcoinAddress::IsValid(const CChainParams& params) const
     return fCorrectSize && fKnownVersion;
 }
 
-CTxDestination CBitcoinAddress::Get() const
+CTxDestination CSyscoinAddress::Get() const
 {
     if (!IsValid())
         return CNoDestination();
@@ -262,7 +262,7 @@ CTxDestination CBitcoinAddress::Get() const
         return CNoDestination();
 }
 
-bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
+bool CSyscoinAddress::GetKeyID(CKeyID& keyID) const
 {
     if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
         return false;
@@ -272,12 +272,12 @@ bool CBitcoinAddress::GetKeyID(CKeyID& keyID) const
     return true;
 }
 
-bool CBitcoinAddress::IsScript() const
+bool CSyscoinAddress::IsScript() const
 {
     return IsValid() && vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS);
 }
 
-void CBitcoinSecret::SetKey(const CKey& vchSecret)
+void CSyscoinSecret::SetKey(const CKey& vchSecret)
 {
     assert(vchSecret.IsValid());
     SetData(Params().Base58Prefix(CChainParams::SECRET_KEY), vchSecret.begin(), vchSecret.size());
@@ -285,7 +285,7 @@ void CBitcoinSecret::SetKey(const CKey& vchSecret)
         vchData.push_back(1);
 }
 
-CKey CBitcoinSecret::GetKey()
+CKey CSyscoinSecret::GetKey()
 {
     CKey ret;
     assert(vchData.size() >= 32);
@@ -293,19 +293,19 @@ CKey CBitcoinSecret::GetKey()
     return ret;
 }
 
-bool CBitcoinSecret::IsValid() const
+bool CSyscoinSecret::IsValid() const
 {
     bool fExpectedFormat = vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1);
     bool fCorrectVersion = vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
     return fExpectedFormat && fCorrectVersion;
 }
 
-bool CBitcoinSecret::SetString(const char* pszSecret)
+bool CSyscoinSecret::SetString(const char* pszSecret)
 {
     return CBase58Data::SetString(pszSecret) && IsValid();
 }
 
-bool CBitcoinSecret::SetString(const std::string& strSecret)
+bool CSyscoinSecret::SetString(const std::string& strSecret)
 {
     return SetString(strSecret.c_str());
 }

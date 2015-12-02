@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2012-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MRUSET_H
-#define BITCOIN_MRUSET_H
+#ifndef SYSCOIN_MRUSET_H
+#define SYSCOIN_MRUSET_H
 
 #include <set>
 #include <vector>
@@ -62,4 +62,4 @@ public:
     size_type max_size() const { return nMaxSize; }
 };
 
-#endif // BITCOIN_MRUSET_H
+#endif // SYSCOIN_MRUSET_H

@@ -1,11 +1,11 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2013 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "overviewpage.h"
 #include "ui_overviewpage.h"
 
-#include "bitcoinunits.h"
+#include "syscoinunits.h"
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "guiutil.h"
@@ -26,7 +26,7 @@ class TxViewDelegate : public QAbstractItemDelegate
     Q_OBJECT
 public:
     TxViewDelegate(const PlatformStyle *platformStyle):
-        QAbstractItemDelegate(), unit(BitcoinUnits::BTC),
+        QAbstractItemDelegate(), unit(SyscoinUnits::SYS),
         platformStyle(platformStyle)
     {
 
@@ -84,7 +84,7 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = BitcoinUnits::formatWithUnit(unit, amount, true, BitcoinUnits::separatorAlways);
+        QString amountText = SyscoinUnits::formatWithUnit(unit, amount, true, SyscoinUnits::separatorAlways);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");
@@ -162,14 +162,14 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     currentWatchOnlyBalance = watchOnlyBalance;
     currentWatchUnconfBalance = watchUnconfBalance;
     currentWatchImmatureBalance = watchImmatureBalance;
-    ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways));
-    ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchAvailable->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchPending->setText(BitcoinUnits::formatWithUnit(unit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchImmature->setText(BitcoinUnits::formatWithUnit(unit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
+    ui->labelBalance->setText(SyscoinUnits::formatWithUnit(unit, balance, false, SyscoinUnits::separatorAlways));
+    ui->labelUnconfirmed->setText(SyscoinUnits::formatWithUnit(unit, unconfirmedBalance, false, SyscoinUnits::separatorAlways));
+    ui->labelImmature->setText(SyscoinUnits::formatWithUnit(unit, immatureBalance, false, SyscoinUnits::separatorAlways));
+    ui->labelTotal->setText(SyscoinUnits::formatWithUnit(unit, balance + unconfirmedBalance + immatureBalance, false, SyscoinUnits::separatorAlways));
+    ui->labelWatchAvailable->setText(SyscoinUnits::formatWithUnit(unit, watchOnlyBalance, false, SyscoinUnits::separatorAlways));
+    ui->labelWatchPending->setText(SyscoinUnits::formatWithUnit(unit, watchUnconfBalance, false, SyscoinUnits::separatorAlways));
+    ui->labelWatchImmature->setText(SyscoinUnits::formatWithUnit(unit, watchImmatureBalance, false, SyscoinUnits::separatorAlways));
+    ui->labelWatchTotal->setText(SyscoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, SyscoinUnits::separatorAlways));
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
@@ -235,7 +235,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 
-    // update the display unit, to not use the default ("BTC")
+    // update the display unit, to not use the default ("SYS")
     updateDisplayUnit();
 }
 

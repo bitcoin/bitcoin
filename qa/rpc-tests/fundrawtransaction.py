@@ -1,15 +1,15 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 from pprint import pprint
 from time import sleep
 
 # Create one-input, one-output, no-fee transaction:
-class RawTransactionsTest(BitcoinTestFramework):
+class RawTransactionsTest(SyscoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -418,7 +418,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey']])
 
 
-        # send 1.2 BTC to msig addr
+        # send 1.2 SYS to msig addr
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.2);
         self.sync_all()
         self.nodes[1].generate(1)
@@ -444,7 +444,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[1].encryptwallet("test")
         self.nodes.pop(1)
         stop_nodes(self.nodes)
-        wait_bitcoinds()
+        wait_syscoinds()
 
         self.nodes = start_nodes(4, self.options.tmpdir)
 

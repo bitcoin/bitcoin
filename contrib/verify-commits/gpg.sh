@@ -11,7 +11,7 @@ for LINE in $(echo "$INPUT" | gpg --trust-model always "$@" 2>/dev/null); do
 		done < ./contrib/verify-commits/trusted-keys
 		;;
 	"[GNUPG:] REVKEYSIG "*)
-		[ "$BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG" != 1 ] && exit 1
+		[ "$SYSCOIN_VERIFY_COMMITS_ALLOW_REVSIG" != 1 ] && exit 1
 		while read KEY; do
 			case "$LINE" in "[GNUPG:] REVKEYSIG ${KEY:24:40} "*)
 				REVSIG=true
