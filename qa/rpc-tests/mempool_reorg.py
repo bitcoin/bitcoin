@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,13 +8,13 @@
 # that spend (directly or indirectly) coinbase transactions.
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 import os
 import shutil
 
 # Create one-input, one-output, no-fee transaction:
-class MempoolCoinbaseTest(BitcoinTestFramework):
+class MempoolCoinbaseTest(SyscoinTestFramework):
 
     alert_filename = None  # Set by setup_network
 

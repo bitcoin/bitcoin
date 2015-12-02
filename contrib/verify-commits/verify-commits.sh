@@ -20,9 +20,9 @@ IS_SIGNED () {
 		return 0;
 	fi
 	if IS_REVSIG_ALLOWED "$1"; then
-		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=1
+		export SYSCOIN_VERIFY_COMMITS_ALLOW_REVSIG=1
 	else
-		export BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG=0
+		export SYSCOIN_VERIFY_COMMITS_ALLOW_REVSIG=0
 	fi
 	if ! git -c "gpg.program=${DIR}/gpg.sh" verify-commit $1 > /dev/null 2>&1; then
 		return 1;

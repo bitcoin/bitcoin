@@ -5,7 +5,7 @@
 #
 
 from test_framework.mininode import *
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 import time
 from test_framework.blocktools import create_block, create_coinbase
@@ -210,7 +210,7 @@ class TestNode(BaseNode):
     def __init__(self):
         BaseNode.__init__(self)
 
-class SendHeadersTest(BitcoinTestFramework):
+class SendHeadersTest(SyscoinTestFramework):
     def setup_chain(self):
         initialize_chain_clean(self.options.tmpdir, 2)
 

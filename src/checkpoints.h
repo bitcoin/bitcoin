@@ -1,9 +1,9 @@
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2014 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHECKPOINTS_H
-#define BITCOIN_CHECKPOINTS_H
+#ifndef SYSCOIN_CHECKPOINTS_H
+#define SYSCOIN_CHECKPOINTS_H
 
 #include "uint256.h"
 
@@ -29,4 +29,4 @@ double GuessVerificationProgress(const CCheckpointData& data, CBlockIndex* pinde
 
 } //namespace Checkpoints
 
-#endif // BITCOIN_CHECKPOINTS_H
+#endif // SYSCOIN_CHECKPOINTS_H

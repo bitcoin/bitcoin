@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,7 @@
 #
 
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 from struct import *
 import binascii
@@ -52,7 +52,7 @@ def http_post_call(host, port, path, requestdata = '', response_object = 0):
 
     return conn.getresponse().read()
 
-class RESTTest (BitcoinTestFramework):
+class RESTTest (SyscoinTestFramework):
     FORMAT_SEPARATOR = "."
 
     def setup_chain(self):

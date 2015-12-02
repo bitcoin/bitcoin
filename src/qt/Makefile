@@ -1,9 +1,9 @@
 .PHONY: FORCE
 all: FORCE
-	$(MAKE) -C .. bitcoin_qt test_bitcoin_qt
+	$(MAKE) -C .. syscoin_qt test_syscoin_qt
 clean: FORCE
-	$(MAKE) -C .. bitcoin_qt_clean test_bitcoin_qt_clean
+	$(MAKE) -C .. syscoin_qt_clean test_syscoin_qt_clean
 check: FORCE
-	$(MAKE) -C .. test_bitcoin_qt_check
-bitcoin-qt bitcoin-qt.exe: FORCE
-	 $(MAKE) -C .. bitcoin_qt
+	$(MAKE) -C .. test_syscoin_qt_check
+syscoin-qt syscoin-qt.exe: FORCE
+	 $(MAKE) -C .. syscoin_qt

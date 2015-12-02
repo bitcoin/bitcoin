@@ -1,10 +1,10 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2012 The Bitcoin Core developers
+// Copyright (c) 2012 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UI_INTERFACE_H
-#define BITCOIN_UI_INTERFACE_H
+#ifndef SYSCOIN_UI_INTERFACE_H
+#define SYSCOIN_UI_INTERFACE_H
 
 #include <stdint.h>
 #include <string>
@@ -103,4 +103,4 @@ public:
 
 extern CClientUIInterface uiInterface;
 
-#endif // BITCOIN_UI_INTERFACE_H
+#endif // SYSCOIN_UI_INTERFACE_H

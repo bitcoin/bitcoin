@@ -859,8 +859,8 @@
 77mx2jsxaoyesz2p.onion:8333
 7g7j54btiaxhtsiy.onion:8333
 b6fr7dlbu2kpiysf.onion:8333
-bitcoincfqcssig5.onion:8333
-bitcoinostk4e4re.onion:8333
+syscoincfqcssig5.onion:8333
+syscoinostk4e4re.onion:8333
 bmutjfrj5btseddb.onion:8333
 drp4pvejybx2ejdr.onion:8333
 gixnv56d63buypan.onion:8333

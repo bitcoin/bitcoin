@@ -1,0 +1,22 @@
+[Unit]
+Description=Syscoin's distributed currency daemon
+After=network.target
+
+[Service]
+User=syscoin
+Group=syscoin
+
+Type=forking
+PIDFile=/var/lib/syscoind/syscoind.pid
+ExecStart=/usr/bin/syscoind -daemon -pid=/var/lib/syscoind/syscoind.pid \
+-conf=/etc/syscoin/syscoin.conf -datadir=/var/lib/syscoind -disablewallet
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

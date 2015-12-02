@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,10 +7,10 @@
 # Exercise API with -disablewallet.
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 
-class DisableWalletTest (BitcoinTestFramework):
+class DisableWalletTest (SyscoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -22,7 +22,7 @@ class DisableWalletTest (BitcoinTestFramework):
         self.sync_all()
 
     def run_test (self):
-        # Check regression: https://github.com/bitcoin/bitcoin/issues/6963#issuecomment-154548880
+        # Check regression: https://github.com/syscoin/syscoin/issues/6963#issuecomment-154548880
         x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
         assert(x['isvalid'] == False)
         x = self.nodes[0].validateaddress('mneYUmWYsuk7kySiURxCi3AGxrAqZxLgPZ')

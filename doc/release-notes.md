@@ -40,16 +40,16 @@ caching. A sample config for apache2 could look like:
     SSLCertificateFile /etc/apache2/ssl/server.crt
     SSLCertificateKeyFile /etc/apache2/ssl/server.key
 
-    <Location /bitcoinrpc>
+    <Location /syscoinrpc>
         ProxyPass http://127.0.0.1:8332/
         ProxyPassReverse http://127.0.0.1:8332/
         # optional enable digest auth
         # AuthType Digest
         # ...
 
-        # optional bypass bitcoind rpc basic auth
+        # optional bypass syscoind rpc basic auth
         # RequestHeader set Authorization "Basic <hash>"
-        # get the <hash> from the shell with: base64 <<< bitcoinrpc:<password>
+        # get the <hash> from the shell with: base64 <<< syscoinrpc:<password>
     </Location>
 
     # Or, balance the load:
@@ -70,7 +70,7 @@ overridden with the option `-rpccookiefile`.
 This is similar to Tor's CookieAuthentication: see
 https://www.torproject.org/docs/tor-manual.html.en
 
-This allows running bitcoind without having to do any manual configuration.
+This allows running syscoind without having to do any manual configuration.
 
 Low-level RPC API changes
 --------------------------
@@ -92,7 +92,7 @@ other software, the last specified value for an option will hold.
 ------------------------
 
 Support for the `NODE_BLOOM` service bit, as described in [BIP
-111](https://github.com/bitcoin/bips/blob/master/bip-0111.mediawiki), has been
+111](https://github.com/syscoin/bips/blob/master/bip-0111.mediawiki), has been
 added to the P2P protocol code.
 
 BIP 111 defines a service bit to allow peers to advertise that they support
@@ -141,10 +141,10 @@ blocks. When 951 out of a sequence of 1001 blocks have version number 4 or
 higher, it becomes mandatory for all blocks and blocks with versions less than
 4 are rejected.
 
-Bitcoin Core's block templates are now for version 4 blocks only, and any
+Syscoin Core's block templates are now for version 4 blocks only, and any
 mining software relying on its `getblocktemplate` must be updated in parallel
 to use either libblkmaker version 0.4.3 or any version from 0.5.2 onward. If
-you are solo mining, this will affect you the moment you upgrade Bitcoin Core,
+you are solo mining, this will affect you the moment you upgrade Syscoin Core,
 which must be done prior to BIP65 achieving its 951/1001 status.  If you are
 mining with the stratum mining protocol: this does not affect you.  If you are
 mining with the getblocktemplate protocol to a pool: this will affect you at
@@ -156,15 +156,15 @@ Automatically use Tor hidden services
 
 Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
 API, to create and destroy 'ephemeral' hidden services programmatically.
-Bitcoin Core has been updated to make use of this.
+Syscoin Core has been updated to make use of this.
 
 This means that if Tor is running (and proper authorization is available),
-Bitcoin Core automatically creates a hidden service to listen on, without
-manual configuration. Bitcoin Core will also use Tor automatically to connect
+Syscoin Core automatically creates a hidden service to listen on, without
+manual configuration. Syscoin Core will also use Tor automatically to connect
 to other .onion nodes if the control socket can be successfully opened. This
 will positively affect the number of available .onion nodes and their usage.
 
-This new feature is enabled by default if Bitcoin Core is listening, and
+This new feature is enabled by default if Syscoin Core is listening, and
 a connection to Tor can be made. It can be configured with the `-listenonion`,
 `-torcontrol` and `-torpassword` settings. To show verbose debugging
 information, pass `-debug=tor`.
@@ -194,8 +194,8 @@ A more detailed documentation about keeping traffic low can be found in
 Signature validation using libsecp256k1
 ---------------------------------------
 
-ECDSA signatures inside Bitcoin transactions now use validation using
-[https://github.com/bitcoin/secp256k1](libsecp256k1) instead of OpenSSL.
+ECDSA signatures inside Syscoin transactions now use validation using
+[https://github.com/syscoin/secp256k1](libsecp256k1) instead of OpenSSL.
 
 Depending on the platform, this means a significant speedup for raw signature
 validation speed. The advantage is largest on x86_64, where validation is over
@@ -256,7 +256,7 @@ and are affected by this change:
 - RPC `decoderawtransaction`
 - REST `/rest/tx/` (JSON format)
 - REST `/rest/block/` (JSON format when including extended tx details)
-- `bitcoin-tx -json`
+- `syscoin-tx -json`
 
 For example, the `scriptSig.asm` property of a transaction input that
 previously showed an assembly representation of:
@@ -293,7 +293,7 @@ configured specifically to process scriptPubKey and not scriptSig scripts.
 Addition of ZMQ-based Notifications
 ==================================
 
-Bitcoind can now (optionally) asynchronously notify clients through a
+Syscoind can now (optionally) asynchronously notify clients through a
 ZMQ-based PUB socket of the arrival of new transactions and blocks.
 This feature requires installation of the ZMQ C API library 4.x and
 configuring its use through the command line or configuration file.

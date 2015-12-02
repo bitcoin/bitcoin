@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2014 The Bitcoin Core developers
+// Copyright (c) 2012-2014 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_DBWRAPPER_H
-#define BITCOIN_DBWRAPPER_H
+#ifndef SYSCOIN_DBWRAPPER_H
+#define SYSCOIN_DBWRAPPER_H
 
 #include "clientversion.h"
 #include "serialize.h"
@@ -276,5 +276,5 @@ public:
 
 };
 
-#endif // BITCOIN_DBWRAPPER_H
+#endif // SYSCOIN_DBWRAPPER_H
 
