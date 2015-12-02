@@ -140,7 +140,7 @@ public:
 
 private:
     size_type _size;
-    union {
+    union direct_or_indirect {
         char direct[sizeof(T) * N];
         struct {
             size_type capacity;
