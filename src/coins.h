@@ -406,6 +406,13 @@ public:
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
 
     /**
+     * Check if we have the given tx already loaded in this cache.
+     * The semantics are the same as HaveCoins(), but no calls to
+     * the backing CCoinsView are made.
+     */
+    bool HaveCoinsInCache(const uint256 &txid) const;
+
+    /**
      * Return a pointer to CCoins in the cache, or NULL if not found. This is
      * more efficient than GetCoins. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
@@ -436,6 +443,12 @@ public:
      * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
     bool Flush();
+
+    /**
+     * Removes the transaction with the given hash from the cache, if it is
+     * not modified.
+     */
+    void Uncache(const uint256 &txid);
 
     //! Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize() const;
