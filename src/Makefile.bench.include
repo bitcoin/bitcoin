@@ -19,7 +19,8 @@ bench_bench_syscoin_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
-  $(LIBSECP256K1)
+  $(LIBSECP256K1) \
+  $(LIBSCRYPTOPP)
 
 if ENABLE_ZMQ
 bench_bench_syscoin_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)

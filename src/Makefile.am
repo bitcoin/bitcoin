@@ -1,4 +1,4 @@
-DIST_SUBDIRS = secp256k1 univalue
+DIST_SUBDIRS = secp256k1 univalue cryptopp
 
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
 AM_CXXFLAGS = $(HARDENED_CXXFLAGS)
@@ -34,13 +34,17 @@ LIBSYSCOIN_CRYPTO=crypto/libsyscoin_crypto.a
 LIBSYSCOINQT=qt/libsyscoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBUNIVALUE=univalue/libunivalue.la
+LIBCRYPTOPP=cryptopp/libcryptopp.a
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
   
 $(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-
+	
+$(LIBCRYPTOPP): $(wildcard cryptopp/*)
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
+  
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES = \
@@ -79,6 +83,12 @@ endif
 .PHONY: FORCE
 # syscoin core #
 SYSCOIN_CORE_H = \
+  alias.h \
+  offer.h \
+  message.h \
+  cert.h \
+  escrow.h \
+  messagecrypter.h \
   addrman.h \
   alert.h \
   amount.h \
@@ -264,6 +274,12 @@ crypto_libsyscoin_crypto_a_SOURCES = \
 libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
+  alias.cpp \
+  offer.cpp \
+  message.cpp \
+  cert.cpp \
+  escrow.cpp \
+  messagecrypter.cpp \
   amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
@@ -344,7 +360,8 @@ syscoind_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
-  $(LIBSECP256K1)
+  $(LIBSECP256K1) \
+  $(LIBCRYPTOPP)
 
 if ENABLE_ZMQ
 syscoind_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
@@ -446,6 +463,7 @@ clean-local:
 	-$(MAKE) -C leveldb clean
 	-$(MAKE) -C secp256k1 clean
 	-$(MAKE) -C univalue clean
+	-$(MAKE) -C cryptopp clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 
