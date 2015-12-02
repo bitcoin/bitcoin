@@ -2836,10 +2836,6 @@
         <translation>Pairs de la liste blanche se connectant à partir du masque réseau ou de l'IP donné. Peut être spécifié plusieurs fois.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(par défaut : 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; peut être :</translation>
     </message>
@@ -3056,10 +3052,6 @@
         <translation>Impossible de résoudre l'adresse -whitebind : « %s »</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Choisir un répertoire de données au démarrage (par défaut : 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Se connecter par un mandataire SOCKS5</translation>
     </message>
@@ -3136,20 +3128,8 @@
         <translation>Envoyer si possible les transactions comme étant sans frais (par défaut : %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Définir les certificats racine SSL pour les demandes de paiement (par défaut : -système-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Définir la langue, par exemple « fr_CA » (par défaut : la langue du système)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Montrer toutes les options de débogage (utilisation : --help --help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Afficher la page de garde au démarrage (par défaut : 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3158,10 +3138,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>La signature de la transaction a échoué</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Démarrer minimisé</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3186,10 +3162,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transaction trop volumineuse</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Options de l'IU :</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

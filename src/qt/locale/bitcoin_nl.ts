@@ -222,7 +222,11 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Geband tot</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1072,6 +1076,18 @@
         <translation>Poort van de proxy (bijv. 9050)</translation>
     </message>
     <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Scherm</translation>
     </message>
@@ -1317,6 +1333,10 @@
         <translation>User Agent</translation>
     </message>
     <message>
+        <source>Node/Service</source>
+        <translation>Node/Service</translation>
+    </message>
+    <message>
         <source>Ping Time</source>
         <translation>Ping tijd</translation>
     </message>
@@ -1466,6 +1486,14 @@
         <translation>Versie</translation>
     </message>
     <message>
+        <source>Synced Headers</source>
+        <translation>Gesynchroniseerde headers</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Gesynchroniseerde blokken</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
@@ -1492,6 +1520,10 @@
     <message>
         <source>Ping Time</source>
         <translation>Ping Tijd</translation>
+    </message>
+    <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>De tijdsduur van een op het moment openstaande ping.</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1536,6 +1568,22 @@
     <message>
         <source>Clear console</source>
         <translation>Maak console leeg</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;uur</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;dag</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;week</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;jaar</translation>
     </message>
     <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
@@ -1956,6 +2004,10 @@
     <message>
         <source>Copy change</source>
         <translation>Kopieer wijziging</translation>
+    </message>
+    <message>
+        <source>Total Amount %1</source>
+        <translation>Totaalbedrag %1</translation>
     </message>
     <message>
         <source>or</source>
@@ -2613,6 +2665,10 @@
         <translation>Kopieer transactie-ID</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Kopieer </translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Bewerk label</translation>
     </message>
@@ -2760,6 +2816,10 @@
         <translation>Aanvaard commandoregel- en JSON-RPC-commando's</translation>
     </message>
     <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Als er geen &lt;category&gt; is opgegeven of als de &lt;category&gt; 1 is, laat dan alle debugging informatie zien.</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Fout: er is een fout opgetreden,  zie debug.log voor details</translation>
     </message>
@@ -2818,10 +2878,6 @@
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>Goedgekeurde peers die verbinden van het ingegeven netmask of IP adres. Kan meerdere keren gespecificeerd worden.</translation>
-    </message>
-    <message>
-        <source>(default: 1)</source>
-        <translation>(standaard: 1)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -3021,10 +3077,6 @@
         <translation>Kan -whitebind adres niet herleiden: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Kies de gegevensmap tijdens het opstarten (standaard: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Verbind door SOCKS5 proxy</translation>
     </message>
@@ -3093,20 +3145,8 @@
         <translation>Verstuur transacties zonder verzendkosten indien mogelijk (standaard: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Zet SSL root certificaten voor betalingsverzoek (standaard: -sytem-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Stel taal in, bijvoorbeeld ''de_DE" (standaard: systeeminstellingen)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Toon alle foutopsporingsopties (gebruik: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Laat laadscherm zien bij het opstarten. (standaard: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3115,10 +3155,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Ondertekenen van transactie mislukt</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Geminimaliseerd starten</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3143,10 +3179,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transactie te groot</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>UI Opties:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

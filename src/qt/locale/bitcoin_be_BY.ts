@@ -1444,10 +1444,6 @@
         <translation>Памылка подпісу транзакцыі</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>Стартаваць ммінімізаванай</translation>
-    </message>
-    <message>
         <source>This is experimental software.</source>
         <translation>Гэта эксперыментальная праграма.</translation>
     </message>

@@ -2840,10 +2840,6 @@
         <translation>Umístit na bílou listinu protějšky připojující se z dané podsítě či IP adresy. Lze zadat i vícekrát.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(výchozí: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; může být:</translation>
     </message>
@@ -3060,10 +3056,6 @@
         <translation>Nemohu přeložit -whitebind adresu: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Zvolit adresář pro data při startu (výchozí: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Připojit se přes SOCKS5 proxy</translation>
     </message>
@@ -3140,20 +3132,8 @@
         <translation>Posílat transakce pokud možno bez poplatků (výchozí: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastavit kořenové SSL certifikáty pro platební požadavky (výchozí: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastavit jazyk, například „de_DE“ (výchozí: systémové nastavení)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Zobrazit všechny možnosti ladění (užití: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Zobrazit startovací obrazovku (výchozí: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3162,10 +3142,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Nepodařilo se podepsat transakci</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Nastartovat minimalizovaně</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3190,10 +3166,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transakce je příliš velká</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Možnosti UI:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

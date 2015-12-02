@@ -2373,10 +2373,6 @@
         <translation>Az adatbázist újra kell építeni -reindex használatával (módosítás -tindex).</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Adatkönyvtár kiválasztása induláskor (alapbeállítás: 0)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i A Bitcoin Core Fejlesztői</translation>
     </message>
@@ -2401,25 +2397,8 @@
         <translation>trace/debug információ küldése a konzolra a debog.log fájl helyett</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>SLL gyökér-igazolások megadása fizetési kérelmekhez (alapértelmezett: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nyelvbeállítás, például "de_DE" (alapértelmezett: rendszer nyelve)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Indítóképernyő mutatása induláskor (alapértelmezett: 1)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Tranzakció aláírása sikertelen</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Indítás lekicsinyítve
-</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2436,10 +2415,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Túl nagy tranzakció</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Kezelőfelület beállításai:</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>

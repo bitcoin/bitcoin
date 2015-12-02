@@ -2980,10 +2980,6 @@
         <translation>Lista Branca pares de ligação da máscara de rede dado ou o endereço IP . Pode ser especificado várias vezes.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(padrão: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool deve ser pelo menos %d MB</translation>
     </message>
@@ -3212,10 +3208,6 @@
         <translation>Impossível resolver endereço -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Escolha o diretório de dados na inicialização (padrão: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Connecte-se através de um proxy SOCKS5</translation>
     </message>
@@ -3280,20 +3272,8 @@
         <translation>Enviar transação sem taxa, se possível (padrão: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Define certificados SSL root para requisição de pagamento (padrão: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Escolher língua, por exemplo "de_DE" (padrão: localização do sistema)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Exibir todas opções de depuração (uso: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostrar tela inicial ao ligar (padrão: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3302,10 +3282,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Assinatura de transação falhou</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Inicializar minimizado</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3330,10 +3306,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transação muito larga</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Opções da interface:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

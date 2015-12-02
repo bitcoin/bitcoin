@@ -2114,10 +2114,6 @@
         <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(noklusējums: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; var būt:</translation>
     </message>
@@ -2174,20 +2170,8 @@
         <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Uzstādiet valodu, piemēram "de_DE" (pēc noklusēšanas: sistēmas lokāle)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Uzsākot, parādīt programmas informācijas logu (pēc noklusēšanas: 1)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Transakcijas parakstīšana neizdevās</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Sākt minimizētu</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

@@ -2772,10 +2772,6 @@
         <translation>Varoitus: wallet.dat -lompakkotiedosto on korruptoitunut, tiedot pelastettu. Alkuperäinen wallet.dat -lompakkotiedosto on tallennettu wallet.{timestamp}.bak kansioon %s; jos balanssisi tai siirtohistoria on virheellinen, sinun tulisi palauttaa lompakkotiedosto varmuuskopiosta.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(oletus: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; voi olla:</translation>
     </message>
@@ -2928,10 +2924,6 @@
         <translation>-whitebind -osoitetta '%s' ei voida jäsentää</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Valitse data-hakemisto käynnistyksessä (oletus: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Yhdistä SOCKS5 proxin kautta</translation>
     </message>
@@ -2976,20 +2968,8 @@
         <translation>Lähetä jäljitys/debug-tieto konsoliin, debug.log-tiedoston sijaan</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Aseta SSL root varmenne maksupyynnöille (oletus: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Set language, for example "de_DE" (default: system locale)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Näytä kaikki debuggaus valinnat: (käyttö: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Näytä aloitusruutu käynnistettäessä (oletus: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2998,10 +2978,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Siirron vahvistus epäonnistui</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Käynnistä pienennettynä</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3018,10 +2994,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Siirtosumma liian iso</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Ulkoasun asetukset:</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>

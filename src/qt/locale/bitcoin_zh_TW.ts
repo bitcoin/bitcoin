@@ -2997,10 +2997,6 @@
         <translation>把來自指定網域或位址的節點放進白名單。這個選項可以設定多次。</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(預設值: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>參數 -maxmempool 至少要給 %d 百萬位元組(MB)</translation>
     </message>
@@ -3269,10 +3265,6 @@
         <translation>沒辦法解析 -whitebind 指定的位址: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>啓動時選擇資料目錄(預設值: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>透過 SOCKS5 代理伺服器連線</translation>
     </message>
@@ -3361,20 +3353,8 @@
         <translation>盡可能送出不用付手續費的交易(預設值: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>設定付款請求時所使用的 SSL 根憑證 (預設值: 系統憑證庫)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>設定語言，比如說 de_DE (預設值: 系統語系)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>顯示所有的除錯選項 (用法: --help --help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>顯示啓動畫面(預設值: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3383,10 +3363,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>簽署交易失敗</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>啓動時縮到最小</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3419,10 +3395,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>交易位元量太大</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>使用介面選項:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

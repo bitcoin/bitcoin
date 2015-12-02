@@ -2716,10 +2716,6 @@
         <translation>Atenţie: fişierul wallet.dat este corupt, date salvate! Fişierul original wallet.dat a fost salvat ca wallet.{timestamp}.bak in %s; dacă balansul sau tranzactiile sînt incorecte ar trebui să restauraţi dintr-o copie de siguranţă.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(iniţial: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; poate fi:</translation>
     </message>
@@ -2856,10 +2852,6 @@
         <translation>Acceptă cererile publice REST (implicit: %u)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Alege dosarul de date la pornire (implicit: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Conectare prin proxy SOCKS5</translation>
     </message>
@@ -2916,20 +2908,8 @@
         <translation>Trimitere tranzacţii ca tranzacţii taxă-zero dacă este posibil (implicit: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Setare rădăcină certificat SSL pentru cerere de plată (implicit: -sistem- )</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Setează limba, de exemplu: "de_DE" (implicit: sistem local)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Arată toate opţiunile de depanare (uz: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Afişează pe ecran splash la pornire (implicit: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2938,10 +2918,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Nu s-a reuşit semnarea tranzacţiei</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Începe minimizat</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
