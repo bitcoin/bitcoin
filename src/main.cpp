@@ -668,6 +668,9 @@ int64_t LockTime(const CTransaction &tx, int flags, const std::vector<int>* prev
                                     ? block.GetAncestor(std::max(block.nHeight-1, 0))->GetMedianTimePast()
                                     : block.GetBlockTime();
 
+    // tx.nVersion is signed integer so requires cast to unsigned otherwise
+    // we would be doing a signed comparison and half the range of nVersion
+    // wouldn't support BIP 68.
     bool fEnforceBIP68 = static_cast<uint32_t>(tx.nVersion) >= 2
                       && flags & LOCKTIME_VERIFY_SEQUENCE;
 
