@@ -66,6 +66,8 @@ static const unsigned int DEFAULT_MAX_PEER_CONNECTIONS = 125;
 static const uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 /** Default for blocks only*/
 static const bool DEFAULT_BLOCKSONLY = false;
+/** setInventoryKnown size. */
+static const unsigned int MAX_SETINVENTORYKNOWN_SZ = MAX_INV_SZ;
 
 static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
@@ -333,6 +335,7 @@ public:
 
     int64_t nLastSend;
     int64_t nLastRecv;
+    int64_t nTimeLastMempool;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
     CAddress addr;

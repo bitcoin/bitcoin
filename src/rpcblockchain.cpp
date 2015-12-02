@@ -220,7 +220,7 @@ UniValue mempoolToJSON(bool fVerbose = false)
     else
     {
         vector<uint256> vtxid;
-        mempool.queryHashes(vtxid);
+        mempool.queryHashes(vtxid, std::numeric_limits<size_t>::max(), std::numeric_limits<int64_t>::max());
 
         UniValue a(UniValue::VARR);
         BOOST_FOREACH(const uint256& hash, vtxid)

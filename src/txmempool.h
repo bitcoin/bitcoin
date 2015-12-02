@@ -426,7 +426,7 @@ public:
                         std::list<CTransaction>& conflicts, bool fCurrentEstimate = true);
     void clear();
     void _clear(); //lock free
-    void queryHashes(std::vector<uint256>& vtxid);
+    void queryHashes(std::vector<uint256>& vtxid, size_t maxresults, int64_t maxtime);
     void pruneSpent(const uint256& hash, CCoins &coins);
     unsigned int GetTransactionsUpdated() const;
     void AddTransactionsUpdated(unsigned int n);
