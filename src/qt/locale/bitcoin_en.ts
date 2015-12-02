@@ -1121,6 +1121,41 @@
         <source>command-line options</source>
         <translation type="unfinished">command-line options</translation>
     </message>
+    <message>
+        <location line="+9"/>
+        <source>UI Options:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set language, for example &quot;de_DE&quot; (default: system locale)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Start minimized</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -2888,7 +2923,7 @@
 <context>
     <name>ShutdownWindow</name>
     <message>
-        <location filename="../utilitydialog.cpp" line="+96"/>
+        <location filename="../utilitydialog.cpp" line="+78"/>
         <source>Bitcoin Core is shutting down...</source>
         <translation type="unfinished"></translation>
     </message>
