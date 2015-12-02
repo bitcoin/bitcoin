@@ -70,6 +70,9 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/fail32.json \
 	$(TEST_DATA_DIR)/fail33.json \
 	$(TEST_DATA_DIR)/fail34.json \
+	$(TEST_DATA_DIR)/fail35.json \
+	$(TEST_DATA_DIR)/fail36.json \
+	$(TEST_DATA_DIR)/fail37.json \
 	$(TEST_DATA_DIR)/fail3.json \
 	$(TEST_DATA_DIR)/fail4.json \
 	$(TEST_DATA_DIR)/fail5.json \
@@ -79,6 +82,7 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/fail9.json \
 	$(TEST_DATA_DIR)/pass1.json \
 	$(TEST_DATA_DIR)/pass2.json \
-	$(TEST_DATA_DIR)/pass3.json
+	$(TEST_DATA_DIR)/pass3.json \
+	$(TEST_DATA_DIR)/round1.json
 
 EXTRA_DIST=$(TEST_FILES) $(GEN_SRCS)
