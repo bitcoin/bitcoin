@@ -9,6 +9,11 @@
 
 using namespace std;
 
+static bool json_isdigit(int ch)
+{
+    return ((ch >= '0') && (ch <= '9'));
+}
+
 // convert hexadecimal string to unsigned integer
 static const char *hatoui(const char *first, const char *last,
                           unsigned int& out)
@@ -17,7 +22,7 @@ static const char *hatoui(const char *first, const char *last,
     for (; first != last; ++first)
     {
         int digit;
-        if (isdigit(*first))
+        if (json_isdigit(*first))
             digit = *first - '0';
 
         else if (*first >= 'a' && *first <= 'f')
@@ -44,7 +49,7 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
 
     const char *rawStart = raw;
 
-    while ((*raw) && (isspace(*raw)))             // skip whitespace
+    while ((*raw) && (json_isspace(*raw)))             // skip whitespace
         raw++;
 
     switch (*raw) {
@@ -113,18 +118,18 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
         const char *first = raw;
 
         const char *firstDigit = first;
-        if (!isdigit(*firstDigit))
+        if (!json_isdigit(*firstDigit))
             firstDigit++;
-        if ((*firstDigit == '0') && isdigit(firstDigit[1]))
+        if ((*firstDigit == '0') && json_isdigit(firstDigit[1]))
             return JTOK_ERR;
 
         numStr += *raw;                       // copy first char
         raw++;
 
-        if ((*first == '-') && (!isdigit(*raw)))
+        if ((*first == '-') && (!json_isdigit(*raw)))
             return JTOK_ERR;
 
-        while ((*raw) && isdigit(*raw)) {     // copy digits
+        while ((*raw) && json_isdigit(*raw)) {     // copy digits
             numStr += *raw;
             raw++;
         }
@@ -134,9 +139,9 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
             numStr += *raw;                   // copy .
             raw++;
 
-            if (!isdigit(*raw))
+            if (!json_isdigit(*raw))
                 return JTOK_ERR;
-            while ((*raw) && isdigit(*raw)) { // copy digits
+            while ((*raw) && json_isdigit(*raw)) { // copy digits
                 numStr += *raw;
                 raw++;
             }
@@ -152,9 +157,9 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
                 raw++;
             }
 
-            if (!isdigit(*raw))
+            if (!json_isdigit(*raw))
                 return JTOK_ERR;
-            while ((*raw) && isdigit(*raw)) { // copy digits
+            while ((*raw) && json_isdigit(*raw)) { // copy digits
                 numStr += *raw;
                 raw++;
             }
@@ -236,12 +241,23 @@ enum jtokentype getJsonToken(string& tokenVal, unsigned int& consumed,
     }
 }
 
+enum expect_bits {
+    EXP_OBJ_NAME = (1U << 0),
+    EXP_COLON = (1U << 1),
+    EXP_ARR_VALUE = (1U << 2),
+    EXP_VALUE = (1U << 3),
+    EXP_NOT_VALUE = (1U << 4),
+};
+
+#define expect(bit) (expectMask & (EXP_##bit))
+#define setExpect(bit) (expectMask |= EXP_##bit)
+#define clearExpect(bit) (expectMask &= ~EXP_##bit)
+
 bool UniValue::read(const char *raw)
 {
     clear();
 
-    bool expectName = false;
-    bool expectColon = false;
+    uint32_t expectMask = 0;
     vector<UniValue*> stack;
 
     string tokenVal;
@@ -255,6 +271,41 @@ bool UniValue::read(const char *raw)
         if (tok == JTOK_NONE || tok == JTOK_ERR)
             return false;
         raw += consumed;
+
+        bool isValueOpen = jsonTokenIsValue(tok) ||
+            tok == JTOK_OBJ_OPEN || tok == JTOK_ARR_OPEN;
+
+        if (expect(VALUE)) {
+            if (!isValueOpen)
+                return false;
+            clearExpect(VALUE);
+
+        } else if (expect(ARR_VALUE)) {
+            bool isArrValue = isValueOpen || (tok == JTOK_ARR_CLOSE);
+            if (!isArrValue)
+                return false;
+
+            clearExpect(ARR_VALUE);
+
+        } else if (expect(OBJ_NAME)) {
+            bool isObjName = (tok == JTOK_OBJ_CLOSE || tok == JTOK_STRING);
+            if (!isObjName)
+                return false;
+
+        } else if (expect(COLON)) {
+            if (tok != JTOK_COLON)
+                return false;
+            clearExpect(COLON);
+
+        } else if (!expect(COLON) && (tok == JTOK_COLON)) {
+            return false;
+        }
+
+        if (expect(NOT_VALUE)) {
+            if (isValueOpen)
+                return false;
+            clearExpect(NOT_VALUE);
+        }
 
         switch (tok) {
 
@@ -277,13 +328,15 @@ bool UniValue::read(const char *raw)
             }
 
             if (utyp == VOBJ)
-                expectName = true;
+                setExpect(OBJ_NAME);
+            else
+                setExpect(ARR_VALUE);
             break;
             }
 
         case JTOK_OBJ_CLOSE:
         case JTOK_ARR_CLOSE: {
-            if (!stack.size() || expectColon || (last_tok == JTOK_COMMA))
+            if (!stack.size() || (last_tok == JTOK_COMMA))
                 return false;
 
             VType utyp = (tok == JTOK_OBJ_CLOSE ? VOBJ : VARR);
@@ -292,37 +345,40 @@ bool UniValue::read(const char *raw)
                 return false;
 
             stack.pop_back();
-            expectName = false;
+            clearExpect(OBJ_NAME);
+            setExpect(NOT_VALUE);
             break;
             }
 
         case JTOK_COLON: {
-            if (!stack.size() || expectName || !expectColon)
+            if (!stack.size())
                 return false;
 
             UniValue *top = stack.back();
             if (top->getType() != VOBJ)
                 return false;
 
-            expectColon = false;
+            setExpect(VALUE);
             break;
             }
 
         case JTOK_COMMA: {
-            if (!stack.size() || expectName || expectColon ||
+            if (!stack.size() ||
                 (last_tok == JTOK_COMMA) || (last_tok == JTOK_ARR_OPEN))
                 return false;
 
             UniValue *top = stack.back();
             if (top->getType() == VOBJ)
-                expectName = true;
+                setExpect(OBJ_NAME);
+            else
+                setExpect(ARR_VALUE);
             break;
             }
 
         case JTOK_KW_NULL:
         case JTOK_KW_TRUE:
         case JTOK_KW_FALSE: {
-            if (!stack.size() || expectName || expectColon)
+            if (!stack.size())
                 return false;
 
             UniValue tmpVal;
@@ -342,17 +398,19 @@ bool UniValue::read(const char *raw)
             UniValue *top = stack.back();
             top->values.push_back(tmpVal);
 
+            setExpect(NOT_VALUE);
             break;
             }
 
         case JTOK_NUMBER: {
-            if (!stack.size() || expectName || expectColon)
+            if (!stack.size())
                 return false;
 
             UniValue tmpVal(VNUM, tokenVal);
             UniValue *top = stack.back();
             top->values.push_back(tmpVal);
 
+            setExpect(NOT_VALUE);
             break;
             }
 
@@ -362,15 +420,16 @@ bool UniValue::read(const char *raw)
 
             UniValue *top = stack.back();
 
-            if (expectName) {
+            if (expect(OBJ_NAME)) {
                 top->keys.push_back(tokenVal);
-                expectName = false;
-                expectColon = true;
+                clearExpect(OBJ_NAME);
+                setExpect(COLON);
             } else {
                 UniValue tmpVal(VSTR, tokenVal);
                 top->values.push_back(tmpVal);
             }
 
+            setExpect(NOT_VALUE);
             break;
             }
 

@@ -14,7 +14,7 @@ m4_define([libunivalue_age], [m4_eval(libunivalue_binary_age - libunivalue_inter
 m4_define([libunivalue_version], [libunivalue_major_version().libunivalue_minor_version().libunivalue_micro_version()libunivalue_extraversion()])
 
 
-AC_INIT([univalue], [1.0.0],
+AC_INIT([univalue], [1.0.1],
         [http://github.com/jgarzik/univalue/])
 
 dnl make the compilation flags quiet unless V=1 is used
