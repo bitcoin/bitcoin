@@ -437,6 +437,8 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-splash", _("Show splash screen on startup (default: 1)"));
     }
 
+    strUsage += UnlimitedCmdLineHelp();
+
     return strUsage;
 }
 

@@ -36,6 +36,18 @@ boost::chrono::steady_clock CLeakyBucket::clock;
 
 void UnlimitedPushTxns(CNode* dest);
 
+std::string UnlimitedCmdLineHelp()
+{
+  std::string strUsage;
+  strUsage += HelpMessageGroup(_("Bitcoin Unlimited Options:"));
+  strUsage += HelpMessageOpt("-excessiveblocksize", _("Blocks above this size in bytes are considered excessive"));
+  strUsage += HelpMessageOpt("-excessiveacceptdepth", _("Excessive blocks are accepted anyway if this many blocks are mined on top of them"));
+  strUsage += HelpMessageOpt("-receiveburst", _("The maximum rate that data can be received in KBytes/src.  If there has been a period of lower than average data rates, the client may receive extra data to bring the average back to '-receiveavg' but the data rate will not exceed this parameter."));
+  strUsage += HelpMessageOpt("-sendburst", _("The maximum rate that data can be sent in KBytes/src.  If there has been a period of lower than average data rates, the client may send extra data to bring the average back to '-receiveavg' but the data rate will not exceed this parameter."));
+  strUsage += HelpMessageOpt("-receiveavg", _("The average rate that data can be received in KBytes/src"));
+  strUsage += HelpMessageOpt("-sendavg", _("The maximum rate that data can be sent in KBytes/src"));
+  return strUsage;
+}
 
 Value pushtx(const Array& params, bool fHelp)
 {
@@ -95,8 +107,8 @@ void UnlimitedPushTxns(CNode* dest)
 void UnlimitedSetup(void)
 {
   maxGeneratedBlock = GetArg("-blockmaxsize", DEFAULT_MAX_GENERATED_BLOCK_SIZE);
-  excessiveBlockSize = GetArg("-blockexcessivesize", DEFAULT_EXCESSIVE_BLOCK_SIZE);
-  excessiveAcceptDepth = GetArg("-blockacceptdepth", DEFAULT_EXCESSIVE_ACCEPT_DEPTH);
+  excessiveBlockSize = GetArg("-excessiveblocksize", DEFAULT_EXCESSIVE_BLOCK_SIZE);
+  excessiveAcceptDepth = GetArg("-excessiveacceptdepth", DEFAULT_EXCESSIVE_ACCEPT_DEPTH);
 
   //  Init network shapers
   int64_t rb = GetArg("-receiveburst", DEFAULT_MAX_RECV_BURST);

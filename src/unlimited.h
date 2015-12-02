@@ -30,6 +30,7 @@ extern unsigned int excessiveAcceptDepth;
 extern unsigned int maxMessageSizeMultiplier;
 
 extern void UnlimitedSetup(void);
+extern std::string UnlimitedCmdLineHelp();
 
 // Called whenever a new block is accepted
 extern void UnlimitedAcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex* ppindex, CDiskBlockPos* dbp);
