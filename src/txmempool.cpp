@@ -944,7 +944,7 @@ void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
     }
 }
 
-void CTxMemPool::TrimToSize(size_t sizelimit) {
+void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRemaining) {
     LOCK(cs);
 
     unsigned nTxnRemoved = 0;
@@ -963,8 +963,26 @@ void CTxMemPool::TrimToSize(size_t sizelimit) {
 
         setEntries stage;
         CalculateDescendants(mapTx.project<0>(it), stage);
-        RemoveStaged(stage);
         nTxnRemoved += stage.size();
+
+        std::vector<CTransaction> txn;
+        if (pvNoSpendsRemaining) {
+            txn.reserve(stage.size());
+            BOOST_FOREACH(txiter it, stage)
+                txn.push_back(it->GetTx());
+        }
+        RemoveStaged(stage);
+        if (pvNoSpendsRemaining) {
+            BOOST_FOREACH(const CTransaction& tx, txn) {
+                BOOST_FOREACH(const CTxIn& txin, tx.vin) {
+                    if (exists(txin.prevout.hash))
+                        continue;
+                    std::map<COutPoint, CInPoint>::iterator it = mapNextTx.lower_bound(COutPoint(txin.prevout.hash, 0));
+                    if (it == mapNextTx.end() || it->first.hash != txin.prevout.hash)
+                        pvNoSpendsRemaining->push_back(txin.prevout.hash);
+                }
+            }
+        }
     }
 
     if (maxFeeRateRemoved > CFeeRate(0))
