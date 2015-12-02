@@ -2996,10 +2996,6 @@
         <translation>Sæt andre knuder, der forbinder fra den angivne netmaske eller IP, på hvidliste. Kan angives flere gange.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(standard: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool skal være mindst %d MB</translation>
     </message>
@@ -3272,10 +3268,6 @@
         <translation>Kan ikke løse -whitebind adresse: "%s"</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Vælg datamappe ved opstart (standard: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Forbind gennem SOCKS5-proxy</translation>
     </message>
@@ -3364,20 +3356,8 @@
         <translation>Send transaktioner som nul-gebyr-transaktioner hvis muligt (standard: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Sæt SSL-rodcertifikater for betalingsanmodning (standard: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Angiv sprog, fx "da_DK" (standard: systemlokalitet)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Vis alle tilvalg for fejlsøgning (brug: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Vis opstartsbillede ved opstart (standard: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3386,10 +3366,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Underskrift af transaktion mislykkedes</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Start minimeret</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3422,10 +3398,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transaktionen er for stor</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Indstillinger for brugerflade:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

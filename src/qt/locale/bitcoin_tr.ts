@@ -2836,10 +2836,6 @@
         <translation>Belirtilen ağ maskesi ya da IP adresinden bağlanan eşleri beyaz listeye al. Birden fazla kez belirtilebilir.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(varsayılan: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;kategori&gt; şunlar olabilir:</translation>
     </message>
@@ -3056,10 +3052,6 @@
         <translation>-whitebind adresi çözümlenemedi: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Başlangıçta veri klasörü seç (varsayılan: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>SOCKS5 vekil sunucusu vasıtasıyla bağlan</translation>
     </message>
@@ -3136,20 +3128,8 @@
         <translation>Muameleleri mümkünse ücretsiz olarak gönder (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ödeme talebi için SSL kök sertifikalarını belirle (varsayılan: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Lisan belirt, mesela "de_De" (varsayılan: sistem dili)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Tüm hata ayıklama seçeneklerini göster (kullanımı: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Başlatıldığında başlangıç ekranını göster (varsayılan: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3158,10 +3138,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Muamelenin imzalanması başarısız oldu</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Küçültülmüş olarak başlat</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3186,10 +3162,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Muamele çok büyük</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Arayüz Seçenkleri:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

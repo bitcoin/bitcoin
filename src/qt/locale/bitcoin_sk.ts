@@ -2798,10 +2798,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Uzle na zoznam povolených, ktoré sa pripájajú z danej netmask alebo IP adresy. Môže byť zadané viac krát.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(predvolené: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; môže byť:</translation>
     </message>
@@ -2986,10 +2982,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Nedá sa vyriešiť -whitebind adresa: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Zvoľte dátový priečinok pri štarte (prednastavené: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Pripojiť cez proxy server SOCKS5</translation>
     </message>
@@ -3058,20 +3050,8 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Poslať ako transakcie bez poplatku, ak je to možné (predvolené: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastaviť koreňový certifikát pre výzvy na platbu (prednastavené: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastaviť jazyk, napríklad "sk_SK" (predvolené: systémový)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Zobraziť všetky možnosti ladenia (použitie: --help --help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Zobraziť splash screen pri spustení (predvolené: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3080,10 +3060,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Signing transaction failed</source>
         <translation>Podpísanie správy zlyhalo</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Spustiť minimalizované</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3104,10 +3080,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Transaction too large</source>
         <translation>Transakcia príliš veľká</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Možnosti používateľského rozhrania:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

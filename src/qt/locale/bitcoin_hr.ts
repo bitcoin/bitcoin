@@ -1784,10 +1784,6 @@
         <translation>Šalji trace/debug informacije na konzolu umjesto u debug.log datoteku</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>Pokreni minimiziran</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Korisničko ime za JSON-RPC veze</translation>
     </message>

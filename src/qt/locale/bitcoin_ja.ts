@@ -3000,10 +3000,6 @@
         <translation>与えられたネットマスクやIPアドレスから接続を行う、ホワイトリストのピア。複数回指定できます。</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(デフォルト: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempoolは最低でも %d MB必要です</translation>
     </message>
@@ -3277,10 +3273,6 @@
         <translation>-whitebind アドレス '%s' を解決できません</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>起動時にデータ ディレクトリを選ぶ (初期値: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>SOCKS5 プロキシ経由で接続する</translation>
     </message>
@@ -3369,20 +3361,8 @@
         <translation>可能な場合には手数料ゼロのトランザクションとしてトランザクションを送信する (初期値: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>支払いリクエスト用にSSLルート証明書を設定する（デフォルト：-system-）</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>言語設定 例: "de_DE" (初期値: システムの言語)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>すべてのデバッグオプションを表示する (使い方: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>起動時にスプラッシュ画面を表示する (初期値: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3391,10 +3371,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>取引の署名に失敗しました</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>最小化された状態で起動する</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3427,10 +3403,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>取引が大き過ぎます</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>UIオプション:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

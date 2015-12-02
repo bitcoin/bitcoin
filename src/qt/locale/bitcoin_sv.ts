@@ -2989,10 +2989,6 @@ Var vänlig och försök igen.</translation>
         <translation>Vitlista klienter som ansluter från angivna nätmasker eller IP-adresser. Kan specificeras flera gånger.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(förvalt: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool måste vara minst %d MB</translation>
     </message>
@@ -3261,10 +3257,6 @@ Var vänlig och försök igen.</translation>
         <translation>Kan inte matcha -whitebind adress: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Välj datakatalog vid uppstart (förvalt: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Anslut genom SOCKS5 proxy</translation>
     </message>
@@ -3353,20 +3345,8 @@ Var vänlig och försök igen.</translation>
         <translation>Sänd transaktioner som nollavgiftstransaktioner om möjligt (förvalt: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Sätt SSL root-certifikat för betalningsbegäran (förvalt: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Ändra språk, till exempel "de_DE" (förvalt: systemets språk)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Visa alla avlusningsalternativ (använd: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Visa startbilden vid uppstart (förvalt: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3375,10 +3355,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Signing transaction failed</source>
         <translation>Signering av transaktion misslyckades</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Starta som minimerad</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3411,10 +3387,6 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Transaction too large</source>
         <translation>Transaktionen är för stor</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>UI Alternativ:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

@@ -2362,10 +2362,6 @@
         <translation>Сложете в бял списък пиъри,свързващи се от дадената интернет маска или айпи адрес.Може да бъде заложено неколкократно.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(по подразбиране 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; може да бъде:</translation>
     </message>
@@ -2410,10 +2406,6 @@
         <translation>Заложете броя на нишки за генерация на монети ако е включено(-1 = всички ядра, по подразбиране: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Изберете директория при стартиране на програмата.( настройка по подразбиране:0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Свързване чрез SOCKS5  прокси</translation>
     </message>
@@ -2436,14 +2428,6 @@
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Изпрати локализиращата или дебъг информацията към конзолата, вместо файлът debug.log</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Задаване на език,например "de_DE" (по подразбиране: system locale)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Стартирай минимизирано</translation>
     </message>
     <message>
         <source>This is experimental software.</source>

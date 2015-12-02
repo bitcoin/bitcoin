@@ -2901,10 +2901,6 @@
         <translation>节点白名单,网络掩码或IP址。可多次指定。</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(默认值: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; 可能是：</translation>
     </message>
@@ -3121,10 +3117,6 @@
         <translation>无法解析 -whitebind 地址: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>在启动时选择数据目录（默认：0）</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>通过 SOCKS5 代理连接</translation>
     </message>
@@ -3197,20 +3189,8 @@
         <translation>发送时尽可能 不支付交易费用 (默认: %u) </translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>设置SSL根证书的付款请求(默认：-系统-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>设置语言, 例如“zh-TW”（默认为系统语言）</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>显示所有调试选项 (用法: --帮助 -帮助调试)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>启动时显示版权页 (缺省: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3219,11 +3199,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>签署交易失败</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>启动时最小化
-</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3248,10 +3223,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>交易太大</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>界面选项：</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

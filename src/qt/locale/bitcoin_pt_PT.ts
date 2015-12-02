@@ -2773,10 +2773,6 @@
         <translation>Ligações na lista branca conectam desde a seguinte netmask ou endereço IP. Posse ser especificado varias vezes.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(padrão: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;categoria&gt; pode ser:</translation>
     </message>
@@ -2921,10 +2917,6 @@
         <translation>(por defeito: %u)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Escolha a pasta de dados ao iniciar (por defeito: 0)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i Os Programadores do Bitcoin Core</translation>
     </message>
@@ -2949,28 +2941,12 @@
         <translation>Enviar informação de rastreio/depuração para a consola e não para o ficheiro debug.log</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Configurar certificados SSL root para pedido de pagamento (default: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Definir linguagem, por exemplo "pt_PT" (por defeito: linguagem do sistema)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostrar imagem ao iniciar (por defeito: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Encolher ficheiro debug.log ao iniciar o cliente (por defeito: 1 sem -debug definido)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Falhou assinatura da transação</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Iniciar minimizado</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

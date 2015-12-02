@@ -1374,18 +1374,6 @@
         <translation>Magpadalang trace/debug info okeng console kesa keng debug.log file</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Mamiling Amanu, alimbawa "de_DE"(default: system locale)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Ipalto ing splash screen keng umpisa (default: 1)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Umpisan ing pamaglati</translation>
-    </message>
-    <message>
         <source>Transaction too large</source>
         <translation>Maragul yang masiadu ing transaksion</translation>
     </message>

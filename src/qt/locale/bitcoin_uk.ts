@@ -2980,10 +2980,6 @@
         <translation>Додати учасників, що під'єднуються з заданої підмережі чи IP-адреси, в білий список. Можна вказувати декілька разів.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(типово: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool має бути не менше %d МБ</translation>
     </message>
@@ -3224,10 +3220,6 @@
         <translation>Не вдалося розпізнати адресу для -whitebind: «%s»</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Обрати каталог даних під час запуску (типово: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Підключитись через SOCKS5-проксі</translation>
     </message>
@@ -3308,20 +3300,8 @@
         <translation>Не сплачувати комісію за надсилання транзакцій, якщо це можливо (типово: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Вказати кореневі SSL-сертифікати для запиту платежу (типово: -системні-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Встановлення мови, наприклад "de_DE" (типово: системна)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Показати всі налагоджувальні параметри (використання: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Показувати заставку під час запуску (типово: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3330,10 +3310,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Підписання транзакції не вдалося</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Запускати згорнутим</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3358,10 +3334,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Транзакція занадто велика</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Параметри інтерфейсу:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

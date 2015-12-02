@@ -2833,10 +2833,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Inserisce in whitelist i peer che si connettono da un dato indirizzo IP o netmask. Può essere specificato più volte.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(predefinito: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>Valori possibili per &lt;category&gt;:</translation>
     </message>
@@ -3053,10 +3049,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Impossibile risolvere indirizzo -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Seleziona la cartella dati all'avvio (predefinito: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Connessione attraverso un proxy SOCKS5</translation>
     </message>
@@ -3133,20 +3125,8 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Invia transazioni a zero commissioni se possibile (predefinito: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Imposta i certificati radice SSL per le richieste di pagamento (predefinito: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Imposta lingua, ad esempio "it_IT" (predefinito: lingua di sistema)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Mostra tutte le opzioni di debug (utilizzo: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostra finestra di presentazione all'avvio (predefinito: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3155,10 +3135,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Signing transaction failed</source>
         <translation>Firma transazione fallita</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Avvia ridotto a icona</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3183,10 +3159,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Transaction too large</source>
         <translation>Transazione troppo grande</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Opzioni Interfaccia Utente:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

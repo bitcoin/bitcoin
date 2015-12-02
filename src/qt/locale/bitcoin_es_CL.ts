@@ -1313,11 +1313,6 @@
         <translation>Enviar informacion de seguimiento a la consola en vez del archivo debug.log</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>Arranca minimizado
-</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Usuario para las conexiones JSON-RPC
 </translation>
