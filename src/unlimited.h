@@ -47,6 +47,11 @@ extern json_spirit::Value settrafficshaping(const json_spirit::Array& params, bo
 extern json_spirit::Value gettrafficshaping(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value pushtx(const json_spirit::Array& params, bool fHelp);
 
+extern json_spirit::Value getminingmaxblock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value setminingmaxblock(const json_spirit::Array& params, bool fHelp);
+
+extern json_spirit::Value getexcessiveblock(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value setexcessiveblock(const json_spirit::Array& params, bool fHelp);
 
 // These variables for traffic shaping need to be globally scoped so the GUI and CLI can adjust the parameters
 extern CLeakyBucket receiveShaper;

@@ -285,6 +285,8 @@ static const CRPCCommand vRPCCommands[] =
     { "network",            "settrafficshaping",      &settrafficshaping,      true  },
     { "network",            "gettrafficshaping",      &gettrafficshaping,      true  },
     { "network",            "pushtx",                 &pushtx,                 true  },  // BU
+    { "network",            "getexcessiveblock",      &getexcessiveblock,      true  },  // BU
+    { "network",            "setexcessiveblock",      &setexcessiveblock,      true  },  // BU
 
     /* Block chain and UTXO */
     { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },
@@ -308,6 +310,8 @@ static const CRPCCommand vRPCCommands[] =
     { "mining",             "getnetworkhashps",       &getnetworkhashps,       true  },
     { "mining",             "prioritisetransaction",  &prioritisetransaction,  true  },
     { "mining",             "submitblock",            &submitblock,            true  },
+    { "mining",             "getminingmaxblock",      &getminingmaxblock,      true  },  // BU
+    { "mining",             "setminingmaxblock",      &setminingmaxblock,      true  },  // BU
 
 #ifdef ENABLE_WALLET
     /* Coin generation */

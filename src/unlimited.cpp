@@ -171,6 +171,113 @@ bool CheckExcessive(const CBlock& block,uint64_t blockSize, uint64_t nSigOps,uin
   return false;
 }
 
+Value getexcessiveblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getexcessiveblock\n"
+            "\nReturn the excessive block size and accept depth."
+            "\nResult\n"
+            "  excessiveBlockSize (integer) block size in bytes\n"
+            "  excessiveAcceptDepth (integer) if the chain gets this much deeper than the excessive block, then accept the chain as active (if it has the most work)\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getexcessiveblock", "")
+            + HelpExampleRpc("getexcessiveblock", "")
+        );
+
+    Object ret;
+    ret.push_back(Pair("excessiveBlockSize",(uint64_t)excessiveBlockSize));
+    ret.push_back(Pair("excessiveAcceptDepth",(uint64_t)excessiveAcceptDepth));
+    return ret;
+}
+
+Value setexcessiveblock(const Array& params, bool fHelp)
+{
+  if (fHelp || params.size() >= 3)
+    throw runtime_error(
+                        "setexcessiveblock blockSize acceptDepth\n"
+                        "\nSet the excessive block size and accept depth.  Excessive blocks will not be used in the active chain or relayed until they are several blocks deep in the blockchain.  This discourages the propagation of blocks that you consider excessively large.  However, if the mining majority of the network builds upon the block then you will eventually accept it, maintaining consensus."
+                        "\nResult\n"
+                        "  blockSize (integer) excessive block size in bytes\n"
+                        "  acceptDepth (integer) if the chain gets this much deeper than the excessive block, then accept the chain as active (if it has the most work)\n"
+                        "\nExamples:\n"
+                        + HelpExampleCli("getexcessiveblock", "")
+                        + HelpExampleRpc("getexcessiveblock", "")
+                        );
+
+  if (params[0].is_uint64())
+    excessiveBlockSize = params[0].get_uint64();
+  else 
+    {
+      string temp = params[0].get_str();
+      excessiveBlockSize = boost::lexical_cast<unsigned int>(temp);
+    }
+
+  if (params[1].is_uint64())
+    excessiveAcceptDepth = params[1].get_uint64();
+  else 
+    {
+      string temp = params[1].get_str();
+      excessiveAcceptDepth = boost::lexical_cast<unsigned int>(temp);
+    }
+  
+  return Value::null;
+}
+
+
+
+
+Value getminingmaxblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getminingmaxblock\n"
+            "\nReturn the max generated (mined) block size"
+            "\nResult\n"
+            "      (integer) maximum generated block size in bytes\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getminingmaxblock", "")
+            + HelpExampleRpc("getminingmaxblock", "")
+        );
+
+    return maxGeneratedBlock;
+}
+
+
+Value setminingmaxblock(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "setminingmaxblock blocksize\n"
+            "\nSet the maximum number of bytes to include in a generated (mined) block.  This command does not turn generation on/off.\n"
+            "\nArguments:\n"
+            "1. blocksize         (integer, required) the maximum number of bytes to include in a block.\n"
+            "\nExamples:\n"
+            "\nSet the generated block size limit to 8 MB\n"
+            + HelpExampleCli("setminingmaxblock", "8000000") +
+            "\nCheck the setting\n"
+            + HelpExampleCli("getminingmaxblock", "")
+        );
+
+    uint64_t arg=0;
+    if (params[0].is_uint64())
+      arg = params[0].get_uint64();
+    else 
+      {
+      string temp = params[0].get_str();
+      arg = boost::lexical_cast<uint64_t>(temp);
+      }
+
+    // I don't want to waste time testing edge conditions where no txns can fit in a block, so limit the minimum block size
+    if (arg < 100000)
+            throw runtime_error("max generated block size must be greater than 100KB");
+
+    maxGeneratedBlock = arg;
+
+    return Value::null;
+}
+
+
 Value gettrafficshaping(const Array& params, bool fHelp)
 {
     string strCommand;
