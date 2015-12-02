@@ -42,6 +42,7 @@ using namespace std;
 // pool, we select by highest priority or fee rate, so we might consider
 // transactions that depend on transactions that aren't yet in the block.
 
+unsigned int nBlockMaxSize = DEFAULT_BLOCK_MAX_SIZE;
 uint64_t nLastBlockTx = 0;
 uint64_t nLastBlockSize = 0;
 
@@ -96,8 +97,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOps.push_back(-1); // updated at end
 
-    // Largest block you're willing to create:
-    unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+    // Largest block you're willing to create
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
 
