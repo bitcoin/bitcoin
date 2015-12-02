@@ -1872,7 +1872,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     // Discourage fee sniping.
     //
     // For a large miner the value of the transactions in the best block and
-    // the mempool can exceed the cost of delibrately attempting to mine two
+    // the mempool can exceed the cost of deliberately attempting to mine two
     // blocks to orphan the current best block. By setting nLockTime such that
     // only the next block can include the transaction, we discourage this
     // practice as the height restricted and limited blocksize gives miners
