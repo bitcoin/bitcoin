@@ -2984,10 +2984,6 @@
         <translation>Вносить в белый список участников, подключающихся с указанной маски сети или IP. Можно использовать многократно.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(по умолчанию: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool должен быть как минимум %d MB</translation>
     </message>
@@ -3260,10 +3256,6 @@
         <translation>Не удаётся разрешить адрес в параметре -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Выбрать каталог данных при запуске (по умолчанию: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Подключаться через SOCKS5 прокси</translation>
     </message>
@@ -3352,20 +3344,8 @@
         <translation>Осуществить транзакцию бесплатно, если возможно (по умолчанию: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Указать корневые SSL-сертификаты для запроса платежа (по умолчанию: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Выберите язык, например "de_DE" (по умолчанию: как в системе)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Показать все отладочные параметры (использование: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Показывать сплэш при запуске (по умолчанию: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3374,10 +3354,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Не удалось подписать транзакцию</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Запускать свёрнутым</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3410,10 +3386,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Транзакция слишком большая</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Настройки интерфейса:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

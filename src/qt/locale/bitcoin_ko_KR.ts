@@ -2360,10 +2360,6 @@
         <translation>경고 : wallet.dat가 손상되어 데이터가 복구되었습니다. 원래의 wallet.dat 파일은 %s 후에 wallet.{timestamp}.bak 이름으로 저장됩니다. 잔액과 거래 내역이 정확하지 않다면 백업 파일로 부터 복원해야 합니다. </translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(기본값: 1)</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>블록 생성 옵션:</translation>
     </message>
@@ -2472,10 +2468,6 @@
         <translation>최대 크기를 최우선으로 설정 / 바이트당 최소 수수료로 거래(기본값: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>파일목록을 선택하여 시작하시오(기본값: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>정보</translation>
     </message>
@@ -2496,20 +2488,8 @@
         <translation>추적오류 정보를 degug.log 자료로 보내는 대신 콘솔로 보내기</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>지불 요청을 위해 SSL 최상위 인증을 설정합니다. (기본값: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>"de_DE"와 같이 언어를 설정하십시오 (기본값: 시스템 로캘)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>모든 디버그 설정 보기(설정: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>시작시 시작 화면 표시 (기본값: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2518,10 +2498,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>거래를 서명하는것을 실패하였습니다.</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>최소화 상태에서 시작</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

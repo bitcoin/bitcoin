@@ -2042,10 +2042,6 @@
         <translation>Executar comando cando se recibe unha alerta relevante ou vemos un fork realmente longo (%s no cmd é substituído pola mensaxe)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Escolle directorio de datos ao arrancar (por defecto: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Información</translation>
     </message>
@@ -2062,24 +2058,12 @@
         <translation>Enviar traza/información de depuración á consola en lugar de ao arquivo debug.log</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Fixar idioma, por exemplo "de_DE" (por defecto: locale del sistema)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Amosar pantalla splash no arranque (por defecto: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Recortar o arquivo debug.log ao arrancar o cliente (por defecto: 1 cando no-debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Fallou a sinatura da transacción</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Comezar minimizado</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

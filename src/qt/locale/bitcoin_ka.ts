@@ -2326,10 +2326,6 @@
         <translation>მაღალპრიორიტეტული/დაბალსაკომისიოიანი ტრანსაქციების მაქსიმალური ზომა ბაიტებში (ნაგულისხმევი: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>მონაცემთა კატალოგის მითითება ყოველი გაშვებისას (ნაგულისხმევი: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>ინფორმაცია</translation>
     </message>
@@ -2346,24 +2342,12 @@
         <translation>ტრასირების/დახვეწის ინფოს გაგზავნა კონსოლზე debug.log ფაილის ნაცვლად</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>აირჩიეთ ენა, მაგალითად "de_DE" (ნაგულისხმევია სისტემური ლოკალი)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>მისალმების ეკრანის ჩვენება გაშვებისას (ნაგულისხმევი:1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>debug.log ფაილის შეკუმშვა გაშვებისას (ნაგულისხმევია: 1 როცა არ აყენია -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>ტრანსაქციების ხელმოწერა ვერ მოხერხდა</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>გაშვება მინიმიზებული ეკრანით</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

@@ -2996,10 +2996,6 @@
         <translation>Hvitelist noder som kobler til fra den oppgitte nettmasken eller IP-adressen. Kan oppgis flere ganger.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(standardverdi: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool må være minst %d MB</translation>
     </message>
@@ -3272,10 +3268,6 @@
         <translation>Kan ikke løse -whitebind-adresse: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Velg datamappe ved oppstart (standard: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Koble til via SOCKS5-proxy</translation>
     </message>
@@ -3364,20 +3356,8 @@
         <translation>Send transaksjoner uten transaksjonsgebyr hvis mulig (standardverdi: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Sett SSL-rotsertifikat for betalingsetterspørring (standard: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Sett språk, for eksempel "nb_NO" (standardverdi: fra operativsystem)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Vis alle feilsøkingsvalg (bruk: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Vis splashskjerm ved oppstart (standardverdi: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3386,10 +3366,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Signering av transaksjon feilet</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Start minimert</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3422,10 +3398,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transaksjonen er for stor</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Innstillinger for Brukergrensesnitt:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
