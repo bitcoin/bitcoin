@@ -10,8 +10,6 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-from pprint import pprint
-from time import sleep
 
 # Create one-input, one-output, no-fee transaction:
 class RawTransactionsTest(BitcoinTestFramework):
@@ -43,9 +41,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
         self.nodes[0].generate(101)
         self.sync_all()
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.5);
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.0);
-        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5.0);
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.5)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.0)
+        self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5.0)
         self.sync_all()
         self.nodes[0].generate(5)
         self.sync_all()
@@ -64,7 +62,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         except JSONRPCException,e:
             errorString = e.error['message']
 
-        assert_equal("Missing inputs" in errorString, True);
+        assert("Missing inputs" in errorString)
 
         #########################
         # RAW TX MULTISIG TESTS #
@@ -83,7 +81,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         bal = self.nodes[2].getbalance()
 
         # send 1.2 BTC to msig adr
-        txId       = self.nodes[0].sendtoaddress(mSigObj, 1.2);
+        txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
         self.sync_all()
         self.nodes[0].generate(1)
         self.sync_all()
@@ -105,7 +103,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         mSigObj = self.nodes[2].addmultisigaddress(2, [addr1Obj['pubkey'], addr2Obj['pubkey'], addr3Obj['pubkey']])
         mSigObjValid = self.nodes[2].validateaddress(mSigObj)
 
-        txId       = self.nodes[0].sendtoaddress(mSigObj, 2.2);
+        txId = self.nodes[0].sendtoaddress(mSigObj, 2.2)
         decTx = self.nodes[0].gettransaction(txId)
         rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
         sPK = rawTx['vout'][0]['scriptPubKey']['hex']
@@ -123,7 +121,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         for outpoint in rawTx['vout']:
             if outpoint['value'] == Decimal('2.20000000'):
                 vout = outpoint
-                break;
+                break
 
         bal = self.nodes[0].getbalance()
         inputs = [{ "txid" : txId, "vout" : vout['n'], "scriptPubKey" : vout['scriptPubKey']['hex']}]

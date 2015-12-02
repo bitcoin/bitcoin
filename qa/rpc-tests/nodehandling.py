@@ -9,7 +9,6 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import base64
 
 try:
     import http.client as httplib
@@ -54,7 +53,7 @@ class NodeHandlingTest (BitcoinTestFramework):
         self.nodes[2].setban("127.0.0.0/24", "add")
         self.nodes[2].setban("192.168.0.1", "add", 1) #ban for 1 seconds
         self.nodes[2].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/19", "add", 1000) #ban for 1000 seconds
-        listBeforeShutdown = self.nodes[2].listbanned();
+        listBeforeShutdown = self.nodes[2].listbanned()
         assert_equal("192.168.0.1/32", listBeforeShutdown[2]['address']) #must be here
         time.sleep(2) #make 100% sure we expired 192.168.0.1 node time
 
@@ -62,7 +61,7 @@ class NodeHandlingTest (BitcoinTestFramework):
         stop_node(self.nodes[2], 2)
 
         self.nodes[2] = start_node(2, self.options.tmpdir)
-        listAfterShutdown = self.nodes[2].listbanned();
+        listAfterShutdown = self.nodes[2].listbanned()
         assert_equal("127.0.0.0/24", listAfterShutdown[0]['address'])
         assert_equal("127.0.0.0/32", listAfterShutdown[1]['address'])
         assert_equal("/19" in listAfterShutdown[2]['address'], True)
