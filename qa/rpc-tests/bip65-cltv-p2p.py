@@ -10,7 +10,7 @@ from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 import cStringIO
 import time
 
