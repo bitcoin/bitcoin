@@ -809,7 +809,7 @@ bool CheckOfferInputs(const CTransaction &tx,
 		COffer theOffer(tx);
 		COfferAccept theOfferAccept;
 		if (theOffer.IsNull())
-			return error("CheckOfferInputs() : null offer UniValue");
+			return error("CheckOfferInputs() : null offer");
 		if(theOffer.sDescription.size() > 1024 * 64)
 		{
 			return error("offer description too big");

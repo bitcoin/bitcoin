@@ -476,7 +476,7 @@ bool CheckMessageInputs(const CTransaction &tx,
         CMessage theMessage;
         theMessage.UnserializeFromTx(tx);
         if (theMessage.IsNull())
-            return error("CheckMessageInputs() : null message UniValue");
+            return error("CheckMessageInputs() : null message");
 		if(theMessage.vchRand.size() > MAX_ID_LENGTH)
 		{
 			return error("message rand too big");
