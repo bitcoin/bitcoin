@@ -194,6 +194,12 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_SOURCES = \
+  alias.cpp \
+  offer.cpp \
+  message.cpp \
+  cert.cpp \
+  escrow.cpp \
+  messagecrypter.cpp \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -274,12 +280,6 @@ crypto_libsyscoin_crypto_a_SOURCES = \
 libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
-  alias.cpp \
-  offer.cpp \
-  message.cpp \
-  cert.cpp \
-  escrow.cpp \
-  messagecrypter.cpp \
   amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
