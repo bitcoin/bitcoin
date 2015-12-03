@@ -143,6 +143,7 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
         pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
+			// SYSCOIN fInit controls syscoin tx's that get created in checkinputs, don't do this if we are verifying or reindexing
 			fInit = true;
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
 			fInit = false;
