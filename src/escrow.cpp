@@ -8,7 +8,6 @@
 #include "base58.h"
 #include "rpcserver.h"
 #include "wallet/wallet.h"
-#include "test/bignum.h"
 #include "chainparams.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -730,8 +729,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	}
 	
     // gather inputs
-    uint64_t rand = GetRand((uint64_t) -1);
-    vector<unsigned char> vchRand = CBigNum(rand).getvch();
+    vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
     vector<unsigned char> vchEscrow = vchFromValue(HexStr(vchRand));
 
     // this is a syscoin transaction

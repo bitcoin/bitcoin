@@ -24,7 +24,12 @@
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
-
+// SYSCOIN services
+#include "alias.h"
+#include "offer.h"
+#include "cert.h"
+#include "escrow.h"
+#include "message.h"
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -1843,9 +1848,26 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nC
 }
 
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
+                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const string& txData, const CWalletTx* wtxIn)
 {
     CAmount nValue = 0;
+	// SYSCOIN: get output amount of input transaction for syscoin service calls
+	int nTxOut = 0;
+	if(wtxIn != NULL)
+	{
+		const CTransaction& txIn = wtxIn[0];
+		nTxOut = IndexOfAliasOutput(txIn);
+		if (nTxOut < 0)
+			nTxOut = IndexOfCertOutput(txIn);
+		if (nTxOut < 0)
+			nTxOut = IndexOfOfferOutput(txIn);
+		if (nTxOut < 0)
+			nTxOut = IndexOfEscrowOutput(txIn);
+		if (nTxOut < 0)
+			nTxOut = IndexOfMessageOutput(txIn);
+		if (nTxOut < 0)
+			nTxOut = 0;
+	}
     unsigned int nSubtractFeeFromAmount = 0;
     BOOST_FOREACH (const CRecipient& recipient, vecSend)
     {
@@ -1868,7 +1890,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     wtxNew.fTimeReceivedIsTxTime = true;
     wtxNew.BindWallet(this);
     CMutableTransaction txNew;
-
+	// SYSCOIN: set syscoin tx version if its a syscoin service call
+	if(wtxIn != NULL)
+		txNew.nVersion = SYSCOIN_TX_VERSION;
     // Discourage fee sniping.
     //
     // For a large miner the value of the transactions in the best block and
@@ -1910,6 +1934,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
             {
                 txNew.vin.clear();
                 txNew.vout.clear();
+				// SYSCOIN data
+				txNew.data = vchFromString(txData);
                 wtxNew.fFromMe = true;
                 nChangePosRet = -1;
                 bool fFirst = true;

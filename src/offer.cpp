@@ -9,7 +9,6 @@
 #include "base58.h"
 #include "rpcserver.h"
 #include "wallet/wallet.h"
-#include "test/bignum.h"
 #include "chainparams.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -1462,8 +1461,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 
 
 	// generate rand identifier
-	uint64_t rand = GetRand((uint64_t) -1);
-	vector<unsigned char> vchRand = CBigNum(rand).getvch();
+	vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 
 	EnsureWalletIsUnlocked();
@@ -1639,8 +1637,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 
 
 	// generate rand identifier
-	uint64_t rand = GetRand((uint64_t) -1);
-	vector<unsigned char> vchRand = CBigNum(rand).getvch();
+	vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 	int precision = 2;
 	// get precision
@@ -2365,8 +2362,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyOrig;
 
 	// generate offer accept identifier and hash
-	uint64_t rand = GetRand((uint64_t) -1);
-	vector<unsigned char> vchAcceptRand = CBigNum(rand).getvch();
+	vector<unsigned char> vchAcceptRand = vchFromString(GetRandHash().GetHex());
 	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
 
 	// get a key from our wallet set dest as ourselves

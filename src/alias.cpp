@@ -15,7 +15,6 @@
 #include "base58.h"
 #include "txmempool.h"
 #include "txdb.h"
-#include "test/bignum.h"
 #include "chainparams.h"
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
@@ -1012,8 +1011,7 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 						+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchName = vchFromValue(params[0]);
-	uint64_t rand = GetRand((uint64_t) -1);
-	vector<unsigned char> vchRand = CBigNum(rand).getvch();
+	vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
 	vector<unsigned char> vchValue;
 
 	vchValue = vchFromValue(params[1]);

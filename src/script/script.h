@@ -42,6 +42,33 @@ enum opcodetype
 {
     // push value
     OP_0 = 0x00,
+    // SYSCOIN aliases
+    OP_ALIAS_NEW = 0x01,
+    OP_ALIAS_ACTIVATE=0x02,
+    OP_ALIAS_UPDATE=0x03,
+
+    // distributed exchange
+    OP_OFFER_ACTIVATE=0x04,
+    OP_OFFER_UPDATE=0x05,
+    OP_OFFER_ACCEPT=0x06,
+    OP_OFFER_REFUND=0x07,
+
+    // distributed licensing system
+    OP_CERT_ACTIVATE=0x08,
+    OP_CERT_UPDATE=0x09,
+    OP_CERT_TRANSFER=0x0a,
+
+    // distributed escrow system
+    OP_ESCROW_ACTIVATE=0x0b,
+    OP_ESCROW_RELEASE=0x0c,
+    OP_ESCROW_REFUND=0x0d,
+	OP_ESCROW_COMPLETE=0x0e,
+
+	// encrypted messaging
+	OP_MESSAGE_ACTIVATE=0x0f,
+
+     // syscoin extended reserved 
+    OP_SYSCOIN_EXTENDED=0x10,
     OP_FALSE = OP_0,
     OP_PUSHDATA1 = 0x4c,
     OP_PUSHDATA2 = 0x4d,

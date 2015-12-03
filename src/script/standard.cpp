@@ -11,7 +11,12 @@
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
-
+// SYSCOIN services
+#include "alias.h"
+#include "offer.h"
+#include "cert.h"
+#include "escrow.h"
+#include "message.h"
 using namespace std;
 
 typedef vector<unsigned char> valtype;
@@ -53,7 +58,20 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
     }
-
+	// SYSCOIN check to see if this is a syscoin service transaction, if so get the scriptPubKey by extracting service specific script information
+	CScript scriptPubKey = scriptPubKeyIn;
+	vector<vector<unsigned char> > vvch;
+	int op;
+	if (DecodeAliasScript(scriptPubKeyIn, op, vvch))
+		scriptPubKey = RemoveAliasScriptPrefix(scriptPubKeyIn);
+	else if (DecodeOfferScript(scriptPubKeyIn, op, vvch))
+		scriptPubKey = RemoveOfferScriptPrefix(scriptPubKeyIn);
+	else if (DecodeCertScript(scriptPubKeyIn, op, vvch))
+		scriptPubKey = RemoveCertScriptPrefix(scriptPubKeyIn);
+	else if (DecodeEscrowScript(scriptPubKeyIn, op, vvch))
+		scriptPubKey = RemoveEscrowScriptPrefix(scriptPubKeyIn);
+	else if (DecodeMessageScript(scriptPubKeyIn, op, vvch))
+		scriptPubKey = RemoveMessageScriptPrefix(scriptPubKeyIn);
     vSolutionsRet.clear();
 
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:

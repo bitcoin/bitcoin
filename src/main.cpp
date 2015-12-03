@@ -42,7 +42,12 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/math/distributions/poisson.hpp>
 #include <boost/thread.hpp>
-
+// SYSCOIN service's
+#include "alias.h"
+#include "offer.h"
+#include "cert.h"
+#include "escrow.h"
+#include "message.h"
 using namespace std;
 
 #if defined(NDEBUG)
@@ -785,7 +790,126 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
             if (txin.prevout.IsNull())
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
     }
+	// SYSCOIN tx structure check
+    if (tx.nVersion != SYSCOIN_TX_VERSION)
+        return true;
 
+    vector<vector<unsigned char> > vvch;
+    int op;
+    int nOut;
+	string err = "";
+
+    if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
+		if (vvch[0].size() > MAX_NAME_LENGTH) {
+			err = error("alias transaction with alias too long");
+		}
+		switch (op) {
+			case OP_ALIAS_ACTIVATE:
+				if (vvch[1].size() > 20)
+					err = error("aliasactivate tx with rand too big");
+				break;
+			case OP_ALIAS_UPDATE:
+				if (vvch[1].size() > MAX_VALUE_LENGTH)
+					err = error("aliasupdate tx with value too long");
+				break;
+			default:
+				err = error("alias transaction has unknown op");
+		}
+		
+    }
+    else if(DecodeOfferTx(tx, op, nOut, vvch, -1)) {
+		if (vvch[0].size() > MAX_NAME_LENGTH) {
+			err = error("offer transaction with offer guid too long");
+		}
+		switch (op) {
+			case OP_OFFER_ACTIVATE:
+				if (vvch[1].size() > 20)
+					err = error("offeractivate tx with rand too big");
+				break;
+			case OP_OFFER_UPDATE:
+				if (vvch[1].size() > MAX_VALUE_LENGTH)
+					err = error("offerupdate tx with value too long");
+				break;
+			case OP_OFFER_ACCEPT: 
+				if (vvch[1].size() > 20)
+					err = error("offeraccept tx with accept rand too big");
+				break;
+			case OP_OFFER_REFUND: 
+				if (vvch[1].size() > 20)
+					err = error("offerrefund tx with accept rand too big");
+				if (vvch[2].size() > 20)
+					err = error("offerrefund tx with refund status too long");
+				break;
+			default:
+				err = error("offer transaction has unknown op");
+		
+        }
+    }
+    else if(DecodeCertTx(tx, op, nOut, vvch, -1)) {
+		if (vvch[0].size() > MAX_NAME_LENGTH) {
+			err = error("cert transaction with cert title too long");
+		}
+		switch (op) {
+
+			case OP_CERT_ACTIVATE:
+				if (vvch[1].size() > 20)
+					err = error("cert tx with rand too big");
+				if (vvch[2].size() > MAX_NAME_LENGTH)
+					err = error("cert tx with value too long");
+				break;
+			case OP_CERT_UPDATE:
+				if (vvch[1].size() > MAX_NAME_LENGTH)
+					err = error("cert tx with value too long");
+				break;
+			case OP_CERT_TRANSFER:
+        		if (vvch[0].size() > 20)
+					err = error("cert transfer tx with cert rand too big");
+				if (vvch[1].size() > 20)
+					err = error("cert transfer tx with invalid hash length");
+				break;
+			default:
+				err = error("cert transaction has unknown op");
+		}
+        
+	}  
+   else if(DecodeEscrowTx(tx, op, nOut, vvch, -1)) {
+		if (vvch[0].size() > MAX_NAME_LENGTH) {
+			err = error("escrow tx with GUID too big");
+		}
+		if (vvch[1].size() > 20) {
+			err = error("escrow tx rand too big");
+		}
+		switch (op) {
+			case OP_ESCROW_ACTIVATE:
+				break;
+			case OP_ESCROW_RELEASE:
+				break;
+			case OP_ESCROW_REFUND:
+				break;
+			case OP_ESCROW_COMPLETE:
+				break;			
+			default:
+				err = error("escrow transaction has unknown op");
+		}
+	} 
+   else if(DecodeMessageTx(tx, op, nOut, vvch, -1)) {
+		if (vvch[0].size() > MAX_NAME_LENGTH) {
+			err = error("message tx with GUID too big");
+		}
+		if (vvch[1].size() > 20) {
+			err = error("message tx rand too big");
+		}
+		switch (op) {
+			case OP_MESSAGE_ACTIVATE:
+				break;		
+			default:
+				err = error("message transaction has unknown op");
+		}
+	} 
+    if(err != "")
+	{
+		return state.DoS(10,error(err.c_str()));
+	}
     return true;
 }
 
@@ -1599,7 +1723,8 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
 }
 
 namespace Consensus {
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight)
+// SYSCOIN 3 params added for syscoin check inputs
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, bool bCheckInputs, bool fBlock, bool fMiner)
 {
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
@@ -1628,7 +1753,40 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
 
         }
+		// SYSCOIN check inputs
+		vector<vector<unsigned char> > vvchArgs;
+		int op;
+		int nOut;
 
+		if(HasReachedMainNetForkB2())
+		{
+			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
+			{
+				if (!CheckAliasInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+					return false;
+				
+			}
+			else if(DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
+			{	
+				if (!CheckOfferInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+					return false;		 
+			}
+			else if(DecodeCertTx(tx, op, nOut, vvchArgs, -1))
+			{
+				if (!CheckCertInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+					return false;			
+			}
+			else if(DecodeEscrowTx(tx, op, nOut, vvchArgs, -1))
+			{
+				if (!CheckEscrowInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+					return false;			
+			}
+			else if(DecodeMessageTx(tx, op, nOut, vvchArgs, -1))
+			{
+				if (!CheckMessageInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+					return false;			
+			}
+		}
         if (nValueIn < tx.GetValueOut())
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
                 strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(tx.GetValueOut())));
@@ -1643,12 +1801,13 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
     return true;
 }
 }// namespace Consensus
-
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks)
+// SYSCOIN checkinputs add's 3 bools for syscoin check input functions
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks, bool bCheckInputs, bool fBlock, bool fMiner)
 {
     if (!tx.IsCoinBase())
     {
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
+		// SYSCOIN pass in 3 params to CheckTxInputs
+        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), bCheckInputs, fBlock, fMiner))
             return false;
 
         if (pvChecks)
@@ -1809,7 +1968,192 @@ static bool ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const CO
 
     return fClean;
 }
+// SYSCOIN disconnect service related blocks
+bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
+	
+	TRY_LOCK(cs_main, cs_maintry);
+	string opName = aliasFromOp(op);
+	vector<CAliasIndex> vtxPos;
+	if (!paliasdb->ReadAlias(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to read from alias DB for %s %s\n",
+				opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
 
+	// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+	// be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+	if (vtxPos.size()) {
+		if (vtxPos.back().txHash == tx.GetHash())
+			vtxPos.pop_back();
+		// TODO validate that the first pos is the current tx pos
+	}
+	
+	if(!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to write to alias DB");
+	if(fDebug)
+		printf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
+		stringFromVch(vvchArgs[0]).c_str(),
+		aliasFromOp(op).c_str(),
+		tx.GetHash().ToString().c_str(),
+		pindex->nHeight);
+
+	return true;
+}
+
+bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
+    string opName = offerFromOp(op);
+	
+	COffer theOffer(tx);
+	if (theOffer.IsNull())
+		error("CheckOfferInputs() : null offer object");
+
+	TRY_LOCK(cs_main, cs_maintry);
+    // make sure a DB record exists for this offer
+    vector<COffer> vtxPos;
+    if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos))
+        return error("DisconnectBlock() : failed to read from offer DB for %s %s\n",
+        		opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+	// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+	// be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+	if (vtxPos.size()) {
+		if(vtxPos.back().txHash == tx.GetHash())
+			vtxPos.pop_back();
+		// TODO validate that the first pos is the current tx pos
+	}
+
+    if(op == OP_OFFER_ACCEPT ) {
+    	vector<unsigned char> vvchOfferAccept = vvchArgs[1];
+    	COfferAccept theOfferAccept;
+
+    	// make sure the offeraccept is also in the serialized offer in the txn
+    	if(!theOffer.GetAcceptByHash(vvchOfferAccept, theOfferAccept))
+            return error("DisconnectBlock() : not found in offer for offer accept %s %s\n",
+            		opName.c_str(), HexStr(vvchOfferAccept).c_str());
+		
+		
+        // make sure offer accept db record already exists
+        if (pofferdb->ExistsOfferAccept(vvchOfferAccept))
+        	pofferdb->EraseOfferAccept(vvchOfferAccept);
+		
+    }
+
+    // write new offer state to db
+	if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to write to offer DB");
+	
+	if(fDebug)
+		printf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
+			stringFromVch(vvchArgs[0]).c_str(),
+			aliasFromOp(op).c_str(),
+			tx.GetHash().ToString().c_str(),
+			pindex->nHeight);
+
+	return true;
+}
+
+bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
+	string opName = certFromOp(op);
+	
+	CCert theCert(tx);
+	if (theCert.IsNull())
+		error("CheckOfferInputs() : null  object");
+
+
+	TRY_LOCK(cs_main, cs_maintry);
+	// make sure a DB record exists for this cert
+	vector<CCert> vtxPos;
+	if (!pcertdb->ReadCert(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to read from certificate DB for %s %s\n",
+				opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+	// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+	// be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+	if (vtxPos.size()) {
+		if(vtxPos.back().txHash == tx.GetHash())
+			vtxPos.pop_back();
+		// TODO validate that the first pos is the current tx pos
+	}
+
+	// write new offer state to db
+	if(!pcertdb->WriteCert(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to write to offer DB");
+	if(fDebug)
+		printf("DISCONNECTED CERT TXN: title=%s hash=%s height=%d\n",
+		   stringFromVch(vvchArgs[0]).c_str(),
+			tx.GetHash().ToString().c_str(),
+			pindex->nHeight);
+
+	return true;
+}
+
+bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
+	string opName = escrowFromOp(op);
+	
+	CEscrow theEscrow(tx);
+	if (theEscrow.IsNull())
+		error("CheckOfferInputs() : null  object");
+
+
+	TRY_LOCK(cs_main, cs_maintry);
+	// make sure a DB record exists for this cert
+	vector<CEscrow> vtxPos;
+	if (!pescrowdb->ReadEscrow(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to read from escrow DB for %s %s\n",
+				opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+	// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+	// be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+	if (vtxPos.size()) {
+		if(vtxPos.back().txHash == tx.GetHash())
+			vtxPos.pop_back();
+		// TODO validate that the first pos is the current tx pos
+	}
+
+	// write new escrow state to db
+	if(!pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to write to escrow DB");
+	if(fDebug)
+		printf("DISCONNECTED ESCROW TXN: escrow=%s hash=%s height=%d\n",
+		   stringFromVch(vvchArgs[0]).c_str(),
+			tx.GetHash().ToString().c_str(),
+			pindex->nHeight);
+
+	return true;
+}
+
+bool DisconnectMessage(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
+	string opName = messageFromOp(op);
+	
+	CMessage theMessage(tx);
+	if (theMessage.IsNull())
+		error("CheckOfferInputs() : null  object");
+
+
+	TRY_LOCK(cs_main, cs_maintry);
+	// make sure a DB record exists for this cert
+	vector<CMessage> vtxPos;
+	if (!pmessagedb->ReadMessage(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to read from message DB for %s %s\n",
+				opName.c_str(), stringFromVch(vvchArgs[0]).c_str());
+
+	// vtxPos might be empty if we pruned expired transactions.  However, it should normally still not
+	// be empty, since a reorg cannot go that far back.  Be safe anyway and do not try to pop if empty.
+	if (vtxPos.size()) {
+		if(vtxPos.back().txHash == tx.GetHash())
+			vtxPos.pop_back();
+		// TODO validate that the first pos is the current tx pos
+	}
+
+	// write new message state to db
+	if(!pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
+		return error("DisconnectBlock() : failed to write to message DB");
+	if(fDebug)
+		printf("DISCONNECTED MESSAGE TXN: message=%s hash=%s height=%d\n",
+		   stringFromVch(vvchArgs[0]).c_str(),
+			tx.GetHash().ToString().c_str(),
+			pindex->nHeight);
+
+	return true;
+}
 bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockIndex* pindex, CCoinsViewCache& view, bool* pfClean)
 {
     assert(pindex->GetBlockHash() == view.GetBestBlock());
@@ -1852,7 +2196,32 @@ bool DisconnectBlock(const CBlock& block, CValidationState& state, const CBlockI
         // remove outputs
         outs->Clear();
         }
-
+		// SYSCOIN disconnect syscoin related block
+		if (tx.nVersion == SYSCOIN_TX_VERSION && HasReachedMainNetForkB2()) {
+		    vector<vector<unsigned char> > vvchArgs;
+		    int op, nOut;
+			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
+			{
+				DisconnectAlias(pindex, tx, op, vvchArgs);	
+			}
+			else if(DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
+			{
+				DisconnectOffer(pindex, tx, op, vvchArgs); 
+			}
+			else if(DecodeCertTx(tx, op, nOut, vvchArgs, -1))
+			{
+				DisconnectCertificate(pindex, tx, op, vvchArgs);
+				
+			}
+			else if(DecodeEscrowTx(tx, op, nOut, vvchArgs, -1))
+			{
+				DisconnectEscrow(pindex, tx, op, vvchArgs);	
+			}
+			else if(DecodeMessageTx(tx, op, nOut, vvchArgs, -1))
+			{
+				DisconnectMessage(pindex, tx, op, vvchArgs);	
+			}
+		}
         // restore inputs
         if (i > 0) { // not coinbases
             const CTxUndo &txundo = blockUndo.vtxundo[i-1];
@@ -2113,7 +2482,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
+			// SYSCOIN pass in 3 params for syscoin check inputs
+            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, fJustCheck, true, false))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
