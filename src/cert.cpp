@@ -9,7 +9,7 @@
 #include "rpcserver.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
-#include "messagecrypter.h"
+//#include "messagecrypter.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
@@ -20,9 +20,9 @@ using namespace std;
 static void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const string& txData="", const CWalletTx* wtxIn=NULL);
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
 {
-	CMessageCrypter crypter;
+	/*CMessageCrypter crypter;
 	if(!crypter.Encrypt(stringFromVch(vchPubKey), stringFromVch(vchMessage), strCipherText))
-		return false;
+		return false;*/
 
 	return true;
 }
@@ -38,9 +38,9 @@ bool DecryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigne
 	CSyscoinSecret Secret(PrivateKey);
 	PrivateKey = Secret.GetKey();
 	std::vector<unsigned char> vchPrivateKey(PrivateKey.begin(), PrivateKey.end());
-	CMessageCrypter crypter;
+	/*CMessageCrypter crypter;
 	if(!crypter.Decrypt(HexStr(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
-		return false;
+		return false;*/
 	
 	return true;
 }
