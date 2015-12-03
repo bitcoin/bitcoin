@@ -806,7 +806,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 		}
 		switch (op) {
 			case OP_ALIAS_ACTIVATE:
-				if (vvch[1].size() > 20)
+				if (vvch[1].size() > 64)
 					err = error("aliasactivate tx with rand too big");
 				break;
 			case OP_ALIAS_UPDATE:
@@ -824,7 +824,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 		}
 		switch (op) {
 			case OP_OFFER_ACTIVATE:
-				if (vvch[1].size() > 20)
+				if (vvch[1].size() > MAX_ID_LENGTH)
 					err = error("offeractivate tx with rand too big");
 				break;
 			case OP_OFFER_UPDATE:
@@ -832,13 +832,13 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 					err = error("offerupdate tx with value too long");
 				break;
 			case OP_OFFER_ACCEPT: 
-				if (vvch[1].size() > 20)
+				if (vvch[1].size() > MAX_ID_LENGTH)
 					err = error("offeraccept tx with accept rand too big");
 				break;
 			case OP_OFFER_REFUND: 
-				if (vvch[1].size() > 20)
+				if (vvch[1].size() > MAX_ID_LENGTH)
 					err = error("offerrefund tx with accept rand too big");
-				if (vvch[2].size() > 20)
+				if (vvch[2].size() > MAX_ID_LENGTH)
 					err = error("offerrefund tx with refund status too long");
 				break;
 			default:
@@ -853,7 +853,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 		switch (op) {
 
 			case OP_CERT_ACTIVATE:
-				if (vvch[1].size() > 20)
+				if (vvch[1].size() > MAX_ID_LENGTH)
 					err = error("cert tx with rand too big");
 				if (vvch[2].size() > MAX_NAME_LENGTH)
 					err = error("cert tx with value too long");
@@ -863,9 +863,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 					err = error("cert tx with value too long");
 				break;
 			case OP_CERT_TRANSFER:
-        		if (vvch[0].size() > 20)
+        		if (vvch[0].size() > MAX_ID_LENGTH)
 					err = error("cert transfer tx with cert rand too big");
-				if (vvch[1].size() > 20)
+				if (vvch[1].size() > MAX_ID_LENGTH)
 					err = error("cert transfer tx with invalid hash length");
 				break;
 			default:
@@ -877,7 +877,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 		if (vvch[0].size() > MAX_NAME_LENGTH) {
 			err = error("escrow tx with GUID too big");
 		}
-		if (vvch[1].size() > 20) {
+		if (vvch[1].size() > MAX_ID_LENGTH) {
 			err = error("escrow tx rand too big");
 		}
 		switch (op) {
@@ -897,7 +897,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 		if (vvch[0].size() > MAX_NAME_LENGTH) {
 			err = error("message tx with GUID too big");
 		}
-		if (vvch[1].size() > 20) {
+		if (vvch[1].size() > MAX_ID_LENGTH) {
 			err = error("message tx rand too big");
 		}
 		switch (op) {

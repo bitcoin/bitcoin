@@ -102,6 +102,7 @@ const int SYSCOIN_TX_VERSION = 0x7400;
 static const int64_t MIN_AMOUNT = COIN;
 static const unsigned int MAX_NAME_LENGTH = 255;
 static const unsigned int MAX_VALUE_LENGTH = 1023;
+static const unsigned int MAX_ID_LENGTH = 64;
 static const unsigned int MAX_MSG_LENGTH = 16383;
 
 static const unsigned int MIN_ACTIVATE_DEPTH = 1;
