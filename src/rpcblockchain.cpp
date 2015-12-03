@@ -573,7 +573,7 @@ UniValue verifychain(const UniValue& params, bool fHelp)
 	fInit = true;
 	try
 	{
-		ret = CVerifyDB().VerifyDB(pcoinsTip, nCheckLevel, nCheckDepth);
+		ret = CVerifyDB().VerifyDB(Params(), pcoinsTip, nCheckLevel, nCheckDepth);
 	}
 	catch(...)
 	{
