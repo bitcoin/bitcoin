@@ -499,7 +499,7 @@ bool CheckAliasInputs(const CTransaction &tx,
 		// unserialize alias UniValue from txn, check for valid
 		CAliasIndex theAlias(tx);
 		if (theAlias.IsNull())
-			return error("CheckAliasInputs() : null alias UniValue");
+			return error("CheckAliasInputs() : null alias");
 		if(theAlias.vValue.size() > MAX_VALUE_LENGTH)
 		{
 			return error("alias value too big");
@@ -644,6 +644,7 @@ string stringFromVch(const vector<unsigned char> &vch) {
 	return res;
 }
 bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {
+	printf("data string %s\n", DecodeBase64(stringFromVch(tx.data)).c_str());
     try {
         CDataStream dsAlias(vchFromString(DecodeBase64(stringFromVch(tx.data))), SER_NETWORK, PROTOCOL_VERSION);
         dsAlias >> *this;
@@ -655,7 +656,6 @@ bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {
 
 
 string CAliasIndex::SerializeToString() {
-    // serialize cert UniValue
     CDataStream dsAlias(SER_NETWORK, PROTOCOL_VERSION);
     dsAlias << *this;
     vector<unsigned char> vchData(dsAlias.begin(), dsAlias.end());

@@ -1758,13 +1758,10 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 		vector<vector<unsigned char> > vvchArgs;
 		int op;
 		int nOut;
-		printf("HasReachedMainNetForkB2() %d tx.nVersion == SYSCOIN_TX_VERSION %d\n", HasReachedMainNetForkB2()? 1:0, tx.nVersion == SYSCOIN_TX_VERSION? 1:0);
 		if(HasReachedMainNetForkB2() && tx.nVersion == SYSCOIN_TX_VERSION)
 		{
-			printf("decodealiastx?\n");
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
 			{
-				printf("CheckAliasInputs?\n");
 				if (!CheckAliasInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
 					return false;
 				
