@@ -237,8 +237,7 @@ int64_t GetTxHashHeight(const uint256 txHash) {
 bool HasReachedMainNetForkB2()
 {
 	bool fTestNet = false;
-	std::string chain = ChainNameFromCommandLine();
-    if (chain != CBaseChainParams::MAIN)
+    if (Params().NetworkIDString() != "main")
 		fTestNet = true;
 	return fTestNet || (!fTestNet && chainActive.Tip()->nHeight >= 1);
 }
@@ -378,8 +377,8 @@ void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
 
 
 int GetMinActivateDepth() {
-	std::string chain = ChainNameFromCommandLine();
-    if (chain != CBaseChainParams::MAIN)
+
+    if (Params().NetworkIDString() != "main")
 		return MIN_ACTIVATE_DEPTH_TESTNET;
 	else
 		return MIN_ACTIVATE_DEPTH;
