@@ -202,6 +202,7 @@ libsyscoin_server_a_SOURCES = \
   messagecrypter.cpp \
   addrman.cpp \
   alert.cpp \
+  base58.cpp \  
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
@@ -225,7 +226,7 @@ libsyscoin_server_a_SOURCES = \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
   script/sigcache.cpp \
-  script/standard.cpp \  
+  script/standard.cpp \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
@@ -283,7 +284,6 @@ libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
   amount.cpp \
   arith_uint256.cpp \
-  base58.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
