@@ -11,12 +11,11 @@
 #include "json/json_spirit_utils.h"
 #include "json/json_spirit_writer_template.h"
 
-enum
-{
-  DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,
-  DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4, 
-  DEFAULT_EXCESSIVE_BLOCK_SIZE = 16000000,
-  DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 10
+enum {
+    DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,
+    DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4,
+    DEFAULT_EXCESSIVE_BLOCK_SIZE = 16000000,
+    DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 10
 };
 
 class CBlock;
@@ -35,13 +34,13 @@ extern std::string UnlimitedCmdLineHelp();
 // Called whenever a new block is accepted
 extern void UnlimitedAcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex* ppindex, CDiskBlockPos* dbp);
 
-extern void UnlimitedLogBlock(const CBlock& block,const std::string& hash,uint64_t receiptTime);
+extern void UnlimitedLogBlock(const CBlock& block, const std::string& hash, uint64_t receiptTime);
 
 // Check whether this block is bigger in some metric than we really want to accept
-extern bool CheckExcessive(const CBlock& block,uint64_t blockSize, uint64_t nSigOps,uint64_t nTx);
+extern bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, uint64_t nTx);
 
 // Check whether any block N back in this chain is an excessive block
-extern int isChainExcessive(const CBlockIndex* blk,unsigned int checkDepth = excessiveAcceptDepth);
+extern int isChainExcessive(const CBlockIndex* blk, unsigned int checkDepth = excessiveAcceptDepth);
 
 // RPC calls
 extern json_spirit::Value settrafficshaping(const json_spirit::Array& params, bool fHelp);
