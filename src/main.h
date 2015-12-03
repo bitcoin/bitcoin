@@ -116,6 +116,7 @@ extern uint64_t nLastBlockSize;
 extern const std::string strMessageMagic;
 extern CWaitableCriticalSection csBestBlock;
 extern CConditionVariable cvBlockChange;
+extern bool fInit;
 extern bool fImporting;
 extern bool fReindex;
 extern int nScriptCheckThreads;

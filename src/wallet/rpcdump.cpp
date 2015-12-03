@@ -143,7 +143,9 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
         pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
+			fInit = true;
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+			fInit = false;
         }
     }
 

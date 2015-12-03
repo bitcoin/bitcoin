@@ -67,6 +67,7 @@ int64_t nTimeBestReceived = 0;
 CWaitableCriticalSection csBestBlock;
 CConditionVariable cvBlockChange;
 int nScriptCheckThreads = 0;
+bool fInit = false;
 bool fImporting = false;
 bool fReindex = false;
 bool fTxIndex = false;

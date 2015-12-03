@@ -569,7 +569,15 @@ UniValue verifychain(const UniValue& params, bool fHelp)
     if (params.size() > 1)
         nCheckDepth = params[1].get_int();
 
-    return CVerifyDB().VerifyDB(Params(), pcoinsTip, nCheckLevel, nCheckDepth);
+	fInit = true;
+	try
+	{
+		ret = CVerifyDB().VerifyDB(pcoinsTip, nCheckLevel, nCheckDepth);
+	}
+	catch(...)
+	{
+	}
+	fInit = false;
 }
 
 /** Implementation of IsSuperMajority with better feedback */
