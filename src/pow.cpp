@@ -10,6 +10,7 @@
 #include "primitives/block.h"
 #include "uint256.h"
 #include "util.h"
+#include "chainparamsbase.h"
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
@@ -98,7 +99,8 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 
     // Check proof of work matches claimed amount
 	// SYSCOIN regtest fix
-    if (UintToArith256(hash) > bnTarget && params.NetworkIDString() != "regtest")
+	std::string chain = ChainNameFromCommandLine();
+    if (UintToArith256(hash) > bnTarget && chain != CBaseChainParams::REGTEST)
         return error("CheckProofOfWork(): hash doesn't match nBits");
 
     return true;
