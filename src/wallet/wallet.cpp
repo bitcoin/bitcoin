@@ -1937,7 +1937,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				// SYSCOIN data
 				if(!txData.empty())
 					txNew.data = vchFromString(txData);
-				printf("txNew.data %s\n", txNew.data.c_str());
+				printf("txNew.data len %d\n", txNew.data.size());
                 wtxNew.fFromMe = true;
                 nChangePosRet = -1;
                 bool fFirst = true;
