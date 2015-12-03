@@ -7,7 +7,6 @@
 #include "base58.h"
 #include "rpcserver.h"
 #include "wallet/wallet.h"
-#include "test/bignum.h"
 #include "chainparams.h"
 #include "messagecrypter.h"
 #include <boost/algorithm/hex.hpp>
@@ -772,8 +771,7 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		bPrivate = false;
 	}
     // gather inputs
-    uint64_t rand = GetRand((uint64_t) -1);
-    vector<unsigned char> vchRand = CBigNum(rand).getvch();
+    vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
     vector<unsigned char> vchCert = vchFromValue(HexStr(vchRand));
 
     // this is a syscoin transaction

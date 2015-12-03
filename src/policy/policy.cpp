@@ -11,7 +11,8 @@
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
-
+// SYSCOIN need constant SYSCOIN_TX_VERSION
+#include "alias.h"
 #include <boost/foreach.hpp>
 
     /**
@@ -58,7 +59,8 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 
 bool IsStandardTx(const CTransaction& tx, std::string& reason)
 {
-    if (tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) {
+	// SYSCOIN check for syscoin or bitcoin tx
+    if ((tx.nVersion > CTransaction::CURRENT_VERSION || tx.nVersion < 1) && tx.nVersion != SYSCOIN_TX_VERSION) {
         reason = "version";
         return false;
     }
