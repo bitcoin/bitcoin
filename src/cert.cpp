@@ -4,6 +4,7 @@
 #include "init.h"
 #include "main.h"
 #include "util.h"
+#include "random.h"
 #include "base58.h"
 #include "rpcserver.h"
 #include "wallet/wallet.h"
@@ -16,7 +17,7 @@
 using namespace std;
 
 
-static void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const string& txData, const CWalletTx* wtxIn);
+static void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const string& txData="", const CWalletTx* wtxIn=NULL);
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
 {
 	CMessageCrypter crypter;

@@ -109,10 +109,11 @@ public:
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
-    CSyscoinAddress() {}
-    CSyscoinAddress(const CTxDestination &dest) { Set(dest); }
-    CSyscoinAddress(const std::string& strAddress) { SetString(strAddress); }
-    CSyscoinAddress(const char* pszAddress) { SetString(pszAddress); }
+	// SYSCOIN aliases as addresses
+    CSyscoinAddress();
+    CSyscoinAddress(const CTxDestination &dest);
+    CSyscoinAddress(const std::string& strAddress);
+    CSyscoinAddress(const char* pszAddress);
 
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;

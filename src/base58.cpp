@@ -217,7 +217,57 @@ public:
 };
 
 } // anon namespace
-
+// SYSCOIN aliases as addresses
+CSyscoinAddress::CSyscoinAddress() {
+	isAlias = false;
+	aliasName = "";
+}
+CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest) { 
+	isAlias = false;
+	aliasName = "";
+    Set(dest);
+}
+CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) { 
+	isAlias = false;
+	aliasName = "";
+    SetString(strAddress);
+	// try to resolve alias address
+	if (!IsValid())
+	{
+		try 
+		{
+			std::string strAliasAddress;
+			GetAliasValue(strAddress, strAliasAddress);
+			SetString(strAliasAddress);
+			aliasName = strAddress;
+			isAlias = true;
+		}
+		catch(...)
+		{
+		}
+	}
+			
+}
+CSyscoinAddress::CSyscoinAddress(const char* pszAddress) { 
+	isAlias = false;
+    SetString(pszAddress);
+	// try to resolve alias address
+	if (!IsValid())
+	{
+		try 
+		{
+			std::string strAliasAddress;
+			GetAliasValue(std::string(pszAddress), strAliasAddress);
+			SetString(strAliasAddress);
+			aliasName = std::string(pszAddress);
+			isAlias = true;
+			
+		}
+		catch(...)
+		{
+		}
+	}
+}
 bool CSyscoinAddress::Set(const CKeyID& id)
 {
     SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
