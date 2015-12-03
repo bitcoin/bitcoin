@@ -83,8 +83,8 @@ CTransaction& CTransaction::operator=(const CTransaction &tx) {
     *const_cast<std::vector<CTxIn>*>(&vin) = tx.vin;
     *const_cast<std::vector<CTxOut>*>(&vout) = tx.vout;
     *const_cast<unsigned int*>(&nLockTime) = tx.nLockTime;
-    *const_cast<uint256*>(&hash) = tx.hash;
 	*const_cast<std::vector<unsigned char>*>(&data) = tx.data;
+    *const_cast<uint256*>(&hash) = tx.hash;
     return *this;
 }
 
