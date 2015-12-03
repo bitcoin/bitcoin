@@ -251,7 +251,8 @@ public:
     {
         Init(NULL);
     }
-
+	// SYSCOIN tx with data and syscoin service version
+	CWalletTx(std::string txData);
     CWalletTx(const CWallet* pwalletIn)
     {
         Init(pwalletIn);
