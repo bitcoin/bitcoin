@@ -71,11 +71,7 @@ std::string COutput::ToString() const
 {
     return strprintf("COutput(%s, %d, %d) [%s]", tx->GetHash().ToString(), i, nDepth, FormatMoney(tx->vout[i].nValue));
 }
-// SYSCOIN tx with data and syscoin service version
-CWalletTx(std::string txData): data(txData), nVersion(SYSCOIN_TX_VERSION)
-    {
-        Init(NULL);
-    }
+
 const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 {
     LOCK(cs_wallet);
@@ -1939,7 +1935,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 txNew.vin.clear();
                 txNew.vout.clear();
 				// SYSCOIN data
-				txNew.data = vchFromString(txData);
+				if(!txData.empty())
+					txNew.data = vchFromString(txData);
+				printf("txNew.data %s\n", txNew.data.c_str());
                 wtxNew.fFromMe = true;
                 nChangePosRet = -1;
                 bool fFirst = true;
