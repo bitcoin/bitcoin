@@ -5,6 +5,7 @@
 #include "init.h"
 #include "main.h"
 #include "util.h"
+#include "util.h"
 #include "base58.h"
 #include "rpcserver.h"
 #include "wallet/wallet.h"
@@ -16,7 +17,7 @@
 #include <boost/thread.hpp>
 using namespace std;
 
-static void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const string& txData, const CWalletTx* wtxIn);
+static void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const string& txData="", const CWalletTx* wtxIn=NULL);
 void PutToEscrowList(std::vector<CEscrow> &escrowList, CEscrow& index) {
 	int i = escrowList.size() - 1;
 	BOOST_REVERSE_FOREACH(CEscrow &o, escrowList) {
