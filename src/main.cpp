@@ -1759,7 +1759,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 		int op;
 		int nOut;
 
-		if(HasReachedMainNetForkB2())
+		if(HasReachedMainNetForkB2() && tx.nVersion == SYSCOIN_TX_VERSION)
 		{
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
 			{
