@@ -202,7 +202,7 @@ libsyscoin_server_a_SOURCES = \
   messagecrypter.cpp \
   addrman.cpp \
   alert.cpp \
-  base58.cpp \  
+  base58.cpp \ 
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
