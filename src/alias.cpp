@@ -456,6 +456,11 @@ bool CheckAliasInputs(const CTransaction &tx,
 		bool fMiner, bool fJustCheck) {
 
 	if (!tx.IsCoinBase()) {
+		if (fDebug)
+			printf("*** %d %s %s %s %s\n", 
+				chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
+				fBlock ? "BLOCK" : "", fMiner ? "MINER" : "",
+				fJustCheck ? "JUSTCHECK" : "");
 
 		bool found = false;
 		const COutPoint *prevOutput = NULL;
