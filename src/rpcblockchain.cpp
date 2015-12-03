@@ -563,7 +563,8 @@ UniValue verifychain(const UniValue& params, bool fHelp)
         );
 
     LOCK(cs_main);
-
+	// SYSCOIN fInit controls syscoin tx's that get created in checkinputs, don't do this if we are verifying or reindexing
+	bool ret = false;
     if (params.size() > 0)
         nCheckLevel = params[0].get_int();
     if (params.size() > 1)
