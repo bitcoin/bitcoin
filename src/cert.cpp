@@ -564,7 +564,7 @@ bool CheckCertInputs(const CTransaction &tx,
 		{
 			return error("cert title too big");
 		}
-		if(theCert.vchRand.size() > 20)
+		if(theCert.vchRand.size() > MAX_ID_LENGTH)
 		{
 			return error("cert rand too big");
 		}
@@ -579,7 +579,7 @@ bool CheckCertInputs(const CTransaction &tx,
             if (found)
                 return error(
                         "CheckCertInputs() : certactivate tx pointing to previous syscoin tx");
-			if (vvchArgs[1].size() > 20)
+			if (vvchArgs[1].size() > MAX_ID_LENGTH)
 				return error("cert tx with rand too big");
 			if (vvchArgs[2].size() > MAX_NAME_LENGTH)
                 return error("certactivate tx title too long");
@@ -637,9 +637,9 @@ bool CheckCertInputs(const CTransaction &tx,
             // validate conditions
             if ( !found || !IsCertOp(prevOp))
                 return error("certtransfer previous op is invalid");
-        	if (vvchArgs[0].size() > 20)
+        	if (vvchArgs[0].size() > MAX_ID_LENGTH)
 				return error("certtransfer tx with cert rand too big");
-            if (vvchArgs[1].size() > 20)
+            if (vvchArgs[1].size() > MAX_ID_LENGTH)
                 return error("certtransfer tx with cert Cert hash too big");
             if (vvchPrevArgs[0] != vvchArgs[0])
                 return error("CheckCertInputs() : certtransfer cert mismatch");

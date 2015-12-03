@@ -822,7 +822,7 @@ bool CheckOfferInputs(const CTransaction &tx,
 		{
 			return error("offer category too big");
 		}
-		if(theOffer.vchRand.size() > 20)
+		if(theOffer.vchRand.size() > MAX_ID_LENGTH)
 		{
 			return error("offer rand too big");
 		}
@@ -847,7 +847,7 @@ bool CheckOfferInputs(const CTransaction &tx,
 				return error("offeractivate previous op is invalid");		
 			if (found && vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offernew cert mismatch");
-			if (vvchArgs[1].size() > 20)
+			if (vvchArgs[1].size() > MAX_ID_LENGTH)
 				return error("offeractivate tx with guid too big");
 
 			if (fBlock && !fJustCheck) {
@@ -914,9 +914,9 @@ bool CheckOfferInputs(const CTransaction &tx,
 			if(op == OP_OFFER_REFUND && vvchArgs[2] == OFFER_REFUND_COMPLETE && vvchPrevArgs[2] != OFFER_REFUND_PAYMENT_INPROGRESS)
 				return error("offerrefund complete tx must be linked to an inprogress tx");
 			
-			if (vvchArgs[1].size() > 20)
+			if (vvchArgs[1].size() > MAX_ID_LENGTH)
 				return error("offerrefund tx with guid too big");
-			if (vvchArgs[2].size() > 20)
+			if (vvchArgs[2].size() > MAX_ID_LENGTH)
 				return error("offerrefund refund status too long");
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offerrefund offer mismatch");
@@ -940,7 +940,7 @@ bool CheckOfferInputs(const CTransaction &tx,
 			// if only cert input
 			if (found && !vvchPrevArgs.empty() && !IsCertOp(prevOp))
 				return error("CheckOfferInputs() : offeraccept cert/escrow input tx mismatch");
-			if (vvchArgs[1].size() > 20)
+			if (vvchArgs[1].size() > MAX_ID_LENGTH)
 				return error("offeraccept tx with guid too big");
 			// check for existence of offeraccept in txn offer obj
 			if(!theOffer.GetAcceptByHash(vvchArgs[1], theOfferAccept))

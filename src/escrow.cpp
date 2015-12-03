@@ -519,13 +519,13 @@ bool CheckEscrowInputs(const CTransaction &tx,
         theEscrow.UnserializeFromTx(tx);
         if (theEscrow.IsNull())
             return error("CheckEscrowInputs() : null escrow UniValue");
-		if(theEscrow.vchRand.size() > 20)
+		if(theEscrow.vchRand.size() > MAX_ID_LENGTH)
 		{
 			return error("escrow rand too big");
 		}
         if (vvchArgs[0].size() > MAX_NAME_LENGTH)
             return error("escrow tx GUID too big");
-		if (vvchArgs[1].size() > 20)
+		if (vvchArgs[1].size() > MAX_ID_LENGTH)
 			return error("escrow tx rand too big");
         switch (op) {
         case OP_ESCROW_ACTIVATE:

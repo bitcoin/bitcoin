@@ -477,13 +477,13 @@ bool CheckMessageInputs(const CTransaction &tx,
         theMessage.UnserializeFromTx(tx);
         if (theMessage.IsNull())
             return error("CheckMessageInputs() : null message UniValue");
-		if(theMessage.vchRand.size() > 20)
+		if(theMessage.vchRand.size() > MAX_ID_LENGTH)
 		{
 			return error("message rand too big");
 		}
         if (vvchArgs[0].size() > MAX_NAME_LENGTH)
             return error("message tx GUID too big");
-		if (vvchArgs[1].size() > 20)
+		if (vvchArgs[1].size() > MAX_ID_LENGTH)
 			return error("message tx rand too big");
 		if(theMessage.vchPubKeyTo.size() > MAX_NAME_LENGTH)
 		{
