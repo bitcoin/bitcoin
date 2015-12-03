@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-osx-0.12"
+name: "bitcoin-osx-0.13"
 enable_cache: true
 suites:
 - "trusty"
