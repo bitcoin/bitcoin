@@ -103,6 +103,8 @@ public:
  */
 class CSyscoinAddress : public CBase58Data {
 public:
+	bool isAlias;
+	std::string aliasName;
     bool Set(const CKeyID &id);
     bool Set(const CScriptID &id);
     bool Set(const CTxDestination &dest);
