@@ -389,7 +389,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
             # Use getblocks/getdata
             test_node.send_getblocks(locator = [fork_point])
-            assert_equal(test_node.check_last_announcement(inv=new_block_hashes[0:-1]), True)
+            assert_equal(test_node.check_last_announcement(inv=new_block_hashes), True)
             test_node.get_data(new_block_hashes)
             test_node.wait_for_block(new_block_hashes[-1])
 
