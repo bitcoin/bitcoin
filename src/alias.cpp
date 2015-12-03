@@ -238,7 +238,7 @@ bool HasReachedMainNetForkB2()
 {
 	bool fTestNet = false;
 	std::string chain = ChainNameFromCommandLine();
-    if (chain == CBaseChainParams::TESTNET)
+    if (chain != CBaseChainParams::MAIN)
 		fTestNet = true;
 	return fTestNet || (!fTestNet && chainActive.Tip()->nHeight >= 1);
 }
@@ -379,7 +379,7 @@ void PutToAliasList(std::vector<CAliasIndex> &aliasList, CAliasIndex& index) {
 
 int GetMinActivateDepth() {
 	std::string chain = ChainNameFromCommandLine();
-    if (chain == CBaseChainParams::TESTNET)
+    if (chain != CBaseChainParams::MAIN)
 		return MIN_ACTIVATE_DEPTH_TESTNET;
 	else
 		return MIN_ACTIVATE_DEPTH;
