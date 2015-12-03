@@ -37,9 +37,9 @@ bool DecryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigne
 	CSyscoinSecret Secret(PrivateKey);
 	PrivateKey = Secret.GetKey();
 	std::vector<unsigned char> vchPrivateKey(PrivateKey.begin(), PrivateKey.end());
-	/*CMessageCrypter crypter;
+	CMessageCrypter crypter;
 	if(!crypter.Decrypt(HexStr(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
-		return false;*/
+		return false;
 	
 	return true;
 }
