@@ -225,6 +225,7 @@ libsyscoin_server_a_SOURCES = \
   rpcrawtransaction.cpp \
   rpcserver.cpp \
   script/sigcache.cpp \
+  script/standard.cpp \  
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
@@ -302,7 +303,6 @@ libsyscoin_common_a_SOURCES = \
   script/script.cpp \
   script/script_error.cpp \
   script/sign.cpp \
-  script/standard.cpp \
   $(SYSCOIN_CORE_H)
 
 # util: shared between all executables.
