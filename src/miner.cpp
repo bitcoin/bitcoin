@@ -74,9 +74,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 void ValidateBlock(const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
 {
     CValidationState state;
-    if (!TestBlockValidity(state, chainparams, block, pindexPrev, fCheckPOW, fCheckMerkleRoot)) {
-        throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
-    }
+    assert(TestBlockValidity(state, chainparams, block, pindexPrev, fCheckPOW, fCheckMerkleRoot));
 }
 
 CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn)
