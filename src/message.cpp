@@ -691,7 +691,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 
     // gather inputs
-	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
     vector<unsigned char> vchMessage = vchFromValue(HexStr(vchRand));
 

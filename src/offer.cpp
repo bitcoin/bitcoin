@@ -1462,7 +1462,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 
 
 	// generate rand identifier
-	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 
@@ -1639,7 +1639,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 
 
 	// generate rand identifier
-	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 	int precision = 2;
@@ -2365,7 +2365,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyOrig;
 
 	// generate offer accept identifier and hash
-	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 	vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
 	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
 
