@@ -3003,6 +3003,35 @@ static bool CheckIndexAgainstCheckpoint(const CBlockIndex* pindexPrev, CValidati
     return true;
 }
 
+std::vector<unsigned char> GenerateCoinbaseCommitment(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
+{
+    std::vector<unsigned char> ret;
+    if (block.nVersion >= 5 && pindexPrev->nHeight + 1 >= consensusParams.SegWitHeight && IsSuperMajority(5, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)) {
+        ret.push_back(0xaa);
+        ret.push_back(0x21);
+        ret.push_back(0xa9);
+        ret.push_back(0xed);
+        ret.push_back(0x00);
+        ret.push_back(0x00);
+        ret.push_back(0x00);
+        ret.push_back(0x00);
+        ret.push_back(0x00);
+        uint256 witnessroot = BlockWitnessMerkleRoot(block, NULL);
+        ret.insert(ret.end(), witnessroot.begin(), witnessroot.end());
+    }
+    return ret;
+}
+
+CTxWitness GenerateCoinbaseWitness(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
+{
+    CTxWitness ret;
+    if (block.nVersion >= 5 && pindexPrev->nHeight + 1 >= consensusParams.SegWitHeight && IsSuperMajority(5, pindexPrev, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)) {
+        ret.vtxinwit.resize(1);
+        ret.vtxinwit[0].scriptWitness.stack.resize(1);
+    }
+    return ret;
+}
+
 static bool CheckCoinbaseCommitment(const CScript& script, const uint256& leaf, const std::vector<unsigned char> pathdata, const unsigned char typ[16])
 {
     CScript::const_iterator it = script.begin();

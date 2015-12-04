@@ -408,6 +408,10 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
 /** Check a block is completely valid from start to finish (only works on top of our current best block, with cs_main held) */
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true);
 
+/** Produce the necessary coinbase commitment for a block. */
+std::vector<unsigned char> GenerateCoinbaseCommitment(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
+CTxWitness GenerateCoinbaseWitness(const CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
+
 
 class CBlockFileInfo
 {
