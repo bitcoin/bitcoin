@@ -75,7 +75,7 @@ class PruneTest(BitcoinTestFramework):
         waitstart = time.time()
         while os.path.isfile(self.prunedir+"blk00000.dat"):
             time.sleep(0.1)
-            if time.time() - waitstart > 10:
+            if time.time() - waitstart > 30:
                 raise AssertionError("blk00000.dat not pruned when it should be")
 
         print("Success")
