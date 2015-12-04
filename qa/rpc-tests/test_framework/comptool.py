@@ -45,7 +45,6 @@ class TestNode(NodeConnCB):
 
     def __init__(self, block_store, tx_store):
         NodeConnCB.__init__(self)
-        self.create_callback_map()
         self.conn = None
         self.bestblockhash = None
         self.block_store = block_store
