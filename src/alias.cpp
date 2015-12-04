@@ -452,13 +452,15 @@ bool IsAliasMine(const CTransaction& tx) {
 }
 
 bool CheckAliasInputs(const CTransaction &tx,
-		CValidationState &state, const CCoinsViewCache &inputs, bool fJustCheck) {
+		CValidationState &state, const CCoinsViewCache &inputs, bool fBlock,
+		bool fMiner, bool fJustCheck, int nHeight) {
 
 	if (!tx.IsCoinBase()) {
 		if (fDebug)
-			printf("*** %d %s %s %s %s\n", 
+			printf("*** %d %d %s %s %s %s\n", nHeight,
 				chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
-				fJustCheck ? "JUSTCHECK" : "BLOCK");
+				fBlock ? "BLOCK" : "", fMiner ? "MINER" : "",
+				fJustCheck ? "JUSTCHECK" : "");
 
 		bool found = false;
 		const COutPoint *prevOutput = NULL;
@@ -526,16 +528,16 @@ bool CheckAliasInputs(const CTransaction &tx,
 				return error("aliasactivate tx with rand too big");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
 				return error("aliasactivate tx with value too long");
+			if (fBlock && !fJustCheck) {
 
-
-				// check for enough fees
-			nNetFee = GetAliasNetFee(tx);
-			if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE, theAlias.nHeight))
-				return error(
-						"CheckAliasInputs() : OP_ALIAS_ACTIVATE got tx %s with fee too low %lu",
-						tx.GetHash().GetHex().c_str(),
-						(long unsigned int) nNetFee);		
-			
+					// check for enough fees
+				nNetFee = GetAliasNetFee(tx);
+				if (nNetFee < GetAliasNetworkFee(OP_ALIAS_ACTIVATE, theAlias.nHeight))
+					return error(
+							"CheckAliasInputs() : OP_ALIAS_ACTIVATE got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);		
+			}
 			break;
 
 		case OP_ALIAS_UPDATE:
@@ -551,21 +553,21 @@ bool CheckAliasInputs(const CTransaction &tx,
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckAliasInputs() : aliasupdate alias mismatch");
 
-
-			// TODO CPU intensive
-			nDepth = CheckTransactionAtRelativeDepth( prevCoins,
-					GetAliasExpirationDepth());
-			if (nDepth < 0)
-				return error(
-						"CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
-			// verify enough fees with this txn
-			nNetFee = GetAliasNetFee(tx);
-			if (stringFromVch(vvchArgs[0]) != "SYS_RATES" && nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE, theAlias.nHeight))
-				return error(
-						"CheckAliasInputs() : OP_ALIAS_UPDATE got tx %s with fee too low %lu",
-						tx.GetHash().GetHex().c_str(),
-						(long unsigned int) nNetFee);
-		
+			if (fBlock && !fJustCheck) {
+				// TODO CPU intensive
+				nDepth = CheckTransactionAtRelativeDepth( prevCoins,
+						GetAliasExpirationDepth());
+				if ((fBlock || fMiner) && nDepth < 0)
+					return error(
+							"CheckAliasInputs() : aliasupdate on an expired alias, or there is a pending transaction on the alias");
+				// verify enough fees with this txn
+				nNetFee = GetAliasNetFee(tx);
+				if (stringFromVch(vvchArgs[0]) != "SYS_RATES" && nNetFee < GetAliasNetworkFee(OP_ALIAS_UPDATE, theAlias.nHeight))
+					return error(
+							"CheckAliasInputs() : OP_ALIAS_UPDATE got tx %s with fee too low %lu",
+							tx.GetHash().GetHex().c_str(),
+							(long unsigned int) nNetFee);
+			}
 
 			break;
 
@@ -574,44 +576,43 @@ bool CheckAliasInputs(const CTransaction &tx,
 					"CheckAliasInputs() : alias transaction has unknown op");
 		}
 
-		vector<CAliasIndex> vtxPos;
-		if(op != OP_ALIAS_ACTIVATE)
-		{
+		if (fBlock || (!fBlock && !fMiner && !fJustCheck)) {
+
 			// get the alias from the DB
-			
-			if (!paliasdb->ExistsAlias(vvchArgs[0]) || !paliasdb->ReadAlias(vvchArgs[0], vtxPos) || vtxPos.empty())
-				return error(
-						"CheckAliasInputs() : failed to read from alias DB");		
-		}
-		else
-		{
-			if(paliasdb->ExistsAlias(vvchArgs[0]))
-				return true;
-		}
-		if (!fJustCheck) {
-			
-			int nHeight = chainActive.Tip()->nHeight;
-
-			const vector<unsigned char> &vchVal = vvchArgs[
-				op == OP_ALIAS_ACTIVATE ? 2 : 1];
-			theAlias.nHeight = nHeight;
-			theAlias.vValue = vchVal;
-			theAlias.txHash = tx.GetHash();
-
-			PutToAliasList(vtxPos, theAlias);
-			{
-			TRY_LOCK(cs_main, cs_trymain);
-
-			if (!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
-				return error( "CheckAliasInputs() :  failed to write to alias DB");
-			
-			if(fDebug)
-				printf(
-					"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
-					stringFromVch(vvchArgs[0]).c_str(),
-					aliasFromOp(op).c_str(),
-					tx.GetHash().ToString().c_str(), nHeight);
+			vector<CAliasIndex> vtxPos;
+			if (paliasdb->ExistsAlias(vvchArgs[0]) && !fJustCheck) {
+				if (!paliasdb->ReadAlias(vvchArgs[0], vtxPos))
+					return error(
+							"CheckAliasInputs() : failed to read from alias DB");
 			}
+
+			if (!fMiner && !fJustCheck && chainActive.Tip()->nHeight != nHeight) {
+				
+				int nHeight = chainActive.Tip()->nHeight;
+	
+				const vector<unsigned char> &vchVal = vvchArgs[
+					op == OP_ALIAS_ACTIVATE ? 2 : 1];
+				theAlias.nHeight = nHeight;
+				theAlias.vValue = vchVal;
+				theAlias.txHash = tx.GetHash();
+
+				PutToAliasList(vtxPos, theAlias);
+
+				{
+				TRY_LOCK(cs_main, cs_trymain);
+
+				if (!paliasdb->WriteAlias(vvchArgs[0], vtxPos))
+					return error( "CheckAliasInputs() :  failed to write to alias DB");
+				
+				if(fDebug)
+					printf(
+						"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
+						stringFromVch(vvchArgs[0]).c_str(),
+						aliasFromOp(op).c_str(),
+						tx.GetHash().ToString().c_str(), nHeight);
+				}
+			}
+			
 		}
 	}
 	return true;
