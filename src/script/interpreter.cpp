@@ -1063,7 +1063,10 @@ public:
         ::Serialize(s, txTo.nLockTime, nType, nVersion);
         // SYSCOIN serialize data
 		if(!txTo.data.empty())
+		{
+			::WriteCompactSize(s, txTo.data.size());
 			::Serialize(s, txTo.data, nType, nVersion);
+		}
     }
 };
 
