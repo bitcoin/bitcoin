@@ -109,7 +109,7 @@ static const unsigned int MIN_ACTIVATE_DEPTH = 1;
 static const unsigned int MIN_ACTIVATE_DEPTH_TESTNET = 1;
 
 bool CheckAliasInputs(const CTransaction &tx, CValidationState &state,
-	const CCoinsViewCache &inputs, bool fBlock, bool fMiner, bool fJustCheck);
+	const CCoinsViewCache &inputs, bool fJustCheck);
 
 bool IsAliasMine(const CTransaction& tx);
 bool IsAliasOp(int op);
