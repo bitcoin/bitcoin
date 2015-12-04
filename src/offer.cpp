@@ -1462,7 +1462,8 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 
 
 	// generate rand identifier
-	vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
+	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 
 	EnsureWalletIsUnlocked();
@@ -1638,7 +1639,8 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 
 
 	// generate rand identifier
-	vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
+	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 	int precision = 2;
 	// get precision
@@ -2363,7 +2365,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CScript scriptPubKeyOrig;
 
 	// generate offer accept identifier and hash
-	vector<unsigned char> vchAcceptRand = vchFromString(GetRandHash().GetHex());
+	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
 	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
 
 	// get a key from our wallet set dest as ourselves

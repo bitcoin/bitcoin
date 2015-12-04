@@ -1017,7 +1017,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 						+ HelpRequiringPassphrase());
 
 	vector<unsigned char> vchName = vchFromValue(params[0]);
-	vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
+	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
 	vector<unsigned char> vchValue;
 
 	vchValue = vchFromValue(params[1]);

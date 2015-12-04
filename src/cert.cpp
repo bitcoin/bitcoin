@@ -771,7 +771,8 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 		bPrivate = false;
 	}
     // gather inputs
-    vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
+	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
     vector<unsigned char> vchCert = vchFromValue(HexStr(vchRand));
 
     // this is a syscoin transaction
