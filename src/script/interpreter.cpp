@@ -1064,8 +1064,7 @@ public:
         // SYSCOIN serialize data
 		if(!txTo.data.empty())
 		{
-			::WriteCompactSize(s, txTo.data.size());
-			s.write((char*)&txTo.data[0], txTo.data.size() * sizeof(txTo.data[0]));
+			READWRITE(*const_cast<std::vector<unsigned char>*>(&txTo.data));
 		}
     }
 };
