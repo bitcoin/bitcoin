@@ -520,10 +520,6 @@ bool CheckAliasInputs(const CTransaction &tx,
 		case OP_ALIAS_ACTIVATE:
 
 			// validate inputs
-			if (found)
-				return error(
-						"CheckAliasInputs() : aliasactivate tx pointing to previous syscoin tx");
-
 			if (vvchArgs[1].size() > MAX_ID_LENGTH)
 				return error("aliasactivate tx with rand too big");
 			if (vvchArgs[2].size() > MAX_VALUE_LENGTH)
