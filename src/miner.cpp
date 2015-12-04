@@ -71,11 +71,6 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     return nNewTime - nOldTime;
 }
 
-void ValidateBlock(const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
-{
-    CValidationState state;
-    assert(TestBlockValidity(state, chainparams, block, pindexPrev, fCheckPOW, fCheckMerkleRoot));
-}
 
 CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& scriptPubKeyIn)
 {
@@ -294,9 +289,6 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
-        // Execute TestBlockValidity in a detached thread so that it doesn't delay GBT
-        boost::thread validationThread(ValidateBlock, chainparams, *pblock, pindexPrev, false, false);
-        validationThread.detach();
     }
 
     return pblocktemplate.release();
