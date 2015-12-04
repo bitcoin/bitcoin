@@ -574,15 +574,14 @@ bool CheckAliasInputs(const CTransaction &tx,
 					"CheckAliasInputs() : alias transaction has unknown op");
 		}
 
-
+		vector<CAliasIndex> vtxPos;
 		if(op != OP_ALIAS_ACTIVATE)
 		{
 			// get the alias from the DB
-			vector<CAliasIndex> vtxPos;
+			
 			if (!paliasdb->ExistsAlias(vvchArgs[0]) || !paliasdb->ReadAlias(vvchArgs[0], vtxPos) || vtxPos.empty())
 				return error(
-						"CheckAliasInputs() : failed to read from alias DB");
-			
+						"CheckAliasInputs() : failed to read from alias DB");		
 		}
 		else
 		{
