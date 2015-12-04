@@ -1062,10 +1062,8 @@ public:
         // Serialize nLockTime
         ::Serialize(s, txTo.nLockTime, nType, nVersion);
         // SYSCOIN serialize data
-		if(!txTo.data.empty())
-		{
-			::Serialize(s, txTo.data, nType, nVersion);
-		}
+		::Serialize(s, txTo.data, nType, nVersion);
+		
     }
 };
 
