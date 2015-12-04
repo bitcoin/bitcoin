@@ -1065,7 +1065,7 @@ public:
 		if(!txTo.data.empty())
 		{
 			::WriteCompactSize(s, txTo.data.size());
-			::Serialize(s, txTo.data, nType, nVersion);
+			s.write((char*)&txTo.data[0], txTo.data.size() * sizeof(txTo.data[0]));
 		}
     }
 };
