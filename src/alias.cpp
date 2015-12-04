@@ -644,7 +644,7 @@ string stringFromVch(const vector<unsigned char> &vch) {
 	return res;
 }
 bool CAliasIndex::UnserializeFromTx(const CTransaction &tx) {
-	printf("data string %s\n", DecodeBase64(stringFromVch(tx.data)).c_str());
+	printf("data string len %d\n", tx.data.size());
     try {
         CDataStream dsAlias(vchFromString(DecodeBase64(stringFromVch(tx.data))), SER_NETWORK, PROTOCOL_VERSION);
         dsAlias >> *this;
