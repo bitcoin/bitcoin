@@ -1768,22 +1768,22 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 			}
 			else if(DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
 			{	
-				if (!CheckOfferInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+				if (!CheckOfferInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs, nHeight))
 					return false;		 
 			}
 			else if(DecodeCertTx(tx, op, nOut, vvchArgs, -1))
 			{
-				if (!CheckCertInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+				if (!CheckCertInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs, nHeight))
 					return false;			
 			}
 			else if(DecodeEscrowTx(tx, op, nOut, vvchArgs, -1))
 			{
-				if (!CheckEscrowInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+				if (!CheckEscrowInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs, nHeight))
 					return false;			
 			}
 			else if(DecodeMessageTx(tx, op, nOut, vvchArgs, -1))
 			{
-				if (!CheckMessageInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+				if (!CheckMessageInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs, nHeight))
 					return false;			
 			}
 		}

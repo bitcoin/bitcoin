@@ -427,13 +427,13 @@ CScript RemoveMessageScriptPrefix(const CScript& scriptIn) {
 
 bool CheckMessageInputs(const CTransaction &tx,
         CValidationState &state, const CCoinsViewCache &inputs, bool fBlock, bool fMiner,
-        bool fJustCheck) {
+        bool fJustCheck, int nHeight) {
 
     if (!tx.IsCoinBase()) {
-        printf("*** %d %s %s %s %s\n", 
-                chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
-                fBlock ? "BLOCK" : "", fMiner ? "MINER" : "",
-                fJustCheck ? "JUSTCHECK" : "");
+			printf("*** %d %d %s %s %s %s\n", nHeight,
+				chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
+				fBlock ? "BLOCK" : "", fMiner ? "MINER" : "",
+				fJustCheck ? "JUSTCHECK" : "");
 
         bool found = false;
         const COutPoint *prevOutput = NULL;
@@ -544,7 +544,7 @@ bool CheckMessageInputs(const CTransaction &tx,
 					return error(
 							"CheckMessageInputs() : failed to read from message DB");
 			}
-            if (!fMiner && !fJustCheck && chainActive.Tip()->nHeight != chainActive.Tip()->nHeight) {
+            if (!fMiner && !fJustCheck && chainActive.Tip()->nHeight != nHeight) {
                 int nHeight = chainActive.Tip()->nHeight;
                 // set the message's txn-dependent values
 				theMessage.txHash = tx.GetHash();
