@@ -215,8 +215,7 @@ public:
         READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
         READWRITE(*const_cast<uint32_t*>(&nLockTime));
 		// SYSCOIN serialize tx data
-		if(!data.empty())
-			READWRITE(*const_cast<std::vector<unsigned char>*>(&data));
+		READWRITE(*const_cast<std::vector<unsigned char>*>(&data));
 
         if (ser_action.ForRead())
             UpdateHash();
@@ -282,8 +281,7 @@ struct CMutableTransaction
         READWRITE(vout);
         READWRITE(nLockTime);
 		// SYSCOIN data
-		if(!data.empty())
-			READWRITE(data);	
+		READWRITE(data);	
     }
 
     /** Compute the hash of this CMutableTransaction. This is computed on the
