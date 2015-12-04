@@ -763,7 +763,6 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 			} /* TX */
 			pindex = chainActive.Next(pindex);
 		} /* BLOCK */
-		Flush();
 	} /* LOCK */
 	return true;
 }
