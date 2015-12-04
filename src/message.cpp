@@ -691,7 +691,8 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 
 
     // gather inputs
-    vector<unsigned char> vchRand = vchFromString(GetRandHash().GetHex());
+	int64 rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
     vector<unsigned char> vchMessage = vchFromValue(HexStr(vchRand));
 
     // this is a syscoin transaction
