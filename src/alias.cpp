@@ -1037,6 +1037,10 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 
 	EnsureWalletIsUnlocked();
 
+	// check for existing pending aliases
+	if (ExistsInMempool(vchName, OP_ALIAS_ACTIVATE)) {
+		throw runtime_error("there are pending operations on that alias");
+	}
 	
 
 	CPubKey newDefaultKey;
