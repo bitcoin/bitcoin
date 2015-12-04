@@ -12,7 +12,7 @@ class CValidationState;
 class CCoinsViewCache;
 class CCoins;
 
-bool CheckOfferInputs(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &inputs, bool fBlock, bool fMiner, bool fJustCheck);
+bool CheckOfferInputs(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &inputs, bool fBlock, bool fMiner, bool fJustCheck, int nHeight);
 
 bool IsOfferMine(const CTransaction& tx);
 

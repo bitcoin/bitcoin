@@ -469,13 +469,13 @@ CScript RemoveEscrowScriptPrefix(const CScript& scriptIn) {
 
 bool CheckEscrowInputs(const CTransaction &tx,
         CValidationState &state, const CCoinsViewCache &inputs, bool fBlock, bool fMiner,
-        bool fJustCheck) {
+        bool fJustCheck, int nHeight) {
 
     if (!tx.IsCoinBase()) {
-        printf("*** %d %s %s %s %s\n", 
-                chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
-                fBlock ? "BLOCK" : "", fMiner ? "MINER" : "",
-                fJustCheck ? "JUSTCHECK" : "");
+			printf("*** %d %d %s %s %s %s\n", nHeight,
+				chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
+				fBlock ? "BLOCK" : "", fMiner ? "MINER" : "",
+				fJustCheck ? "JUSTCHECK" : "");
 
         bool found = false;
         const COutPoint *prevOutput = NULL;
@@ -599,7 +599,7 @@ bool CheckEscrowInputs(const CTransaction &tx,
 					return error(
 							"CheckEscrowInputs() : failed to read from escrow DB");
 			}
-            if (!fMiner && !fJustCheck && chainActive.Tip()->nHeight != chainActive.Tip()->nHeight) {
+            if (!fMiner && !fJustCheck && chainActive.Tip()->nHeight != nHeight) {
                 int nHeight = chainActive.Tip()->nHeight;
 				// make sure escrow settings don't change (besides rawTx) outside of activation
 				if(op != OP_ESCROW_ACTIVATE) 

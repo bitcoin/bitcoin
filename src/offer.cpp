@@ -741,10 +741,10 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 
 bool CheckOfferInputs(const CTransaction &tx,
 		CValidationState &state, const CCoinsViewCache &inputs, bool fBlock, bool fMiner,
-		bool fJustCheck) {
+		bool fJustCheck, int nHeight) {
 	if (!tx.IsCoinBase()) {
 		if (fDebug)
-			printf("*** %d %s %s %s %s\n", 
+			printf("*** %d %d %s %s %s %s\n", nHeight,
 				chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
 				fBlock ? "BLOCK" : "", fMiner ? "MINER" : "",
 				fJustCheck ? "JUSTCHECK" : "");
@@ -980,7 +980,7 @@ bool CheckOfferInputs(const CTransaction &tx,
 							"CheckOfferInputs() : failed to read from offer DB");
 			}
 
-			if (!fMiner && !fJustCheck) {
+			if (!fMiner && !fJustCheck && chainActive.Tip()->nHeight != nHeight) {
 				int nHeight = chainActive.Tip()->nHeight;
 				// get the latest offer from the db
             	theOffer.nHeight = nHeight;
