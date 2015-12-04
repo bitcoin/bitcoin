@@ -9,6 +9,7 @@
 #include "key.h"
 #include "pubkey.h"
 #include "txdb.h"
+#include "txmempool.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
@@ -71,7 +72,8 @@ struct TestMemPoolEntryHelper
     bool hadNoDependencies;
     bool spendsCoinbase;
     unsigned int sigOpCount;
-    
+    LockPoints lp;
+
     TestMemPoolEntryHelper() :
         nFee(0), nTime(0), dPriority(0.0), nHeight(1),
         hadNoDependencies(false), spendsCoinbase(false), sigOpCount(1) { }
