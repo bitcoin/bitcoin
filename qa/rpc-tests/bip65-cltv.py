@@ -14,6 +14,13 @@ import shutil
 
 class BIP65Test(BitcoinTestFramework):
 
+    def __init__(self):
+        self.num_nodes = 3
+
+    def setup_chain(self):
+        print "Initializing test directory "+self.options.tmpdir
+        initialize_chain_clean(self.options.tmpdir, self.num_nodes)
+
     def setup_network(self):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, []))
