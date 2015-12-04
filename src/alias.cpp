@@ -68,21 +68,25 @@ bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
              mi != mempool.mapTx.end(); ++mi)
         {
         const CTransaction& tx = mi->GetTx();	
-   
+		printf("mempool tx checking %s\n", tx.GetHash().GetHex().c_str());
 		if (tx.IsCoinBase() || !CheckFinalTx(tx))
 			continue;
 		if(IsAliasOp(type))
 		{
+			printf("isalias %s\n", tx.GetHash().GetHex().c_str());
 			vector<vector<unsigned char> > vvch;
 			int op, nOut;
 			
 			if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
+				printf("get type %s\n", tx.GetHash().GetHex().c_str());
 				if(op == type)
 				{
+					printf("found aliasnew %s\n", tx.GetHash().GetHex().c_str());
 					string vchToFindStr = stringFromVch(vchToFind);
 					string vvchFirstStr = stringFromVch(vvch[0]);
 					if(vvchFirstStr == vchToFindStr)
 					{
+						printf("vch matches %s\n", tx.GetHash().GetHex().c_str());
 						if (GetTxHashHeight(tx.GetHash()) <= 0) 
 							return true;
 					}
