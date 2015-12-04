@@ -448,8 +448,6 @@ bool IsAliasMine(const CTransaction& tx) {
 
 	const CTxOut& txout = tx.vout[nOut];
 	if (pwalletMain->IsMine(txout)) {
-		if(fDebug)
-			printf("IsAliasMine()  : found my transaction value\n");
 		return true;
 	}
 
@@ -543,9 +541,10 @@ bool CheckAliasInputs(const CTransaction &tx,
 
 		case OP_ALIAS_UPDATE:
 
-			if (!found
-					|| (prevOp != OP_ALIAS_ACTIVATE && prevOp != OP_ALIAS_UPDATE))
-				return error("aliasupdate tx without previous update tx");
+			if (!found)
+				return error("aliasupdate previous tx not found");
+			if (prevOp != OP_ALIAS_ACTIVATE && prevOp != OP_ALIAS_UPDATE)
+				return error("aliasupdate tx without correct previous alias tx");
 
 			if (vvchArgs[1].size() > MAX_VALUE_LENGTH)
 				return error("aliasupdate tx with value too long");

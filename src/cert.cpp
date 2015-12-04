@@ -340,8 +340,6 @@ bool IsCertMine(const CTransaction& tx) {
 
     const CTxOut& txout = tx.vout[nOut];
     if (pwalletMain->IsMine(txout)) {
-		if(fDebug)
-			printf("IsCertMine() : found my transaction value\n");
         return true;
     }
     return false;

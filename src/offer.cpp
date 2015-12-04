@@ -572,8 +572,6 @@ bool IsOfferMine(const CTransaction& tx) {
 
 	const CTxOut& txout = tx.vout[nOut];
 	if (pwalletMain->IsMine(txout)) {
-		if(fDebug)
-			printf("IsOfferMine() : found my transaction\n");
 		return true;
 	}
 	return false;
