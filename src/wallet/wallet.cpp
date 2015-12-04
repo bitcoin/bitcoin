@@ -1866,7 +1866,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 		if (nTxOut < 0)
 			nTxOut = IndexOfMessageOutput(txIn);
 		if (nTxOut < 0)
-			nTxOut = 0;
+		{
+			strFailReason = _("Can't determine type of input into syscoin service transaction");
+            return false;
+		}
 	}
     unsigned int nSubtractFeeFromAmount = 0;
     BOOST_FOREACH (const CRecipient& recipient, vecSend)
