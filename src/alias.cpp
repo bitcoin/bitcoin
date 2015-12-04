@@ -483,6 +483,7 @@ bool CheckAliasInputs(const CTransaction &tx,
 			if (found)
 				return error(
 						"CheckAliasInputs() : a non-syscoin transaction with a syscoin input");
+			printf("CheckAliasInputs() : non-syscoin transaction\n");
 			return true;
 		}
 
