@@ -1762,7 +1762,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 		{
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
 			{
-				if (!CheckAliasInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
+				if (!CheckAliasInputs(tx, state, inputs, bCheckInputs))
 					return false;
 				
 			}
@@ -1807,7 +1807,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
     if (!tx.IsCoinBase())
     {
 		// SYSCOIN pass in 3 params to CheckTxInputs
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), bCheckInputs, fBlock, fMiner))
+        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), fScriptChecks, fBlock, fMiner))
             return false;
 
         if (pvChecks)
@@ -2483,7 +2483,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
 			// SYSCOIN pass in 3 params for syscoin check inputs
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, false, fJustCheck, false))
+            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, false, false, false))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
