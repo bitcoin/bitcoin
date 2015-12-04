@@ -15,6 +15,7 @@
 
 BOOST_AUTO_TEST_SUITE(scheduler_tests)
 
+#if 0 /* Disabled for now because there is a race condition issue in this test - see #6540 */
 static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delta, boost::chrono::system_clock::time_point rescheduleTime)
 {
     {
@@ -40,7 +41,6 @@ static void MicroSleep(uint64_t n)
 #endif
 }
 
-#if 0 /* Disabled for now because there is a race condition issue in this test - see #6540 */
 BOOST_AUTO_TEST_CASE(manythreads)
 {
     seed_insecure_rand(false);
