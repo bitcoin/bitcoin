@@ -1994,7 +1994,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 					setCoins.begin(), setCoins.end());
 				// Input tx always at first position
 				if(wtxIn != NULL)
-					vecCoins.insert(vecCoins.begin(), make_pair(&wtxIn, nTxOut));
+					vecCoins.insert(vecCoins.begin(), make_pair(wtxIn, nTxOut));
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, vecCoins)
                 {
                     CAmount nCredit = pcoin.first->vout[pcoin.second].nValue;
