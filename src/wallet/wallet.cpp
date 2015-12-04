@@ -2096,8 +2096,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, vecCoins)
                 {
                     bool signSuccess;
-					// SYSCOIN set this var based on the logic below
-                    const CScript& scriptPubKey;
+					// SYSCOIN assign this var based on logic below
+                    const CScript& scriptPubKeyIn = coin.first->vout[coin.second].scriptPubKey;
+					CScript &scriptPubKey = scriptPubKeyIn;
                     CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
                     if (sign)
 					{
@@ -2106,24 +2107,20 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 							vector<vector<unsigned char> > vvch;
 							int op;
 							if (DecodeAliasScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveAliasScriptPrefix(scriptPubKey);
+								scriptPubKey = RemoveAliasScriptPrefix(scriptPubKeyIn);
 							else if (DecodeOfferScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveOfferScriptPrefix(scriptPubKey);
+								scriptPubKey = RemoveOfferScriptPrefix(scriptPubKeyIn);
 							else if (DecodeCertScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveCertScriptPrefix(scriptPubKey);
+								scriptPubKey = RemoveCertScriptPrefix(scriptPubKeyIn);
 							else if (DecodeEscrowScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveEscrowScriptPrefix(scriptPubKey);
+								scriptPubKey = RemoveEscrowScriptPrefix(scriptPubKeyIn);
 							else if (DecodeMessageScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveMessageScriptPrefix(scriptPubKey);
+								scriptPubKey = RemoveMessageScriptPrefix(scriptPubKeyIn);
 							else
 							{
-								strFailReason = _("Can't determine type of input into syscoin service transaction prior to signing");
+								strFailReason = _("Can't determine type of input into syscoin service transaction");
 								return false;
 							}
-						}
-						else
-						{
-							scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
 						}
                         signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
 					}
