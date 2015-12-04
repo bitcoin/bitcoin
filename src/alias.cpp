@@ -588,7 +588,7 @@ bool CheckAliasInputs(const CTransaction &tx,
 			if(paliasdb->ExistsAlias(vvchArgs[0]))
 				return true;
 		}
-		if (!fJustCheck && chainActive.Tip()->nHeight != chainActive.Tip()->nHeight) {
+		if (!fJustCheck) {
 			
 			int nHeight = chainActive.Tip()->nHeight;
 
