@@ -320,7 +320,7 @@ unsigned int GetP2SHSigOpCount(const CTransaction& tx, const CCoinsViewCache& ma
  */
 // SYSCOIN checkinputs add's 3 bools for syscoin check input functions
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &view, bool fScriptChecks,
-                 unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL, bool fJustCheck = true);
+                 unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks = NULL, bool bCheckInputs = true, bool fBlock = false, bool fMiner = false, int nHeight = 0);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CValidationState &state, CCoinsViewCache &inputs, int nHeight);

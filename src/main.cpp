@@ -1725,7 +1725,7 @@ int GetSpendHeight(const CCoinsViewCache& inputs)
 
 namespace Consensus {
 // SYSCOIN 3 params added for syscoin check inputs
-bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, bool fJustCheck)
+bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& inputs, int nSpendHeight, bool bCheckInputs, bool fBlock, bool fMiner, int nHeight)
 {
         // This doesn't trigger the DoS code on purpose; if it did, it would make it easier
         // for an attacker to attempt to split the network.
@@ -1762,11 +1762,11 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 		{
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs, -1))
 			{
-				if (!CheckAliasInputs(tx, state, inputs, fJustCheck))
+				if (!CheckAliasInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs, nHeight))
 					return false;
 				
 			}
-			/*else if(DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
+			else if(DecodeOfferTx(tx, op, nOut, vvchArgs, -1))
 			{	
 				if (!CheckOfferInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
 					return false;		 
@@ -1785,7 +1785,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 			{
 				if (!CheckMessageInputs(tx, state, inputs, fBlock, fMiner, bCheckInputs))
 					return false;			
-			}*/
+			}
 		}
         if (nValueIn < tx.GetValueOut())
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
@@ -1802,12 +1802,12 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 }
 }// namespace Consensus
 // SYSCOIN checkinputs add's 3 bools for syscoin check input functions
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks, bool fJustCheck)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, std::vector<CScriptCheck> *pvChecks, bool bCheckInputs, bool fBlock, bool fMiner, int nHeight)
 {
     if (!tx.IsCoinBase())
     {
 		// SYSCOIN pass in 3 params to CheckTxInputs
-        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), fJustCheck))
+        if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs), bCheckInputs, fBlock, fMiner, nHeight))
             return false;
 
         if (pvChecks)
@@ -2483,7 +2483,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
 			// SYSCOIN pass in 3 params for syscoin check inputs
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, false))
+            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL, fJustCheck, true, false, pindex->nHeight))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
