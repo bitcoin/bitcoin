@@ -324,8 +324,6 @@ bool IsEscrowMine(const CTransaction& tx) {
 
     const CTxOut& txout = tx.vout[nOut];
    	if (pwalletMain->IsMine(txout)) {
-		if(fDebug)
-			printf("IsEscrowMine() : found my transaction value\n");
         return true;
     }
     return false;

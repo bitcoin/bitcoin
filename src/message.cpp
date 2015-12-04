@@ -284,9 +284,7 @@ bool IsMessageMine(const CTransaction& tx) {
         return false;
 
     const CTxOut& txout = tx.vout[nOut];
-    if (pwalletMain->IsMine(txout)) {
-		if(fDebug)
-			printf("IsMessageMine() : found my transaction value\n");       
+    if (pwalletMain->IsMine(txout)) {     
         return true;
     }
     return false;
