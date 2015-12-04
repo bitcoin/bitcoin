@@ -64,6 +64,7 @@ unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind
 }
 bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 {
+	printf("mempool size %d\n", mempool.mapTx.size());
 	for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
              mi != mempool.mapTx.end(); ++mi)
         {
