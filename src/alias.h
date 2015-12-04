@@ -78,7 +78,7 @@ public:
             unsigned int nMax,
             std::vector<std::pair<std::vector<unsigned char>, CAliasIndex> >& nameScan);
 
-    bool ReconstructNameIndex(CBlockIndex *pindexRescan);
+    bool ReconstructAliasIndex(CBlockIndex *pindexRescan);
 };
 
 class COfferDB;

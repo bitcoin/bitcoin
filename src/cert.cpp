@@ -249,7 +249,6 @@ bool CCertDB::ReconstructCertIndex(CBlockIndex *pindexRescan) {
         pindex = chainActive.Next(pindex);
         
     }
-	Flush();
     }
     return true;
 }
