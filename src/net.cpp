@@ -1203,8 +1203,9 @@ void ThreadSocketHandler()
                 {
                     {
                         // typical socket buffer is 8K-64K
-                        char pchBuf[0x10000];
-                        int nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+                        const size_t bufferSize = 0x10000;
+                        char pchBuf[bufferSize];
+                        int nBytes = recv(pnode->hSocket, pchBuf, bufferSize, MSG_DONTWAIT);
                         if (nBytes > 0)
                         {
                             if (!pnode->ReceiveMsgBytes(pchBuf, nBytes))
