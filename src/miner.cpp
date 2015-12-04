@@ -71,8 +71,9 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     return nNewTime - nOldTime;
 }
 
-void ValidateBlock(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
+void ValidateBlock(const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
 {
+    CValidationState state;
     if (!TestBlockValidity(state, chainparams, block, pindexPrev, fCheckPOW, fCheckMerkleRoot)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
     }
@@ -295,9 +296,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         pblock->nNonce         = 0;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
-        CValidationState state;
         // Execute TestBlockValidity in a detached thread so that it doesn't delay GBT
-        boost::thread validationThread(ValidateBlock, state, chainparams, *pblock, pindexPrev, false, false);
+        boost::thread validationThread(ValidateBlock, chainparams, *pblock, pindexPrev, false, false);
         validationThread.detach();
     }
 
