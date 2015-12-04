@@ -1064,9 +1064,7 @@ public:
         // SYSCOIN serialize data
 		if(!txTo.data.empty())
 		{
-			::WriteCompactSize(s, txTo.data.size());
-			for (unsigned int nData = 0; nData < txTo.data.size(); nData++)
-				::Serialize(s, txTo.data[nData], nType, nVersion);
+			//::Serialize(s, txTo.data, nType, nVersion);
 		}
     }
 };
