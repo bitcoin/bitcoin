@@ -41,6 +41,7 @@ class CValidationInterface;
 class CValidationState;
 
 struct CNodeStateStats;
+struct LockPoints;
 
 /** Default for accepting alerts from the P2P network. */
 static const bool DEFAULT_ALERTS = true;
@@ -399,6 +400,10 @@ public:
     }
 };
 
+/**
+ * Test whether the LockPoints height and time are still valid on the current chain
+ */
+bool TestLockPointValidity(const LockPoints* lp);
 
 /**
  * Check if transaction is final per BIP 68 sequence numbers and can be included in a block.
@@ -410,10 +415,14 @@ bool SequenceLocks(const CTransaction &tx, int flags, std::vector<int>* prevHeig
  * Check if transaction will be BIP 68 final in the next block to be created.
  *
  * Simulates calling SequenceLocks() with data from the tip of the current active chain.
+ * Optionally stores in LockPoints the resulting height and time calculated and the hash
+ * of the block needed for calculation or skips the calculation and uses the LockPoints
+ * passed in for evaluation.
+ * The LockPoints should not be considered valid if CheckSequenceLocks returns false.
  *
  * See consensus/consensus.h for flag definitions.
  */
-bool CheckSequenceLocks(const CTransaction &tx, int flags);
+bool CheckSequenceLocks(const CTransaction &tx, int flags, LockPoints* lp = NULL, bool useExistingLockPoints = false);
 
 /**
  * Closure representing one script verification
