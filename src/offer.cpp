@@ -479,7 +479,6 @@ bool COfferDB::ReconstructOfferIndex(CBlockIndex *pindexRescan) {
         }
         pindex = chainActive.Next(pindex);
     }
-	Flush();
     }
     return true;
 }

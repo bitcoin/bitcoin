@@ -698,10 +698,10 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName,
 
 void rescanforaliases(CBlockIndex *pindexRescan) {
 	printf("Scanning blockchain for names to create fast index...\n");
-	paliasdb->ReconstructNameIndex(pindexRescan);
+	paliasdb->ReconstructAliasIndex(pindexRescan);
 }
 
-bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
+bool CAliasDB::ReconstructAliasIndex(CBlockIndex *pindexRescan) {
 	CBlockIndex* pindex = pindexRescan;
 	if(!HasReachedMainNetForkB2())
 		return true;
@@ -738,7 +738,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 				if (ExistsAlias(vchName)) {
 					if (!ReadAlias(vchName, vtxPos))
 						return error(
-								"ReconstructNameIndex() : failed to read from alias DB");
+								"ReconstructAliasIndex() : failed to read from alias DB");
 				}
 
 				// rebuild the alias UniValue, store to DB
@@ -751,7 +751,7 @@ bool CAliasDB::ReconstructNameIndex(CBlockIndex *pindexRescan) {
 
 				if (!WriteAlias(vchName, vtxPos))
 					return error(
-							"ReconstructNameIndex() : failed to write to alias DB");
+							"ReconstructAliasIndex() : failed to write to alias DB");
 
 			
 				printf(
