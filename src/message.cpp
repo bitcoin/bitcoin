@@ -200,7 +200,6 @@ bool CMessageDB::ReconstructMessageIndex(CBlockIndex *pindexRescan) {
         pindex = chainActive.Next(pindex);
         
     }
-	Flush();
     }
     return true;
 }
