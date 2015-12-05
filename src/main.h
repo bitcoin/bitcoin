@@ -45,8 +45,8 @@ static const bool DEFAULT_ALERTS = true;
 /** Default for DEFAULT_WHITELISTALWAYSRELAY. */
 static const bool DEFAULT_WHITELISTALWAYSRELAY = true;
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
-// SYSCOIN min relay fee of 0.01 COINS
-static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000000;
+// SYSCOIN min relay fee
+static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = (5 * CENT);
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
