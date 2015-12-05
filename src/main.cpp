@@ -969,27 +969,42 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         *pfMissingInputs = false;
 
     if (!CheckTransaction(tx, state))
+	{
+		printf("CheckTransaction failed\n");
         return false;
+	}
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
+	{
+		printf("tx.IsCoinBase\n");
         return state.DoS(100, false, REJECT_INVALID, "coinbase");
+	}
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     string reason;
     if (fRequireStandard && !IsStandardTx(tx, reason))
+	{
+		printf("IsStandardTx\n");
         return state.DoS(0, false, REJECT_NONSTANDARD, reason);
+	}
 
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
     if (!CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
+	{
+		printf("CheckFinalTx\n");
         return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
+	}
 
     // is it already in the memory pool?
     uint256 hash = tx.GetHash();
     if (pool.exists(hash))
+	{
+		printf("xn-already-in-mempool\n");
         return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
+	}
 
     // Check for conflicts with in-memory transactions
     set<uint256> setConflicts;
@@ -1024,7 +1039,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                     }
                 }
                 if (fReplacementOptOut)
+				{
+					printf("txn-mempool-conflict\n");
                     return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+				}
 
                 setConflicts.insert(ptxConflicting->GetHash());
             }
@@ -1047,6 +1065,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         if (view.HaveCoins(hash)) {
             if (!fHadTxInCache)
                 vHashTxnToUncache.push_back(hash);
+			printf("txn-already-known\n");
             return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
         }
 
@@ -1059,13 +1078,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             if (!view.HaveCoins(txin.prevout.hash)) {
                 if (pfMissingInputs)
                     *pfMissingInputs = true;
+				printf("pfMissingInputs\n");
                 return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
             }
         }
 
         // are the actual inputs available?
         if (!view.HaveInputs(tx))
+		{
+			printf("bad-txns-inputs-spent\n");
             return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
+		}
 
         // Bring the best block into scope
         view.GetBestBlock();
@@ -1078,7 +1101,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // Check for non-standard pay-to-script-hash in inputs
         if (fRequireStandard && !AreInputsStandard(tx, view))
+		{
+			printf("bad-txns-nonstandard-inputs\n");
             return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
+		}
 
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction
@@ -1088,8 +1114,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         unsigned int nSigOps = GetLegacySigOpCount(tx);
         nSigOps += GetP2SHSigOpCount(tx, view);
         if (nSigOps > MAX_STANDARD_TX_SIGOPS)
+		{
+			printf("bad-txns-too-many-sigops\n");
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d > %d", nSigOps, MAX_STANDARD_TX_SIGOPS));
+		}
 
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
