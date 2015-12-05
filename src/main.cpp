@@ -1142,13 +1142,18 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // Don't accept it if it can't get into a block
         CAmount txMinFee = GetMinRelayFee(tx, pool, nSize, true);
         if (fLimitFree && nFees < txMinFee)
+		{
+			printf("insufficient fee\n");
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient fee", false,
                 strprintf("%d < %d", nFees, txMinFee));
+		}
 
         CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
         if (mempoolRejectFee > 0 && nFees < mempoolRejectFee) {
+			printf("mempool min fee not met\n");
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool min fee not met", false, strprintf("%d < %d", nFees, mempoolRejectFee));
         } else if (GetBoolArg("-relaypriority", DEFAULT_RELAYPRIORITY) && nFees < ::minRelayTxFee.GetFee(nSize) && !AllowFree(entry.GetPriority(chainActive.Height() + 1))) {
+			printf("insufficient priority\n");
             // Require that free transactions have sufficient priority to be mined in the next block.
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
@@ -1177,9 +1182,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         }
 
         if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
+		{
+			printf("absurdly-high-fee\n");
             return state.Invalid(false,
                 REJECT_HIGHFEE, "absurdly-high-fee",
                 strprintf("%d > %d", nFees, ::minRelayTxFee.GetFee(nSize) * 10000));
+		}
 
         // Calculate in-mempool ancestors, up to a limit.
         CTxMemPool::setEntries setAncestors;
@@ -1201,6 +1209,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             const uint256 &hashAncestor = ancestorIt->GetTx().GetHash();
             if (setConflicts.count(hashAncestor))
             {
+				printf("spends conflicting transaction\n");
                 return state.DoS(10, error("AcceptToMemoryPool: %s spends conflicting transaction %s",
                                            hash.ToString(),
                                            hashAncestor.ToString()),
@@ -1241,6 +1250,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                 // that we don't spend too much time walking descendants.
                 // This should be rare.
                 if (mi->IsDirty()) {
+					printf("with untracked descendants\n");
                     return state.DoS(0,
                             error("AcceptToMemoryPool: rejecting replacement %s; cannot replace tx %s with untracked descendants",
                                 hash.ToString(),
@@ -1267,6 +1277,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                 CFeeRate oldFeeRate(mi->GetFee(), mi->GetTxSize());
                 if (newFeeRate <= oldFeeRate)
                 {
+					printf("rejecting replacement\n");
                     return state.DoS(0,
                             error("AcceptToMemoryPool: rejecting replacement %s; new feerate %s <= old feerate %s",
                                   hash.ToString(),
@@ -1296,6 +1307,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                     nConflictingSize += it->GetTxSize();
                 }
             } else {
+				printf("too many potential replacements\n");
                 return state.DoS(0,
                         error("AcceptToMemoryPool: rejecting replacement %s; too many potential replacements (%d > %d)\n",
                             hash.ToString(),
@@ -1349,7 +1361,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
+		{
+			printf("ConnectInputs failed against STANDARD_SCRIPT_VERIFY_FLAGS\n");
             return false;
+		}
 
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
@@ -1362,6 +1377,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // can be exploited as a DoS attack.
         if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
         {
+			printf("ConnectInputs failed against MANDATORY\n");
             return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
         }
