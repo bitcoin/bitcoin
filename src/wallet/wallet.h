@@ -41,7 +41,7 @@ static const unsigned int DEFAULT_KEYPOOL_SIZE = 100;
 static const CAmount DEFAULT_TRANSACTION_FEE = 0;
 // SYSCOIN change min fee variables
 //! -paytxfee will warn if called with a higher fee than this amount (in satoshis) per KB
-static const CAmount nHighTransactionFeeWarning = 5 * COIN;
+static const CAmount nHighTransactionFeeWarning = 50 * COIN;
 //! -mintxfee default
 static const CAmount DEFAULT_TRANSACTION_MINFEE = (5 * CENT);
 //! -maxtxfee default
