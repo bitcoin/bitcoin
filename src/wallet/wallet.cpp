@@ -1980,11 +1980,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     txNew.vout.push_back(txout);
                 }
 				// SYSCOIN input credit from input tx
-				int64 nWtxinCredit = wtxIn.vout[nTxOut].nValue;
+				int64 nWtxinCredit = 0;
+				if(wtxIn != NULL)
+					nWtxinCredit = wtxIn.vout[nTxOut].nValue;
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
-                if (!SelectCoins(nValueToSelect, setCoins, nValueIn, coinControl))
+				// SYSCOIN add input credit to current coin selection
+                if ((nValueToSelect-nWtxinCredit) > 0 && !SelectCoins(nValueToSelect-nWtxinCredit, setCoins, nValueIn, coinControl))
                 {
                     strFailReason = _("Insufficient funds");
                     return false;
