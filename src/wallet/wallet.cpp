@@ -2100,13 +2100,18 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
                     if (sign)
 					{
+						printf("signing\n");
 						// SYSCOIN remove syscoin service script's from script pubkey before signing, if input tx is given
 						if (coin.first == wtxIn && coin.second == (unsigned int) nTxOut) {
+							printf("first sign\n");
 							vector<vector<unsigned char> > vvch;
 							CScript scriptSysPubKey;
 							int op;
 							if (DecodeAliasScript(scriptPubKey, op, vvch))
+							{
 								scriptSysPubKey = RemoveAliasScriptPrefix(scriptPubKey);
+								printf("RemoveAliasScriptPrefix\n");
+							}
 							else if (DecodeOfferScript(scriptPubKey, op, vvch))
 								scriptSysPubKey = RemoveOfferScriptPrefix(scriptPubKey);
 							else if (DecodeCertScript(scriptPubKey, op, vvch))
@@ -2122,6 +2127,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 							}
 							const CScript& scriptPubKeyIn = scriptSysPubKey;
 							signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKeyIn, scriptSigRes);
+							printf("signed sig %s result %d\n", signSuccess? 1: 0, scriptPubKeyIn.ToString().c_str());
 						}
 						else
 							signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
