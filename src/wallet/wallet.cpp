@@ -1982,7 +1982,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				// SYSCOIN input credit from input tx
 				int64_t nWtxinCredit = 0;
 				if(wtxIn != NULL)
-					nWtxinCredit = wtxIn.vout[nTxOut].nValue;
+					nWtxinCredit = wtxIn->vout[nTxOut].nValue;
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
