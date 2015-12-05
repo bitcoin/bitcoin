@@ -2096,9 +2096,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, vecCoins)
                 {
                     bool signSuccess;
-					// SYSCOIN assign this var based on logic below
-                    const CScript& scriptPubKeyIn = coin.first->vout[coin.second].scriptPubKey;
-					CScript &scriptPubKey = scriptPubKeyIn;
+                    CScript& scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
                     CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
                     if (sign)
 					{
@@ -2107,15 +2105,15 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 							vector<vector<unsigned char> > vvch;
 							int op;
 							if (DecodeAliasScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveAliasScriptPrefix(scriptPubKeyIn);
+								scriptPubKey = RemoveAliasScriptPrefix(scriptPubKey);
 							else if (DecodeOfferScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveOfferScriptPrefix(scriptPubKeyIn);
+								scriptPubKey = RemoveOfferScriptPrefix(scriptPubKey);
 							else if (DecodeCertScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveCertScriptPrefix(scriptPubKeyIn);
+								scriptPubKey = RemoveCertScriptPrefix(scriptPubKey);
 							else if (DecodeEscrowScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveEscrowScriptPrefix(scriptPubKeyIn);
+								scriptPubKey = RemoveEscrowScriptPrefix(scriptPubKey);
 							else if (DecodeMessageScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveMessageScriptPrefix(scriptPubKeyIn);
+								scriptPubKey = RemoveMessageScriptPrefix(scriptPubKey);
 							else
 							{
 								strFailReason = _("Can't determine type of input into syscoin service transaction");
