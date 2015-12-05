@@ -2089,29 +2089,25 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, vecCoins)
                     txNew.vin.push_back(CTxIn(coin.first->GetHash(),coin.second,CScript(),
                                               std::numeric_limits<unsigned int>::max()-1));
-printf("entering sign\n");
                 // Sign
                 int nIn = 0;
                 CTransaction txNewConst(txNew);
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, vecCoins)
                 {
-					printf("veccoins\n");
                     bool signSuccess;
                     const CScript& scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
                     CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
                     if (sign)
 					{
-						printf("signing\n");
 						// SYSCOIN remove syscoin service script's from script pubkey before signing, if input tx is given
-						if (coin.first == wtxIn && coin.second == (unsigned int) nTxOut) {
-							printf("first sign\n");
+						/*if (coin.first == wtxIn && coin.second == (unsigned int) nTxOut) {
 							vector<vector<unsigned char> > vvch;
 							CScript scriptSysPubKey;
 							int op;
 							if (DecodeAliasScript(scriptPubKey, op, vvch))
 							{
 								scriptSysPubKey = RemoveAliasScriptPrefix(scriptPubKey);
-								printf("RemoveAliasScriptPrefix\n");
+
 							}
 							else if (DecodeOfferScript(scriptPubKey, op, vvch))
 								scriptSysPubKey = RemoveOfferScriptPrefix(scriptPubKey);
@@ -2130,8 +2126,9 @@ printf("entering sign\n");
 							signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKeyIn, scriptSigRes);
 							printf("signed result %d\n", signSuccess? 1: 0);
 						}
-						else
+						else*/
 							signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
+							printf("signed result %d\n", signSuccess? 1: 0);
 					}
                     else
                         signSuccess = ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);
