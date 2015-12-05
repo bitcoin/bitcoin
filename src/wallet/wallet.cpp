@@ -2096,31 +2096,35 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 BOOST_FOREACH(const PAIRTYPE(const CWalletTx*,unsigned int)& coin, vecCoins)
                 {
                     bool signSuccess;
-                    CScript& scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
+                    const CScript& scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
                     CScript& scriptSigRes = txNew.vin[nIn].scriptSig;
                     if (sign)
 					{
 						// SYSCOIN remove syscoin service script's from script pubkey before signing, if input tx is given
 						if (coin.first == wtxIn && coin.second == (unsigned int) nTxOut) {
 							vector<vector<unsigned char> > vvch;
+							CScript scriptSysPubKey;
 							int op;
 							if (DecodeAliasScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveAliasScriptPrefix(scriptPubKey);
+								scriptSysPubKey = RemoveAliasScriptPrefix(scriptPubKey);
 							else if (DecodeOfferScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveOfferScriptPrefix(scriptPubKey);
+								scriptSysPubKey = RemoveOfferScriptPrefix(scriptPubKey);
 							else if (DecodeCertScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveCertScriptPrefix(scriptPubKey);
+								scriptSysPubKey = RemoveCertScriptPrefix(scriptPubKey);
 							else if (DecodeEscrowScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveEscrowScriptPrefix(scriptPubKey);
+								scriptSysPubKey = RemoveEscrowScriptPrefix(scriptPubKey);
 							else if (DecodeMessageScript(scriptPubKey, op, vvch))
-								scriptPubKey = RemoveMessageScriptPrefix(scriptPubKey);
+								scriptSysPubKey = RemoveMessageScriptPrefix(scriptPubKey);
 							else
 							{
 								strFailReason = _("Can't determine type of input into syscoin service transaction");
 								return false;
 							}
+							const CScript& scriptPubKeyIn = scriptSysPubKey;
+							signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKeyIn, scriptSigRes);
 						}
-                        signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
+						else
+							signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
 					}
                     else
                         signSuccess = ProduceSignature(DummySignatureCreator(this), scriptPubKey, scriptSigRes);
