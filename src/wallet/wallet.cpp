@@ -1979,7 +1979,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     }
                     txNew.vout.push_back(txout);
                 }
-
+				// SYSCOIN input credit from input tx
+				int64 nWtxinCredit = wtxIn.vout[nTxOut].nValue;
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
@@ -2008,7 +2009,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         age += 1;
                     dPriority += (double)nCredit * age;
                 }
-
+				// SYSCOIN add input amount to total value in
+				nValueIn += nWtxinCredit;
                 const CAmount nChange = nValueIn - nValueToSelect;
                 if (nChange > 0)
                 {
