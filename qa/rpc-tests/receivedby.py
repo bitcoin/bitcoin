@@ -27,6 +27,11 @@ def get_sub_array_from_array(object_array, to_match):
 
 class ReceivedByTest(BitcoinTestFramework):
 
+    def setup_nodes(self):
+        #This test requires mocktime
+        enable_mocktime()
+        return start_nodes(4, self.options.tmpdir)
+
     def run_test(self):
         '''
         listreceivedbyaddress Test

@@ -18,6 +18,11 @@ def txFromHex(hexstring):
 
 class ListTransactionsTest(BitcoinTestFramework):
 
+    def setup_nodes(self):
+        #This test requires mocktime
+        enable_mocktime()
+        return start_nodes(4, self.options.tmpdir)
+
     def run_test(self):
         # Simple send, 0 to 1:
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
