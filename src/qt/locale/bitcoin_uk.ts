@@ -1546,14 +1546,6 @@
         <translation>Востаннє отримано</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Байтів відправлено</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Байтів отримано</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Затримка</translation>
     </message>
@@ -2100,14 +2092,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Перше підтвердження очікується протягом %n блоку.</numerusform><numerusform>Перше підтвердження очікується протягом %n блоків.</numerusform><numerusform>Перше підтвердження очікується протягом %n блоків.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Платити тільки мінімальну комісію у розмірі %1</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Всього %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2888,10 +2872,6 @@
         <translation>Приймати команди із командного рядка та команди JSON-RPC</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>Комісії (в %s/КБ), що менші за вказану, вважатимуться нульовими (для ретрансляції) (типово: %s)</translation>
-    </message>
-    <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>Якщо &lt;category&gt; не задано, або ж якщо &lt;category&gt; = 1, виводить всю налагоджувальну інформацію.</translation>
     </message>
@@ -3000,20 +2980,12 @@
         <translation>Додати учасників, що під'єднуються з заданої підмережі чи IP-адреси, в білий список. Можна вказувати декілька разів.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(типово: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool має бути не менше %d МБ</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; може бути:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Спроба відновити закриті ключі з пошкодженого wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3156,10 +3128,6 @@
         <translation>Вам необхідно перебудувати базу даних з використанням -reindex для того, щоб змінити -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Імпорт блоків з зовнішнього файлу blk000??.dat</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Дозволити підключення по протоколу JSON-RPC зі вказаного джерела. Правильною для &lt;ip&gt; є окрема IP-адреса (наприклад, 1.2.3.4), IP-адреса та маска підмережі (наприклад, 1.2.3.4/255.255.255.0) або CIDR-адреса (наприклад, 1.2.3.4/24). Цей параметр можна вказувати декілька разів.</translation>
     </message>
@@ -3252,10 +3220,6 @@
         <translation>Не вдалося розпізнати адресу для -whitebind: «%s»</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Обрати каталог даних під час запуску (типово: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Підключитись через SOCKS5-проксі</translation>
     </message>
@@ -3336,20 +3300,8 @@
         <translation>Не сплачувати комісію за надсилання транзакцій, якщо це можливо (типово: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Вказати кореневі SSL-сертифікати для запиту платежу (типово: -системні-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Встановлення мови, наприклад "de_DE" (типово: системна)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Показати всі налагоджувальні параметри (використання: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Показувати заставку під час запуску (типово: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3358,10 +3310,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Підписання транзакції не вдалося</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Запускати згорнутим</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3388,10 +3336,6 @@
         <translation>Транзакція занадто велика</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Параметри інтерфейсу:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Неможливо прив'язатися до %s на цьому комп'ютері (bind повернув помилку: %s)</translation>
     </message>
@@ -3416,10 +3360,6 @@
         <translation>Параметри сповіщень ZeroMQ:</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>під час запуску</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat пошкоджено, відновлення не вдалося</translation>
     </message>
@@ -3430,14 +3370,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Виконати команду, коли з'явиться новий блок (%s в команді змінюється на хеш блоку)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Модернізувати гаманець до найновішого формату</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Пересканувати ланцюжок блоків, в пошуку втрачених транзакцій</translation>
     </message>
     <message>
         <source>This help message</source>

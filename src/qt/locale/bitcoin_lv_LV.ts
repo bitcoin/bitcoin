@@ -2114,16 +2114,8 @@
         <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(noklusējums: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; var būt:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Mēģināt atgūt privātās atslēgas no bojāta wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2166,10 +2158,6 @@
         <translation>Maciņa iespējas:</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importēt blokus no ārējās blk000??.dat datnes</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Informācija</translation>
     </message>
@@ -2182,20 +2170,8 @@
         <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Uzstādiet valodu, piemēram "de_DE" (pēc noklusēšanas: sistēmas lokāle)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Uzsākot, parādīt programmas informācijas logu (pēc noklusēšanas: 1)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Transakcijas parakstīšana neizdevās</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Sākt minimizētu</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2218,10 +2194,6 @@
         <translation>Brīdinājums</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>startēšanas laikā</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat ir bojāts, glābšana neizdevās</translation>
     </message>
@@ -2232,14 +2204,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Izpildīt komandu, kad labāk atbilstošais bloks izmainās (%s cmd aizvieto ar bloka hešu)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Atjaunot maciņa formātu uz jaunāko</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Atkārtoti skanēt bloku virkni, meklējot trūkstošās maciņa transakcijas</translation>
     </message>
     <message>
         <source>This help message</source>

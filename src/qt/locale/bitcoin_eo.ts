@@ -1124,10 +1124,6 @@
         <translation>Aktuala nombro de blokoj</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bajtoj Senditaj:</translation>
-    </message>
-    <message>
         <source>Last block time</source>
         <translation>Horo de la lasta bloko</translation>
     </message>
@@ -2134,10 +2130,6 @@
         <translation>&lt;category&gt; povas esti:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Provo ripari privatajn ŝlosilojn el difektita wallet.dat</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Blok-kreaj agordaĵoj:</translation>
     </message>
@@ -2214,16 +2206,8 @@
         <translation>Vi devas rekontrui la datumbazon kun -reindex por ŝanĝi -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importas blokojn el ekstera dosiero blk000??.dat</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Plenumi komandon kiam rilata alerto riceviĝas, aŭ kiam ni vidas tre longan forkon (%s en cms anstataŭiĝas per mesaĝo)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Elekti dosierujon por datumoj dum lanĉo (defaŭlte: 0)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2242,24 +2226,12 @@
         <translation>Sendi spurajn/sencimigajn informojn al la konzolo anstataŭ al dosiero debug.log</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Agordi lingvon, ekzemple "de_DE" (defaŭlte: tiu de la sistemo)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Montri salutŝildon dum lanĉo (defaŭlte: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Malpligrandigi la sencimigan protokol-dosieron kiam kliento lanĉiĝas (defaŭlte: 1 kiam mankas -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Subskriba transakcio fiaskis</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Lanĉiĝi plejete</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2296,14 +2268,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Plenumi komandon kiam plej bona bloko ŝanĝiĝas (%s en cmd anstataŭiĝas per bloka haketaĵo)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Ĝisdatigi monujon al plej lasta formato</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Reskani la blokĉenon por mankantaj monujaj transakcioj</translation>
     </message>
     <message>
         <source>This help message</source>

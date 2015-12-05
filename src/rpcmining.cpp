@@ -99,7 +99,7 @@ UniValue getgenerate(const UniValue& params, bool fHelp)
         throw runtime_error(
             "getgenerate\n"
             "\nReturn if the server is set to generate coins or not. The default is false.\n"
-            "It is set with the command line argument -gen (or bitcoin.conf setting gen)\n"
+            "It is set with the command line argument -gen (or " + std::string(BITCOIN_CONF_FILENAME) + " setting gen)\n"
             "It can also be set with the setgenerate call.\n"
             "\nResult\n"
             "true|false      (boolean) If the server is set to generate coins or not\n"
@@ -109,7 +109,7 @@ UniValue getgenerate(const UniValue& params, bool fHelp)
         );
 
     LOCK(cs_main);
-    return GetBoolArg("-gen", false);
+    return GetBoolArg("-gen", DEFAULT_GENERATE);
 }
 
 UniValue generate(const UniValue& params, bool fHelp)
@@ -725,4 +725,76 @@ UniValue estimatepriority(const UniValue& params, bool fHelp)
         nBlocks = 1;
 
     return mempool.estimatePriority(nBlocks);
+}
+
+UniValue estimatesmartfee(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "estimatesmartfee nblocks\n"
+            "\nWARNING: This interface is unstable and may disappear or change!\n"
+            "\nEstimates the approximate fee per kilobyte needed for a transaction to begin\n"
+            "confirmation within nblocks blocks if possible and return the number of blocks\n"
+            "for which the estimate is valid.\n"
+            "\nArguments:\n"
+            "1. nblocks     (numeric)\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"feerate\" : x.x,     (numeric) estimate fee-per-kilobyte (in BTC)\n"
+            "  \"blocks\" : n         (numeric) block number where estimate was found\n"
+            "}\n"
+            "\n"
+            "A negative value is returned if not enough transactions and blocks\n"
+            "have been observed to make an estimate for any number of blocks.\n"
+            "However it will not return a value below the mempool reject fee.\n"
+            "\nExample:\n"
+            + HelpExampleCli("estimatesmartfee", "6")
+            );
+
+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM));
+
+    int nBlocks = params[0].get_int();
+
+    UniValue result(UniValue::VOBJ);
+    int answerFound;
+    CFeeRate feeRate = mempool.estimateSmartFee(nBlocks, &answerFound);
+    result.push_back(Pair("feerate", feeRate == CFeeRate(0) ? -1.0 : ValueFromAmount(feeRate.GetFeePerK())));
+    result.push_back(Pair("blocks", answerFound));
+    return result;
+}
+
+UniValue estimatesmartpriority(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "estimatesmartpriority nblocks\n"
+            "\nWARNING: This interface is unstable and may disappear or change!\n"
+            "\nEstimates the approximate priority a zero-fee transaction needs to begin\n"
+            "confirmation within nblocks blocks if possible and return the number of blocks\n"
+            "for which the estimate is valid.\n"
+            "\nArguments:\n"
+            "1. nblocks     (numeric)\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"priority\" : x.x,    (numeric) estimated priority\n"
+            "  \"blocks\" : n         (numeric) block number where estimate was found\n"
+            "}\n"
+            "\n"
+            "A negative value is returned if not enough transactions and blocks\n"
+            "have been observed to make an estimate for any number of blocks.\n"
+            "However if the mempool reject fee is set it will return 1e9 * MAX_MONEY.\n"
+            "\nExample:\n"
+            + HelpExampleCli("estimatesmartpriority", "6")
+            );
+
+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VNUM));
+
+    int nBlocks = params[0].get_int();
+
+    UniValue result(UniValue::VOBJ);
+    int answerFound;
+    double priority = mempool.estimateSmartPriority(nBlocks, &answerFound);
+    result.push_back(Pair("priority", priority));
+    result.push_back(Pair("blocks", answerFound));
+    return result;
 }

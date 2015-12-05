@@ -48,6 +48,7 @@ class BitcoinGUI : public QMainWindow
 
 public:
     static const QString DEFAULT_WALLET;
+    static const std::string DEFAULT_UIPLATFORM;
 
     explicit BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *networkStyle, QWidget *parent = 0);
     ~BitcoinGUI();
@@ -149,7 +150,7 @@ public Q_SLOTS:
     /** Set number of connections shown in the UI */
     void setNumConnections(int count);
     /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate);
+    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress);
 
     /** Notify the user of an event from the core network or transaction handling code.
        @param[in] title     the message box / notification title

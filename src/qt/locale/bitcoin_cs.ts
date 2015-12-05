@@ -1494,14 +1494,6 @@
         <translation>Poslední příjem</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bajtů odesláno</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bajtů přijato</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Odezva</translation>
     </message>
@@ -2008,10 +2000,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Potvrzování by podle odhadu mělo začít během %n bloku.</numerusform><numerusform>Potvrzování by podle odhadu mělo začít během %n bloků.</numerusform><numerusform>Potvrzování by podle odhadu mělo začít během %n bloků.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Zaplatit pouze minimální poplatek %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2852,16 +2840,8 @@
         <translation>Umístit na bílou listinu protějšky připojující se z dané podsítě či IP adresy. Lze zadat i vícekrát.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(výchozí: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; může být:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Pokusit se zachránit soukromé klíče z poškozeného souboru wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2984,10 +2964,6 @@
         <translation>Je třeba přestavět databázi použitím -reindex, aby bylo možné změnit -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importovat bloky z externího souboru blk000??.dat</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Povolit JSON-RPC spojení ze specifikovaného zdroje. Platnou hodnotou &lt;ip&gt; je jednotlivá IP adresa (např. 1.2.3.4), síť/maska (např. 1.2.3.4/255.255.255.0) nebo síť/CIDR (např. 1.2.3.4/24). Tuto volbu lze použít i vícekrát</translation>
     </message>
@@ -3080,10 +3056,6 @@
         <translation>Nemohu přeložit -whitebind adresu: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Zvolit adresář pro data při startu (výchozí: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Připojit se přes SOCKS5 proxy</translation>
     </message>
@@ -3160,20 +3132,8 @@
         <translation>Posílat transakce pokud možno bez poplatků (výchozí: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastavit kořenové SSL certifikáty pro platební požadavky (výchozí: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastavit jazyk, například „de_DE“ (výchozí: systémové nastavení)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Zobrazit všechny možnosti ladění (užití: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Zobrazit startovací obrazovku (výchozí: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3182,10 +3142,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Nepodařilo se podepsat transakci</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Nastartovat minimalizovaně</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3212,10 +3168,6 @@
         <translation>Transakce je příliš velká</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Možnosti UI:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Nedaří se mi připojit na %s na tomhle počítači (operace bind vrátila chybu %s)</translation>
     </message>
@@ -3236,10 +3188,6 @@
         <translation>Vymazat všechny transakce z peněženky...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>při startu</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>Soubor wallet.dat je poškozen, jeho záchrana se nezdařila</translation>
     </message>
@@ -3250,14 +3198,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Spustit příkaz, když se změní nejlepší blok (%s se v příkazu nahradí hashem bloku)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Převést peněženku na nejnovější formát</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Přeskenovat řetězec bloků na chybějící transakce tvé pěněženky</translation>
     </message>
     <message>
         <source>This help message</source>

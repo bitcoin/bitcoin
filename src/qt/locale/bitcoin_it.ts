@@ -1487,14 +1487,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Ultima Ricezione</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Byte Inviati</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Byte Ricevuti</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Tempo di Ping</translation>
     </message>
@@ -1997,10 +1989,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Payment request expired.</source>
         <translation>Richiesta di pagamento scaduta.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Paga solamente la commissione minima di %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2845,16 +2833,8 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Inserisce in whitelist i peer che si connettono da un dato indirizzo IP o netmask. Può essere specificato più volte.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(predefinito: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>Valori possibili per &lt;category&gt;:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Tenta di recuperare le chiavi private da un wallet.dat corrotto</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2977,10 +2957,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>È necessario ricostruire il database usando -reindex per cambiare -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importa blocchi da un file blk000??.dat esterno</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Permette connessioni JSON-RPC dall'origine specificata. I valori validi per &lt;ip&gt; sono un singolo IP (ad es. 1.2.3.4), una network/netmask (ad es. 1.2.3.4/255.255.255.0) oppure una network/CIDR (ad es. 1.2.3.4/24). Questa opzione può essere specificata più volte.</translation>
     </message>
@@ -3073,10 +3049,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Impossibile risolvere indirizzo -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Seleziona la cartella dati all'avvio (predefinito: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Connessione attraverso un proxy SOCKS5</translation>
     </message>
@@ -3153,20 +3125,8 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Invia transazioni a zero commissioni se possibile (predefinito: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Imposta i certificati radice SSL per le richieste di pagamento (predefinito: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Imposta lingua, ad esempio "it_IT" (predefinito: lingua di sistema)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Mostra tutte le opzioni di debug (utilizzo: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostra finestra di presentazione all'avvio (predefinito: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3175,10 +3135,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Signing transaction failed</source>
         <translation>Firma transazione fallita</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Avvia ridotto a icona</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3205,10 +3161,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Transazione troppo grande</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Opzioni Interfaccia Utente:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Impossibile associarsi a %s su questo computer (l'associazione ha restituito l'errore %s)</translation>
     </message>
@@ -3229,10 +3181,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
         <translation>Eliminazione dal portamonete di tutte le transazioni...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>all'avvio</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrotto, recupero fallito</translation>
     </message>
@@ -3243,14 +3191,6 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Esegue un comando quando il miglior blocco cambia (%s nel cmd è sostituito dall'hash del blocco)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Aggiorna il wallet all'ultimo formato</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Ripete la scansione della block chain per individuare le transazioni che mancano dal portamonete</translation>
     </message>
     <message>
         <source>This help message</source>

@@ -29,6 +29,8 @@ TX = 'tx'
 SOURCE_LANG = 'bitcoin_en.ts'
 # Directory with locale files
 LOCALE_DIR = 'src/qt/locale'
+# Minimum number of messages for translation to be considered at all
+MIN_NUM_MESSAGES = 10
 
 def check_at_repository_root():
     if not os.path.exists('.git'):
@@ -37,7 +39,7 @@ def check_at_repository_root():
         exit(1)
 
 def fetch_all_translations():
-    if subprocess.call([TX, 'pull', '-f']):
+    if subprocess.call([TX, 'pull', '-f', '-a']):
         print('Error while fetching translations', file=sys.stderr)
         exit(1)
 
@@ -165,6 +167,15 @@ def postprocess_translations(reduce_diff_hacks=False):
                 # Remove entire message if it is an unfinished translation
                 if translation_node.get('type') == 'unfinished':
                     context.remove(message)
+
+        # check if document is (virtually) empty, and remove it if so
+        num_messages = 0
+        for context in root.findall('context'):
+            for message in context.findall('message'):
+                num_messages += 1
+        if num_messages < MIN_NUM_MESSAGES:
+            print('Removing %s, as it contains only %i messages' % (filepath, num_messages))
+            continue
 
         # write fixed-up tree
         # if diff reduction requested, replace some XML to 'sanitize' to qt formatting

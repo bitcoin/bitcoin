@@ -1494,14 +1494,6 @@
         <translation>Posledné prijatie</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Odoslaných bajtov</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Prijatých bajtov</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Čas odozvy</translation>
     </message>
@@ -1996,10 +1988,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Vypršala platnosť požiadavky na platbu.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Zaplatiť minimálny poplatok %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2810,16 +2798,8 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Uzle na zoznam povolených, ktoré sa pripájajú z danej netmask alebo IP adresy. Môže byť zadané viac krát.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(predvolené: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; môže byť:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Pokus zachrániť súkromné kľúče z poškodeného wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2930,10 +2910,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Potrebujete prebudovať databázu použitím -reindex zmeniť -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importuje bloky z externého súboru blk000??.dat</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Povoliť JSON-RPC pripojenia zo zadaného zdroja. Pre &lt;ip&gt; sú platné jednoduché IP (napr. 1.2.3.4), sieť/netmask (napr. 1.2.3.4/255.255.255.0) alebo sieť/CIDR (napr. 1.2.3.4/24). Táto možnosť môže byť zadaná niekoľko krát</translation>
     </message>
@@ -3006,10 +2982,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Nedá sa vyriešiť -whitebind adresa: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Zvoľte dátový priečinok pri štarte (prednastavené: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Pripojiť cez proxy server SOCKS5</translation>
     </message>
@@ -3078,20 +3050,8 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Poslať ako transakcie bez poplatku, ak je to možné (predvolené: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastaviť koreňový certifikát pre výzvy na platbu (prednastavené: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastaviť jazyk, napríklad "sk_SK" (predvolené: systémový)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Zobraziť všetky možnosti ladenia (použitie: --help --help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Zobraziť splash screen pri spustení (predvolené: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3100,10 +3060,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Signing transaction failed</source>
         <translation>Podpísanie správy zlyhalo</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Spustiť minimalizované</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3126,10 +3082,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Transakcia príliš veľká</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Možnosti používateľského rozhrania:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Na tomto počítači sa nedá vytvoriť väzba %s (vytvorenie väzby vrátilo chybu %s)</translation>
     </message>
@@ -3146,10 +3098,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
         <translation>Zmazať všetky transakcie z peňaženky...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>pri štarte</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat je poškodený, záchrana zlyhala</translation>
     </message>
@@ -3160,14 +3108,6 @@ The network does not appear to fully agree! Some miners appear to be experiencin
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Vykonaj príkaz, ak zmeny v najlepšom bloku (%s v príkaze nahradí blok hash)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Aktualizuj peňaženku na najnovší formát.</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Znovu skenovať reťaz blokov pre chýbajúce transakcie</translation>
     </message>
     <message>
         <source>This help message</source>

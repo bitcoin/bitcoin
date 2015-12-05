@@ -449,6 +449,15 @@ void TorController::auth_cb(TorControlConnection& conn, const TorControlReply& r
 {
     if (reply.code == 250) {
         LogPrint("tor", "tor: Authentication succesful\n");
+
+        // Now that we know Tor is running setup the proxy for onion addresses
+        // if -onion isn't set to something else.
+        if (GetArg("-onion", "") == "") {
+            proxyType addrOnion = proxyType(CService("127.0.0.1", 9050), true);
+            SetProxy(NET_TOR, addrOnion);
+            SetReachable(NET_TOR);
+        }
+
         // Finally - now create the service
         if (private_key.empty()) // No private key, generate one
             private_key = "NEW:BEST";
@@ -608,7 +617,9 @@ void TorController::disconnected_cb(TorControlConnection& conn)
     service = CService();
     if (!reconnect)
         return;
-    LogPrintf("tor: Disconnected from Tor control port %s, trying to reconnect\n", target);
+
+    LogPrint("tor", "tor: Disconnected from Tor control port %s, trying to reconnect\n", target);
+
     // Single-shot timer for reconnect. Use exponential backoff.
     struct timeval time = MillisToTimeval(int64_t(reconnect_timeout * 1000.0));
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);

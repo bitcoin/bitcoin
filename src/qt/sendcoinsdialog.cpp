@@ -124,7 +124,7 @@ void SendCoinsDialog::setClientModel(ClientModel *clientModel)
     this->clientModel = clientModel;
 
     if (clientModel) {
-        connect(clientModel, SIGNAL(numBlocksChanged(int,QDateTime)), this, SLOT(updateSmartFeeLabel()));
+        connect(clientModel, SIGNAL(numBlocksChanged(int,QDateTime,double)), this, SLOT(updateSmartFeeLabel()));
     }
 }
 
@@ -531,7 +531,7 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.second = CClientUIInterface::MSG_ERROR;
         break;
     case WalletModel::AbsurdFee:
-        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), 10000000));
+        msgParams.first = tr("A fee higher than %1 is considered an absurdly high fee.").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), maxTxFee));
         break;
     case WalletModel::PaymentRequestExpired:
         msgParams.first = tr("Payment request expired.");
@@ -585,7 +585,7 @@ void SendCoinsDialog::updateFeeSectionControls()
     ui->checkBoxMinimumFee      ->setEnabled(ui->radioCustomFee->isChecked());
     ui->labelMinFeeWarning      ->setEnabled(ui->radioCustomFee->isChecked());
     ui->radioCustomPerKilobyte  ->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked());
-    ui->radioCustomAtLeast      ->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked());
+    ui->radioCustomAtLeast      ->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked() && CoinControlDialog::coinControl->HasSelected());
     ui->customFee               ->setEnabled(ui->radioCustomFee->isChecked() && !ui->checkBoxMinimumFee->isChecked());
 }
 
@@ -600,7 +600,10 @@ void SendCoinsDialog::updateGlobalFeeVariables()
     {
         nTxConfirmTarget = defaultConfirmTarget;
         payTxFee = CFeeRate(ui->customFee->value());
-        fPayAtLeastCustomFee = ui->radioCustomAtLeast->isChecked();
+
+        // if user has selected to set a minimum absolute fee, pass the value to coincontrol
+        // set nMinimumTotalFee to 0 in case of user has selected that the fee is per KB
+        CoinControlDialog::coinControl->nMinimumTotalFee = ui->radioCustomAtLeast->isChecked() ? ui->customFee->value() : 0;
     }
 
     fSendFreeTransactions = ui->checkBoxFreeTx->isChecked();
@@ -633,7 +636,8 @@ void SendCoinsDialog::updateSmartFeeLabel()
         return;
 
     int nBlocksToConfirm = defaultConfirmTarget - ui->sliderSmartFee->value();
-    CFeeRate feeRate = mempool.estimateFee(nBlocksToConfirm);
+    int estimateFoundAtBlocks = nBlocksToConfirm;
+    CFeeRate feeRate = mempool.estimateSmartFee(nBlocksToConfirm, &estimateFoundAtBlocks);
     if (feeRate <= CFeeRate(0)) // not enough data => minfee
     {
         ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), CWallet::GetRequiredFee(1000)) + "/kB");
@@ -644,7 +648,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
     {
         ui->labelSmartFee->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK()) + "/kB");
         ui->labelSmartFee2->hide();
-        ui->labelFeeEstimation->setText(tr("Estimated to begin confirmation within %n block(s).", "", nBlocksToConfirm));
+        ui->labelFeeEstimation->setText(tr("Estimated to begin confirmation within %n block(s).", "", estimateFoundAtBlocks));
     }
 
     updateFeeMinimizedLabel();
@@ -706,8 +710,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
     if (!checked && model) // coin control features disabled
         CoinControlDialog::coinControl->SetNull();
 
-    if (checked)
-        coinControlUpdateLabels();
+    coinControlUpdateLabels();
 }
 
 // Coin Control: button inputs -> show actual coin control dialog
@@ -781,8 +784,23 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
 // Coin Control: update labels
 void SendCoinsDialog::coinControlUpdateLabels()
 {
-    if (!model || !model->getOptionsModel() || !model->getOptionsModel()->getCoinControlFeatures())
+    if (!model || !model->getOptionsModel())
         return;
+
+    if (model->getOptionsModel()->getCoinControlFeatures())
+    {
+        // enable minium absolute fee UI controls
+        ui->radioCustomAtLeast->setVisible(true);
+
+        // only enable the feature if inputs are selected
+        ui->radioCustomAtLeast->setEnabled(CoinControlDialog::coinControl->HasSelected());
+    }
+    else
+    {
+        // in case coin control is disabled (=default), hide minimum absolute fee UI controls
+        ui->radioCustomAtLeast->setVisible(false);
+        return;
+    }
 
     // set pay amounts
     CoinControlDialog::payAmounts.clear();

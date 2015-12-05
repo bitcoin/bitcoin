@@ -2234,10 +2234,6 @@
         <translation>&lt;category&gt; შეიძლება იყოს:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>პირადი გასაღებების აღდგენის მცდელობა wallet.dat-იდან</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>ბლოკის შექმნის ოპციები:</translation>
     </message>
@@ -2322,20 +2318,12 @@
         <translation>საჭიროა ბაზის ხელახალი აგება, გამოიყენეთ -reindex რათა შეცვალოთ -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>ბლოკების იმპორტი გარე blk000??.dat ფაილიდან</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>ბრძანების შესრულება შესაბამისი უწყების მიღებისას ან როცა შეინიშნება საგრძნობი გახლეჩა (cmd-ში %s შეიცვლება მესიჯით)</translation>
     </message>
     <message>
         <source>Set maximum size of high-priority/low-fee transactions in bytes (default: %d)</source>
         <translation>მაღალპრიორიტეტული/დაბალსაკომისიოიანი ტრანსაქციების მაქსიმალური ზომა ბაიტებში (ნაგულისხმევი: %d)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>მონაცემთა კატალოგის მითითება ყოველი გაშვებისას (ნაგულისხმევი: 0)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2354,24 +2342,12 @@
         <translation>ტრასირების/დახვეწის ინფოს გაგზავნა კონსოლზე debug.log ფაილის ნაცვლად</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>აირჩიეთ ენა, მაგალითად "de_DE" (ნაგულისხმევია სისტემური ლოკალი)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>მისალმების ეკრანის ჩვენება გაშვებისას (ნაგულისხმევი:1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>debug.log ფაილის შეკუმშვა გაშვებისას (ნაგულისხმევია: 1 როცა არ აყენია -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>ტრანსაქციების ხელმოწერა ვერ მოხერხდა</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>გაშვება მინიმიზებული ეკრანით</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2408,14 +2384,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>კომანდის შესრულება უკეთესი ბლოკის გამოჩენისას (%s კომანდაში ჩანაცვლდება ბლოკის ჰეშით)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>საფულის ფორმატის განახლება</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>ბლოკების ჯაჭვის გადამოწმება საფულეში გამორჩენილ ტრანსაქციებზე</translation>
     </message>
     <message>
         <source>This help message</source>

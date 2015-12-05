@@ -1220,14 +1220,6 @@
         <translation>Сўнгги қабул қилинган</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Жўнатилган байтлар</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Қабул қилинган байтлар</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping вақти</translation>
     </message>
@@ -2122,20 +2114,8 @@
         <translation>Уланиш кўрсаткичлари:</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Ишга тушиш вақтида маълумотлар директориясини танлаш (стандарт: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Маълумот</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Тўлов сўровлари учун SSL асос сертификатларини ўрнатиш (стандарт: -system-)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Йиғилганларни бошлаш</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>

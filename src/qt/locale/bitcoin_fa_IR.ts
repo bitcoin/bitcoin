@@ -1024,14 +1024,6 @@
         <translation>دستور را وقتی بهترین بلاک تغییر کرد اجرا کن (%s در دستور توسط block hash جایگزین شده است)</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>wallet را به جدیدترین نسخه روزآمد کنید</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>زنجیره بلاک را برای تراکنش جا افتاده در WALLET دوباره اسکن کنید</translation>
-    </message>
-    <message>
         <source>This help message</source>
         <translation>این پیام راهنما</translation>
     </message>

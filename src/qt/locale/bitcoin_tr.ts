@@ -1494,14 +1494,6 @@
         <translation>Son Alma</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Yollanan Baytlar</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Alınan Baytlar</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping Süresi</translation>
     </message>
@@ -2004,10 +1996,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Ödeme talebinin ömrü doldu.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Sadece asgari ücret olan %1 tutarını öde</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2848,16 +2836,8 @@
         <translation>Belirtilen ağ maskesi ya da IP adresinden bağlanan eşleri beyaz listeye al. Birden fazla kez belirtilebilir.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(varsayılan: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;kategori&gt; şunlar olabilir:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Bozuk bir wallet.dat dosyasından özel anahtarları geri kazanmayı dene</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2980,10 +2960,6 @@
         <translation>-txindex'i değiştirmek için veritabanını -reindex kullanarak tekrar inşa etmeniz gerekmektedir</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Harici blk000??.dat dosyasından blokları içe aktarır</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Belirtilen kaynaktan JSON-RPC bağlantılarını kabul et. Bir &lt;ip&gt; için geçerli olanlar şunlardır: salt IP adresi (mesela 1.2.3.4), bir şebeke/ağ maskesi (örneğin 1.2.3.4/255.255.255.0) ya da bir şebeke/CIDR (mesela 1.2.3.4/24). Bu seçenek birden fazla kez belirtilebilir</translation>
     </message>
@@ -3076,10 +3052,6 @@
         <translation>-whitebind adresi çözümlenemedi: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Başlangıçta veri klasörü seç (varsayılan: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>SOCKS5 vekil sunucusu vasıtasıyla bağlan</translation>
     </message>
@@ -3156,20 +3128,8 @@
         <translation>Muameleleri mümkünse ücretsiz olarak gönder (varsayılan: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ödeme talebi için SSL kök sertifikalarını belirle (varsayılan: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Lisan belirt, mesela "de_De" (varsayılan: sistem dili)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Tüm hata ayıklama seçeneklerini göster (kullanımı: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Başlatıldığında başlangıç ekranını göster (varsayılan: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3178,10 +3138,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Muamelenin imzalanması başarısız oldu</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Küçültülmüş olarak başlat</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3208,10 +3164,6 @@
         <translation>Muamele çok büyük</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Arayüz Seçenkleri:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Bu bilgisayarda %s unsuruna bağlanılamadı (bağlanma %s hatasını verdi)</translation>
     </message>
@@ -3232,10 +3184,6 @@
         <translation>Cüzdandaki tüm muameleler kaldırılıyor...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>başlangıçta</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat bozuk, geri kazanım başarısız oldu</translation>
     </message>
@@ -3246,14 +3194,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>En iyi blok değiştiğinde komutu çalıştır (komut için %s parametresi blok hash değeri ile değiştirilecektir)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Cüzdanı en yeni biçime güncelle</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Blok zincirini eksik cüzdan muameleleri için tekrar tara</translation>
     </message>
     <message>
         <source>This help message</source>

@@ -1616,8 +1616,16 @@
         <translation>تولید شده ولی قبول نشده</translation>
     </message>
     <message>
+        <source>Offline</source>
+        <translation>آفلاین</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>برچسب</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>تایید نشده</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1918,10 +1926,6 @@
         <translation>در حال بازبینی کیف پول...</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>انتخاب مسیر داده‌ها در ابتدای اجرای برنامه (پیش‌فرض: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>اطلاعات</translation>
     </message>
@@ -1930,24 +1934,8 @@
         <translation>اطلاعات ردگیری/اشکال‌زدایی را به جای فایل لاگ اشکال‌زدایی به کنسول بفرستید</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>زبان را تنظیم کنید؛ برای مثال «de_DE» (زبان پیش‌فرض محلی)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>نمایش پنجرهٔ خوشامدگویی در ابتدای اجرای برنامه (پیش‌فرض: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>فایل debug.log  را در startup مشتری کوچک کن (پیش فرض:1 اگر اشکال زدایی روی نداد)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>اجرای برنامه به صورت کوچک‌شده</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>گزینه‌های رابط کاربری:</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -1964,14 +1952,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>زمانی که بهترین بلاک تغییر کرد، دستور را اجرا کن (%s در cmd با block hash جایگزین شده است)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>wallet  را به جدیدترین فرمت روزآمد کنید</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>اسکان مجدد زنجیر بلوکها برای گم والت معامله</translation>
     </message>
     <message>
         <source>This help message</source>

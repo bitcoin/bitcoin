@@ -1034,10 +1034,6 @@
         <translation>Түрүйвчийн сонголтууд:</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Түрүйвчийг хамгийн сүүлийн үеийн форматруу шинэчлэх</translation>
-    </message>
-    <message>
         <source>Loading addresses...</source>
         <translation>Хаягуудыг ачааллаж байна...</translation>
     </message>

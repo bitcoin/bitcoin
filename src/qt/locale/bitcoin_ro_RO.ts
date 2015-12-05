@@ -1466,14 +1466,6 @@
         <translation>Ultima primire</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Octeţi trimişi</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Octeţi primiţi</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Timp ping</translation>
     </message>
@@ -1940,10 +1932,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Cererea de plată a expirat.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Plăteşte doar taxa minimă de %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2728,16 +2716,8 @@
         <translation>Atenţie: fişierul wallet.dat este corupt, date salvate! Fişierul original wallet.dat a fost salvat ca wallet.{timestamp}.bak in %s; dacă balansul sau tranzactiile sînt incorecte ar trebui să restauraţi dintr-o copie de siguranţă.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(iniţial: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; poate fi:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Încercare de recuperare a cheilor private dintr-un wallet.dat corupt</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2848,10 +2828,6 @@
         <translation>Trebuie să reconstruiţi baza de date folosind -reindex pentru a schimba -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importă blocuri dintr-un fişier extern blk000??.dat</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Permite conexiunile JSON-RPC din sursa specificată. Valid pentru &lt;ip&gt; sînt IP singulare (ex. 1.2.3.4), o reţea/mască-reţea (ex. 1.2.3.4/255.255.255.0) sau o reţea/CIDR (ex. 1.2.3.4/24). Această opţiune poate fi specificată de mai multe ori</translation>
     </message>
@@ -2874,10 +2850,6 @@
     <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Acceptă cererile publice REST (implicit: %u)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Alege dosarul de date la pornire (implicit: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -2936,20 +2908,8 @@
         <translation>Trimitere tranzacţii ca tranzacţii taxă-zero dacă este posibil (implicit: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Setare rădăcină certificat SSL pentru cerere de plată (implicit: -sistem- )</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Setează limba, de exemplu: "de_DE" (implicit: sistem local)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Arată toate opţiunile de depanare (uz: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Afişează pe ecran splash la pornire (implicit: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2958,10 +2918,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Nu s-a reuşit semnarea tranzacţiei</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Începe minimizat</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3004,10 +2960,6 @@
         <translation>Şterge toate tranzacţiile din portofel...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>la pornire</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corupt, salvare nereuşită</translation>
     </message>
@@ -3018,14 +2970,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Execută comanda cînd cel mai bun bloc se modifică (%s în cmd este înlocuit cu hash-ul blocului)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Actualizează portofelul la ultimul format</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Rescanează lanţul de bloc pentru tranzacţiile portofel lipsă</translation>
     </message>
     <message>
         <source>This help message</source>

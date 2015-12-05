@@ -1490,14 +1490,6 @@
         <translation>Darrera recepció</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bytes enviats</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bytes rebuts</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Temps de ping</translation>
     </message>
@@ -2004,10 +1996,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Estimat per començar la confirmació en %n bloc.</numerusform><numerusform>Estimat per començar la confirmació en %n blocs.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Paga només la comissió mínima de %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2848,16 +2836,8 @@
         <translation>Afig a la llista blanca els iguals que es connecten de la màscara de xarxa o adreça IP donada. Es pot especificar moltes vegades.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(per defecte: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; pot ser:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Intenta recuperar les claus privades d'un fitxer wallet.dat corrupte</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2980,10 +2960,6 @@
         <translation>Cal que reconstruïu la base de dades fent servir -reindex per canviar -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importa blocs d'un fitxer blk000??.dat extern</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Permet les connexions JSON-RPC d'una font específica. Vàlid per a &lt;ip&gt; són una IP individual (p. ex., 1.2.3.4), una xarxa / màscara de xarxa (p. ex., 1.2.3.4/255.255.255.0) o una xarxa/CIDR (p. ex., 1.2.3.4/24). Es pot especificar esta opció moltes vegades</translation>
     </message>
@@ -3076,10 +3052,6 @@
         <translation>No es pot resoldre l'adreça -whitebind: «%s»</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Tria el directori de dades a l'inici (per defecte: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Connecta a través del proxy SOCKS5</translation>
     </message>
@@ -3156,20 +3128,8 @@
         <translation>Envia les transaccions com a transaccions de comissió zero sempre que siga possible (per defecte: %u) </translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Defineix certificats arrel SSL per a la sol·licitud de pagament (per defecte: -sistema-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Defineix un idioma, per exemple «de_DE» (per defecte: preferències locals de sistema)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Mostra totes les opcions de depuració (ús: --help  --help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostra la finestra de benvinguda a l'inici (per defecte: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3178,10 +3138,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Ha fallat la signatura de la transacció</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Inicia minimitzat</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3208,10 +3164,6 @@
         <translation>La transacció és massa gran</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Opcions d'interfície:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>No s'ha pogut vincular a %s en este ordinador (la vinculació ha retornat l'error %s)</translation>
     </message>
@@ -3232,10 +3184,6 @@
         <translation>Se suprimeixen totes les transaccions del moneder...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>a l'inici de l'aplicació</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>El fitxer wallet.data és corrupte. El rescat de les dades ha fallat</translation>
     </message>
@@ -3246,14 +3194,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Executa l'orde quan el millor bloc canvie (%s en cmd es reemplaça per un resum de bloc)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Actualitza el moneder a l'últim format</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Reescaneja la cadena de blocs en les transaccions de moneder perdudes</translation>
     </message>
     <message>
         <source>This help message</source>

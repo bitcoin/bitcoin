@@ -4,7 +4,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <stdint.h>
-#include <ctype.h>
 #include <errno.h>
 #include <iomanip>
 #include <limits>
@@ -21,7 +20,7 @@ static bool ParsePrechecks(const std::string& str)
 {
     if (str.empty()) // No empty string allowed
         return false;
-    if (str.size() >= 1 && (isspace(str[0]) || isspace(str[str.size()-1]))) // No padding allowed
+    if (str.size() >= 1 && (json_isspace(str[0]) || json_isspace(str[str.size()-1]))) // No padding allowed
         return false;
     if (str.size() != strlen(str.c_str())) // No embedded NUL characters allowed
         return false;
@@ -210,7 +209,7 @@ bool UniValue::pushKVs(const UniValue& obj)
 
     for (unsigned int i = 0; i < obj.keys.size(); i++) {
         keys.push_back(obj.keys[i]);
-        values.push_back(obj.values[i]);
+        values.push_back(obj.values.at(i));
     }
 
     return true;
@@ -234,7 +233,7 @@ bool UniValue::checkObject(const std::map<std::string,UniValue::VType>& t)
         if (idx < 0)
             return false;
 
-        if (values[idx].getType() != it->second)
+        if (values.at(idx).getType() != it->second)
             return false;
     }
 
@@ -250,7 +249,7 @@ const UniValue& UniValue::operator[](const std::string& key) const
     if (index < 0)
         return NullUniValue;
 
-    return values[index];
+    return values.at(index);
 }
 
 const UniValue& UniValue::operator[](unsigned int index) const
@@ -260,7 +259,7 @@ const UniValue& UniValue::operator[](unsigned int index) const
     if (index >= values.size())
         return NullUniValue;
 
-    return values[index];
+    return values.at(index);
 }
 
 const char *uvTypeName(UniValue::VType t)
@@ -278,15 +277,11 @@ const char *uvTypeName(UniValue::VType t)
     return NULL;
 }
 
-const UniValue& find_value( const UniValue& obj, const std::string& name)
+const UniValue& find_value(const UniValue& obj, const std::string& name)
 {
     for (unsigned int i = 0; i < obj.keys.size(); i++)
-    {
-        if( obj.keys[i] == name )
-        {
-            return obj.values[i];
-        }
-    }
+        if (obj.keys[i] == name)
+            return obj.values.at(i);
 
     return NullUniValue;
 }

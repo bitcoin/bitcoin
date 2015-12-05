@@ -222,7 +222,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Maska Sieci</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Blokada do</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1068,6 +1076,18 @@
         <translation>Port proxy (np. 9050)</translation>
     </message>
     <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Okno</translation>
     </message>
@@ -1454,6 +1474,10 @@
         <translation>&amp;Węzły</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Blokowane węzły</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Wybierz węzeł żeby zobaczyć szczegóły.</translation>
     </message>
@@ -1488,14 +1512,6 @@
     <message>
         <source>Last Receive</source>
         <translation>Ostatnio odebrano</translation>
-    </message>
-    <message>
-        <source>Bytes Sent</source>
-        <translation>Bajtów wysłano</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bajtów pobrano</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1550,6 +1566,14 @@
         <translation>Wyczyść konsolę</translation>
     </message>
     <message>
+        <source>Ban Node for</source>
+        <translation>Blokuj węzeł na okres</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>Odblokuj węzeł</translation>
+    </message>
+    <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
         <translation>Witaj w konsoli Bitcoin Core RPC.</translation>
     </message>
@@ -1592,6 +1616,14 @@
     <message>
         <source>Outbound</source>
         <translation>Wyjściowy</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Tak</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nie</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -1989,17 +2021,13 @@
         <source>Payment request expired.</source>
         <translation>Żądanie płatności upłynęło.</translation>
     </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Zapłać tylko wymaganą opłatę %1</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform><numerusform>Przybliżony czas zatwierdzenia: %n bloków.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Płac tylko minimalna opłatę %1</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Całkowita kwota %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2844,16 +2872,8 @@
         <translation>Dodawaj do białej listy węzły łączące się z podanej maski sieciowej lub adresu IP. Może być określona kilka razy.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(domyślnie: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; mogą być:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Próbuj odzyskać klucze prywatne z uszkodzonego wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2976,10 +2996,6 @@
         <translation>Musisz przebudować bazę używając parametru -reindex aby zmienić -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importuj bloki z zewnętrznego pliku blk000??.dat</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Pozwól na połączenia JSON-RPC z podanego źródła. Jako &lt;ip&gt; prawidłowe jest pojedyncze IP (np. 1.2.3.4), podsieć/maska (np. 1.2.3.4/255.255.255.0) lub sieć/CIDR (np. 1.2.3.4/24). Opcja ta może być użyta wiele razy.</translation>
     </message>
@@ -3064,10 +3080,6 @@
         <translation>Nie można rozwiązać adresu -whitebind: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Wybierz folder danych przy starcie (domyślnie: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Połącz przez SOCKS5 proxy</translation>
     </message>
@@ -3140,20 +3152,8 @@
         <translation>Wyślij bez opłaty jeżeli to możliwe (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ustaw certyfikaty główne SSL dla żądań płatności (domyślnie: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Ustaw Język, na przykład "pl_PL" (domyślnie: systemowy)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Pokaż wszystkie opcje odpluskwiania (użycie: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Pokazuj okno powitalne przy starcie (domyślnie: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3162,10 +3162,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Podpisywanie transakcji nie powiodło się</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Uruchom zminimalizowany</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3192,10 +3188,6 @@
         <translation>Transakcja zbyt duża</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Opcje UI</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Nie można przywiązać do %s na tym komputerze (bind zwrócił błąd %s)</translation>
     </message>
@@ -3216,10 +3208,6 @@
         <translation>Usuwam wszystkie transakcje z portfela...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>podczas uruchamiania</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat uszkodzony, odtworzenie się nie powiodło</translation>
     </message>
@@ -3230,14 +3218,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Wykonaj polecenie kiedy najlepszy blok ulegnie zmianie (%s w komendzie zastanie zastąpione przez hash bloku)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Zaktualizuj portfel do najnowszego formatu.</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Przeskanuj łańcuch bloków w poszukiwaniu zaginionych transakcji portfela</translation>
     </message>
     <message>
         <source>This help message</source>

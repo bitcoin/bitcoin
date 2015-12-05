@@ -1410,10 +1410,6 @@
         <translation>Monitio: wallet.data corrupta, data salvata!  Originalis wallet.dat salvata ut wallet.{timestamp}.bak in %s; si pendendum tuum vel transactiones pravae sunt, oportet ab conservato restituere.</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Conare recipere claves privatas de corrupto wallet.dat</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Optiones creandi frustorum:</translation>
     </message>
@@ -1466,10 +1462,6 @@
         <translation>Verificante cassidilem...</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importat frusta ab externa plica blk000??.dat</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Informatio</translation>
     </message>
@@ -1486,24 +1478,12 @@
         <translation>Mitte informationem vestigii/debug ad terminale potius quam plicam debug.log</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Constitue linguam, exempli gratia "de_DE" (praedefinitum: lingua systematis)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Monstra principem imaginem ad initium (praedefinitum: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Diminue plicam debug.log ad initium clientis (praedefinitum: 1 nisi -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Signandum transactionis abortum est</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Incipe minifactum ut icon</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -1536,14 +1516,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Pelle mandatum quando optissimum frustum mutat (%s in mandato substituitur ab hash frusti)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Progredere cassidile ad formam recentissimam</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Iterum perlege catenam frustorum propter absentes cassidilis transactiones</translation>
     </message>
     <message>
         <source>This help message</source>

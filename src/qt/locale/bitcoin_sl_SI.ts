@@ -1490,14 +1490,6 @@
         <translation>Nazadnje prejeto</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Oddanih bajtov</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Prejetih bajtov</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Odzivni čas</translation>
     </message>
@@ -2004,10 +1996,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Predviden začetek potrditev po %n najdenem bloku.</numerusform><numerusform>Predviden začetek potrditev po %n najdenih blokih.</numerusform><numerusform>Predviden začetek potrditev po %n najdenih blokih.</numerusform><numerusform>Predviden začetek potrditev po %n najdenih blokih.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Plačilo samo minimalne provizije v znesku %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2844,16 +2832,8 @@
         <translation>Sprejemaj povezave samo od soležnikov, ki so na naslovih, ki ustrezajo navedeni omrežni maski ali naslovu. Opcijo lahko navedete večkrat.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(privzeto: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; je lahko:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Skušaj obnoviti zasebne ključe iz okvarjene datoteke wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2976,10 +2956,6 @@
         <translation>Ob spremembi vrednosti opcije -txindex boste morali obnoviti bazo podatkov z uporabo opcije -reindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Uvozi bloke iz zunanje datoteke blk000??.dat</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Iz navedenega vira dovoli povezave na JSON-RPC. Veljavne oblike vrednosti parametra &lt;ip&gt; so: edinstven naslov IP (npr.: 1.2.3.4), kombinacija omrežje/netmask (npr.: 1.2.3.4/255.255.255.0), ali pa kombinacija omrežje/CIDR (1.2.3.4/24). To opcijo lahko navedete večkrat.</translation>
     </message>
@@ -3032,10 +3008,6 @@
         <translation>Naslova %s, podanega pri opciji -whitebind ni mogoče razrešiti.</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Ob zagonu pozovi uporabnika, naj izbere podatkovno mapo (privzeto: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Poveži se preko posredniškega strežnika SOCKS5</translation>
     </message>
@@ -3056,28 +3028,12 @@
         <translation>Pošilja sledilne/razhroščevalne informacije na konzolo namesto v datoteko debug.log</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastavi korenske certifikate SSL za preverjanje zahtevkov za plačilo (privzeto: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastavi jezik, npr. "sl_SI" (privzeto: jezik sistema)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Ob zagonu prikaži uvodni zaslon (privzeto: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Ob zagonu skrajšaj datoteko debug.log (privzeto: 1, če ni vklopljena opcija -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Transakcije ni bilo mogoče podpisati.</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Zaženi v minimiranem oknu</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3096,10 +3052,6 @@
         <translation>Transkacija je prevelika</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Možnosti uporabniškega vmesnika:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Na tem računalniku ni bilo mogoče vezati naslova %s (vrnjena napaka: %s)</translation>
     </message>
@@ -3116,10 +3068,6 @@
         <translation>Brišem vse transakcije iz denarnice ...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>ob zagonu</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>Datoteka wallet.dat je poškodovana in je ni bilo mogoče obnoviti.</translation>
     </message>
@@ -3130,14 +3078,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Izvedi ukaz, ko je najden najboljši blok (niz %s v ukazu bo zamenjan s hash vrednostjo bloka)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Nadgradi denarnico na najnovejšo različico</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>S ponovnim pregledom verige blokov poišči manjkajoče transakcije iz denarnice</translation>
     </message>
     <message>
         <source>This help message</source>

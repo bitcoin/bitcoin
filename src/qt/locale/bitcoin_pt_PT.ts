@@ -1491,14 +1491,6 @@
         <translation>Ultimo Recebimento</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bytes Enviados</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bytes Recebidos</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Tempo de Latência</translation>
     </message>
@@ -1985,10 +1977,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Pedido de pagamento expirou.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Pagar somente a taxa minima de %1</translation>
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
@@ -2785,16 +2773,8 @@
         <translation>Ligações na lista branca conectam desde a seguinte netmask ou endereço IP. Posse ser especificado varias vezes.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(padrão: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;categoria&gt; pode ser:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Tentar recuperar chaves privadas de um wallet.dat corrupto</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2909,10 +2889,6 @@
         <translation>É necessário reconstruir as bases de dados usando -reindex para mudar o -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importar blocos de um ficheiro blk000??.dat externo</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Permitir conexções JSON-RPC de fontes especificas. Valido para &lt;ip&gt; um unico IP (ex. 1.2.3.4), uma rede/netmask (ex. 1.2.3.4/255.255.255.0) ou uma rede/CIDR (ex. 1.2.3.4/24). Esta opção pode ser especificada varias vezes</translation>
     </message>
@@ -2941,10 +2917,6 @@
         <translation>(por defeito: %u)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Escolha a pasta de dados ao iniciar (por defeito: 0)</translation>
-    </message>
-    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i Os Programadores do Bitcoin Core</translation>
     </message>
@@ -2969,28 +2941,12 @@
         <translation>Enviar informação de rastreio/depuração para a consola e não para o ficheiro debug.log</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Configurar certificados SSL root para pedido de pagamento (default: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Definir linguagem, por exemplo "pt_PT" (por defeito: linguagem do sistema)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostrar imagem ao iniciar (por defeito: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Encolher ficheiro debug.log ao iniciar o cliente (por defeito: 1 sem -debug definido)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Falhou assinatura da transação</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Iniciar minimizado</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3031,14 +2987,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Executar comando quando o melhor bloco mudar (no comando, %s é substituído pela hash do bloco)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Atualize a carteira para o formato mais recente</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Procurar transações em falta na cadeia de blocos</translation>
     </message>
     <message>
         <source>This help message</source>

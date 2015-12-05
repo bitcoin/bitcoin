@@ -1966,10 +1966,6 @@
         <translation>&lt;categoría&gt; pode ser:</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Tentar recuperar claves privadas dende un wallet.dat corrupto</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Opcións de creación de bloque:</translation>
     </message>
@@ -2042,16 +2038,8 @@
         <translation>Precisas reconstruír a base de datos empregando -reindex para cambiar -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importa bloques dende arquivos blk000??.dat externos</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Executar comando cando se recibe unha alerta relevante ou vemos un fork realmente longo (%s no cmd é substituído pola mensaxe)</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Escolle directorio de datos ao arrancar (por defecto: 0)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -2070,24 +2058,12 @@
         <translation>Enviar traza/información de depuración á consola en lugar de ao arquivo debug.log</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Fixar idioma, por exemplo "de_DE" (por defecto: locale del sistema)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Amosar pantalla splash no arranque (por defecto: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Recortar o arquivo debug.log ao arrancar o cliente (por defecto: 1 cando no-debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Fallou a sinatura da transacción</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Comezar minimizado</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2120,14 +2096,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Executar comando cando o mellor bloque cambie (%s no comando é sustituído polo hash do bloque)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Actualizar moedeiro ao formato máis recente</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Rescanear transaccións ausentes na cadea de bloques</translation>
     </message>
     <message>
         <source>This help message</source>

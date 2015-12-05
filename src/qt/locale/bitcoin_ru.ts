@@ -218,7 +218,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/префикс</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Заблокировано до</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -421,6 +429,10 @@
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
         <translation>Показать помощь по Bitcoin Core и получить список доступных параметров командной строки.</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n активных соединений с сетью Bitcoin</numerusform><numerusform>%n активных соединений с сетью Bitcoin</numerusform><numerusform>%n активных соединений с сетью Bitcoin</numerusform><numerusform>%n активных соединений с сетью Bitcoin</numerusform></translation>
+    </message>
     <message>
         <source>No block source available...</source>
         <translation>Источник блоков недоступен...</translation>
@@ -433,9 +445,21 @@
         <source>%n hour(s)</source>
         <translation><numerusform>%n час</numerusform><numerusform>%n часа</numerusform><numerusform>%n часов</numerusform><numerusform>%n часов</numerusform></translation>
     </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n день</numerusform><numerusform>%n дня</numerusform><numerusform>%n дней</numerusform><numerusform>%n дней</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n неделю</numerusform><numerusform>%n недели</numerusform><numerusform>%n недель</numerusform><numerusform>%n недель</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 и %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n год</numerusform><numerusform>%n лет</numerusform><numerusform>%n лет</numerusform><numerusform>%n года</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -893,7 +917,15 @@
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n ГБ свободного места доступно</numerusform><numerusform>%n ГБ свободного места доступно</numerusform><numerusform>%n ГБ свободного места доступно</numerusform><numerusform>%n ГБ свободного места доступно</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(из необходимых %n ГБ)</numerusform><numerusform>(из необходимых %n ГБ)</numerusform><numerusform>(из необходимых %n ГБ)</numerusform><numerusform>(из необходимых %n ГБ)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1042,6 +1074,34 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Порт прокси-сервера (например, 9050)</translation>
+    </message>
+    <message>
+        <source>Used for reaching peers via:</source>
+        <translation>Используется для достижения участников через:</translation>
+    </message>
+    <message>
+        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Показывается, если включено прокси SOCKS5 по умолчанию, используемое для соединения с участниками по этому типу сети.</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Подключаться к сети Bitcoin через прокси SOCKS5 для скрытых сервисов Tor.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Использовать отдельный прокси SOCKS5 для соединения с участниками через скрытые сервисы Tor:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1430,8 +1490,16 @@
         <translation>&amp;Участники</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Заблокированные участники</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Выберите участника для просмотра подробностей.</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>Доверенный</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1440,6 +1508,18 @@
     <message>
         <source>Version</source>
         <translation>Версия</translation>
+    </message>
+    <message>
+        <source>Starting Block</source>
+        <translation>Начальный блок</translation>
+    </message>
+    <message>
+        <source>Synced Headers</source>
+        <translation>Синхронизировано заголовков</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Синхронизировано блоков</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -1466,15 +1546,15 @@
         <translation>Последний раз получено</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Байт передано</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Байт получено</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
+        <translation>Время задержки</translation>
+    </message>
+    <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>Длительность текущего пинга.</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
         <translation>Время задержки</translation>
     </message>
     <message>
@@ -1526,6 +1606,34 @@
         <translation>Очистить консоль</translation>
     </message>
     <message>
+        <source>&amp;Disconnect Node</source>
+        <translation>&amp;Отключить узел</translation>
+    </message>
+    <message>
+        <source>Ban Node for</source>
+        <translation>Заблокировать узел на</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;час</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;день</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;неделю</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;год</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>&amp;Разблокировать узел</translation>
+    </message>
+    <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
         <translation>Добро пожаловать в RPC-консоль Bitcoin Core.</translation>
     </message>
@@ -1552,6 +1660,10 @@
     <message>
         <source>%1 GB</source>
         <translation>%1 ГБ</translation>
+    </message>
+    <message>
+        <source>(node id: %1)</source>
+        <translation>(номер узла: %1)</translation>
     </message>
     <message>
         <source>via %1</source>
@@ -1946,6 +2058,10 @@
         <translation>Копировать размен</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Общая сумма %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>или</translation>
     </message>
@@ -1976,10 +2092,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Запрос платежа просрочен.</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Всего %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2295,6 +2407,10 @@
         <source>Status</source>
         <translation>Статус</translation>
     </message>
+    <message numerus="yes">
+        <source>, broadcast through %n node(s)</source>
+        <translation><numerusform>, разослано через %n узел</numerusform><numerusform>, разослано через %n узла</numerusform><numerusform>, разослано через %n узлов</numerusform><numerusform>, разослано через %n узлов</numerusform></translation>
+    </message>
     <message>
         <source>Date</source>
         <translation>Дата</translation>
@@ -2330,6 +2446,10 @@
     <message>
         <source>Credit</source>
         <translation>Кредит</translation>
+    </message>
+    <message numerus="yes">
+        <source>matures in %n more block(s)</source>
+        <translation><numerusform>будет доступно через %n блок</numerusform><numerusform>будет доступно через %n блока</numerusform><numerusform>будет доступно через %n блоков</numerusform><numerusform>будет доступно через %n блоков</numerusform></translation>
     </message>
     <message>
         <source>not accepted</source>
@@ -2403,6 +2523,10 @@
         <source>, has not been successfully broadcast yet</source>
         <translation>, ещё не было успешно разослано</translation>
     </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Открыто для ещё %n блока</numerusform><numerusform>Открыто для ещё %n блоков</numerusform><numerusform>Открыто для ещё %n блоков</numerusform><numerusform>Открыто для ещё %n блоков</numerusform></translation>
+    </message>
     <message>
         <source>unknown</source>
         <translation>неизвестно</translation>
@@ -2432,6 +2556,10 @@
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Незрелый (%1 подтверждений, будет доступен после %2)</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Открыто для ещё %n блока</numerusform><numerusform>Открыто для ещё %n блоков</numerusform><numerusform>Открыто для ещё %n блоков</numerusform><numerusform>Открыто для ещё %n блоков</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2593,6 +2721,10 @@
         <translation>Скопировать ID транзакции</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Скопировать исходную транзакции</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Изменить метку</translation>
     </message>
@@ -2740,8 +2872,40 @@
         <translation>Принимать командную строку и команды JSON-RPC</translation>
     </message>
     <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Если &lt;category&gt; не предоставлена или равна 1, выводить всю отладочную информацию.</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Максимальная сумма комиссий (%s) для одной транзакции в бумажнике; слишком низкое значение может вызвать прерывание больших транзакций (по умолчанию: %s)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Внимание: убедитесь, что дата и время на Вашем компьютере выставлены верно! Если Ваши часы идут неправильно, Bitcoin Core будет работать некорректно.</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Удаление блоков выставлено ниже, чем минимум в %d Мб. Пожалуйста, используйте большее значение.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Удаление: последняя синхронизация кошелька вышла за рамки удаленных данных. Вам нужен -reindex (скачать всю  цепь блоков в случае удаленного узла)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Уменьшить размер хранилища за счёт удаления (обрезания) старых блоков. Этот режим несовместим с -txindex и  -rescan. Внимание: переключение этой опции обратно потребует полной загрузки цепи блоков. (по умолчанию: 0 = отключить удаление блоков, &gt;%u = целевой размер в Мб для файлов блоков)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Повторное сканирование не возможно в режиме удаления. Вам надо будет использовать -reindex, который загрузит заново всю цепь блоков.</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Ошибка: произошла неустранимая ошибка, подробности в debug.log</translation>
+    </message>
+    <message>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation>Комиссия (в %s/Кб) для добавления к вашим транзакциям (по умолчанию: %s)</translation>
     </message>
     <message>
         <source>Pruning blockstore...</source>
@@ -2750,6 +2914,10 @@
     <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Запускаться в фоне как демон и принимать команды</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>Невозможно запустить HTTP сервер. Смотри debug лог для подробностей.</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
@@ -2776,12 +2944,20 @@
         <translation>Задать число потоков проверки скрипта (от %u до %d, 0=авто, &lt;0 = оставить столько ядер свободными, по умолчанию: %d)</translation>
     </message>
     <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>База данных блоков содержит блок, который появляется из будущего. Это может из-за некорректно установленных даты и времени на вашем компьютере. Остается только перестроивать базу блоков, если вы уверены, что дата и время корректны.</translation>
+    </message>
+    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>Это пре-релизная тестовая сборка - используйте на свой страх и риск - не используйте для добычи или торговых приложений</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>Не удалось забиндиться на %s на этом компьютере. Возможно, Bitcoin Core уже запущен.</translation>
+    </message>
+    <message>
+        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
+        <translation>Использовать UPnP для проброса порта (по умолчанию: 1, если используется прослушивание и нет -proxy)</translation>
     </message>
     <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
@@ -2808,16 +2984,12 @@
         <translation>Вносить в белый список участников, подключающихся с указанной маски сети или IP. Можно использовать многократно.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(по умолчанию: 1)</translation>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-maxmempool должен быть как минимум %d MB</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; может быть:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Попытаться восстановить приватные ключи из повреждённого wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2846,6 +3018,22 @@
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Пересобрать БД блоков прямо сейчас?</translation>
+    </message>
+    <message>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation>Включить публичный хеш блока в &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish hash transaction in &lt;address&gt;</source>
+        <translation>Включить публичный хеш транзакции в &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw block in &lt;address&gt;</source>
+        <translation>Включить публичный сырой блок в &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw transaction in &lt;address&gt;</source>
+        <translation>Включить публичную сырую транзакцию в &lt;address&gt;</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -2884,6 +3072,10 @@
         <translation>Неверный -onion адрес: '%s'</translation>
     </message>
     <message>
+        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
+        <translation>Сбрасывать транзакции из памяти на диск каждые &lt;n&gt; мегабайт (по умолчанию: %u)</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>Недостаточно файловых дескрипторов.</translation>
     </message>
@@ -2912,8 +3104,24 @@
         <translation>Укажите файл бумажника (внутри каталога данных)</translation>
     </message>
     <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Неподдерживаемый аргумент -benchmark проигнорирован, используйте -debug=bench.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Неподдерживаемый аргумент -debugnet проигнорирован, используйте -debug=net.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>Обнаружен не поддерживаемый параметр -tor, используйте -onion.</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>Использовать UPnP для проброса порта (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>Комментарий пользователя (%s) содержит небезопасные символы.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -2938,10 +3146,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Вам необходимо пересобрать базы данных с помощью -reindex, чтобы изменить -txindex</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Импортировать блоки из внешнего файла blk000??.dat</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -2974,6 +3178,10 @@
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Выполнить команду, когда приходит соответствующее сообщение о тревоге или наблюдается очень длинное расщепление цепи (%s в команде заменяется на сообщение)</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
+        <translation>Комиссии (в %s/Кб) меньшие этого значения считаются нулевыми для создания, ретрансляции, получения транзакции (по умолчанию: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3032,12 +3240,20 @@
         <translation>Активируется лучшая цепь...</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Не удаётся разрешить адрес в параметре -whitebind: '%s'</translation>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>Всегда транслировать транзакции, полученные из белого списка участников (по умолчанию: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Выбрать каталог данных при запуске (по умолчанию: 0)</translation>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation>Попытаться восстановить приватные ключи из повреждённого wallet.dat при запуске</translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Автоматически создавать скрытый Tor сервис (по умолчанию: %d)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Не удаётся разрешить адрес в параметре -whitebind: '%s'</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3054,6 +3270,10 @@
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Ошибка чтения базы данных, работа завершается.</translation>
+    </message>
+    <message>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>Импортировать блоки из внешнего файла blk000?.dat при запуске</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3108,6 +3328,14 @@
         <translation>Получать и отображать P2P сетевые тревоги (по умолчанию: %u)</translation>
     </message>
     <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>Уменьшите -maxconnections с %d до %d, из-за ограничений системы.</translation>
+    </message>
+    <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>Перепроверить цепь блоков на предмет отсутствующих в бумажнике транзакций при запуске</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Выводить информацию трассировки/отладки на консоль вместо файла debug.log</translation>
     </message>
@@ -3116,20 +3344,8 @@
         <translation>Осуществить транзакцию бесплатно, если возможно (по умолчанию: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Указать корневые SSL-сертификаты для запроса платежа (по умолчанию: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Выберите язык, например "de_DE" (по умолчанию: как в системе)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Показать все отладочные параметры (использование: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Показывать сплэш при запуске (по умолчанию: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3140,16 +3356,20 @@
         <translation>Не удалось подписать транзакцию</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>Запускать свёрнутым</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Сумма транзакции слишком мала для уплаты комиссии</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
         <translation>Это экспериментальное ПО.</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Пароль контроля порта Tor (по умолчанию: пустой)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>Порт контроля Tor используется, если включено прослушивание onion (по умолчанию: %s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3168,12 +3388,12 @@
         <translation>Транзакция слишком большая</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Настройки интерфейса:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Невозможно привязаться к %s на этом компьютере (bind вернул ошибку %s)</translation>
+    </message>
+    <message>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>Обновить бумажник до последнего формата при запуске</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3188,12 +3408,16 @@
         <translation>Внимание</translation>
     </message>
     <message>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>Будет работать в режиме только блоков (по умолчанию: %u)</translation>
+    </message>
+    <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Стираем все транзакции из кошелька...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>при запуске</translation>
+        <source>ZeroMQ notification options:</source>
+        <translation>ZeroMQ параметры оповещения:</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -3206,14 +3430,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Выполнить команду, когда появляется новый блок (%s в команде заменяется на хэш блока)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Обновить бумажник до последнего формата</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Перепроверить цепь блоков на предмет отсутствующих в бумажнике транзакций</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3236,6 +3452,22 @@
         <translation>(1 = сохранять метаданные транзакции: например, владельца аккаунта и информацию запроса платежа; 2 = отбросить метаданные)</translation>
     </message>
     <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Установлено очень большое значение -maxtxfee. Такие большие комиссии могут быть уплачены в отдельной транзакции.</translation>
+    </message>
+    <message>
+        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Установлено очень большое значение -paytxfee. Такие большие комиссии могут быть уплачены в отдельной транзакции.</translation>
+    </message>
+    <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>Не хранить транзакции в памяти дольше, чем &lt;n&gt; часов (по умолчанию %u)</translation>
+    </message>
+    <message>
+        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Ошибка чтения wallet.dat! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Насколько тщательна проверка контрольных блоков -checkblocks (0-4, по умолчанию: %u)</translation>
     </message>
@@ -3250,6 +3482,18 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Выводить отладочную информацию (по умолчанию: %u, указание &lt;category&gt; необязательно)</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>Текущая длина строки версии сети (%i) превышает максимальную длину (%i). Увеливается количество или размер uacomments.</translation>
+    </message>
+    <message>
+        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
+        <translation>Пытается ограничить исходящий трафик до (в МБ за 24ч), 0 = не ограничивать (по умолчанию: %d)</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Обнаружен не поддерживаемый аргумент -socks. Выбор версии SOCKS более невозможен, поддерживаются только прокси SOCKS5.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

@@ -222,7 +222,11 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Geband tot</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1072,6 +1076,18 @@
         <translation>Poort van de proxy (bijv. 9050)</translation>
     </message>
     <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Scherm</translation>
     </message>
@@ -1317,6 +1333,10 @@
         <translation>User Agent</translation>
     </message>
     <message>
+        <source>Node/Service</source>
+        <translation>Node/Service</translation>
+    </message>
+    <message>
         <source>Ping Time</source>
         <translation>Ping tijd</translation>
     </message>
@@ -1466,6 +1486,14 @@
         <translation>Versie</translation>
     </message>
     <message>
+        <source>Synced Headers</source>
+        <translation>Gesynchroniseerde headers</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Gesynchroniseerde blokken</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>User Agent</translation>
     </message>
@@ -1490,16 +1518,12 @@
         <translation>Laatst ontvangen</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Bytes Verzonden</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bytes Ontvangen</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping Tijd</translation>
+    </message>
+    <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>De tijdsduur van een op het moment openstaande ping.</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1544,6 +1568,22 @@
     <message>
         <source>Clear console</source>
         <translation>Maak console leeg</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;uur</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;dag</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;week</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;jaar</translation>
     </message>
     <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
@@ -1966,6 +2006,10 @@
         <translation>Kopieer wijziging</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Totaalbedrag %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>of</translation>
     </message>
@@ -1992,10 +2036,6 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Betalingsverzoek verlopen.</translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Betaal alleen de minimale transactiekosten van %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2625,6 +2665,10 @@
         <translation>Kopieer transactie-ID</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Kopieer </translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Bewerk label</translation>
     </message>
@@ -2772,6 +2816,10 @@
         <translation>Aanvaard commandoregel- en JSON-RPC-commando's</translation>
     </message>
     <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Als er geen &lt;category&gt; is opgegeven of als de &lt;category&gt; 1 is, laat dan alle debugging informatie zien.</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>Fout: er is een fout opgetreden,  zie debug.log voor details</translation>
     </message>
@@ -2832,16 +2880,8 @@
         <translation>Goedgekeurde peers die verbinden van het ingegeven netmask of IP adres. Kan meerdere keren gespecificeerd worden.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(standaard: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; kan zijn:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Poog de geheime sleutels uit een corrupt wallet.dat bestand terug te halen</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2956,10 +2996,6 @@
         <translation>Om -txindex te kunnen veranderen dient u de database opnieuw te bouwen met gebruik van -reindex.</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importeert blokken van extern blk000??.dat bestand</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Sta JSON-RPC verbindingen toe vanuit een gespecificeerde bron. Geldig voor &lt;ip&gt; zijn een enkel IP (bijv. 1.2.3.4), een netwerk/netmask (bijv. 1.2.3.4/255.255.255.0) of een netwerk/CIDR (bijv. 1.2.3.4/24). Deze optie kan meerdere keren gespecificeerd worden.</translation>
     </message>
@@ -3041,10 +3077,6 @@
         <translation>Kan -whitebind adres niet herleiden: '%s'</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Kies de gegevensmap tijdens het opstarten (standaard: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Verbind door SOCKS5 proxy</translation>
     </message>
@@ -3113,20 +3145,8 @@
         <translation>Verstuur transacties zonder verzendkosten indien mogelijk (standaard: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Zet SSL root certificaten voor betalingsverzoek (standaard: -sytem-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Stel taal in, bijvoorbeeld ''de_DE" (standaard: systeeminstellingen)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Toon alle foutopsporingsopties (gebruik: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Laat laadscherm zien bij het opstarten. (standaard: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3135,10 +3155,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Ondertekenen van transactie mislukt</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Geminimaliseerd starten</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3165,10 +3181,6 @@
         <translation>Transactie te groot</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>UI Opties:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Niet in staat om aan %s te binden op deze computer (bind gaf error %s)</translation>
     </message>
@@ -3189,10 +3201,6 @@
         <translation>Bezig met het zappen van alle transacties van de portemonnee...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>bij opstarten</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrupt, veiligstellen mislukt</translation>
     </message>
@@ -3203,14 +3211,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Voer commando uit zodra het beste blok verandert (%s in cmd wordt vervangen door blockhash)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Vernieuw portemonnee naar nieuwste versie</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Doorzoek de blokketen op ontbrekende portemonnee-transacties</translation>
     </message>
     <message>
         <source>This help message</source>

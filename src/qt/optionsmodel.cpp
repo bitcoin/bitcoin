@@ -26,10 +26,10 @@
 #include <QSettings>
 #include <QStringList>
 
-OptionsModel::OptionsModel(QObject *parent) :
+OptionsModel::OptionsModel(QObject *parent, bool resetSettings) :
     QAbstractListModel(parent)
 {
-    Init();
+    Init(resetSettings);
 }
 
 void OptionsModel::addOverriddenOption(const std::string &option)
@@ -38,8 +38,11 @@ void OptionsModel::addOverriddenOption(const std::string &option)
 }
 
 // Writes all missing QSettings with their default values
-void OptionsModel::Init()
+void OptionsModel::Init(bool resetSettings)
 {
+    if (resetSettings)
+        Reset();
+
     QSettings settings;
 
     // Ensure restart flag is unset on client startup

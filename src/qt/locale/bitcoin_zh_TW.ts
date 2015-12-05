@@ -403,7 +403,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>要求付款(產生 QR Code 和位元幣付款協議的 URI)</translation>
+        <translation>要求付款(產生 QR Code 和位元幣付款協議的資源識別碼: URI)</translation>
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
@@ -423,7 +423,7 @@
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>開啓 bitcoin 協議的 URI 或付款要求</translation>
+        <translation>開啓 bitcoin 協議的資源識別碼(URI)或付款要求</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -907,7 +907,7 @@
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>使用自定的資料目錄:</translation>
+        <translation>使用自訂的資料目錄:</translation>
     </message>
     <message>
         <source>Bitcoin Core</source>
@@ -997,7 +997,7 @@
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
-        <translation>在交易頁籤的情境選單出現的第三方(比如說區塊探索網站)網址連結。網址中的 %s 會被取代為交易的雜湊值。可以用直線符號 | 來分隔多個連結。</translation>
+        <translation>在交易頁籤的情境選單出現的第三方網址連結(URL)，比如說區塊探索網站。網址中的 %s 會被取代為交易的雜湊值。可以用直線符號 | 來分隔多個連結。</translation>
     </message>
     <message>
         <source>Third party transaction URLs</source>
@@ -1291,11 +1291,11 @@
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
-        <translation>取得付款要求的 URL 無效: %1</translation>
+        <translation>取得付款要求的網址連結(URL)無效: %1</translation>
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>沒辦法解析 URI 位址！可能是因為位元幣位址無效，或是 URI 參數格式錯誤。</translation>
+        <translation>沒辦法解析資源識別碼(URI)！可能是因為位元幣位址無效，或是 URI 參數格式錯誤。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1548,14 +1548,6 @@
     <message>
         <source>Last Receive</source>
         <translation>最近收到</translation>
-    </message>
-    <message>
-        <source>Bytes Sent</source>
-        <translation>送出位元組</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>收到位元組</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1931,7 +1923,7 @@
     </message>
     <message>
         <source>Custom change address</source>
-        <translation>自定找零位址</translation>
+        <translation>自訂找零位址</translation>
     </message>
     <message>
         <source>Transaction Fee:</source>
@@ -2070,6 +2062,10 @@
         <translation>複製找零金額</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>總金額 %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>或</translation>
     </message>
@@ -2102,12 +2098,8 @@
         <translation>付款的要求過期了。</translation>
     </message>
     <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>只付最低手續費 %1</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>總金額 %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
+        <source>Pay only the required fee of %1</source>
+        <translation>只付必要的手續費 %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2202,11 +2194,11 @@
     </message>
     <message>
         <source>This is an unauthenticated payment request.</source>
-        <translation>這是個沒驗證過的付款要求。</translation>
+        <translation>這是個沒有驗證過身份的付款要求。</translation>
     </message>
     <message>
         <source>This is an authenticated payment request.</source>
-        <translation>這是個已驗證的付款要求。</translation>
+        <translation>這是個已經驗證過身份的付款要求。</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2214,7 +2206,7 @@
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>附加在位元幣付款協議 URI 中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到位元幣網路上。</translation>
+        <translation>附加在位元幣付款協議的資源識別碼(URI)中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到位元幣網路上。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2741,6 +2733,10 @@
         <translation>複製交易識別碼</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>複製交易原始資料</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>編輯標記</translation>
     </message>
@@ -2889,10 +2885,6 @@
 </translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>當處理轉發的交易時，如果每千位元組(kB)的手續費比這個值(單位是 %s)低，就視為沒付手續費(預設值: %s)</translation>
-    </message>
-    <message>
         <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
         <translation>如果沒有提供 &lt;category&gt; 或是值為 1 就會輸出所有的除錯資訊。</translation>
     </message>
@@ -3005,20 +2997,12 @@
         <translation>把來自指定網域或位址的節點放進白名單。這個選項可以設定多次。</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(預設值: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>參數 -maxmempool 至少要給 %d 百萬位元組(MB)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; 可以是:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>嘗試從壞掉的錢包檔 wallet.dat 復原密鑰</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3110,7 +3094,7 @@
     </message>
     <message>
         <source>Only connect to nodes in network &lt;net&gt; (ipv4, ipv6 or onion)</source>
-        <translation>只有連接到網絡節點 &lt;net&gt; （IPv4，IPv6或onion）</translation>
+        <translation>只和 &lt;net&gt; 網路上的節點連線(ipv4, ipv6, 或 onion)</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3173,10 +3157,6 @@
         <translation>改變 -txindex 參數後，必須要用 -reindex 參數來重建資料庫</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>從其它來源的 blk000??.dat 檔匯入區塊</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>允許指定的來源建立 JSON-RPC 連線。&lt;ip&gt; 的有效值可以是一個單獨位址(像是 1.2.3.4)，一個網段/網段罩遮值(像是 1.2.3.4/255.255.255.0)，或是網段/CIDR值(像是 1.2.3.4/24)。這個選項可以設定多次。</translation>
     </message>
@@ -3207,6 +3187,10 @@
     <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>當收到相關警示，或發現相當長的分支時，所要執行的指令(指令中的 %s 會被取代成警示訊息)</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
+        <translation>當處理轉發的交易、挖礦、或製造交易時，如果每千位元組(kB)的手續費比這個值(單位是 %s)低，就視為沒付手續費(預設值: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3265,12 +3249,20 @@
         <translation>啟用最佳鏈結...</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>沒辦法解析 -whitebind 指定的位址: '%s'</translation>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>無條件轉發從白名點節點收到的交易(預設值: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>啓動時選擇資料目錄(預設值: 0)</translation>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation>啟動時嘗試從壞掉的錢包檔 wallet.dat 復原密鑰</translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>自動產生 Tor 隱藏服務(預設值: %d)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>沒辦法解析 -whitebind 指定的位址: '%s'</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3287,6 +3279,10 @@
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>讀取資料庫時發生錯誤，要關閉了。</translation>
+    </message>
+    <message>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>啟動時從其它來源的 blk000??.dat 檔匯入區塊</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3345,6 +3341,10 @@
         <translation>因為系統的限制，將 -maxconnections 參數從 %d 降到了 %d</translation>
     </message>
     <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>啟動時重新掃描區塊鏈，來尋找錢包可能漏掉的交易。</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>在終端機顯示追蹤或除錯資訊，而不是寫到檔案 debug.log 中</translation>
     </message>
@@ -3353,20 +3353,8 @@
         <translation>盡可能送出不用付手續費的交易(預設值: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>設定付款請求時所使用的 SSL 根憑證 (預設值: 系統憑證庫)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>設定語言，比如說 de_DE (預設值: 系統語系)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>顯示所有的除錯選項 (用法: --help --help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>顯示啓動畫面(預設值: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3377,16 +3365,20 @@
         <translation>簽署交易失敗</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>啓動時縮到最小</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>交易金額太少而付不起手續費</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
         <translation>這套軟體屬於實驗性質。</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Tor 控制埠密碼(預設值: 空白)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>開啟聽候 onion 連線時的 Tor 控制埠號碼(預設值: %s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3405,12 +3397,12 @@
         <translation>交易位元量太大</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>使用介面選項:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>無法和這台電腦上的 %s 繫結(回傳錯誤 %s)</translation>
+    </message>
+    <message>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>啟動時把錢包檔案升級成最新的格式</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3425,16 +3417,16 @@
         <translation>警告</translation>
     </message>
     <message>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>是否要用只要區塊模式運作(預設值: %u)</translation>
+    </message>
+    <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>正在砍掉錢包中的所有交易...</translation>
     </message>
     <message>
         <source>ZeroMQ notification options:</source>
         <translation>ZeroMQ 通知選項:</translation>
-    </message>
-    <message>
-        <source>on startup</source>
-        <translation>當啟動時</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -3447,14 +3439,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>當最新區塊改變時要執行的指令(指令中的 %s 會被取代成區塊雜湊值)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>把錢包檔案升級成最新的格式</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>重新掃描區塊鏈，來尋找錢包可能漏掉的交易。</translation>
     </message>
     <message>
         <source>This help message</source>

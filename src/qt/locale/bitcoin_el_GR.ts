@@ -1389,14 +1389,6 @@
         <translation>Τελευταία λήψη</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Σταλθέντα bytes</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Ληφθέντα bytes</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Χρόνος καθυστέρησης</translation>
     </message>
@@ -2551,14 +2543,6 @@
         <translation>Προειδοποίηση : το αρχειο wallet.dat ειναι διεφθαρμένο, τα δεδομένα σώζονται ! Original wallet.dat αποθηκεύονται ως wallet.{timestamp}.bak στο %s . Αν το υπόλοιπο του ή τις συναλλαγές σας, είναι λάθος θα πρέπει να επαναφέρετε από ένα αντίγραφο ασφαλείας</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(προεπιλογή: 1)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Προσπάθεια για ανακτησει ιδιωτικων κλειδιων από ενα διεφθαρμένο αρχειο wallet.dat </translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Αποκλεισμός επιλογων δημιουργίας: </translation>
     </message>
@@ -2639,16 +2623,8 @@
         <translation>Επιλογές πορτοφολιού:</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Εισαγωγή μπλοκ από εξωτερικό αρχείο blk000?.dat</translation>
-    </message>
-    <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation>Αδυναμία κλειδώματος του φακέλου δεδομένων %s. Πιθανώς το Bitcoin να είναι ήδη ενεργό.</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Επιλογή φακέλου δεδομένων στην εκκίνηση (προεπιλεγμένο: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -2691,20 +2667,8 @@
         <translation>Αποστολή πληροφοριών εντοπισμού σφαλμάτων στην κονσόλα αντί του αρχείου debug.log</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ορίστε SSL root certificates για αίτηση πληρωμής (default: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Όρισε γλώσσα, για παράδειγμα "de_DE"(προεπιλογή:τοπικές ρυθμίσεις)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Προβολή όλων των επιλογών εντοπισμού σφαλμάτων (χρήση: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Εμφάνισε την οθόνη εκκίνησης κατά την εκκίνηση(προεπιλογή:1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2713,10 +2677,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Η υπογραφή συναλλαγής απέτυχε </translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Έναρξη ελαχιστοποιημένο</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2747,10 +2707,6 @@
         <translation>Μεταφορά όλων των συναλλαγών απο το πορτοφόλι</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>κατά την εκκίνηση</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>Το αρχειο wallet.dat ειναι διεφθαρμένο, η διάσωση απέτυχε</translation>
     </message>
@@ -2761,14 +2717,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Εκτέλεσε την εντολή όταν το καλύτερο μπλοκ αλλάξει(%s στην εντολή αντικαθίσταται από το hash του μπλοκ)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Αναβάθμισε το πορτοφόλι στην τελευταία έκδοση</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Επανέλεγχος της αλυσίδας μπλοκ για απούσες συναλλαγές</translation>
     </message>
     <message>
         <source>This help message</source>

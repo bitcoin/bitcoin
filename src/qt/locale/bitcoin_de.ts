@@ -226,7 +226,11 @@
         <source>IP/Netmask</source>
         <translation>IP/Netzmaske</translation>
     </message>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Gesperrt bis</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -1088,6 +1092,10 @@
         <translation>Tor</translation>
     </message>
     <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Separaten SOCKS5-Proxy verwenden, um Gegenstellen über versteckte Tor-Dienste zu erreichen:</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;Programmfenster</translation>
     </message>
@@ -1474,6 +1482,10 @@
         <translation>&amp;Gegenstellen</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Gesperrte Peers</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Gegenstelle auswählen, um detaillierte Informationen zu erhalten.</translation>
     </message>
@@ -1516,14 +1528,6 @@
     <message>
         <source>Last Receive</source>
         <translation>Letzter Empfang</translation>
-    </message>
-    <message>
-        <source>Bytes Sent</source>
-        <translation>Übertragene Byte</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Empfangene Byte</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -2022,6 +2026,10 @@
         <translation>Wechselgeld kopieren</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Gesamtbetrag %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>oder</translation>
     </message>
@@ -2053,17 +2061,13 @@
         <source>Payment request expired.</source>
         <translation>Zahlungsanforderung abgelaufen.</translation>
     </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Nur die notwendige Gebühr in Höhe von %1 zahlen</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Block.</numerusform><numerusform>Voraussichtlicher Beginn der Bestätigung innerhalb von %n Blöcken.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Nur die minimale Gebühr in Höhe von %1 zahlen</translation>
-    </message>
-    <message>
-        <source>Total Amount %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</source>
-        <translation>Gesamtbetrag %1&lt;span style='font-size:10pt;font-weight:normal;'&gt;&lt;br /&gt;(=%2)&lt;/span&gt;</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2912,20 +2916,12 @@
         <translation>Gegenstellen die sich von der angegebenen Netzmaske oder IP-Adresse aus verbinden immer zulassen. Kann mehrmals angegeben werden.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(Standard: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool muss mindestens %d MB betragen</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; kann sein:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Versuchen, private Schlüssel aus einer beschädigten wallet.dat wiederherzustellen</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -3020,6 +3016,18 @@
         <translation>Wallet-Datei angeben (innerhalb des Datenverzeichnisses)</translation>
     </message>
     <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Nicht unterstütztes Argument -benchmark wurde ignoriert, bitte -debug=bench verwenden.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Nicht unterstütztes Argument -debugnet wurde ignoriert, bitte -debug=net verwenden.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>Nicht unterstütztes Argument -tor gefunden, bitte -onion verwenden.</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>UPnP verwenden, um eine Portweiterleitung einzurichten (Standard: %u)</translation>
     </message>
@@ -3046,10 +3054,6 @@
     <message>
         <source>You need to rebuild the database using -reindex to change -txindex</source>
         <translation>Sie müssen die Datenbank mit Hilfe von -reindex neu aufbauen, um -txindex zu verändern</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Blöcke aus externer Datei blk000??.dat importieren</translation>
     </message>
     <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
@@ -3140,12 +3144,12 @@
         <translation>Aktiviere beste Blockkette...</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Kann Adresse in -whitebind nicht auflösen: '%s'</translation>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation>Versuchen, private Schlüssel beim Starten aus einer beschädigten wallet.dat wiederherzustellen</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Datenverzeichnis beim Starten auswählen (Standard: 0)</translation>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Kann Adresse in -whitebind nicht auflösen: '%s'</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3162,6 +3166,10 @@
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Fehler beim lesen der Datenbank, Ausführung wird beendet.</translation>
+    </message>
+    <message>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>Blöcke beim Starten aus externer Datei blk000??.dat importieren</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3216,6 +3224,10 @@
         <translation>P2P-Netzwerk-Alarme empfangen und anzeigen (Standard: %u)</translation>
     </message>
     <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>Blockkette beim Starten erneut nach fehlenden Wallet-Transaktionen durchsuchen</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Rückverfolgungs- und Debuginformationen an die Konsole senden, anstatt sie in debug.log zu schreiben</translation>
     </message>
@@ -3224,20 +3236,8 @@
         <translation>Transaktionen, wenn möglich, als gebührenfreie Transaktion senden (Standard: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>SSL-Wurzelzertifikate für Zahlungsanforderungen festlegen (Standard: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Sprache festlegen, z.B. "de_DE" (Standard: Systemstandard)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Zeige alle Debuggingoptionen (Benutzung: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Startbildschirm beim Starten anzeigen (Standard: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3246,10 +3246,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Signierung der Transaktion fehlgeschlagen</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Minimiert starten</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3276,12 +3272,12 @@
         <translation>Transaktion zu groß</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Benutzeroberflächenoptionen:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Kann auf diesem Computer nicht an %s binden (bind meldete Fehler %s)</translation>
+    </message>
+    <message>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>Wallet beim Starten auf das neueste Format aktualisieren</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3304,10 +3300,6 @@
         <translation>ZeroMQ-Benachrichtigungsoptionen:</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>beim Starten</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat beschädigt, Datenrettung fehlgeschlagen</translation>
     </message>
@@ -3318,14 +3310,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Befehl ausführen wenn der beste Block wechselt (%s im Befehl wird durch den Hash des Blocks ersetzt)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Wallet auf das neueste Format aktualisieren</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Blockkette erneut nach fehlenden Wallet-Transaktionen durchsuchen</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3348,6 +3332,18 @@
         <translation>(1 = TX-Metadaten wie z.B. Accountbesitzer und Zahlungsanforderungsinformationen behalten, 2 = TX-Metadaten verwerfen)</translation>
     </message>
     <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee ist auf einen sehr hohen Wert festgelegt! Gebühren dieser Höhe könnten für eine einzelne Transaktion bezahlt werden.</translation>
+    </message>
+    <message>
+        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>-paytxfee ist auf einen sehr hohen Wert festgelegt! Dies ist die Gebühr die beim Senden einer Transaktion fällig wird.</translation>
+    </message>
+    <message>
+        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Lesen von wallet.dat fehlgeschlagen! Alle Schlüssel wurden korrekt gelesen, Transaktionsdaten bzw. Adressbucheinträge fehlen aber möglicherweise oder sind inkorrekt.</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Legt fest, wie gründlich die Blockverifikation von -checkblocks ist (0-4, Standard: %u)</translation>
     </message>
@@ -3362,6 +3358,10 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Debugginginformationen ausgeben (Standard: %u, &lt;category&gt; anzugeben ist optional)</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Nicht unterstütztes Argument -socks gefunden. Das Festlegen der SOCKS-Version ist nicht mehr möglich, nur noch SOCKS5-Proxies werden unterstützt.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

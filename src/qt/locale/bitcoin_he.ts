@@ -1332,14 +1332,6 @@
         <translation>קבלה אחרונה</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>בתים שנשלחו</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>בתים שהתקבלו</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>זמן המענה</translation>
     </message>
@@ -2526,16 +2518,8 @@
         <translation>אזהרה: הקובץ wallet.dat הושחת, המידע חולץ! קובץ ה־wallet.dat המקורי נשמר בשם wallet.{timestamp}.bak במיקום %s; אם המאזן או ההעברות שגויים עליך לשחזר גיבוי.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(בררת מחדל: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;קטגוריה&gt; יכולה להיות:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>נסה לשחזר מפתחות פרטיים מקובץ wallet.dat מושחת.</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2642,20 +2626,12 @@
         <translation>עליך לבנות מחדש את מסד הנתונים תוך שימוש ב־‎-reindex על מנת לשנות את ‎-txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>מיובאים מקטעים מקובצי blk000??.dat חיצוניים</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>הרץ פקודה כאשר ההתראה הרלוונטית מתקבלת או כשאנחנו עדים לפיצול ארוך מאוד (%s בשורת הפקודה יוחלף ע"י ההודעה)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>לא ניתן לפתור את הכתובת ‎-whitebind:‏ '%s'</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>בחירת תיקיית נתונים עם ההפעלה (בררת מחדל: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -2710,20 +2686,8 @@
         <translation>שלח מידע דיבאג ועקבה לקונסולה במקום לקובץ debug.log</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>הגדרות אישורי בסיס של SSL לבקשות תשלום (בררת המחדל: -מערכת-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>הגדרת שפה, למשל „he_il“ (בררת מחדל: שפת המערכת)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>הצגת כל אפשרויות הניפוי (שימוש: ‎--help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>הצגת מסך פתיחה בעת הפעלה (בררת מחדל: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2732,10 +2696,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>החתימה על ההעברה נכשלה</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>התחלה במצב ממוזער</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -2770,10 +2730,6 @@
         <translation>אזהרה</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>עם ההפעלה</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>קובץ wallet.dat מושחת, החילוץ נכשל</translation>
     </message>
@@ -2784,14 +2740,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>יש לבצע פקודה זו כשהמקטע הטוב ביותר משתנה (%s בפקודה יוחלף בגיבוב המקטע)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>שדרוג הארנק למבנה העדכני</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>יש לסרוק מחדש את שרשרת המקטעים למציאת העברות חסרות בארנק</translation>
     </message>
     <message>
         <source>This help message</source>
