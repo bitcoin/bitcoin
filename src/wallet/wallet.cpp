@@ -2127,7 +2127,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 							}
 							const CScript& scriptPubKeyIn = scriptSysPubKey;
 							signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKeyIn, scriptSigRes);
-							printf("signed sig %s result %d\n", signSuccess? 1: 0, scriptPubKeyIn.GetHex().c_str());
+							printf("signed result %d\n", signSuccess? 1: 0);
 						}
 						else
 							signSuccess = ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, scriptSigRes);
