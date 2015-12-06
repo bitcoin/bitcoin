@@ -9,7 +9,7 @@
 #include "rpcserver.h"
 #include "wallet/wallet.h"
 #include "chainparams.h"
-//#include "messagecrypter.h"
+#include "messagecrypter.h"
 #include <boost/algorithm/hex.hpp>
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/foreach.hpp>
@@ -20,9 +20,9 @@ using namespace std;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const string& txData="", const CWalletTx* wtxIn=NULL);
 bool EncryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigned char> &vchMessage, string &strCipherText)
 {
-	/*CMessageCrypter crypter;
+	CMessageCrypter crypter;
 	if(!crypter.Encrypt(stringFromVch(vchPubKey), stringFromVch(vchMessage), strCipherText))
-		return false;*/
+		return false;
 
 	return true;
 }
@@ -38,9 +38,9 @@ bool DecryptMessage(const vector<unsigned char> &vchPubKey, const vector<unsigne
 	CSyscoinSecret Secret(PrivateKey);
 	PrivateKey = Secret.GetKey();
 	std::vector<unsigned char> vchPrivateKey(PrivateKey.begin(), PrivateKey.end());
-	/*CMessageCrypter crypter;
+	CMessageCrypter crypter;
 	if(!crypter.Decrypt(HexStr(vchPrivateKey), stringFromVch(vchCipherText), strMessage))
-		return false;*/
+		return false;
 	
 	return true;
 }
@@ -1175,33 +1175,33 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 
     uint256 blockHash;
     uint256 hash;
-    CTransaction tx, dbtx;
+    CTransaction tx;
 
     vector<unsigned char> vchValue;
     int nHeight;
 
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
+		const CWalletTx &wtx = item.second;
 		int expired = 0;
 		int expires_in = 0;
 		int expired_block = 0;
-        // get txn hash, read txn index
-        hash = item.second.GetHash();
-		if (!GetTransaction(hash, tx, Params().GetConsensus(), blockHash, true))
-			continue;
+		// get txn hash, read txn index
+        hash = item.second.GetHash();       
+
         // skip non-syscoin txns
-        if (tx.nVersion != SYSCOIN_TX_VERSION)
+        if (wtx.nVersion != SYSCOIN_TX_VERSION)
             continue;
 		// decode txn, skip non-alias txns
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
-		if (!DecodeCertTx(tx, op, nOut, vvch, -1) || !IsCertOp(op))
+		if (!DecodeCertTx(wtx, op, nOut, vvch, -1) || !IsCertOp(op))
 			continue;
 		// get the txn height
 		nHeight = GetTxHashHeight(hash);
 
 		// get the txn cert name
-		if (!GetNameOfCertTx(tx, vchName))
+		if (!GetNameOfCertTx(wtx, vchName))
 			continue;
 
 		// skip this cert if it doesn't match the given filter value

@@ -11,13 +11,18 @@
 #include "utilstrencodings.h"
 
 #include <boost/foreach.hpp>
-// SYSCOIN services
-#include "alias.h"
-#include "offer.h"
-#include "cert.h"
-#include "escrow.h"
-#include "message.h"
 using namespace std;
+// SYSCOIN services
+extern bool DecodeAliasScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
+extern bool DecodeCertScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
+extern bool DecodeOfferScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
+extern bool DecodeMessageScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
+extern bool DecodeEscrowScript(const CScript& script, int& op, vector<vector<unsigned char> > &vvch);
+extern CScript RemoveAliasScriptPrefix(const CScript& scriptIn);
+extern CScript RemoveCertScriptPrefix(const CScript& scriptIn);
+extern CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
+extern CScript RemoveEscrowScriptPrefix(const CScript& scriptIn);
+extern CScript RemoveMessageScriptPrefix(const CScript& scriptIn);
 
 typedef vector<unsigned char> valtype;
 

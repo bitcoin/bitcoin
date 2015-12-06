@@ -2762,17 +2762,16 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
             // get txn hash, read txn index
             hash = item.second.GetHash();
 
-            if (!GetTransaction(hash, tx, Params().GetConsensus(), blockHash, true))
-                continue;
+ 			const CWalletTx &wtx = item.second;
 
             // skip non-syscoin txns
-            if (tx.nVersion != SYSCOIN_TX_VERSION)
+            if (wtx.nVersion != SYSCOIN_TX_VERSION)
                 continue;
 
             // decode txn, skip non-alias txns
             vector<vector<unsigned char> > vvch;
             int op, nOut;
-            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) 
+            if (!DecodeOfferTx(wtx, op, nOut, vvch, -1) 
             	|| !IsOfferOp(op) 
             	|| (op != OP_OFFER_ACCEPT))
                 continue;
@@ -2781,7 +2780,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
             nHeight = GetTxHashHeight(hash);
 
             // get the txn alias name
-            if(!GetNameOfOfferTx(tx, vchName))
+            if(!GetNameOfOfferTx(wtx, vchName))
                 continue;
 			
 			COfferAccept theOfferAccept;
@@ -2948,17 +2947,16 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
             // get txn hash, read txn index
             hash = item.second.GetHash();
 
-            if (!GetTransaction(hash, tx, Params().GetConsensus(), blockHash, true))
-                continue;
+ 			const CWalletTx &wtx = item.second;
 
             // skip non-syscoin txns
-            if (tx.nVersion != SYSCOIN_TX_VERSION)
+            if (wtx.nVersion != SYSCOIN_TX_VERSION)
                 continue;
 
             // decode txn, skip non-alias txns
             vector<vector<unsigned char> > vvch;
             int op, nOut;
-            if (!DecodeOfferTx(tx, op, nOut, vvch, -1) 
+            if (!DecodeOfferTx(wtx, op, nOut, vvch, -1) 
             	|| !IsOfferOp(op) 
             	|| (op == OP_OFFER_ACCEPT))
                 continue;
@@ -2967,7 +2965,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
             nHeight = GetTxHashHeight(hash);
 
             // get the txn alias name
-            if(!GetNameOfOfferTx(tx, vchName))
+            if(!GetNameOfOfferTx(wtx, vchName))
                 continue;
 
 			// skip this offer if it doesn't match the given filter value
