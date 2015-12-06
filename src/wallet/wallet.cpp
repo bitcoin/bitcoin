@@ -1605,7 +1605,7 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
-            for (unsigned int i = 0; i < vValue.size() && !fReachedTarget; i++)
+            for (unsigned int i = 0; i < vValue.size(); i++)
             {
                 //The solver here uses a randomized algorithm,
                 //the randomness serves no real security purpose but is just
@@ -1625,6 +1625,8 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
+                        nTotal -= vValue[i].first;
+                        vfIncluded[i] = false;
                     }
                 }
             }
@@ -1634,11 +1636,11 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
     //Reduces the approximate best subset by removing any inputs that are smaller than the surplus of nTotal beyond nTargetValue. 
     for (unsigned int i = 0; i < vValue.size(); i++)
     {                        
-	if (vfBest[i] && (nBest - vValue[i].first) >= nTargetValue )
-	{
-	    vfBest[i] = false;
-	    nBest -= vValue[i].first;
-	}
+        if (vfBest[i] && (nBest - vValue[i].first) >= nTargetValue )
+        {
+            vfBest[i] = false;
+            nBest -= vValue[i].first;
+        }
     }
 }
 
