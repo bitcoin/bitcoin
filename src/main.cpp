@@ -2335,9 +2335,18 @@ bool CBlock::AcceptBlock()
     if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
         return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
 
+    int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
+    int nMaxOffset = 12 * 3600; // 12 hours
+    if (pindexPrev->nTime < 1450569600)
+        nMaxOffset = 7 * 86400; // One week until 20 Dec, 2015
+
     // Check timestamp against prev
-    if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || FutureDrift(GetBlockTime()) < pindexPrev->GetBlockTime())
+    if (GetBlockTime() <= nMedianTimePast || FutureDrift(GetBlockTime()) < pindexPrev->GetBlockTime())
         return error("AcceptBlock() : block's timestamp is too early");
+
+    // Don't accept blocks with future timestamps
+    if (pindexPrev->nHeight > 1 && nMedianTimePast  + nMaxOffset < GetBlockTime())
+        return error("AcceptBlock() : block's timestamp is too far in the future");
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, vtx)
