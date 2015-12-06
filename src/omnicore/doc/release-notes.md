@@ -19,6 +19,7 @@ Table of contents
   - [Upgrade to Bitcoin Core 0.10.4](#upgrade-to-bitcoin-core-0104)
   - [Headers-first synchronization](#headers-first-synchronization)
   - [Dust threshold values](#dust-threshold-values)
+  - [Transaction fee changes](#transaction-fee-changes)
   - [Rebranding to Omni Core](#rebranding-to-omni-core)
   - [Incompatible API changes](#incompatible-api-changes)
   - [Feature and consensus rule activations](#feature-and-consensus-rule-activations)
@@ -99,6 +100,27 @@ minrelaytxfee=0.00001
 ```
 
 Lowering the `minrelaytxfee` may result in higher memory consumption, and too low values can result in delayed transaction propagation. A value less than than `0.00001` is generally not recommended.
+
+Transaction fee changes
+-----------------------
+
+Starting with Bitcoin Core 0.10, transaction fees, as per default, are no longer hardcoded, but estimated based on previous blocks.
+
+This behavior can result in significantly different fees compared to Master Core 0.0.9, and manual tweaking is recommended, if the default fee estimation doesn't yield satisfying results.
+
+The following fee related configuration options are available:
+
+- `txconfirmtarget=<n>`: create transactions that have enough fees (or priority) so they are likely to begin confirmation within n blocks (default: `6`). This setting is overridden by the `paytxfee` option.
+- `paytxfee=<amount>`: fee (in BTC/kB) to add to transactions you send.
+- `sendfreetransactions=0|1`: send transactions as zero-fee transactions if possible (default: `0`).
+
+New RPC commands for fee estimation:
+
+- `estimatefee nblocks`: returns approximate fee-per-1,000-bytes needed for a transaction to begin confirmation within nblocks. Returns `-1` if not enough transactions have been observed to compute an estimate.
+- `estimatepriority nblocks`: returns approximate priority needed for a zero-fee transaction to begin confirmation within nblocks. Returns `-1` if not enough free transactions have been observed to compute an estimate.
+
+Please note, the fee estimation is not necessarily accurate.
+
 
 Rebranding to Omni Core
 -----------------------
@@ -526,6 +548,11 @@ The following list includes relevant pull requests merged into this release:
 - #288 Expose payload over RPC and add payload size
 - #291 Add error handlers for "omni_getpayload"
 - #292 Add API documentation for "omni_getpayload"
+- #295 Fix overflow when trading divisible against divisible
+- #303 Force UI update every block with Omni transactions
+- #305 Change default confirm target to 6 blocks
+- #307 Update release notes for 0.0.10
+- #306 Bump version to Omni Core 0.0.10-rel
 ```
 
 Credits
