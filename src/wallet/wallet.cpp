@@ -1605,7 +1605,7 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
         bool fReachedTarget = false;
         for (int nPass = 0; nPass < 2 && !fReachedTarget; nPass++)
         {
-            for (unsigned int i = 0; i < vValue.size(); i++)
+            for (unsigned int i = 0; i < vValue.size() && !fReachedTarget; i++)
             {
                 //The solver here uses a randomized algorithm,
                 //the randomness serves no real security purpose but is just
@@ -1620,30 +1620,25 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
                     if (nTotal >= nTargetValue)
                     {
                         fReachedTarget = true;
-
-                        for (unsigned int i = 0; i < vValue.size(); i++)
-                        {                        
-                            //The target has been reached, but the candidate set may contain extraneous inputs.
-                            //This iterates over all inputs and deducts any that are included, but smaller 
-                            //than the amount nTargetValue is still exceeded by.
-                            if (vfIncluded[i] && (nTotal - vValue[i].first) >= nTargetValue )
-                            {
-                                vfIncluded[i] = false;
-                                nTotal -= vValue[i].first;
-                            }
-                        }
-                        
                         if (nTotal < nBest)
                         {
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
-                        nTotal -= vValue[i].first;
-                        vfIncluded[i] = false;
                     }
                 }
             }
         }
+    }
+
+    //Reduces the approximate best subset by removing any inputs that are smaller than the surplus of nTotal beyond nTargetValue. 
+    for (unsigned int i = 0; i < vValue.size(); i++)
+    {                        
+	if (vfBest[i] && (nBest - vValue[i].first) >= nTargetValue )
+	{
+	    vfBest[i] = false;
+	    nBest -= vValue[i].first;
+	}
     }
 }
 
