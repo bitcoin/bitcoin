@@ -825,21 +825,21 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
     {
         // get txn hash, read txn index
         hash = item.second.GetHash();
-		if (!GetTransaction(hash, tx, Params().GetConsensus(), blockHash, true))
-			continue;
+		const CWalletTx &wtx = item.second;
+
         // skip non-syscoin txns
-        if (tx.nVersion != SYSCOIN_TX_VERSION)
+        if (wtx.nVersion != SYSCOIN_TX_VERSION)
             continue;
 		// decode txn, skip non-alias txns
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
-		if (!DecodeMessageTx(tx, op, nOut, vvch, -1) || !IsMessageOp(op))
+		if (!DecodeMessageTx(wtx, op, nOut, vvch, -1) || !IsMessageOp(op))
 			continue;
 		// get the txn height
 		nHeight = GetTxHashHeight(hash);
 
 		// get the txn message name
-		if (!GetNameOfMessageTx(tx, vchName))
+		if (!GetNameOfMessageTx(wtx, vchName))
 			continue;
 
 		vector<CMessage> vtxPos;
@@ -897,21 +897,19 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
     {
         // get txn hash, read txn index
         hash = item.second.GetHash();
-		if (!GetTransaction(hash, tx, Params().GetConsensus(), blockHash, true))
-			continue;
-        // skip non-syscoin txns
-        if (tx.nVersion != SYSCOIN_TX_VERSION)
+		const CWalletTx &wtx = item.second;        // skip non-syscoin txns
+        if (wtx.nVersion != SYSCOIN_TX_VERSION)
             continue;
 		// decode txn, skip non-alias txns
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
-		if (!DecodeMessageTx(tx, op, nOut, vvch, -1) || !IsMessageOp(op))
+		if (!DecodeMessageTx(wtx, op, nOut, vvch, -1) || !IsMessageOp(op))
 			continue;
 		// get the txn height
 		nHeight = GetTxHashHeight(hash);
 
 		// get the txn message name
-		if (!GetNameOfMessageTx(tx, vchName))
+		if (!GetNameOfMessageTx(wtx, vchName))
 			continue;
 
 		vector<CMessage> vtxPos;

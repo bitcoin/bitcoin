@@ -24,12 +24,6 @@
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
-// SYSCOIN services
-#include "alias.h"
-#include "offer.h"
-#include "cert.h"
-#include "escrow.h"
-#include "message.h"
 #include <assert.h>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -37,6 +31,14 @@
 #include <boost/thread.hpp>
 
 using namespace std;
+// SYSCOIN services
+extern int IndexOfAliasOutput(const CTransaction& tx);
+extern int IndexOfCertOutput(const CTransaction& tx);
+extern int IndexOfOfferOutput(const CTransaction& tx);
+extern int IndexOfMessageOutput(const CTransaction& tx);
+extern int IndexOfEscrowOutput(const CTransaction& tx);
+extern int GetSyscoinTxVersion();
+extern vector<unsigned char> vchFromString(const string &str);
 
 /**
  * Settings
@@ -1895,7 +1897,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     CMutableTransaction txNew;
 	// SYSCOIN: set syscoin tx version if its a syscoin service call
 	if(!txData.empty())
-		txNew.nVersion = SYSCOIN_TX_VERSION;
+		txNew.nVersion = GetSyscoinTxVersion();
     // Discourage fee sniping.
     //
     // For a large miner the value of the transactions in the best block and

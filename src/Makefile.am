@@ -77,7 +77,7 @@ if BUILD_SYSCOIND
 endif
 
 if BUILD_SYSCOIN_UTILS
-  bin_PROGRAMS += syscoin-cli syscoin-tx
+  bin_PROGRAMS += syscoin-cli
 endif
 
 .PHONY: FORCE
@@ -194,6 +194,12 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_SOURCES = \
+  alias.cpp \
+  offer.cpp \
+  message.cpp \
+  cert.cpp \
+  escrow.cpp \
+  messagecrypter.cpp \
   addrman.cpp \
   alert.cpp \
   bloom.cpp \
@@ -274,12 +280,6 @@ crypto_libsyscoin_crypto_a_SOURCES = \
 libsyscoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 libsyscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_common_a_SOURCES = \
-  alias.cpp \
-  offer.cpp \
-  message.cpp \
-  cert.cpp \
-  escrow.cpp \
-  messagecrypter.cpp \
   amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
@@ -401,8 +401,12 @@ if TARGET_WINDOWS
 syscoin_tx_SOURCES += syscoin-tx-res.rc
 endif
 
-syscoin_tx_LDADD = $(syscoind_LDADD)
-#
+syscoin_tx_LDADD = \
+  $(LIBUNIVALUE) \
+  $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_UTIL) \
+  $(LIBSYSCOIN_CRYPTO) \
+  $(LIBSECP256K1)
 
 # syscoinconsensus library #
 if BUILD_SYSCOIN_LIBS

@@ -97,7 +97,7 @@ std::string stringFromVch(const std::vector<unsigned char> &vch);
 std::vector<unsigned char> vchFromValue(const UniValue& value);
 std::vector<unsigned char> vchFromString(const std::string &str);
 std::string stringFromValue(const UniValue& value);
-
+int GetSyscoinTxVersion();
 const int SYSCOIN_TX_VERSION = 0x7400;
 static const int64_t MIN_AMOUNT = COIN;
 static const unsigned int MAX_NAME_LENGTH = 255;
