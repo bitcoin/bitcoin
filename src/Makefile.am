@@ -189,10 +189,9 @@ obj/build.h: FORCE
 libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between syscoind and syscoin-qt
-libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I/usr/include/cryptopp
+libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_LIBADD = /usr/lib/libcryptopp.a
-
 libsyscoin_server_a_SOURCES = \
   alias.cpp \
   offer.cpp \
@@ -344,7 +343,7 @@ nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 
 # syscoind binary #
 syscoind_SOURCES = syscoind.cpp
-syscoind_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoind_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -I/usr/include/cryptopp
 syscoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
@@ -370,7 +369,8 @@ if ENABLE_WALLET
 syscoind_LDADD += libsyscoin_wallet.a
 endif
 
-syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) 
+syscoind_LDADD += /usr/lib/libcryptopp.a
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp
 syscoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CFLAGS)
