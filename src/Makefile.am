@@ -1,4 +1,4 @@
-DIST_SUBDIRS = secp256k1 univalue cryptopp
+DIST_SUBDIRS = secp256k1 univalue
 
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
 AM_CXXFLAGS = $(HARDENED_CXXFLAGS)
@@ -374,7 +374,7 @@ syscoind_LDADD += libcryptopp.a
 syscoin_cli_SOURCES = syscoin-cli.cpp
 syscoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CFLAGS)
 syscoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-syscoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -L/usr/lib
+syscoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -L"/usr/lib"
 
 if TARGET_WINDOWS
 syscoin_cli_SOURCES += syscoin-cli-res.rc
@@ -456,7 +456,6 @@ clean-local:
 	-$(MAKE) -C leveldb clean
 	-$(MAKE) -C secp256k1 clean
 	-$(MAKE) -C univalue clean
-	-$(MAKE) -C cryptopp clean
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 
