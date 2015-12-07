@@ -372,8 +372,8 @@ syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPN
 syscoind_LDADD += libcryptopp.a
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp
-syscoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CFLAGS)
-syscoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CFLAGS) -L"/usr/lib"
+syscoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -L"/usr/lib"
 syscoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) -L"/usr/lib"
 
 if TARGET_WINDOWS
