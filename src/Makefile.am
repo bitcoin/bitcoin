@@ -10,6 +10,7 @@ LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
 LIBLEVELDB += $(builddir)/leveldb/libleveldb.a
 LIBMEMENV  += $(builddir)/leveldb/libmemenv.a
 
+
 # NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
 $(LIBLEVELDB): $(LIBMEMENV)
 
@@ -24,6 +25,7 @@ SYSCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPP
 
 SYSCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 SYSCOIN_INCLUDES += -I$(srcdir)/univalue/include
+SYSCOIN_INCLUDES += -I/usr/include
 
 LIBSYSCOIN_SERVER=libsyscoin_server.a
 LIBSYSCOIN_WALLET=libsyscoin_wallet.a
@@ -341,7 +343,7 @@ nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 
 # syscoind binary #
 syscoind_SOURCES = syscoind.cpp
-syscoind_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) -I/usr/include
+syscoind_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
