@@ -34,7 +34,6 @@ LIBSYSCOIN_CRYPTO=crypto/libsyscoin_crypto.a
 LIBSYSCOINQT=qt/libsyscoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 LIBUNIVALUE=univalue/libunivalue.la
-LIBCRYPTOPP=cryptopp/libcryptopp.a
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
@@ -42,9 +41,7 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 $(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 	
-$(LIBCRYPTOPP): $(wildcard cryptopp/*)
-	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
-  
+
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES = \
@@ -360,8 +357,7 @@ syscoind_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
-  $(LIBSECP256K1) \
-  $(LIBCRYPTOPP)
+  $(LIBSECP256K1)
 
 if ENABLE_ZMQ
 syscoind_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
@@ -371,7 +367,7 @@ if ENABLE_WALLET
 syscoind_LDADD += libsyscoin_wallet.a
 endif
 
-syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) -lcryptopp
 
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp
