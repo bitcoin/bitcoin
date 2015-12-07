@@ -70,7 +70,6 @@ f. Announce 1 more header that builds on that fork.
 class BaseNode(NodeConnCB):
     def __init__(self):
         NodeConnCB.__init__(self)
-        self.create_callback_map()
         self.connection = None
         self.last_inv = None
         self.last_headers = None
