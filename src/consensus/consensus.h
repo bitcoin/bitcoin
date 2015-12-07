@@ -13,13 +13,17 @@ static const unsigned int MAX_BLOCK_SIGOPS = MAX_BLOCK_SIZE/50;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
 static const int COINBASE_MATURITY = 100;
 
-/** Flags for LockTime() */
+/** Flags for nSequence and nLockTime locks */
 enum {
+    /* Interpret sequence numbers as relative lock-time constraints. */
+    LOCKTIME_VERIFY_SEQUENCE = (1 << 0),
+
     /* Use GetMedianTimePast() instead of nTime for end point timestamp. */
     LOCKTIME_MEDIAN_TIME_PAST = (1 << 1),
 };
 
-/** Used as the flags parameter to CheckFinalTx() in non-consensus code */
-static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_MEDIAN_TIME_PAST;
+/** Used as the flags parameter to sequence and nLocktime checks in non-consensus code. */
+static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_VERIFY_SEQUENCE |
+                                                           LOCKTIME_MEDIAN_TIME_PAST;
 
 #endif // BITCOIN_CONSENSUS_CONSENSUS_H
