@@ -189,7 +189,7 @@ obj/build.h: FORCE
 libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
 # server: shared between syscoind and syscoin-qt
-libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I/usr/include/cryptopp
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libsyscoin_server_a_LIBADD = /usr/lib/libcryptopp.a
 
