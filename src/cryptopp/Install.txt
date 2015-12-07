@@ -1,0 +1,169 @@
+CONTENTS OF THIS FILE
+---------------------
+
+* Introduction
+* Building the Library
+* Installing the Library
+* Makefile Targets
+* DataDir Patch
+* Dynamic Analysis
+* Acceptance Testing
+* Reporting problems
+
+INTRODUCTION
+------------
+
+Crypto++ Library is a free C++ class library of cryptographic algorithms and schemes. It was written and placed in public domain by Wei Dai. The library homepage is at http://www.cryptopp.com/. The latest library source code can be found at https://github.com/weidai11/cryptopp. For licensing and copyright information, please see License.txt.
+
+These are general instructions for the BSDs, Linux, OS X, Solaris and Unix. On BSD you will likely have to use `gmake` to build the library. On Linux, OS X, Solaris and Unix, the system's make should be OK. On Windows, Crypto++ provides Borland and Visual Studio solutions.
+
+Crypto++ uses a GNU makefile, which combines configuration and a non-anemic make. You should look through the GNUmakefile and config.h to ensure settings look reasonable before building. Please pay particular attention to CRYPTOPP_NO_UNALIGNED_DATA_ACCESS in config.h.
+
+Crypto++ does not depend upon other tools or libraries. It does not use Autotools, does not use Cmake, and does not use Boost.
+
+
+BUILDING THE LIBRARY
+--------------------
+
+In general, all you should have to do is open a terminal, and then:
+
+    make
+    make test
+    sudo make install
+
+The command above builds the static library and cryptest.exe program. If you want to build the shared object, then issue:
+
+    make static dynamic cryptest.exe
+	
+Or:
+
+    make libcryptopp.a libcryptopp.so cryptest.exe
+
+
+If you would like to use a different compiler, the set CXX:
+
+    export CXX=/opt/intel/bin/icpc
+    make
+
+If you want to build using C++11, then:
+
+    make CXXFLAGS="-std=c++11"
+
+Or:
+
+    CXXFLAGS="-std=c++11"
+    make
+
+LLVM's libc++ is also supported, so you can:
+
+    CXXFLAGS="-std=c++11 -stdlib=libc++"
+    make
+
+
+INSTALLING THE LIBRARY
+----------------------
+
+To install the library into a user selected directory, perform:
+
+    make install PREFIX=/usr/local
+
+During install, the makefile copies cryptest.exe into $PREFIX/bin, copies headers into $PREFIX/include/cryptopp, and copies libraries into $PREFIX/lib. If you only built a static or dynamic version of the library, then only one library is copied. The install recipe does not fail if the static library or shared object is not built.
+
+PREFIX is non-standard, but its retained for historical purposes. The makefile also responds to `prefix=<path>`.
+
+There are some open issues installing the library because cryptest.exe is not sympathetic to path changes of of its test vectors and test data. See the DataDir patch below to fix it.
+
+
+MAKEFILE TARGETS
+----------------
+
+The following are some of the targets provided by the GNU makefile.
+
+`make` invokes the default rule, which builds the Crypto++ static library and test harness. They are called `libcryptopp.a` and `cryptest.exe`, respectively. `cryptest.exe` links against `libcryptopp.a`, so the static library is a prerequisite for the target.
+
+`make libcryptopp.a` and `make static` build the static version of the library.
+
+`make libcryptopp.so` and `make dynamic` build the dynamic version of the library. On Mac OS X, the recipe builds `libcryptopp.dylib` instead.
+
+`make cryptest.exe` builds the library test harness.
+
+`make test` and `make check` are the same recipe and invoke the test harness with the the validation option. That is, it executes `cryptest.exe v`. 
+
+`make install` installs the library. By default, the makefile copies into `/usr`. On OpenBSD, `make install` uses `/usr/local` by default because C++ headers should not be placed with the system headers.
+
+`make clean` cleans most transient and temporary objects.
+
+`make disclean` cleans most objects that are not part of the original distribution.
+
+`make dist` and `make zip` build s ZIP file that is suitable for distribution.
+
+
+DATADIR PATCH
+-------------
+
+The library offers a DataDir patch to help with post-installation issues regarding the location of the test vectors and test data. Its a patch provided by the community, so it must be applied manually. To acquire the patch, see http://www.cryptopp.com/wiki/DataDir.
+
+
+DYNAMIC ANALYSIS
+----------------
+
+The Crypto++ embraces tools like Undefined Behavior sanitizer (UBsan), Address sanitizer (Asan) and Valgrind. Both Clang 3.2 and above and GCC 4.8 and above provide sanitizers. Please check with your distribution on how to install the compiler with its sanitizer libraries (they are sometimes a separate install item).
+
+UBsan and Asan are mutually exclusive options, so you can perform only one of these at a time:
+
+    make ubsan
+    ./cryptest.exe v 2>&1 | egrep "(error|FAILED)"
+    ./cryptest.exe tv all 2>&1 | egrep "(error|FAILED)"
+
+Or:
+
+    make asan
+    ./cryptest.exe v 2>&1 | egrep "(error|FAILED)"
+    ./cryptest.exe tv all 2>&1 | egrep "(error|FAILED)"
+
+If you experience self test failures or see reports of undefined behavior, then you should ensure CRYPTOPP_NO_UNALIGNED_DATA_ACCESS is defined in config.h. CRYPTOPP_NO_UNALIGNED_DATA_ACCESS is not defined due to historical purposes.
+
+If you experience failures under Asan, then gather more information with:
+
+    ./cryptest.exe v 2>&1 | asan_symbolize
+
+If you moved Crypto++ such that the paths have changed, then perform:
+
+    ./cryptest.exe v 2>&1 | sed "s/<old path>/<new path>/g" | asan_symbolize
+
+
+ACCEPTANCE TESTING
+------------------
+
+Crypto++ uses five security gates in its engineering process. The library must maintain the quality provided by the review system and integrity of the test suites. You can use the information to decide if the Crypto++ library suits your needs and provides a compatible security posture.
+
+The first gate is code review and discussion of proposed patches. Git commits often cross reference a User Group discussions.
+
+Second is the compiler warning system. The code must clean compile under the equivalent of GCC's -Wall -Wextra (modulo -Wno-type-limits -Wno-unknown-pragmas). This is a moving target as compiler analysis improves.
+
+Third, the code must pass cleanly though GCC and Clang's Undefined Behavior sanitizer (UBsan) and Address sanitizer (Asan) with CRYPTOPP_NO_UNALIGNED_DATA_ACCESS defined in config.h. See DYNAMIC ANALYSIS above on how to execute them.
+
+Fourth, the test harness provides a "validation" option which performs basic system checks (like endianess and word sizes) and exercises algorithms (like AES and SHA). You run the validation suite as shown below. The tail of the output should indicate 0 failed tests.
+
+    ./cryptest.exe v
+    ...
+
+    All tests passed!
+    Test ended at Sun Jul 26 02:10:57 2015
+    Seed used was: 1437891055
+
+Fifth, the test harness provides a "test vector" option which uses many known test vectors, even those published by other people (like Brian Gladman for AES). You run the test vectors as shown below. The tail of the output should indicate 0 failed tests.
+
+    ./cryptest.exe tv all
+    ...
+
+    Testing SymmetricCipher algorithm MARS/ECB.
+    .................
+    Tests complete. Total tests = 4094. Failed tests = 0.
+
+REPORTING PROBLEMS
+------------------
+
+Dirty compiles and failures in the validation suite or test vectors should be reported at the Crypto++ User Group. The User Group is located at https://groups.google.com/forum/#!forum/cryptopp-users.
+
+Also see http://www.cryptopp.com/wiki/Bug_Report.

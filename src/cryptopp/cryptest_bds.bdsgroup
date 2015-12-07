@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<PersonalityInfo>
+		<Option>
+			<Option Name="Personality">Default.Personality</Option>
+			<Option Name="ProjectType"></Option>
+			<Option Name="Version">1.0</Option>
+			<Option Name="GUID">{ADA0E4CD-AA24-421A-B10E-65809E7CCAE2}</Option>
+		</Option>
+	</PersonalityInfo>
+	<Default.Personality>  <Projects>
+      <Projects Name="cryptest_bds.exe">cryptest_bds.bdsproj</Projects>
+      <Projects Name="cryptlib_bds.lib">cryptlib_bds.bdsproj</Projects>
+      <Projects Name="Targets">cryptest_bds.exe cryptlib_bds.lib</Projects>
+    </Projects>
+    <Dependencies>
+      <Dependency GUID="{B9D40715-C340-489C-957A-5CD08E1BDFAA}">
+        <Dependency GUID="{70949AD8-A923-4012-BCC6-5B1BB6BA413D}"/>
+      </Dependency>
+    </Dependencies>
+  </Default.Personality>
+</BorlandProject>

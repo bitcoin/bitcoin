@@ -1,0 +1,186 @@
+CXXFLAGS ?= -DNDEBUG -g2 -Os -fPIC -pipe
+
+# The following options reduce code size, but breaks link or makes link very slow on some systems
+# CXXFLAGS += -ffunction-sections -fdata-sections
+# LDFLAGS += -Wl,--gc-sections
+
+ARFLAGS = -cr	# ar needs the dash on OpenBSD
+RANLIB ?= ranlib
+CP = cp
+MKDIR = mkdir
+EGREP = egrep
+CHMOD = chmod
+
+CLANG_COMPILER = $(shell $(CXX) --version 2>&1 | $(EGREP) -i -c "clang")
+
+IS_X86=0
+IS_LINUX=0
+IS_MINGW=0
+IS_DARWIN=0
+UNAME=CrossCompile
+
+# Default prefix for make install
+ifeq ($(PREFIX),)
+PREFIX = /usr/local
+endif
+
+# Sadly, we can't actually use GCC_PRAGMA_AWARE because of GCC bug 53431.
+# Its a shame because GCC has so much to offer by the way of analysis.
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431
+ifneq ($(CLANG_COMPILER),0)
+CXXFLAGS += -Wall
+endif
+
+# iOS cross-compile configuration. Works in conjunction with IS_CROSS_COMPILE.
+#   See http://www.cryptopp.com/wiki/iOS_(Command_Line).
+ifeq ($(IS_IOS),1)
+  CXX = clang++
+
+  CXXFLAGS += -DCRYPTOPP_DISABLE_ASM  $(IOS_FLAGS)
+  CXXFLAGS += -arch $(IOS_ARCH) -isysroot $(IOS_SYSROOT)
+  CXXFLAGS += -stdlib=libc++
+
+  AR = libtool
+  ARFLAGS = -static -o
+endif
+
+# Android cross-compile configuration. Works in conjunction with IS_CROSS_COMPILE.
+#   See http://www.cryptopp.com/wiki/Android_(Command_Line).
+ifeq ($(IS_ANDROID),1)
+  # CPP, CXX, AR, RANLIB, LD, etc are set in 'setenv-android.sh'
+  CXXFLAGS += -DCRYPTOPP_DISABLE_ASM $(ANDROID_FLAGS)
+  CXXFLAGS += --sysroot=$(ANDROID_SYSROOT) -I$(ANDROID_STL_INC)
+  LDLIBS += $(ANDROID_STL_LIB)
+endif
+
+# ARM embedded cross-compile configuration. Works in conjunction with IS_CROSS_COMPILE.
+#   See http://www.cryptopp.com/wiki/ARM_Embedded_(Command_Line)
+#   and http://www.cryptopp.com/wiki/ARM_Embedded_(Bare Metal).
+ifeq ($(IS_ARM_EMBEDDED),1)
+  # CPP, CXX, AR, RANLIB, LD, etc are set in 'setenv-embedded.sh'
+  CXXFLAGS += -DCRYPTOPP_DISABLE_ASM $(ARM_EMBEDDED_FLAGS)
+  CXXFLAGS += --sysroot=$(ARM_EMBEDDED_SYSROOT)
+endif
+
+# List cryptlib.cpp first in an attempt to tame C++ static initialization problems
+SRCS := cryptlib.cpp cpu.cpp $(filter-out cryptlib.cpp cpu.cpp pch.cpp simple.cpp winpipes.cpp cryptlib_bds.cpp,$(wildcard *.cpp))
+
+# List of objects with crytlib.o at the first index position
+OBJS := $(SRCS:.cpp=.o)
+
+# test.o needs to be after bench.o for cygwin 1.1.4 (possible ld bug?)
+TESTOBJS := bench.o bench2.o test.o validat1.o validat2.o validat3.o adhoc.o datatest.o regtest.o fipsalgt.o dlltest.o
+LIBOBJS := $(filter-out $(TESTOBJS),$(OBJS))
+
+# List cryptlib.cpp first in an attempt to tame C++ static initialization problems
+DLLSRCS := cryptlib.cpp cpu.cpp algebra.cpp algparam.cpp asn.cpp basecode.cpp cbcmac.cpp channels.cpp des.cpp dessp.cpp dh.cpp dll.cpp dsa.cpp ec2n.cpp eccrypto.cpp ecp.cpp eprecomp.cpp files.cpp filters.cpp fips140.cpp fipstest.cpp gf2n.cpp gfpcrypt.cpp hex.cpp hmac.cpp integer.cpp iterhash.cpp misc.cpp modes.cpp modexppc.cpp mqueue.cpp nbtheory.cpp oaep.cpp osrng.cpp pch.cpp pkcspad.cpp pubkey.cpp queue.cpp randpool.cpp rdtables.cpp rijndael.cpp rng.cpp rsa.cpp sha.cpp simple.cpp skipjack.cpp strciphr.cpp trdlocal.cpp
+DLLOBJS := $(DLLSRCS:.cpp=.export.o)
+
+# Import lib testing
+LIBIMPORTOBJS := $(LIBOBJS:.o=.import.o)
+TESTIMPORTOBJS := $(TESTOBJS:.o=.import.o)
+DLLTESTOBJS := dlltest.dllonly.o
+
+all: cryptest.exe
+
+ifneq ($(IS_DARWIN),0)
+static: libcryptopp.a
+shared dynamic dylib: libcryptopp.dylib
+else
+static: libcryptopp.a
+shared dynamic: libcryptopp.so
+endif
+
+test: cryptest.exe
+	./cryptest.exe v
+
+.PHONY: clean
+clean:
+	-$(RM) cryptest.exe dlltest.exe libcryptopp.a libcryptopp.so libcryptopp.dylib cryptopp.dll libcryptopp.dll.a libcryptopp.import.a cryptest.import.exe ct
+	-$(RM) adhoc.cpp.o adhoc.cpp.proto.o $(LIBOBJS) $(TESTOBJS) $(DLLOBJS) $(LIBIMPORTOBJS) $(TESTIMPORTOBJS) $(DLLTESTOBJS)
+ifneq ($(wildcard *.dSYM),)
+	-$(RM) -r cryptest.exe.dSYM dlltest.exe.dSYM
+endif
+
+.PHONY: distclean
+distclean: clean
+	-$(RM) adhoc.cpp adhoc.cpp.copied GNUmakefile.deps cryptopp$(LIB_VER).diff cryptopp$(LIB_VER).zip *.o *.ii *.s
+
+.PHONY: install
+install:
+	$(MKDIR) -p $(PREFIX)/include/cryptopp $(PREFIX)/lib $(PREFIX)/bin
+	-$(CP) *.h $(PREFIX)/include/cryptopp
+	-$(CHMOD) 755 $(PREFIX)/include/cryptopp
+	-$(CHMOD) 644 $(PREFIX)/include/cryptopp/*.h
+	-$(CP) libcryptopp.a $(PREFIX)/lib
+	-$(CHMOD) 644 $(PREFIX)/lib/libcryptopp.a
+	-$(CP) cryptest.exe $(PREFIX)/bin
+	-$(CHMOD) 755 $(PREFIX)/bin/cryptest.exe
+ifneq ($(IS_DARWIN),0)
+	-$(CP) libcryptopp.dylib $(PREFIX)/lib
+	-$(CHMOD) 755 $(PREFIX)/lib/libcryptopp.dylib
+else
+	-$(CP) libcryptopp.so $(PREFIX)/lib
+	-$(CHMOD) 755 $(PREFIX)/lib/libcryptopp.so
+endif
+
+.PHONY: remove uninstall
+remove uninstall:
+	-$(RM) -r $(PREFIX)/include/cryptopp
+	-$(RM) $(PREFIX)/lib/libcryptopp.a
+	-$(RM) $(PREFIX)/bin/cryptest.exe
+ifneq ($(IS_DARWIN),0)
+	-$(RM) $(PREFIX)/lib/libcryptopp.dylib
+else
+	-$(RM) $(PREFIX)/lib/libcryptopp.so
+endif
+
+libcryptopp.a: public_service | $(LIBOBJS)
+	$(AR) $(ARFLAGS) $@ $(LIBOBJS)
+	$(RANLIB) $@
+
+libcryptopp.so: public_service | $(LIBOBJS)
+	$(CXX) $(CXXFLAGS) -shared -o $@ $(LIBOBJS) $(LDFLAGS) $(LDLIBS)
+
+cryptest.exe: public_service | libcryptopp.a $(TESTOBJS)
+	$(CXX) -o $@ $(CXXFLAGS) $(TESTOBJS) ./libcryptopp.a $(LDFLAGS) $(LDLIBS)
+
+adhoc.cpp: adhoc.cpp.proto
+ifeq ($(wildcard adhoc.cpp),)
+	cp adhoc.cpp.proto adhoc.cpp
+else
+	touch adhoc.cpp
+endif
+
+# Include dependencies, if present. You must issue `make deps` to create them.
+ifeq ($(wildcard GNUmakefile.deps),GNUmakefile.deps)
+-include GNUmakefile.deps
+endif # Dependencies
+
+%.o : %.cpp
+	$(CXX) $(CXXFLAGS) -c $<
+
+GNUmakefile.deps:
+	$(CXX) $(CXXFLAGS) -MM *.cpp > GNUmakefile.deps
+
+# Warn of potential configurations issues. This will go away after 5.6.3
+UNALIGNED_ACCESS := $(shell $(EGREP) -c "^[[:space:]]*//[[:space:]]*\#[[:space:]]*define[[:space:]]*CRYPTOPP_NO_UNALIGNED_DATA_ACCESS" config.h)
+NO_INIT_PRIORITY := $(shell $(EGREP) -c "^[[:space:]]*//[[:space:]]*\#[[:space:]]*define[[:space:]]*CRYPTOPP_INIT_PRIORITY" config.h)
+COMPATIBILITY_562 := $(shell $(EGREP) -c "^[[:space:]]*\#[[:space:]]*define[[:space:]]*CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562" config.h)
+.PHONY: public_service
+public_service:
+ifneq ($(UNALIGNED_ACCESS),0)
+	$(info WARNING: CRYPTOPP_NO_UNALIGNED_DATA_ACCESS is not defined in config.h.)
+endif
+ifneq ($(NO_INIT_PRIORITY),0)
+	$(info WARNING: CRYPTOPP_INIT_PRIORITY is not defined in config.h.)
+endif
+ifneq ($(COMPATIBILITY_562),0)
+	$(info WARNING: CRYPTOPP_MAINTAIN_BACKWARDS_COMPATIBILITY_562 is defined in config.h.)
+endif
+ifneq (x$(UNALIGNED_ACCESS)$(NO_INIT_PRIORITY)$(COMPATIBILITY_562),x000)
+	$(info WARNING: You should make these changes in config.h, and not CXXFLAGS.)
+	$(info WARNING: You can 'mv config.recommend config.h', but it breaks versioning.)
+	$(info WARNING: See http://cryptopp.com/wiki/config.h for more details.)
+	$(info )
+endif
