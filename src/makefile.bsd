@@ -81,11 +81,7 @@ LIBS+= \
 DEBUGFLAGS=-g
 
 ifeq (${ARCH}, i386)
-    EXT_OPTIONS=-msse2 -mssse3
-endif
-
-ifeq (${ARCH}, amd64)
-    EXT_OPTIONS=-mssse3
+    EXT_OPTIONS=-msse2
 endif
 
 xOPT_LEVEL=-O2

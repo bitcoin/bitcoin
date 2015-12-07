@@ -53,9 +53,9 @@ ifdef RELEASE
 # Compile for maximum compatibility and smallest size.
 # This requires that dependencies are compiled
 # the same way.
-CFLAGS = -O2 -msse2 -mssse3
+CFLAGS = -O2 -msse2
 else
-CFLAGS = -g -msse2 -mssse3
+CFLAGS = -g -msse2
 endif
 
 # ppc doesn't work because we don't support big-endian

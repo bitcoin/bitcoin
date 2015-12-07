@@ -82,11 +82,7 @@ DEBUGFLAGS=-g
 
 
 ifeq (${ARCH}, i686)
-    EXT_OPTIONS=-msse2 -mssse3
-endif
-
-ifeq (${ARCH}, x86_64)
-    EXT_OPTIONS=-mssse3
+    EXT_OPTIONS=-msse2
 endif
 
 xOPT_LEVEL=-O2
