@@ -4,30 +4,30 @@
 #include <string>
 #include <vector>
 using std::string;
-#include <cryptopp/files.h>
+#include <crypto++/files.h>
 using CryptoPP::FileSink;
 using CryptoPP::FileSource;
 
-#include <cryptopp/hex.h>
+#include <crypto++/hex.h>
 using CryptoPP::HexEncoder;
 
-#include <cryptopp/filters.h>
+#include <crypto++/filters.h>
 using CryptoPP::StringSink;
 using CryptoPP::StringSource;
 using CryptoPP::PK_EncryptorFilter;
 using CryptoPP::PK_DecryptorFilter;
 
-#include <cryptopp/osrng.h>
+#include <crypto++/osrng.h>
 using CryptoPP::AutoSeededRandomPool;
 
-#include <cryptopp/integer.h>
+#include <crypto++/integer.h>
 using CryptoPP::Integer;
 
-#include <cryptopp/pubkey.h>
+#include <crypto++/pubkey.h>
 using CryptoPP::PublicKey;
 using CryptoPP::PrivateKey;
 
-#include <cryptopp/eccrypto.h>
+#include <crypto++/eccrypto.h>
 using CryptoPP::ECP;    // Prime field
 using CryptoPP::EC2N;   // Binary field
 using CryptoPP::ECIES;
@@ -36,15 +36,15 @@ using CryptoPP::DL_GroupParameters_EC;
 using CryptoPP::DL_GroupPrecomputation;
 using CryptoPP::DL_FixedBasePrecomputation;
 
-#include <cryptopp/pubkey.h>
+#include <crypto++/pubkey.h>
 using CryptoPP::DL_PrivateKey_EC;
 using CryptoPP::DL_PublicKey_EC;
 
-#include <cryptopp/asn.h>
-#include <cryptopp/oids.h>
+#include <crypto++/asn.h>
+#include <crypto++/oids.h>
 namespace ASN1 = CryptoPP::ASN1;
 
-#include <cryptopp/cryptlib.h>
+#include <crypto++/cryptlib.h>
 using CryptoPP::PK_Encryptor;
 using CryptoPP::PK_Decryptor;
 using CryptoPP::g_nullNameValuePairs;
