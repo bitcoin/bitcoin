@@ -368,8 +368,8 @@ if ENABLE_WALLET
 syscoind_LDADD += libsyscoin_wallet.a
 endif
 
-syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) -lcryptopp
-
+syscoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) 
+syscoind_LDADD += /usr/lib/libcryptopp.a
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp
 syscoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(EVENT_CFLAGS)
