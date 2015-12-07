@@ -123,7 +123,7 @@ contains(USE_ASM, 1) {
     DEFINES += USE_ASM
 
      contains(QMAKE_TARGET.arch, i386) | contains(QMAKE_TARGET.arch, i586) | contains(QMAKE_TARGET.arch, i686) {
-        message("x86 platform, setting -msse2 & -mssse3 flags")
+        message("x86 platform, setting -msse2 flag")
 
         QMAKE_CXXFLAGS += -msse2
         QMAKE_CFLAGS += -msse2
