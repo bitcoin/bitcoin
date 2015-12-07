@@ -15,14 +15,6 @@ public:
     vector<pair<uint256,uint32_t> >& GetSolutions();
 
 private:
-#ifdef USE_ASM
-#ifdef __x86_64__
-    // AVX2 CPUs: 8-way hashing.
-    void Do_8way();
-#endif
-    // SSE2, Neon: 4-way hashing.
-    void Do_4way();
-#endif
     // One way hashing.
     void Do_generic();
 

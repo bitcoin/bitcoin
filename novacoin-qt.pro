@@ -119,36 +119,27 @@ contains(USE_LEVELDB, 1) {
 
 # use: qmake "USE_ASM=1"
 contains(USE_ASM, 1) {
-    message(Using assembler scrypt & sha256 implementations)
+    message(Using assembler scrypt implementations)
     DEFINES += USE_ASM
 
      contains(QMAKE_TARGET.arch, i386) | contains(QMAKE_TARGET.arch, i586) | contains(QMAKE_TARGET.arch, i686) {
         message("x86 platform, setting -msse2 & -mssse3 flags")
 
-        QMAKE_CXXFLAGS += -msse2 -mssse3
-        QMAKE_CFLAGS += -msse2 -mssse3
+        QMAKE_CXXFLAGS += -msse2
+        QMAKE_CFLAGS += -msse2
     }
-
-    contains(QMAKE_TARGET.arch, x86_64) | contains(QMAKE_TARGET.arch, amd64) {
-        message("x86_64 platform, setting -mssse3 flag")
-
-        QMAKE_CXXFLAGS += -mssse3
-        QMAKE_CFLAGS += -mssse3
-    }
-
 
     SOURCES += src/crypto/scrypt/asm/scrypt-arm.S src/crypto/scrypt/asm/scrypt-x86.S src/crypto/scrypt/asm/scrypt-x86_64.S src/crypto/scrypt/asm/asm-wrapper.cpp
-    SOURCES += src/crypto/sha2/asm/sha2-arm.S src/crypto/sha2/asm/sha2-x86.S src/crypto/sha2/asm/sha2-x86_64.S
 } else {
     # use: qmake "USE_SSE2=1"
     contains(USE_SSE2, 1) {
         message(Using SSE2 intrinsic scrypt implementation & generic sha256 implementation)
         SOURCES += src/crypto/scrypt/intrin/scrypt-sse2.cpp
         DEFINES += USE_SSE2
-        QMAKE_CXXFLAGS += -msse2 
+        QMAKE_CXXFLAGS += -msse2
         QMAKE_CFLAGS += -msse2
     } else {
-        message(Using generic scrypt & sha256 implementations)
+        message(Using generic scrypt implementations)
         SOURCES += src/crypto/scrypt/generic/scrypt-generic.cpp
     }
 }
