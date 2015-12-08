@@ -11,7 +11,7 @@
 // Internal implementation code.
 namespace
 {
-/// Internal SHA-512 implementation.
+// Internal SHA-512 implementation.
 namespace sha512
 {
 uint64_t inline Ch(uint64_t x, uint64_t y, uint64_t z) { return z ^ (x & (y ^ z)); }
