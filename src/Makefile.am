@@ -195,6 +195,7 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 # server: shared between syscoind and syscoin-qt
 libsyscoin_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
 libsyscoin_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libsyscoin_server_a_LIBADD =  $(LIBCRYPTOPP)
 libsyscoin_server_a_SOURCES = \
   alias.cpp \
   offer.cpp \
@@ -362,8 +363,7 @@ syscoind_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
-  $(LIBSECP256K1) \
-  $(LIBCRYPTOPP)
+  $(LIBSECP256K1)
 
 if ENABLE_ZMQ
 syscoind_LDADD += $(LIBSYSCOIN_ZMQ) $(ZMQ_LIBS)
