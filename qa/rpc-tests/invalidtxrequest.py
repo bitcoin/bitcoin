@@ -15,15 +15,11 @@ import time
 
 
 '''
-In this test we connect to one node over p2p, and test block requests:
-1) Valid blocks should be requested and become chain tip.
-2) Invalid block with duplicated transaction should be re-requested.
-3) Invalid block with bad coinbase value should be rejected and not
-re-requested.
+In this test we connect to one node over p2p, and test tx requests.
 '''
 
 # Use the ComparisonTestFramework with 1 node: only use --testbinary.
-class InvalidBlockRequestTest(ComparisonTestFramework):
+class InvalidTxRequestTest(ComparisonTestFramework):
 
     ''' Can either run this test as 1 node with expected answers, or two and compare them. 
         Change the "outcome" variable from each TestInstance object to only do the comparison. '''
@@ -69,51 +65,12 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
             height += 1
         yield test
 
-        '''
-        Now we use merkle-root malleability to generate an invalid block with
-        same blockheader.
-        Manufacture a block with 3 transactions (coinbase, spend of prior
-        coinbase, spend of that spend).  Duplicate the 3rd transaction to 
-        leave merkle root and blockheader unchanged but invalidate the block.
-        '''
-        block2 = create_block(self.tip, create_coinbase(height), self.block_time)
-        self.block_time += 1
+        # chr(100) is OP_NOTIF
+        # Transaction will be rejected with code 16 (REJECT_INVALID)
+        tx1 = create_transaction(self.block1.vtx[0], 0, chr(100), 50*100000000)
+        yield TestInstance([[tx1, RejectResult(16, 'mandatory-script-verify-flag-failed')]])
 
-        # chr(81) is OP_TRUE
-        tx1 = create_transaction(self.block1.vtx[0], 0, chr(81), 50*100000000)
-        tx2 = create_transaction(tx1, 0, chr(81), 50*100000000)
-
-        block2.vtx.extend([tx1, tx2])
-        block2.hashMerkleRoot = block2.calc_merkle_root()
-        block2.rehash()
-        block2.solve()
-        orig_hash = block2.sha256
-        block2_orig = copy.deepcopy(block2)
-
-        # Mutate block 2
-        block2.vtx.append(tx2)
-        assert_equal(block2.hashMerkleRoot, block2.calc_merkle_root())
-        assert_equal(orig_hash, block2.rehash())
-        assert(block2_orig.vtx != block2.vtx)
-
-        self.tip = block2.sha256
-        yield TestInstance([[block2, RejectResult(16,'bad-txns-duplicate')], [block2_orig, True]])
-        height += 1
-
-        '''
-        Make sure that a totally screwed up block is not valid.
-        '''
-        block3 = create_block(self.tip, create_coinbase(height), self.block_time)
-        self.block_time += 1
-        block3.vtx[0].vout[0].nValue = 100*100000000 # Too high!
-        block3.vtx[0].sha256=None
-        block3.vtx[0].calc_sha256()
-        block3.hashMerkleRoot = block3.calc_merkle_root()
-        block3.rehash()
-        block3.solve()
-
-        yield TestInstance([[block3, RejectResult(16,'bad-cb-amount')]])
-
+        # TODO: test further transactions...
 
 if __name__ == '__main__':
-    InvalidBlockRequestTest().main()
+    InvalidTxRequestTest().main()
