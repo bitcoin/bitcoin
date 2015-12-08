@@ -649,6 +649,11 @@ boost::filesystem::path static GetAutostartDir()
 
 boost::filesystem::path static GetAutostartFilePath()
 {
+    if (GetBoolArg("-testnet", false))
+        return GetAutostartDir() / "bitcoin-test.desktop";
+    else if (GetBoolArg("-regtest", false))
+        return GetAutostartDir() / "bitcoin-regtest.desktop";
+
     return GetAutostartDir() / "bitcoin.desktop";
 }
 
