@@ -15,6 +15,7 @@
 #include "uint256.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include <list>
 
 #include "test/test_bitcoin.h"
 
@@ -256,6 +257,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // height map
     std::vector<int> prevheights;
 
+    std::list<CTxMemPoolEntry> transactions;
+
     // relative height locked
     tx.nVersion = 2;
     tx.vin.resize(1);
@@ -270,7 +273,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vout[0].scriptPubKey = CScript() << OP_1;
     tx.nLockTime = 0;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, entry.Fee(100000000L).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+    transactions.push_back(entry.Fee(100000000L).Time(GetTime()).SpendsCoinbase(true).FromTx(tx));
+    mempool.addUnchecked(hash, transactions.back());
     BOOST_CHECK(CheckLockTime(tx, LOCKTIME_VERIFY_SEQUENCE|LOCKTIME_MEDIAN_TIME_PAST) == chainActive.Tip()->nHeight + 1);
     BOOST_CHECK(!LockTime(tx, LOCKTIME_VERIFY_SEQUENCE, &prevheights, CreateBlockIndex(chainActive.Tip()->nHeight + 2, chainActive.Tip()->GetMedianTimePast())));
 
@@ -279,17 +283,20 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | (((chainActive.Tip()->GetMedianTimePast()+1-chainActive[1]->GetMedianTimePast()) >> CTxIn::SEQUENCE_LOCKTIME_GRANULARITY) + 1); // txFirst[1] is the 3rd block
     prevheights[0] = baseheight + 2;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, entry.Time(GetTime()).FromTx(tx));
+    transactions.push_back(entry.Time(GetTime()).FromTx(tx));
+    mempool.addUnchecked(hash, transactions.back());
     BOOST_CHECK(CheckLockTime(tx, LOCKTIME_VERIFY_SEQUENCE|LOCKTIME_MEDIAN_TIME_PAST) > chainActive.Tip()->GetMedianTimePast());
     BOOST_CHECK(!LockTime(tx, LOCKTIME_VERIFY_SEQUENCE, &prevheights, CreateBlockIndex(chainActive.Tip()->nHeight + 1, chainActive.Tip()->GetMedianTimePast() + 512)));
 
     // absolute height locked
     tx.vin[0].prevout.hash = txFirst[2]->GetHash();
+    tx.vin[0].prevout.hash = txFirst[2]->GetHash();
     tx.vin[0].nSequence = CTxIn::SEQUENCE_FINAL - 1;
     prevheights[0] = baseheight + 3;
     tx.nLockTime = chainActive.Tip()->nHeight + 1;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, entry.Time(GetTime()).FromTx(tx));
+    transactions.push_back(entry.Time(GetTime()).FromTx(tx));
+    mempool.addUnchecked(hash, transactions.back());
     BOOST_CHECK(CheckLockTime(tx, LOCKTIME_MEDIAN_TIME_PAST) == chainActive.Tip()->nHeight + 1);
     BOOST_CHECK(!LockTime(tx, 0, &prevheights, CreateBlockIndex(chainActive.Tip()->nHeight + 2, chainActive.Tip()->GetMedianTimePast())));
 
@@ -299,7 +306,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     prevheights.resize(1);
     prevheights[0] = baseheight + 4;
     hash = tx.GetHash();
-    mempool.addUnchecked(hash, entry.Time(GetTime()).FromTx(tx));
+    transactions.push_back(entry.Time(GetTime()).FromTx(tx));
+    mempool.addUnchecked(hash, transactions.back());
     BOOST_CHECK(CheckLockTime(tx, LOCKTIME_MEDIAN_TIME_PAST) == chainActive.Tip()->GetMedianTimePast());
     BOOST_CHECK(!LockTime(tx, 0, &prevheights, CreateBlockIndex(chainActive.Tip()->nHeight + 1, chainActive.Tip()->GetMedianTimePast() + 1)));
 
@@ -312,6 +320,8 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     tx.vin[0].nSequence = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | 2;
     BOOST_CHECK(LockTime(tx, LOCKTIME_VERIFY_SEQUENCE, &prevheights, CreateBlockIndex(chainActive.Tip()->nHeight + 1, chainActive.Tip()->GetMedianTimePast()+1)) > chainActive.Tip()->GetMedianTimePast());
 
+    //This should kick non final transaction from the mempool
+    mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, LOCKTIME_MEDIAN_TIME_PAST | LOCKTIME_VERIFY_SEQUENCE);
     BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
 
     // None of the of the above height/time locked tx should have made
@@ -319,11 +329,15 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 1);
     delete pblocktemplate;
     // However if we advance height and time by one, all of them should be mined
+    BOOST_FOREACH(const CTxMemPoolEntry& entry, transactions) {
+        mempool.addUnchecked(entry.GetTx().GetHash(), entry);
+    }
     for (int i = 0; i < CBlockIndex::nMedianTimeSpan; i++)
         chainActive.Tip()->GetAncestor(chainActive.Tip()->nHeight - i)->nTime += 512; //Trick the MedianTimePast
     chainActive.Tip()->nHeight++;
     SetMockTime(chainActive.Tip()->GetMedianTimePast() + 1);
 
+    mempool.removeForReorg(pcoinsTip, chainActive.Tip()->nHeight + 1, LOCKTIME_MEDIAN_TIME_PAST | LOCKTIME_VERIFY_SEQUENCE);
     BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
     BOOST_CHECK_EQUAL(pblocktemplate->block.vtx.size(), 5);
     delete pblocktemplate;

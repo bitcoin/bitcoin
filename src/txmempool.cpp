@@ -22,10 +22,10 @@ using namespace std;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                                  bool poolHasNoInputsOf, CAmount _inChainInputValue,
-                                 bool _spendsCoinbase, unsigned int _sigOps):
+                                 bool _spendsCoinbase, unsigned int _sigOps, const uint256 _tip):
     tx(_tx), nFee(_nFee), nTime(_nTime), entryPriority(_entryPriority), entryHeight(_entryHeight),
     hadNoDependencies(poolHasNoInputsOf), inChainInputValue(_inChainInputValue),
-    spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps)
+    spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), tip(_tip)
 {
     nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
     nModSize = tx.CalculateModifiedSize(nTxSize);
@@ -58,6 +58,11 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
 void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
 {
     feeDelta = newFeeDelta;
+}
+
+void CTxMemPoolEntry::UpdateTip(uint256 newTip)
+{
+    tip = newTip;
 }
 
 // Update the given tx for any in-mempool descendants.
@@ -501,23 +506,42 @@ void CTxMemPool::removeForReorg(const CCoinsViewCache *pcoins, unsigned int nMem
 {
     // Remove transactions spending a coinbase which are now immature and no-longer-final transactions
     LOCK(cs);
+    AssertLockHeld(cs_main);
+    CBlockIndex* tip = chainActive.Tip();
     list<CTransaction> transactionsToRemove;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
         const CTransaction& tx = it->GetTx();
-        if (CheckLockTime(tx, flags)) {
+        bool lockTimeInvalidated = true;
+        CBlockIndex* current = tip;
+        for(int i = 0; i < 10; i++)
+        {
+            if(current->GetBlockHash() == it->GetTip())
+            {
+                lockTimeInvalidated = false;
+                break;
+            }
+            current = tip->pprev;
+            if(current == NULL)
+                break;
+        }
+        if (lockTimeInvalidated && CheckLockTime(tx, flags)) {
             transactionsToRemove.push_back(tx);
-        } else if (it->GetSpendsCoinbase()) {
+        } else if (it->GetSpendsCoinbase()) {            
             BOOST_FOREACH(const CTxIn& txin, tx.vin) {
                 indexed_transaction_set::const_iterator it2 = mapTx.find(txin.prevout.hash);
                 if (it2 != mapTx.end())
                     continue;
                 const CCoins *coins = pcoins->AccessCoins(txin.prevout.hash);
-		if (nCheckFrequency != 0) assert(coins);
+                if (nCheckFrequency != 0) assert(coins);
                 if (!coins || (coins->IsCoinBase() && ((signed long)nMemPoolHeight) - coins->nHeight < COINBASE_MATURITY)) {
                     transactionsToRemove.push_back(tx);
                     break;
                 }
             }
+        }
+        if(lockTimeInvalidated)
+        {
+                mapTx.modify(it, update_tip(tip->GetBlockHash()));
         }
     }
     BOOST_FOREACH(const CTransaction& tx, transactionsToRemove) {
