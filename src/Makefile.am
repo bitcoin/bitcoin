@@ -43,7 +43,9 @@ $(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 	
 $(LIBCRYPTOPP): 
-	@echo "Building LibCryptoPP ..." && $(MAKE) -C $(@D) $(@F)
+	@echo "Building LibCryptoPP ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
+	  CC="$(CC)" AR="$(AR)" \
+          OPT="$(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) $(AM_CPPFLAGS) $(CPPFLAGS) -DNO_OS_DEPENDENCE"
   
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
