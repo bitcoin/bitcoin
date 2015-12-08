@@ -806,7 +806,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 		}
 		switch (op) {
 			case OP_ALIAS_ACTIVATE:
-				if (vvch[1].size() > 64)
+				if (vvch[1].size() > MAX_ID_LENGTH)
 					err = error("aliasactivate tx with rand too big");
 				break;
 			case OP_ALIAS_UPDATE:
@@ -970,7 +970,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
     if (!CheckTransaction(tx, state))
 	{
-		printf("CheckTransaction failed\n");
+		// SYSCOIN verbose logging
+		printf("CheckTransaction failed, validation state: %s\n", FormatStateMessage(state).c_str());
         return false;
 	}
 

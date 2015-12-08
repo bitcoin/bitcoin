@@ -1662,7 +1662,9 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
             continue;
 
         const CWalletTx *pcoin = output.tx;
-
+		// SYSCOIN txs are unspendable unless input to another syscoin tx
+		if(pcoin->nVersion == GetSyscoinTxVersion())
+			continue;
         if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
             continue;
 
@@ -1773,6 +1775,9 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
         if (it != mapWallet.end())
         {
             const CWalletTx* pcoin = &it->second;
+			// SYSCOIN txs are unspendable unless input to another syscoin tx
+			if(pcoin->nVersion == GetSyscoinTxVersion())
+				continue;
             // Clearly invalid input, fail
             if (pcoin->vout.size() <= outpoint.n)
                 return false;
@@ -1996,9 +2001,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 
 				// SYSCOIN attach input TX
+				nValueIn += nWtxinCredit;
 				vector<pair<const CWalletTx*, unsigned int> > vecCoins(
 					setCoins.begin(), setCoins.end());
-				// Input tx always at first position
 				if(wtxIn != NULL)
 					vecCoins.insert(vecCoins.begin(), make_pair(wtxIn, nTxOut));
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, vecCoins)
@@ -2014,8 +2019,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                         age += 1;
                     dPriority += (double)nCredit * age;
                 }
-				// SYSCOIN add input amount to total value in
-				nValueIn += nWtxinCredit;
+
+
                 const CAmount nChange = nValueIn - nValueToSelect;
                 if (nChange > 0)
                 {
