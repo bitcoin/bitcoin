@@ -100,6 +100,8 @@ testScripts = [
     'sendheaders.py',
     'keypool.py',
     'prioritise_transaction.py',
+    'invalidblockrequest.py',
+    'invalidtxrequest.py',
 ]
 testScriptsExt = [
     'bip65-cltv.py',
@@ -116,7 +118,6 @@ testScriptsExt = [
 #    'rpcbind_test.py', #temporary, bug in libevent, see #6655
     'smartfees.py',
     'maxblocksinflight.py',
-    'invalidblockrequest.py',
     'p2p-acceptblock.py',
     'mempool_packages.py',
     'maxuploadtarget.py',
