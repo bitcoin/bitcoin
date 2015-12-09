@@ -64,30 +64,24 @@ unsigned int QtyOfPendingAcceptsInMempool(const vector<unsigned char>& vchToFind
 }
 bool ExistsInMempool(std::vector<unsigned char> vchToFind, opcodetype type)
 {
-	printf("mempool size %d\n", mempool.mapTx.size());
 	for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
              mi != mempool.mapTx.end(); ++mi)
         {
         const CTransaction& tx = mi->GetTx();	
-		printf("mempool tx checking %s\n", tx.GetHash().GetHex().c_str());
 		if (tx.IsCoinBase() || !CheckFinalTx(tx))
 			continue;
 		if(IsAliasOp(type))
 		{
-			printf("isalias %s\n", tx.GetHash().GetHex().c_str());
 			vector<vector<unsigned char> > vvch;
 			int op, nOut;
 			
 			if(DecodeAliasTx(tx, op, nOut, vvch, -1)) {
-				printf("get type %s\n", tx.GetHash().GetHex().c_str());
 				if(op == type)
 				{
-					printf("found aliasnew %s\n", tx.GetHash().GetHex().c_str());
 					string vchToFindStr = stringFromVch(vchToFind);
 					string vvchFirstStr = stringFromVch(vvch[0]);
 					if(vvchFirstStr == vchToFindStr)
 					{
-						printf("vch matches %s\n", tx.GetHash().GetHex().c_str());
 						if (GetTxHashHeight(tx.GetHash()) <= 0) 
 							return true;
 					}
@@ -976,6 +970,7 @@ bool DecodeAliasScript(const CScript& script, int& op,
 bool DecodeAliasScript(const CScript& script, int& op,
 		vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
 	opcodetype opcode;
+	vvch.clear();
 	if (!script.GetOp(pc, opcode))
 		return false;
 	if (opcode < OP_1 || opcode > OP_16)

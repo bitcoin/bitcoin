@@ -675,6 +675,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 bool DecodeOfferScript(const CScript& script, int& op,
 		vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
 	opcodetype opcode;
+	vvch.clear();
 	if (!script.GetOp(pc, opcode)) return false;
 	if (opcode < OP_1 || opcode > OP_16) return false;
 	op = CScript::DecodeOP_N(opcode);
