@@ -1,7 +1,7 @@
-// Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/// Copyright (c) 2010 Satoshi Nakamoto
+/// Copyright (c) 2009-2014 The Bitcoin Core developers
+/// Distributed under the MIT software license, see the accompanying
+/// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "alert.h"
 
@@ -107,13 +107,13 @@ bool CAlert::IsInEffect() const
 bool CAlert::Cancels(const CAlert& alert) const
 {
     if (!IsInEffect())
-        return false; // this was a no-op before 31403
+        return false; /// this was a no-op before 31403
     return (alert.nID <= nCancel || setCancel.count(alert.nID));
 }
 
 bool CAlert::AppliesTo(int nVersion, const std::string& strSubVerIn) const
 {
-    // TODO: rework for client-version-embedded-in-strSubVer ?
+    /// TODO: rework for client-version-embedded-in-strSubVer ?
     return (IsInEffect() &&
             nMinVer <= nVersion && nVersion <= nMaxVer &&
             (setSubVer.empty() || setSubVer.count(strSubVerIn)));
@@ -128,10 +128,10 @@ bool CAlert::RelayTo(CNode* pnode) const
 {
     if (!IsInEffect())
         return false;
-    // don't relay to nodes which haven't sent their version message
+    /// don't relay to nodes which haven't sent their version message
     if (pnode->nVersion == 0)
         return false;
-    // returns true if wasn't already contained in the set
+    /// returns true if wasn't already contained in the set
     if (pnode->setKnown.insert(GetHash()).second)
     {
         if (AppliesTo(pnode->nVersion, pnode->strSubVer) ||
@@ -151,7 +151,7 @@ bool CAlert::CheckSignature(const std::vector<unsigned char>& alertKey) const
     if (!key.Verify(Hash(vchMsg.begin(), vchMsg.end()), vchSig))
         return error("CAlert::CheckSignature(): verify signature failed");
 
-    // Now unserialize the data
+    /// Now unserialize the data
     CDataStream sMsg(vchMsg, SER_NETWORK, PROTOCOL_VERSION);
     sMsg >> *(CUnsignedAlert*)this;
     return true;
@@ -176,13 +176,13 @@ bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThre
     if (!IsInEffect())
         return false;
 
-    // alert.nID=max is reserved for if the alert key is
-    // compromised. It must have a pre-defined message,
-    // must never expire, must apply to all versions,
-    // and must cancel all previous
-    // alerts or it will be ignored (so an attacker can't
-    // send an "everything is OK, don't panic" version that
-    // cannot be overridden):
+    /// alert.nID=max is reserved for if the alert key is
+    /// compromised. It must have a pre-defined message,
+    /// must never expire, must apply to all versions,
+    /// and must cancel all previous
+    /// alerts or it will be ignored (so an attacker can't
+    /// send an "everything is OK, don't panic" version that
+    /// cannot be overridden):
     int maxInt = std::numeric_limits<int>::max();
     if (nID == maxInt)
     {
@@ -200,7 +200,7 @@ bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThre
 
     {
         LOCK(cs_mapAlerts);
-        // Cancel previous alerts
+        /// Cancel previous alerts
         for (map<uint256, CAlert>::iterator mi = mapAlerts.begin(); mi != mapAlerts.end();)
         {
             const CAlert& alert = (*mi).second;
@@ -220,7 +220,7 @@ bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThre
                 mi++;
         }
 
-        // Check if this alert has been cancelled
+        /// Check if this alert has been cancelled
         BOOST_FOREACH(PAIRTYPE(const uint256, CAlert)& item, mapAlerts)
         {
             const CAlert& alert = item.second;
@@ -231,9 +231,9 @@ bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThre
             }
         }
 
-        // Add to mapAlerts
+        /// Add to mapAlerts
         mapAlerts.insert(make_pair(GetHash(), *this));
-        // Notify UI and -alertnotify if it applies to me
+        /// Notify UI and -alertnotify if it applies to me
         if(AppliesToMe())
         {
             uiInterface.NotifyAlertChanged(GetHash(), CT_NEW);
@@ -251,16 +251,16 @@ CAlert::Notify(const std::string& strMessage, bool fThread)
     std::string strCmd = GetArg("-alertnotify", "");
     if (strCmd.empty()) return;
 
-    // Alert text should be plain ascii coming from a trusted source, but to
-    // be safe we first strip anything not in safeChars, then add single quotes around
-    // the whole string before passing it to the shell:
+    /// Alert text should be plain ascii coming from a trusted source, but to
+    /// be safe we first strip anything not in safeChars, then add single quotes around
+    /// the whole string before passing it to the shell:
     std::string singleQuote("'");
     std::string safeStatus = SanitizeString(strMessage);
     safeStatus = singleQuote+safeStatus+singleQuote;
     boost::replace_all(strCmd, "%s", safeStatus);
 
     if (fThread)
-        boost::thread t(runCommand, strCmd); // thread runs free
+        boost::thread t(runCommand, strCmd); /// thread runs free
     else
         runCommand(strCmd);
 }

@@ -1,8 +1,8 @@
-// Copyright (c) 2013 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/// Copyright (c) 2013 The Bitcoin Core developers
+/// Distributed under the MIT software license, see the accompanying
+/// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-// Unit tests for alert system
+/// Unit tests for alert system
 
 #include "alert.h"
 #include "chain.h"
@@ -24,17 +24,17 @@
 #include <boost/test/unit_test.hpp>
 
 #if 0
-//
-// alertTests contains 7 alerts, generated with this code:
-// (SignAndSave code not shown, alert signing key is secret)
-//
+///
+/// alertTests contains 7 alerts, generated with this code:
+/// (SignAndSave code not shown, alert signing key is secret)
+///
 {
     CAlert alert;
     alert.nRelayUntil   = 60;
     alert.nExpiration   = 24 * 60 * 60;
     alert.nID           = 1;
-    alert.nCancel       = 0;   // cancels previous messages up to this ID number
-    alert.nMinVer       = 0;  // These versions are protocol versions
+    alert.nCancel       = 0; /// cancels previous messages up to this ID number
+    alert.nMinVer       = 0; /// These versions are protocol versions
     alert.nMaxVer       = 999001;
     alert.nPriority     = 1;
     alert.strComment    = "Alert comment";
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
 
     BOOST_CHECK(alerts.size() >= 3);
 
-    // Matches:
+    /// Matches:
     BOOST_CHECK(alerts[0].AppliesTo(1, ""));
     BOOST_CHECK(alerts[0].AppliesTo(999001, ""));
     BOOST_CHECK(alerts[0].AppliesTo(1, "/Satoshi:11.11.11/"));
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
     BOOST_CHECK(alerts[2].AppliesTo(1, "/Satoshi:0.1.0/"));
     BOOST_CHECK(alerts[2].AppliesTo(1, "/Satoshi:0.2.0/"));
 
-    // Don't match:
+    /// Don't match:
     BOOST_CHECK(!alerts[0].AppliesTo(-1, ""));
     BOOST_CHECK(!alerts[0].AppliesTo(999002, ""));
 
@@ -173,8 +173,8 @@ BOOST_AUTO_TEST_CASE(AlertNotify)
     std::vector<std::string> r = read_lines(temp);
     BOOST_CHECK_EQUAL(r.size(), 4u);
 
-// Windows built-in echo semantics are different than posixy shells. Quotes and
-// whitespace are printed literally.
+/// Windows built-in echo semantics are different than posixy shells. Quotes and
+/// whitespace are printed literally.
 
 #ifndef WIN32
     BOOST_CHECK_EQUAL(r[0], "Alert 1");
@@ -196,14 +196,14 @@ static bool falseFunc() { return false; }
 
 BOOST_AUTO_TEST_CASE(PartitionAlert)
 {
-    // Test PartitionCheck
+    /// Test PartitionCheck
     CCriticalSection csDummy;
     CBlockIndex indexDummy[100];
     CChainParams& params = Params(CBaseChainParams::MAIN);
     int64_t nPowTargetSpacing = params.GetConsensus().nPowTargetSpacing;
 
-    // Generate fake blockchain timestamps relative to
-    // an arbitrary time:
+    /// Generate fake blockchain timestamps relative to
+    /// an arbitrary time:
     int64_t now = 1427379054;
     SetMockTime(now);
     for (int i = 0; i < 100; i++)
@@ -213,18 +213,18 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
         else indexDummy[i].pprev = &indexDummy[i-1];
         indexDummy[i].nHeight = i;
         indexDummy[i].nTime = now - (100-i)*nPowTargetSpacing;
-        // Other members don't matter, the partition check code doesn't
-        // use them
+        /// Other members don't matter, the partition check code doesn't
+        /// use them
     }
 
     strMiscWarning = "";
 
-    // Test 1: chain with blocks every nPowTargetSpacing seconds,
-    // as normal, no worries:
+    /// Test 1: chain with blocks every nPowTargetSpacing seconds,
+    /// as normal, no worries:
     PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK_MESSAGE(strMiscWarning.empty(), strMiscWarning);
 
-    // Test 2: go 3.5 hours without a block, expect a warning:
+    /// Test 2: go 3.5 hours without a block, expect a warning:
     now += 3*60*60+30*60;
     SetMockTime(now);
     PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
@@ -232,18 +232,18 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     BOOST_TEST_MESSAGE(std::string("Got alert text: ")+strMiscWarning);
     strMiscWarning = "";
 
-    // Test 3: test the "partition alerts only go off once per day"
-    // code:
+    /// Test 3: test the "partition alerts only go off once per day"
+    /// code:
     now += 60*10;
     SetMockTime(now);
     PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK(strMiscWarning.empty());
 
-    // Test 4: get 2.5 times as many blocks as expected:
-    now += 60*60*24; // Pretend it is a day later
+    /// Test 4: get 2.5 times as many blocks as expected:
+    now += 60*60*24; /// Pretend it is a day later
     SetMockTime(now);
     int64_t quickSpacing = nPowTargetSpacing*2/5;
-    for (int i = 0; i < 100; i++) // Tweak chain timestamps:
+    for (int i = 0; i < 100; i++) /// Tweak chain timestamps:
         indexDummy[i].nTime = now - (100-i)*quickSpacing;
     PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK(!strMiscWarning.empty());

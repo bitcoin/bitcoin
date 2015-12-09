@@ -1,6 +1,6 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/// Copyright (c) 2011-2013 The Bitcoin Core developers
+/// Distributed under the MIT software license, see the accompanying
+/// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
 #include "config/bitcoin-config.h"
@@ -76,13 +76,13 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode mode, 
         break;
     }
 
-    // Context menu actions
+    /// Context menu actions
     QAction *copyAddressAction = new QAction(tr("&Copy Address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
     QAction *editAction = new QAction(tr("&Edit"), this);
     deleteAction = new QAction(ui->deleteAddress->text(), this);
 
-    // Build context menu
+    /// Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
@@ -91,7 +91,7 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode mode, 
         contextMenu->addAction(deleteAction);
     contextMenu->addSeparator();
 
-    // Connect signals for context menu actions
+    /// Connect signals for context menu actions
     connect(copyAddressAction, SIGNAL(triggered()), this, SLOT(on_copyAddress_clicked()));
     connect(copyLabelAction, SIGNAL(triggered()), this, SLOT(onCopyLabelAction()));
     connect(editAction, SIGNAL(triggered()), this, SLOT(onEditAction()));
@@ -121,12 +121,12 @@ void AddressBookPage::setModel(AddressTableModel *model)
     switch(tab)
     {
     case ReceivingTab:
-        // Receive filter
+        /// Receive filter
         proxyModel->setFilterRole(AddressTableModel::TypeRole);
         proxyModel->setFilterFixedString(AddressTableModel::Receive);
         break;
     case SendingTab:
-        // Send filter
+        /// Send filter
         proxyModel->setFilterRole(AddressTableModel::TypeRole);
         proxyModel->setFilterFixedString(AddressTableModel::Send);
         break;
@@ -134,7 +134,7 @@ void AddressBookPage::setModel(AddressTableModel *model)
     ui->tableView->setModel(proxyModel);
     ui->tableView->sortByColumn(0, Qt::AscendingOrder);
 
-    // Set column widths
+    /// Set column widths
 #if QT_VERSION < 0x050000
     ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Label, QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setResizeMode(AddressTableModel::Address, QHeaderView::ResizeToContents);
@@ -146,7 +146,7 @@ void AddressBookPage::setModel(AddressTableModel *model)
     connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
         this, SLOT(selectionChanged()));
 
-    // Select row for newly created address
+    /// Select row for newly created address
     connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewAddress(QModelIndex,int,int)));
 
     selectionChanged();
@@ -214,7 +214,7 @@ void AddressBookPage::on_deleteAddress_clicked()
 
 void AddressBookPage::selectionChanged()
 {
-    // Set button states based on selected tab and selection
+    /// Set button states based on selected tab and selection
     QTableView *table = ui->tableView;
     if(!table->selectionModel())
         return;
@@ -224,13 +224,13 @@ void AddressBookPage::selectionChanged()
         switch(tab)
         {
         case SendingTab:
-            // In sending tab, allow deletion of selection
+            /// In sending tab, allow deletion of selection
             ui->deleteAddress->setEnabled(true);
             ui->deleteAddress->setVisible(true);
             deleteAction->setEnabled(true);
             break;
         case ReceivingTab:
-            // Deleting receiving addresses, however, is not allowed
+            /// Deleting receiving addresses, however, is not allowed
             ui->deleteAddress->setEnabled(false);
             ui->deleteAddress->setVisible(false);
             deleteAction->setEnabled(false);
@@ -251,7 +251,7 @@ void AddressBookPage::done(int retval)
     if(!table->selectionModel() || !table->model())
         return;
 
-    // Figure out which address was selected, and return it
+    /// Figure out which address was selected, and return it
     QModelIndexList indexes = table->selectionModel()->selectedRows(AddressTableModel::Address);
 
     Q_FOREACH (const QModelIndex& index, indexes) {
@@ -261,7 +261,7 @@ void AddressBookPage::done(int retval)
 
     if(returnValue.isEmpty())
     {
-        // If no address entry selected, return rejected
+        /// If no address entry selected, return rejected
         retval = Rejected;
     }
 
@@ -270,7 +270,7 @@ void AddressBookPage::done(int retval)
 
 void AddressBookPage::on_exportButton_clicked()
 {
-    // CSV is currently the only supported format
+    /// CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Address List"), QString(),
         tr("Comma separated file (*.csv)"), NULL);
@@ -280,7 +280,7 @@ void AddressBookPage::on_exportButton_clicked()
 
     CSVModelWriter writer(filename);
 
-    // name, column, role
+    /// name, column, role
     writer.setModel(proxyModel);
     writer.addColumn("Label", AddressTableModel::Label, Qt::EditRole);
     writer.addColumn("Address", AddressTableModel::Address, Qt::EditRole);
@@ -305,7 +305,7 @@ void AddressBookPage::selectNewAddress(const QModelIndex &parent, int begin, int
     QModelIndex idx = proxyModel->mapFromSource(model->index(begin, AddressTableModel::Address, parent));
     if(idx.isValid() && (idx.data(Qt::EditRole).toString() == newAddressToSelect))
     {
-        // Select row of newly created address, once
+        /// Select row of newly created address, once
         ui->tableView->setFocus();
         ui->tableView->selectRow(idx.row());
         newAddressToSelect.clear();
