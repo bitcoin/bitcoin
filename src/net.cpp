@@ -101,6 +101,7 @@ map<CInv, CDataStream> mapRelay;
 deque<pair<int64_t, CInv> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
+CCriticalSection cs_cNodeStats;
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -624,6 +625,7 @@ void CNode::AddWhitelistedRange(const CSubNet &subnet) {
 #define X(name) stats.name = name
 void CNode::copyStats(CNodeStats &stats)
 {
+    LOCK(cs_cNodeStats);
     stats.nodeid = this->GetId();
     X(nServices);
     X(fRelayTxes);
@@ -849,6 +851,21 @@ private:
     CNode *_pnode;
 };
 
+static bool CompareNodeTxTime(const CNodeRef &a, const CNodeRef &b)
+{
+    // Prefer latest TX and on ties (e.g. 0) prefer fRelayTx, fNetworkNode, uptime.
+    if (a->nTimeLastTX != b->nTimeLastTX)
+        return a->nTimeLastTX < b->nTimeLastTX;
+
+    if (a->fRelayTxes != b->fRelayTxes)
+        return b->fRelayTxes;
+
+    if (a->fNetworkNode != b->fNetworkNode)
+        return b->fNetworkNode;
+
+    return a->nTimeConnected > b->nTimeConnected;
+}
+
 static bool ReverseCompareNodeMinPingTime(const CNodeRef &a, const CNodeRef &b)
 {
     return a->nMinPingUsecTime > b->nMinPingUsecTime;
@@ -891,7 +908,7 @@ public:
     }
 };
 
-static bool AttemptToEvictConnection(bool fPreferNewConnection) {
+static bool AttemptToEvictConnection(CNetAddr newaddr, bool fPreferNewConnection) {
     std::vector<CNodeRef> vEvictionCandidates;
     {
         LOCK(cs_vNodes);
@@ -903,8 +920,6 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
                 continue;
             if (node->fDisconnect)
                 continue;
-            if (node->addr.IsLocal())
-                continue;
             vEvictionCandidates.push_back(CNodeRef(node));
         }
     }
@@ -912,6 +927,8 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     if (vEvictionCandidates.empty()) return false;
 
     // Protect connections with certain characteristics
+
+    LOCK(cs_cNodeStats);
 
     // Deterministically select 4 peers to protect by netgroup.
     // An attacker cannot predict which netgroups will be protected.
@@ -928,22 +945,34 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
 
     if (vEvictionCandidates.empty()) return false;
 
+    // Protect the 4 nodes which most recently sent us a TX we accepted.
+    // An attacker cannot manipulate this metric without sending us useful transactions.
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareNodeTxTime);
+    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(4, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+
+    if (vEvictionCandidates.empty()) return false;
+
     // Protect the half of the remaining nodes which have been connected the longest.
-    // This replicates the existing implicit behavior.
+    // An attacker cannot go back in time and begin their attack earlier. This is also the historic node behavior.
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
     vEvictionCandidates.erase(vEvictionCandidates.end() - static_cast<int>(vEvictionCandidates.size() / 2), vEvictionCandidates.end());
 
     if (vEvictionCandidates.empty()) return false;
 
-    // Identify the network group with the most connections
+    // Identify the network group with the most connections and youngest member.
+    // (vEvictionCandidates is already sorted by reverse connect time)
     std::vector<unsigned char> naMostConnections;
     unsigned int nMostConnections = 0;
+    int64_t nMostConnectionsTime = 0;
     std::map<std::vector<unsigned char>, std::vector<CNodeRef> > mapAddrCounts;
     BOOST_FOREACH(const CNodeRef &node, vEvictionCandidates) {
         mapAddrCounts[node->addr.GetGroup()].push_back(node);
+        int64_t grouptime = mapAddrCounts[node->addr.GetGroup()][0]->nTimeConnected;
+        size_t groupsize = mapAddrCounts[node->addr.GetGroup()].size();
 
-        if (mapAddrCounts[node->addr.GetGroup()].size() > nMostConnections) {
-            nMostConnections = mapAddrCounts[node->addr.GetGroup()].size();
+        if (groupsize > nMostConnections || (groupsize == nMostConnections && grouptime > nMostConnectionsTime)) {
+            nMostConnections = groupsize;
+            nMostConnectionsTime = grouptime;
             naMostConnections = node->addr.GetGroup();
         }
     }
@@ -951,14 +980,13 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     // Reduce to the network group with the most connections
     vEvictionCandidates = mapAddrCounts[naMostConnections];
 
-    // Do not disconnect peers if there is only 1 connection from their network group
-    if (vEvictionCandidates.size() <= 1)
+    // Do not disconnect a peer if doing so would reduce the number of unprotected netgroups connected.
+    if (vEvictionCandidates.size() <= 1 && mapAddrCounts.find(newaddr.GetGroup()) != mapAddrCounts.end())
         // unless we prefer the new connection (for whitelisted peers)
         if (!fPreferNewConnection)
             return false;
 
-    // Disconnect the most recent connection from the network group with the most connections
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
+    // Disconnect from the network group with the most connections
     vEvictionCandidates[0]->fDisconnect = true;
 
     return true;
@@ -1017,7 +1045,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
 
     if (nInbound >= nMaxInbound)
     {
-        if (!AttemptToEvictConnection(whitelisted)) {
+        if (!AttemptToEvictConnection(addr, whitelisted)) {
             // No connection to evict, disconnect the new connection
             LogPrint("net", "failed to find an eviction candidate - connection dropped (full)\n");
             CloseSocket(hSocket);
@@ -1274,6 +1302,7 @@ void ThreadSocketHandler()
             int64_t nTime = GetTime();
             if (nTime - pnode->nTimeConnected > 60)
             {
+                LOCK(cs_cNodeStats);
                 if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
                 {
                     LogPrint("net", "socket no message in first 60 seconds, %d %d from %d\n", pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->id);
@@ -2374,6 +2403,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nRecvBytes = 0;
     nTimeConnected = GetTime();
     nTimeOffset = 0;
+    nTimeLastTX = 0;
     addr = addrIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
     nVersion = 0;

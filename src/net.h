@@ -161,6 +161,7 @@ extern int nMaxConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
+extern CCriticalSection cs_cNodeStats;
 extern std::map<CInv, CDataStream> mapRelay;
 extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
@@ -337,6 +338,7 @@ public:
     int64_t nLastRecv;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
+    int64_t nTimeLastTX; // time we last accepted a transaction into the mempool from this peer. Protected by cs_cNodeStats
     CAddress addr;
     std::string addrName;
     CService addrLocal;
@@ -402,7 +404,7 @@ public:
     // Also protected by cs_inventory
     std::vector<uint256> vBlockHashesToAnnounce;
 
-    // Ping time measurement:
+    // Ping time measurement: Protected by cs_cNodeStats
     // The pong reply we're expecting, or 0 if no pong expected.
     uint64_t nPingNonceSent;
     // Time (in usec) the last ping was sent, or 0 if no ping was ever sent.
