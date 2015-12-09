@@ -1116,7 +1116,8 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	CCert ca = vtxPos.back();
 	uint256 blockHash;
 	if (!GetTransaction(ca.txHash, tx, Params().GetConsensus(), blockHash, true))
-		continue;
+			throw JSONRPCError(RPC_WALLET_ERROR,
+					"failed to read transaction from disk");   
     string sHeight = strprintf("%llu", ca.nHeight);
     oCert.push_back(Pair("cert", stringFromVch(vchCert)));
     oCert.push_back(Pair("txid", ca.txHash.GetHex()));
