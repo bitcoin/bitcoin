@@ -594,6 +594,9 @@ bool CTransaction::CheckTransaction(CValidationState &state) const
         return state.DoS(10, error("CTransaction::CheckTransaction() : vin empty"));
     if (vout.empty())
         return state.DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
+    // Time (prevent mempool memory exhaustion attack)
+    if (nTime > GetAdjustedTime() + nMaxClockDrift)
+        return state.DoS(10, error("CTransaction::CheckTransaction() : timestamp is too far into the future"));
     // Size limits
     if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return state.DoS(100, error("CTransaction::CheckTransaction() : size limits failed"));
