@@ -2,7 +2,7 @@
 # Attempt to guess a canonical system name.
 #   Copyright 1992-2015 Free Software Foundation, Inc.
 
-timestamp='2015-10-21'
+timestamp='2015-11-19'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -1392,6 +1392,9 @@ EOF
 	exit ;;
     x86_64:VMkernel:*:*)
 	echo ${UNAME_MACHINE}-unknown-esx
+	exit ;;
+    amd64:Isilon\ OneFS:*:*)
+        echo x86_64-unknown-onefs
 	exit ;;
 esac
 
