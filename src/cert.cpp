@@ -439,6 +439,7 @@ bool DecodeCertScript(const CScript& script, int& op,
 bool DecodeCertScript(const CScript& script, int& op,
         vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
     opcodetype opcode;
+	vvch.clear();
     if (!script.GetOp(pc, opcode)) return false;
     if (opcode < OP_1 || opcode > OP_16) return false;
     op = CScript::DecodeOP_N(opcode);
@@ -1113,7 +1114,9 @@ UniValue certinfo(const UniValue& params, bool fHelp) {
 	if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
 		  throw JSONRPCError(RPC_WALLET_ERROR, "failed to read from cert DB");
 	CCert ca = vtxPos.back();
-
+	uint256 blockHash;
+	if (!GetTransaction(ca.txHash, tx, Params().GetConsensus(), blockHash, true))
+		continue;
     string sHeight = strprintf("%llu", ca.nHeight);
     oCert.push_back(Pair("cert", stringFromVch(vchCert)));
     oCert.push_back(Pair("txid", ca.txHash.GetHex()));
@@ -1192,32 +1195,38 @@ UniValue certlist(const UniValue& params, bool fHelp) {
         // skip non-syscoin txns
         if (wtx.nVersion != SYSCOIN_TX_VERSION)
             continue;
-		// decode txn, skip non-alias txns
+		// decode txn, skip non-cert txns
 		vector<vector<unsigned char> > vvch;
 		int op, nOut;
 		if (!DecodeCertTx(wtx, op, nOut, vvch, -1) || !IsCertOp(op))
 			continue;
+		
 		// get the txn height
 		nHeight = GetTxHashHeight(hash);
 
 		// get the txn cert name
 		if (!GetNameOfCertTx(wtx, vchName))
 			continue;
-
+		
 		// skip this cert if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
 			continue;
+		
 		// get last active name only
 		if (vNamesI.find(vchName) != vNamesI.end() && (nHeight < vNamesI[vchName] || vNamesI[vchName] < 0))
 			continue;
+		
 		vector<CCert> vtxPos;
 		if (!pcertdb->ReadCert(vchName, vtxPos) || vtxPos.empty())
 			continue;
+		
 		CCert cert = vtxPos.back();
 		if (!GetTransaction(cert.txHash, tx, Params().GetConsensus(), blockHash, true))
 			continue;
+		
 		if(!IsCertMine(tx))
 			continue;
+	
         // build the output object
 		UniValue oName(UniValue::VOBJ);
         oName.push_back(Pair("cert", stringFromVch(vchName)));
