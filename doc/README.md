@@ -1,9 +1,7 @@
 Dash Core 0.12.0
 =====================
 
-Setup
----------------------
-[Bitcoin Core](http://bitcoin.org/en/download) is the original Bitcoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Bitcoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more. Thankfully you only have to do this once. If you would like the process to go faster you can [download the blockchain directly](bootstrap.md).
+This is the official reference wallet for Dash digital currency and comprises the backbone of the Dash peer-to-peer network. You can [download Dash Core](https://www.dash.org/downloads/) or [build it yourself](#building) using the guides below.
 
 Running
 ---------------------
@@ -32,7 +30,7 @@ Drag Dash-Qt to your applications folder, and then run Dash-Qt.
 
 ### Need Help?
 
-* See the documentation at the [Dash Wiki](https://en.bitcoin.it/wiki/Main_Page) ***TODO***
+* See the [Dash documentation](https://dashpay.atlassian.net/wiki/display/DOC)
 for help and more information.
 * Ask for help on [#dashpay](http://webchat.freenode.net?channels=dashpay) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=dashpay).
 * Ask for help on the [DashTalk](https://dashtalk.org/) forums.
@@ -52,7 +50,7 @@ The Dash repo's [root README](https://github.com/dashpay/dash/blob/master/README
 - [Multiwallet Qt Development](multiwallet-qt.md)
 - [Release Notes](release-notes.md)
 - [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://dev.visucore.com/bitcoin/doxygen/) ***TODO***
+- Source Code Documentation ***TODO***
 - [Translation Process](translation_process.md)
 - [Unit Tests](unit-tests.md)
 
