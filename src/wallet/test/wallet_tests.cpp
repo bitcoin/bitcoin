@@ -336,14 +336,16 @@ BOOST_AUTO_TEST_CASE(pruning_in_ApproximateBestSet)
     LOCK(wallet.cs_wallet);
 
     empty_wallet();
-    for (int i = 0; i < 12; i++) 
-    {
-        add_coin(10*CENT);
-    }
-    add_coin(100*CENT);
-    add_coin(100*CENT);
-    BOOST_CHECK(wallet.SelectCoinsMinConf(221*CENT, 1, 6, vCoins, setCoinsRet, nValueRet));
-    BOOST_CHECK_EQUAL(nValueRet, 230*CENT);
+    for (int i = 0; i < 100; i++)
+        add_coin(10 * CENT);
+    for (int i = 0; i < 100; i++)
+        add_coin(1000 * CENT);
+
+    BOOST_CHECK(wallet.SelectCoinsMinConf(100001 * CENT, 1, 6, vCoins, setCoinsRet, nValueRet));
+    // We need all 100 larger coins and exactly one small coin.
+    // Superfluous small coins must be pruned:
+    BOOST_CHECK_EQUAL(nValueRet, 100010 * CENT);
+    BOOST_CHECK_EQUAL(setCoinsRet.size(), 101);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
