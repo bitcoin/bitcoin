@@ -66,10 +66,17 @@ uint256 CMutableTransaction::GetHash() const
 {
     return SerializeHash(*this);
 }
-
+uint256 CMutableTransaction::GetAuxHash() const
+{
+    return SerializeHash(*this, SER_GETHASHWITHOUTDATA | SER_GETHASH);
+}
 void CTransaction::UpdateHash() const
 {
     *const_cast<uint256*>(&hash) = SerializeHash(*this);
+}
+uint256 CTransaction::GetAuxHash() const
+{
+    return SerializeHash(*this, SER_GETHASHWITHOUTDATA | SER_GETHASH);
 }
 // SYSCOIN add data to tx
 CTransaction::CTransaction() : nVersion(CTransaction::CURRENT_VERSION), vin(), vout(), nLockTime(0), data() { }
