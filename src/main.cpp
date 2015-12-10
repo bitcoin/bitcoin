@@ -2801,8 +2801,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         const CBlockIndex* pindex = chainActive.Tip();
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
-			// SYSCOIN getbaseversion
-            if (pindex->nVersion.GetBaseVersion() > CBlock::CURRENT_VERSION)
+            if (pindex->nVersion > CBlock::CURRENT_VERSION)
                 ++nUpgraded;
             pindex = pindex->pprev;
         }
