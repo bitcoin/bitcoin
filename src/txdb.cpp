@@ -190,6 +190,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
             if (pcursor->GetValue(diskindex)) {
                 // Construct block index object
                 CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
+				pindexNew->pauxpow        = diskindex.pauxpow;
                 pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
                 pindexNew->nHeight        = diskindex.nHeight;
                 pindexNew->nFile          = diskindex.nFile;
@@ -202,10 +203,16 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
-
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
-                    return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
-
+				pindexNew->hashBlockPoW   = diskindex.hashBlockPoW;
+				// SYSCOIN disk auxpow check
+                if (pindexNew->nVersion.IsAuxpow()) {
+                    if (!diskindex.pauxpow->check(diskindex.GetBlockHash(), pindexNew->nVersion.GetChainId(), Params().GetConsensus(pindexNew->nHeight))) {
+                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+                    }
+                } else {
+                    if (!CheckProofOfWork(pindexNew->hashBlockPoW, pindexNew->nBits, Params().GetConsensus(pindexNew->nHeight)))
+                        return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
+                }
                 pcursor->Next();
             } else {
                 return error("LoadBlockIndex() : failed to read value");

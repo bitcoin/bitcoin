@@ -8,6 +8,8 @@
 #include "addrman.h"
 #include "alert.h"
 #include "arith_uint256.h"
+// SYSCOINA auxpow
+#include "auxpow.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
@@ -1492,7 +1494,40 @@ bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::P
 //
 // CBlock and CBlockIndex
 //
+// SYSCOIN check header auxpow proof of work
+bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
+{
+    if (block.nVersion.GetChainId() != params.nAuxpowChainId)
+        return error("%s : block does not have our chain ID"
+                     " (got %d, expected %d, full nVersion %d)",
+                     __func__, block.nVersion.GetChainId(),
+                     params.nAuxpowChainId, block.nVersion.GetFullVersion());
 
+    /* If there is no auxpow, just check the block hash.  */
+    if (!block.auxpow)
+    {
+        if (block.nVersion.IsAuxpow())
+            return error("%s : no auxpow on block with auxpow version",
+                         __func__);
+
+        if (!CheckProofOfWork(block.GetPoWHash(), block.nBits, params))
+            return error("%s : non-AUX proof of work failed", __func__);
+
+        return true;
+    }
+
+    /* We have auxpow.  Check it.  */
+
+    if (!block.nVersion.IsAuxpow())
+        return error("%s : auxpow on block with non-auxpow version", __func__);
+
+    if (!block.auxpow->check(block.GetHash(), block.nVersion.GetChainId(), params))
+        return error("%s : AUX POW is not valid", __func__);
+    if (!CheckProofOfWork(block.auxpow->getParentBlockHash(), block.nBits, params))
+        return error("%s : AUX proof of work failed", __func__);
+
+    return true;
+}
 bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos, const CMessageHeader::MessageStartChars& messageStart)
 {
     // Open history file to append
@@ -1514,7 +1549,11 @@ bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos, const CMessageHea
     return true;
 }
 
-bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams)
+/* Generic implementation of block reading that can handle
+   both a block and its header.  */
+// SYSCOIN: block header template's for auxpow integration
+template<typename T>
+static bool ReadBlockOrHeader(T& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams)
 {
     block.SetNull();
 
@@ -1532,20 +1571,35 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (!CheckProofOfWork(block, consensusParams))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     return true;
 }
-
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+template<typename T>
+static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
 {
-    if (!ReadBlockFromDisk(block, pindex->GetBlockPos(), consensusParams))
+    if (!ReadBlockOrHeader(block, pindex->GetBlockPos(), consensusParams))
         return false;
     if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
     return true;
+}
+
+bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, const Consensus::Params& consensusParams)
+{
+    return ReadBlockOrHeader(block, pos, consensusParams);
+}
+
+bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+{
+    return ReadBlockOrHeader(block, pindex, consensusParams);
+}
+
+bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+{
+    return ReadBlockOrHeader(block, pindex, consensusParams);
 }
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
