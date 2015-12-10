@@ -1,6 +1,6 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/// Copyright (c) 2011-2013 The Bitcoin Core developers
+/// Distributed under the MIT software license, see the accompanying
+/// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <boost/test/unit_test.hpp>
 #include <stdint.h>
@@ -64,10 +64,10 @@ std::string ArrayToString(const unsigned char A[], unsigned int width)
     return Stream.str();
 }
 
-BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
+BOOST_AUTO_TEST_CASE( basics ) /// constructors, equality, inequality
 {
     BOOST_CHECK(1 == 0+1);
-    // constructor arith_uint256(vector<char>):
+    /// constructor arith_uint256(vector<char>):
     BOOST_CHECK(R1L.ToString() == ArrayToString(R1Array,32));
     BOOST_CHECK(R2L.ToString() == ArrayToString(R2Array,32));
     BOOST_CHECK(ZeroL.ToString() == ArrayToString(ZeroArray,32));
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK(MaxL.ToString() == ArrayToString(MaxArray,32));
     BOOST_CHECK(OneL.ToString() != ArrayToString(ZeroArray,32));
 
-    // == and !=
+    /// == and !=
     BOOST_CHECK(R1L != R2L);
     BOOST_CHECK(ZeroL != OneL);
     BOOST_CHECK(OneL != ZeroL);
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     }
     BOOST_CHECK(ZeroL == (OneL << 256));
 
-    // String Constructor and Copy Constructor
+    /// String Constructor and Copy Constructor
     BOOST_CHECK(arith_uint256("0x"+R1L.ToString()) == R1L);
     BOOST_CHECK(arith_uint256("0x"+R2L.ToString()) == R2L);
     BOOST_CHECK(arith_uint256("0x"+ZeroL.ToString()) == ZeroL);
@@ -108,13 +108,13 @@ BOOST_AUTO_TEST_CASE( basics ) // constructors, equality, inequality
     BOOST_CHECK(arith_uint256(ZeroL) == ZeroL);
     BOOST_CHECK(arith_uint256(OneL) == OneL);
 
-    // uint64_t constructor
+    /// uint64_t constructor
     BOOST_CHECK( (R1L & arith_uint256("0xffffffffffffffff")) == arith_uint256(R1LLow64));
     BOOST_CHECK(ZeroL == arith_uint256(0));
     BOOST_CHECK(OneL == arith_uint256(1));
     BOOST_CHECK(arith_uint256("0xffffffffffffffff") = arith_uint256(0xffffffffffffffffULL));
 
-    // Assignment (from base_uint)
+    /// Assignment (from base_uint)
     arith_uint256 tmpL = ~ZeroL; BOOST_CHECK(tmpL == ~ZeroL);
     tmpL = ~OneL; BOOST_CHECK(tmpL == ~OneL);
     tmpL = ~R1L; BOOST_CHECK(tmpL == ~R1L);
@@ -153,7 +153,7 @@ void shiftArrayLeft(unsigned char* to, const unsigned char* from, unsigned int a
     }
 }
 
-BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
+BOOST_AUTO_TEST_CASE( shifts ) { /// "<<"  ">>"  "<<="  ">>="
     unsigned char TmpArray[32];
     arith_uint256 TmpL;
     for (unsigned int i = 0; i < 256; ++i)
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE( shifts ) { // "<<"  ">>"  "<<="  ">>="
     }
 }
 
-BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
+BOOST_AUTO_TEST_CASE( unaryOperators ) /// !    ~    -
 {
     BOOST_CHECK(!ZeroL);
     BOOST_CHECK(!(!OneL));
@@ -218,8 +218,8 @@ BOOST_AUTO_TEST_CASE( unaryOperators ) // !    ~    -
 }
 
 
-// Check if doing _A_ _OP_ _B_ results in the same as applying _OP_ onto each
-// element of Aarray and Barray, and then converting the result into a arith_uint256.
+/// Check if doing _A_ _OP_ _B_ results in the same as applying _OP_ onto each
+/// element of Aarray and Barray, and then converting the result into a arith_uint256.
 #define CHECKBITWISEOPERATOR(_A_,_B_,_OP_)                              \
     for (unsigned int i = 0; i < 32; ++i) { TmpArray[i] = _A_##Array[i] _OP_ _B_##Array[i]; } \
     BOOST_CHECK(arith_uint256V(std::vector<unsigned char>(TmpArray,TmpArray+32)) == (_A_##L _OP_ _B_##L));
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE( bitwiseOperators )
     TmpL ^= Tmp64;  BOOST_CHECK(TmpL == (R1L ^ arith_uint256(Tmp64)));
 }
 
-BOOST_AUTO_TEST_CASE( comparison ) // <= >= < >
+BOOST_AUTO_TEST_CASE( comparison ) /// <= >= < >
 {
     arith_uint256 TmpL;
     for (unsigned int i = 0; i < 256; ++i) {
@@ -374,7 +374,7 @@ bool almostEqual(double d1, double d2)
     return fabs(d1-d2) <= 4*fabs(d1)*std::numeric_limits<double>::epsilon();
 }
 
-BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex size() GetLow64 GetSerializeSize, Serialize, Unserialize
+BOOST_AUTO_TEST_CASE( methods ) /// GetHex SetHex size() GetLow64 GetSerializeSize, Serialize, Unserialize
 {
     BOOST_CHECK(R1L.GetHex() == R1L.ToString());
     BOOST_CHECK(R2L.GetHex() == R2L.ToString());
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE( methods ) // GetHex SetHex size() GetLow64 GetSerializeSiz
     for (int i = 256; i > 53; --i)
         BOOST_CHECK(almostEqual((R1L>>(256-i)).getdouble(), ldexp(R1Ldouble,i)));
     uint64_t R1L64part = (R1L>>192).GetLow64();
-    for (int i = 53; i > 0; --i) // doubles can store all integers in {0,...,2^54-1} exactly
+    for (int i = 53; i > 0; --i) /// doubles can store all integers in {0,...,2^54-1} exactly
     {
         BOOST_CHECK((R1L>>(256-i)).getdouble() == (double)(R1L64part >> (64-i)));
     }
@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
     BOOST_CHECK_EQUAL(fNegative, false);
     BOOST_CHECK_EQUAL(fOverflow, false);
 
-    // Make sure that we don't generate compacts with the 0x00800000 bit set
+    /// Make sure that we don't generate compacts with the 0x00800000 bit set
     num = 0x80;
     BOOST_CHECK_EQUAL(num.GetCompact(), 0x02008000U);
 
@@ -538,9 +538,9 @@ BOOST_AUTO_TEST_CASE(bignum_SetCompact)
 }
 
 
-BOOST_AUTO_TEST_CASE( getmaxcoverage ) // some more tests just to get 100% coverage
+BOOST_AUTO_TEST_CASE( getmaxcoverage ) /// some more tests just to get 100% coverage
 {
-    // ~R1L give a base_uint<256>
+    /// ~R1L give a base_uint<256>
     BOOST_CHECK((~~R1L >> 10) == (R1L >> 10));
     BOOST_CHECK((~~R1L << 10) == (R1L << 10));
     BOOST_CHECK(!(~~R1L < R1L));

@@ -1,6 +1,6 @@
-// Copyright (c) 2012-2013 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/// Copyright (c) 2012-2013 The Bitcoin Core developers
+/// Distributed under the MIT software license, see the accompanying
+/// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "util.h"
 
@@ -11,7 +11,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(allocator_tests, BasicTestingSetup)
 
-// Dummy memory page locker for platform independent tests
+/// Dummy memory page locker for platform independent tests
 static const void *last_lock_addr, *last_unlock_addr;
 static size_t last_lock_len, last_unlock_len;
 class TestLocker
@@ -39,42 +39,44 @@ BOOST_AUTO_TEST_CASE(test_LockedPageManagerBase)
     last_lock_addr = last_unlock_addr = 0;
     last_lock_len = last_unlock_len = 0;
 
-    /* Try large number of small objects */
+    /// Try large number of small objects
     addr = 0;
     for(int i=0; i<1000; ++i)
     {
         lpm.LockRange(reinterpret_cast<void*>(addr), 33);
         addr += 33;
     }
-    /* Try small number of page-sized objects, straddling two pages */
+    
+    /// Try small number of page-sized objects, straddling two pages
     addr = test_page_size*100 + 53;
     for(int i=0; i<100; ++i)
     {
         lpm.LockRange(reinterpret_cast<void*>(addr), test_page_size);
         addr += test_page_size;
     }
-    /* Try small number of page-sized objects aligned to exactly one page */
+    
+    /// Try small number of page-sized objects aligned to exactly one page
     addr = test_page_size*300;
     for(int i=0; i<100; ++i)
     {
         lpm.LockRange(reinterpret_cast<void*>(addr), test_page_size);
         addr += test_page_size;
     }
-    /* one very large object, straddling pages */
+    /// one very large object, straddling pages
     lpm.LockRange(reinterpret_cast<void*>(test_page_size*600+1), test_page_size*500);
     BOOST_CHECK(last_lock_addr == reinterpret_cast<void*>(test_page_size*(600+500)));
-    /* one very large object, page aligned */
+    /// one very large object, page aligned
     lpm.LockRange(reinterpret_cast<void*>(test_page_size*1200), test_page_size*500-1);
     BOOST_CHECK(last_lock_addr == reinterpret_cast<void*>(test_page_size*(1200+500-1)));
 
     BOOST_CHECK(lpm.GetLockedPageCount() == (
-        (1000*33+test_page_size-1)/test_page_size + // small objects
-        101 + 100 +  // page-sized objects
-        501 + 500)); // large objects
-    BOOST_CHECK((last_lock_len & (test_page_size-1)) == 0); // always lock entire pages
-    BOOST_CHECK(last_unlock_len == 0); // nothing unlocked yet
+        (1000*33+test_page_size-1)/test_page_size + /// small objects
+        101 + 100 +  /// page-sized objects
+        501 + 500)); /// large objects
+    BOOST_CHECK((last_lock_len & (test_page_size-1)) == 0); /// always lock entire pages
+    BOOST_CHECK(last_unlock_len == 0); /// nothing unlocked yet
 
-    /* And unlock again */
+    /// And unlock again
     addr = 0;
     for(int i=0; i<1000; ++i)
     {
@@ -96,10 +98,10 @@ BOOST_AUTO_TEST_CASE(test_LockedPageManagerBase)
     lpm.UnlockRange(reinterpret_cast<void*>(test_page_size*600+1), test_page_size*500);
     lpm.UnlockRange(reinterpret_cast<void*>(test_page_size*1200), test_page_size*500-1);
 
-    /* Check that everything is released */
+    /// Check that everything is released
     BOOST_CHECK(lpm.GetLockedPageCount() == 0);
 
-    /* A few and unlocks of size zero (should have no effect) */
+    /// A few and unlocks of size zero (should have no effect)
     addr = 0;
     for(int i=0; i<1000; ++i)
     {
@@ -114,7 +116,7 @@ BOOST_AUTO_TEST_CASE(test_LockedPageManagerBase)
         addr += 1;
     }
     BOOST_CHECK(lpm.GetLockedPageCount() == 0);
-    BOOST_CHECK((last_unlock_len & (test_page_size-1)) == 0); // always unlock entire pages
+    BOOST_CHECK((last_unlock_len & (test_page_size-1)) == 0); /// always unlock entire pages
 }
 
 BOOST_AUTO_TEST_SUITE_END()

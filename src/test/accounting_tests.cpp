@@ -1,6 +1,6 @@
-// Copyright (c) 2012-2014 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+/// Copyright (c) 2012-2014 The Bitcoin Core developers
+/// Distributed under the MIT software license, see the accompanying
+/// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     wtx.mapValue["comment"] = "y";
     {
         CMutableTransaction tx(wtx);
-        --tx.nLockTime;  // Just to change the hash :)
+        --tx.nLockTime;  /// Just to change the hash :)
         *static_cast<CTransaction*>(&wtx) = CTransaction(tx);
     }
     pwalletMain->AddToWallet(wtx, false, &walletdb);
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
     wtx.mapValue["comment"] = "x";
     {
         CMutableTransaction tx(wtx);
-        --tx.nLockTime;  // Just to change the hash :)
+        --tx.nLockTime;  /// Just to change the hash :)
         *static_cast<CTransaction*>(&wtx) = CTransaction(tx);
     }
     pwalletMain->AddToWallet(wtx, false, &walletdb);
