@@ -5,14 +5,13 @@
 
 #ifndef SYSCOIN_PRIMITIVES_BLOCK_H
 #define SYSCOIN_PRIMITIVES_BLOCK_H
-// SYSCOIN auxpow
 #include "auxpow.h"
 #include "primitives/transaction.h"
+// SYSCOIN auxpow
 #include "primitives/pureheader.h"
 #include "serialize.h"
 #include "uint256.h"
-// SYSCOIN for auxpow
-#include <boost/shared_ptr.hpp>
+
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
