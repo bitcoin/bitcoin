@@ -93,6 +93,7 @@ SYSCOIN_CORE_H = \
   messagecrypter.h \
   addrman.h \
   alert.h \
+  auxpow.h \
   amount.h \
   arith_uint256.h \
   base58.h \
@@ -138,6 +139,7 @@ SYSCOIN_CORE_H = \
   pow.h \
   prevector.h \
   primitives/block.h \
+  primitives/pureheader.h \
   primitives/transaction.h \
   protocol.h \
   pubkey.h \
@@ -203,6 +205,7 @@ libsyscoin_server_a_SOURCES = \
   escrow.cpp \
   messagecrypter.cpp \
   addrman.cpp \
+  auxpow.cpp \
   alert.cpp \
   bloom.cpp \
   chain.cpp \
@@ -271,6 +274,8 @@ crypto_libsyscoin_crypto_a_SOURCES = \
   crypto/hmac_sha512.h \
   crypto/ripemd160.cpp \
   crypto/ripemd160.h \
+  crypto/scrypt.cpp \
+  crypto/scrypt.h \  
   crypto/sha1.cpp \
   crypto/sha1.h \
   crypto/sha256.cpp \
@@ -296,6 +301,7 @@ libsyscoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   primitives/block.cpp \
+  primitives/pureheader.cpp \
   primitives/transaction.cpp \
   protocol.cpp \
   pubkey.cpp \
@@ -416,6 +422,7 @@ include_HEADERS = script/syscoinconsensus.h
 libsyscoinconsensus_la_SOURCES = \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
+  crypto/scrypt.cpp \
   crypto/sha1.cpp \
   crypto/sha256.cpp \
   crypto/sha512.cpp \

@@ -215,7 +215,8 @@ public:
         READWRITE(*const_cast<std::vector<CTxOut>*>(&vout));
         READWRITE(*const_cast<uint32_t*>(&nLockTime));
 		// SYSCOIN serialize tx data
-		READWRITE(*const_cast<std::vector<unsigned char>*>(&data));
+		if(!(nType & SER_GETHASHWITHOUTDATA))
+			READWRITE(*const_cast<std::vector<unsigned char>*>(&data));
 
         if (ser_action.ForRead())
             UpdateHash();
@@ -228,7 +229,10 @@ public:
     const uint256& GetHash() const {
         return hash;
     }
-
+	const uint256& GetAuxHash() const
+    {
+        return SerializeHash(*this, SER_GETHASHWITHOUTDATA | SER_GETHASH);
+    }
     // Return sum of txouts.
     CAmount GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
@@ -281,9 +285,13 @@ struct CMutableTransaction
         READWRITE(vout);
         READWRITE(nLockTime);
 		// SYSCOIN data
-		READWRITE(data);	
+		if(!(nType & SER_GETHASHWITHOUTDATA))
+			READWRITE(data);	
     }
-
+	const uint256& GetAuxHash() const
+    {
+        return SerializeHash(*this, SER_GETHASHWITHOUTDATA | SER_GETHASH);
+    }
     /** Compute the hash of this CMutableTransaction. This is computed on the
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
      */
