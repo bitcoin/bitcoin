@@ -4,7 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chain.h"
-
+// SYSCOIN for auxpow
+#include "main.h"
 using namespace std;
 // SYSCOIN moved and added auxpow check
 CBlockHeader GetBlockHeader() const
