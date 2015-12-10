@@ -10,14 +10,22 @@ packages:
 - "git-core"
 - "pkg-config"
 - "autoconf"
+- "libffi-dev"
+- "libtiff-tools"
 - "libtool"
 - "automake"
 - "faketime"
 - "bsdmainutils"
 - "cmake"
+- "imagemagick"
 - "libcap-dev"
+- "libxslt-dev"
 - "libz-dev"
 - "libbz2-dev"
+- "python-cairo"
+- "python-dev"
+- "python-pip"
+- "fonts-tuffy"
 reference_datetime: "2015-06-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
@@ -25,6 +33,10 @@ remotes:
 files:
 - "MacOSX10.9.sdk.tar.gz"
 script: |
+  # FIXME: We should probably install these in some other (cachable) way, but the depends system doesn't appear to make native packages available to Core's build system itself?
+  pip install --user mac_alias ds_store cairosvg cssselect tinycss lxml
+  export PATH="$HOME/.local/bin:$PATH"
+
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-apple-darwin11"
   CONFIGFLAGS="--enable-reduce-exports GENISOIMAGE=$WRAP_DIR/genisoimage"
@@ -107,8 +119,11 @@ script: |
     make ${MAKEOPTS}
     make install-strip
 
+    make osx_volname
     make deploydir
+    OSX_VOLNAME="$(cat osx_volname)"
     mkdir -p unsigned-app-${i}
+    cp osx_volname unsigned-app-${i}/
     cp contrib/macdeploy/detached-sig-apply.sh unsigned-app-${i}
     cp contrib/macdeploy/detached-sig-create.sh unsigned-app-${i}
     cp ${BASEPREFIX}/${i}/native/bin/dmg ${BASEPREFIX}/${i}/native/bin/genisoimage unsigned-app-${i}
@@ -120,7 +135,7 @@ script: |
     popd
 
     make deploy
-    ${WRAP_DIR}/dmg dmg Bitcoin-Core.dmg ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
+    ${WRAP_DIR}/dmg dmg "${OSX_VOLNAME}.dmg" ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
 
     cd installed
     find . -name "lib*.la" -delete
