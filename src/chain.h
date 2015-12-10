@@ -210,7 +210,7 @@ public:
     }
 
 	// SYSCOIN defined in chain.cpp
-    CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams) const;
+    CBlockHeader GetBlockHeader() const;
 
     uint256 GetBlockHash() const
     {
