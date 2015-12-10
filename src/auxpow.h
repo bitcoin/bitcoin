@@ -147,7 +147,7 @@ public:
   getParentBlockHash () const
   {
 	// SYSCOIN pow hash of parent
-    return parentBlock.GetHash();
+    return parentBlock.GetPoWHash();
   }
 
   /**
