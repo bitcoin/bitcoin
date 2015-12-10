@@ -106,7 +106,7 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId,
     // Check that the chain merkle root is in the coinbase
     const uint256 nRootHash
       = CheckMerkleBranch (hashAuxBlock, vChainMerkleBranch, nChainIndex);
-    valtype vchRootHash(nRootHash.begin (), nRootHash.end ());
+    std::vector<unsigned char> vchRootHash(nRootHash.begin (), nRootHash.end ());
     std::reverse (vchRootHash.begin (), vchRootHash.end ()); // correct endian
 
     // Check that we are in the parent block merkle tree
