@@ -394,8 +394,7 @@ UniValue getblockheader(const UniValue& params, bool fHelp)
     if (!fVerbose)
     {
         CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION);
-		// SYSCOIN pass consensus into getblockheader for auxpow
-        ssBlock << pblockindex->GetBlockHeader(Params().GetConsensus());
+        ssBlock << pblockindex->GetBlockHeader();
         std::string strHex = HexStr(ssBlock.begin(), ssBlock.end());
         return strHex;
     }
