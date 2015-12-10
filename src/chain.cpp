@@ -8,7 +8,7 @@
 #include "main.h"
 using namespace std;
 // SYSCOIN moved and added auxpow check
-CBlockHeader GetBlockHeader() const
+CBlockHeader CBlockIndex::GetBlockHeader() const
 {
     CBlockHeader block;
 	/* The CBlockIndex object's block header is missing the auxpow.
