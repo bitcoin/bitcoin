@@ -633,8 +633,7 @@ static UniValue SoftForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nR
     CBlockIndex* pstart = pindex;
     for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
     {
-		// SYSCOIN getbaseversion
-        if (pstart->nVersion.GetBaseVersion() >= minVersion)
+        if (pstart->nVersion >= minVersion)
             ++nFound;
         pstart = pstart->pprev;
     }
