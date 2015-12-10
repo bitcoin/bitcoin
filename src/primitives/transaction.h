@@ -229,7 +229,10 @@ public:
     const uint256& GetHash() const {
         return hash;
     }
-	const uint256& GetAuxHash() const;
+	const uint256& GetAuxHash() const
+    {
+        return SerializeHash(*this, SER_GETHASHWITHOUTDATA | SER_GETHASH);
+    }
     // Return sum of txouts.
     CAmount GetValueOut() const;
     // GetValueIn() is a method on CCoinsViewCache, because
@@ -285,7 +288,10 @@ struct CMutableTransaction
 		if(!(nType & SER_GETHASHWITHOUTDATA))
 			READWRITE(data);	
     }
-	const uint256& GetAuxHash() const;
+	const uint256& GetAuxHash() const
+    {
+        return SerializeHash(*this, SER_GETHASHWITHOUTDATA | SER_GETHASH);
+    }
     /** Compute the hash of this CMutableTransaction. This is computed on the
      * fly, as opposed to GetHash() in CTransaction, which uses a cached result.
      */
