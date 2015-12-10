@@ -849,14 +849,6 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD,
                            "Namecoin is downloading blocks...");
     
-    /* This should never fail, since the chain is already
-       past the point of merge-mining start.  Check nevertheless.  */
-    {
-        LOCK(cs_main);
-        if (chainActive.Height() + 1 < Params().GetConsensus().nAuxpowStartHeight)
-            throw std::runtime_error("getauxblock method is not yet available");
-    }
-
     /* The variables below are used to keep track of created and not yet
        submitted auxpow blocks.  Lock them to be sure even for multiple
        RPC threads running in parallel.  */
