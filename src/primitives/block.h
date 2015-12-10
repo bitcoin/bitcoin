@@ -5,10 +5,8 @@
 
 #ifndef SYSCOIN_PRIMITIVES_BLOCK_H
 #define SYSCOIN_PRIMITIVES_BLOCK_H
-#include "auxpow.h"
+
 #include "primitives/transaction.h"
-// SYSCOIN auxpow
-#include "primitives/pureheader.h"
 #include "serialize.h"
 #include "uint256.h"
 
@@ -19,13 +17,17 @@
  * in the block is a special one that creates a new coin owned by the creator
  * of the block.
  */
-// SYSCOIN depends on pureblockheader for auxpow
-class CBlockHeader : public CPureBlockHeader
+class CBlockHeader
 {
 public:
-
-    // auxpow (if this is a merge-minded block)
-    boost::shared_ptr<CAuxPow> auxpow;
+    // header
+    static const int32_t CURRENT_VERSION=4;
+    int32_t nVersion;
+    uint256 hashPrevBlock;
+    uint256 hashMerkleRoot;
+    uint32_t nTime;
+    uint32_t nBits;
+    uint32_t nNonce;
 
     CBlockHeader()
     {
@@ -36,31 +38,36 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*(CPureBlockHeader*)this);
-        nVersion = this->nVersion.GetBaseVersion();
-
-        if (this->nVersion.IsAuxpow())
-        {
-            if (ser_action.ForRead())
-                auxpow.reset (new CAuxPow());
-            assert(auxpow);
-            READWRITE(*auxpow);
-        } else if (ser_action.ForRead())
-            auxpow.reset();
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(hashPrevBlock);
+        READWRITE(hashMerkleRoot);
+        READWRITE(nTime);
+        READWRITE(nBits);
+        READWRITE(nNonce);
     }
 
     void SetNull()
     {
-        CPureBlockHeader::SetNull();
-        auxpow.reset();
+        nVersion = CBlockHeader::CURRENT_VERSION;
+        hashPrevBlock.SetNull();
+        hashMerkleRoot.SetNull();
+        nTime = 0;
+        nBits = 0;
+        nNonce = 0;
     }
 
-    /**
-     * Set the block's auxpow (or unset it).  This takes care of updating
-     * the version accordingly.
-     * @param apow Pointer to the auxpow to use or NULL.
-     */
-    void SetAuxpow (CAuxPow* apow);
+    bool IsNull() const
+    {
+        return (nBits == 0);
+    }
+
+    uint256 GetHash() const;
+
+    int64_t GetBlockTime() const
+    {
+        return (int64_t)nTime;
+    }
 };
 
 
@@ -108,8 +115,6 @@ public:
         block.nTime          = nTime;
         block.nBits          = nBits;
         block.nNonce         = nNonce;
-		// SYSCOIN include auxpow in blockheader
-		block.auxpow         = auxpow;
         return block;
     }
 

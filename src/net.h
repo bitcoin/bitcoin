@@ -44,13 +44,8 @@ static const int TIMEOUT_INTERVAL = 20 * 60;
 static const unsigned int MAX_INV_SZ = 50000;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
-/**
- * Maximum length of incoming protocol messages (no message over 32 MiB is
- * currently acceptable).  Bitcoin has 2 MiB here, but we need more space
- * to allow for 2,000 block headers with auxpow.
- */
-// SYSCOIN FIXME: Once the headers size limit is deployed sufficiently in the network, we may want to lower this again if it seems useful.
-static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 32 * 1024 * 1024;
+/** Maximum length of incoming protocol messages (no message over 2 MiB is currently acceptable). */
+static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;
 /** Maximum length of strSubVer in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** -listen default */

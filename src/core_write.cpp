@@ -118,8 +118,7 @@ string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode)
 
 string EncodeHexTx(const CTransaction& tx)
 {
-	// SYSCOIN do not account for syscoin data field (REMOVED FOR NOW)
-    CDataStream ssTx(SER_NETWORK /*| SER_GETHASHWITHOUTDATA */, PROTOCOL_VERSION);
+    CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
     ssTx << tx;
     return HexStr(ssTx.begin(), ssTx.end());
 }
