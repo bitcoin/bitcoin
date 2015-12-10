@@ -29,8 +29,6 @@ struct Params {
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
-    // SYSCOIN: Auxpow chain ID parameter
-    int32_t nAuxpowChainId;
 };
 } // namespace Consensus
 

@@ -9,19 +9,12 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 #include "crypto/common.h"
-// SYSCOIN setauxpow and remove gethash (moved to pureheader.cpp)
-void CBlockHeader::SetAuxpow (CAuxPow* apow)
+
+uint256 CBlockHeader::GetHash() const
 {
-    if (apow)
-    {
-        auxpow.reset(apow);
-        nVersion.SetAuxpow(true);
-    } else
-    {
-        auxpow.reset();
-        nVersion.SetAuxpow(false);
-    }
+    return SerializeHash(*this);
 }
+
 std::string CBlock::ToString() const
 {
     std::stringstream s;
