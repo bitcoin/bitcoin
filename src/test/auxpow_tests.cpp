@@ -75,7 +75,7 @@ public:
    * @param index Index to use in the merkle tree.
    * @return The root hash, with reversed endian.
    */
-   std::vector<unsigned char> buildAuxpowChain (const uint256& hashAux, unsigned h, int index);
+  valtype buildAuxpowChain (const uint256& hashAux, unsigned h, int index);
 
   /**
    * Build the finished CAuxPow object.  We assume that the auxpowChain
@@ -107,7 +107,7 @@ public:
    * @param nonce The nonce value to use.
    * @return The constructed data.
    */
-  static std::vector<unsigned char> buildCoinbaseData (bool header, const std::vector<unsigned char>& auxRoot,
+  static valtype buildCoinbaseData (bool header, const valtype& auxRoot,
                                     unsigned h, int nonce);
 
 };
@@ -132,7 +132,7 @@ CAuxpowBuilder::setCoinbase (const CScript& scr)
   parentBlock.hashMerkleRoot = BlockMerkleRoot (parentBlock);
 }
 
-std::vector<unsigned char>
+valtype
 CAuxpowBuilder::buildAuxpowChain (const uint256& hashAux, unsigned h, int index)
 {
   auxpowChainIndex = index;
@@ -145,7 +145,7 @@ CAuxpowBuilder::buildAuxpowChain (const uint256& hashAux, unsigned h, int index)
   const uint256 hash
     = CAuxPow::CheckMerkleBranch (hashAux, auxpowChainMerkleBranch, index);
 
-  std::vector<unsigned char> res = ToByteVector (hash);
+  valtype res = ToByteVector (hash);
   std::reverse (res.begin (), res.end ());
 
   return res;
@@ -165,11 +165,11 @@ CAuxpowBuilder::get (const CTransaction& tx) const
   return res;
 }
 
-std::vector<unsigned char>
-CAuxpowBuilder::buildCoinbaseData (bool header, const std::vector<unsigned char>& auxRoot,
+valtype
+CAuxpowBuilder::buildCoinbaseData (bool header, const valtype& auxRoot,
                                    unsigned h, int nonce)
 {
-  std::vector<unsigned char> res;
+  valtype res;
 
   if (header)
     res.insert (res.end (), UBEGIN (pchMergedMiningHeader),
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE (check_auxpow)
   const int nonce = 7;
   int index;
 
-  std::vector<unsigned char> auxRoot, data;
+  valtype auxRoot, data;
   CScript scr;
 
   /* Build a correct auxpow.  The height is the maximally allowed one.  */
@@ -262,9 +262,9 @@ BOOST_AUTO_TEST_CASE (check_auxpow)
 
   /* However, various attempts at smuggling two roots in should be detected.  */
 
-  const std::vector<unsigned char> wrongAuxRoot
+  const valtype wrongAuxRoot
     = builder2.buildAuxpowChain (modifiedAux, height, index);
-  std::vector<unsigned char> data2
+  valtype data2
     = CAuxpowBuilder::buildCoinbaseData (false, wrongAuxRoot, height, nonce);
   builder2.setCoinbase (CScript () << data << data2);
   BOOST_CHECK (builder2.get ().check (hashAux, ourChainId, params));
@@ -407,7 +407,7 @@ BOOST_AUTO_TEST_CASE (auxpow_pow)
   const unsigned height = 3;
   const int nonce = 7;
   const int index = CAuxPow::getExpectedIndex (nonce, ourChainId, height);
-  std::vector<unsigned char> auxRoot, data;
+  valtype auxRoot, data;
 
   /* Valid auxpow, PoW check of parent block.  */
   block.nVersion.SetAuxpow (true);
