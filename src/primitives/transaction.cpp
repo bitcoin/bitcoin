@@ -74,7 +74,7 @@ void CTransaction::UpdateHash() const
 {
     *const_cast<uint256*>(&hash) = SerializeHash(*this);
 }
-const uint256& CTransaction::GetAuxHash() const
+uint256 CTransaction::GetAuxHash() const
 {
     return SerializeHash(*this, SER_GETHASHWITHOUTDATA | SER_GETHASH);
 }
