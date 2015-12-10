@@ -512,7 +512,8 @@ bool CTransaction::CheckTransaction() const
     if (vout.empty())
         return DoS(10, error("CTransaction::CheckTransaction() : vout empty"));
     // Time (prevent mempool memory exhaustion attack)
-    if (nTime > FutureDrift(GetAdjustedTime()))
+    // Comes into force since 20 December 2015.
+    if (nTime > 1450569600 && nTime > FutureDrift(GetAdjustedTime()))
         return DoS(10, error("CTransaction::CheckTransaction() : timestamp is too far into the future"));
     // Size limits
     if (::GetSerializeSize(*this, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
