@@ -203,14 +203,13 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nNonce         = diskindex.nNonce;
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
-				pindexNew->hashBlockPoW   = diskindex.hashBlockPoW;
 				// SYSCOIN disk auxpow check
                 if (pindexNew->nVersion.IsAuxpow()) {
                     if (!diskindex.pauxpow->check(diskindex.GetBlockHash(), pindexNew->nVersion.GetChainId(), Params().GetConsensus(pindexNew->nHeight))) {
                         return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
                     }
                 } else {
-                    if (!CheckProofOfWork(pindexNew->hashBlockPoW, pindexNew->nBits, Params().GetConsensus(pindexNew->nHeight)))
+                    if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus(pindexNew->nHeight)))
                         return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
                 }
                 pcursor->Next();

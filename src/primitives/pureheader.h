@@ -187,8 +187,6 @@ public:
     }
 
     uint256 GetHash() const;
-	// SYSCOIN get pow hash for scrypt
-	uint256 GetPoWHash() const;
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;

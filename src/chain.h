@@ -148,9 +148,6 @@ public:
     unsigned int nBits;
     unsigned int nNonce;
 
-	// SYSCOIN: Keep the Scrypt hash as well as SHA256
-    uint256 hashBlockPoW;
-
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
 
@@ -175,7 +172,6 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
-		hashBlockPoW   = uint256();
     }
 
     CBlockIndex()
@@ -192,7 +188,6 @@ public:
         nTime          = block.nTime;
         nBits          = block.nBits;
         nNonce         = block.nNonce;
-		hashBlockPoW   = block.GetPoWHash();
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -319,7 +314,6 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        READWRITE(hashBlockPoW);
         if (this->nVersion.IsAuxpow()) {
             if (ser_action.ForRead())
                 pauxpow.reset(new CAuxPow());

@@ -21,10 +21,3 @@ uint256 CPureBlockHeader::GetHash() const
 {
     return SerializeHash(*this);
 }
-// SYSCOIN powhash for scrypt
-uint256 CPureBlockHeader::GetPoWHash() const
-{
-    uint256 thash;
-    scrypt_1024_1_1_256(BEGIN(nVersion), BEGIN(thash));
-    return thash;
-}
