@@ -9,8 +9,6 @@
 #include "checkpoints.h"
 #include "coins.h"
 #include "consensus/validation.h"
-// SYSCOIN for hexencode
-#include "core_io.h"
 #include "main.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
@@ -141,8 +139,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     result.push_back(Pair("confirmations", confirmations));
     result.push_back(Pair("size", (int)::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION)));
     result.push_back(Pair("height", blockindex->nHeight));
-	// SYSCOIN getfullversion
-    result.push_back(Pair("version", block.nVersion.GetFullVersion()));
+    result.push_back(Pair("version", block.nVersion));
     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
     UniValue txs(UniValue::VARR);
     BOOST_FOREACH(const CTransaction&tx, block.vtx)
