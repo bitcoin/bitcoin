@@ -8,20 +8,20 @@ compiler:
   - gcc
 env:
   global:
-    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  STATICPRECOMPUTATION=yes  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=no  schnorr=no  RECOVERY=no
+    - FIELD=auto  BIGNUM=auto  SCALAR=auto  ENDOMORPHISM=no  STATICPRECOMPUTATION=yes  ASM=no  BUILD=check  EXTRAFLAGS=  HOST=  ECDH=no  schnorr=no  RECOVERY=no  EXPERIMENTAL=no
   matrix:
     - SCALAR=32bit    RECOVERY=yes
-    - SCALAR=32bit    FIELD=32bit       ECDH=yes
+    - SCALAR=32bit    FIELD=32bit       ECDH=yes  EXPERIMENTAL=yes
     - SCALAR=64bit
     - FIELD=64bit     RECOVERY=yes
     - FIELD=64bit     ENDOMORPHISM=yes
-    - FIELD=64bit     ENDOMORPHISM=yes  ECDH=yes
+    - FIELD=64bit     ENDOMORPHISM=yes  ECDH=yes EXPERIMENTAL=yes
     - FIELD=64bit                       ASM=x86_64
     - FIELD=64bit     ENDOMORPHISM=yes  ASM=x86_64
-    - FIELD=32bit     SCHNORR=yes
+    - FIELD=32bit     SCHNORR=yes EXPERIMENTAL=yes
     - FIELD=32bit     ENDOMORPHISM=yes
     - BIGNUM=no
-    - BIGNUM=no       ENDOMORPHISM=yes SCHNORR=yes  RECOVERY=yes
+    - BIGNUM=no       ENDOMORPHISM=yes SCHNORR=yes  RECOVERY=yes EXPERIMENTAL=yes
     - BIGNUM=no       STATICPRECOMPUTATION=no
     - BUILD=distcheck
     - EXTRAFLAGS=CPPFLAGS=-DDETERMINISTIC
@@ -59,5 +59,5 @@ before_script: ./autogen.sh
 script:
  - if [ -n "$HOST" ]; then export USE_HOST="--host=$HOST"; fi
  - if [ "x$HOST" = "xi686-linux-gnu" ]; then export CC="$CC -m32"; fi
- - ./configure --enable-endomorphism=$ENDOMORPHISM --with-field=$FIELD --with-bignum=$BIGNUM --with-scalar=$SCALAR --enable-ecmult-static-precomputation=$STATICPRECOMPUTATION --enable-module-ecdh=$ECDH --enable-module-schnorr=$SCHNORR --enable-module-recovery=$RECOVERY $EXTRAFLAGS $USE_HOST && make -j2 $BUILD
+ - ./configure --enable-experimental=$EXPERIMENTAL --enable-endomorphism=$ENDOMORPHISM --with-field=$FIELD --with-bignum=$BIGNUM --with-scalar=$SCALAR --enable-ecmult-static-precomputation=$STATICPRECOMPUTATION --enable-module-ecdh=$ECDH --enable-module-schnorr=$SCHNORR --enable-module-recovery=$RECOVERY $EXTRAFLAGS $USE_HOST && make -j2 $BUILD
 os: linux
