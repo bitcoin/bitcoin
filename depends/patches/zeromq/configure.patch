@@ -1,0 +1,12 @@
+--- old/configure.ac	2015-10-13 12:13:21.560330183 -0400
++++ new/configure.ac	2015-10-13 12:13:31.468330323 -0400
+@@ -237,9 +237,6 @@
+         libzmq_on_mingw32="yes"
+         libzmq_dso_visibility="no"
+ 
+-        if test "x$enable_static" = "xyes"; then
+-            AC_MSG_ERROR([Building static libraries is not supported under MinGW32])
+-        fi
+         ;;
+     *cygwin*)
+         # Define on Cygwin to enable all library features

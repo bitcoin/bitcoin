@@ -1,0 +1,13 @@
+--- old/src/windows.hpp	2014-03-10 17:20:14.000000000 -0400
++++ new/src/windows.hpp	2015-10-13 12:19:40.036335509 -0400
+@@ -165,7 +165,10 @@
+  
+ #include <winsock2.h>
+ #include <mswsock.h>
++
++#ifndef __MINGW32__
+ #include <Mstcpip.h>
++#endif
+ 
+ #include <ws2tcpip.h>
+ #include <ipexport.h>
