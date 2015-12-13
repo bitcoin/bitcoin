@@ -441,6 +441,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
 
     static unsigned int nTransactionsUpdatedLast;
+    bool fBuildEmptyBlock = false;
 
     if (!lpval.isNull())
     {
@@ -480,6 +481,9 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
                     checktxtime += boost::posix_time::seconds(10);
                 }
             }
+
+            if (chainActive.Tip()->GetBlockHash() != hashWatchedChain)
+                fBuildEmptyBlock = true;
         }
         ENTER_CRITICAL_SECTION(cs_main);
 
@@ -510,7 +514,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             pblocktemplate = NULL;
         }
         CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = CreateNewBlock(Params(), scriptDummy);
+        pblocktemplate = CreateNewBlock(Params(), scriptDummy, fBuildEmptyBlock);
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
