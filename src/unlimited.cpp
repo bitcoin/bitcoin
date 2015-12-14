@@ -46,6 +46,10 @@ static atomic<uint64_t> nLargestBlockSeen{BLOCKSTREAM_CORE_MAX_BLOCK_SIZE}; // t
 static atomic<bool> fIsChainNearlySyncd{false};
 static atomic<bool> fIsInitialBlockDownload{false};
 
+/** If the tip is older than this (in seconds), the node is considered to be in initial block download.
+*/
+int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
+
 bool IsTrafficShapingEnabled();
 
 std::string ExcessiveBlockValidator(const unsigned int& value,unsigned int* item,bool validate)
@@ -1370,7 +1374,7 @@ void IsInitialBlockDownloadInit()
         return;
     }
     bool state = (chainActive.Height() < pindexBestHeader->nHeight - 24 * 6 ||
-            pindexBestHeader->GetBlockTime() < GetTime() - chainParams.MaxTipAge());
+            pindexBestHeader->GetBlockTime() < GetTime() - nMaxTipAge);
     if (!state)
         lockIBDState = true;
     fIsInitialBlockDownload.store(state);
