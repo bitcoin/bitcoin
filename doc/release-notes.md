@@ -350,6 +350,20 @@ caching. A sample config for apache2 could look like:
 
     </VirtualHost>
 
+Asm script outputs now contain OP_CHECKLOCKTIMEVERIFY in place of OP_NOP2
+-------------------------------------------------------------------------
+
+OP_NOP2 has been renamed to OP_CHECKLOCKTIMEVERIFY by [BIP 
+65](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki)
+
+The following outputs are affected by this change:
+- RPC `getrawtransaction` (in verbose mode)
+- RPC `decoderawtransaction`
+- RPC `decodescript`
+- REST `/rest/tx/` (JSON format)
+- REST `/rest/block/` (JSON format when including extended tx details)
+- `bitcoin-tx -json`
+
 0.12.0 Change log
 =================
 
