@@ -9,7 +9,7 @@ from test_framework.util import *
 from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import CScript, OP_1NEGATE, OP_NOP2, OP_DROP
+from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP
 from binascii import hexlify, unhexlify
 import cStringIO
 import time
@@ -19,7 +19,7 @@ def cltv_invalidate(tx):
 
     Prepends -1 CLTV DROP in the scriptSig itself.
     '''
-    tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_NOP2, OP_DROP] +
+    tx.vin[0].scriptSig = CScript([OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP] +
                                   list(CScript(tx.vin[0].scriptSig)))
 
 '''
