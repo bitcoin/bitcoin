@@ -102,7 +102,7 @@ class BitcoinTestFramework(object):
             import logging
             logging.basicConfig(level=logging.DEBUG)
 
-        os.environ['PATH'] = self.options.srcdir+":"+os.environ['PATH']
+        os.environ['PATH'] = self.options.srcdir+":"+self.options.srcdir+"/qt:"+os.environ['PATH']
 
         check_json_precision()
 
