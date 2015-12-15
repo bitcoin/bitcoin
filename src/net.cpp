@@ -53,17 +53,14 @@
 
 using namespace std;
 
-namespace
-{
-const int MAX_OUTBOUND_CONNECTIONS = 8;
+namespace {
+    const int MAX_OUTBOUND_CONNECTIONS = 8;
 
-struct ListenSocket
-{
-    SOCKET socket;
-    bool whitelisted;
-
-    ListenSocket(SOCKET socket, bool whitelisted) : socket(socket), whitelisted(whitelisted) {}
-};
+    struct ListenSocket {
+        SOCKET socket;
+        bool whitelisted;
+        ListenSocket(SOCKET socket, bool whitelisted) : socket(socket), whitelisted(whitelisted) {}
+    };
 }
 
 //
@@ -121,7 +118,7 @@ unsigned short GetListenPort()
 }
 
 // find 'best' local address for a particular peer
-bool GetLocal(CService& addr, const CNetAddr* paddrPeer)
+bool GetLocal(CService& addr, const CNetAddr *paddrPeer)
 {
     if (!fListen)
         return false;
@@ -130,10 +127,12 @@ bool GetLocal(CService& addr, const CNetAddr* paddrPeer)
     int nBestReachability = -1;
     {
         LOCK(cs_mapLocalHost);
-        for (map<CNetAddr, LocalServiceInfo>::iterator it = mapLocalHost.begin(); it != mapLocalHost.end(); it++) {
+        for (map<CNetAddr, LocalServiceInfo>::iterator it = mapLocalHost.begin(); it != mapLocalHost.end(); it++)
+        {
             int nScore = (*it).second.nScore;
             int nReachability = (*it).first.GetReachabilityFrom(paddrPeer);
-            if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore)) {
+            if (nReachability > nBestReachability || (nReachability == nBestReachability && nScore > nBestScore))
+            {
                 addr = CService((*it).first, (*it).second.nPort);
                 nBestReachability = nReachability;
                 nBestScore = nScore;
@@ -144,16 +143,17 @@ bool GetLocal(CService& addr, const CNetAddr* paddrPeer)
 }
 
 //! Convert the pnSeeds6 array into usable address objects.
-static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6>& vSeedsIn)
+static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6> &vSeedsIn)
 {
     // It'll only connect to one or two seed nodes because once it connects,
     // it'll get a pile of addresses with newer timestamps.
     // Seed nodes are given a random 'last seen time' of between one and two
     // weeks ago.
-    const int64_t nOneWeek = 7 * 24 * 60 * 60;
+    const int64_t nOneWeek = 7*24*60*60;
     std::vector<CAddress> vSeedsOut;
     vSeedsOut.reserve(vSeedsIn.size());
-    for (std::vector<SeedSpec6>::const_iterator i(vSeedsIn.begin()); i != vSeedsIn.end(); ++i) {
+    for (std::vector<SeedSpec6>::const_iterator i(vSeedsIn.begin()); i != vSeedsIn.end(); ++i)
+    {
         struct in6_addr ip;
         memcpy(&ip, i->addr, sizeof(ip));
         CAddress addr(CService(ip, i->port));
@@ -167,11 +167,12 @@ static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6>& vSeedsIn
 // Otherwise, return the unroutable 0.0.0.0 but filled in with
 // the normal parameters, since the IP may be changed to a useful
 // one by discovery.
-CAddress GetLocalAddress(const CNetAddr* paddrPeer)
+CAddress GetLocalAddress(const CNetAddr *paddrPeer)
 {
     CAddress ret(CService("0.0.0.0", GetListenPort()), 0);
     CService addr;
-    if (GetLocal(addr, paddrPeer)) {
+    if (GetLocal(addr, paddrPeer))
+    {
         ret = CAddress(addr);
     }
     ret.nServices = nLocalServices;
@@ -195,7 +196,7 @@ bool IsPeerAddrLocalGood(CNode* pnode)
 }
 
 // pushes our own address to a peer
-void AdvertizeLocal(CNode* pnode)
+void AdvertizeLocal(CNode *pnode)
 {
     if (fListen && pnode->fSuccessfullyConnected) {
         CAddress addrLocal = GetLocalAddress(&pnode->addr);
@@ -668,6 +669,8 @@ void SocketSendData(CNode* pnode)
 
 static list<CNode*> vNodesDisconnected;
 
+char recvMsgBuf[MAX_RECV_CHUNK];  // Messages are first pulled into this buffer
+
 void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
@@ -906,11 +909,10 @@ void ThreadSocketHandler()
                         progress++;
                         // max of min makes sure amt is in a range reasonable for buffer allocation
                         int64_t amt = max((int64_t)1, min(amt2Recv, MAX_RECV_CHUNK));
-                        char pchBuf[amt];
-                        int nBytes = recv(pnode->hSocket, pchBuf, sizeof(pchBuf), MSG_DONTWAIT);
+                        int nBytes = recv(pnode->hSocket, recvMsgBuf, amt, MSG_DONTWAIT);
                         if (nBytes > 0) {
                             receiveShaper.leak(nBytes);
-                            if (!pnode->ReceiveMsgBytes(pchBuf, nBytes))
+                            if (!pnode->ReceiveMsgBytes(recvMsgBuf, nBytes))
                                 pnode->CloseSocketDisconnect();
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;

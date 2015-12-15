@@ -133,6 +133,7 @@ FILE* blockReceiptLog = NULL;
 
 extern void UnlimitedLogBlock(const CBlock& block, const std::string& hash, uint64_t receiptTime)
 {
+#if 0  // remove block logging for official release
     if (!blockReceiptLog)
         blockReceiptLog = fopen("blockReceiptLog.txt", "a");
     if (blockReceiptLog) {
@@ -141,6 +142,7 @@ extern void UnlimitedLogBlock(const CBlock& block, const std::string& hash, uint
         fprintf(blockReceiptLog, "%" PRIu64 ",%" PRIu64 ",%ld,%ld,%s\n", receiptTime, (uint64_t)bh.nTime, byteLen, block.vtx.size(), hash.c_str());
         fflush(blockReceiptLog);
     }
+#endif    
 }
 
 
