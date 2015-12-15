@@ -36,6 +36,7 @@ MY_VERSION = 60001  # past bip-31 for ping/pong
 MY_SUBVERSION = "/python-mininode-tester:0.0.1/"
 
 MAX_INV_SZ = 50000
+MAX_BLOCK_SIZE = 1000000
 
 # Keep our own socket map for asyncore, so that we can track disconnects
 # ourselves (to workaround an issue with closing an asyncore socket when 
