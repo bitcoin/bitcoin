@@ -1067,6 +1067,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         LOCK(pool.cs);
         if (setConflicts.size())
         {
+            CAmount nConflictingMinFees = 0;
             CFeeRate newFeeRate(nFees, nSize);
             set<uint256> setConflictsParents;
             const int maxDescendantsToVisit = 100;
@@ -1139,6 +1140,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                 }
                 BOOST_FOREACH(CTxMemPool::txiter it, allConflicting) {
                     nConflictingFees += it->GetFee();
+                    nConflictingMinFees += ::minRelayTxFee.GetFee(it->GetTxSize());
                     nConflictingSize += it->GetTxSize();
                 }
             } else {
@@ -1170,8 +1172,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
             // The replacement must pay greater fees than the transactions it
             // replaces - if we did the bandwidth used by those conflicting
-            // transactions would not be paid for.
-            if (nFees < nConflictingFees)
+            // transactions would not be paid for. Note that equal fees must be
+            // treated as insufficient, or we would create a DoS where we would
+            // accept the same two transactions as replacements for each other.
+            if (nFees <= nConflictingFees)
             {
                 return state.DoS(0, error("AcceptToMemoryPool: rejecting replacement %s, less fees than conflicting txs; %s < %s",
                                           hash.ToString(), FormatMoney(nFees), FormatMoney(nConflictingFees)),
@@ -1179,8 +1183,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             }
 
             // Finally in addition to paying more fees than the conflicts the
-            // new transaction must pay for its own bandwidth.
-            CAmount nDeltaFees = nFees - nConflictingFees;
+            // new transaction must pay for both its own bandwidth, and the
+            // bandwidth of the transactions being replaced (to avoid a DoS).
+            CAmount nDeltaFees = nFees - nConflictingMinFees;
             if (nDeltaFees < ::minRelayTxFee.GetFee(nSize))
             {
                 return state.DoS(0,
