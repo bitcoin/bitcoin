@@ -456,6 +456,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-acceptnonstdtxn", strprintf("Relay and mine \"non-standard\" transactions (%sdefault: %u)", "testnet/regtest only; ", !Params(CBaseChainParams::TESTNET).RequireStandard()));
     strUsage += HelpMessageOpt("-datacarrier", strprintf(_("Relay and mine data carrier transactions (default: %u)"), 1));
     strUsage += HelpMessageOpt("-datacarriersize", strprintf(_("Maximum size of data in data carrier transactions we relay and mine (default: %u)"), MAX_OP_RETURN_RELAY));
+    strUsage += HelpMessageOpt("-replacebyfee", strprintf(_("Allow replacement of transactions paying sufficiently higher fees (0 = never, 1 = always, 2 = opt-in, default: %s)"), nRbfPolicy));
 
     strUsage += HelpMessageGroup(_("Block creation options:"));
     strUsage += HelpMessageOpt("-blockminsize=<n>", strprintf(_("Set minimum block size in bytes (default: %u)"), 0));
@@ -956,6 +957,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", true);
     nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
+    nRbfPolicy = GetArg("-replacebyfee", nRbfPolicy, 1);
 
     fAlerts = GetBoolArg("-alerts", DEFAULT_ALERTS);
 
