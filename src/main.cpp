@@ -1013,6 +1013,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
         LOCK(pool.cs);
         if (setConflicts.size())
         {
+            CAmount nConflictingMinFees = 0;
             CFeeRate newFeeRate(nFees, nSize);
             set<uint256> setConflictsParents;
             const int maxDescendantsToVisit = 100;
@@ -1085,6 +1086,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                 }
                 BOOST_FOREACH(CTxMemPool::txiter it, allConflicting) {
                     nConflictingFees += it->GetFee();
+                    nConflictingMinFees += ::minRelayTxFee.GetFee(it->GetTxSize());
                     nConflictingSize += it->GetTxSize();
                 }
             } else {
@@ -1125,8 +1127,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             }
 
             // Finally in addition to paying more fees than the conflicts the
-            // new transaction must pay for its own bandwidth.
-            CAmount nDeltaFees = nFees - nConflictingFees;
+            // new transaction must pay for both its own bandwidth, and the
+            // bandwidth of the transactions being replaced (to avoid a DoS).
+            CAmount nDeltaFees = nFees - nConflictingMinFees;
             if (nDeltaFees < ::minRelayTxFee.GetFee(nSize))
             {
                 return state.DoS(0,
