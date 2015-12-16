@@ -1118,8 +1118,10 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
             // The replacement must pay greater fees than the transactions it
             // replaces - if we did the bandwidth used by those conflicting
-            // transactions would not be paid for.
-            if (nFees < nConflictingFees)
+            // transactions would not be paid for. Note that equal fees must be
+            // treated as insufficient, or we would create a DoS where we would
+            // accept the same two transactions as replacements for each other.
+            if (nFees <= nConflictingFees)
             {
                 return state.DoS(0, error("AcceptToMemoryPool: rejecting replacement %s, less fees than conflicting txs; %s < %s",
                                           hash.ToString(), FormatMoney(nFees), FormatMoney(nConflictingFees)),
