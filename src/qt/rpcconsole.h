@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2014 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_RPCCONSOLE_H
-#define BITCOIN_QT_RPCCONSOLE_H
+#ifndef SYSCOIN_QT_RPCCONSOLE_H
+#define SYSCOIN_QT_RPCCONSOLE_H
 
 #include "guiutil.h"
 #include "peertablemodel.h"
@@ -25,7 +25,7 @@ class QMenu;
 class QItemSelection;
 QT_END_NAMESPACE
 
-/** Local Bitcoin RPC console. */
+/** Local Syscoin RPC console. */
 class RPCConsole: public QWidget
 {
     Q_OBJECT
@@ -136,4 +136,4 @@ private:
     QMenu *banTableContextMenu;
 };
 
-#endif // BITCOIN_QT_RPCCONSOLE_H
+#endif // SYSCOIN_QT_RPCCONSOLE_H

@@ -1,0 +1,11 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: Syscoin Core consensus library
+Description: Library for the Syscoin consensus protocol.
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lsyscoinconsensus
+Cflags: -I${includedir}
+Requires.private: libcrypto

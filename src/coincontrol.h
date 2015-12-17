@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2013 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COINCONTROL_H
-#define BITCOIN_COINCONTROL_H
+#ifndef SYSCOIN_COINCONTROL_H
+#define SYSCOIN_COINCONTROL_H
 
 #include "primitives/transaction.h"
 
@@ -68,4 +68,4 @@ private:
     std::set<COutPoint> setSelected;
 };
 
-#endif // BITCOIN_COINCONTROL_H
+#endif // SYSCOIN_COINCONTROL_H

@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+#  syscoind The syscoin core server.
+#
+#
+# chkconfig: 345 80 20
+# description: syscoind
+# processname: syscoind
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# you can override defaults in /etc/sysconfig/syscoind, see below
+if [ -f /etc/sysconfig/syscoind ]; then
+        . /etc/sysconfig/syscoind
+fi
+
+RETVAL=0
+
+prog=syscoind
+# you can override the lockfile via SYSCOIND_LOCKFILE in /etc/sysconfig/syscoind
+lockfile=${SYSCOIND_LOCKFILE-/var/lock/subsys/syscoind}
+
+# syscoind defaults to /usr/bin/syscoind, override with SYSCOIND_BIN
+syscoind=${SYSCOIND_BIN-/usr/bin/syscoind}
+
+# syscoind opts default to -disablewallet, override with SYSCOIND_OPTS
+syscoind_opts=${SYSCOIND_OPTS--disablewallet}
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $DAEMONOPTS $syscoind $syscoind_opts
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac

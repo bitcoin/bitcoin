@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@ than:
       interface.
 
 For a description of arguments recognized by test scripts, see
-`qa/pull-tester/test_framework/test_framework.py:BitcoinTestFramework.main`.
+`qa/pull-tester/test_framework/test_framework.py:SyscoinTestFramework.main`.
 
 """
 
@@ -34,8 +34,8 @@ from tests_config import *
 #If imported values are not defined then set to zero (or disabled)
 if not vars().has_key('ENABLE_WALLET'):
     ENABLE_WALLET=0
-if not vars().has_key('ENABLE_BITCOIND'):
-    ENABLE_BITCOIND=0
+if not vars().has_key('ENABLE_SYSCOIND'):
+    ENABLE_SYSCOIND=0
 if not vars().has_key('ENABLE_UTILS'):
     ENABLE_UTILS=0
 if not vars().has_key('ENABLE_ZMQ'):
@@ -62,8 +62,8 @@ for arg in sys.argv[1:]:
 
 #Set env vars
 buildDir = BUILDDIR
-os.environ["BITCOIND"] = buildDir + '/src/bitcoind' + EXEEXT
-os.environ["BITCOINCLI"] = buildDir + '/src/bitcoin-cli' + EXEEXT
+os.environ["SYSCOIND"] = buildDir + '/src/syscoind' + EXEEXT
+os.environ["SYSCOINCLI"] = buildDir + '/src/syscoin-cli' + EXEEXT
 
 #Disable Windows tests by default
 if EXEEXT == ".exe" and "-win" not in opts:
@@ -136,7 +136,7 @@ def runtests():
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)
 
-    if(ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
+    if(ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_SYSCOIND == 1):
         rpcTestDir = buildDir + '/qa/rpc-tests/'
         run_extended = '-extended' in opts
         cov_flag = coverage.flag if coverage else ''
@@ -182,7 +182,7 @@ def runtests():
             coverage.cleanup()
 
     else:
-        print "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
+        print "No rpc tests to run. Wallet, utils, and syscoind must all be enabled"
 
 
 class RPCCoverage(object):
@@ -192,7 +192,7 @@ class RPCCoverage(object):
     Coverage calculation works by having each test script subprocess write
     coverage files into a particular directory. These files contain the RPC
     commands invoked during testing, as well as a complete listing of RPC
-    commands per `bitcoin-cli help` (`rpc_interface.txt`).
+    commands per `syscoin-cli help` (`rpc_interface.txt`).
 
     After all tests complete, the commands run are combined and diff'd against
     the complete list to calculate uncovered RPC commands.
