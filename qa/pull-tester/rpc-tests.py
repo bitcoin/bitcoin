@@ -62,8 +62,10 @@ for arg in sys.argv[1:]:
 
 #Set env vars
 buildDir = BUILDDIR
-os.environ["BITCOIND"] = buildDir + '/src/bitcoind' + EXEEXT
-os.environ["BITCOINCLI"] = buildDir + '/src/bitcoin-cli' + EXEEXT
+if "BITCOIND" not in os.environ:
+    os.environ["BITCOIND"] = buildDir + '/src/bitcoind' + EXEEXT
+if "BITCOINCLI" not in os.environ:
+    os.environ["BITCOINCLI"] = buildDir + '/src/bitcoin-cli' + EXEEXT
 
 #Disable Windows tests by default
 if EXEEXT == ".exe" and "-win" not in opts:
