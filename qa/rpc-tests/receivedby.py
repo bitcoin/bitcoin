@@ -1,11 +1,11 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Exercise the listreceivedbyaddress API
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 
 
@@ -51,7 +51,7 @@ def check_array_result(object_array, to_match, expected, should_not_find = False
     if num_matched > 0 and should_not_find == True:
         raise AssertionError("Objects was matched %s"%(str(to_match)))
 
-class ReceivedByTest(BitcoinTestFramework):
+class ReceivedByTest(SyscoinTestFramework):
 
     def run_test(self):
         '''

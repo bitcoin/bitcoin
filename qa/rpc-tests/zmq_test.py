@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2015 The Bitcoin Core developers
+# Copyright (c) 2015 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 # Test ZMQ interface
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 import zmq
 import binascii
@@ -22,7 +22,7 @@ try:
 except ImportError:
     import urlparse
 
-class ZMQTest (BitcoinTestFramework):
+class ZMQTest (SyscoinTestFramework):
 
     port = 28332
 

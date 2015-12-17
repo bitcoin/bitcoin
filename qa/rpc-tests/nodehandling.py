@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,7 +7,7 @@
 # Test node handling
 #
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import *
 import base64
 
@@ -20,7 +20,7 @@ try:
 except ImportError:
     import urlparse
 
-class NodeHandlingTest (BitcoinTestFramework):
+class NodeHandlingTest (SyscoinTestFramework):
     def run_test(self):
         ###########################
         # setban/listbanned tests #

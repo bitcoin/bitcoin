@@ -1,11 +1,11 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Base class for RPC testing
 
-# Add python-bitcoinrpc to module search path:
+# Add python-syscoinrpc to module search path:
 import os
 import sys
 
@@ -21,7 +21,7 @@ from .util import (
     sync_blocks,
     sync_mempools,
     stop_nodes,
-    wait_bitcoinds,
+    wait_syscoinds,
     enable_coverage,
     check_json_precision,
     initialize_chain_clean,
@@ -29,7 +29,7 @@ from .util import (
 from authproxy import AuthServiceProxy, JSONRPCException
 
 
-class BitcoinTestFramework(object):
+class SyscoinTestFramework(object):
 
     # These may be over-ridden by subclasses:
     def run_test(self):
@@ -72,7 +72,7 @@ class BitcoinTestFramework(object):
         """
         assert not self.is_network_split
         stop_nodes(self.nodes)
-        wait_bitcoinds()
+        wait_syscoinds()
         self.setup_network(True)
 
     def sync_all(self):
@@ -91,7 +91,7 @@ class BitcoinTestFramework(object):
         """
         assert self.is_network_split
         stop_nodes(self.nodes)
-        wait_bitcoinds()
+        wait_syscoinds()
         self.setup_network(False)
 
     def main(self):
@@ -99,11 +99,11 @@ class BitcoinTestFramework(object):
 
         parser = optparse.OptionParser(usage="%prog [options]")
         parser.add_option("--nocleanup", dest="nocleanup", default=False, action="store_true",
-                          help="Leave bitcoinds and test.* datadir on exit or error")
+                          help="Leave syscoinds and test.* datadir on exit or error")
         parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
-                          help="Don't stop bitcoinds after the test execution")
+                          help="Don't stop syscoinds after the test execution")
         parser.add_option("--srcdir", dest="srcdir", default="../../src",
-                          help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
+                          help="Source directory containing syscoind/syscoin-cli (default: %default)")
         parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                           help="Root directory for datadirs")
         parser.add_option("--tracerpc", dest="trace_rpc", default=False, action="store_true",
@@ -149,9 +149,9 @@ class BitcoinTestFramework(object):
         if not self.options.noshutdown:
             print("Stopping nodes")
             stop_nodes(self.nodes)
-            wait_bitcoinds()
+            wait_syscoinds()
         else:
-            print("Note: bitcoinds were not stopped and may still be running")
+            print("Note: syscoinds were not stopped and may still be running")
 
         if not self.options.nocleanup and not self.options.noshutdown:
             print("Cleaning up")
@@ -165,13 +165,13 @@ class BitcoinTestFramework(object):
             sys.exit(1)
 
 
-# Test framework for doing p2p comparison testing, which sets up some bitcoind
+# Test framework for doing p2p comparison testing, which sets up some syscoind
 # binaries:
 # 1 binary: test binary
 # 2 binaries: 1 test binary, 1 ref binary
 # n>2 binaries: 1 test binary, n-1 ref binaries
 
-class ComparisonTestFramework(BitcoinTestFramework):
+class ComparisonTestFramework(SyscoinTestFramework):
 
     # Can override the num_nodes variable to indicate how many nodes to run.
     def __init__(self):
@@ -179,11 +179,11 @@ class ComparisonTestFramework(BitcoinTestFramework):
 
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to test")
+                          default=os.getenv("SYSCOIND", "syscoind"),
+                          help="syscoind binary to test")
         parser.add_option("--refbinary", dest="refbinary",
-                          default=os.getenv("BITCOIND", "bitcoind"),
-                          help="bitcoind binary to use for reference nodes (if any)")
+                          default=os.getenv("SYSCOIND", "syscoind"),
+                          help="syscoind binary to use for reference nodes (if any)")
 
     def setup_chain(self):
         print "Initializing test directory "+self.options.tmpdir

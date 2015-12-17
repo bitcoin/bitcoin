@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@
 
 import decimal
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     initialize_chain,
     assert_equal,
@@ -17,7 +17,7 @@ from test_framework.util import (
     connect_nodes_bi,
 )
 
-class BlockchainTest(BitcoinTestFramework):
+class BlockchainTest(SyscoinTestFramework):
     """
     Test blockchain-related RPC calls:
 
