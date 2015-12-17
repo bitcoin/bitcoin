@@ -10,7 +10,7 @@ packages:
 - "git-core"
 - "pkg-config"
 - "autoconf"
-- "libffi-dev"
+- "librsvg2-bin"
 - "libtiff-tools"
 - "libtool"
 - "automake"
@@ -19,10 +19,8 @@ packages:
 - "cmake"
 - "imagemagick"
 - "libcap-dev"
-- "libxslt-dev"
 - "libz-dev"
 - "libbz2-dev"
-- "python-cairo"
 - "python-dev"
 - "python-pip"
 - "fonts-tuffy"
@@ -34,7 +32,7 @@ files:
 - "MacOSX10.9.sdk.tar.gz"
 script: |
   # FIXME: We should probably install these in some other (cachable) way, but the depends system doesn't appear to make native packages available to Core's build system itself?
-  pip install --user mac_alias ds_store cairosvg cssselect tinycss lxml
+  pip install --user mac_alias ds_store
   export PATH="$HOME/.local/bin:$PATH"
 
   WRAP_DIR=$HOME/wrapped

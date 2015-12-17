@@ -41,7 +41,7 @@ matrix:
     - compiler: ": No wallet"
       env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
     - compiler: ": Cross-Mac"
-      env: HOST=x86_64-apple-darwin11 PACKAGES="cmake imagemagick libcap-dev libz-dev libbz2-dev libffi-dev libtiff-tools python-dev python-pip" BITCOIN_CONFIG="--enable-reduce-exports" OSX_SDK=10.9 GOAL="deploy"
+      env: HOST=x86_64-apple-darwin11 PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python-dev python-pip" BITCOIN_CONFIG="--enable-reduce-exports" OSX_SDK=10.9 GOAL="deploy"
   exclude:
     - compiler: gcc
 install:
@@ -49,7 +49,7 @@ install:
     - if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
-    - if [[ "$HOST" =~ apple ]]; then pip install --user cairosvg mac_alias ds_store; export PATH="$HOME/.local/bin:$PATH"; ( wget 'https://bitbucket.org/al45tair/ds_store/get/c80c23706eae.tar.gz' && tar -xzvpf c80c23706eae.tar.gz && cd al45tair-ds_store-c80c23706eae/ && python setup.py install --user; ) fi
+    - if [[ "$HOST" =~ apple ]]; then pip install --user mac_alias ds_store; export PATH="$HOME/.local/bin:$PATH"; ( wget 'https://bitbucket.org/al45tair/ds_store/get/c80c23706eae.tar.gz' && tar -xzvpf c80c23706eae.tar.gz && cd al45tair-ds_store-c80c23706eae/ && python setup.py install --user; ) fi
 before_script:
     - unset CC; unset CXX
     - mkdir -p depends/SDKs depends/sdk-sources
