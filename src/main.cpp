@@ -2729,7 +2729,7 @@ string GetWarnings(string strFor)
     {
 //        nPriority = 100;
 //        strStatusBar = "WARNING: Checkpoint is too old. Wait for block chain to download, or notify developers.";
-        printf("WARNING: Checkpoint is too old. Wait for block chain to download, or notify developers.\n");
+//        printf("WARNING: Checkpoint is too old. Wait for block chain to download, or notify developers.\n");
     }
 
     // ppcoin: if detected invalid checkpoint enter safe mode
