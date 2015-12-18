@@ -70,6 +70,7 @@ private:
     bool spendsCoinbase; //! keep track of transactions that spend a coinbase
     unsigned int sigOpCount; //! Legacy sig ops plus P2SH sig op count
     int64_t feeDelta; //! Used for determining the priority of the transaction for mining in a block
+    uint256 tip; //! The tip at the time the mempool entry was inserted, used for knowing if locktime is potentially invalidated by a reorg
 
     // Information about descendants of this transaction that are in the
     // mempool; if we remove this transaction we must remove all of these
@@ -84,7 +85,7 @@ public:
     CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                     int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                     bool poolHasNoInputsOf, CAmount _inChainInputValue, bool spendsCoinbase,
-                    unsigned int nSigOps);
+                    unsigned int nSigOps, uint256 tip);
     CTxMemPoolEntry(const CTxMemPoolEntry& other);
 
     const CTransaction& GetTx() const { return this->tx; }
@@ -97,6 +98,7 @@ public:
     size_t GetTxSize() const { return nTxSize; }
     int64_t GetTime() const { return nTime; }
     unsigned int GetHeight() const { return entryHeight; }
+    uint256 GetTip() const { return tip; }
     bool WasClearAtEntry() const { return hadNoDependencies; }
     unsigned int GetSigOpCount() const { return sigOpCount; }
     int64_t GetModifiedFee() const { return nFee + feeDelta; }
@@ -106,6 +108,8 @@ public:
     void UpdateState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);
     // Updates the fee delta used for mining priority score
     void UpdateFeeDelta(int64_t feeDelta);
+    // Updates the tip used for locktime invalidation detection
+    void UpdateTip(uint256 tip);
 
     /** We can set the entry to be dirty if doing the full calculation of in-
      *  mempool descendants will be too expensive, which can potentially happen
@@ -161,6 +165,15 @@ struct mempoolentry_txid
     {
         return entry.GetTx().GetHash();
     }
+};
+
+struct update_tip
+{
+    update_tip(uint256 _tip) : tip(_tip) {}
+    void operator() (CTxMemPoolEntry &e) { e.UpdateTip(tip); }
+
+private:
+    uint256 tip;
 };
 
 /** \class CompareTxMemPoolEntryByFee

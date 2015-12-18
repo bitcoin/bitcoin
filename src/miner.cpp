@@ -133,13 +133,9 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     {
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
-        const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
-        const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
-        int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? nMedianTimePast
-                                : pblock->GetBlockTime();
+        unsigned int nHeight = pindexPrev->nHeight + 1;
 
         bool fPriorityBlock = nBlockPrioritySize > 0;
         if (fPriorityBlock) {
@@ -219,9 +215,6 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 }
                 continue;
             }
-
-            if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
-                continue;
 
             unsigned int nTxSigOps = iter->GetSigOpCount();
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS) {

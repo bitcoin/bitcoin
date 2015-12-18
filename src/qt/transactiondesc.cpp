@@ -24,12 +24,13 @@
 QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
 {
     AssertLockHeld(cs_main);
-    if (!CheckFinalTx(wtx))
+    int64_t nLockTime = CheckLockTime(wtx);
+    if (nLockTime)
     {
-        if (wtx.nLockTime < LOCKTIME_THRESHOLD)
-            return tr("Open for %n more block(s)", "", wtx.nLockTime - chainActive.Height());
+        if (nLockTime < LOCKTIME_THRESHOLD)
+            return tr("Open for %n more block(s)", "", nLockTime - chainActive.Height());
         else
-            return tr("Open until %1").arg(GUIUtil::dateTimeStr(wtx.nLockTime));
+            return tr("Open until %1").arg(GUIUtil::dateTimeStr(nLockTime));
     }
     else
     {
