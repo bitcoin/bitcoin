@@ -2068,12 +2068,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
-    bool fBIP102Enforcing = (pindex->GetBlockTime() >= (int64_t)BIP102_FORK_TIME);
-    if (fBIP102Enforcing && block.nVersion >= 5 && !IsSuperMajority(5, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus()))
-        fBIP102Enforcing = false;
+    bool fBIP202Enforcing = (pindex->GetBlockTime() >= (int64_t)BIP202_FORK_TIME);
+    if (fBIP202Enforcing && block.nVersion >= 5 && !IsSuperMajority(5, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus()))
+        fBIP202Enforcing = false;
 
     // TODO
-    (void) fBIP102Enforcing;
+    (void) fBIP202Enforcing;
 
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint("bench", "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);

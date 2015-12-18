@@ -8,18 +8,18 @@
 
 #include <stdint.h>
 
-static const uint64_t BIP102_FORK_TIME = 1462406400; // May 5 2016, midnight UTC
+static const uint64_t BIP202_FORK_TIME = 1462406400; // May 5 2016, midnight UTC
 
 /** The maximum allowed size for a serialized block, in bytes (network rule) */
 inline unsigned int MaxBlockSize(uint64_t nTime) {
-    if (nTime < BIP102_FORK_TIME)
+    if (nTime < BIP202_FORK_TIME)
         return 1000*1000;
 
     // cap for tests
     if (nTime > 4113158400)
         nTime = 4113158400;
 
-    return (2*1000*1000) + (20 * ((nTime - BIP102_FORK_TIME) / 600));
+    return (2*1000*1000) + (20 * ((nTime - BIP202_FORK_TIME) / 600));
 }
 
 /** The maximum allowed size for a serialized transaction, in bytes */
