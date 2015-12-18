@@ -81,6 +81,12 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
+        consensus.nMaxBlockSize = 1000000;
+        consensus.nMaxTxSize = 1000000;
+        consensus.nMinTxSize = ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION);
+        consensus.nMaxBlockSigops = consensus.nMaxBlockSize / 50;
+        consensus.nCoinbaseMaturity = 100;
+
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -163,6 +169,12 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+        consensus.nMaxBlockSize = 1000000;
+        consensus.nMaxTxSize = 1000000;
+        consensus.nMinTxSize = ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION);
+        consensus.nMaxBlockSigops = consensus.nMaxBlockSize / 50;
+        consensus.nCoinbaseMaturity = 100;
+
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x09;
@@ -227,6 +239,11 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
+        consensus.nMaxBlockSize = 1000000;
+        consensus.nMaxTxSize = 1000000;
+        consensus.nMinTxSize = ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION);
+        consensus.nMaxBlockSigops = consensus.nMaxBlockSize / 50;
+        consensus.nCoinbaseMaturity = 100;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
