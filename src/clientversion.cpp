@@ -97,7 +97,7 @@ std::string FormatFullVersion()
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
 {
     std::ostringstream ss;
-    ss << "/";
+    ss << "/BTCC";
     ss << name << ":" << FormatVersion(nClientVersion);
     if (!comments.empty())
     {
