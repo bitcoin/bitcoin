@@ -96,13 +96,14 @@ BOOST_AUTO_TEST_CASE(TwoMegFork)
     BOOST_CHECK(!TestCheckBlock(*pblock, BIP102_FORK_TIME, 2*1000*1000+1)); // >2MB : invalid
 
     // Fork height + 10 min...
-    BOOST_CHECK(TestCheckBlock(*pblock, BIP102_FORK_TIME+600, 2*1000*1000+20)); // 2MB+20 : valid
+    BOOST_CHECK(!TestCheckBlock(*pblock, BIP102_FORK_TIME+600, 2*1000*1000+20)); // 2MB+20 : invalid
 
     // A year after fork time:
     unsigned int yearAfter = BIP102_FORK_TIME + (365 * 24 * 60 * 60);
     BOOST_CHECK(TestCheckBlock(*pblock, yearAfter, 1000*1000)); // 1MB : valid
     BOOST_CHECK(TestCheckBlock(*pblock, yearAfter, 2*1000*1000)); // 2MB : valid
-    BOOST_CHECK(TestCheckBlock(*pblock, yearAfter, 3*1000*1000)); // 3MB : valid
+    BOOST_CHECK(!TestCheckBlock(*pblock, yearAfter, 2*1000*1000+1)); // >2MB : invalid
+    BOOST_CHECK(!TestCheckBlock(*pblock, yearAfter, 3*1000*1000)); // 3MB : invalid
     BOOST_CHECK(!TestCheckBlock(*pblock, yearAfter, 4*1000*1000)); // 4MB : invalid
 }
 

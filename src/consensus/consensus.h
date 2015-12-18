@@ -15,11 +15,7 @@ inline unsigned int MaxBlockSize(uint64_t nTime) {
     if (nTime < BIP102_FORK_TIME)
         return 1000*1000;
 
-    // cap for tests
-    if (nTime > 4113158400)
-        nTime = 4113158400;
-
-    return (2*1000*1000) + (20 * ((nTime - BIP102_FORK_TIME) / 600));
+    return (2*1000*1000);
 }
 
 /** The maximum allowed size for a serialized transaction, in bytes */
