@@ -2069,7 +2069,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
 
     bool fBIP102Enforcing = (pindex->GetBlockTime() >= (int64_t)BIP102_FORK_TIME);
-    if (fBIP102Enforcing && block.nVersion >= 5 && !IsSuperMajority(5, pindex->pprev, chainparams.GetConsensus().nMajorityRejectBlockOutdated, chainparams.GetConsensus()))
+    if (fBIP102Enforcing && block.nVersion >= 5 && !IsSuperMajority(5, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus()))
         fBIP102Enforcing = false;
 
     // TODO
