@@ -213,7 +213,7 @@ Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spur
 
   - Optionally reddit /r/Bitcoin_Classic, ... but this will usually sort out itself
 
-- Notify @yamamushi so that he can start building [https://launchpad.net/~bitcoinclassic/+archive/ubuntu/bitcoinclassic](the PPAs)
+- Notify @yamamushi so that he can start building [the PPAs](https://launchpad.net/~bitcoinclassic/+archive/ubuntu/bitcoinclassic)
 
 - Add release notes for the new version to the directory `doc/release-notes` in git master
 
