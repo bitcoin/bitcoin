@@ -848,9 +848,15 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
     {
         if (pool.mapNextTx.count(txin.prevout))
         {
+            if (!nRbfPolicy)
+                // No replacement allowed by policy
+                return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+
             const CTransaction *ptxConflicting = pool.mapNextTx[txin.prevout].ptx;
-            if (!setConflicts.count(ptxConflicting->GetHash()))
-            {
+            if (setConflicts.count(ptxConflicting->GetHash()))
+                continue;
+
+            if (nRbfPolicy > 1) {
                 // Allow opt-out of transaction replacement by setting
                 // nSequence >= maxint-1 on all inputs.
                 //
@@ -874,9 +880,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                 }
                 if (fReplacementOptOut)
                     return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
-
-                setConflicts.insert(ptxConflicting->GetHash());
             }
+
+            setConflicts.insert(ptxConflicting->GetHash());
         }
     }
     }

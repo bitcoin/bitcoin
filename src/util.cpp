@@ -384,10 +384,14 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault)
     return strDefault;
 }
 
-int64_t GetArg(const std::string& strArg, int64_t nDefault)
+int64_t GetArg(const std::string& strArg, int64_t nDefault, int64_t nNoValue)
 {
-    if (mapArgs.count(strArg))
-        return atoi64(mapArgs[strArg]);
+    if (mapArgs.count(strArg)) {
+        const std::string& strValue = mapArgs[strArg];
+        if (strValue.empty())
+            return nNoValue;
+        return atoi64(strValue);
+    }
     return nDefault;
 }
 
