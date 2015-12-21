@@ -63,8 +63,14 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
 
     # If requested, ensure txouts are confirmed.
     if confirmed:
-        while len(node.getrawmempool()):
+        mempool_size = len(node.getrawmempool())
+        while mempool_size > 0:
             node.generate(1)
+            new_size = len(node.getrawmempool())
+            # Error out if we have something stuck in the mempool, as this
+            # would likely be a bug.
+            assert(new_size < mempool_size)
+            mempool_size = new_size
 
     return COutPoint(int(txid, 16), 0)
 
@@ -72,7 +78,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000",
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000", "-debug",
                                                               "-relaypriority=0", "-whitelist=127.0.0.1",
                                                               "-limitancestorcount=50",
                                                               "-limitancestorsize=101",
@@ -107,6 +113,9 @@ class ReplaceByFeeTest(BitcoinTestFramework):
 
         print "Running test opt-in..."
         self.test_opt_in()
+
+        print "Running test prioritised transactions..."
+        self.test_prioritised_transactions()
 
         print "Passed\n"
 
@@ -512,6 +521,73 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         # If tx3b was accepted, tx3c won't look like a replacement,
         # but make sure it is accepted anyway
         self.nodes[0].sendrawtransaction(tx3c_hex, True)
+
+    def test_prioritised_transactions(self):
+        # Ensure that fee deltas used via prioritisetransaction are
+        # correctly used by replacement logic
+
+        # 1. Check that feeperkb uses modified fees
+        tx0_outpoint = make_utxo(self.nodes[0], 1.1*COIN)
+
+        tx1a = CTransaction()
+        tx1a.vin = [CTxIn(tx0_outpoint, nSequence=0)]
+        tx1a.vout = [CTxOut(1*COIN, CScript([b'a']))]
+        tx1a_hex = txToHex(tx1a)
+        tx1a_txid = self.nodes[0].sendrawtransaction(tx1a_hex, True)
+
+        # Higher fee, but the actual fee per KB is much lower.
+        tx1b = CTransaction()
+        tx1b.vin = [CTxIn(tx0_outpoint, nSequence=0)]
+        tx1b.vout = [CTxOut(0.001*COIN, CScript([b'a'*740000]))]
+        tx1b_hex = txToHex(tx1b)
+
+        # Verify tx1b cannot replace tx1a.
+        try:
+            tx1b_txid = self.nodes[0].sendrawtransaction(tx1b_hex, True)
+        except JSONRPCException as exp:
+            assert_equal(exp.error['code'], -26)
+        else:
+            assert(False)
+
+        # Use prioritisetransaction to set tx1a's fee to 0.
+        self.nodes[0].prioritisetransaction(tx1a_txid, 0, int(-0.1*COIN))
+
+        # Now tx1b should be able to replace tx1a
+        tx1b_txid = self.nodes[0].sendrawtransaction(tx1b_hex, True)
+
+        assert(tx1b_txid in self.nodes[0].getrawmempool())
+
+        # 2. Check that absolute fee checks use modified fee.
+        tx1_outpoint = make_utxo(self.nodes[0], 1.1*COIN)
+
+        tx2a = CTransaction()
+        tx2a.vin = [CTxIn(tx1_outpoint, nSequence=0)]
+        tx2a.vout = [CTxOut(1*COIN, CScript([b'a']))]
+        tx2a_hex = txToHex(tx2a)
+        tx2a_txid = self.nodes[0].sendrawtransaction(tx2a_hex, True)
+
+        # Lower fee, but we'll prioritise it
+        tx2b = CTransaction()
+        tx2b.vin = [CTxIn(tx1_outpoint, nSequence=0)]
+        tx2b.vout = [CTxOut(1.01*COIN, CScript([b'a']))]
+        tx2b.rehash()
+        tx2b_hex = txToHex(tx2b)
+
+        # Verify tx2b cannot replace tx2a.
+        try:
+            tx2b_txid = self.nodes[0].sendrawtransaction(tx2b_hex, True)
+        except JSONRPCException as exp:
+            assert_equal(exp.error['code'], -26)
+        else:
+            assert(False)
+
+        # Now prioritise tx2b to have a higher modified fee
+        self.nodes[0].prioritisetransaction(tx2b.hash, 0, int(0.1*COIN))
+
+        # tx2b should now be accepted
+        tx2b_txid = self.nodes[0].sendrawtransaction(tx2b_hex, True)
+
+        assert(tx2b_txid in self.nodes[0].getrawmempool())
 
 if __name__ == '__main__':
     ReplaceByFeeTest().main()
