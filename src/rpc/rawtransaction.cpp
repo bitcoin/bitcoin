@@ -334,6 +334,7 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
             "       {\n"
             "         \"txid\":\"id\",    (string, required) The transaction id\n"
             "         \"vout\":n        (numeric, required) The output number\n"
+            "         \"sequence\":n    (numeric, optional) The sequence number (will overwrite RBF opt-in)\n"
             "       }\n"
             "       ,...\n"
             "     ]\n"
@@ -390,6 +391,10 @@ UniValue createrawtransaction(const UniValue& params, bool fHelp)
         uint32_t nSequence = (rawTx.nLockTime ? std::numeric_limits<uint32_t>::max() - 1 : std::numeric_limits<uint32_t>::max());
         if (rbfOptIn)
             nSequence = std::numeric_limits<uint32_t>::max() - 2;
+
+        const UniValue& sequenceObj = find_value(o, "sequence");
+        if (sequenceObj.isNum())
+            nSequence = sequenceObj.get_int();
         CTxIn in(COutPoint(txid, nOutput), CScript(), nSequence);
 
         rawTx.vin.push_back(in);
