@@ -22,6 +22,7 @@ packages:
 - "libz-dev"
 - "libbz2-dev"
 - "python-dev"
+- "python-setuptools"
 - "fonts-tuffy"
 reference_datetime: "2015-06-01 00:00:00"
 remotes:
