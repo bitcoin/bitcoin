@@ -13,7 +13,6 @@ from test_framework.script import *
 from test_framework.mininode import *
 import binascii
 
-COIN = 100000000
 MAX_REPLACEMENT_LIMIT = 100
 
 def satoshi_round(amount):
