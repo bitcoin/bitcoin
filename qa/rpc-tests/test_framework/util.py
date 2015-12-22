@@ -409,3 +409,49 @@ def assert_raises(exc, fun, *args, **kwds):
 
 def satoshi_round(amount):
     return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+
+def create_confirmed_utxos(fee, node, count):
+    node.generate(int(0.5*count)+101)
+    utxos = node.listunspent()
+    iterations = count - len(utxos)
+    addr1 = node.getnewaddress()
+    addr2 = node.getnewaddress()
+    if iterations <= 0:
+        return utxos
+    for i in xrange(iterations):
+        t = utxos.pop()
+        inputs = []
+        inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
+        outputs = {}
+        send_value = t['amount'] - fee
+        outputs[addr1] = satoshi_round(send_value/2)
+        outputs[addr2] = satoshi_round(send_value/2)
+        raw_tx = node.createrawtransaction(inputs, outputs)
+        signed_tx = node.signrawtransaction(raw_tx)["hex"]
+        txid = node.sendrawtransaction(signed_tx)
+
+    while (node.getmempoolinfo()['size'] > 0):
+        node.generate(1)
+
+    utxos = node.listunspent()
+    assert(len(utxos) >= count)
+    return utxos
+
+def create_lots_of_big_transactions(node, txouts, utxos, fee):
+    addr = node.getnewaddress()
+    txids = []
+    for i in xrange(len(utxos)):
+        t = utxos.pop()
+        inputs = []
+        inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
+        outputs = {}
+        send_value = t['amount'] - fee
+        outputs[addr] = satoshi_round(send_value)
+        rawtx = node.createrawtransaction(inputs, outputs)
+        newtx = rawtx[0:92]
+        newtx = newtx + txouts
+        newtx = newtx + rawtx[94:]
+        signresult = node.signrawtransaction(newtx, None, None, "NONE")
+        txid = node.sendrawtransaction(signresult["hex"], True)
+        txids.append(txid)
+    return txids

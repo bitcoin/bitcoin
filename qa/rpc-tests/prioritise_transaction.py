@@ -42,62 +42,15 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-printpriority=1"]))
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
-    def create_confirmed_utxos(self, count):
-        self.nodes[0].generate(int(0.5*count)+101)
-        utxos = self.nodes[0].listunspent()
-        iterations = count - len(utxos)
-        addr1 = self.nodes[0].getnewaddress()
-        addr2 = self.nodes[0].getnewaddress()
-        if iterations <= 0:
-            return utxos
-        for i in xrange(iterations):
-            t = utxos.pop()
-            fee = self.relayfee
-            inputs = []
-            inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
-            outputs = {}
-            send_value = t['amount'] - fee
-            outputs[addr1] = satoshi_round(send_value/2)
-            outputs[addr2] = satoshi_round(send_value/2)
-            raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
-            signed_tx = self.nodes[0].signrawtransaction(raw_tx)["hex"]
-            txid = self.nodes[0].sendrawtransaction(signed_tx)
-
-        while (self.nodes[0].getmempoolinfo()['size'] > 0):
-            self.nodes[0].generate(1)
-
-        utxos = self.nodes[0].listunspent()
-        assert(len(utxos) >= count)
-        return utxos
-
-    def create_lots_of_big_transactions(self, utxos, fee):
-        addr = self.nodes[0].getnewaddress()
-        txids = []
-        for i in xrange(len(utxos)):
-            t = utxos.pop()
-            inputs = []
-            inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
-            outputs = {}
-            send_value = t['amount'] - fee
-            outputs[addr] = satoshi_round(send_value)
-            rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
-            newtx = rawtx[0:92]
-            newtx = newtx + self.txouts
-            newtx = newtx + rawtx[94:]
-            signresult = self.nodes[0].signrawtransaction(newtx, None, None, "NONE")
-            txid = self.nodes[0].sendrawtransaction(signresult["hex"], True)
-            txids.append(txid)
-        return txids
-
     def run_test(self):
-        utxos = self.create_confirmed_utxos(90)
+        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], 90)
         base_fee = self.relayfee*100 # our transactions are smaller than 100kb
         txids = []
 
         # Create 3 batches of transactions at 3 different fee rate levels
         for i in xrange(3):
             txids.append([])
-            txids[i] = self.create_lots_of_big_transactions(utxos[30*i:30*i+30], (i+1)*base_fee)
+            txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[30*i:30*i+30], (i+1)*base_fee)
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined (lower

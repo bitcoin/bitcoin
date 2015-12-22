@@ -85,6 +85,7 @@ testScripts = [
     'rest.py',
     'mempool_spendcoinbase.py',
     'mempool_reorg.py',
+    'mempool_limit.py',
     'httpbasics.py',
     'multi_rpc.py',
     'zapwallettxes.py',
