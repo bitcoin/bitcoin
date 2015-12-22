@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-osx-0.11"
+name: "BitcoinUnlimited-osx-0.11"
 enable_cache: true
 suites:
 - "precise"
@@ -20,7 +20,7 @@ packages:
 - "libbz2-dev"
 reference_datetime: "2015-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
+- "url": "https://github.com/gandrewstone/BitcoinUnlimited.git"
   "dir": "bitcoin"
 files:
 - "MacOSX10.9.sdk.tar.gz"
