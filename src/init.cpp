@@ -513,7 +513,7 @@ std::string HelpMessage(HelpMessageMode mode)
 std::string LicenseInfo()
 {
     // todo: remove urls from translations on next change
-    return FormatParagraph(strprintf(_("Copyright (C) %i-%i The %s Developers"), 2009, COPYRIGHT_YEAR, _(PACKAGE_NAME))) + "\n" +
+    return FormatParagraph(strprintf(_("Copyright (C) %i-%i %s"), 2009, COPYRIGHT_YEAR, CopyrightHolders())) + "\n" +
            "\n" +
            FormatParagraph(_("This is experimental software.")) + "\n" +
            "\n" +
