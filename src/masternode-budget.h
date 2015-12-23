@@ -116,7 +116,6 @@ public:
     void MarkSynced();
     void Sync(CNode* node, uint256 nProp, bool fPartial=false);
 
-    void Calculate();
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
     CBudgetProposal *FindProposal(const std::string &strProposalName);
@@ -417,7 +416,6 @@ public:
     CBudgetProposal(const CBudgetProposal& other);
     CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
 
-    void Calculate();
     bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
     bool HasMinimumRequiredSupport();
     std::pair<std::string, std::string> GetVotes();
