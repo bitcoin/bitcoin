@@ -793,7 +793,7 @@ public:
     bool HDAddHDChain(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, HDChainID& chainId, std::string &strBase58ExtPrivKey, std::string &strBase58ExtPubKey, bool overwrite = false);
 
     //!gets a child key from the internal or external chain at given index
-    bool HDGetChildPubKeyAtIndex(const HDChainID& chainID, CPubKey &pubKeyOut, unsigned int nIndex, bool internal = false);
+    bool HDGetChildPubKeyAtIndex(const HDChainID& chainID, CPubKey &pubKeyOut, std::string& newKeysChainpath, unsigned int nIndex, bool internal = false);
 
     //!get next free child key
     bool HDGetNextChildPubKey(const HDChainID& chainId, CPubKey &pubKeyOut, std::string& newKeysChainpathOut, bool internal = false);

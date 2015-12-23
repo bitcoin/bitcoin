@@ -72,7 +72,7 @@ class HDWalletTest (BitcoinTestFramework):
         stop_node(self.nodes[1], 1)
         stop_node(self.nodes[2], 2)
 
-        #try to cover over master seed
+        #try to recover over master seed
         os.remove(self.options.tmpdir + "/node2/regtest/wallet.dat")
         self.nodes[2] = start_node(2, self.options.tmpdir)
 
@@ -115,6 +115,15 @@ class HDWalletTest (BitcoinTestFramework):
         self.sync_all()
         walletinfo = self.nodes[0].getwalletinfo()
         assert_equal(walletinfo['balance'], balanceOld+Decimal('52.00000000'))
+        
+        self.nodes[2].hdaddchain('m/ch', '9886e45b8435b488a4cb753121db41a07f66a6a73e0a705ce24cee3a3bce87db')
+        adr0 = self.nodes[2].hdgetaddress()
+        assert_equal(adr0['address'], "mhr4GkkutTAVQ2RQvqSYdrFyt7vtmrgJ6S");
+        assert_equal(adr0['chainpath'], "m/0'/0'");
+
+        adr1 = self.nodes[2].hdgetaddress()
+        assert_equal(adr1['address'], "mzSuRQocScfhoYufYE5Uc1E5JW8BJtnZFr");
+        assert_equal(adr1['chainpath'], "m/0'/1'");
 
 if __name__ == '__main__':
     HDWalletTest ().main ()

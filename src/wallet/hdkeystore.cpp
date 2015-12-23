@@ -156,11 +156,9 @@ bool CHDKeyStore::GetPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const
     return CCryptoKeyStore::GetPubKey(address, vchPubKeyOut);
 }
 
-bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
+bool CHDKeyStore::PrivKeyDer(const std::string chainPath, const HDChainID& chainId, CExtKey& extKeyOut) const
 {
     //this methode required no locking
-
-    std::string chainPath = hdPubKey.chainPath;
     std::vector<std::string> pathFragments;
     boost::split(pathFragments, chainPath, boost::is_any_of("/"));
 
@@ -181,7 +179,7 @@ bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
             CKeyingMaterial masterSeed;
 
             // get master seed
-            if (!GetMasterSeed(hdPubKey.chainHash, masterSeed))
+            if (!GetMasterSeed(chainId, masterSeed))
                 return false;
 
             if (masterSeed.size() == BIP32_EXTKEY_SIZE)
@@ -208,7 +206,19 @@ bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
             parentKey = childKey;
         }
     }
-    keyOut = parentKey.key;
+    extKeyOut = parentKey;
+    return true;
+}
+
+bool CHDKeyStore::DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const
+{
+    //this methode required no locking
+    std::string chainPath = hdPubKey.chainPath;
+    CExtKey extKeyOut;
+    if (!PrivKeyDer(chainPath, hdPubKey.chainHash, extKeyOut))
+        return false;
+
+    keyOut = extKeyOut.key;
     return true;
 }
 
@@ -218,24 +228,36 @@ bool CHDKeyStore::DeriveHDPubKeyAtIndex(const HDChainID chainId, CHDPubKey& hdPu
     if (!GetChain(chainId, hdChain))
         return false;
 
-    if ( (internal && !hdChain.internalPubKey.pubkey.IsValid()) || !hdChain.externalPubKey.pubkey.IsValid())
-        throw std::runtime_error("CHDKeyStore::HDGetChildPubKeyAtIndex(): Missing HD extended pubkey!");
-
     if (nIndex >= 0x80000000)
-        throw std::runtime_error("CHDKeyStore::HDGetChildPubKeyAtIndex(): No more available keys!");
+        throw std::runtime_error("CHDKeyStore::DeriveHDPubKeyAtIndex(): No more available keys!");
 
-    CExtPubKey useExtKey = internal ? hdChain.internalPubKey : hdChain.externalPubKey;
     CExtPubKey childKey;
-    if (!useExtKey.Derive(childKey, nIndex))
-        throw std::runtime_error("CHDKeyStore::HDGetChildPubKeyAtIndex(): Key deriving failed!");
+    hdPubKeyOut.chainPath = hdChain.chainPath; //base chain path
+    boost::replace_all(hdPubKeyOut.chainPath, "c", itostr(internal)); //replace the chain switch index
+
+    if ( (internal && !hdChain.internalPubKey.pubkey.IsValid()) || !hdChain.externalPubKey.pubkey.IsValid())
+    {
+        hdPubKeyOut.chainPath += "/"+itostr(nIndex)+"'"; //add hardened flag
+
+        CExtKey extKeyOut;
+        if (!PrivKeyDer(hdPubKeyOut.chainPath, chainId, extKeyOut))
+            throw std::runtime_error("CHDKeyStore::DeriveHDPubKeyAtIndex(): Private Key Derivation failed!");
+        childKey = extKeyOut.Neuter();
+    }
+    else
+    {
+
+        hdPubKeyOut.chainPath += "/"+itostr(nIndex);
+
+        CExtPubKey useExtKey = internal ? hdChain.internalPubKey : hdChain.externalPubKey;
+        if (!useExtKey.Derive(childKey, nIndex))
+            throw std::runtime_error("CHDKeyStore::DeriveHDPubKeyAtIndex(): Key deriving failed!");
+    }
 
     hdPubKeyOut.pubkey = childKey.pubkey;
     hdPubKeyOut.chainHash = chainId;
     hdPubKeyOut.nChild = nIndex;
-    hdPubKeyOut.chainPath = hdChain.chainPath;
     hdPubKeyOut.internal = internal;
-    boost::replace_all(hdPubKeyOut.chainPath, "c", itostr(internal)); //replace the chain switch index
-    hdPubKeyOut.chainPath += "/"+itostr(nIndex);
 
     return true;
 }

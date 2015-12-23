@@ -2462,7 +2462,7 @@ example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/0 for the first internal ke
 example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/1 for the second external key
 example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/1 for the second internal key
 */
-const std::string hd_default_chainpath = "m/44'/0'/0'/c";
+const std::string hd_default_chainpath = "m/c'";
 
 static void SendMoneyHD(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
 {
@@ -2558,8 +2558,6 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
         }
     }
 
-
-
     pwalletMain->HDAddHDChain(chainPath, fGenerateMasterSeed, vSeed, chainId, xprivOut, xpubOut);
     if (fGenerateMasterSeed)
         result.push_back(Pair("seed_hex", HexStr(vSeed)));
@@ -2567,6 +2565,7 @@ UniValue hdaddchain(const UniValue& params, bool fHelp)
     result.push_back(Pair("extended_master_pubkey", xpubOut));
     result.push_back(Pair("extended_master_privkey", xprivOut));
     result.push_back(Pair("chainid", chainId.GetHex()));
+    result.push_back(Pair("keypath", chainPath));
 
     memory_cleanse(&vSeed[0], bip32MasterSeedLength);
     memory_cleanse(&xprivOut[0], xpubOut.size());
@@ -2677,7 +2676,7 @@ UniValue hdgetaddress(const UniValue& params, bool fHelp)
     if (params.size() == 1 && params[0].isNum())
     {
         HDChainID emptyId;
-        if (!pwalletMain->HDGetChildPubKeyAtIndex(emptyId, newKey, params[0].get_int()))
+        if (!pwalletMain->HDGetChildPubKeyAtIndex(emptyId, newKey, keyChainPath, params[0].get_int()))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
     }
     else

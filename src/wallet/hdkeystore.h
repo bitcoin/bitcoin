@@ -62,6 +62,7 @@ class CHDChain
 public:
     static const int CURRENT_VERSION=1;
     int nVersion;
+    bool usePubCKD;
     int64_t nCreateTime; // 0 means unknown
 
     HDChainID chainHash; //hash() of the masterpubkey
@@ -82,7 +83,9 @@ public:
 
     bool IsValid()
     {
-        return externalPubKey.pubkey.IsValid();
+        if (usePubCKD && !externalPubKey.pubkey.IsValid())
+            return false;
+        return (chainPath.size() > 0);
     }
 
     ADD_SERIALIZE_METHODS;
@@ -95,8 +98,12 @@ public:
         READWRITE(nCreateTime);
         READWRITE(chainHash);
         READWRITE(chainPath);
-        READWRITE(externalPubKey);
-        READWRITE(internalPubKey);
+        READWRITE(usePubCKD);
+        if (usePubCKD)
+        {
+            READWRITE(externalPubKey);
+            READWRITE(internalPubKey);
+        }
     }
 
     void SetNull()
@@ -104,6 +111,7 @@ public:
         nVersion = CHDChain::CURRENT_VERSION;
         nCreateTime = 0;
         chainHash.SetNull();
+        usePubCKD = false;
     }
 };
 
@@ -114,6 +122,9 @@ protected:
     std::map<HDChainID, std::vector<unsigned char> > mapHDCryptedMasterSeeds;
     std::map<CKeyID, CHDPubKey> mapHDPubKeys; //all hd pubkeys of all chains
     std::map<HDChainID, CHDChain> mapChains; //all available chains
+
+    //!private key derivition of a ext priv key
+    bool PrivKeyDer(const std::string chainPath, const HDChainID& chainId, CExtKey& extKeyOut) const;
 
     //!derive key from a CHDPubKey object
     bool DeriveKey(const CHDPubKey hdPubKey, CKey& keyOut) const;
