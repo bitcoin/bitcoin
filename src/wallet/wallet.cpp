@@ -13,7 +13,6 @@
 #include "consensus/validation.h"
 #include "key.h"
 #include "keystore.h"
-#include "eccryptoverify.h"
 #include "main.h"
 #include "net.h"
 #include "policy/policy.h"
@@ -2960,13 +2959,12 @@ bool CWallet::HDAddHDChain(const std::string& chainPathIn, bool generateMaster, 
                 assert(vSeed.size() == 32);
                 if (generateMaster)
                 {
-                    RandAddSeedPerfmon();
-                    do {
-                        GetRandBytes(&vSeed[0], vSeed.size());
-                    } while (!eccrypto::Check(&vSeed[0]));
+                    CKey masterKey;
+                    masterKey.MakeNewKey(true);
+                    bip32MasterKey.SetMaster(masterKey.begin(),masterKey.size());
                 }
-
-                bip32MasterKey.SetMaster(&vSeed[0], vSeed.size());
+                else
+                    bip32MasterKey.SetMaster(&vSeed[0], vSeed.size());
             }
 
             CExtPubKey masterPubKey = bip32MasterKey.Neuter();
