@@ -89,6 +89,7 @@ if ENABLE_WALLET
 BITCOIN_TESTS += \
   test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
+  wallet/test/hdkeystore_tests.cpp \
   test/rpc_wallet_tests.cpp
 endif
 
