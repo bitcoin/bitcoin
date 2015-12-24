@@ -437,6 +437,24 @@ def create_confirmed_utxos(fee, node, count):
     assert(len(utxos) >= count)
     return utxos
 
+def gen_return_txouts():
+    # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
+    # So we have big transactions (and therefore can't fit very many into each block)
+    # create one script_pubkey
+    script_pubkey = "6a4d0200" #OP_RETURN OP_PUSH2 512 bytes
+    for i in xrange (512):
+        script_pubkey = script_pubkey + "01"
+    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
+    txouts = "81"
+    for k in xrange(128):
+        # add txout value
+        txouts = txouts + "0000000000000000"
+        # add length of script_pubkey
+        txouts = txouts + "fd0402"
+        # add script_pubkey
+        txouts = txouts + script_pubkey
+    return txouts
+
 def create_lots_of_big_transactions(node, txouts, utxos, fee):
     addr = node.getnewaddress()
     txids = []
