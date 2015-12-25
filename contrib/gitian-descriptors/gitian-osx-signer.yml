@@ -7,7 +7,7 @@ architectures:
 packages:
 - "libc6:i386"
 - "faketime"
-reference_datetime: "2015-06-01 00:00:00"
+reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin-detached-sigs.git"
   "dir": "signature"
