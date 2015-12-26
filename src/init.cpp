@@ -1021,13 +1021,22 @@ bool AppInit2(boost::thread_group& threadGroup)
                 delete pcoinscatcher;
                 delete pblocktree;
 
-                pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
-                pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
+                // Detect database obfuscated by future versions of the DBWrapper
+                bool chainstateScrambled;
+                bool blockDbScrambled;
+
+                pblocktree = new CBlockTreeDB(nBlockTreeDBCache, blockDbScrambled, false, fReindex);
+                pcoinsdbview = new CCoinsViewDB(nCoinDBCache, chainstateScrambled, false, fReindex);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
                 if (fReindex)
                     pblocktree->WriteReindexing(true);
+
+                if (chainstateScrambled || blockDbScrambled) {
+                   strLoadError = _("Reindex required as the chainstate or block database is obfuscated");
+                   break;
+                }
 
                 if (!LoadBlockIndex()) {
                     strLoadError = _("Error loading block database");
