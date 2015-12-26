@@ -1127,7 +1127,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                 delete pcoinscatcher;
                 delete pblocktree;
 
-                // Detect database obfuscated by future versions of the DBWrapper
+                // Detect database obfuscation by future versions of the DBWrapper
                 bool chainstateScrambled;
                 bool blockDbScrambled;
 
