@@ -400,7 +400,7 @@ static CScript PushAll(const vector<valtype>& values)
 void ReplaceRedeemScript(CScript& script, const CScript& redeemScript)
 {
     vector<valtype> stack;
-    EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker());
+    EvalScript(stack, script, SCRIPT_VERIFY_STRICTENC, BaseSignatureChecker(), 0);
     assert(stack.size() > 0);
     stack.back() = std::vector<unsigned char>(redeemScript.begin(), redeemScript.end());
     script = PushAll(stack);
