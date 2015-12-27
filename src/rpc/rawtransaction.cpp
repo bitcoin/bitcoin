@@ -828,7 +828,7 @@ UniValue signrawtransaction(const JSONRPCRequest& request)
         // ... and merge in other signatures:
         for (const CMutableTransaction& txv : txVariants) {
             if (txv.vin.size() > i) {
-                txin.scriptSig = CombineSignatures(prevPubKey, txConst, i, txin.scriptSig, txv.vin[i].scriptSig);
+                txin.scriptSig = CombineSignatures(prevPubKey, txConst, i, amount, txin.scriptSig, txv.vin[i].scriptSig);
             }
         }
         ScriptError serror = SCRIPT_ERR_OK;
