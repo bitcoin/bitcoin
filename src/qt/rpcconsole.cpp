@@ -349,7 +349,7 @@ void RPCConsole::setClientModel(ClientModel *model)
         updateTrafficStats(model->getTotalBytesRecv(), model->getTotalBytesSent());
         connect(model, SIGNAL(bytesChanged(quint64,quint64)), this, SLOT(updateTrafficStats(quint64, quint64)));
 
-        connect(model, SIGNAL(mempoolSizeChanged(long,size_t)), this, SLOT(setMempoolSize(long,size_t)));
+        connect(model, SIGNAL(mempoolSizeChanged(size_t,size_t)), this, SLOT(setMempoolSize(size_t,size_t)));
 
         // set up peer table
         ui->peerWidget->setModel(model->getPeerTableModel());
@@ -531,7 +531,7 @@ void RPCConsole::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     ui->lastBlockTime->setText(blockDate.toString());
 }
 
-void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
+void RPCConsole::setMempoolSize(size_t numberOfTxs, size_t dynUsage)
 {
     ui->mempoolNumberTxs->setText(QString::number(numberOfTxs));
 
