@@ -2297,7 +2297,7 @@ static CBlockIndex* FindMostWorkChain() {
         CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
         uint64_t depth=0;
-        while (pindexTest && !chainActive.Contains(pindexTest)) {
+        while (pindexTest && !chainActive.Contains(pindexTest)) {  // follow the chain all the way back to where it joins the current active chain.
             assert(pindexTest->nChainTx || pindexTest->nHeight == 0);
 
             // Pruned nodes may have entries in setBlockIndexCandidates for

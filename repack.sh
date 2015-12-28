@@ -1,5 +1,5 @@
 #!/bin/bash
-cd build/out && exit "run this from the gitian-builder directory"
+cd build/out || exit "run this from the gitian-builder directory"
 mkdir -p tmp
 cd tmp
 rm -rf bitcoin-0.11.2/ bitcoinUnlimited-0.11.2/
