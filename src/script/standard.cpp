@@ -31,6 +31,8 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
     case TX_NULL_DATA: return "nulldata";
+    case TX_WITNESS_V0: return "witness_v0";
+    case TX_WITNESS_V1: return "witness_v1";
     }
     return NULL;
 }
@@ -64,6 +66,22 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
         return true;
+    }
+
+    int witnessversion;
+    std::vector<unsigned char> witnessprogram;
+    if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+        if (witnessversion == 0) {
+            typeRet = TX_WITNESS_V0;
+            vSolutionsRet.push_back(witnessprogram);
+            return true;
+        }
+        if (witnessversion == 1 && witnessprogram.size() == 32) {
+            typeRet = TX_WITNESS_V1;
+            vSolutionsRet.push_back(witnessprogram);
+            return true;
+        }
+        return false;
     }
 
     // Provably prunable, data-carrying output
@@ -178,6 +196,10 @@ int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned c
         return vSolutions[0][0] + 1;
     case TX_SCRIPTHASH:
         return 1; // doesn't include args needed by the script
+    case TX_WITNESS_V0:
+        return 0;
+    case TX_WITNESS_V1:
+        return 0;
     }
     return -1;
 }
@@ -301,5 +323,26 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
     BOOST_FOREACH(const CPubKey& key, keys)
         script << ToByteVector(key);
     script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
+    return script;
+}
+
+CScript GetScriptForWitness(const CScript& redeemscript)
+{
+    opcodetype witnessversion = OP_0;
+    std::vector<unsigned char> witnessprogram;
+
+    if (redeemscript.size() >= 1 && redeemscript.size() <= 32) {
+        witnessprogram = std::vector<unsigned char>(redeemscript.begin(), redeemscript.end());
+    } else {
+        witnessversion = OP_1;
+        uint256 hash;
+        CSHA256().Write(&redeemscript[0], redeemscript.size()).Finalize(hash.begin());
+        witnessprogram = ToByteVector(hash);
+    }
+
+    CScript script;
+    script << witnessversion << witnessprogram;
+    int v;
+    assert(script.IsWitnessProgram(v, witnessprogram));
     return script;
 }
