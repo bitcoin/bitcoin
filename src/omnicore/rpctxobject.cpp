@@ -56,11 +56,13 @@ int populateRPCTransactionObject(const uint256& txid, Object& txobj, std::string
     return populateRPCTransactionObject(tx, blockHash, txobj, filterAddress, extendedDetails, extendedDetailsFilter);
 }
 
-int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHash, Object& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter)
+int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHash, Object& txobj, std::string filterAddress, bool extendedDetails, std::string extendedDetailsFilter, int blockHeight)
 {
     int confirmations = 0;
     int64_t blockTime = 0;
-    int blockHeight = GetHeight();
+    if (blockHeight == 0) {
+        blockHeight = GetHeight();
+    }
 
     if (blockHash != 0) {
         CBlockIndex* pBlockIndex = GetBlockIndex(blockHash);
@@ -134,10 +136,14 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     populateRPCTypeInfo(mp_obj, txobj, mp_obj.getType(), extendedDetails, extendedDetailsFilter);
 
     // state and chain related information
-    if (confirmations > 0) txobj.push_back(Pair("valid", valid));
-    if (confirmations > 0) txobj.push_back(Pair("blockhash", blockHash.GetHex()));
-    if (confirmations > 0) txobj.push_back(Pair("blocktime", blockTime));
-    if (confirmations > 0) txobj.push_back(Pair("block", blockHeight));
+    if (confirmations != 0 && blockHash != 0) {
+        txobj.push_back(Pair("valid", valid));
+        txobj.push_back(Pair("blockhash", blockHash.GetHex()));
+        txobj.push_back(Pair("blocktime", blockTime));
+    }
+    if (confirmations != 0) {
+        txobj.push_back(Pair("block", blockHeight));
+    }
     txobj.push_back(Pair("confirmations", confirmations));
 
     // finished

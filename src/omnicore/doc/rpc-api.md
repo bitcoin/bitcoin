@@ -1325,12 +1325,15 @@ Decodes an Omni transaction.
 
 If the inputs of the transaction are not in the chain, then they must be provided, because the transaction inputs are used to identify the sender of a transaction.
 
+A block height can be provided, which is used to determine the parsing rules.
+
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `rawtx`             | string  | required | the raw transaction to decode                                                                |
 | `prevtxs`           | string  | optional | a JSON array of transaction inputs (default: none)                                           |
+| `height`            | number  | optional | the parsing block height (default: 0 for chain height)                                       |
 
 The format of `prevtxs` is as following:
 
