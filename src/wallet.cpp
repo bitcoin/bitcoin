@@ -1246,7 +1246,9 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend,
                 BOOST_FOREACH (const PAIRTYPE(CScript, int64_t)& s, vecSend)
                 {
                     CTxOut txout(s.second, s.first);
-                    if (txout.IsDust(CTransaction::nMinRelayTxFee))
+                    /* We allow 0-value outputs as this is used for
+                       timestamping OP_RETURN scripts.  */
+                    if (s.second > 0 && txout.IsDust(CTransaction::nMinRelayTxFee))
                     {
                         strFailReason = _("Transaction amount too small");
                         return false;

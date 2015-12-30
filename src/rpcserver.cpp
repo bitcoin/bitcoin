@@ -273,6 +273,7 @@ static const CRPCCommand vRPCCommands[] =
 #ifdef ENABLE_WALLET
     { "name_register",          &name_register,          false,     false,      true },
     { "sendtoname",             &sendtoname,             false,     false,      true },
+    { "timestamp",              &timestamp,              false,     false,      true },
 #endif /* ENABLE_WALLET?  */
 
 #ifdef ENABLE_WALLET

@@ -185,4 +185,38 @@ sendtoname (const json_spirit::Array& params, bool fHelp)
   return wtx.GetHash ().GetHex ();
 }
 
+json_spirit::Value
+timestamp (const json_spirit::Array& params, bool fHelp)
+{
+  if (fHelp || params.size () != 1)
+    throw std::runtime_error (
+        "timestamp \"hex-data\"\n"
+        "\nStore the 32-byte hex-data into the blockchain.\n"
+        + HelpRequiringPassphrase () +
+        "\nArguments:\n"
+        "1. \"hex-data\"    (string, required) 32-byte hex string\n"
+        "\nResult:\n"
+        "\"transactionid\"  (string) The transaction id.\n"
+        "\nExamples:\n"
+        + HelpExampleCli ("timestamp", "\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"")
+        + HelpExampleRpc ("timestamp", "\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"")
+      );
+
+  const std::vector<unsigned char> hash = ParseHexV (params[0], "hex-data");
+  if (hash.size () != 32)
+    throw JSONRPCError(RPC_INVALID_PARAMETER, "hex-data must be 32 bytes");
+
+  CScript script;
+  script << OP_RETURN << hash;
+
+  CWalletTx wtx;
+  EnsureWalletIsUnlocked ();
+
+  std::string strError = pwalletMain->SendMoney (script, 0, wtx);
+  if (strError != "")
+    throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+  return wtx.GetHash ().GetHex ();
+}
+
 #endif /* ENABLE_WALLET?  */
