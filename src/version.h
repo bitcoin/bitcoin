@@ -40,4 +40,7 @@ static const int NO_BLOOM_VERSION = 70011;
 //! "sendheaders" command and announcing blocks with headers starts with this version
 static const int SENDHEADERS_VERSION = 70012;
 
+//! Version after which witness support potentially exists
+static const int WITNESS_VERSION = 70012;
+
 #endif // BITCOIN_VERSION_H

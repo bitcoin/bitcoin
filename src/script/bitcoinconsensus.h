@@ -6,6 +6,8 @@
 #ifndef BITCOIN_BITCOINCONSENSUS_H
 #define BITCOIN_BITCOINCONSENSUS_H
 
+#include <stdint.h>
+
 #if defined(BUILD_BITCOIN_INTERNAL) && defined(HAVE_CONFIG_H)
 #include "config/bitcoin-config.h"
   #if defined(_WIN32)
@@ -54,7 +56,7 @@ enum
 /// txTo correctly spends the scriptPubKey pointed to by scriptPubKey under
 /// the additional constraints specified by flags.
 /// If not NULL, err will contain an error/success code for the operation
-EXPORT_SYMBOL int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen,
+EXPORT_SYMBOL int bitcoinconsensus_verify_script(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, uint64_t amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err);
 

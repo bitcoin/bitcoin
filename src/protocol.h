@@ -218,6 +218,11 @@ extern const char *REJECT;
  * @see https://bitcoin.org/en/developer-reference#sendheaders
  */
 extern const char *SENDHEADERS;
+/**
+ * Indicates that a node can be asked for blocks and transactions including
+ * witness data.
+ */
+extern const char *HAVEWITNESS;
 
 };
 
@@ -313,9 +318,10 @@ public:
 enum {
     MSG_TX = 1,
     MSG_BLOCK,
-    // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
-    // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
+    // The following can only occur in getdata. Invs always use TX or BLOCK.
     MSG_FILTERED_BLOCK,
+    MSG_WITNESS_BLOCK,
+    MSG_WITNESS_TX,
 };
 
 #endif // BITCOIN_PROTOCOL_H

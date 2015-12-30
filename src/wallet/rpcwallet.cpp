@@ -1083,6 +1083,35 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
     return CBitcoinAddress(innerID).ToString();
 }
 
+UniValue addwitnessaddress(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 1)
+    {
+        string msg = "createwitnessaddress \"script\"\n"
+            "\nAdd a witness address for a particular script to the wallet.\n"
+            "It returns a json object with the address and witness script.\n"
+
+            "\nArguments:\n"
+            "1. \"script\"       (string, required) A hex encoded script\n"
+
+            "\nResult:\n"
+            "\"address\":\"witnessaddress\",  (string) The value of the new address (P2SH of witness script).\n"
+            "}\n"
+        ;
+        throw runtime_error(msg);
+    }
+
+    std::vector<unsigned char> code = ParseHex(params[0].get_str());
+    CScript script(code.begin(), code.end());
+    CScript witscript = GetScriptForWitness(script);
+    CScriptID witscriptid(witscript);
+    CBitcoinAddress address(witscriptid);
+
+    pwalletMain->AddCScript(script);
+    pwalletMain->AddCScript(witscript);
+    UniValue result(UniValue::VOBJ);
+    return address.ToString();
+}
 
 struct tallyitem
 {
