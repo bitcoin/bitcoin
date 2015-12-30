@@ -1482,7 +1482,9 @@ Value omni_getinfo(const Array& params, bool fHelp)
             "Returns various state information of the client and protocol.\n"
             "\nResult:\n"
             "{\n"
-            "  \"mastercoreversion\" : \"x.x.x.x-xxx\",   (string) client version\n"
+            "  \"omnicoreversion_int\" : xxxxxxx,       (number) client version as integer\n"
+            "  \"omnicoreversion\" : \"x.x.x.x-xxx\",     (string) client version\n"
+            "  \"mastercoreversion\" : \"x.x.x.x-xxx\",   (string) client version (DEPRECIATED)\n"
             "  \"bitcoincoreversion\" : \"x.x.x\",        (string) Bitcoin Core version\n"
             "  \"commitinfo\" : \"xxxxxxx\",              (string) build commit identifier\n"
             "  \"block\" : nnnnnn,                      (number) index of the last processed block\n"
@@ -1507,6 +1509,8 @@ Value omni_getinfo(const Array& params, bool fHelp)
     Object infoResponse;
 
     // provide the mastercore and bitcoin version and if available commit id
+    infoResponse.push_back(Pair("omnicoreversion_int", OMNICORE_VERSION));
+    infoResponse.push_back(Pair("omnicoreversion", OmniCoreVersion()));
     infoResponse.push_back(Pair("mastercoreversion", OmniCoreVersion()));
     infoResponse.push_back(Pair("bitcoincoreversion", BitcoinCoreVersion()));
     infoResponse.push_back(Pair("commitinfo", BuildCommit()));

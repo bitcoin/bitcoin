@@ -515,7 +515,9 @@ Returns various state information of the client and protocol.
 ```js
 Result:
 {
-  "mastercoreversion" : "x.x.x.x-xxx",  // (string) client version
+  "omnicoreversion_int" : xxxxxxx,      // (number) client version as integer
+  "omnicoreversion" : "x.x.x.x-xxx",    // (string) client version
+  "mastercoreversion" : "x.x.x.x-xxx",  // (string) client version (DEPRECIATED)
   "bitcoincoreversion" : "x.x.x",       // (string) Bitcoin Core version
   "commitinfo" : "xxxxxxx",             // (string) build commit identifier
   "block" : nnnnnn,                     // (number) index of the last processed block
