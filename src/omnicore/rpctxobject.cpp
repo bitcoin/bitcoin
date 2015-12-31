@@ -197,6 +197,9 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, Object& txobj, uint32_t txType,
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS:
             populateRPCTypeChangeIssuer(mp_obj, txobj);
             break;
+        case OMNICORE_MESSAGE_TYPE_ACTIVATION:
+            populateRPCTypeActivation(mp_obj, txobj);
+            break;
     }
 }
 
@@ -221,6 +224,7 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_REVOKE_PROPERTY_TOKENS: return false;
         case MSC_TYPE_CHANGE_ISSUER_ADDRESS: return true;
         case MSC_TYPE_SEND_ALL: return true;
+        case OMNICORE_MESSAGE_TYPE_ACTIVATION: return false;
     }
     return true; // default to true, shouldn't be needed but just in case
 }
@@ -476,6 +480,13 @@ void populateRPCTypeChangeIssuer(CMPTransaction& omniObj, Object& txobj)
     uint32_t propertyId = omniObj.getProperty();
     txobj.push_back(Pair("propertyid", (uint64_t)propertyId));
     txobj.push_back(Pair("divisible", isPropertyDivisible(propertyId)));
+}
+
+void populateRPCTypeActivation(CMPTransaction& omniObj, Object& txobj)
+{
+    txobj.push_back(Pair("featureid", (uint64_t) omniObj.getFeatureId()));
+    txobj.push_back(Pair("activationblock", (uint64_t) omniObj.getActivationBlock()));
+    txobj.push_back(Pair("minimumversion", (uint64_t) omniObj.getMinClientVersion()));
 }
 
 void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, Object& txobj)

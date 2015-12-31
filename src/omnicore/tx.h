@@ -192,6 +192,9 @@ public:
     uint32_t getAlertExpiry() const { return alert_expiry; }
     std::string getAlertMessage() const { return alert_text; }
     int getPayloadSize() const { return pkt_size; }
+    uint16_t getFeatureId() const { return feature_id; }
+    uint32_t getActivationBlock() const { return activation_block; }
+    uint32_t getMinClientVersion() const { return min_client_version; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()

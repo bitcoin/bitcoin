@@ -29,6 +29,7 @@ void populateRPCTypeCloseCrowdsale(CMPTransaction& omniObj, json_spirit::Object&
 void populateRPCTypeGrant(CMPTransaction& omniObj, json_spirit::Object& txobj);
 void populateRPCTypeRevoke(CMPTransaction& omniOobj, json_spirit::Object& txobj);
 void populateRPCTypeChangeIssuer(CMPTransaction& omniObj, json_spirit::Object& txobj);
+void populateRPCTypeActivation(CMPTransaction& omniObj, json_spirit::Object& txobj);
 
 void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, json_spirit::Object& txobj);
 void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, json_spirit::Object& txobj);
