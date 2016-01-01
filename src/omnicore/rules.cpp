@@ -92,8 +92,9 @@ std::vector<ConsensusCheckpoint> CMainConsensusParams::GetCheckpoints() const
     // block height, block hash and consensus hash
     const ConsensusCheckpoint vCheckpoints[] = {
         /** TODO: Generate block 0 checkpoint (also check purpose)
+        /** TODO: Generate new checkpoints based on including issuer for properties in consensus hash
         {      0, uint256("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
-                  uint256("55b852781b9995a44c939b64e441ae2724b96f99c8f4fb9a141cfc9842c4b0e3") }, **/
+                  uint256("55b852781b9995a44c939b64e441ae2724b96f99c8f4fb9a141cfc9842c4b0e3") },
         { 250000, uint256("000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214"),
                   uint256("7a87074d740d49b9c51b2bf79e98e331c21e1d1aebcc199b565cc75e15732bfd") },
         { 260000, uint256("000000000000001fb91fbcebaaba0e2d926f04908d798a8b598c3bd962951080"),
@@ -119,7 +120,7 @@ std::vector<ConsensusCheckpoint> CMainConsensusParams::GetCheckpoints() const
         { 360000, uint256("00000000000000000ca6e07cf681390ff888b7f96790286a440da0f2b87c8ea6"),
                   uint256("6f3060ba8614d587bfdabf9f0d7b450f86977cc1446be5607bbf96d185954a6b") },
         { 370000, uint256("000000000000000002cad3026f68357229dd6eaa6bcef6fe5166e1e53b039b8c"),
-                  uint256("98698ee9514d0d48feaa8a81098eccb00c453367935759422fe2848492a0b2dd") },
+                  uint256("98698ee9514d0d48feaa8a81098eccb00c453367935759422fe2848492a0b2dd") },**/
     };
 
     const size_t nSize = sizeof(vCheckpoints) / sizeof(vCheckpoints[0]);
