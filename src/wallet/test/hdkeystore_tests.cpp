@@ -4,6 +4,7 @@
 
 #include "wallet/wallet.h"
 #include "base58.h"
+#include "random.h"
 
 #include <set>
 #include <stdint.h>
@@ -44,6 +45,7 @@ BOOST_AUTO_TEST_CASE(hdkeystore_tests)
     // store the chain
     pwalletMain->AddHDChain(chain);
     pwalletMain->AddMasterSeed(chain.chainID, seed);
+    pwalletMain->SetActiveHDChainID(chain.chainID);
 
     // create some keys
     CKey newKey;
@@ -81,19 +83,18 @@ BOOST_AUTO_TEST_CASE(hdkeystore_tests)
     BOOST_CHECK(pwalletMain->GetNextChildIndex(chain.chainID, true) == 1);
     BOOST_CHECK(CBitcoinAddress(newKey.GetPubKey().GetID()).ToString() == "1HbQusfqAYSUEBqVfHzhasVqGatn6Jjqwq");
 
-    pwalletMain->EncryptSeeds();
     BOOST_CHECK(pwalletMain->HaveKey(newKey.GetPubKey().GetID()) == true);
 
     CKey keyTest;
-    pwalletMain->GetKey(newKey.GetPubKey().GetID(), keyTest);
+    BOOST_CHECK(pwalletMain->GetKey(newKey.GetPubKey().GetID(), keyTest));
     BOOST_CHECK(CBitcoinSecret(keyTest).ToString() == "L1igds57v39YDHZ1LirRZQkRiikPkPCECiDarFaiYxJ6JSyhXLn6"); //m/1'/0'
 
-//
-//    CPubKey pkey = pwalletMain->GenerateNewKey();
-//    std::string test23 = CBitcoinAddress(pkey.GetID()).ToString();
-//
-//    BOOST_CHECK(CBitcoinAddress(pkey.GetID()).ToString() == "1PEzTQaYAqcnLR6Ug23pzFqTEakBttFrgo");
-//    BOOST_CHECK(pwalletMain->GetNextChildIndex(chain.chainID, false) == 3);
+
+    CPubKey pkey = pwalletMain->GenerateNewKey();
+    std::string test23 = CBitcoinAddress(pkey.GetID()).ToString();
+
+    BOOST_CHECK(CBitcoinAddress(pkey.GetID()).ToString() == "1PEzTQaYAqcnLR6Ug23pzFqTEakBttFrgo");
+    BOOST_CHECK(pwalletMain->GetNextChildIndex(chain.chainID, false) == 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

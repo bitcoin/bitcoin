@@ -106,7 +106,7 @@ public:
     bool WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret);
     bool EraseHDMasterSeed(const uint256& hash);
     bool WriteHDChain(const CHDChain& chain);
-    bool WriteHDAchiveChain(const uint256& hash);
+    bool WriteHDActiveChain(const uint256& hash);
 
 private:
     CWalletDB(const CWalletDB&);

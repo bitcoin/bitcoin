@@ -16,8 +16,12 @@ bool CHDKeyStore::AddMasterSeed(const HDChainID& chainID, const CKeyingMaterial&
     LOCK(cs_KeyStore);
     if (IsCrypted())
     {
+        if (IsLocked())
+            return false;
+
         std::vector<unsigned char> vchCryptedSecret;
-        if (!EncryptSeed(masterSeed, chainID, vchCryptedSecret))
+        CKeyingMaterial emptyKey; //an empty key will tell EncryptSeed() to use the internal vMasterKey
+        if (!EncryptSeed(emptyKey, masterSeed, chainID, vchCryptedSecret))
             return false;
 
         mapHDCryptedMasterSeeds[chainID] = vchCryptedSecret;
@@ -48,12 +52,16 @@ bool CHDKeyStore::GetMasterSeed(const HDChainID& chainID, CKeyingMaterial& seedO
     }
     else
     {
+        if (IsLocked())
+            return false;
+
         std::map<HDChainID, std::vector<unsigned char> >::const_iterator it=mapHDCryptedMasterSeeds.find(chainID);
         if (it == mapHDCryptedMasterSeeds.end())
             return false;
 
         std::vector<unsigned char> vchCryptedSecret = it->second;
-        if (!DecryptSeed(vchCryptedSecret, chainID, seedOut))
+        CKeyingMaterial emptyKey; //an empty key will tell DecryptSeed() to use the internal vMasterKey
+        if (!DecryptSeed(emptyKey, vchCryptedSecret, chainID, seedOut))
             return false;
 
         return true;
@@ -61,17 +69,20 @@ bool CHDKeyStore::GetMasterSeed(const HDChainID& chainID, CKeyingMaterial& seedO
     return false;
 }
 
-bool CHDKeyStore::EncryptSeeds()
+bool CHDKeyStore::EncryptSeeds(CKeyingMaterial& vMasterKeyIn)
 {
     LOCK(cs_KeyStore);
     for (std::map<HDChainID, CKeyingMaterial >::iterator it = mapHDMasterSeeds.begin(); it != mapHDMasterSeeds.end(); ++it)
     {
         std::vector<unsigned char> vchCryptedSecret;
-        if (!EncryptSeed(it->second, it->first, vchCryptedSecret))
+        if (!EncryptSeed(vMasterKeyIn, it->second, it->first, vchCryptedSecret))
             return false;
         AddCryptedMasterSeed(it->first, vchCryptedSecret);
     }
     mapHDMasterSeeds.clear();
+    if (!SetCrypted())
+        return false;
+
     return true;
 }
 
@@ -89,7 +100,7 @@ bool CHDKeyStore::GetCryptedMasterSeed(const HDChainID& chainID, std::vector<uns
     return true;
 }
 
-bool CHDKeyStore::GetAvailableChainIDs(std::vector<HDChainID>& chainIDs)
+void CHDKeyStore::GetAvailableChainIDs(std::vector<HDChainID>& chainIDs)
 {
     LOCK(cs_KeyStore);
     chainIDs.clear();
@@ -106,8 +117,6 @@ bool CHDKeyStore::GetAvailableChainIDs(std::vector<HDChainID>& chainIDs)
             chainIDs.push_back(it->first);
         }
     }
-
-    return true;
 }
 
 bool CHDKeyStore::PrivateKeyDerivation(const std::string keypath, const HDChainID& chainID, CExtKey& extKeyOut) const
@@ -156,7 +165,7 @@ bool CHDKeyStore::PrivateKeyDerivation(const std::string keypath, const HDChainI
 
 bool CHDKeyStore::DeriveKey(const HDChainID chainID, const std::string keypath, CKey& keyOut) const
 {
-    //this methode required no locking
+    //this methode requires no locking
     CExtKey extKeyOut;
     if (!PrivateKeyDerivation(keypath, chainID, extKeyOut))
         return false;
@@ -172,7 +181,7 @@ bool CHDKeyStore::DeriveKeyAtIndex(const HDChainID chainID, CKey& keyOut, std::s
         return false;
 
     if (nIndex >= 0x80000000)
-        throw std::runtime_error("CHDKeyStore::DerivePubKeyAtIndex(): No more available keys!");
+        throw std::runtime_error("CHDKeyStore::DeriveKeyAtIndex(): No more available keys!");
 
     keypathOut = hdChain.keypathTemplate;
     boost::replace_all(keypathOut, "c", itostr(internal)); //replace the chain switch index
@@ -181,7 +190,7 @@ bool CHDKeyStore::DeriveKeyAtIndex(const HDChainID chainID, CKey& keyOut, std::s
 
     CExtKey extKeyOut;
     if (!PrivateKeyDerivation(keypathOut, chainID, extKeyOut))
-        throw std::runtime_error("CHDKeyStore::DerivePubKeyAtIndex(): Private Key Derivation failed!");
+        throw std::runtime_error("CHDKeyStore::DeriveKeyAtIndex(): Private Key Derivation failed!");
     keyOut = extKeyOut.key;
 
     return true;

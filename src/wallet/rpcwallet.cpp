@@ -110,15 +110,15 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
-
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
-            "getnewaddress ( \"account\" )\n"
+            "getnewaddress ( \"account\" ) ( \"details\" )\n"
             "\nReturns a new Bitcoin address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "2. \"details\"        (boolean, optional) If set, the response will be populated with related HD details\n"
             "\nResult:\n"
             "\"bitcoinaddress\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
@@ -130,8 +130,11 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     // Parse the account first so we don't generate a key if there's an error
     string strAccount;
+    bool showDetails = false;
     if (params.size() > 0)
         strAccount = AccountFromValue(params[0]);
+    if (params.size() > 1)
+        showDetails = params[1].isTrue();
 
     if (!pwalletMain->IsLocked())
         pwalletMain->TopUpKeyPool();
@@ -144,6 +147,13 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
+    if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && showDetails && pwalletMain->mapKeyMetadata[keyID].keypath.size() > 0)
+    {
+        UniValue result(UniValue::VOBJ);
+        result.pushKV("address", CBitcoinAddress(keyID).ToString());
+        result.pushKV("keypath", pwalletMain->mapKeyMetadata[keyID].keypath);
+        return result;
+    }
     return CBitcoinAddress(keyID).ToString();
 }
 
@@ -333,13 +343,13 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
-
-    if (fHelp || params.size() != 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
-            "getaddressesbyaccount \"account\"\n"
+            "getaddressesbyaccount \"account\" ( \"details\" )\n"
             "\nDEPRECATED. Returns the list of addresses for the given account.\n"
             "\nArguments:\n"
             "1. \"account\"  (string, required) The account name.\n"
+            "2. \"details\"  (boolean, optional) If set, the response will be populated with related HD details\n"
             "\nResult:\n"
             "[                     (json array of string)\n"
             "  \"bitcoinaddress\"  (string) a bitcoin address associated with the given account\n"
@@ -353,7 +363,9 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     string strAccount = AccountFromValue(params[0]);
-
+    bool showDetails = false;
+    if (params.size() > 1)
+        showDetails = params[1].isTrue();
     // Find all addresses that have the given account
     UniValue ret(UniValue::VARR);
     BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
@@ -361,7 +373,27 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
         const CBitcoinAddress& address = item.first;
         const string& strName = item.second.name;
         if (strName == strAccount)
-            ret.push_back(address.ToString());
+        {
+            if (GetBoolArg("-usehd", DEFAULT_USE_HD_WALLET) && showDetails)
+            {
+                UniValue addressObj(UniValue::VOBJ);
+                CKeyID keyID;
+                if (!address.GetKeyID(keyID))
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Could not get KeyID");
+
+                if (pwalletMain->mapKeyMetadata[keyID].keypath.size() > 0)
+                {
+                    addressObj.pushKV("address", address.ToString());
+                    addressObj.pushKV("keypath", pwalletMain->mapKeyMetadata[keyID].keypath);
+                    addressObj.pushKV("hd_chain_id", pwalletMain->mapKeyMetadata[keyID].chainID.GetHex());
+                    ret.push_back(addressObj);
+                }
+                else
+                    ret.push_back(address.ToString());
+            }
+            else
+                ret.push_back(address.ToString());
+        }
     }
     return ret;
 }

@@ -87,9 +87,26 @@ CPubKey CWallet::GenerateNewKey()
 {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
     bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
-
     CKey secret;
-    secret.MakeNewKey(fCompressed);
+
+    // Create new metadata
+    int64_t nCreationTime = GetTime();
+    CKeyMetadata metadata(nCreationTime);
+
+    // check if there is an active HD chain
+    HDChainID activeHDChainID;
+    bool validHDChain = GetActiveHDChainID(activeHDChainID);
+    if (validHDChain)
+    {
+        // hd derive key
+        std::string keypath;
+        if (!DeriveKeyAtIndex(activeHDChainID, secret, keypath, GetNextChildIndex(activeHDChainID, false), false))
+            throw std::runtime_error("CWallet::GenerateNewKey(): HD key derivation failed");
+        metadata.keypath = keypath;
+        metadata.chainID = activeHDChainID;
+    }
+    else
+        secret.MakeNewKey(fCompressed);
 
     // Compressed public keys were introduced in version 0.6.0
     if (fCompressed)
@@ -98,12 +115,10 @@ CPubKey CWallet::GenerateNewKey()
     CPubKey pubkey = secret.GetPubKey();
     assert(secret.VerifyPubKey(pubkey));
 
-    // Create new metadata
-    int64_t nCreationTime = GetTime();
-    mapKeyMetadata[pubkey.GetID()] = CKeyMetadata(nCreationTime);
+    //mem store metadata, time of first key (wallet birthday)
+    mapKeyMetadata[pubkey.GetID()] = metadata;
     if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
         nTimeFirstKey = nCreationTime;
-
     if (!AddKeyPubKey(secret, pubkey))
         throw std::runtime_error("CWallet::GenerateNewKey(): AddKey failed");
     return pubkey;
@@ -543,7 +558,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             pwalletdbEncryption->WriteMasterKey(nMasterKeyMaxID, kMasterKey);
         }
 
-        if (!EncryptKeys(vMasterKey))
+        if (!EncryptKeys(vMasterKey) || !EncryptHDSeeds(vMasterKey))
         {
             if (fFileBacked) {
                 pwalletdbEncryption->TxnAbort();
@@ -1038,6 +1053,89 @@ CAmount CWallet::GetChange(const CTransaction& tx) const
             throw std::runtime_error("CWallet::GetChange(): value out of range");
     }
     return nChange;
+}
+
+bool CWallet::AddMasterSeed(const HDChainID& chainID, const CKeyingMaterial& masterSeed, bool memonly)
+{
+    LOCK(cs_wallet);
+    if (!IsCrypted())
+    {
+        CHDKeyStore::AddMasterSeed(chainID, masterSeed);
+
+        if (!memonly && !CWalletDB(strWalletFile).WriteHDMasterSeed(chainID, masterSeed))
+            throw runtime_error("AddMasterSeed(): writing master seed failed");
+    }
+    else
+    {
+        if (IsLocked())
+            return false;
+
+        std::vector<unsigned char> vchCryptedSecret;
+        CKeyingMaterial emptyKey;
+        if (!EncryptSeed(emptyKey, masterSeed, chainID, vchCryptedSecret))
+            return false;
+        AddCryptedMasterSeed(chainID, vchCryptedSecret);
+
+        if (!memonly && !CWalletDB(strWalletFile).WriteHDCryptedMasterSeed(chainID, vchCryptedSecret))
+            throw runtime_error("AddMasterSeed(): writing master seed failed");
+    }
+
+    return true;
+}
+
+bool CWallet::AddHDChain(const CHDChain& chain, bool memonly)
+{
+    LOCK(cs_wallet);
+    CHDKeyStore::AddHDChain(chain);
+    if (!memonly && !CWalletDB(strWalletFile).WriteHDChain(chain))
+        throw runtime_error("AddHDChain(): writing chain failed");
+    return true;
+}
+
+bool CWallet::EncryptHDSeeds(CKeyingMaterial& vMasterKeyIn)
+{
+    EncryptSeeds(vMasterKeyIn);
+
+    std::vector<HDChainID> chainIds;
+    GetAvailableChainIDs(chainIds);
+
+    BOOST_FOREACH(HDChainID& chainId, chainIds)
+    {
+        std::vector<unsigned char> vchCryptedSecret;
+        if (!GetCryptedMasterSeed(chainId, vchCryptedSecret))
+            throw std::runtime_error("CWallet::EncryptHDSeeds(): Encrypting seeds failed!");
+
+        if (pwalletdbEncryption)
+            return pwalletdbEncryption->WriteHDCryptedMasterSeed(chainId, vchCryptedSecret);
+        else
+            return CWalletDB(strWalletFile).WriteHDCryptedMasterSeed(chainId, vchCryptedSecret);
+    }
+
+    return true;
+}
+
+bool CWallet::SetActiveHDChainID(const HDChainID& chainID, bool check, bool memonly)
+{
+    LOCK(cs_wallet);
+
+    CHDChain chainOut;
+    if (check && !GetChain(chainID, chainOut))
+        return false;
+
+    activeHDChain = chainID;
+    if (!memonly && !CWalletDB(strWalletFile).WriteHDActiveChain(chainID))
+        throw runtime_error("SetActiveHDChainID(): writing active chainid failed");
+
+    return true;
+}
+
+bool CWallet::GetActiveHDChainID(HDChainID& chainID)
+{
+    LOCK(cs_wallet);
+    if (activeHDChain.IsNull())
+        return false;
+    chainID = activeHDChain;
+    return true;
 }
 
 int64_t CWalletTx::GetTxTime() const
@@ -2963,6 +3061,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
     strUsage += HelpMessageOpt("-fallbackfee=<amt>", strprintf(_("A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)"),
                                                                CURRENCY_UNIT, FormatMoney(DEFAULT_FALLBACK_FEE)));
+    strUsage += HelpMessageOpt("-hdseed", _("Use the given 256bit (64 char hex) as HD master seed (default: <generate random seed>)"));
     strUsage += HelpMessageOpt("-mintxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)"),
                                                             CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)));
     strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
@@ -2973,6 +3072,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
     strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
+    strUsage += HelpMessageOpt("-usehd", strprintf(_("Use hierarchical deterministic key derivation (HD wallets) (default: %d)"), DEFAULT_USE_HD_WALLET));
     strUsage += HelpMessageOpt("-wallet=<file>", _("Specify wallet file (within data directory)") + " " + strprintf(_("(default: %s)"), DEFAULT_WALLET_DAT));
     strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
     strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));

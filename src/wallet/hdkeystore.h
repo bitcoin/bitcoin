@@ -15,7 +15,9 @@ typedef uint256 HDChainID;
 class CKeyMetadata
 {
 public:
-    static const int CURRENT_VERSION=2;
+    static const int CURRENT_VERSION=3;
+    static const int VERSION_SUPPORT_FLAGS=2;
+    static const int VERSION_SUPPORT_HD=3;
     int nVersion;
     int64_t nCreateTime; // 0 means unknown
     HDChainID chainID;
@@ -27,7 +29,7 @@ public:
     }
     CKeyMetadata(int64_t nCreateTime_)
     {
-        nVersion = CKeyMetadata::CURRENT_VERSION;
+        nVersion = CKeyMetadata::VERSION_SUPPORT_HD;
         nCreateTime = nCreateTime_;
     }
 
@@ -38,7 +40,7 @@ public:
         READWRITE(this->nVersion);
         nVersion = this->nVersion;
         READWRITE(nCreateTime);
-        if (nVersion >= 2)
+        if (nVersion >= VERSION_SUPPORT_HD)
         {
             READWRITE(keypath);
             if (keypath.size() > 0)
@@ -107,7 +109,7 @@ public:
 class CHDKeyStore : public CCryptoKeyStore
 {
 protected:
-    std::map<HDChainID, CKeyingMaterial > mapHDMasterSeeds; //master seeds are stored outside of CHDChain (mind crypting)
+    std::map<HDChainID, CKeyingMaterial > mapHDMasterSeeds; //master seeds are stored outside of the CHDChain object (for independent encryption)
     std::map<HDChainID, std::vector<unsigned char> > mapHDCryptedMasterSeeds;
     std::map<HDChainID, CHDChain> mapChains; //all available chains
 
@@ -121,13 +123,13 @@ public:
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
 
     //!add a master seed with a given pubkeyhash (memory only)
-    virtual bool AddMasterSeed(const HDChainID& chainID, const CKeyingMaterial& masterSeed);
+    bool AddMasterSeed(const HDChainID& chainID, const CKeyingMaterial& masterSeed);
 
     //!add a crypted master seed with a given pubkeyhash (memory only)
     virtual bool AddCryptedMasterSeed(const HDChainID& chainID, const std::vector<unsigned char>& vchCryptedSecret);
 
     //!encrypt existing uncrypted seeds and remove unencrypted data
-    virtual bool EncryptSeeds();
+    virtual bool EncryptSeeds(CKeyingMaterial& vMasterKeyIn);
 
     //!export the master seed from a given chain id (hash of the master pub key)
     virtual bool GetMasterSeed(const HDChainID& chainID, CKeyingMaterial& seedOut) const;
@@ -136,7 +138,7 @@ public:
     virtual bool GetCryptedMasterSeed(const HDChainID& chainID, std::vector<unsigned char>& vchCryptedSecret) const;
 
     //!writes all available chain ids to a vector
-    virtual bool GetAvailableChainIDs(std::vector<HDChainID>& chainIDs);
+    virtual void GetAvailableChainIDs(std::vector<HDChainID>& chainIDs);
 
     //!add a new chain to the keystore (memory only)
     bool AddHDChain(const CHDChain& chain);

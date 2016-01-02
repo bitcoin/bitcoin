@@ -605,7 +605,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             CKeyingMaterial masterSeed;
             ssKey >> masterPubKeyHash;
             ssValue >> masterSeed;
-            pwallet->AddMasterSeed(masterPubKeyHash, masterSeed);
+            pwallet->AddMasterSeed(masterPubKeyHash, masterSeed, true);
         }
         else if (strType == "hdcryptedmasterseed")
         {
@@ -1050,8 +1050,6 @@ bool CWalletDB::WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<
         return false;
 
     Erase(std::make_pair(std::string("hdmasterseed"), hash));
-    Erase(std::make_pair(std::string("hdmasterseed"), hash));
-
     return true;
 }
 
@@ -1067,7 +1065,7 @@ bool CWalletDB::WriteHDChain(const CHDChain &chain)
     return Write(std::make_pair(std::string("hdchain"), chain.chainID), chain);
 }
 
-bool CWalletDB::WriteHDAchiveChain(const uint256& hash)
+bool CWalletDB::WriteHDActiveChain(const uint256& hash)
 {
     nWalletDBUpdated++;
     return Write(std::string("hdactivechain"), hash);
