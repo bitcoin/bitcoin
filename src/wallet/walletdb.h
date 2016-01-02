@@ -101,6 +101,13 @@ public:
     static bool Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKeys);
     static bool Recover(CDBEnv& dbenv, const std::string& filename);
 
+    /* HD functions */
+    bool WriteHDMasterSeed(const uint256& hash, const CKeyingMaterial& masterSeed);
+    bool WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret);
+    bool EraseHDMasterSeed(const uint256& hash);
+    bool WriteHDChain(const CHDChain& chain);
+    bool WriteHDAchiveChain(const uint256& hash);
+
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
