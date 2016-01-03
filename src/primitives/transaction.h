@@ -13,6 +13,8 @@
 
 static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x40000000;
 
+static const int WITNESS_SCALE_FACTOR = 4;
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -166,15 +168,30 @@ public:
         // which has units satoshis-per-kilobyte.
         // If you'd pay more than 1/3 in fees
         // to spend something, then we consider it dust.
-        // A typical spendable txout is 34 bytes big, and will
+        // A typical spendable non-segwit txout is 34 bytes big, and will
         // need a CTxIn of at least 148 bytes to spend:
         // so dust is a spendable txout less than
-        // 546*minRelayTxFee/1000 (in satoshis)
+        // 546*minRelayTxFee/1000 (in satoshis).
+        // A typical spendable segwit txout is 31 bytes big, and will
+        // need a CTxIn of at least 67 bytes to spend:
+        // so dust is a spendable txout less than
+        // 294*minRelayTxFee/1000 (in satoshis).
         if (scriptPubKey.IsUnspendable())
             return 0;
 
-        size_t nSize = GetSerializeSize(SER_DISK,0)+148u;
-        return 3*minRelayTxFee.GetFee(nSize);
+        size_t nSize = GetSerializeSize(SER_DISK, 0);
+        int witnessversion = 0;
+        std::vector<unsigned char> witnessprogram;
+
+        if (scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
+            // sum the sizes of the parts of a transaction input
+            // with 75% segwit discount applied to the script size.
+            nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+        } else {
+            nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
+        }
+
+        return 3 * minRelayTxFee.GetFee(nSize);
     }
 
     bool IsDust(const CFeeRate &minRelayTxFee) const
@@ -441,5 +458,8 @@ struct CMutableTransaction
      */
     uint256 GetHash() const;
 };
+
+/** Compute the cost of a transaction, as defined by BIP 141 */
+int64_t GetTransactionCost(const CTransaction &tx);
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
