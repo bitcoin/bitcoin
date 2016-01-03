@@ -228,12 +228,9 @@ uint256 GetConsensusHash()
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
         for (uint32_t propertyId = startPropertyId; propertyId < _my_sps->peekNextSPID(ecosystem); propertyId++) {
             CMPSPInfo::Entry sp;
-            {
-                LOCK(cs_tally);
-                if (!_my_sps->getSP(propertyId, sp)) {
-                    PrintToLog("Error loading property ID %d for consensus hashing, hash should not be trusted!\n");
-                    continue;
-                }
+            if (!_my_sps->getSP(propertyId, sp)) {
+                PrintToLog("Error loading property ID %d for consensus hashing, hash should not be trusted!\n");
+                continue;
             }
             std::string dataStr = GenerateConsensusString(propertyId, sp.issuer);
             if (msc_debug_consensus_hash) PrintToLog("Adding property to consensus hash: %s\n", dataStr);
