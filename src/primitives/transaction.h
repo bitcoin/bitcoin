@@ -13,6 +13,8 @@
 
 static const int SERIALIZE_TRANSACTION_WITNESS = 0x40000000;
 
+static const int WITNESS_SCALE_FACTOR = 4;
+
 /** An outpoint - a combination of a transaction hash and an index n into its vout */
 class COutPoint
 {
@@ -437,5 +439,8 @@ struct CMutableTransaction
      */
     uint256 GetHash() const;
 };
+
+/** Compute the cost of a transaction, as defined by BIP 141 */
+int64_t GetTransactionCost(const CTransaction &tx);
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H
