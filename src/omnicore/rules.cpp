@@ -91,36 +91,39 @@ std::vector<ConsensusCheckpoint> CMainConsensusParams::GetCheckpoints() const
 {
     // block height, block hash and consensus hash
     const ConsensusCheckpoint vCheckpoints[] = {
-        /** TODO: Generate block 0 checkpoint (also check purpose)
-        /** TODO: Generate new checkpoints based on including issuer for properties in consensus hash
+        /** TODO: Generate block 0 checkpoint
         {      0, uint256("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
-                  uint256("55b852781b9995a44c939b64e441ae2724b96f99c8f4fb9a141cfc9842c4b0e3") },
+                  uint256("") }, **/
         { 250000, uint256("000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214"),
-                  uint256("7a87074d740d49b9c51b2bf79e98e331c21e1d1aebcc199b565cc75e15732bfd") },
+                  uint256("c2e1e0f3cf3c49d8ee08bd45ad39be27eb400041d6288864ee144892449c97df") },
         { 260000, uint256("000000000000001fb91fbcebaaba0e2d926f04908d798a8b598c3bd962951080"),
-                  uint256("929d5258b8bc97cbae84f0d7a9de6486c004dbfd612014afd94f0993847d816f") },
+                  uint256("cfe2c574a9f969cfa26f23d3a0a7b3c3f416b50e7fb7b2adffe4524a4a7b0992") },
         { 270000, uint256("0000000000000002a775aec59dc6a9e4bb1c025cf1b8c2195dd9dc3998c827c5"),
-                  uint256("5088b2ccbfbb39bd34da3183ab3c8dd64f3c2688c22ded7df8d6dfc266511919") },
+                  uint256("46daa1df4cea9a1edc9624091d94839203239502bafcc3a20df2fee1a446cf42") },
         { 280000, uint256("0000000000000001c091ada69f444dc0282ecaabe4808ddbb2532e5555db0c03"),
-                  uint256("05f93f186f85e10d99da474f2f2e74fc34115437df1ddd9a23f757504c8d787a") },
+                  uint256("4739e5d00fc94e079428cd5a29421df4de3f2b3a4903990a162d8afdd2605fd9") },
         { 290000, uint256("0000000000000000fa0b2badd05db0178623ebf8dd081fe7eb874c26e27d0b3b"),
-                  uint256("599211303dccd4de7b39377bb06783f624d946d6c3bafa66169a0f4ef997d008") },
+                  uint256("51cb4219ae68cc4bf5bd835a1fadec4c4e587c3653304dfdff8109ea0795bfcb") },
         { 300000, uint256("000000000000000082ccf8f1557c5d40b21edabb18d2d691cfbf87118bac7254"),
-                  uint256("8f12fec7c0d7784f338628728ab56b22667507902a9aa48a0e728cfcf904afb0") },
+                  uint256("3bc727b74dd660ac080c974af67bb627f5a059b82935839a37ce3309af68b7be") },
         { 310000, uint256("0000000000000000125a28cc9e9209ddb75718f599a8039f6c9e7d9f1fb021e0"),
-                  uint256("d1fbac7a6a12d53e1b79f3d4383650f0e377220576c4e59dbd9c6d8c4e4cc556") },
+                  uint256("1a1923a644bee373649e01a0a825daae8d0b862a3488e7f5b092599862169fb7") },
         { 320000, uint256("000000000000000015aab005b28a326ade60f07515c33517ea5cb598f28fb7ea"),
-                  uint256("dc9fa30a845fefe8d6e73236fd3334cd4a01dfeded4ad3242f913e44baadbadf") },
+                  uint256("30f169f9bff9296157b6d116560af485dc6bccabaf827393d4683823e9dca1f4") },
         { 330000, uint256("00000000000000000faabab19f17c0178c754dbed023e6c871dcaf74159c5f02"),
-                  uint256("52db587e4f15e5ad7ba9e49919285bdf60dff4cb49d1f263a8d65b9c3b175e64") },
+                  uint256("52cb759cf37cf8aa25c14f988e1515b966e40cd29a310b8faff6cab0bfe0112e") },
         { 340000, uint256("00000000000000000d9b2508615d569e18f00c034d71474fc44a43af8d4a5003"),
-                  uint256("7bb4e69f9e951023815d4ad7ccab8df2ec0958959ebe5f773f5c9dbeeff7f0c3") },
+                  uint256("1e21df8610d5ed32645df4e1aacebbb423e4ebe7097015a2392070bb53b3bdf1") },
         { 350000, uint256("0000000000000000053cf64f0400bb38e0c4b3872c38795ddde27acb40a112bb"),
-                  uint256("4d431ff6c54a6a09fbad5696f6fb618923c92d5c0183a644cfa680c7c366bd61") },
+                  uint256("05e89e25bb86688aac26bc796084638f10bc7564e391eb5c31e07e26f952f92f") },
         { 360000, uint256("00000000000000000ca6e07cf681390ff888b7f96790286a440da0f2b87c8ea6"),
-                  uint256("6f3060ba8614d587bfdabf9f0d7b450f86977cc1446be5607bbf96d185954a6b") },
+                  uint256("0ffa97ffd5ac83030d50fbb23e0e953ff3717aa0b5181734e782a62ac39925af") },
         { 370000, uint256("000000000000000002cad3026f68357229dd6eaa6bcef6fe5166e1e53b039b8c"),
-                  uint256("98698ee9514d0d48feaa8a81098eccb00c453367935759422fe2848492a0b2dd") },**/
+                  uint256("4cce696e822f390fc83a730095d39f5cca5121398829c087dd0c92154e1fb83c") },
+        { 380000, uint256("00000000000000000b06cee3cee10d2617e2024a996f5c613f7d786b15a571ff"),
+                  uint256("32b092620f37c02a1ca33acf5b1f3752642b23e8089ffc4ff0ae401ed41aa9d7") },
+        { 390000, uint256("00000000000000000520000e60b56818523479ada2614806ba17ce0bbe6eaded"),
+                  uint256("ef1812cf6cc1b1b89de173666126744e3f2441bb32c5e28233088f4c8757eb19") },
     };
 
     const size_t nSize = sizeof(vCheckpoints) / sizeof(vCheckpoints[0]);
