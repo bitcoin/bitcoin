@@ -31,3 +31,11 @@ std::string CBlock::ToString() const
     }
     return s.str();
 }
+
+int64_t GetBlockCost(const CBlock& block)
+{
+    // The intended approximate formula is: cost = base_size * 4 + witness_size.
+    // We can only serialize base or base+witness, so the formula
+    // becomes: cost = base_size * 3 + total_size.
+    return ::GetSerializeSize(block, SER_NETWORK, 0) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(block, SER_NETWORK, SERIALIZE_TRANSACTION_WITNESS);
+}
