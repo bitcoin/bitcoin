@@ -136,7 +136,7 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(CTransaction &txn, CTxMemPool *po
     CAmount inChainValue = hasNoDependencies ? txn.GetValueOut() : 0;
 
     return CTxMemPoolEntry(txn, nFee, nTime, dPriority, nHeight,
-                           hasNoDependencies, inChainValue, spendsCoinbase, sigOpCount, lp);
+                           hasNoDependencies, inChainValue, spendsCoinbase, sigOpCost, lp);
 }
 
 void Shutdown(void* parg)
