@@ -91,9 +91,8 @@ std::vector<ConsensusCheckpoint> CMainConsensusParams::GetCheckpoints() const
 {
     // block height, block hash and consensus hash
     const ConsensusCheckpoint vCheckpoints[] = {
-        /** TODO: Generate block 0 checkpoint
         {      0, uint256("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
-                  uint256("") }, **/
+                  uint256("15cecb88f2d0eb8a2a85e8c8c3e2f60df1b2b365404eac97abfecead8d92e371") },
         { 250000, uint256("000000000000003887df1f29024b06fc2200b55f8af8f35453d7be294df2d214"),
                   uint256("c2e1e0f3cf3c49d8ee08bd45ad39be27eb400041d6288864ee144892449c97df") },
         { 260000, uint256("000000000000001fb91fbcebaaba0e2d926f04908d798a8b598c3bd962951080"),
