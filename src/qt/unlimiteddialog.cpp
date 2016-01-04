@@ -76,10 +76,10 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
     connect(ui.sendShapingEnable, SIGNAL(clicked(bool)), this, SLOT(shapingEnableChanged(bool)));
     connect(ui.recvShapingEnable, SIGNAL(clicked(bool)), this, SLOT(shapingEnableChanged(bool)));
 
-    connect(ui.sendBurstSlider, SIGNAL(valueChanged(int)), this, SLOT(shapingSliderChanged()));
-    connect(ui.sendAveSlider, SIGNAL(valueChanged(int)), this, SLOT(shapingSliderChanged()));
-    connect(ui.recvBurstSlider, SIGNAL(valueChanged(int)), this, SLOT(shapingSliderChanged()));
-    connect(ui.recvAveSlider, SIGNAL(valueChanged(int)), this, SLOT(shapingSliderChanged()));
+    connect(ui.sendBurstSlider, SIGNAL(sliderMoved(int)), this, SLOT(shapingSliderChanged()));
+    connect(ui.sendAveSlider, SIGNAL(sliderMoved(int)), this, SLOT(shapingSliderChanged()));
+    connect(ui.recvBurstSlider, SIGNAL(sliderMoved(int)), this, SLOT(shapingSliderChanged()));
+    connect(ui.recvAveSlider, SIGNAL(sliderMoved(int)), this, SLOT(shapingSliderChanged()));
 
     connect(ui.recvAveEdit, SIGNAL(editingFinished()), this, SLOT(shapingAveEditFinished()));
     connect(ui.sendAveEdit, SIGNAL(editingFinished()), this, SLOT(shapingAveEditFinished()));

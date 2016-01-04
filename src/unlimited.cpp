@@ -40,12 +40,12 @@ std::string UnlimitedCmdLineHelp()
 {
     std::string strUsage;
     strUsage += HelpMessageGroup(_("Bitcoin Unlimited Options:"));
-    strUsage += HelpMessageOpt("-excessiveblocksize", _("Blocks above this size in bytes are considered excessive"));
-    strUsage += HelpMessageOpt("-excessiveacceptdepth", _("Excessive blocks are accepted anyway if this many blocks are mined on top of them"));
-    strUsage += HelpMessageOpt("-receiveburst", _("The maximum rate that data can be received in KBytes/src.  If there has been a period of lower than average data rates, the client may receive extra data to bring the average back to '-receiveavg' but the data rate will not exceed this parameter."));
-    strUsage += HelpMessageOpt("-sendburst", _("The maximum rate that data can be sent in KBytes/src.  If there has been a period of lower than average data rates, the client may send extra data to bring the average back to '-receiveavg' but the data rate will not exceed this parameter."));
-    strUsage += HelpMessageOpt("-receiveavg", _("The average rate that data can be received in KBytes/src"));
-    strUsage += HelpMessageOpt("-sendavg", _("The maximum rate that data can be sent in KBytes/src"));
+    strUsage += HelpMessageOpt("-excessiveblocksize=<n>", _("Blocks above this size in bytes are considered excessive"));
+    strUsage += HelpMessageOpt("-excessiveacceptdepth=<n>", _("Excessive blocks are accepted anyway if this many blocks are mined on top of them"));
+    strUsage += HelpMessageOpt("-receiveburst", _("The maximum rate that data can be received in kB/s.  If there has been a period of lower than average data rates, the client may receive extra data to bring the average back to '-receiveavg' but the data rate will not exceed this parameter."));
+    strUsage += HelpMessageOpt("-sendburst", _("The maximum rate that data can be sent in kB/s.  If there has been a period of lower than average data rates, the client may send extra data to bring the average back to '-receiveavg' but the data rate will not exceed this parameter."));
+    strUsage += HelpMessageOpt("-receiveavg", _("The average rate that data can be received in kB/s"));
+    strUsage += HelpMessageOpt("-sendavg", _("The maximum rate that data can be sent in kB/s"));
     return strUsage;
 }
 
