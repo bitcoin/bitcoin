@@ -131,7 +131,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_getorderbook", 1 },
     { "omni_getseedblocks", 0 },
     { "omni_getseedblocks", 1 },
-    { "omni_getseedblocks", 2 },
 
     /* Omni Core - transaction calls */
     { "omni_send", 2 },
