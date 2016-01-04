@@ -82,6 +82,14 @@
     </context>
 <context>
     <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>Ετικέτα</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>Διεύθυνση</translation>
+    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -109,6 +117,10 @@
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Πορτοφόλι</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -184,6 +196,10 @@
 <context>
     <name>SendCoinsDialog</name>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>Κεφάλαια μη επαρκή</translation>
+    </message>
+    <message>
         <source>Recommended:</source>
         <translation>Συνίσταται:</translation>
     </message>
@@ -202,6 +218,10 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>Message:</source>
+        <translation>Μήνυμα:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
