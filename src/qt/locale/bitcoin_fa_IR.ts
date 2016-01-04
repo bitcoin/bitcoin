@@ -250,6 +250,10 @@
         <translation>تغییر رمز/پَس فرِیز</translation>
     </message>
     <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>دریافت آدرس ها</translation>
+    </message>
+    <message>
         <source>Backup wallet to another location</source>
         <translation>گرفتن نسخه پیشتیبان در آدرسی دیگر</translation>
     </message>
@@ -392,6 +396,10 @@
         <translation>ویرایش حساب ارسال کننده</translation>
     </message>
     <message>
+        <source>The entered address "%1" is already in the address book.</source>
+        <translation>حساب وارد شده «%1» از پیش در دفترچه حساب ها موجود است.</translation>
+    </message>
+    <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
         <translation>آدرس وارد شده "%1" یک آدرس صحیح برای bitcoin نسشت</translation>
     </message>
@@ -433,6 +441,14 @@
     <message>
         <source>Options</source>
         <translation>انتخاب/آپشن</translation>
+    </message>
+    <message>
+        <source>&amp;Network</source>
+        <translation>شبکه</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>کیف پول</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -504,8 +520,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>میزان وجه:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>و برچسب</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>پیام:</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -518,6 +542,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>کپی آدرس</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>حساب</translation>
@@ -571,6 +599,10 @@
     <message>
         <source>Send Coins</source>
         <translation>سکه های ارسالی</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>وجوه ناکافی</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -684,6 +716,10 @@
     <message>
         <source>Alt+P</source>
         <translation>Alt و P</translation>
+    </message>
+    <message>
+        <source>Sign &amp;Message</source>
+        <translation>و امضای پیام </translation>
     </message>
     </context>
 <context>
@@ -998,6 +1034,18 @@
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>مبلغ تراکنش کمتر از آن است که پس از کسر هزینه  تراکنش قابل ارسال باشد</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان اشتباه است for -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان اشتباه است for -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان اشتباه است for -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>RPC server options:</source>

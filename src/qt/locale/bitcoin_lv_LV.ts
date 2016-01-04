@@ -721,6 +721,10 @@
         <translation>Par Bitcoin Core</translation>
     </message>
     <message>
+        <source>Command-line options</source>
+        <translation>Komandrindas iespējas</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Lietojums:</translation>
     </message>
@@ -728,7 +732,7 @@
         <source>command-line options</source>
         <translation>komandrindas izvēles</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1374,6 +1378,10 @@
     <message>
         <source>Custom change address</source>
         <translation>Pielāgota atlikuma adrese</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Transakcijas maksa:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2158,8 +2166,24 @@
         <translation>Maciņa iespējas:</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Nevar atrisināt -whitebind adresi: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informācija</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nederīgs daudzums priekš -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nederīgs daudzums priekš -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nederīgs daudzums priekš -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>RPC server options:</source>

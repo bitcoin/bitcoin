@@ -93,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>فشل التصدير</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>لقد حدث خطأ أثناء  حفظ قائمة العناوين إلى %1. يرجى المحاولة مرة أخرى.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -334,6 +338,10 @@
         <translation>محفظة</translation>
     </message>
     <message>
+        <source>&amp;Send</source>
+        <translation>&amp;ارسل</translation>
+    </message>
+    <message>
         <source>&amp;Receive</source>
         <translation>&amp;استقبل</translation>
     </message>
@@ -376,6 +384,10 @@
     <message>
         <source>&amp;About Bitcoin Core</source>
         <translation>حول bitcoin core</translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 و %2</translation>
     </message>
     <message>
         <source>Error</source>
@@ -779,6 +791,10 @@
     </context>
 <context>
     <name>PaymentServer</name>
+    <message>
+        <source>Bad response from server %1</source>
+        <translation>استجابة سيئة من الملقم %1</translation>
+    </message>
     </context>
 <context>
     <name>PeerTableModel</name>
@@ -788,6 +804,14 @@
     <message>
         <source>Amount</source>
         <translation>المبلغ</translation>
+    </message>
+    <message>
+        <source>%1 h</source>
+        <translation>%1 ساعة</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 دقيقة</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -830,6 +854,10 @@
     <message>
         <source>&amp;Information</source>
         <translation>المعلومات</translation>
+    </message>
+    <message>
+        <source>Debug window</source>
+        <translation>نافذة المعالجة</translation>
     </message>
     <message>
         <source>General</source>
@@ -906,6 +934,22 @@
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
         <translation>استخدم اسهم الاعلى و الاسفل للتنقل بين السجلات و &lt;b&gt;Ctrl-L&lt;/b&gt;  لمسح الشاشة</translation>
+    </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 بايت</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 كيلو بايت</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 ميقا بايت</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 قيقا بايت</translation>
     </message>
     <message>
         <source>Yes</source>
@@ -1076,6 +1120,10 @@
         <translation>تعديل :</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>رسوم المعاملة:</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>إرسال إلى عدة مستلمين في وقت واحد</translation>
     </message>
@@ -1106,6 +1154,10 @@
     <message>
         <source>Confirm send coins</source>
         <translation>تأكيد الإرسال Coins</translation>
+    </message>
+    <message>
+        <source>%1 to %2</source>
+        <translation>%1 الى %2</translation>
     </message>
     <message>
         <source>Copy quantity</source>
@@ -1144,12 +1196,20 @@
         <translation>القيمة تتجاوز رصيدك</translation>
     </message>
     <message>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>المجموع يتجاوز رصيدك عندما يتم اضافة %1 رسوم العملية</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(لا وصف)</translation>
     </message>
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>&amp;القيمة</translation>
+    </message>
     <message>
         <source>Pay &amp;To:</source>
         <translation>ادفع &amp;الى :</translation>
@@ -1177,6 +1237,10 @@
     <message>
         <source>Message:</source>
         <translation>الرسائل</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>ادفع &amp;الى :</translation>
     </message>
     </context>
 <context>
@@ -1298,8 +1362,20 @@
 <context>
     <name>TransactionDesc</name>
     <message>
+        <source>Open until %1</source>
+        <translation>مفتوح حتى %1</translation>
+    </message>
+    <message>
         <source>conflicted</source>
         <translation>يتعارض</translation>
+    </message>
+    <message>
+        <source>%1/offline</source>
+        <translation>%1 غير متواجد</translation>
+    </message>
+    <message>
+        <source>%1/unconfirmed</source>
+        <translation>غير مؤكدة/%1</translation>
     </message>
     <message>
         <source>%1 confirmations</source>
@@ -1412,6 +1488,10 @@
         <translation>النوع</translation>
     </message>
     <message>
+        <source>Open until %1</source>
+        <translation>مفتوح حتى %1</translation>
+    </message>
+    <message>
         <source>This block was not received by any other nodes and will probably not be accepted!</source>
         <translation>لم يتم تلقى هذه الكتلة (Block) من قبل أي العقد الأخرى وربما لن تكون مقبولة!</translation>
     </message>
@@ -1426,6 +1506,10 @@
     <message>
         <source>Label</source>
         <translation>وصف</translation>
+    </message>
+    <message>
+        <source>Conflicted</source>
+        <translation>يتعارض</translation>
     </message>
     <message>
         <source>Received with</source>

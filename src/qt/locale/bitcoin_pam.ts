@@ -250,6 +250,10 @@
         <translation>&amp;Alilan ing Passphrase...</translation>
     </message>
     <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Address king pamag-Tanggap</translation>
+    </message>
+    <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>Magpadalang barya king Bitcoin address</translation>
     </message>
@@ -310,6 +314,10 @@
         <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
+        <source>&amp;Command-line options</source>
+        <translation>Pipamilian command-line</translation>
+    </message>
+    <message>
         <source>Last received block was generated %1 ago.</source>
         <translation>Ing tatauling block a metanggap,  me-generate ya %1 ing milabas</translation>
     </message>
@@ -363,6 +371,10 @@
 </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Alaga:</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation>Alaga</translation>
@@ -464,7 +476,7 @@
         <source>command-line options</source>
         <translation>pipamilian command-line</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -640,6 +652,10 @@
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>I-Debug ing awang</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>Gagamit bersion na ning OpenSSL</translation>
     </message>
@@ -718,6 +734,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Kopyan ing address</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Address</translation>
     </message>
@@ -762,6 +782,18 @@
     <message>
         <source>Send Coins</source>
         <translation>Magpadalang Barya</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Kulang a pondo</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Alaga:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Bayad king Transaksion:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -841,6 +873,14 @@
     <message>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mensayi:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Ibayad kang:</translation>
     </message>
     </context>
 <context>
@@ -1366,8 +1406,24 @@
         <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Eya me-resolve ing -whitebind address: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>&amp;Impormasion</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Eya maliari ing alaga keng -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Eya maliari ing alaga keng -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Eya maliari ing alaga keng -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
