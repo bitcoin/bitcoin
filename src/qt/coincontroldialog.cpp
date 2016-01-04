@@ -411,7 +411,7 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
     // todo: this is a temporary qt5 fix: when clicking a parent node in tree mode, the parent node
     //       including all children are partially selected. But the parent node should be fully selected
     //       as well as the children. Children should never be partially selected in the first place.
-    //       Please remove this ugly fix, once the bug is solved upstream.
+    //       Should be fixed in Qt5.4 and above. https://bugreports.qt.io/browse/QTBUG-43473
 #if QT_VERSION >= 0x050000
     else if (column == COLUMN_CHECKBOX && item->childCount() > 0)
     {
