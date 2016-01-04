@@ -7,6 +7,7 @@
 #include "omnicore/omnicore.h"
 
 #include "omnicore/activation.h"
+#include "omnicore/consensushash.h"
 #include "omnicore/convert.h"
 #include "omnicore/dex.h"
 #include "omnicore/encoding.h"
@@ -2799,6 +2800,11 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
             p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
         }
         fFoundTx |= (interp_ret == 0);
+    }
+
+    if (fFoundTx && msc_debug_consensus_hash_every_transaction) {
+        uint256 consensusHash = GetConsensusHash();
+        PrintToLog("Consensus hash for transaction %s: %s\n", tx.GetHash().GetHex(), consensusHash.GetHex());
     }
 
     return fFoundTx;

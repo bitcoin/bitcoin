@@ -1,3 +1,4 @@
+#include "omnicore/consensushash.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/rules.h"
 #include "omnicore/tally.h"

@@ -7,6 +7,7 @@
 #include "omnicore/rpc.h"
 
 #include "omnicore/activation.h"
+#include "omnicore/consensushash.h"
 #include "omnicore/convert.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
