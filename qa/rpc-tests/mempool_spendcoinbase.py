@@ -26,14 +26,6 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         self.nodes.append(start_node(0, self.options.tmpdir, args))
         self.is_network_split = False
 
-    def create_tx(self, from_txid, to_address, amount):
-        inputs = [{ "txid" : from_txid, "vout" : 0}]
-        outputs = { to_address : amount }
-        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
-        signresult = self.nodes[0].signrawtransaction(rawtx)
-        assert_equal(signresult["complete"], True)
-        return signresult["hex"]
-
     def run_test(self):
         chain_height = self.nodes[0].getblockcount()
         assert_equal(chain_height, 200)
@@ -44,7 +36,7 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         # is too immature to spend.
         b = [ self.nodes[0].getblockhash(n) for n in range(101, 103) ]
         coinbase_txids = [ self.nodes[0].getblock(h)['tx'][0] for h in b ]
-        spends_raw = [ self.create_tx(txid, node0_address, 49.99) for txid in coinbase_txids ]
+        spends_raw = [ create_tx(self.nodes[0], txid, node0_address, 49.99) for txid in coinbase_txids ]
 
         spend_101_id = self.nodes[0].sendrawtransaction(spends_raw[0])
 
