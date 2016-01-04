@@ -89,6 +89,7 @@ private:
     QWidget *bitcoinTXTab;
     QProgressDialog *progressDialog;
     QTabWidget *txTabHolder;
+    QTabWidget *sendTabHolder;
 
 public slots:
     /** Switch to overview (home) page */
