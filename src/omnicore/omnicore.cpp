@@ -2547,7 +2547,7 @@ int mastercore_save_state( CBlockIndex const *pBlockIndex )
 /**
  * Clears the state of the system.
  */
-static void clear_all_state()
+void clear_all_state()
 {
     LOCK2(cs_tally, cs_pending);
 
