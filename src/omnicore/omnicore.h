@@ -244,6 +244,7 @@ public:
     bool exists(const uint256 &txid);
     bool getTX(const uint256 &txid, string &value);
 
+    std::set<int> GetSeedBlocks(int startHeight, int endHeight);
     void LoadAlerts(int blockHeight);
     void LoadActivations(int blockHeight);
 

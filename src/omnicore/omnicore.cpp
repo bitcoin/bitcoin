@@ -2898,6 +2898,30 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
 #endif
 }
 
+std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
+{
+    std::set<int> setSeedBlocks;
+
+    if (!pdb) return setSeedBlocks;
+
+    Iterator* it = NewIterator();
+
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string itData = it->value().ToString();
+        std::vector<std::string> vstr;
+        boost::split(vstr, itData, boost::is_any_of(":"), boost::token_compress_on);
+        if (4 != vstr.size()) continue; // unexpected number of tokens
+        int block = atoi(vstr[1]);
+        if (block >= startHeight && block <= endHeight) {
+            setSeedBlocks.insert(block);
+        }
+    }
+
+    delete it;
+
+    return setSeedBlocks;
+}
+
 void CMPTxList::LoadActivations(int blockHeight)
 {
     if (!pdb) return;
