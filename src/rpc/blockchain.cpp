@@ -420,6 +420,39 @@ UniValue getmempooldescendants(const UniValue& params, bool fHelp)
     }
 }
 
+UniValue getmempoolentry(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1) {
+        throw runtime_error(
+            "getmempoolentry txid\n"
+            "\nReturns mempool data for given transaction\n"
+            "\nArguments:\n"
+            "1. \"txid\"                   (string, required) The transaction id (must be in mempool)\n"
+            "\nResult:\n"
+            "{                           (json object)\n"
+            + EntryDescriptionString()
+            + "}\n"
+            "\nExamples\n"
+            + HelpExampleCli("getmempoolentry", "\"mytxid\"")
+            + HelpExampleRpc("getmempoolentry", "\"mytxid\"")
+        );
+    }
+
+    uint256 hash = ParseHashV(params[0], "parameter 1");
+
+    LOCK(mempool.cs);
+
+    CTxMemPool::txiter it = mempool.mapTx.find(hash);
+    if (it == mempool.mapTx.end()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
+    }
+
+    const CTxMemPoolEntry &e = *it;
+    UniValue info(UniValue::VOBJ);
+    entryToJSON(info, e);
+    return info;
+}
+
 UniValue getblockhash(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -1146,6 +1179,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getdifficulty",          &getdifficulty,          true  },
     { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    true  },
     { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  true  },
+    { "blockchain",         "getmempoolentry",        &getmempoolentry,        true  },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true  },
     { "blockchain",         "getrawmempool",          &getrawmempool,          true  },
     { "blockchain",         "gettxout",               &gettxout,               true  },
