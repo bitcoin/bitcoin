@@ -262,6 +262,10 @@
         <translation>&amp;Cambiar contrasinal...</translation>
     </message>
     <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Direccións para recibir</translation>
+    </message>
+    <message>
         <source>Importing blocks from disk...</source>
         <translation>Importando bloques de disco...</translation>
     </message>
@@ -368,6 +372,10 @@
     <message>
         <source>Open a bitcoin: URI or payment request</source>
         <translation>Abrir un bitcoin: URI ou solicitude de pago</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>Opcións da liña de comandos</translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -696,7 +704,7 @@
         <source>command-line options</source>
         <translation>opcións da liña de comandos</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -764,6 +772,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Rede</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Moedeiro</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -966,6 +978,10 @@
     <message>
         <source>&amp;Information</source>
         <translation>&amp;Información</translation>
+    </message>
+    <message>
+        <source>Debug window</source>
+        <translation>Ventana de Depuración</translation>
     </message>
     <message>
         <source>Using OpenSSL version</source>
@@ -1188,6 +1204,10 @@
         <translation>Moedas Enviadas</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>Fondos insuficientes</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Cantidade:</translation>
     </message>
@@ -1210,6 +1230,10 @@
     <message>
         <source>Change:</source>
         <translation>Cambiar:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Tarifa de transacción:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1349,6 +1373,10 @@
     <message>
         <source>Remove this entry</source>
         <translation>Eliminar esta entrada</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mensaxe:</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2042,8 +2070,16 @@
         <translation>Executar comando cando se recibe unha alerta relevante ou vemos un fork realmente longo (%s no cmd é substituído pola mensaxe)</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Non se pode resolver dirección -whitebind: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Información</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Cantidade inválida para -maxtxfee=&lt;cantidade&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

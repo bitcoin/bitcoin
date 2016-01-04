@@ -874,7 +874,7 @@
         <source>command-line options</source>
         <translation>opções da linha de comandos</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -2917,6 +2917,10 @@
         <translation>(por defeito: %u)</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Não foi possível resolver o endereço -whitebind: '%s'</translation>
+    </message>
+    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i Os Programadores do Bitcoin Core</translation>
     </message>
@@ -2927,6 +2931,10 @@
     <message>
         <source>Information</source>
         <translation>Informação</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Quantia inválida para -maxtxfee=&lt;quantidade&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -3003,6 +3011,10 @@
     <message>
         <source>Error loading wallet.dat: Wallet corrupted</source>
         <translation>Erro ao carregar wallet.dat: Carteira danificada</translation>
+    </message>
+    <message>
+        <source>(default: %s)</source>
+        <translation>(por defeito: %s)</translation>
     </message>
     <message>
         <source>Error loading wallet.dat</source>

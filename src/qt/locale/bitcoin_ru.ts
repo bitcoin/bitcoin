@@ -93,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>Экспорт не удался</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Произошла ошибка при попытке сохранить список адресов, %1. Пожалуйста, попробуйте еще раз.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -878,6 +882,34 @@
         <source>command-line options</source>
         <translation>параметры командной строки</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Настройки интерфейса:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Выбрать каталог данных при запуске (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Выберите язык, например "de_DE" (по умолчанию: как в системе)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Запускать свёрнутым</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Указать корневые SSL-сертификаты для запроса платежа (по умолчанию: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Показывать экран-заставку при запуске (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Сбросить все настройки сделанные через графический интерфейс</translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -1472,6 +1504,18 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Текущее число блоков</translation>
+    </message>
+    <message>
+        <source>Memory Pool</source>
+        <translation>Пул памяти</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>Текущее число транзакций</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Использование памяти</translation>
     </message>
     <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2094,6 +2138,14 @@
         <translation>Запрос платежа просрочен.</translation>
     </message>
     <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Заплатить только обязательную комиссию %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>Подтверждение ожидается через %n блок.</numerusform><numerusform>Подтверждение ожидается через %n блока.</numerusform><numerusform>Подтверждение ожидается через %n блоков.</numerusform><numerusform>Подтверждение ожидается через %n блоков.</numerusform></translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Адрес получателя неверный. Пожалуйста, перепроверьте.</translation>
     </message>
@@ -2588,6 +2640,10 @@
     <message>
         <source>Unconfirmed</source>
         <translation>Неподтверждено</translation>
+    </message>
+    <message>
+        <source>Confirming (%1 of %2 recommended confirmations)</source>
+        <translation>Подтверждено(%1 подтверждений, рекомендуется %2 подтверждений)</translation>
     </message>
     <message>
         <source>Conflicted</source>
@@ -3468,6 +3524,10 @@
         <translation>Ошибка чтения wallet.dat! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
     </message>
     <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Комиссии (в %s/Кб) меньшие этого значения считаются нулевыми при создании транзакций (по умолчанию: %s)</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Насколько тщательна проверка контрольных блоков -checkblocks (0-4, по умолчанию: %u)</translation>
     </message>
@@ -3484,6 +3544,10 @@
         <translation>Выводить отладочную информацию (по умолчанию: %u, указание &lt;category&gt; необязательно)</translation>
     </message>
     <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>Поддерживать фильтрацию блоков и транзакций с помощью фильтра Блума (по умолчанию: %u)</translation>
+    </message>
+    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Текущая длина строки версии сети (%i) превышает максимальную длину (%i). Увеливается количество или размер uacomments.</translation>
     </message>
@@ -3498,6 +3562,10 @@
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Использовать отдельный прокси SOCKS5 для соединения с участниками через скрытые сервисы Tor (по умолчанию: %s)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>Имя пользователя и хэш пароля для JSON-RPC соединений. Поле &lt;userpw&gt; использует формат: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Каноничный пример скрипта на питоне включен в "share/rpcuser". Эта опция может быть указана несколько раз</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -3566,6 +3634,10 @@
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Установить размер пула ключей в &lt;n&gt; (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>Set minimum block size in bytes (default: %u)</source>
+        <translation>Задать минимальный размер блока в байтах (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Set the number of threads to service RPC calls (default: %d)</source>

@@ -739,6 +739,10 @@ Var vänlig och försök igen.</translation>
         <translation>Denna etikett blir röd om någon mottagare får ett belopp mindre än %1.</translation>
     </message>
     <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Kan variera +/- %1 satoshi per inmatning.</translation>
+    </message>
+    <message>
         <source>yes</source>
         <translation>ja</translation>
     </message>
@@ -878,6 +882,34 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>command-line options</source>
         <translation>kommandoradsalternativ</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>UI-inställningar:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Välj datakatalog vid uppstart (standard: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Ange språk, till exempel "de_DE" (standard: systemspråk)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Starta minimerad</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Ange SSL rotcertifikat för betalningsansökan (standard: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Visa startbild vid uppstart (standard: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Återställ alla inställningar som gjorts över GUI</translation>
     </message>
 </context>
 <context>
@@ -1475,6 +1507,18 @@ Var vänlig och försök igen.</translation>
         <translation>Aktuellt antal block</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation>Minnespool</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>Nuvarande antal transaktioner</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Minnesåtgång</translation>
+    </message>
+    <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Öppna felsökningsloggfilen för Bitcoin Core från den nuvarande datakatalogen. Detta kan ta några sekunder om loggfilen är stor.</translation>
     </message>
@@ -1697,6 +1741,10 @@ Var vänlig och försök igen.</translation>
 </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>&amp;Belopp:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etikett:</translation>
@@ -2180,6 +2228,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>Avgiften dras från beloppet som skickas. Mottagaren kommer att få mindre bitcoins än du angivit i belopp-fältet. Om flera mottagare valts kommer avgiften delas jämt.</translation>
+    </message>
+    <message>
+        <source>S&amp;ubtract fee from amount</source>
+        <translation>S&amp;ubtrahera avgiften från beloppet</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -3213,6 +3265,10 @@ Var vänlig och försök igen.</translation>
         <translation>Sätt den maximala storleken av hög-prioriterade/låg-avgifts transaktioner i byte (förvalt: %d)</translation>
     </message>
     <message>
+        <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
+        <translation>Ange antalet trådar för myntgenerering om påslagen (-1= alla kärnor, förval: %d)</translation>
+    </message>
+    <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
         <translation>Transaktionen är för liten att skicka efter det att avgiften har dragits</translation>
     </message>
@@ -3469,6 +3525,10 @@ Var vänlig och försök igen.</translation>
         <translation>Fel vid läsning av wallet.dat! Alla nycklar lästes korrekt, men transaktionsdata eller adressbokens poster kanske saknas eller är felaktiga.</translation>
     </message>
     <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Avgifter (i %s/kB) mindre än detta anses vara nollavgifter vid skapande av transaktion (standard: %s)</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Hur grundlig blockverifikationen vid -checkblocks är (0-4, förvalt: %u)</translation>
     </message>
@@ -3485,6 +3545,10 @@ Var vänlig och försök igen.</translation>
         <translation>Skriv ut avlusningsinformation (förvalt: %u, att ange &lt;category&gt; är frivilligt)</translation>
     </message>
     <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>Stöd filtrering av block och transaktioner med bloomfilter (standard: %u)</translation>
+    </message>
+    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Total längd på strängen för nätverksversion (%i) överskrider maxlängden (%i). Minska numret eller storleken på uacomments.</translation>
     </message>
@@ -3499,6 +3563,10 @@ Var vänlig och försök igen.</translation>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Använd separat SOCKS5 proxy för att nå kollegor via dolda tjänster i Tor (förvalt: -%s)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>Användarnamn och hashat lösenord för JSON-RPC-anslutningar. Fältet &lt;userpw&gt; kommer i formatet: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Ett kanoniskt pythonskript finns inkluderat i share/rpcuser. Detta alternativ kan anges flera gånger</translation>
     </message>
     <message>
         <source>(default: %s)</source>

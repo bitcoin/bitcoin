@@ -117,6 +117,10 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Alış adresleri</translation>
+    </message>
     </context>
 <context>
     <name>ClientModel</name>
@@ -130,6 +134,14 @@
     </context>
 <context>
     <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>Etiket</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>Adres</translation>
+    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -169,6 +181,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Adresi Kopyala</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Adres</translation>

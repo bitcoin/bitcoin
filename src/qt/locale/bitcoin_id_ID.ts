@@ -254,6 +254,10 @@
         <translation>&amp;Pilihan...</translation>
     </message>
     <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Enkripsi Dompet...</translation>
+    </message>
+    <message>
         <source>&amp;Backup Wallet...</source>
         <translation>&amp;Cadangkan Dompet...</translation>
     </message>
@@ -795,6 +799,10 @@
         <translation>Mengenai Bitcoin Core</translation>
     </message>
     <message>
+        <source>Command-line options</source>
+        <translation>pilihan Perintah-baris</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Penggunaan:</translation>
     </message>
@@ -802,7 +810,7 @@
         <source>command-line options</source>
         <translation>pilihan perintah-baris</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1556,6 +1564,10 @@
         <translation>Alamat uang kembali yang kustom</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>Biaya Transaksi:</translation>
+    </message>
+    <message>
         <source>Recommended:</source>
         <translation>Disarankan</translation>
     </message>
@@ -1582,6 +1594,10 @@
     <message>
         <source>Clear all fields of the form.</source>
         <translation>Hapus informasi dari form.</translation>
+    </message>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation>Hapus &amp;Semua</translation>
     </message>
     <message>
         <source>Balance:</source>
@@ -1803,6 +1819,10 @@
     <message>
         <source>Reset all sign message fields</source>
         <translation>Hapus semua bidang penanda pesan</translation>
+    </message>
+    <message>
+        <source>Clear &amp;All</source>
+        <translation>Hapus &amp;Semua</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
@@ -2454,12 +2474,20 @@
         <translation>Tidak bisa mengunci data directory %s. Kemungkinan Bitcoin Core sudah mulai.</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Tidak dapat menyelesaikan alamat -whitebind: '%s'</translation>
+    </message>
+    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Hubungkan melalui proxy SOCKS5</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Informasi</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nilai salah untuk -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
