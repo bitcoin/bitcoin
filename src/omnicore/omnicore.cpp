@@ -2898,7 +2898,6 @@ std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
 
     if (!pdb) return setSeedBlocks;
 
-    Slice skey, svalue;
     Iterator* it = NewIterator();
 
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
