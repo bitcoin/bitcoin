@@ -258,6 +258,7 @@ static const CRPCCommand vRPCCommands[] =
     /* Overall control/query calls */
     { "control",            "getinfo",                &getinfo,                true  }, /* uses wallet if enabled */
     { "control",            "help",                   &help,                   true  },
+    { "control",            "setarg",                 &setarg,                 true  },
     { "control",            "stop",                   &stop,                   true  },
 
     /* P2P networking */

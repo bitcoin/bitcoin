@@ -107,6 +107,35 @@ UniValue getinfo(const UniValue& params, bool fHelp)
     return obj;
 }
 
+UniValue setarg(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "setarg \"argumentname\" newvalue\n"
+            "Changes arguments at runtime. Not all arguments are supported.\n"
+        );
+
+#ifdef ENABLE_WALLET
+    LOCK2(cs_main, pwalletMain ? &pwalletMain->cs_wallet : NULL);
+#else
+    LOCK(cs_main);
+#endif
+
+    if (params[0].type() != UniValue::VSTR) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Argument name must be a String");
+    }
+    RegisteredArgsType::iterator it = RegisteredArgs.find(params[0].get_str());
+    if (it == RegisteredArgs.end()) {
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Argument unknown or cannot be changed at runtime");
+    }
+    if (it->second.type() == typeid(bool)) {
+        it->second.assign(params[1].get_bool());
+    } else {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Argument type is not supported");
+    }
+    return NullUniValue;
+}
+
 #ifdef ENABLE_WALLET
 class DescribeAddressVisitor : public boost::static_visitor<UniValue>
 {
