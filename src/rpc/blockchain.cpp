@@ -302,7 +302,7 @@ UniValue getmempoolancestors(const UniValue& params, bool fHelp)
             "1. \"txid\"                   (string, required) The transaction id (must be in mempool)\n"
             "2. verbose                  (boolean, optional, default=false) true for a json object, false for array of transaction ids\n"
             "\nResult (for verbose=false):\n"
-            "[                       (json array of string)\n"
+            "[                       (json array of strings)\n"
             "  \"transactionid\"           (string) The transaction id of an in-mempool ancestor transaction\n"
             "  ,...\n"
             "]\n"
@@ -347,6 +347,70 @@ UniValue getmempoolancestors(const UniValue& params, bool fHelp)
         UniValue o(UniValue::VOBJ);
         BOOST_FOREACH(CTxMemPool::txiter ancestorIt, setAncestors) {
             const CTxMemPoolEntry &e = *ancestorIt;
+            const uint256& hash = e.GetTx().GetHash();
+            UniValue info(UniValue::VOBJ);
+            entryToJSON(info, e);
+            o.push_back(Pair(hash.ToString(), info));
+        }
+        return o;
+    }
+}
+
+UniValue getmempooldescendants(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2) {
+        throw runtime_error(
+            "getmempooldescendants txid (verbose)\n"
+            "\nIf txid is in the mempool, returns all in-mempool descendants.\n"
+            "\nArguments:\n"
+            "1. \"txid\"                   (string, required) The transaction id (must be in mempool)\n"
+            "2. verbose                  (boolean, optional, default=false) true for a json object, false for array of transaction ids\n"
+            "\nResult (for verbose=false):\n"
+            "[                       (json array of strings)\n"
+            "  \"transactionid\"           (string) The transaction id of an in-mempool descendant transaction\n"
+            "  ,...\n"
+            "]\n"
+            "\nResult (for verbose=true):\n"
+            "{                           (json object)\n"
+            "  \"transactionid\" : {       (json object)\n"
+            + EntryDescriptionString()
+            + "  }, ...\n"
+            "}\n"
+            "\nExamples\n"
+            + HelpExampleCli("getmempooldescendants", "\"mytxid\"")
+            + HelpExampleRpc("getmempooldescendants", "\"mytxid\"")
+            );
+    }
+
+    bool fVerbose = false;
+    if (params.size() > 1)
+        fVerbose = params[1].get_bool();
+
+    uint256 hash = ParseHashV(params[0], "parameter 1");
+
+    LOCK(mempool.cs);
+
+    CTxMemPool::txiter it = mempool.mapTx.find(hash);
+    if (it == mempool.mapTx.end()) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not in mempool");
+    }
+
+    CTxMemPool::setEntries setDescendants;
+    mempool.CalculateDescendants(it, setDescendants);
+    // CTxMemPool::CalculateDescendants will include the given tx
+    setDescendants.erase(it);
+
+    if (!fVerbose) {
+        UniValue o(UniValue::VARR);
+        BOOST_FOREACH(CTxMemPool::txiter descendantIt, setDescendants) {
+            o.push_back(descendantIt->GetTx().GetHash().ToString());
+        }
+
+        return o;
+    } else {
+        UniValue o(UniValue::VOBJ);
+        BOOST_FOREACH(CTxMemPool::txiter descendantIt, setDescendants) {
+            const CTxMemPoolEntry &e = *descendantIt;
             const uint256& hash = e.GetTx().GetHash();
             UniValue info(UniValue::VOBJ);
             entryToJSON(info, e);
@@ -1081,6 +1145,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getchaintips",           &getchaintips,           true  },
     { "blockchain",         "getdifficulty",          &getdifficulty,          true  },
     { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    true  },
+    { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  true  },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true  },
     { "blockchain",         "getrawmempool",          &getrawmempool,          true  },
     { "blockchain",         "gettxout",               &gettxout,               true  },
