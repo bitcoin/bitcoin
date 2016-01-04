@@ -328,6 +328,24 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
     empty_wallet();
 }
 
+BOOST_AUTO_TEST_CASE(sorting_in_ApproximateBestSet)
+{
+    CoinSet setCoinsRet;
+    CAmount nValueRet;
+
+    LOCK(wallet.cs_wallet);
+
+    empty_wallet();
+    
+    for (int i = 0; i < 1000; i++)
+        add_coin(1000 * COIN);
+    add_coin(3 * COIN);
+
+    BOOST_CHECK(wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, vCoins, setCoinsRet, nValueRet));
+    BOOST_CHECK_EQUAL(nValueRet, 1003 * COIN);
+    BOOST_CHECK_EQUAL(setCoinsRet.size(), 2U);
+}
+
 BOOST_AUTO_TEST_CASE(pruning_in_ApproximateBestSet)
 {
     CoinSet setCoinsRet;
