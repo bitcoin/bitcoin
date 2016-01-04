@@ -147,7 +147,7 @@ bool BalanceToJSON(const std::string& address, uint32_t property, Object& balanc
 // generate a list of seed blocks based on the data in LevelDB
 Value omni_getseedblocks(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 3)
+    if (fHelp || params.size() != 2)
         throw runtime_error(
             "omni_getseedblocks startblock endblock\n"
             "\nReturns a list of blocks containing Omni transactions for use in seed block filtering.\n"
@@ -155,7 +155,6 @@ Value omni_getseedblocks(const Array& params, bool fHelp)
             "\nArguments:\n"
             "1. startblock           (number, required) the first block to look for Omni transactions (inclusive)\n"
             "2. endblock             (number, required) the last block to look for Omni transactions (inclusive)\n"
-            "3. stringify            (bool, optional) whether to output one continuous string of seed blocks for easier inclusion in seedblocks.cpp\n"
             "\nResult:\n"
             "[                           (array of JSON objects)\n"
             "  {\n"
@@ -170,37 +169,21 @@ Value omni_getseedblocks(const Array& params, bool fHelp)
 
     int startHeight = params[0].get_int();
     int endHeight = params[1].get_int();
-    bool overrideOutput = false;
-    if (params.size() > 2) overrideOutput = params[2].get_bool();
 
     RequireHeightInChain(startHeight);
     RequireHeightInChain(endHeight);
 
-    std::set<int> setSeedBlocks = p_txlistdb->GetSeedBlocks(startHeight, endHeight);
-
     Array response;
-    std::string stringifiedOutput;
 
-    for (std::set<int>::const_iterator it = setSeedBlocks.begin(); it != setSeedBlocks.end(); ++it) {
-        if (!overrideOutput) {
-            Object seedBlockObj;
-            seedBlockObj.push_back(Pair("seedblock", *it));
-            response.push_back(seedBlockObj);
-        } else {
-            stringifiedOutput += strprintf("%d, ", *it);
+    {
+        LOCK(cs_tally);
+        std::set<int> setSeedBlocks = p_txlistdb->GetSeedBlocks(startHeight, endHeight);
+        for (std::set<int>::const_iterator it = setSeedBlocks.begin(); it != setSeedBlocks.end(); ++it) {
+            response.push_back(*it);
         }
     }
 
-    if (!overrideOutput) {
-        return response;
-    } else {
-        Object stringifiedResponse;
-        if (stringifiedOutput.size()>2) { // remove trailing ", "
-            stringifiedOutput.erase(stringifiedOutput.size()-2);
-        }
-        stringifiedResponse.push_back(Pair("seedblocks", stringifiedOutput));
-        return stringifiedResponse;
-    }
+    return response;
 }
 
 // obtain the payload for a transaction

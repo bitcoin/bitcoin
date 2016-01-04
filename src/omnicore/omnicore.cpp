@@ -2903,7 +2903,7 @@ std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
         std::string itData = it->value().ToString();
         std::vector<std::string> vstr;
-        boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
+        boost::split(vstr, itData, boost::is_any_of(":"), boost::token_compress_on);
         if (4 != vstr.size()) continue; // unexpected number of tokens
         int block = atoi(vstr[1]);
         if (block >= startHeight && block <= endHeight) {
