@@ -18,7 +18,7 @@ packages:
 - "g++-mingw-w64"
 - "nsis"
 - "zip"
-reference_datetime: "2015-06-01 00:00:00"
+reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
