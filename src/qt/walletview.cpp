@@ -83,10 +83,10 @@ WalletView::WalletView(QWidget *parent):
     QVBoxLayout *svbox = new QVBoxLayout();
     sendCoinsTab = new SendCoinsDialog();
     sendMPTab = new SendMPDialog();
-    QTabWidget *tabHolder = new QTabWidget();
-    tabHolder->addTab(sendMPTab,tr("Omni Layer"));
-    tabHolder->addTab(sendCoinsTab,tr("Bitcoin"));
-    svbox->addWidget(tabHolder);
+    sendTabHolder = new QTabWidget();
+    sendTabHolder->addTab(sendMPTab,tr("Omni Layer"));
+    sendTabHolder->addTab(sendCoinsTab,tr("Bitcoin"));
+    svbox->addWidget(sendTabHolder);
     sendCoinsPage->setLayout(svbox);
     // exchange page
     exchangePage = new QWidget(this);
@@ -307,6 +307,7 @@ void WalletView::gotoVerifyMessageTab(QString addr)
 
 bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
+    sendTabHolder->setCurrentIndex(1);
     return sendCoinsTab->handlePaymentRequest(recipient);
 }
 
