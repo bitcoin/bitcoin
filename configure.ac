@@ -619,6 +619,31 @@ if test x$use_boost = xyes; then
 
 BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB $BOOST_CHRONO_LIB"
 
+TEMP_LIBS="$LIBS"
+LIBS="$BOOST_LIBS $LIBS"
+TEMP_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+AC_MSG_CHECKING([for mismatched boost c++11 scoped enums])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+  #include "boost/config.hpp"
+  #include "boost/version.hpp"
+  #if !defined(BOOST_NO_SCOPED_ENUMS) && !defined(BOOST_NO_CXX11_SCOPED_ENUMS) && BOOST_VERSION < 105700
+  #define BOOST_NO_SCOPED_ENUMS
+  #define BOOST_NO_CXX11_SCOPED_ENUMS
+  #define CHECK
+  #endif
+  #include "boost/filesystem.hpp"
+  ]],[[
+  #if defined(CHECK)
+    boost::filesystem::copy_file("foo", "bar");
+  #else
+    choke;
+  #endif
+  ]])],
+  [AC_MSG_RESULT(mismatched); AC_DEFINE(FORCE_BOOST_EMULATED_SCOPED_ENUMS, 1, [Define this symbol if boost scoped enums are emulated])], [AC_MSG_RESULT(ok)])
+LIBS="$TEMP_LIBS"
+CPPFLAGS="$TEMP_CPPFLAGS"
+
 dnl Boost >= 1.50 uses sleep_for rather than the now-deprecated sleep, however
 dnl it was broken from 1.50 to 1.52 when backed by nanosleep. Use sleep_for if
 dnl a working version is available, else fall back to sleep. sleep was removed
