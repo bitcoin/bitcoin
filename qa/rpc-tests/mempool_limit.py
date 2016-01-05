@@ -33,7 +33,9 @@ class MempoolLimitTest(BitcoinTestFramework):
         inputs = [{ "txid" : us0["txid"], "vout" : us0["vout"]}]
         outputs = {self.nodes[0].getnewaddress() : 0.0001}
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
+        self.nodes[0].settxfee(self.relayfee) # specifically fund this tx with low fee
         txF = self.nodes[0].fundrawtransaction(tx)
+        self.nodes[0].settxfee(0) # return to automatic fee selection
         txFS = self.nodes[0].signrawtransaction(txF['hex'])
         txid = self.nodes[0].sendrawtransaction(txFS['hex'])
         self.nodes[0].lockunspent(True, [us0])
