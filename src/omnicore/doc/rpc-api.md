@@ -1315,6 +1315,60 @@ $ omnicore-cli "omni_getactivations" "1075db55d416d3ca199f55b6084e2115b9345e16c5
 
 ---
 
+### omni_getseedblocks
+
+Returns a list of blocks containing Omni transactions for use in seed block filtering.
+
+WARNING: The Exodus crowdsale is not stored in LevelDB, thus this is currently only safe to use to generate seed blocks after block 255365.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `startblock`        | number  | required | the first block to look for Omni transactions (inclusive)                                    |
+| `endblock`          | number  | required | the last block to look for Omni transactions (inclusive)                                     |
+
+**Result:**
+```js
+[         // (array of numbers) a list of seed blocks
+  nnnnnnn,  // the block height of the seed block
+  ...
+]
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getseedblocks" 290000 300000
+```
+
+---
+
+### omni_getcurrentconsensushash
+
+Returns the consensus hash covering the state of the current block.
+
+**Arguments:**
+
+*None*
+
+**Result:**
+```js
+{
+  "block" : nnnnnn,         // (number) the index of the block this consensus hash applies to
+  "blockhash" : "hash",     // (string) the hash of the corresponding block
+  "consensushash" : "hash"  // (string) the consensus hash for the block
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getcurrentconsensushash"
+```
+
+---
+
 ## Raw transactions
 
 The RPCs for raw transactions can be used to decode or create raw Omni transactions.
@@ -1553,6 +1607,33 @@ $ omnicore-cli "omni_createrawtx_change" \
     "[{\"txid\":\"6779a710fcd5f6fb0883ea3306360c3ad8c0a3c5de902768ec57ef3104e65eb1\",\"vout\":4, \
     \"scriptPubKey\":\"76a9147b25205fd98d462880a3e5b0541235831ae959e588ac\",\"value\":0.00068257}]" \
     "1CE8bBr1dYZRMnpmyYsFEoexa1YoPz2mfB" 0.000035 1
+```
+
+---
+
+## Configuration
+
+The RPCs for the configuration can be used to alter Omni Core settings.
+
+### omni_setautocommit
+
+Sets the global flag that determines whether transactions are automatically committed and broadcasted.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `flag`              | boolean | required | the flag                                                                                     |
+
+**Result:**
+```js
+true|false  // (boolean) the updated flag status
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_setautocommit" false
 ```
 
 ---
