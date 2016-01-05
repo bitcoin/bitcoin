@@ -217,6 +217,63 @@ RES_ICONS = \
   qt/res/icons/drkblue/unit_tmdash.png \
   qt/res/icons/drkblue/unit_tudash.png \
   qt/res/icons/drkblue/unit_tduffs.png \
+  qt/res/icons/crownium/add.png \
+  qt/res/icons/crownium/address-book.png \
+  qt/res/icons/crownium/bitcoin.ico \
+  qt/res/icons/crownium/bitcoin.png \
+  qt/res/icons/crownium/bitcoin_testnet.ico \
+  qt/res/icons/crownium/bitcoin_testnet.png \
+  qt/res/icons/crownium/browse.png \
+  qt/res/icons/crownium/clock1.png \
+  qt/res/icons/crownium/clock2.png \
+  qt/res/icons/crownium/clock3.png \
+  qt/res/icons/crownium/clock4.png \
+  qt/res/icons/crownium/clock5.png \
+  qt/res/icons/crownium/configure.png \
+  qt/res/icons/crownium/connect0_16.png \
+  qt/res/icons/crownium/connect1_16.png \
+  qt/res/icons/crownium/connect2_16.png \
+  qt/res/icons/crownium/connect3_16.png \
+  qt/res/icons/crownium/connect4_16.png \
+  qt/res/icons/crownium/debugwindow.png \
+  qt/res/icons/crownium/drkblue_editpaste.png \
+  qt/res/icons/crownium/drkblue_address-book.png \
+  qt/res/icons/crownium/drkblue_editcopy.png \
+  qt/res/icons/crownium/drkblue_remove.png \
+  qt/res/icons/crownium/edit.png \
+  qt/res/icons/crownium/editcopy.png \
+  qt/res/icons/crownium/editpaste.png \
+  qt/res/icons/crownium/export.png \
+  qt/res/icons/crownium/eye.png \
+  qt/res/icons/crownium/eye_minus.png \
+  qt/res/icons/crownium/eye_plus.png \
+  qt/res/icons/crownium/filesave.png \
+  qt/res/icons/crownium/history.png \
+  qt/res/icons/crownium/key.png \
+  qt/res/icons/crownium/lock_closed.png \
+  qt/res/icons/crownium/lock_open.png \
+  qt/res/icons/crownium/overview.png \
+  qt/res/icons/crownium/qrcode.png \
+  qt/res/icons/crownium/quit.png \
+  qt/res/icons/crownium/receive.png \
+  qt/res/icons/crownium/remove.png \
+  qt/res/icons/crownium/send.png \
+  qt/res/icons/crownium/synced.png \
+  qt/res/icons/crownium/transaction0.png \
+  qt/res/icons/crownium/transaction2.png \
+  qt/res/icons/crownium/transaction_conflicted.png \
+  qt/res/icons/crownium/tx_inout.png \
+  qt/res/icons/crownium/tx_input.png \
+  qt/res/icons/crownium/tx_output.png \
+  qt/res/icons/crownium/tx_mined.png \
+  qt/res/icons/crownium/unit_dash.png \
+  qt/res/icons/crownium/unit_mdash.png \
+  qt/res/icons/crownium/unit_udash.png \
+  qt/res/icons/crownium/unit_duffs.png \
+  qt/res/icons/crownium/unit_tdash.png \
+  qt/res/icons/crownium/unit_tmdash.png \
+  qt/res/icons/crownium/unit_tudash.png \
+  qt/res/icons/crownium/unit_tduffs.png \
   qt/res/icons/trad/add.png \
   qt/res/icons/trad/address-book.png \
   qt/res/icons/trad/bitcoin.ico \
@@ -341,6 +398,18 @@ RES_IMAGES = \
   qt/res/images/drkblue/drkblue_qtreeview_selected.png \
   qt/res/images/drkblue/drkblue_walletFrame_bg.png \
   qt/res/images/drkblue/drkblue_walletFrame.png \
+  qt/res/images/crownium/about.png \
+  qt/res/images/crownium/splash.png \
+  qt/res/images/crownium/splash_testnet.png \
+  qt/res/images/crownium/dash_logo_horizontal.png \
+  qt/res/images/crownium/drkblue_downArrow.png \
+  qt/res/images/crownium/drkblue_downArrow_small.png \
+  qt/res/images/crownium/drkblue_upArrow_small.png \
+  qt/res/images/crownium/drkblue_leftArrow_small.png \
+  qt/res/images/crownium/drkblue_rightArrow_small.png \
+  qt/res/images/crownium/drkblue_qtreeview_selected.png \
+  qt/res/images/crownium/drkblue_walletFrame_bg.png \
+  qt/res/images/crownium/drkblue_walletFrame.png \
   qt/res/images/trad/about.png \
   qt/res/images/trad/splash.png \
   qt/res/images/trad/splash_testnet.png \
@@ -355,7 +424,8 @@ RES_IMAGES = \
   qt/res/images/trad/drkblue_walletFrame.png
 
 RES_CSS = \
-  qt/res/css/drkblue.css
+  qt/res/css/drkblue.css \
+  qt/res/css/crownium.css
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
