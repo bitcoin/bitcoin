@@ -1767,7 +1767,22 @@ bool CDarksendPool::CreateDenominated(int64_t nTotalValue)
     }
 
     // ****** Add denoms ************ /
+
     BOOST_REVERSE_FOREACH(int64_t v, darkSendDenominations){
+
+        // Note: denoms are skipped if there are already DENOMS_COUNT_MAX of them
+
+        // check skipped denoms
+        if(IsDenomSkipped(v)) continue;
+
+        // find new denoms to skip if any (ignore the largest one)
+        if (v != darkSendDenominations[0] && pwalletMain->CountInputsWithAmount(v) > DENOMS_COUNT_MAX){
+            strAutoDenomResult = strprintf(_("Too many %f denominations, removing."), (float)v/COIN);
+            LogPrintf("DoAutomaticDenominating : %s\n", strAutoDenomResult);
+            darkSendDenominationsSkipped.push_back(v);
+            continue;
+        }
+
         int nOutputs = 0;
 
         // add each output up to 10 times until it can't be added again

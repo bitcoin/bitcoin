@@ -48,6 +48,7 @@ class CActiveMasternode;
 
 static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
 static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
+static const int64_t DENOMS_COUNT_MAX = 100;
 
 extern CDarksendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
@@ -290,6 +291,8 @@ private:
 
     int64_t lastNewBlock;
 
+    std::vector<int64_t> darkSendDenominationsSkipped;
+
     //debugging data
     std::string strAutoDenomResult;
 
@@ -360,6 +363,19 @@ public:
 
     void InitCollateralAddress(){
         SetCollateralAddress(Params().DarksendPoolDummyAddress());
+    }
+
+    void ClearSkippedDenominations() {
+        darkSendDenominationsSkipped.clear();
+    }
+
+    bool IsDenomSkipped(int64_t denom) {
+        BOOST_FOREACH(int64_t d, darkSendDenominationsSkipped) {
+            if (d == denom) {
+                return true;
+            }
+        }
+        return false;
     }
 
     void SetMinBlockSpacing(int minBlockSpacingIn){
