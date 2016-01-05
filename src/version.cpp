@@ -18,6 +18,10 @@ const std::string CLIENT_NAME("Satoshi");
 #endif
 
 // Compiler name
+#if defined(__GNUC__) && defined(__INTEL_COMPILER)
+/*code specific to linux icc compiler*/
+#define CL_NAME   "-icc"
+#else
 #ifdef __GNUC__
 /*code for GNU C compiler */
 #define CL_NAME   "-gcc"
@@ -34,6 +38,7 @@ const std::string CLIENT_NAME("Satoshi");
 #else
 #define CL_NAME   "-genericcl"
 /*others*/
+#endif
 #endif
 
 // The following part of the code determines the CLIENT_BUILD variable.
