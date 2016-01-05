@@ -394,7 +394,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         if(!winner.SignatureValid()){
             LogPrintf("mnw - invalid signature\n");
-            Misbehaving(pfrom->GetId(), 20);
+            if(masternodeSync.IsSynced()) Misbehaving(pfrom->GetId(), 20);
             // it could just be a non-synced masternode
             mnodeman.AskForMN(pfrom, winner.vinMasternode);
             return;
@@ -656,7 +656,7 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError)
         {
             strError = strprintf("Masternode not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL, n);
             LogPrintf("CMasternodePaymentWinner::IsValid - %s\n", strError);
-            Misbehaving(pnode->GetId(), 20);            
+            if(masternodeSync.IsSynced()) Misbehaving(pnode->GetId(), 20);
         }
         return false;
     }
