@@ -67,6 +67,7 @@ bool AddressToPubKey(const std::string& key, CPubKey& pubKey)
 bool CheckFee(const std::string& fromAddress, size_t nDataSize)
 {
     int64_t minFee = 0;
+    int64_t feePerKB = 0;
     int64_t inputTotal = 0;
 #ifdef ENABLE_WALLET
     bool fUseClassC = UseEncodingClassC(nDataSize);
@@ -74,15 +75,27 @@ bool CheckFee(const std::string& fromAddress, size_t nDataSize)
     CCoinControl coinControl;
     inputTotal = SelectCoins(fromAddress, coinControl, 0);
 
-    // TODO: THIS NEEDS WORK - CALCULATIONS ARE UNSUITABLE CURRENTLY
-    if (fUseClassC) {
-        // estimated minimum fee calculation for Class C with payload of nDataSize
-        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
-        minFee = 10000; // simply warn when below 10,000 satoshi for now
+    // calculate the estimated fee per KB based on the currently set confirm target
+    CFeeRate feeRate = mempool.estimateFee(nTxConfirmTarget);
+
+    // if there is not enough data (and zero is estimated) then base minimum on a fairly high/safe 50,000 satoshi fee per KB
+    if (feeRate == CFeeRate(0)) {
+        feePerKB = 50000;
     } else {
-        // estimated minimum fee calculation for Class B with payload of nDataSize
-        // minFee = 3 * minRelayTxFee.GetFee(200) + CWallet::minTxFee.GetFee(200000);
-        minFee = 10000; // simply warn when below 10,000 satoshi for now
+        feePerKB = feeRate.GetFeePerK();
+    }
+
+    // we do not know the size of the transaction at this point.  Warning calculation employs some guesswork
+    if (!fUseClassC) {
+        // Calculation based on a 3KB transaction due to:
+        //   - the average size across all Class B transactions ever sent to date is 909 bytes.
+        //   - under 2% of Class B transactions are over 2KB, under 0.6% of transactions are over 3KB.
+        // Thus if created transaction will be over 3KB (rare as per above) warning may not be sufficient.
+        minFee = feePerKB * 3;
+    } else {
+        // Averages for Class C transactions are not yet available, Calculation based on a 2KB transaction due to:
+        //   - Class B values but considering Class C removes outputs for both data and Exodus (reduces size).
+        minFee = feePerKB * 2;
     }
 #endif
     return inputTotal >= minFee;
