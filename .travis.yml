@@ -115,4 +115,4 @@ script:
     - if [ "$RUN_TESTS" = "true" ]; then make check; fi
     - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.sh; fi
     - if [ "$RUN_WIN_TESTS" = "true" ]; then $(which wine) src/test/test_omnicore.exe; fi
-    - if [ "$RUN_OMNIJ_TESTS" = "true" ]; then qa/pull-tester/omnicore-rpc-tests.sh; fi
+    - if [ "$RUN_OMNIJ_TESTS" = "true" ]; then qa/pull-tester/omnicore-rpc-tests.sh "$RUN_WIN_TESTS"; fi

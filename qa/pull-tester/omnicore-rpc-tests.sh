@@ -16,7 +16,13 @@ touch "$DATADIR/regtest/omnicore.log"
 cd $TESTDIR
 echo "Omni Core RPC test dir: "$TESTDIR
 echo "Last OmniJ commit: "$(git log -n 1 --format="%H Author: %cn <%ce>")
-$REAL_BITCOIND -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -debug=1 -omnidebug=all -omnialertallowsender=any -omniactivationallowsender=any -paytxfee=0.0001 -minrelaytxfee=0.00001 -discover=0 -listen=0 -datadir="$DATADIR" &
+if [ "$@" = "true" ]; then
+    echo "Debug logging level: minimum"
+    $REAL_BITCOIND -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -debug=0 -omnidebug=none -omnialertallowsender=any -omniactivationallowsender=any -paytxfee=0.0001 -minrelaytxfee=0.00001 -discover=0 -listen=0 -datadir="$DATADIR" &
+else
+    echo "Debug logging level: maximum"
+    $REAL_BITCOIND -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -debug=1 -omnidebug=all -omnialertallowsender=any -omniactivationallowsender=any -paytxfee=0.0001 -minrelaytxfee=0.00001 -discover=0 -listen=0 -datadir="$DATADIR" &  
+fi
 $REAL_BITCOINCLI -regtest -rpcuser=bitcoinrpc -rpcpassword=pass -rpcwait getinfo
 $REAL_BITCOINCLI -regtest -rpcuser=bitcoinrpc -rpcpassword=pass -rpcwait getinfo_MP
 ./gradlew --console plain :omnij-rpc:regTest
