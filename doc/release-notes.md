@@ -215,6 +215,46 @@ of just announcing the hash. In a reorganization, all new headers are sent,
 instead of just the new tip. This can often prevent an extra roundtrip before
 the actual block is downloaded.
 
+Memory pool limiting
+--------------------------------
+
+Previous versions of Bitcoin Core had their mempool limited by checking
+a transaction's fees against the node's minimum relay fee. There was no
+upper bound on the size of the mempool and attackers could send massive
+amounts of transactions paying just slighly more than the default minimum
+relay fee to crash nodes with relatively low RAM. A temporary workaround
+for previous versions of Bitcoin Core was to raise the default minimum
+relay fee.
+
+Bitcoin Core 0.12 will have a strict maximum size on the mempool. The
+default value is 300 MB and can be configured with the `-maxmempool`
+parameter. Whenever a transaction would cause the mempool to exceed
+it's maximum size, the transaction with the lowest feerate will be
+evicted and the node's minimum relay fee will be increased to match
+this feerate. The initial minimum relay fee is set to 1000 satoshis
+per kB.
+
+Priority transactions
+---------------------
+
+Transactions that do not pay the minimum relay fee, are called "free
+transactions" or priority transactions. Previous versions of Bitcoin
+Core would relay and mine priority transactions depending on their
+setting of `-limitfreerelay=15` (kB per minute) and
+`-blockprioritysize=50000` (bytes of a block's priority space).
+
+Priority code is planned to get moved out of from Bitcoin Core 0.13
+and the default block priority size was set to `0` in Bitcoin Core
+0.12.
+
+Wallet transaction fees
+-----------------------
+
+Various impromements were made how the wallet calculates transaction
+fees.
+
+...
+
 Negative confirmations and conflict detection
 ---------------------------------------------
 
