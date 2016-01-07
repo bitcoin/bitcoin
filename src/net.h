@@ -77,7 +77,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer = NULL);
 enum
 {
     MSG_TX = 1,
-    MSG_BLOCK,
+    MSG_BLOCK
 };
 
 class CRequestTracker

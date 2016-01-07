@@ -427,7 +427,7 @@ enum GetMinFee_mode
 {
     GMF_BLOCK,
     GMF_RELAY,
-    GMF_SEND,
+    GMF_SEND
 };
 
 typedef std::map<uint256, std::pair<CTxIndex, CTransaction> > MapPrevTx;
@@ -1176,7 +1176,7 @@ public:
     {
         BLOCK_PROOF_OF_STAKE = (1 << 0), // is proof-of-stake block
         BLOCK_STAKE_ENTROPY  = (1 << 1), // entropy bit for stake modifier
-        BLOCK_STAKE_MODIFIER = (1 << 2), // regenerated stake modifier
+        BLOCK_STAKE_MODIFIER = (1 << 2)  // regenerated stake modifier
     };
 
     uint64_t nStakeModifier; // hash modifier for proof-of-stake
