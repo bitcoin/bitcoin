@@ -767,7 +767,7 @@ static std::string ResolveErrMsg(const char * const optname, const std::string& 
 
 static std::string AmountErrMsg(const char * const optname, const std::string& strValue)
 {
-    return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
+    return strprintf(_("Invalid amount for -%s=<amount>: '%s'."), optname, strValue);
 }
 
 void InitLogging()
@@ -941,6 +941,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (nConnectTimeout <= 0)
         nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
+    const std::string HIGH_AMOUNT_WARN_MSG = _("%s is set very high!");
+    const std::string LOW_AMOUNT_WARN_MSG =
+        _("%s is set very low!") + " " + _("Transactions you create may take a long time to confirm when you set "
+                                           "%s lower than the default relay fee.");
+
     // Fee-per-kilobyte amount considered the same as "free"
     // If you are mining, be careful setting this:
     // if you set it to zero then
@@ -950,10 +955,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (mapArgs.count("-minrelaytxfee"))
     {
         CAmount n = 0;
-        if (ParseMoney(mapArgs["-minrelaytxfee"], n) && n > 0)
-            ::minRelayTxFee = CFeeRate(n);
-        else
+        if (!ParseMoney(mapArgs["-minrelaytxfee"], n))
             return InitError(AmountErrMsg("minrelaytxfee", mapArgs["-minrelaytxfee"]));
+        if (n > HIGH_TX_FEE_PER_KB)
+            InitWarning(strprintf(HIGH_AMOUNT_WARN_MSG, "-minrelaytxfee") + " " +
+                        _("This is the minimum transaction fee you pay on every transaction."));
+        ::minRelayTxFee = CFeeRate(n);
     }
 
     fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard());
@@ -965,18 +972,24 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (mapArgs.count("-mintxfee"))
     {
         CAmount n = 0;
-        if (ParseMoney(mapArgs["-mintxfee"], n) && n > 0)
-            CWallet::minTxFee = CFeeRate(n);
-        else
+        if (!ParseMoney(mapArgs["-mintxfee"], n))
             return InitError(AmountErrMsg("mintxfee", mapArgs["-mintxfee"]));
+        if (n > HIGH_TX_FEE_PER_KB)
+            InitWarning(strprintf(HIGH_AMOUNT_WARN_MSG, "-mintxfee") + " " +
+                        _("This is the minimum transaction fee you pay on every transaction."));
+        if (n < DEFAULT_MIN_RELAY_TX_FEE)
+            InitWarning(strprintf(LOW_AMOUNT_WARN_MSG, "-mintxfee", "-mintxfee"));
+        CWallet::minTxFee = CFeeRate(n);
     }
     if (mapArgs.count("-fallbackfee"))
     {
         CAmount nFeePerK = 0;
         if (!ParseMoney(mapArgs["-fallbackfee"], nFeePerK))
             return InitError(strprintf(_("Invalid amount for -fallbackfee=<amount>: '%s'"), mapArgs["-fallbackfee"]));
-        if (nFeePerK > nHighTransactionFeeWarning)
+        if (nFeePerK > HIGH_TX_FEE_PER_KB)
             InitWarning(_("-fallbackfee is set very high! This is the transaction fee you may pay when fee estimates are not available."));
+        if (nFeePerK < DEFAULT_MIN_RELAY_TX_FEE)
+            InitWarning(strprintf(LOW_AMOUNT_WARN_MSG, "-fallbackfee", "-fallbackfee"));
         CWallet::fallbackFee = CFeeRate(nFeePerK);
     }
     if (mapArgs.count("-paytxfee"))
@@ -984,8 +997,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         CAmount nFeePerK = 0;
         if (!ParseMoney(mapArgs["-paytxfee"], nFeePerK))
             return InitError(AmountErrMsg("paytxfee", mapArgs["-paytxfee"]));
-        if (nFeePerK > nHighTransactionFeeWarning)
+        if (nFeePerK > HIGH_TX_FEE_PER_KB)
             InitWarning(_("-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
+        if (nFeePerK < DEFAULT_MIN_RELAY_TX_FEE)
+            InitWarning(strprintf(LOW_AMOUNT_WARN_MSG, "-paytxfee", "-paytxfee"));
+
         payTxFee = CFeeRate(nFeePerK, 1000);
         if (payTxFee < ::minRelayTxFee)
         {
@@ -998,7 +1014,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         CAmount nMaxFee = 0;
         if (!ParseMoney(mapArgs["-maxtxfee"], nMaxFee))
             return InitError(AmountErrMsg("maxtxfee", mapArgs["-maxtxfee"]));
-        if (nMaxFee > nHighTransactionMaxFeeWarning)
+        if (nMaxFee > HIGH_MAX_TX_FEE)
             InitWarning(_("-maxtxfee is set very high! Fees this large could be paid on a single transaction."));
         maxTxFee = nMaxFee;
         if (CFeeRate(maxTxFee, 1000) < ::minRelayTxFee)
