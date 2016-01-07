@@ -784,14 +784,14 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
     // Do not flush the wallet here for performance reasons
     CWalletDB walletdb(strWalletFile, "r+", false);
 
-    std::deque<uint256> todo;
+    std::set<uint256> todo;
     std::set<uint256> done;
 
-    todo.push_back(hashTx);
+    todo.insert(hashTx);
 
     while (!todo.empty()) {
-        uint256 now = todo.front();
-        todo.pop_front();
+        uint256 now = *todo.begin();
+        todo.erase(now);
         done.insert(now);
         assert(mapWallet.count(now));
         CWalletTx& wtx = mapWallet[now];
@@ -807,7 +807,7 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
             TxSpends::const_iterator iter = mapTxSpends.lower_bound(COutPoint(now, 0));
             while (iter != mapTxSpends.end() && iter->first.hash == now) {
                  if (!done.count(iter->second)) {
-                     todo.push_back(iter->second);
+                     todo.insert(iter->second);
                  }
                  iter++;
             }
