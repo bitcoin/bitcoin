@@ -52,6 +52,11 @@ public:
         MAX_BASE58_TYPES
     };
 
+    /**
+     * Maps strNetworkID [see BIP70] to chainID (hashGenesisBlock and genesis checkpoint)
+     */
+    static std::map<std::string, uint256> supportedChains;
+
     const Consensus::Params& GetConsensus() const { return consensus; }
     const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
@@ -76,6 +81,12 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
+    /**
+     * Creates and returns a CChainParams* of the chosen chain. The caller has to delete the object.
+     * @returns a CChainParams* of the chosen chain.
+     * @throws a std::runtime_error if the chain is not supported.
+     */
+    static CChainParams* Factory(const std::string& chain);
 protected:
     CChainParams() {}
 
@@ -104,11 +115,6 @@ protected:
  * startup, except for unit tests.
  */
 const CChainParams &Params();
-
-/**
- * @returns CChainParams for the given BIP70 chain name.
- */
-CChainParams& Params(const std::string& chain);
 
 /**
  * Sets the params returned by Params() to those for the given BIP70 chain name.

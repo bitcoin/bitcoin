@@ -21,6 +21,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/foreach.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/test/unit_test.hpp>
 
 #if 0
@@ -119,7 +120,8 @@ BOOST_FIXTURE_TEST_SUITE(Alert_tests, ReadAlerts)
 BOOST_AUTO_TEST_CASE(AlertApplies)
 {
     SetMockTime(11);
-    const std::vector<unsigned char>& alertKey = Params(CBaseChainParams::MAIN).AlertKey();
+    const boost::scoped_ptr<CChainParams> testChainParams(CChainParams::Factory(CBaseChainParams::MAIN));
+    const std::vector<unsigned char>& alertKey = testChainParams->AlertKey();
 
     BOOST_FOREACH(const CAlert& alert, alerts)
     {
@@ -160,7 +162,8 @@ BOOST_AUTO_TEST_CASE(AlertApplies)
 BOOST_AUTO_TEST_CASE(AlertNotify)
 {
     SetMockTime(11);
-    const std::vector<unsigned char>& alertKey = Params(CBaseChainParams::MAIN).AlertKey();
+    const boost::scoped_ptr<CChainParams> testChainParams(CChainParams::Factory(CBaseChainParams::MAIN));
+    const std::vector<unsigned char>& alertKey = testChainParams->AlertKey();
 
     boost::filesystem::path temp = GetTempPath() /
         boost::filesystem::unique_path("alertnotify-%%%%.txt");
@@ -199,8 +202,8 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     // Test PartitionCheck
     CCriticalSection csDummy;
     CBlockIndex indexDummy[100];
-    CChainParams& params = Params(CBaseChainParams::MAIN);
-    int64_t nPowTargetSpacing = params.GetConsensus().nPowTargetSpacing;
+    const boost::scoped_ptr<CChainParams> testChainParams(CChainParams::Factory(CBaseChainParams::MAIN));
+    int64_t nPowTargetSpacing = testChainParams->GetConsensus().nPowTargetSpacing;
 
     // Generate fake blockchain timestamps relative to
     // an arbitrary time:

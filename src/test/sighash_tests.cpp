@@ -2,10 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "data/sighash.json.h"
 #include "hash.h"
-#include "main.h" // For CheckTransaction
 #include "random.h"
 #include "script/interpreter.h"
 #include "script/script.h"
@@ -169,6 +169,8 @@ BOOST_AUTO_TEST_CASE(sighash_test)
 // Goal: check that SignatureHash generates correct hash
 BOOST_AUTO_TEST_CASE(sighash_from_data)
 {
+    Consensus::Params testConsensusParams;
+    testConsensusParams.nMaxTxSize  = std::numeric_limits<uint64_t>::max();
     UniValue tests = read_json(std::string(json_tests::sighash, json_tests::sighash + sizeof(json_tests::sighash)));
 
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
@@ -200,7 +202,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           stream >> tx;
 
           CValidationState state;
-          BOOST_CHECK_MESSAGE(CheckTransaction(tx, state), strTest);
+          BOOST_CHECK_MESSAGE(Consensus::CheckTx(tx, state, testConsensusParams), strTest);
           BOOST_CHECK(state.IsValid());
 
           std::vector<unsigned char> raw = ParseHex(raw_script);

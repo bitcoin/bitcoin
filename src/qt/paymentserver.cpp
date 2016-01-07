@@ -221,14 +221,13 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
             if (GUIUtil::parseBitcoinURI(arg, &r) && !r.address.isEmpty())
             {
                 CBitcoinAddress address(r.address.toStdString());
-
-                if (address.IsValid(Params(CBaseChainParams::MAIN)))
-                {
-                    SelectParams(CBaseChainParams::MAIN);
-                }
-                else if (address.IsValid(Params(CBaseChainParams::TESTNET)))
-                {
-                    SelectParams(CBaseChainParams::TESTNET);
+                std::map<std::string, uint256>::const_iterator iter;
+                for (iter = CChainParams::supportedChains.begin(); iter != CChainParams::supportedChains.end(); ++iter) {
+                    boost::scoped_ptr<CChainParams> tempChainParams(CChainParams::Factory(iter->first));
+                    if (address.IsValid(*tempChainParams)) {
+                        SelectParams(iter->first);
+                        break;
+                    }
                 }
             }
         }
@@ -238,16 +237,7 @@ void PaymentServer::ipcParseCommandLine(int argc, char* argv[])
 
             PaymentRequestPlus request;
             if (readPaymentRequestFromFile(arg, request))
-            {
-                if (request.getDetails().network() == "main")
-                {
-                    SelectParams(CBaseChainParams::MAIN);
-                }
-                else if (request.getDetails().network() == "test")
-                {
-                    SelectParams(CBaseChainParams::TESTNET);
-                }
-            }
+                SelectParams(request.getDetails().network());
         }
         else
         {

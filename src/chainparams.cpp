@@ -13,8 +13,16 @@
 #include <assert.h>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "chainparamsseeds.h"
+
+std::map<std::string, uint256> CChainParams::supportedChains =
+    boost::assign::map_list_of
+    ( CHAINPARAMS_MAIN, uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"))
+    ( CHAINPARAMS_TESTNET, uint256S("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"))
+    ( CHAINPARAMS_REGTEST, uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"))
+    ;
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -69,7 +77,7 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
-        strNetworkID = "main";
+        strNetworkID = CHAINPARAMS_MAIN;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -81,6 +89,12 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
+        consensus.nMaxBlockSize = 1000000;
+        consensus.nMaxTxSize = 1000000;
+        consensus.nMinTxSize = ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION);
+        consensus.nMaxBlockSigops = consensus.nMaxBlockSize / 50;
+        consensus.nCoinbaseMaturity = 100;
+
         /** 
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -97,8 +111,7 @@ public:
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
-        assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        assert(consensus.hashGenesisBlock == supportedChains.find(strNetworkID)->second);
 
         vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be")); // Pieter Wuille
         vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me")); // Matt Corallo
@@ -123,6 +136,7 @@ public:
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
+            (     0, consensus.hashGenesisBlock)
             ( 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d"))
             ( 33333, uint256S("0x000000002dd5588a74784eaa7ab0507a18ad16a236e7b1ce69f00d7ddfb5d0a6"))
             ( 74000, uint256S("0x0000000000573993a3c9e41ce34471c079dcf5f52a0e824a81e7f953b8661a20"))
@@ -143,7 +157,6 @@ public:
         };
     }
 };
-static CMainParams mainParams;
 
 /**
  * Testnet (v3)
@@ -151,7 +164,7 @@ static CMainParams mainParams;
 class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
-        strNetworkID = "test";
+        strNetworkID = CHAINPARAMS_TESTNET;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.nMajorityEnforceBlockUpgrade = 51;
         consensus.nMajorityRejectBlockOutdated = 75;
@@ -163,6 +176,12 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+        consensus.nMaxBlockSize = 1000000;
+        consensus.nMaxTxSize = 1000000;
+        consensus.nMinTxSize = ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION);
+        consensus.nMaxBlockSigops = consensus.nMaxBlockSize / 50;
+        consensus.nCoinbaseMaturity = 100;
+
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
         pchMessageStart[2] = 0x09;
@@ -174,8 +193,7 @@ public:
 
         genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
-        assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        assert(consensus.hashGenesisBlock == supportedChains.find(strNetworkID)->second);
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -199,6 +217,7 @@ public:
 
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
+            (     0, consensus.hashGenesisBlock)
             ( 546, uint256S("000000002a936ca763904c3c35fce2f3556c559c0214345d31b1bcebf76acb70")),
             1337966069,
             1488,
@@ -207,7 +226,6 @@ public:
 
     }
 };
-static CTestNetParams testNetParams;
 
 /**
  * Regression test
@@ -215,7 +233,7 @@ static CTestNetParams testNetParams;
 class CRegTestParams : public CChainParams {
 public:
     CRegTestParams() {
-        strNetworkID = "regtest";
+        strNetworkID = CHAINPARAMS_REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
         consensus.nMajorityEnforceBlockUpgrade = 750;
         consensus.nMajorityRejectBlockOutdated = 950;
@@ -227,6 +245,11 @@ public:
         consensus.nPowTargetSpacing = 10 * 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
+        consensus.nMaxBlockSize = 1000000;
+        consensus.nMaxTxSize = 1000000;
+        consensus.nMinTxSize = ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION);
+        consensus.nMaxBlockSigops = consensus.nMaxBlockSize / 50;
+        consensus.nCoinbaseMaturity = 100;
 
         pchMessageStart[0] = 0xfa;
         pchMessageStart[1] = 0xbf;
@@ -238,8 +261,7 @@ public:
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
-        assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+        assert(consensus.hashGenesisBlock == supportedChains.find(strNetworkID)->second);
 
         vFixedSeeds.clear(); //! Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();  //! Regtest mode doesn't have any DNS seeds.
@@ -252,7 +274,7 @@ public:
 
         checkpointData = (CCheckpointData){
             boost::assign::map_list_of
-            ( 0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")),
+            (     0, consensus.hashGenesisBlock),
             0,
             0,
             0
@@ -264,23 +286,77 @@ public:
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
     }
 };
-static CRegTestParams regTestParams;
 
-static CChainParams *pCurrentParams = 0;
+class CSizeTestParams : public CChainParams {
+public:
+    CSizeTestParams() {
+        consensus.nMaxBlockSize = GetArg("-blocksize", 1000000);
+        strNetworkID = strprintf("%s%d", CHAINPARAMS_SIZETEST, consensus.nMaxBlockSize);
+        consensus.nSubsidyHalvingInterval = 150;
+        consensus.nMajorityEnforceBlockUpgrade = 750;
+        consensus.nMajorityRejectBlockOutdated = 950;
+        consensus.nMajorityWindow = 1000;
+        consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+        consensus.nPowTargetSpacing = 10 * 60;
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fPowNoRetargeting = true;
+        consensus.nMaxTxSize = 1000000;
+        consensus.nMinTxSize = ::GetSerializeSize(CTransaction(), SER_NETWORK, PROTOCOL_VERSION);
+        consensus.nMaxBlockSigops = consensus.nMaxBlockSize / 50;
+        consensus.nCoinbaseMaturity = 100;
+
+        CScript scriptDestination(CScript() << OP_TRUE);
+        genesis = CreateGenesisBlock(strNetworkID.c_str(), scriptDestination, 1296688602, 0, 0x2007ffff, 1, 50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        CChainParams::supportedChains[strNetworkID] = consensus.hashGenesisBlock;
+
+        nDefaultPort = 28333;
+        nPruneAfterHeight = 100000;
+        fMiningRequiresPeers = false;
+        fDefaultConsistencyChecks = true;
+        fRequireStandard = false;
+        fMineBlocksOnDemand = true;
+        fTestnetToBeDeprecatedFieldRPC = false;
+
+        pchMessageStart[0] = 0xe0;
+        pchMessageStart[1] = 0x35;
+        pchMessageStart[2] = 0x8e;
+        pchMessageStart[3] = 0xfb;
+        vFixedSeeds.clear();
+        vSeeds.clear();
+        checkpointData = (CCheckpointData){
+            boost::assign::map_list_of
+            (     0, consensus.hashGenesisBlock),
+            0,
+            0,
+            0
+        };
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
+        base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
+    }
+};
+
+static boost::scoped_ptr<CChainParams> globalChainParams;
 
 const CChainParams &Params() {
-    assert(pCurrentParams);
-    return *pCurrentParams;
+    assert(globalChainParams.get());
+    return *globalChainParams;
 }
 
-CChainParams& Params(const std::string& chain)
+CChainParams* CChainParams::Factory(const std::string& chain)
 {
-    if (chain == CBaseChainParams::MAIN)
-            return mainParams;
-    else if (chain == CBaseChainParams::TESTNET)
-            return testNetParams;
-    else if (chain == CBaseChainParams::REGTEST)
-            return regTestParams;
+    if (chain == CHAINPARAMS_MAIN)
+        return new CMainParams();
+    else if (chain == CHAINPARAMS_TESTNET)
+        return new CTestNetParams();
+    else if (chain == CHAINPARAMS_REGTEST)
+        return new CRegTestParams();
+    else if (chain == CHAINPARAMS_SIZETEST)
+        return new CSizeTestParams();
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
@@ -288,5 +364,5 @@ CChainParams& Params(const std::string& chain)
 void SelectParams(const std::string& network)
 {
     SelectBaseParams(network);
-    pCurrentParams = &Params(network);
+    globalChainParams.reset(CChainParams::Factory(network));
 }
