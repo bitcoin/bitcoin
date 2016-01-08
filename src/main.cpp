@@ -749,7 +749,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_TRANSACTION_SIZE)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
@@ -932,7 +932,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // Check that the transaction doesn't have an excessive number of
         // sigops, making it impossible to mine. Since the coinbase transaction
         // itself can contain sigops MAX_STANDARD_TX_SIGOPS is less than
-        // MAX_BLOCK_SIGOPS; we still consider this an invalid rather than
+        // MaxBlockSigops; we still consider this an invalid rather than
         // merely non-standard transaction.
         unsigned int nSigOps = GetLegacySigOpCount(tx);
         nSigOps += GetP2SHSigOpCount(tx, view);
@@ -2041,6 +2041,13 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
+    bool fBIP102Enforcing = (pindex->GetBlockTime() >= (int64_t)BIP102_FORK_TIME);
+    if (fBIP102Enforcing && block.nVersion >= 5 && !IsSuperMajority(5, pindex->pprev, chainparams.GetConsensus().nMajorityRejectBlockOutdated, chainparams.GetConsensus()))
+        fBIP102Enforcing = false;
+
+    // TODO
+    (void) fBIP102Enforcing;
+
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint("bench", "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
 
@@ -2061,7 +2068,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         nInputs += tx.vin.size();
         nSigOps += GetLegacySigOpCount(tx);
-        if (nSigOps > MAX_BLOCK_SIGOPS)
+        if (nSigOps > MaxBlockSigops(pindex->nHeight))
             return state.DoS(100, error("ConnectBlock(): too many sigops"),
                              REJECT_INVALID, "bad-blk-sigops");
 
@@ -2077,7 +2084,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 // this is to prevent a "rogue miner" from creating
                 // an incredibly-expensive-to-validate block.
                 nSigOps += GetP2SHSigOpCount(tx, view);
-                if (nSigOps > MAX_BLOCK_SIGOPS)
+                if (nSigOps > MaxBlockSigops(pindex->nHeight))
                     return state.DoS(100, error("ConnectBlock(): too many sigops"),
                                      REJECT_INVALID, "bad-blk-sigops");
             }
@@ -2951,7 +2958,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // because we receive the wrong transactions for it.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    unsigned int nMaxSize = MaxBlockSize(block.GetBlockTime());
+    if (block.vtx.empty() || block.vtx.size() > nMaxSize || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nMaxSize)
         return state.DoS(100, error("CheckBlock(): size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
@@ -2976,7 +2984,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     {
         nSigOps += GetLegacySigOpCount(tx);
     }
-    if (nSigOps > MAX_BLOCK_SIGOPS)
+    if (nSigOps > MaxBlockSigops(std::numeric_limits<unsigned int>::max()))
         return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
                          REJECT_INVALID, "bad-blk-sigops");
 
@@ -3025,6 +3033,11 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
 
     // Reject block.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded:
     if (block.nVersion < 4 && IsSuperMajority(4, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+        return state.Invalid(error("%s : rejected nVersion=3 block", __func__),
+                             REJECT_OBSOLETE, "bad-version");
+
+    // Reject block.nVersion=4 blocks when 95% (75% on testnet) of the network has upgraded:
+    if (block.nVersion < 5 && IsSuperMajority(5, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
         return state.Invalid(error("%s : rejected nVersion=3 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
 
@@ -3702,7 +3715,8 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
     int nLoaded = 0;
     try {
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
-        CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SIZE, MAX_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
+        unsigned int nAbsoluteMaxBlockSize = MaxBlockSize(std::numeric_limits<uint64_t>::max());
+        CBufferedFile blkdat(fileIn, 2*nAbsoluteMaxBlockSize, nAbsoluteMaxBlockSize+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             boost::this_thread::interruption_point();
@@ -3721,7 +3735,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                     continue;
                 // read size
                 blkdat >> nSize;
-                if (nSize < 80 || nSize > MAX_BLOCK_SIZE)
+                if (nSize < 80 || nSize > nAbsoluteMaxBlockSize)
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
