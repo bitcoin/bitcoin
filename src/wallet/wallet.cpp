@@ -811,6 +811,13 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
                  }
                  iter++;
             }
+            // If a transaction changes 'conflicted' state, that changes the balance
+            // available of the outputs it spends. So force those to be recomputed
+            BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+            {
+                if (mapWallet.count(txin.prevout.hash))
+                    mapWallet[txin.prevout.hash].MarkDirty();
+            }
         }
     }
 }
