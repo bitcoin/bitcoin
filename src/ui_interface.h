@@ -112,6 +112,8 @@ void InitWarning(const std::string& str);
 /** Show error message **/
 bool InitError(const std::string& str);
 
+std::string AmountHighWarn(const std::string& optname);
+
 std::string AmountErrMsg(const char* const optname, const std::string& strValue);
 
 extern CClientUIInterface uiInterface;
