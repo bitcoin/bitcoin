@@ -7,8 +7,8 @@
 # Exercise API with -disablewallet.
 #
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework import BitcoinTestFramework
+from util import *
 
 class DisableWalletTest (BitcoinTestFramework):
 

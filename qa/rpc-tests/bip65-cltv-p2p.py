@@ -4,12 +4,12 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
-from test_framework.test_framework import ComparisonTestFramework
-from test_framework.util import *
-from test_framework.mininode import CTransaction, NetworkThread
-from test_framework.blocktools import create_coinbase, create_block
-from test_framework.comptool import TestInstance, TestManager
-from test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP
+from new_test_framework.test_framework import ComparisonTestFramework
+from new_test_framework.util import *
+from new_test_framework.mininode import CTransaction, NetworkThread
+from new_test_framework.blocktools import create_coinbase, create_block
+from new_test_framework.comptool import TestInstance, TestManager
+from new_test_framework.script import CScript, OP_1NEGATE, OP_CHECKLOCKTIMEVERIFY, OP_DROP
 from binascii import hexlify, unhexlify
 import cStringIO
 import time

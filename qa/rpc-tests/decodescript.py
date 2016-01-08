@@ -3,9 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import *
+from new_test_framework.test_framework import BitcoinTestFramework
+from new_test_framework.util import *
+from new_test_framework.mininode import *
 from binascii import hexlify, unhexlify
 from cStringIO import StringIO
 
