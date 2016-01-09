@@ -1004,6 +1004,18 @@ class msg_reject(object):
 class NodeConnCB(object):
     def __init__(self):
         self.verack_received = False
+        # deliver_sleep_time is helpful for debugging race conditions in p2p
+        # tests; it causes message delivery to sleep for the specified time
+        # before acquiring the global lock and delivering the next message.
+        self.deliver_sleep_time = None
+
+    def set_deliver_sleep_time(self, value):
+        with mininode_lock:
+            self.deliver_sleep_time = value
+
+    def get_deliver_sleep_time(self):
+        with mininode_lock:
+            return self.deliver_sleep_time
 
     # Spin until verack message is received from the node.
     # Tests may want to use this as a signal that the test can begin.
@@ -1017,6 +1029,9 @@ class NodeConnCB(object):
             time.sleep(0.05)
 
     def deliver(self, conn, message):
+        deliver_sleep = self.get_deliver_sleep_time()
+        if deliver_sleep is not None:
+            time.sleep(deliver_sleep)
         with mininode_lock:
             try:
                 getattr(self, 'on_' + message.command)(conn, message)
