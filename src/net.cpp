@@ -16,6 +16,8 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "crypto/common.h"
+#include "unlimited.h"
+#include <boost/lexical_cast.hpp>
 
 #ifdef WIN32
 #include <string.h>
@@ -428,11 +430,8 @@ void CNode::PushVersion()
     else
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight, true);
+                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments), nBestHeight, true);
 }
-
-
-
 
 
 std::map<CNetAddr, int64_t> CNode::setBanned;

@@ -43,6 +43,8 @@ src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
 
+Makefile.am.user
+
 .deps
 .dirstamp
 .libs

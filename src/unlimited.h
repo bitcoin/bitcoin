@@ -28,6 +28,9 @@ extern unsigned int excessiveBlockSize;
 extern unsigned int excessiveAcceptDepth;
 extern unsigned int maxMessageSizeMultiplier;
 
+extern std::vector<std::string> BUComments;
+extern void settingsToUserAgentString();
+
 extern void UnlimitedSetup(void);
 extern std::string UnlimitedCmdLineHelp();
 

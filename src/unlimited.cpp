@@ -18,6 +18,7 @@
 #include "txmempool.h"
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <iomanip>
 
 using namespace std;
 using namespace json_spirit;
@@ -28,6 +29,8 @@ uint64_t maxGeneratedBlock = DEFAULT_MAX_GENERATED_BLOCK_SIZE;
 unsigned int excessiveBlockSize = DEFAULT_EXCESSIVE_BLOCK_SIZE;
 unsigned int excessiveAcceptDepth = DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
 unsigned int maxMessageSizeMultiplier = DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER;
+
+std::vector<std::string> BUComments = std::vector<std::string>();
 
 // Variables for traffic shaping
 CLeakyBucket receiveShaper(DEFAULT_MAX_RECV_BURST, DEFAULT_AVE_RECV);
@@ -103,12 +106,29 @@ void UnlimitedPushTxns(CNode* dest)
         dest->PushMessage("inv", vInv);
 }
 
+void settingsToUserAgentString()
+{
+    BUComments.clear();
+
+    double ebInMegaBytes = (double)excessiveBlockSize/1000000;
+    std::stringstream ebss;
+    ebss <<std::fixed << std::setprecision(1) << ebInMegaBytes;
+    std::string eb =  ebss.str();
+    std::string eb_formatted;
+    eb_formatted = (eb.at(eb.size() - 1) == '0' ? eb.substr(0, eb.size() - 2) : eb); //strip zero decimal
+    BUComments.push_back("EB" + eb_formatted);
+
+    int ad_formatted;
+    ad_formatted = (excessiveAcceptDepth >= 9999999 ? 9999999 : excessiveAcceptDepth);
+    BUComments.push_back("AD" + boost::lexical_cast<std::string>(ad_formatted));
+}
+
 void UnlimitedSetup(void)
 {
     maxGeneratedBlock = GetArg("-blockmaxsize", DEFAULT_MAX_GENERATED_BLOCK_SIZE);
     excessiveBlockSize = GetArg("-excessiveblocksize", DEFAULT_EXCESSIVE_BLOCK_SIZE);
     excessiveAcceptDepth = GetArg("-excessiveacceptdepth", DEFAULT_EXCESSIVE_ACCEPT_DEPTH);
-
+    settingsToUserAgentString();
     //  Init network shapers
     int64_t rb = GetArg("-receiveburst", DEFAULT_MAX_RECV_BURST);
     // parameter is in KBytes/sec, leaky bucket is in bytes/sec.  But if it is "off" then don't multiply
@@ -204,7 +224,7 @@ Value getexcessiveblock(const Array& params, bool fHelp)
 
 Value setexcessiveblock(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() >= 3)
+    if (fHelp || params.size() < 2 || params.size() >= 3)
         throw runtime_error(
             "setexcessiveblock blockSize acceptDepth\n"
             "\nSet the excessive block size and accept depth.  Excessive blocks will not be used in the active chain or relayed until they are several blocks deep in the blockchain.  This discourages the propagation of blocks that you consider excessively large.  However, if the mining majority of the network builds upon the block then you will eventually accept it, maintaining consensus."
@@ -218,6 +238,7 @@ Value setexcessiveblock(const Array& params, bool fHelp)
         excessiveBlockSize = params[0].get_uint64();
     else {
         string temp = params[0].get_str();
+        if (temp[0] == '-') boost::throw_exception( boost::bad_lexical_cast() );
         excessiveBlockSize = boost::lexical_cast<unsigned int>(temp);
     }
 
@@ -225,9 +246,10 @@ Value setexcessiveblock(const Array& params, bool fHelp)
         excessiveAcceptDepth = params[1].get_uint64();
     else {
         string temp = params[1].get_str();
+        if (temp[0] == '-') boost::throw_exception( boost::bad_lexical_cast() );
         excessiveAcceptDepth = boost::lexical_cast<unsigned int>(temp);
     }
-
+    settingsToUserAgentString();
     return Value::null;
 }
 
@@ -265,6 +287,7 @@ Value setminingmaxblock(const Array& params, bool fHelp)
         arg = params[0].get_uint64();
     else {
         string temp = params[0].get_str();
+        if (temp[0] == '-') boost::throw_exception( boost::bad_lexical_cast() );
         arg = boost::lexical_cast<uint64_t>(temp);
     }
 
