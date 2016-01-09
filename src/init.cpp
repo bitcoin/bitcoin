@@ -1127,8 +1127,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                 delete pcoinscatcher;
                 delete pblocktree;
 
-                pblocktree = new CBlockTreeDB(nBlockTreeDBCache, false, fReindex);
-                pcoinsdbview = new CCoinsViewDB(nCoinDBCache, false, fReindex);
+                // Detect database obfuscation by future versions of the DBWrapper
+                bool chainstateScrambled;
+                bool blockDbScrambled;
+
+                pblocktree = new CBlockTreeDB(nBlockTreeDBCache, blockDbScrambled, false, fReindex);
+                pcoinsdbview = new CCoinsViewDB(nCoinDBCache, chainstateScrambled, false, fReindex);
                 pcoinscatcher = new CCoinsViewErrorCatcher(pcoinsdbview);
                 pcoinsTip = new CCoinsViewCache(pcoinscatcher);
 
@@ -1137,6 +1141,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                     //If we're reindexing in prune mode, wipe away unusable block files and all undo data files
                     if (fPruneMode)
                         CleanupBlockRevFiles();
+                }
+
+                if (chainstateScrambled || blockDbScrambled) {
+                   strLoadError = _("Reindex required as the chainstate or block database is obfuscated");
+                   break;
                 }
 
                 if (!LoadBlockIndex()) {
