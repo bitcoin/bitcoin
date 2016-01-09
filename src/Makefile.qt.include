@@ -274,6 +274,63 @@ RES_ICONS = \
   qt/res/icons/crownium/unit_tmdash.png \
   qt/res/icons/crownium/unit_tudash.png \
   qt/res/icons/crownium/unit_tduffs.png \
+  qt/res/icons/light/add.png \
+  qt/res/icons/light/address-book.png \
+  qt/res/icons/light/bitcoin.ico \
+  qt/res/icons/light/bitcoin.png \
+  qt/res/icons/light/bitcoin_testnet.ico \
+  qt/res/icons/light/bitcoin_testnet.png \
+  qt/res/icons/light/browse.png \
+  qt/res/icons/light/clock1.png \
+  qt/res/icons/light/clock2.png \
+  qt/res/icons/light/clock3.png \
+  qt/res/icons/light/clock4.png \
+  qt/res/icons/light/clock5.png \
+  qt/res/icons/light/configure.png \
+  qt/res/icons/light/connect0_16.png \
+  qt/res/icons/light/connect1_16.png \
+  qt/res/icons/light/connect2_16.png \
+  qt/res/icons/light/connect3_16.png \
+  qt/res/icons/light/connect4_16.png \
+  qt/res/icons/light/debugwindow.png \
+  qt/res/icons/light/drkblue_editpaste.png \
+  qt/res/icons/light/drkblue_address-book.png \
+  qt/res/icons/light/drkblue_editcopy.png \
+  qt/res/icons/light/drkblue_remove.png \
+  qt/res/icons/light/edit.png \
+  qt/res/icons/light/editcopy.png \
+  qt/res/icons/light/editpaste.png \
+  qt/res/icons/light/export.png \
+  qt/res/icons/light/eye.png \
+  qt/res/icons/light/eye_minus.png \
+  qt/res/icons/light/eye_plus.png \
+  qt/res/icons/light/filesave.png \
+  qt/res/icons/light/history.png \
+  qt/res/icons/light/key.png \
+  qt/res/icons/light/lock_closed.png \
+  qt/res/icons/light/lock_open.png \
+  qt/res/icons/light/overview.png \
+  qt/res/icons/light/qrcode.png \
+  qt/res/icons/light/quit.png \
+  qt/res/icons/light/receive.png \
+  qt/res/icons/light/remove.png \
+  qt/res/icons/light/send.png \
+  qt/res/icons/light/synced.png \
+  qt/res/icons/light/transaction0.png \
+  qt/res/icons/light/transaction2.png \
+  qt/res/icons/light/transaction_conflicted.png \
+  qt/res/icons/light/tx_inout.png \
+  qt/res/icons/light/tx_input.png \
+  qt/res/icons/light/tx_output.png \
+  qt/res/icons/light/tx_mined.png \
+  qt/res/icons/light/unit_dash.png \
+  qt/res/icons/light/unit_mdash.png \
+  qt/res/icons/light/unit_udash.png \
+  qt/res/icons/light/unit_duffs.png \
+  qt/res/icons/light/unit_tdash.png \
+  qt/res/icons/light/unit_tmdash.png \
+  qt/res/icons/light/unit_tudash.png \
+  qt/res/icons/light/unit_tduffs.png \
   qt/res/icons/trad/add.png \
   qt/res/icons/trad/address-book.png \
   qt/res/icons/trad/bitcoin.ico \
@@ -410,6 +467,18 @@ RES_IMAGES = \
   qt/res/images/crownium/drkblue_qtreeview_selected.png \
   qt/res/images/crownium/drkblue_walletFrame_bg.png \
   qt/res/images/crownium/drkblue_walletFrame.png \
+  qt/res/images/light/about.png \
+  qt/res/images/light/splash.png \
+  qt/res/images/light/splash_testnet.png \
+  qt/res/images/light/dash_logo_horizontal.png \
+  qt/res/images/light/drkblue_downArrow.png \
+  qt/res/images/light/drkblue_downArrow_small.png \
+  qt/res/images/light/drkblue_upArrow_small.png \
+  qt/res/images/light/drkblue_leftArrow_small.png \
+  qt/res/images/light/drkblue_rightArrow_small.png \
+  qt/res/images/light/drkblue_qtreeview_selected.png \
+  qt/res/images/light/drkblue_walletFrame_bg.png \
+  qt/res/images/light/drkblue_walletFrame.png \
   qt/res/images/trad/about.png \
   qt/res/images/trad/splash.png \
   qt/res/images/trad/splash_testnet.png \
@@ -425,7 +494,8 @@ RES_IMAGES = \
 
 RES_CSS = \
   qt/res/css/drkblue.css \
-  qt/res/css/crownium.css
+  qt/res/css/crownium.css \
+  qt/res/css/light.css
 
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
