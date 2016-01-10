@@ -113,6 +113,63 @@
         <file alias="drkblue_remove">res/icons/crownium/drkblue_remove.png</file>
         <file alias="browse">res/icons/crownium/browse.png</file>
     </qresource>
+    <qresource prefix="/icons/light">
+        <file alias="bitcoin">res/icons/light/bitcoin.png</file>
+        <file alias="address-book">res/icons/light/address-book.png</file>
+        <file alias="quit">res/icons/light/quit.png</file>
+        <file alias="send">res/icons/light/send.png</file>
+        <file alias="connect_0">res/icons/light/connect0_16.png</file>
+        <file alias="connect_1">res/icons/light/connect1_16.png</file>
+        <file alias="connect_2">res/icons/light/connect2_16.png</file>
+        <file alias="connect_3">res/icons/light/connect3_16.png</file>
+        <file alias="connect_4">res/icons/light/connect4_16.png</file>
+        <file alias="transaction_0">res/icons/light/transaction0.png</file>
+        <file alias="transaction_confirmed">res/icons/light/transaction2.png</file>
+        <file alias="transaction_conflicted">res/icons/light/transaction_conflicted.png</file>
+        <file alias="transaction_1">res/icons/light/clock1.png</file>
+        <file alias="transaction_2">res/icons/light/clock2.png</file>
+        <file alias="transaction_3">res/icons/light/clock3.png</file>
+        <file alias="transaction_4">res/icons/light/clock4.png</file>
+        <file alias="transaction_5">res/icons/light/clock5.png</file>
+        <file alias="eye">res/icons/light/eye.png</file>
+        <file alias="eye_minus">res/icons/light/eye_minus.png</file>
+        <file alias="eye_plus">res/icons/light/eye_plus.png</file>
+        <file alias="options">res/icons/light/configure.png</file>
+        <file alias="receiving_addresses">res/icons/light/receive.png</file>
+        <file alias="editpaste">res/icons/light/editpaste.png</file>
+        <file alias="editcopy">res/icons/light/editcopy.png</file>
+        <file alias="add">res/icons/light/add.png</file>
+        <file alias="bitcoin_testnet">res/icons/light/bitcoin_testnet.png</file>
+        <file alias="edit">res/icons/light/edit.png</file>
+        <file alias="history">res/icons/light/history.png</file>
+        <file alias="overview">res/icons/light/overview.png</file>
+        <file alias="export">res/icons/light/export.png</file>
+        <file alias="synced">res/icons/light/synced.png</file>
+        <file alias="remove">res/icons/light/remove.png</file>
+        <file alias="tx_mined">res/icons/light/tx_mined.png</file>
+        <file alias="tx_input">res/icons/light/tx_input.png</file>
+        <file alias="tx_output">res/icons/light/tx_output.png</file>
+        <file alias="tx_inout">res/icons/light/tx_inout.png</file>
+        <file alias="unit_dash">res/icons/light/unit_dash.png</file>
+        <file alias="unit_mdash">res/icons/light/unit_mdash.png</file>
+        <file alias="unit_udash">res/icons/light/unit_udash.png</file>
+        <file alias="unit_duffs">res/icons/light/unit_duffs.png</file>
+        <file alias="unit_tdash">res/icons/light/unit_tdash.png</file>
+        <file alias="unit_tmdash">res/icons/light/unit_tmdash.png</file>
+        <file alias="unit_tudash">res/icons/light/unit_tudash.png</file>
+        <file alias="unit_tduffs">res/icons/light/unit_tduffs.png</file>
+        <file alias="lock_closed">res/icons/light/lock_closed.png</file>
+        <file alias="lock_open">res/icons/light/lock_open.png</file>
+        <file alias="key">res/icons/light/key.png</file>
+        <file alias="filesave">res/icons/light/filesave.png</file>
+        <file alias="qrcode">res/icons/light/qrcode.png</file>
+        <file alias="debugwindow">res/icons/light/debugwindow.png</file>
+        <file alias="drkblue_editpaste">res/icons/light/drkblue_editpaste.png</file>
+        <file alias="drkblue_address-book">res/icons/light/drkblue_address-book.png</file>
+        <file alias="drkblue_editcopy">res/icons/light/drkblue_editcopy.png</file>
+        <file alias="drkblue_remove">res/icons/light/drkblue_remove.png</file>
+        <file alias="browse">res/icons/light/browse.png</file>
+    </qresource>
     <qresource prefix="/icons/trad">
         <file alias="bitcoin">res/icons/trad/bitcoin.png</file>
         <file alias="address-book">res/icons/trad/address-book.png</file>
@@ -173,7 +230,8 @@
     <qresource prefix="/css">
         <file alias="drkblue">res/css/drkblue.css</file>
         <file alias="crownium">res/css/crownium.css</file>
-    </qresource>	    
+        <file alias="light">res/css/light.css</file>
+    </qresource>
     <qresource prefix="/images/drkblue">
         <file alias="about">res/images/drkblue/about.png</file>
         <file alias="dash_logo_horizontal">res/images/drkblue/dash_logo_horizontal.png</file>
@@ -201,6 +259,20 @@
         <file alias="drkblue_walletFrame">res/images/crownium/drkblue_walletFrame.png</file>
         <file alias="splash">res/images/crownium/splash.png</file>
         <file alias="splash_testnet">res/images/crownium/splash_testnet.png</file>
+    </qresource>
+    <qresource prefix="/images/light">
+        <file alias="about">res/images/light/about.png</file>
+        <file alias="dash_logo_horizontal">res/images/light/dash_logo_horizontal.png</file>
+        <file alias="drkblue_downArrow">res/images/light/drkblue_downArrow.png</file>
+        <file alias="drkblue_downArrow_small">res/images/light/drkblue_downArrow_small.png</file>
+        <file alias="drkblue_upArrow_small">res/images/light/drkblue_upArrow_small.png</file>
+        <file alias="drkblue_leftArrow_small">res/images/light/drkblue_leftArrow_small.png</file>
+        <file alias="drkblue_rightArrow_small">res/images/light/drkblue_rightArrow_small.png</file>
+        <file alias="drkblue_qtreeview_selected">res/images/light/drkblue_qtreeview_selected.png</file>
+        <file alias="drkblue_walletFrame_bg">res/images/light/drkblue_walletFrame_bg.png</file>
+        <file alias="drkblue_walletFrame">res/images/light/drkblue_walletFrame.png</file>
+        <file alias="splash">res/images/light/splash.png</file>
+        <file alias="splash_testnet">res/images/light/splash_testnet.png</file>
     </qresource>
     <qresource prefix="/images/trad">
         <file alias="about">res/images/trad/about.png</file>
