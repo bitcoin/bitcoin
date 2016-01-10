@@ -236,6 +236,11 @@ extern UniValue getblockchaininfo(const UniValue& params, bool fHelp);
 extern UniValue getnetworkinfo(const UniValue& params, bool fHelp);
 extern UniValue setmocktime(const UniValue& params, bool fHelp);
 extern UniValue resendwallettransactions(const UniValue& params, bool fHelp);
+extern UniValue hdaddchain(const UniValue& params, bool fHelp);
+extern UniValue hdgetaddress(const UniValue& params, bool fHelp);
+extern UniValue hdsendtoaddress(const UniValue& params, bool fHelp);
+extern UniValue hdsetchain(const UniValue& params, bool fHelp);
+extern UniValue hdgetinfo(const UniValue& params, bool fHelp);
 
 extern UniValue getrawtransaction(const UniValue& params, bool fHelp); // in rcprawtransaction.cpp
 extern UniValue listunspent(const UniValue& params, bool fHelp);

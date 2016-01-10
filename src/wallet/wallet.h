@@ -13,6 +13,7 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 #include "wallet/crypter.h"
+#include "wallet/hdkeystore.h"
 #include "wallet/wallet_ismine.h"
 #include "wallet/walletdb.h"
 
@@ -530,7 +531,7 @@ private:
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet : public CCryptoKeyStore, public CValidationInterface
+class CWallet : public CHDKeyStore, public CValidationInterface
 {
 private:
     /**
@@ -567,6 +568,9 @@ private:
 
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>);
+
+    //! state: current active hd chain
+    HDChainID activeHDChain;
 
 public:
     /*
@@ -862,6 +866,25 @@ public:
     bool GetBroadcastTransactions() const { return fBroadcastTransactions; }
     /** Set whether this wallet broadcasts transactions. */
     void SetBroadcastTransactions(bool broadcast) { fBroadcastTransactions = broadcast; }
+
+
+    //!adds a hd chain of keys to the wallet
+    bool HDAddHDChain(const std::string& chainPath, bool generateMaster, CKeyingMaterial& vSeed, HDChainID& chainId, std::string &strBase58ExtPrivKey, std::string &strBase58ExtPubKey, bool overwrite = false);
+
+    //!gets a child key from the internal or external chain at given index
+    bool HDGetChildPubKeyAtIndex(const HDChainID& chainID, CPubKey &pubKeyOut, std::string& newKeysChainpath, unsigned int nIndex, bool internal = false);
+
+    //!get next free child key
+    bool HDGetNextChildPubKey(const HDChainID& chainId, CPubKey &pubKeyOut, std::string& newKeysChainpathOut, bool internal = false);
+
+    //!encrypt your master seeds
+    bool EncryptHDSeeds(CKeyingMaterial& vMasterKeyIn);
+
+    //!set the active chain of keys
+    bool HDSetActiveChainID(const HDChainID& chainID, bool check = true);
+
+    //!set the active chain of keys
+    bool HDGetActiveChainID(HDChainID& chainID);
 };
 
 /** A key allocated from the key pool. */
@@ -879,6 +902,27 @@ public:
     }
 
     ~CReserveKey()
+    {
+        ReturnKey();
+    }
+
+    void ReturnKey();
+    virtual bool GetReservedKey(CPubKey &pubkey);
+    void KeepKey();
+};
+
+class CHDReserveKey : public CReserveKey
+{
+protected:
+    CPubKey vchPubKey;
+    HDChainID chainID;
+public:
+    CHDReserveKey(CWallet* pwalletIn) : CReserveKey(pwalletIn)
+    {
+        pwalletIn->HDGetActiveChainID(chainID);
+    }
+
+    ~CHDReserveKey()
     {
         ReturnKey();
     }

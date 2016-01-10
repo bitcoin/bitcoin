@@ -15,11 +15,13 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "utilstrencodings.h"
 #include "wallet.h"
 #include "walletdb.h"
 
 #include <stdint.h>
 
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/assign/list_of.hpp>
 
 #include <univalue.h>
@@ -2442,3 +2444,311 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
     return result;
 }
+
+/*
+///////////
+BIP32 stack
+///////////
+
+default chainpath after bip44
+m = master key
+<num>' or <num>h = hardened key
+c stands for internal/external chain switch
+  c=0 for external addresses
+  c=1 for internal addresses
+
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/0 for the first external key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/0 for the first internal key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/0/1 for the second external key
+example "m/44'/0'/0'/c" will result in m/44'/0'/0'/1/1 for the second internal key
+*/
+const std::string hd_default_chainpath = "m/c'";
+
+static void SendMoneyHD(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
+{
+    CAmount curBalance = pwalletMain->GetBalance();
+
+    // Check amount
+    if (nValue <= 0)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
+
+    if (nValue > curBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+
+    // Parse Bitcoin address
+    CScript scriptPubKey = GetScriptForDestination(address);
+
+    // Create and send the transaction
+    CHDReserveKey reservekey(pwalletMain);
+    CAmount nFeeRequired;
+    std::string strError;
+    vector<CRecipient> vecSend;
+    int nChangePosRet = -1;
+    CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
+    vecSend.push_back(recipient);
+    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError)) {
+        if (!fSubtractFeeFromAmount && nValue + nFeeRequired > pwalletMain->GetBalance())
+            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
+        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+    }
+    if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+}
+
+UniValue hdaddchain(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp)
+        throw runtime_error(
+                            "hdaddchain (<chainpath>|default) (<masterseed_hex | master_priv_key>)\n"
+                            "\nAdds a HD/Bip32 chain \n"
+                            "\nArguments:\n"
+                            "1. chainpath        (string, optional, default="+hd_default_chainpath+") chainpath for hd wallet structure\n"
+                            "   m stands for master, c for internal/external key-switch, k stands for upcounting child key index"
+                            "2. masterseed_hex   (string/hex, optional) use this seed for master key generation\n"
+                            "2. master_priv_key  (string/base58check, optional) will import the given extended master private key for this chain of keys\n"
+                            "\nResult\n"
+                            "{\n"
+                            "  \"seed_hex\" : \"<hexstr>\",  (string) seed used during master key generation (only if no masterseed hex was provided\n"
+                            "}\n"
+
+                            "\nExamples\n"
+                            + HelpExampleCli("hdaddchain", "")
+                            + HelpExampleCli("hdaddchain", "m/44'/0'/0'/c/k")
+                            + HelpExampleRpc("hdaddchain", "m/44'/0'/0'/c/k")
+                            );
+
+    UniValue result(UniValue::VOBJ);
+
+    assert(pwalletMain != NULL);
+    EnsureWalletIsUnlocked();
+
+    const unsigned int bip32MasterSeedLength = 32;
+    CKeyingMaterial vSeed = CKeyingMaterial(bip32MasterSeedLength);
+    bool fGenerateMasterSeed = true;
+    HDChainID chainId;
+    std::string chainPath = hd_default_chainpath;
+    if (params.size() > 0 && params[0].isStr() && params[0].get_str() != "default")
+        chainPath = params[0].get_str(); //todo bip32 chainpath sanity
+
+    std::string xpubOut;
+    std::string xprivOut;
+
+    if (params.size() > 1 && params[1].isStr())
+    {
+        if (params[1].get_str().size() > 32*2) //hex
+        {
+            //assume it's a base58check encoded key
+            xprivOut = params[1].get_str();
+        }
+        else
+        {
+            if (!IsHex(params[1].get_str()))
+                throw runtime_error("HD master seed must be encoded in hex");
+
+            std::vector<unsigned char> seed = ParseHex(params[1].get_str());
+            if (seed.size() != bip32MasterSeedLength)
+                throw runtime_error("HD master seed must be "+itostr(bip32MasterSeedLength*8)+"bit");
+
+            memcpy(&vSeed[0], &seed[0], bip32MasterSeedLength);
+            memory_cleanse(&seed[0], bip32MasterSeedLength);
+            fGenerateMasterSeed = false;
+        }
+    }
+
+    pwalletMain->HDAddHDChain(chainPath, fGenerateMasterSeed, vSeed, chainId, xprivOut, xpubOut);
+    if (fGenerateMasterSeed)
+        result.push_back(Pair("seed_hex", HexStr(vSeed)));
+
+    result.push_back(Pair("extended_master_pubkey", xpubOut));
+    result.push_back(Pair("extended_master_privkey", xprivOut));
+    result.push_back(Pair("chainid", chainId.GetHex()));
+    result.push_back(Pair("keypath", chainPath));
+
+    memory_cleanse(&vSeed[0], bip32MasterSeedLength);
+    memory_cleanse(&xprivOut[0], xpubOut.size());
+    memory_cleanse(&xpubOut[0], xpubOut.size());
+
+    return result;
+}
+
+UniValue hdsetchain(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+                            "hdsetchain <chainid>\n"
+                            "\nReturns some hd relevant information.\n"
+                            "\nArguments:\n"
+                            "1. \"chainid\"        (string|hex, required) chainid is a bitcoin hash of the master public key of the corresponding chain.\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("hdsetchain", "")
+                            + HelpExampleCli("hdgetinfo", "True")
+                            + HelpExampleRpc("hdgetinfo", "")
+                            );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    HDChainID chainId;
+    if (!IsHex(params[0].get_str()))
+        throw runtime_error("Chain id format is invalid");
+
+    chainId.SetHex(params[0].get_str());
+
+    if (!pwalletMain->HDSetActiveChainID(chainId))
+        throw runtime_error("Could not set active chain");
+
+    return NullUniValue;
+}
+
+UniValue hdgetinfo(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+                            "hdgetinfo\n"
+                            "\nReturns some hd relevant information.\n"
+                            "\nArguments:\n"
+                            "{\n"
+                            "  \"chainid\" : \"<chainid>\",  string) A bitcoinhash of the master public key\n"
+                            "  \"creationtime\" : The creation time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
+                            "  \"chainpath\" : \"<keyschainpath>\",  string) The chainpath (like m/44'/0'/0'/c)\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("hdgetinfo", "")
+                            + HelpExampleCli("hdgetinfo", "True")
+                            + HelpExampleRpc("hdgetinfo", "")
+                            );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    std::vector<HDChainID> chainIDs;
+    if (!pwalletMain->GetAvailableChainIDs(chainIDs))
+        throw runtime_error("Could not load chain ids");
+
+    UniValue result(UniValue::VARR);
+    BOOST_FOREACH(const HDChainID& chainId, chainIDs)
+    {
+        CHDChain chain;
+        if (!pwalletMain->GetChain(chainId, chain))
+            throw runtime_error("Could not load chain");
+
+        UniValue chainObject(UniValue::VOBJ);
+        chainObject.push_back(Pair("chainid", chainId.GetHex()));
+        chainObject.push_back(Pair("creationtime", chain.nCreateTime));
+        chainObject.push_back(Pair("chainpath", chain.chainPath));
+
+        result.push_back(chainObject);
+    }
+
+    return result;
+}
+
+UniValue hdgetaddress(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+                            "hdgetaddress (<childindex>)\n"
+                            "\nReturns a Bitcoin address for receiving payments.\n"
+                            "\nAutomatically uses the next available childindex if no index is given"
+                            "\nArguments:\n"
+                            "1. \"childindex\"        (numeric, optional) child key index. ATTENTION: automatic index counting will start at the highes available child key index\n"
+                            "{\n"
+                            "  \"address\" : \"<address>\",  string) The new bitcoin address\n"
+                            "  \"chainpath\" : \"<keyschainpath>\",  string) The used chainpath\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("hdgetaddress", "")
+                            + HelpExampleCli("hdgetaddress", "100")
+                            + HelpExampleRpc("hdgetaddress", "")
+                            );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    CPubKey newKey;
+    std::string keyChainPath;
+    if (params.size() == 1 && params[0].isNum())
+    {
+        HDChainID emptyId;
+        if (!pwalletMain->HDGetChildPubKeyAtIndex(emptyId, newKey, keyChainPath, params[0].get_int()))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
+    }
+    else
+    {
+        HDChainID emptyId;
+        if (!pwalletMain->HDGetNextChildPubKey(emptyId, newKey, keyChainPath))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Can't generate HD child key");
+    }
+    CKeyID keyID = newKey.GetID();
+    
+    pwalletMain->SetAddressBook(keyID, "", "receive");
+
+    UniValue result(UniValue::VOBJ);
+    result.push_back(Pair("address", CBitcoinAddress(keyID).ToString()));
+    result.push_back(Pair("chainpath", keyChainPath));
+    return result;
+}
+
+UniValue hdsendtoaddress(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() < 2 || params.size() > 5)
+        throw runtime_error(
+                            "hdsendtoaddress \"bitcoinaddress\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
+                            "\nSend an amount to a given address. The amount is a real and is rounded to the nearest 0.00000001\n"
+                            + HelpRequiringPassphrase() +
+                            "\nArguments:\n"
+                            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
+                            "2. \"amount\"      (numeric, required) The amount in btc to send. eg 0.1\n"
+                            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
+                            "                             This is not part of the transaction, just kept in your wallet.\n"
+                            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
+                            "                             to which you're sending the transaction. This is not part of the \n"
+                            "                             transaction, just kept in your wallet.\n"
+                            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
+                            "                             The recipient will receive less bitcoins than you enter in the amount field.\n"
+                            "\nResult:\n"
+                            "\"transactionid\"  (string) The transaction id.\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("hdsendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
+                            + HelpExampleCli("hdsendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
+                            + HelpExampleCli("hdsendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"\" \"\" true")
+                            + HelpExampleRpc("hdsendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
+                            );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    CBitcoinAddress address(params[0].get_str());
+    if (!address.IsValid())
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+
+    // Amount
+    CAmount nAmount = AmountFromValue(params[1]);
+
+    // Wallet comments
+    CWalletTx wtx;
+    if (params.size() > 2 && !params[2].isNull() && !params[2].get_str().empty())
+        wtx.mapValue["comment"] = params[2].get_str();
+    if (params.size() > 3 && !params[3].isNull() && !params[3].get_str().empty())
+        wtx.mapValue["to"]      = params[3].get_str();
+
+    bool fSubtractFeeFromAmount = false;
+    if (params.size() > 4)
+        fSubtractFeeFromAmount = params[4].get_bool();
+
+    EnsureWalletIsUnlocked();
+
+    SendMoneyHD(address.Get(), nAmount, fSubtractFeeFromAmount, wtx);
+
+    return wtx.GetHash().GetHex();
+}
+
+/* end BIP32 stack */

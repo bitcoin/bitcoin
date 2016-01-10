@@ -9,6 +9,8 @@
 #include "amount.h"
 #include "wallet/db.h"
 #include "key.h"
+#include "keystore.h"
+#include "hdkeystore.h"
 
 #include <list>
 #include <stdint.h>
@@ -98,6 +100,13 @@ public:
 
     bool WriteWatchOnly(const CScript &script);
     bool EraseWatchOnly(const CScript &script);
+
+    bool WriteHDMasterSeed(const uint256& hash, const CKeyingMaterial& masterSeed);
+    bool WriteHDCryptedMasterSeed(const uint256& hash, const std::vector<unsigned char>& vchCryptedSecret);
+    bool EraseHDMasterSeed(const uint256& hash);
+    bool WriteHDChain(const CHDChain& chain);
+    bool WriteHDPubKey(const CHDPubKey& hdPubKey, const CKeyMetadata& keyMeta);
+    bool WriteHDAchiveChain(const uint256& hash);
 
     bool WriteBestBlock(const CBlockLocator& locator);
     bool ReadBestBlock(CBlockLocator& locator);
