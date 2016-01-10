@@ -256,6 +256,12 @@ static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, s
     /** For secp256k1, 2Q is infinity if and only if Q is infinity. This is because if 2Q = infinity,
      *  Q must equal -Q, or that Q.y == -(Q.y), or Q.y is 0. For a point on y^2 = x^3 + 7 to have
      *  y=0, x^3 must be -7 mod p. However, -7 has no cube root mod p.
+     *  
+     *  Having said this, if this function receives a point on a sextic twist, e.g. by
+     *  a fault attack, it is possible for y to be 0. This happens for y^2 = x^3 + 6,
+     *  since -6 does have a cube root mod p. For this point, this function will not set
+     *  the infinity flag even though the point doubles to infinity, and the result
+     *  point will be gibberish (z = 0 but infinity = 0).
      */
     r->infinity = a->infinity;
     if (r->infinity) {
