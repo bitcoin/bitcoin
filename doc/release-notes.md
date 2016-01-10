@@ -169,6 +169,17 @@ a connection to Tor can be made. It can be configured with the `-listenonion`,
 `-torcontrol` and `-torpassword` settings. To show verbose debugging
 information, pass `-debug=tor`.
 
+Replace-by-fee transactions
+---------------------------
+
+It is now possible to replace transactions in the transaction memory pool of
+Bitcoin Core 0.12 nodes. Bitcoin Core will only replace transactions which
+have any of their inputs' `nSequence` number set to less than `0xffffffff - 1`.
+Moreover, a replacement transaction may only be accepted when it pays
+sufficient fee, as described in [BIP 125]
+(https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki).
+
+
 Reduce upload traffic
 ---------------------
 
@@ -229,7 +240,7 @@ relay fee.
 Bitcoin Core 0.12 will have a strict maximum size on the mempool. The
 default value is 300 MB and can be configured with the `-maxmempool`
 parameter. Whenever a transaction would cause the mempool to exceed
-it's maximum size, the transaction with the lowest feerate will be
+its maximum size, the transaction with the lowest feerate will be
 evicted and the node's minimum relay fee will be increased to match
 this feerate. The initial minimum relay fee is set to 1000 satoshis
 per kB.
