@@ -37,16 +37,6 @@ const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
 };
 
-static const char* ppszTypeName[] =
-{
-    "ERROR", // Should never occur
-    NetMsgType::TX,
-    NetMsgType::BLOCK,
-    "filtered block", // Should never occur
-    "witness block",
-    "witness tx",
-};
-
 /** All known message types. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
@@ -161,17 +151,13 @@ CInv::CInv(int typeIn, const uint256& hashIn)
 
 CInv::CInv(const std::string& strType, const uint256& hashIn)
 {
-    unsigned int i;
-    for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
-    {
-        if (strType == ppszTypeName[i])
-        {
-            type = i;
-            break;
-        }
-    }
-    if (i == ARRAYLEN(ppszTypeName))
+    if (strType == NetMsgType::TX)
+        type = MSG_TX;
+    else if (strType == NetMsgType::BLOCK)
+        type = MSG_BLOCK;
+    else
         throw std::out_of_range(strprintf("CInv::CInv(string, uint256): unknown type '%s'", strType));
+
     hash = hashIn;
 }
 
@@ -188,9 +174,14 @@ bool CInv::IsKnownType() const
 
 const char* CInv::GetCommand() const
 {
-    if (!IsKnownType())
+    int masked = type & MSG_TYPE_MASK;
+    switch (masked)
+    {
+    case MSG_TX:    return NetMsgType::TX;
+    case MSG_BLOCK: return NetMsgType::BLOCK;
+    default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
-    return ppszTypeName[type];
+    }
 }
 
 std::string CInv::ToString() const
