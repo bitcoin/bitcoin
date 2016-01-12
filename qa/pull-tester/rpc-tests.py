@@ -115,6 +115,7 @@ testScripts = [
     'segwit.py',
     'txn_clone.py',
     'txn_priority.py',
+    'txn_priority.py --gbt',
     'getchaintips.py',
     'rawtransactions.py',
     'rest.py',

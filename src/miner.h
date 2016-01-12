@@ -29,6 +29,7 @@ struct CBlockTemplate
     CBlock block;
     std::vector<CAmount> vTxFees;
     std::vector<int64_t> vTxSigOpsCost;
+    std::vector<double> vTxPriorities;
     std::vector<unsigned char> vchCoinbaseCommitment;
 };
 
