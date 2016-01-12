@@ -6,7 +6,12 @@
 #ifndef BITCOIN_CONSENSUS_STORAGE_INTERFACES_CPP_H
 #define BITCOIN_CONSENSUS_STORAGE_INTERFACES_CPP_H
 
+#include "amount.h"
+#include "primitives/transaction.h"
 #include "uint256.h"
+
+class CTransaction;
+class CTxOut;
 
 // CPP storage interfaces
 
@@ -29,6 +34,50 @@ public:
         return GetAncestorView(GetHeight() - 1);
     };
     virtual int64_t GetMedianTimePast() const = 0;
+};
+
+class CCoinsInterface
+{
+public:
+    CCoinsInterface() {};
+    virtual ~CCoinsInterface() {};    
+
+    //! check whether a particular output is still available or spent
+    virtual bool IsAvailable(int32_t nPos) const = 0;
+    virtual bool IsCoinBase() const = 0;
+    //! check whether the entire CCoins is spent
+    //! note that only !IsPruned() CCoins can be serialized
+    virtual bool IsPruned() const = 0;
+    virtual const CAmount& GetAmount(int32_t nPos) const = 0;
+    virtual const CScript& GetScriptPubKey(int32_t nPos) const = 0;
+    virtual int64_t GetHeight() const = 0;
+};
+
+class CUtxoView
+{
+public:
+    CUtxoView() {};
+    virtual ~CUtxoView() {};
+
+    /**
+     * Return a pointer to CCoins in the cache, or NULL if not found. This is
+     * more efficient than GetCoins. Modifications to other cache entries are
+     * allowed while accessing the returned pointer.
+     */
+    virtual const CCoinsInterface* AccessCoins(const uint256 &txid) const = 0;
+    //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
+    virtual bool HaveInputs(const CTransaction& tx) const
+    {
+        if (!tx.IsCoinBase()) {
+            for (unsigned int i = 0; i < tx.vin.size(); i++) {
+                const COutPoint& prevout = tx.vin[i].prevout;
+                const CCoinsInterface* coins = AccessCoins(prevout.hash);
+                if (!coins || !coins->IsAvailable(prevout.n))
+                    return false;
+            }
+        }
+        return true;
+    }
 };
 
 #endif // BITCOIN_CONSENSUS_STORAGE_INTERFACES_CPP_H
