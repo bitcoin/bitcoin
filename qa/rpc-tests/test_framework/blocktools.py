@@ -4,20 +4,42 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+from binascii import a2b_hex, b2a_hex
+import io
+import struct
+
 from .mininode import *
 from .script import CScript, OP_TRUE, OP_CHECKSIG, OP_RETURN
 
 # Create a block (with regtest difficulty)
-def create_block(hashprev, coinbase, nTime=None):
+def create_block(hashprev=None, coinbase=None, nTime=None, tmpl=None, txlist=None):
     block = CBlock()
-    if nTime is None:
+    if tmpl:
+        block.nVersion = tmpl.get('version', block.nVersion)
+    if not nTime is None:
+        block.nTime = nTime
+    elif tmpl and not tmpl.get('curtime') is None:
+        block.nTime = tmpl['curtime']
+    else:
         import time
         block.nTime = int(time.time()+600)
+    if not hashprev is None:
+        block.hashPrevBlock = hashprev
     else:
-        block.nTime = nTime
-    block.hashPrevBlock = hashprev
-    block.nBits = 0x207fffff # Will break after a difficulty adjustment...
-    block.vtx.append(coinbase)
+        block.hashPrevBlock = int(tmpl['previousblockhash'], 0x10)
+    if tmpl and not tmpl.get('bits') is None:
+        block.nBits = struct.unpack('>I', a2b_hex(tmpl['bits']))[0]
+    else:
+        block.nBits = 0x207fffff # Will break after a difficulty adjustment...
+    if not coinbase is None:
+        block.vtx.append(coinbase)
+    if txlist:
+        for tx in txlist:
+            if not hasattr(tx, 'calc_sha256'):
+                txo = CTransaction()
+                txo.deserialize(io.BytesIO(tx))
+                tx = txo
+            block.vtx.append(tx)
     block.hashMerkleRoot = block.calc_merkle_root()
     block.calc_sha256()
     return block

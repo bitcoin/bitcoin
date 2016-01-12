@@ -114,6 +114,7 @@ testScripts = [
     'p2p-segwit.py',
     'segwit.py',
     'txn_clone.py',
+    'txn_priority.py',
     'getchaintips.py',
     'rawtransactions.py',
     'rest.py',
