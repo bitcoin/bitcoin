@@ -30,6 +30,11 @@ class RawTransactionsTest(BitcoinTestFramework):
         print "Mining blocks..."
 
         min_relay_tx_fee = self.nodes[0].getnetworkinfo()['relayfee']
+        # This test is not meant to test fee estimation and we'd like
+        # to be sure all txs are sent at a consistent desired feerate
+        for node in self.nodes:
+            node.settxfee(min_relay_tx_fee)
+
         # if the fee's positive delta is higher than this value tests will fail,
         # neg. delta always fail the tests.
         # The size of the signature of every input may be at most 2 bytes larger
@@ -447,6 +452,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         wait_bitcoinds()
 
         self.nodes = start_nodes(4, self.options.tmpdir)
+        # This test is not meant to test fee estimation and we'd like
+        # to be sure all txs are sent at a consistent desired feerate
+        for node in self.nodes:
+            node.settxfee(min_relay_tx_fee)
 
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)
