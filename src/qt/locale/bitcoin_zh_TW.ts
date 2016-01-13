@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>新增新的位址</translation>
+        <translation>產生一個新位址</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -169,7 +169,7 @@
     </message>
     <message>
         <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>位元幣核心現在要關閉，好完成加密程序。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取位元幣。</translation>
+        <translation>比特幣核心現在要關閉，好完成加密程序。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取比特幣。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -307,7 +307,7 @@
     </message>
     <message>
         <source>Bitcoin Core client</source>
-        <translation>位元幣核心客戶端軟體</translation>
+        <translation>比特幣核心客戶端軟體</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -319,7 +319,7 @@
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>付錢給一個位元幣位址</translation>
+        <translation>付錢給一個比特幣位址</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -343,7 +343,7 @@
     </message>
     <message>
         <source>Bitcoin</source>
-        <translation>位元幣</translation>
+        <translation>比特幣</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -359,7 +359,7 @@
     </message>
     <message>
         <source>Show information about Bitcoin Core</source>
-        <translation>顯示位元幣核心的相關資訊</translation>
+        <translation>顯示比特幣核心的相關資訊</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -375,11 +375,11 @@
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>用位元幣位址簽署訊息來證明位址是你的</translation>
+        <translation>用比特幣位址簽署訊息來證明位址是你的</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>驗證訊息是用來確定訊息是用指定的位元幣位址簽署的</translation>
+        <translation>驗證訊息是用來確定訊息是用指定的比特幣位址簽署的</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -399,7 +399,7 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>位元幣核心</translation>
+        <translation>比特幣核心</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
@@ -407,11 +407,11 @@
     </message>
     <message>
         <source>&amp;About Bitcoin Core</source>
-        <translation>關於位元幣核心</translation>
+        <translation>關於比特幣核心</translation>
     </message>
     <message>
         <source>Modify configuration options for Bitcoin Core</source>
-        <translation>修改位元幣核心的設定選項</translation>
+        <translation>修改比特幣核心的設定選項</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -431,11 +431,11 @@
     </message>
     <message>
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
-        <translation>顯示位元幣核心的說明訊息，來取得可用命令列選項的列表</translation>
+        <translation>顯示比特幣核心的說明訊息，來取得可用命令列選項的列表</translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
-        <translation><numerusform>%n 個運作中的位元幣網路連線</numerusform></translation>
+        <translation><numerusform>%n 個運作中的比特幣網路連線</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -856,7 +856,7 @@
     <name>HelpMessageDialog</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>位元幣核心</translation>
+        <translation>比特幣核心</translation>
     </message>
     <message>
         <source>version</source>
@@ -868,7 +868,7 @@
     </message>
     <message>
         <source>About Bitcoin Core</source>
-        <translation>關於位元幣核心</translation>
+        <translation>關於比特幣核心</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -919,15 +919,15 @@
     </message>
     <message>
         <source>Welcome to Bitcoin Core.</source>
-        <translation>歡迎使用位元幣核心</translation>
+        <translation>歡迎使用比特幣核心</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
-        <translation>因為這是程式第一次啓動，你可以選擇位元幣核心儲存資料的地方。</translation>
+        <translation>因為這是程式第一次啓動，你可以選擇比特幣核心儲存資料的地方。</translation>
     </message>
     <message>
         <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>位元幣核心會下載並儲存一份位元幣區塊鏈的拷貝。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
+        <translation>比特幣核心會下載並儲存一份比特幣區塊鏈的拷貝。至少有 %1GB 的資料會儲存到這個目錄中，並且還會持續增長。另外錢包資料也會儲存在這個目錄。</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -939,7 +939,7 @@
     </message>
     <message>
         <source>Bitcoin Core</source>
-        <translation>位元幣核心</translation>
+        <translation>比特幣核心</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -1049,11 +1049,11 @@
     </message>
     <message>
         <source>Automatically start Bitcoin Core after logging in to the system.</source>
-        <translation>在登入系統後自動啓動位元幣核心。</translation>
+        <translation>在登入系統後自動啓動比特幣核心。</translation>
     </message>
     <message>
         <source>&amp;Start Bitcoin Core on system login</source>
-        <translation>系統登入時啟動位元幣核心</translation>
+        <translation>系統登入時啟動比特幣核心</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1133,7 +1133,7 @@
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
-        <translation>用另外的 SOCKS5 代理伺服器，來透過 Tor 隱藏服務跟其他節點聯絡:</translation>
+        <translation>用另外的 SOCKS5 代理伺服器，來透過洋蔥路由的隱藏服務跟其他節點聯絡:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1323,7 +1323,7 @@
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
-        <translation>沒辦法解析資源識別碼(URI)！可能是因為位元幣位址無效，或是 URI 參數格式錯誤。</translation>
+        <translation>沒辦法解析資源識別碼(URI)！可能是因為比特幣位址無效，或是 URI 參數格式錯誤。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1397,7 +1397,7 @@
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>輸入位元幣位址 (比如說 %1)</translation>
+        <translation>輸入比特幣位址 (比如說 %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1679,7 +1679,7 @@
     </message>
     <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
-        <translation>歡迎使用位元幣核心 RPC 主控台。</translation>
+        <translation>歡迎使用比特幣核心 RPC 主控台。</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -2155,7 +2155,7 @@
     </message>
     <message>
         <source>Warning: Invalid Bitcoin address</source>
-        <translation>警告: 位元幣位址無效</translation>
+        <translation>警告: 比特幣位址無效</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2206,7 +2206,7 @@
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
-        <translation>接收付款的位元幣位址</translation>
+        <translation>接收付款的比特幣位址</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2250,7 +2250,7 @@
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
-        <translation>附加在位元幣付款協議的資源識別碼(URI)中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到位元幣網路上。</translation>
+        <translation>附加在比特幣付款協議的資源識別碼(URI)中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到比特幣網路上。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2265,7 +2265,7 @@
     <name>ShutdownWindow</name>
     <message>
         <source>Bitcoin Core is shutting down...</source>
-        <translation>正在關閉位元幣核心中...</translation>
+        <translation>正在關閉比特幣核心中...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2320,7 +2320,7 @@
     </message>
     <message>
         <source>Sign the message to prove you own this Bitcoin address</source>
-        <translation>簽署這個訊息來證明這個位元幣位址是你的</translation>
+        <translation>簽署這個訊息來證明這個比特幣位址是你的</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2344,11 +2344,11 @@
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
-        <translation>簽署這個訊息的位元幣位址</translation>
+        <translation>簽署這個訊息的比特幣位址</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
-        <translation>驗證這個訊息來確定是用指定的位元幣位址簽署的</translation>
+        <translation>驗證這個訊息來確定是用指定的比特幣位址簽署的</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2415,11 +2415,11 @@
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>位元幣核心</translation>
+        <translation>比特幣核心</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
-        <translation>位元幣核心開發人員</translation>
+        <translation>比特幣核心開發人員</translation>
     </message>
     <message>
         <source>[testnet]</source>
@@ -2938,7 +2938,7 @@
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>請檢查電腦日期和時間是否正確！位元幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
+        <translation>請檢查電腦日期和時間是否正確！比特幣核心沒辦法在時鐘不準的情況下正常運作。</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -2970,7 +2970,7 @@
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
-        <translation>用護靈模式在背後執行並接受指令</translation>
+        <translation>在背景執行並接受指令</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -3026,7 +3026,7 @@
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
-        <translation>警告: 位元幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
+        <translation>警告: 比特幣網路對於區塊鏈結的決定目前有分歧！看來有些礦工會有問題。</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
@@ -3218,7 +3218,7 @@
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
-        <translation>沒辦法鎖定資料目錄 %s。位元幣核心可能已經在執行了。</translation>
+        <translation>沒辦法鎖定資料目錄 %s。比特幣核心可能已經在執行了。</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3306,7 +3306,7 @@
     </message>
     <message>
         <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>自動產生 Tor 隱藏服務(預設值: %d)</translation>
+        <translation>自動產生洋蔥路由的隱藏服務(預設值: %d)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
@@ -3318,11 +3318,11 @@
     </message>
     <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
-        <translation>版權為位元幣核心開發人員自西元 2009 至 %i 年起所有</translation>
+        <translation>版權為比特幣核心開發人員自西元 2009 至 %i 年起所有</translation>
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
-        <translation>載入 wallet.dat 檔案時發生錯誤: 這個錢包需要新版的位元幣核心</translation>
+        <translation>載入 wallet.dat 檔案時發生錯誤: 這個錢包需要新版的比特幣核心</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3422,11 +3422,11 @@
     </message>
     <message>
         <source>Tor control port password (default: empty)</source>
-        <translation>Tor 控制埠密碼(預設值: 空白)</translation>
+        <translation>洋蔥路由控制埠密碼(預設值: 空白)</translation>
     </message>
     <message>
         <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>開啟聽候 onion 連線時的 Tor 控制埠號碼(預設值: %s)</translation>
+        <translation>開啟聽候 onion 連線時的洋蔥路由控制埠號碼(預設值: %s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3458,7 +3458,7 @@
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart Bitcoin Core to complete</source>
-        <translation>錢包需要重寫: 請重新啓動位元幣核心來完成</translation>
+        <translation>錢包需要重寫: 請重新啓動比特幣核心來完成</translation>
     </message>
     <message>
         <source>Warning</source>
@@ -3582,7 +3582,7 @@
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
-        <translation>生產位元幣(預設值: %u)</translation>
+        <translation>生產比特幣(預設值: %u)</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>

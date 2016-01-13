@@ -883,6 +883,10 @@
         <translation>opciones de la consola de comandos</translation>
     </message>
     <message>
+        <source>UI Options:</source>
+        <translation>Opciones de interfaz de usuario:</translation>
+    </message>
+    <message>
         <source>Choose data directory on startup (default: %u)</source>
         <translation>Elegir directorio de datos al iniciar (predeterminado: %u)</translation>
     </message>
@@ -898,7 +902,11 @@
         <source>Set SSL root certificates for payment request (default: -system-)</source>
         <translation>Establecer los certificados raíz SSL para solicitudes de pago (predeterminado: -system-)</translation>
     </message>
-    </context>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Resetear los cambios de configuracion hechos por el GUI</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>

@@ -222,7 +222,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Netmask</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Banat până la</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -874,6 +882,30 @@
         <source>command-line options</source>
         <translation>Opţiuni linie de comandă</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Opţiuni UI:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Alege dosarul de date la pornire (implicit: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Setează limba, de exemplu: "ro_RO" (implicit: sistem local)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Porniţi minimizat</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Setare rădăcină certificat SSL pentru cerere de plată (implicit: -sistem- )</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Afişează ecran splash la pornire (implicit: %u)</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
@@ -1311,6 +1343,10 @@
     <message>
         <source>User Agent</source>
         <translation>Agent utilizator</translation>
+    </message>
+    <message>
+        <source>Node/Service</source>
+        <translation>Nod/Serviciu</translation>
     </message>
     <message>
         <source>Ping Time</source>
