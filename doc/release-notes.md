@@ -169,6 +169,17 @@ a connection to Tor can be made. It can be configured with the `-listenonion`,
 `-torcontrol` and `-torpassword` settings. To show verbose debugging
 information, pass `-debug=tor`.
 
+Replace-by-fee transactions
+---------------------------
+
+It is now possible to replace transactions in the transaction memory pool of
+Bitcoin Core 0.12 nodes. Bitcoin Core will only replace transactions which
+have any of their inputs' `nSequence` number set to less than `0xffffffff - 1`.
+Moreover, a replacement transaction may only be accepted when it pays
+sufficient fee, as described in [BIP 125]
+(https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki).
+
+
 Reduce upload traffic
 ---------------------
 
@@ -215,6 +226,65 @@ of just announcing the hash. In a reorganization, all new headers are sent,
 instead of just the new tip. This can often prevent an extra roundtrip before
 the actual block is downloaded.
 
+Memory pool limiting
+--------------------------------
+
+Previous versions of Bitcoin Core had their mempool limited by checking
+a transaction's fees against the node's minimum relay fee. There was no
+upper bound on the size of the mempool and attackers could send a large
+number of transactions paying just slighly more than the default minimum
+relay fee to crash nodes with relatively low RAM. A temporary workaround
+for previous versions of Bitcoin Core was to raise the default minimum
+relay fee.
+
+Bitcoin Core 0.12 will have a strict maximum size on the mempool. The
+default value is 300 MB and can be configured with the `-maxmempool`
+parameter. Whenever a transaction would cause the mempool to exceed
+its maximum size, the transaction with the lowest feerate will be
+evicted and the node's minimum relay fee will be increased to match
+this feerate. The initial minimum relay fee is set to 1000 satoshis
+per kB.
+
+Priority transactions
+---------------------
+
+Transactions that do not pay the minimum relay fee, are called "free
+transactions" or priority transactions. Previous versions of Bitcoin
+Core would relay and mine priority transactions depending on their
+setting of `-limitfreerelay=<r>` (default: `r=15` kB per minute) and
+`-blockprioritysize=<s>` (default: `50000` bytes of a block's
+priority space).
+
+Priority code is planned to get moved out of from Bitcoin Core 0.13
+and the default block priority size has been set to `0` in Bitcoin Core
+0.12.
+
+Wallet transaction fees
+-----------------------
+
+Various improvements have been made to how the wallet calculates
+transaction fees.
+
+Users can decide to pay a predefined fee rate by setting `-paytxfee=<n>`
+(or `settxfee <n>` rpc during runtime). A value of `n=0` signals Bitcoin
+Core to use floating fees. By default, Bitcoin Core will use floating
+fees.
+
+Based on past transaction data, floating fees approximate the fees
+required to get into the `m`th block from now. This is configurable
+with `-txconfirmtarget=<m>` (default: `2`).
+
+Sometimes, it is not possible to give good estimates, or an estimate
+at all. Therefore, a fallback value can be set with `-fallbackfee=<f>`
+(default: `0.0002` BTC/kB).
+
+At all times, Bitcoin Core will cap fees at `-maxtxfee=<x>` (default:
+0.10) BTC.
+Furthermore, Bitcoin Core will never create transactions smaller than
+the current minimum relay fee.
+Finally, a user can set the minimum fee rate for all transactions with
+`-mintxfee=<i>`, which defaults to 1000 satoshis per kB.
+
 Negative confirmations and conflict detection
 ---------------------------------------------
 
@@ -243,8 +313,7 @@ git merge commit are mentioned.
 
 ### RPC and REST
 
-Asm representations of scriptSig signatures now contain SIGHASH type decodes
-----------------------------------------------------------------------------
+- **Asm representations of scriptSig signatures now contain SIGHASH type decodes**
 
 The `asm` property of each scriptSig now contains the decoded signature hash
 type for each signature that provides a valid defined hash type.
@@ -288,10 +357,9 @@ configured specifically to process scriptPubKey and not scriptSig scripts.
 
 ### Miscellaneous
 
-- Removed bitrpc.py from contrib
+- **Removed bitrpc.py from contrib**
 
-Addition of ZMQ-based Notifications
-==================================
+- **Addition of ZMQ-based Notifications**
 
 Bitcoind can now (optionally) asynchronously notify clients through a
 ZMQ-based PUB socket of the arrival of new transactions and blocks.
