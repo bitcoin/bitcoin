@@ -40,7 +40,8 @@ CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
 
     feeDelta = 0;
 
-    cachedHeight = entryHeight;
+    // Since entries arrive *after* the tip's height, their entry priority is for the height+1
+    cachedHeight = entryHeight + 1;
     cachedPriority = entryPriority;
 
     nCountWithAncestors = 1;
