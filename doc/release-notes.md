@@ -20,7 +20,7 @@ installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
 bitcoind/bitcoin-qt (on Linux).
 
 Downgrade warning
-------------------
+-----------------
 
 ### Downgrade to a version < 0.10.0
 
@@ -141,7 +141,7 @@ sufficient fee, as described in [BIP 125]
 (https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki).
 
 RPC: Random-cookie RPC authentication
----------------------------------------
+-------------------------------------
 
 When no `-rpcpassword` is specified, the daemon now uses a special 'cookie'
 file for authentication. This file is generated with random content when the
@@ -169,19 +169,22 @@ Relay and Mining: Priority transactions
 ---------------------------------------
 
 Transactions that do not pay the minimum relay fee, are called "free
-transactions" or priority transactions. Previous versions of Bitcoin
-Core would relay and mine priority transactions depending on their
-setting of `-limitfreerelay=<r>` (default: `r=15` kB per minute) and
-`-blockprioritysize=<s>` (default: `50000` bytes of a block's
-priority space).
+transactions" or priority transactions. Bitcoin Core relays and mines
+priority transactions depending on the setting of `-limitfreerelay=<r>`
+(default: `r=15` kB per minute) and `-blockprioritysize=<s>`.
 
-Priority code is scheduled for removal in Bitcoin Core 0.13. In
-Bitcoin Core 0.12, the default block priority size has been set to `0`
-and the priority calculation has been simplified to only include the
-coin age of inputs that were in the blockchain at the time the transaction
-was accepted into the mempool.  In addition priority transactions are not
-accepted to the mempool if mempool limiting has triggered a higher effective
-minimum relay fee.
+In Bitcoin Core 0.12, priority transactions are not accepted to the mempool nor
+relayed if mempool limiting has triggered a higher effective minimum relay fee.
+
+Mining of priority transactions is also now disabled by default. To re-enable
+it, simply set `-blockprioritysize=<n>` where <n> is the size in bytes of your
+blocks to reserve for priority transactions. The old default was 50k, so to
+retain the same policy, you must set `-blockprioritysize=50000`.
+
+Additionally, calculation of the priority for transactions received with
+unconfirmed inputs is no longer updated correctly when they are received with
+unconfirmed inputs, so miners must continue to use 0.11 if accurate priority
+accounting is important to them.
 
 Automatically use Tor hidden services
 -------------------------------------
@@ -335,7 +338,7 @@ Note that the output of the RPC `decodescript` did not change because it is
 configured specifically to process scriptPubKey and not scriptSig scripts.
 
 RPC: SSL support dropped
-----------------------------
+------------------------
 
 SSL support for RPC, previously enabled by the option `rpcssl` has been dropped
 from both the client and the server. This was done in preparation for removing
