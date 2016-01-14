@@ -148,8 +148,8 @@ the OP_RETURN. The limit on OP_RETURN output size is now applied to the entire
 serialized scriptPubKey, 83 bytes by default. (the previous 80 byte default plus
 three bytes overhead)
 
-Relay: Priority transactions
-----------------------------
+Relay and Mining: Priority transactions
+---------------------------------------
 
 Transactions that do not pay the minimum relay fee, are called "free
 transactions" or priority transactions. Previous versions of Bitcoin
@@ -160,8 +160,11 @@ priority space).
 
 Priority code is scheduled for removal in Bitcoin Core 0.13. In
 Bitcoin Core 0.12, the default block priority size has been set to `0`
-and priority transactions are not accepted to the mempool if mempool
-limiting has triggered a higher effective minimum relay fee.
+and the priority calculation has been simplified to only include the
+coin age of inputs that were in the blockchain at the time the transaction
+was accepted into the mempool.  In addition priority transactions are not
+accepted to the mempool if mempool limiting has triggered a higher effective
+minimum relay fee.
 
 Automatically use Tor hidden services
 -------------------------------------
@@ -352,6 +355,15 @@ caching. A sample config for apache2 could look like:
     # ProxyPass / balancer://balancer_cluster_name
 
     </VirtualHost>
+
+Mining Code Changes
+-------------------
+
+The mining code in 0.12 has been optimized to be significantly faster and use less
+memory. As part of these changes, consensus critical calculations are cached on a
+transaction's acceptance into the mempool and the mining code now relies on the
+consistency of the mempool to assemble blocks. However all blocks are still tested
+for validity after assembly.
 
 0.12.0 Change log
 =================
