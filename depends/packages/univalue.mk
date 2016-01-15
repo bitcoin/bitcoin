@@ -9,7 +9,7 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_set_vars
-$(package)_config_opts=--disable-shared
+$(package)_config_opts=--disable-shared --with-pic
 endef
 
 define $(package)_config_cmds
