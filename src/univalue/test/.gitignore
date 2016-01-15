@@ -1,7 +1,4 @@
-
 unitester
 
-*.log
 *.trs
-
-.libs
+*.log

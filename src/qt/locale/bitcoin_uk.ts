@@ -1,4 +1,4 @@
-<TS language="uk" version="2.0">
+<TS language="uk" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -218,6 +218,17 @@
     <message>
         <source>Wallet passphrase was successfully changed.</source>
         <translation>Пароль було успішно змінено.</translation>
+    </message>
+</context>
+<context>
+    <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Маска підмережі</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Заблоковано До</translation>
     </message>
 </context>
 <context>
@@ -871,6 +882,34 @@
         <source>command-line options</source>
         <translation>параметри командного рядка</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Параметри інтерфейсу:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Обирати каталог даних під час запуску (типово: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Встановити мову (наприклад: "de_DE") (типово: системна)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Запускати згорнутим</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Вказати кореневі SSL-сертифікати для запиту платежу (типово: -системні-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Показувати заставку під час запуску (типово: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Скинути налаштування, які було змінено через графічний інтерфейс користувача</translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -1067,6 +1106,34 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Порт проксі-сервера (наприклад 9050)</translation>
+    </message>
+    <message>
+        <source>Used for reaching peers via:</source>
+        <translation>Приєднуватися до учасників через:</translation>
+    </message>
+    <message>
+        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Вказує на використання наявного типового проксі SOCKS5, що використувується задля встановлення зв'язку з пірами через мережу такого типу.</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Підключатися до мережі Bitcoin через окремий SOCKS5 проксі для прихованих сервісів Tor.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Використовувати окремий SOCKS5-проксі для з'єднання з учасниками через приховані сервіси Tor:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1287,10 +1354,6 @@
         <translation>Запит платежу %1 занадто великий (%2 байт, дозволено %3 байт).</translation>
     </message>
     <message>
-        <source>Payment request DoS protection</source>
-        <translation>Оплата потребує захисту DoS</translation>
-    </message>
-    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Помилка зв'язку з %1: %2</translation>
     </message>
@@ -1443,6 +1506,18 @@
         <translation>Поточне число блоків</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation>Пул пам'яті</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>Поточне число транзакцій</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Використання пам'яті</translation>
+    </message>
+    <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Відкрити файл журналу налагодження Bitcoin Core з поточного каталогу даних. Це може зайняти кілька секунд для великих файлів журналів.</translation>
     </message>
@@ -1459,8 +1534,16 @@
         <translation>&amp;Учасники</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Заблоковані вузли</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Виберіть учасника для перегляду детальнішої інформації</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>В білому списку</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1471,20 +1554,24 @@
         <translation>Версія</translation>
     </message>
     <message>
+        <source>Starting Block</source>
+        <translation>Початковий Блок</translation>
+    </message>
+    <message>
+        <source>Synced Headers</source>
+        <translation>Синхронізовані Заголовки</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Синхронізовані Блоки</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Клієнт користувача</translation>
     </message>
     <message>
         <source>Services</source>
         <translation>Сервіси</translation>
-    </message>
-    <message>
-        <source>Starting Height</source>
-        <translation>Початкова висота</translation>
-    </message>
-    <message>
-        <source>Sync Height</source>
-        <translation>Висота синхронізації</translation>
     </message>
     <message>
         <source>Ban Score</source>
@@ -1503,16 +1590,16 @@
         <translation>Востаннє отримано</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>Байтів відправлено</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Байтів отримано</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Затримка</translation>
+    </message>
+    <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>Тривалість поточної затримки.</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>Поточна Затримка</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -1563,6 +1650,34 @@
         <translation>Очистити консоль</translation>
     </message>
     <message>
+        <source>&amp;Disconnect Node</source>
+        <translation>&amp;Від'єднати Вузол</translation>
+    </message>
+    <message>
+        <source>Ban Node for</source>
+        <translation>Заблокувати Вузол на</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;годину</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;день</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;тиждень</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;рік</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>&amp;Розблокувати Вузол</translation>
+    </message>
+    <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
         <translation>Вітаємо у RPC-консолі Bitcoin Core.</translation>
     </message>
@@ -1591,6 +1706,10 @@
         <translation>%1 ГБ</translation>
     </message>
     <message>
+        <source>(node id: %1)</source>
+        <translation>(ІД вузла: %1)</translation>
+    </message>
+    <message>
         <source>via %1</source>
         <translation>через %1</translation>
     </message>
@@ -1607,12 +1726,16 @@
         <translation>Вихідний</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>Невідома</translation>
+        <source>Yes</source>
+        <translation>Так</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>Отримання...</translation>
+        <source>No</source>
+        <translation>Ні</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Невідома</translation>
     </message>
 </context>
 <context>
@@ -1979,8 +2102,8 @@
         <translation>Копіювати решту</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Всього %1 (= %2)</translation>
+        <source>Total Amount %1</source>
+        <translation>Всього %1</translation>
     </message>
     <message>
         <source>or</source>
@@ -2014,13 +2137,13 @@
         <source>Payment request expired.</source>
         <translation>Запит платежу прострочено.</translation>
     </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Сплатіть лише мінімальну комісію у розмірі %1</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Перше підтвердження очікується протягом %n блоку.</numerusform><numerusform>Перше підтвердження очікується протягом %n блоків.</numerusform><numerusform>Перше підтвердження очікується протягом %n блоків.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Платити тільки мінімальну комісію у розмірі %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2654,6 +2777,10 @@
         <translation>Скопіювати ID транзакції </translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Скопіювати RAW транзакцію</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Редагувати мітку</translation>
     </message>
@@ -2801,12 +2928,52 @@
         <translation>Приймати команди із командного рядка та команди JSON-RPC</translation>
     </message>
     <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>Якщо &lt;category&gt; не задано, або ж якщо &lt;category&gt; = 1, виводить всю налагоджувальну інформацію.</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Максимальна загальна комісія (в %s) за одну транзакцію; занадто низьке значення може скасувати відправку великих транзакцій (типово: %s)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Будь ласка, перевірте коректність дати і часу на своєму комп'ютері! За наявності значної похибки Bitcoin Core буде працювати неправильно.</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>Встановлений розмір ланцюжка блоків є замалим (меншим за %d МіБ). Будь ласка, виберіть більше число.</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>Операція відсікання: остання синхронізація вмісту гаманцю не обмежується діями над скороченими данними. Вам необхідно зробити переіндексацію -reindex (заново завантажити веcь ланцюжок блоків в разі появи скороченого ланцюга)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>Зменшити вимоги до наявного простору на носії даних за допомогою скорочення ланцюжка (видалення старих блоків). Цей режим несумісний з параметрами -txindex та -rescan. Увага: при поверненні до типового значення видалені частини ланцюжка буде повторно завантажено. (типово: 0 = вимкнути скорочення ланцюжка, &gt;%u = очікуваний розмір файлів блоків в МіБ)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>Неможливо провести повторне сканування зі скороченим ланцюжком. Вам необхідно використати -reindex для завантаження повного ланцюжка блоків.</translation>
+    </message>
+    <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>Помилка: Сталася фатальна помилка (детальніший опис наведено в debug.log)</translation>
+    </message>
+    <message>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation>Комісія (в %s/КБ), що додаватиметься до вихідних транзакцій (типово: %s)</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>Скорочення кількості блоків...</translation>
+    </message>
+    <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Запустити в фоновому режимі (як демон) та приймати команди</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Використовувати тестову мережу</translation>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>Неможливо запустити HTTP-сервер. Детальніший опис наведено в журналі зневадження.</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
@@ -2829,16 +2996,12 @@
         <translation>Виконати команду, коли транзакція гаманця зміниться (замість %s в команді буде підставлено ідентифікатор транзакції)</translation>
     </message>
     <message>
-        <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Максимальна загальна комісія за одну транзакцію; занадто низьке значення може скасувати відправку великих транзакцій (типово: %s)</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Зменшити вимоги до наявного простору на носії даних за допомогою скорочення ланцюжка (видалення старих блоків). Цей режим вимикає підтримку гаманця та є несумісним з параметром -txindex. Увага: при поверненні до типового значення видалені частини ланцюжка буде повторно завантажено. (типово: 0 = вимкнути скорочення ланцюжка, &gt;%u = очікуваний розмір файлів блоків в МіБ)</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>Встановити кількість потоків скрипту перевірки (від %u до %d, 0 = автоматично, &lt;0 = вказує кількість вільних ядер, типово: %d)</translation>
+    </message>
+    <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>Схоже, що база даних блоків містить блок з майбутнього. Це може статися із-за некоректно встановленої дати та/або часу. Перебудовуйте базу даних блоків лише тоді, коли ви переконані, що встановлено правильну дату і час</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -2849,16 +3012,16 @@
         <translation>Неможливо прив'язатися до %s на цьому комп'ютері. Можливо, Bitcoin Core вже запущено.</translation>
     </message>
     <message>
+        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
+        <translation>Використовувати UPnP для відображення порту, що прослуховується (типово: 1 при прослуховуванні та за відсутності -proxy)</translation>
+    </message>
+    <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
         <translation>УВАГА: аномально висока кількість згенерованих блоків, %d блок(ів) було отримано за останні %d годин(и) (має бути %d)</translation>
     </message>
     <message>
         <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
         <translation>УВАГА: перевірте ваше мережеве з'єднання, %d блок(ів) було отримано за останні %d годин(и) (має бути %d)</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Увага: встановлено занадто велику комісію (-paytxfee). Комісія зніматиметься кожен раз коли ви проводитимете транзакції.</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
@@ -2869,10 +3032,6 @@
         <translation>Увага: Наш ланцюжок блоків відрізняється від ланцюжків підключених учасників! Можливо, вам, або іншим вузлам, необхідно оновитися.</translation>
     </message>
     <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Увага: помилка читання wallet.dat! Всі ключі прочитано коректно, але дані транзакцій чи записи адресної книги можуть бути пропущені, або пошкоджені.</translation>
-    </message>
-    <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Увага: файл wallet.dat пошкоджено, дані врятовано! Оригінальний wallet.dat збережено як wallet.{timestamp}.bak до %s; якщо Ваш баланс чи транзакції неправильні, Ви можете відновити їх з резервної копії. </translation>
     </message>
@@ -2881,16 +3040,12 @@
         <translation>Додати учасників, що під'єднуються з заданої підмережі чи IP-адреси, в білий список. Можна вказувати декілька разів.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(типово: 1)</translation>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-maxmempool має бути не менше %d МБ</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; може бути:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Спроба відновити закриті ключі з пошкодженого wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2921,6 +3076,22 @@
         <translation>Ви хочете перебудувати базу даних блоків зараз?</translation>
     </message>
     <message>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation>Дозволено введення хеш блоку в рядок &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish hash transaction in &lt;address&gt;</source>
+        <translation>Дозволено введення хеш транзакції в рядок &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw block in &lt;address&gt;</source>
+        <translation>Дозволено введення RAW блоку в рядок &lt;address&gt;</translation>
+    </message>
+    <message>
+        <source>Enable publish raw transaction in &lt;address&gt;</source>
+        <translation>Дозволено введення RAW транзакції в рядок &lt;address&gt;</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>Помилка ініціалізації бази даних блоків</translation>
     </message>
@@ -2937,20 +3108,12 @@
         <translation>Помилка відкриття блоку бази даних </translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Помилка: Сталася фатальна помилка (детальніший опис наведено в debug.log)</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Помилка: Мало вільного місця на диску!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Не вдалося слухати на жодному порту. Використовуйте -listen=0, якщо ви хочете цього.</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>Якщо &lt;category&gt; не задано, виводить всю налагоджувальну інформацію.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2963,6 +3126,10 @@
     <message>
         <source>Invalid -onion address: '%s'</source>
         <translation>Помилка в адресі -onion: «%s»</translation>
+    </message>
+    <message>
+        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
+        <translation>Утримувати розмір пам'яті для пулу транзакцій меншим за &lt;n&gt; мегабайтів (типово: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -2993,8 +3160,24 @@
         <translation>Вкажіть файл гаманця (в межах каталогу даних)</translation>
     </message>
     <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Параметр -benchmark не підтримується та буде проігноровано; використовуйте -debug=bench.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Параметр -debugnet не підтримується та буде проігноровано; використовуйте -debug=net.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>Параметр -tor не підтримується; використовуйте -onion.</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>Намагатись використовувати UPnP для відображення порту, що прослуховується, на роутері (типово: %u)</translation>
+        <translation>Використовувати UPnP для відображення порту, що прослуховується (типово: %u)</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>Коментар до Клієнта Користувача (%s) містить небезпечні символи.</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3021,16 +3204,8 @@
         <translation>Вам необхідно перебудувати базу даних з використанням -reindex для того, щоб змінити -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Імпорт блоків з зовнішнього файлу blk000??.dat</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Дозволити підключення по протоколу JSON-RPC зі вказаного джерела. Правильною для &lt;ip&gt; є окрема IP-адреса (наприклад, 1.2.3.4), IP-адреса та маска підмережі (наприклад, 1.2.3.4/255.255.255.0) або CIDR-адреса (наприклад, 1.2.3.4/24). Цей параметр можна вказувати декілька разів.</translation>
-    </message>
-    <message>
-        <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
-        <translation>Сталася помилка при спробі відкрити порт RPC-адреси %s:%u для прослуховування: %s</translation>
     </message>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
@@ -3057,16 +3232,12 @@
         <translation>Помилка: Не вдалося налаштувати прослуховування вхідних підключень (listen повернув помилку: %s)</translation>
     </message>
     <message>
-        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Помилка: Параметр -socks не підтримується. Можливість вказувати версію SOCKS було видалено, так як підтримується лише SOCKS5.</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Виконати команду при надходженні важливого сповіщення або при спостереженні тривалого розгалуження ланцюжка (замість %s буде підставлено повідомлення)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>Комісії (в BTC/КБ), що менші за вказану, вважатимуться нульовими (для ретрансляції) (типово: %s)</translation>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
+        <translation>Комісії (в %s/kB), що менші за вказану, вважатимуться нульовими для зміни, аналізу та створення транзакцій (типово: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3079,10 +3250,6 @@
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Максимальний розмір даних в транзакціях носіїв даних, що ми передаємо і добуваємо (за замовчуванням: %u)</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MB.  Please use a higher number.</source>
-        <translation>Встановлений розмір ланцюжка блоків є замалим (менший за %d МБ). Будь ласка, виберіть більше число.</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
@@ -3109,38 +3276,6 @@
         <translation>Цей продукт включає в себе програмне забезпечення, розроблене в рамках проекту OpenSSL &lt;https://www.openssl.org/&gt;, криптографічне програмне забезпечення, написане Еріком Янгом, та функції для роботи з UPnP, написані Томасом Бернардом.</translation>
     </message>
     <message>
-        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>Для використання bitcoind, або bitcoin-qt з параметром -server, ви повинні встановити rpcpassword в файлі конфігурації:
-%s
-Рекомендується використати такий випадковий пароль:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(вам не треба запам'ятовувати цей пароль)
-Ім'я користувача та пароль ПОВИННІ бути різними.
-Якщо файлу не існує, створіть його, обмеживши доступ правом читання для власника.
-Також рекомендується використовувати alertnotify для того, щоб отримувати сповіщення про проблеми;
-наприклад: alertnotify=echo %%s | mail -s "Сповіщення Bitcoin" admin@foo.com
-</translation>
-    </message>
-    <message>
-        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>Увага: установлено дуже велике значення -maxtxfee! Такі великі комісії можуть бути сплачені в окремій транзакції.</translation>
-    </message>
-    <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>Увага: будь ласка, перевірте дату і час на своєму комп'ютері! Якщо ваш годинник йде неправильно, Bitcoin Core може працювати некоректно.</translation>
-    </message>
-    <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Учасники, що знаходяться в білому списку, не можуть бути заблоковані за DoS та їхні транзакції завжди ретранслюватимуться (навіть якщо вони є в пам'яті), що може бути корисним, наприклад, для шлюзу</translation>
     </message>
@@ -3161,16 +3296,20 @@ rpcpassword=%s
         <translation>Активація найкращого ланцюжка...</translation>
     </message>
     <message>
-        <source>Can't run with a wallet in prune mode.</source>
-        <translation>Використання гаманця зі скороченим ланцюжком блоків неможливе.</translation>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>Завжди передавайте транзакції отримані від пірів з білого списку (типово: %d)</translation>
+    </message>
+    <message>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation>Спочатку спробуйте відновити приватні ключі в пошкодженому wallet.dat </translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Автоматичне з'єднання з прихованим сервісом Tor (типово: %d)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>Не вдалося розпізнати адресу для -whitebind: «%s»</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Обрати каталог даних під час запуску (типово: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3181,10 +3320,6 @@ rpcpassword=%s
         <translation>(C) 2009-%i Розробники Bitcoin Core</translation>
     </message>
     <message>
-        <source>Could not parse -rpcbind value %s as network address</source>
-        <translation>Неможливо розпізнати мережеву адресу для параметру -rpcbind (%s)</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
         <translation>Помилка при завантаженні wallet.dat: Гаманець потребує новішої версії Bitcoin Core</translation>
     </message>
@@ -3193,12 +3328,8 @@ rpcpassword=%s
         <translation>Помилка читання бази даних, припиняю роботу.</translation>
     </message>
     <message>
-        <source>Error: Unsupported argument -tor found, use -onion.</source>
-        <translation>Помилка: Параметр -tor не підтримується, використовуйте -onion</translation>
-    </message>
-    <message>
-        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
-        <translation>Комісія (в BTC/КБ), що додаватиметься до вихідних транзакцій (типово: %s)</translation>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>Спочатку імпортує блоки з зовнішнього файлу blk000??.dat </translation>
     </message>
     <message>
         <source>Information</source>
@@ -3241,16 +3372,8 @@ rpcpassword=%s
         <translation>Параметри вузла ретрансляції:</translation>
     </message>
     <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>Параметри RPC SSL: (див. Bitcoin Wiki для налаштування SSL)</translation>
-    </message>
-    <message>
         <source>RPC server options:</source>
         <translation>Параметри сервера RPC:</translation>
-    </message>
-    <message>
-        <source>RPC support for HTTP persistent connections (default: %d)</source>
-        <translation>Підтримка RPC для постійних HTTP-з'єднань (типово: %d)</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
@@ -3261,6 +3384,14 @@ rpcpassword=%s
         <translation>Отримувати та відображати попередження з мережі (типово: %u)</translation>
     </message>
     <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>Зменшення значення -maxconnections з %d до %d із-за обмежень системи.</translation>
+    </message>
+    <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>Спочатку переглянте ланцюжок блоків на наявність втрачених транзакцій гаманця</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Відсилати налагоджувальну інформацію на консоль, а не у файл debug.log</translation>
     </message>
@@ -3269,20 +3400,8 @@ rpcpassword=%s
         <translation>Не сплачувати комісію за надсилання транзакцій, якщо це можливо (типово: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Вказати кореневі SSL-сертифікати для запиту платежу (типово: -системні-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Встановлення мови, наприклад "de_DE" (типово: системна)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Показати всі налагоджувальні параметри (використання: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Показувати заставку під час запуску (типово: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3293,16 +3412,20 @@ rpcpassword=%s
         <translation>Підписання транзакції не вдалося</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>Запускати згорнутим</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Неможливо сплатити комісію із-за малої суми транзакції</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
         <translation>Це програмне забезпечення є експериментальним.</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Пароль управління порт протоколом Tor (типово: empty)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>Скористайтесь управлінням порт протоколом Tor, в разі перехоплення обміну цибулевої маршрутизації (типово: %s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3321,16 +3444,12 @@ rpcpassword=%s
         <translation>Транзакція занадто велика</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Параметри інтерфейсу:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Неможливо прив'язатися до %s на цьому комп'ютері (bind повернув помилку: %s)</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Намагатись використовувати UPnP для відображення порту, що прослуховується на роутері (типово: 1 коли прослуховується)</translation>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>Спочатку оновіть гаманець до останньої версії</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3345,20 +3464,16 @@ rpcpassword=%s
         <translation>Попередження</translation>
     </message>
     <message>
-        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Увага: Параметр -benchmark не підтримується та буде проігнорований, використовуйте -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Увага: Параметр -debugnet не підтримується та буде проігнорований, використовуйте -debug=net.</translation>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>Чи слід працювати в режимі тільки блоки (типово: %u)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Видалення всіх транзакцій з гаманця...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>під час запуску</translation>
+        <source>ZeroMQ notification options:</source>
+        <translation>Параметри сповіщень ZeroMQ:</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -3371,18 +3486,6 @@ rpcpassword=%s
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Виконати команду, коли з'явиться новий блок (%s в команді змінюється на хеш блоку)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Модернізувати гаманець до найновішого формату</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Пересканувати ланцюжок блоків, в пошуку втрачених транзакцій</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Використовувати OpenSSL (https) для JSON-RPC-з'єднань</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3405,6 +3508,26 @@ rpcpassword=%s
         <translation>(1 = утримувати метадані транзакцій (до яких відноситься інформація про власника рахунку та запити платежів), 2 - відкинути)</translation>
     </message>
     <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>Встановлено дуже велике значення -maxtxfee! Такі великі комісії можуть бути сплачені окремою транзакцією.</translation>
+    </message>
+    <message>
+        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Встановлено дуже велике значення -paytxfee! Цю комісію буде сплачено для проведення транзакції.</translation>
+    </message>
+    <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>Не тримати транзакції в пам'яті довше &lt;n&gt; годин (типово: %u)</translation>
+    </message>
+    <message>
+        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Помилка читання wallet.dat! Всі ключі прочитано коректно, але дані транзакцій чи записи адресної книги можуть бути пропущені або пошкоджені.</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Комісії (в %s/kB), що менші за вказану, вважатимуться нульовими для створення транзакцій (типово: %s)</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Рівень ретельності перевірки блоків (0-4, типово: %u)</translation>
     </message>
@@ -3421,16 +3544,32 @@ rpcpassword=%s
         <translation>Виводити налагоджувальну інформацію (типово: %u, вказання &lt;category&gt; необов'язкове)</translation>
     </message>
     <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>Фільтрація блоків та транзакцій з допомогою фільтрів Блума (типово: %u)</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>Загальна довжина рядку мережевої версії (%i) перевищує максимально допустиму (%i). Зменшіть число чи розмір коментарів клієнта користувача.</translation>
+    </message>
+    <message>
+        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
+        <translation>Намагається зберегти вихідний трафік відповідно до зданого значення (в MIB за 24 години), 0 = без обмежень (типово: %d)</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Параметр -socks не підтримується. Можливість вказувати версію SOCKS було видалено, так як підтримується лише SOCKS5.</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Використовувати окремий SOCKS5-проксі для з'єднання з учасниками через приховані сервіси Tor (типово: %s)</translation>
     </message>
     <message>
-        <source>(default: %s)</source>
-        <translation>(типово: %s)</translation>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>Логін та хешований пароль для зв'язків JSON-RPC. Поле &lt;userpw&gt; має формат: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Класичний Python script додано до share/rpcuser. Цей параметр може бути застосований декілька разів.</translation>
     </message>
     <message>
-        <source>Acceptable ciphers (default: %s)</source>
-        <translation>Допустимі шифри (типово: %s)</translation>
+        <source>(default: %s)</source>
+        <translation>(типово: %s)</translation>
     </message>
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
@@ -3491,14 +3630,6 @@ rpcpassword=%s
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>Ретранслювати не-P2SH транзакції з мультипідписом (типово: %u)</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: %s)</source>
-        <translation>Файл сертифіката сервера (типово: %s)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: %s)</source>
-        <translation>Закритий ключ сервера (типово: %s)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>

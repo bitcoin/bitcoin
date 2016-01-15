@@ -2,7 +2,7 @@
 
 [ZeroMQ](http://zeromq.org/) is a lightweight wrapper around TCP
 connections, inter-process communication, and shared-memory,
-providing various message-oriented semantics such as publish/subcribe,
+providing various message-oriented semantics such as publish/subscribe,
 request/reply, and push/pull.
 
 The Bitcoin Core daemon can be configured to act as a trusted "border
@@ -43,14 +43,14 @@ operation.
 
 ## Enabling
 
-By default, the ZeroMQ port functionality is enabled. Two steps are
-required to enable--compiling in the ZeroMQ code, and configuring
-runtime operation on the command-line or configuration file.
+By default, the ZeroMQ feature is automatically compiled in if the
+necessary prerequisites are found.  To disable, use --disable-zmq
+during the *configure* step of building bitcoind:
 
-    $ ./configure --enable-zmq (other options)
+    $ ./configure --disable-zmq (other options)
 
-This will produce a binary that is capable of providing the ZeroMQ
-facility, but will not do so until also configured properly.
+To actually enable operation, one must set the appropriate options on
+the commandline or in the configuration file.
 
 ## Usage
 
@@ -78,7 +78,7 @@ bytes).
 These options can also be provided in bitcoin.conf.
 
 ZeroMQ endpoint specifiers for TCP (and others) are documented in the
-[ZeroMQ API](http://api.zeromq.org).
+[ZeroMQ API](http://api.zeromq.org/4-0:_start).
 
 Client side, then, the ZeroMQ subscriber socket must have the
 ZMQ_SUBSCRIBE option set to one or either of these prefixes (for

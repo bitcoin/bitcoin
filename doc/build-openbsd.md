@@ -38,7 +38,7 @@ Do not use `pkg_add boost`! The boost version installed thus is compiled using t
 
     test_bitcoin:/usr/lib/libstdc++.so.57.0: /usr/local/lib/libestdc++.so.17.0 : WARNING: symbol(_ZN11__gnu_debug17_S_debug_me ssagesE) size mismatch, relink your program
     ...
-    Segmentation fault (core dumped) 
+    Segmentation fault (core dumped)
 
 This makes it necessary to build boost, or at least the parts used by Bitcoin Core, manually:
 
@@ -57,7 +57,7 @@ tar -xjf boost_1_59_0.tar.bz2
 # Boost 1.59 needs two small patches for OpenBSD
 cd boost_1_59_0
 # Also here: https://gist.githubusercontent.com/laanwj/bf359281dc319b8ff2e1/raw/92250de8404b97bb99d72ab898f4a8cb35ae1ea3/patch-boost_test_impl_execution_monitor_ipp.patch
-patch -p0 < /usr/ports/devel/boost/patches/patch-boost_test_impl_execution_monitor_ipp 
+patch -p0 < /usr/ports/devel/boost/patches/patch-boost_test_impl_execution_monitor_ipp
 # https://github.com/boostorg/filesystem/commit/90517e459681790a091566dce27ca3acabf9a70c
 sed 's/__OPEN_BSD__/__OpenBSD__/g' < libs/filesystem/src/path.cpp > libs/filesystem/src/path.cpp.tmp
 mv libs/filesystem/src/path.cpp.tmp libs/filesystem/src/path.cpp
@@ -92,7 +92,7 @@ tar -xzf db-4.8.30.NC.tar.gz
 # Build the library and install to specified prefix
 cd db-4.8.30.NC/build_unix/
 #  Note: Do a static build so that it can be embedded into the executable, instead of having to find a .so at runtime
-../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CC=egcc CXX=eg++ CPP=ecpp 
+../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX CC=egcc CXX=eg++ CPP=ecpp
 make install
 ```
 
@@ -160,4 +160,3 @@ version installed by OpenBSD 5.7:
 - https://llvm.org/bugs/show_bug.cgi?id=9758
 
 There is no known workaround for this.
-

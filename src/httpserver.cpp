@@ -38,6 +38,9 @@
 #include <boost/foreach.hpp>
 #include <boost/scoped_ptr.hpp>
 
+/** Maximum size of http request (request line + headers) */
+static const size_t MAX_HEADERS_SIZE = 8192;
+
 /** HTTP request work item */
 class HTTPWorkItem : public HTTPClosure
 {
@@ -362,6 +365,10 @@ static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue)
 /** libevent event log callback */
 static void libevent_log_cb(int severity, const char *msg)
 {
+#ifndef EVENT_LOG_WARN
+// EVENT_LOG_WARN was added in 2.0.19; but before then _EVENT_LOG_WARN existed.
+# define EVENT_LOG_WARN _EVENT_LOG_WARN
+#endif
     if (severity >= EVENT_LOG_WARN) // Log warn messages and higher without debug category
         LogPrintf("libevent: %s\n", msg);
     else
@@ -414,6 +421,7 @@ bool InitHTTPServer()
     }
 
     evhttp_set_timeout(http, GetArg("-rpcservertimeout", DEFAULT_HTTP_SERVER_TIMEOUT));
+    evhttp_set_max_headers_size(http, MAX_HEADERS_SIZE);
     evhttp_set_max_body_size(http, MAX_SIZE);
     evhttp_set_gencb(http, http_request_cb, NULL);
 
@@ -434,15 +442,17 @@ bool InitHTTPServer()
     return true;
 }
 
-bool StartHTTPServer(boost::thread_group& threadGroup)
+boost::thread threadHTTP;
+
+bool StartHTTPServer()
 {
     LogPrint("http", "Starting HTTP server\n");
     int rpcThreads = std::max((long)GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
     LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
-    threadGroup.create_thread(boost::bind(&ThreadHTTP, eventBase, eventHTTP));
+    threadHTTP = boost::thread(boost::bind(&ThreadHTTP, eventBase, eventHTTP));
 
     for (int i = 0; i < rpcThreads; i++)
-        threadGroup.create_thread(boost::bind(&HTTPWorkQueueRun, workQueue));
+        boost::thread(boost::bind(&HTTPWorkQueueRun, workQueue));
     return true;
 }
 
@@ -457,13 +467,6 @@ void InterruptHTTPServer()
         // Reject requests on current connections
         evhttp_set_gencb(eventHTTP, http_reject_request_cb, NULL);
     }
-    if (eventBase) {
-        // Force-exit event loop after predefined time
-        struct timeval tv;
-        tv.tv_sec = 10;
-        tv.tv_usec = 0;
-        event_base_loopexit(eventBase, &tv);
-    }
     if (workQueue)
         workQueue->Interrupt();
 }
@@ -476,6 +479,24 @@ void StopHTTPServer()
         workQueue->WaitExit();
         delete workQueue;
     }
+    if (eventBase) {
+        LogPrint("http", "Waiting for HTTP event thread to exit\n");
+        // Give event loop a few seconds to exit (to send back last RPC responses), then break it
+        // Before this was solved with event_base_loopexit, but that didn't work as expected in
+        // at least libevent 2.0.21 and always introduced a delay. In libevent
+        // master that appears to be solved, so in the future that solution
+        // could be used again (if desirable).
+        // (see discussion in https://github.com/bitcoin/bitcoin/pull/6990)
+#if BOOST_VERSION >= 105000
+        if (!threadHTTP.try_join_for(boost::chrono::milliseconds(2000))) {
+#else
+        if (!threadHTTP.timed_join(boost::posix_time::milliseconds(2000))) {
+#endif
+            LogPrintf("HTTP event loop did not exit within allotted time, sending loopbreak\n");
+            event_base_loopbreak(eventBase);
+            threadHTTP.join();
+        }
+    }
     if (eventHTTP) {
         evhttp_free(eventHTTP);
         eventHTTP = 0;
@@ -484,6 +505,7 @@ void StopHTTPServer()
         event_base_free(eventBase);
         eventBase = 0;
     }
+    LogPrint("http", "Stopped HTTP server\n");
 }
 
 struct event_base* EventBase()

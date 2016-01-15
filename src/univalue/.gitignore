@@ -18,5 +18,15 @@ univalue-config.h*
 test-driver
 libtool
 ltmain.sh
+test-suite.log
 
+*.a
+*.la
+*.lo
+*.logs
 *.o
+*.pc
+*.trs
+
+.dirstamp
+.libs

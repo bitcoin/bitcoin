@@ -5,20 +5,20 @@ ACLOCAL_AMFLAGS = -I build-aux/m4
 include_HEADERS = include/univalue.h
 noinst_HEADERS = lib/univalue_escapes.h
 
-lib_LTLIBRARIES = lib/libunivalue.la
+lib_LTLIBRARIES = libunivalue.la
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = pc/libunivalue.pc
 
-lib_libunivalue_la_SOURCES = \
+libunivalue_la_SOURCES = \
 	lib/univalue.cpp \
 	lib/univalue_read.cpp \
 	lib/univalue_write.cpp
 
-lib_libunivalue_la_LDFLAGS = \
+libunivalue_la_LDFLAGS = \
 	-version-info $(LIBUNIVALUE_CURRENT):$(LIBUNIVALUE_REVISION):$(LIBUNIVALUE_AGE) \
 	-no-undefined
-lib_libunivalue_la_CXXFLAGS = -I$(top_srcdir)/include
+libunivalue_la_CXXFLAGS = -I$(top_srcdir)/include
 
 TESTS = test/unitester
 
@@ -38,7 +38,7 @@ noinst_PROGRAMS = $(TESTS)
 TEST_DATA_DIR=test
 
 test_unitester_SOURCES = test/unitester.cpp
-test_unitester_LDADD = lib/libunivalue.la
+test_unitester_LDADD = libunivalue.la
 test_unitester_CXXFLAGS = -I$(top_srcdir)/include -DJSON_TEST_SRC=\"$(srcdir)/$(TEST_DATA_DIR)\"
 test_unitester_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
 
@@ -70,6 +70,9 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/fail32.json \
 	$(TEST_DATA_DIR)/fail33.json \
 	$(TEST_DATA_DIR)/fail34.json \
+	$(TEST_DATA_DIR)/fail35.json \
+	$(TEST_DATA_DIR)/fail36.json \
+	$(TEST_DATA_DIR)/fail37.json \
 	$(TEST_DATA_DIR)/fail3.json \
 	$(TEST_DATA_DIR)/fail4.json \
 	$(TEST_DATA_DIR)/fail5.json \
@@ -79,6 +82,7 @@ TEST_FILES = \
 	$(TEST_DATA_DIR)/fail9.json \
 	$(TEST_DATA_DIR)/pass1.json \
 	$(TEST_DATA_DIR)/pass2.json \
-	$(TEST_DATA_DIR)/pass3.json
+	$(TEST_DATA_DIR)/pass3.json \
+	$(TEST_DATA_DIR)/round1.json
 
 EXTRA_DIST=$(TEST_FILES) $(GEN_SRCS)

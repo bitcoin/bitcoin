@@ -1,4 +1,4 @@
-<TS language="ja" version="2.0">
+<TS language="ja" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -221,6 +221,17 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IPアドレス/ネットマスク</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>以下の時間までbanする:</translation>
+    </message>
+</context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
@@ -340,11 +351,11 @@
     </message>
     <message>
         <source>&amp;Send</source>
-        <translation>送る (&amp;S)</translation>
+        <translation>送金 (&amp;S)</translation>
     </message>
     <message>
         <source>&amp;Receive</source>
-        <translation>受信 (&amp;R)</translation>
+        <translation>入金 (&amp;R)</translation>
     </message>
     <message>
         <source>Show information about Bitcoin Core</source>
@@ -787,7 +798,7 @@
     </message>
     <message>
         <source>New receiving address</source>
-        <translation>新しい受信アドレス</translation>
+        <translation>新しい入金アドレス</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -795,7 +806,7 @@
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>受信アドレスを編集</translation>
+        <translation>入金アドレスを編集</translation>
     </message>
     <message>
         <source>Edit sending address</source>
@@ -870,6 +881,34 @@
     <message>
         <source>command-line options</source>
         <translation>コマンドライン オプション</translation>
+    </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>UIオプション:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>起動時にデータ ディレクトリを選ぶ (初期値: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>言語設定 例: "de_DE" (初期値: システムの言語)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>最小化された状態で起動する</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>支払いリクエスト用にSSLルート証明書を設定する (デフォルト：-system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>起動時にスプラッシュ画面を表示する (初期値: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>GUI 経由で行われた設定の変更を全てリセット</translation>
     </message>
 </context>
 <context>
@@ -1067,6 +1106,34 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>プロキシのポート番号 (例 9050)</translation>
+    </message>
+    <message>
+        <source>Used for reaching peers via:</source>
+        <translation>ピアへ到達するために使われた方法:</translation>
+    </message>
+    <message>
+        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>このネットワークタイプ経由で、与えられたデフォルトのSOCKS5プロキシを使用してピアに到達した場合に表示する。</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Tor秘匿サービスを利用するため、独立なSOCKS5プロキシ経由でBitcoinネットワークに接続する</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Tor秘匿サービス経由でピアに到達するため、独立なSOCKS5プロキシを利用する:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1287,10 +1354,6 @@
         <translation>支払リクエスト %1 は大きすぎます（%2バイトですが、%3バイトまでが許されています）。</translation>
     </message>
     <message>
-        <source>Payment request DoS protection</source>
-        <translation>支払リクエストDoS保護</translation>
-    </message>
-    <message>
         <source>Error communicating with %1: %2</source>
         <translation>%1: %2とコミュニケーション・エラーです</translation>
     </message>
@@ -1443,6 +1506,18 @@
         <translation>現在のブロック数</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation>メモリ・プール</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>現在のトランザクション数</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>メモリ使用量</translation>
+    </message>
+    <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>現在のデータディレクトリからBitcoin Coreのデバッグ用ログファイルを開きます。ログファイルが巨大な場合、数秒かかることがあります。</translation>
     </message>
@@ -1459,8 +1534,16 @@
         <translation>ピア (&amp;P)</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Banされたピア</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>詳しい情報を見たいピアを選択してください。</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>ホワイトリスト</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1471,20 +1554,24 @@
         <translation>バージョン</translation>
     </message>
     <message>
+        <source>Starting Block</source>
+        <translation>開始ブロック</translation>
+    </message>
+    <message>
+        <source>Synced Headers</source>
+        <translation>同期済みヘッダ</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>同期済みブロック</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>ユーザエージェント</translation>
     </message>
     <message>
         <source>Services</source>
         <translation>サービス</translation>
-    </message>
-    <message>
-        <source>Starting Height</source>
-        <translation>開始時のブロック高</translation>
-    </message>
-    <message>
-        <source>Sync Height</source>
-        <translation>同期済みブロック高</translation>
     </message>
     <message>
         <source>Ban Score</source>
@@ -1503,16 +1590,16 @@
         <translation>最終受信</translation>
     </message>
     <message>
-        <source>Bytes Sent</source>
-        <translation>送信済バイト数</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>受信済バイト数</translation>
-    </message>
-    <message>
         <source>Ping Time</source>
         <translation>Ping時間</translation>
+    </message>
+    <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>現在実行中のpingにかかっている時間。</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>Ping待ち</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -1563,6 +1650,34 @@
         <translation>コンソールをクリア</translation>
     </message>
     <message>
+        <source>&amp;Disconnect Node</source>
+        <translation>ノードを切断する (&amp;D)</translation>
+    </message>
+    <message>
+        <source>Ban Node for</source>
+        <translation>ノードをbanする:</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1時間 (&amp;H)</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1日 (&amp;D)</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1週間 (&amp;W)</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1年 (&amp;Y)</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>ノードのbanを解除する (&amp;U)</translation>
+    </message>
+    <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
         <translation>Bitcoin CoreのRPCコンソールへようこそ。</translation>
     </message>
@@ -1591,6 +1706,10 @@
         <translation>%1 GB</translation>
     </message>
     <message>
+        <source>(node id: %1)</source>
+        <translation>(ノードID: %1)</translation>
+    </message>
+    <message>
         <source>via %1</source>
         <translation>%1経由</translation>
     </message>
@@ -1607,12 +1726,16 @@
         <translation>外向き</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>未知</translation>
+        <source>Yes</source>
+        <translation>はい</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>取得中……</translation>
+        <source>No</source>
+        <translation>いいえ</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>未知</translation>
     </message>
 </context>
 <context>
@@ -1940,7 +2063,7 @@
     </message>
     <message>
         <source>S&amp;end</source>
-        <translation>送る (&amp;e)</translation>
+        <translation>送金 (&amp;E)</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -1979,8 +2102,8 @@
         <translation>釣り銭をコピー</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>総送金額 %1 (= %2)</translation>
+        <source>Total Amount %1</source>
+        <translation>合計：　%1</translation>
     </message>
     <message>
         <source>or</source>
@@ -2014,13 +2137,13 @@
         <source>Payment request expired.</source>
         <translation>支払いリクエストの期限が切れました。</translation>
     </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>要求手数料 %1 のみを支払う</translation>
+    </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>%n ブロック以内に検証が開始されると予想されます。</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>最小手数料 %1 のみを支払う</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2528,7 +2651,7 @@
     </message>
     <message>
         <source>Received with</source>
-        <translation>受信元</translation>
+        <translation>受け取り</translation>
     </message>
     <message>
         <source>Received from</source>
@@ -2652,6 +2775,10 @@
     <message>
         <source>Copy transaction ID</source>
         <translation>取引 ID をコピー</translation>
+    </message>
+    <message>
+        <source>Copy raw transaction</source>
+        <translation>生トランザクションをコピー</translation>
     </message>
     <message>
         <source>Edit label</source>
@@ -2801,12 +2928,52 @@
         <translation>コマンドラインと JSON-RPC コマンドを許可</translation>
     </message>
     <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>&lt;category&gt; が与えられなかった場合や &lt;category&gt; = 1 の場合には、すべてのデバッグ情報が出力されます。</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>ひとつのウォレットトランザクションで使用する合計手数料 (%s 単位) の最大値。低すぎる値を指定すると巨大なトランザクションの作成ができなくなります (規定値: %s)</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>あなたのPCの日付と時刻が正しいことを確認して下さい！ もしあなたの時計が正しくなければBitcoin Coreが正確に動作しません。</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>剪定が最小値の %d MiB以下に設定されています。もっと大きな値を使用してください。</translation>
+    </message>
+    <message>
+        <source>Prune: last wallet synchronisation goes beyond pruned data. You need to -reindex (download the whole blockchain again in case of pruned node)</source>
+        <translation>剪定: 最後のウォレット同期ポイントは、選定されたデータよりも過去のものとなっています。-reindexをする必要があります (剪定されたノードの場合、ブロックチェイン全体をダウンロードします)</translation>
+    </message>
+    <message>
+        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode is incompatible with -txindex and -rescan. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
+        <translation>古いブロックを剪定する (削除する) ことで記憶容量の必要量を削減する。このモードを有効にすると-txindexや-rescanと互換性がなくなります。警告: この設定の再有効化には全ブロックチェインの再ダウンロードが必要となります。(規定値: 0 = ブロックの剪定無効、&gt;%u = ブロックファイルに使用するMiB単位の目標サイズ)</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>剪定モードでは再スキャンを行うことはできません。-reindexを指定し、ブロックチェイン全体を再ダウンロードする必要があります。</translation>
+    </message>
+    <message>
+        <source>Error: A fatal internal error occurred, see debug.log for details</source>
+        <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
+    </message>
+    <message>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation>送信するトランザクションに付加する手数料 (%s/kB単位) (初期値: %s)</translation>
+    </message>
+    <message>
+        <source>Pruning blockstore...</source>
+        <translation>ブロックデータを剪定しています……</translation>
+    </message>
+    <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>デーモンとしてバックグランドで実行しコマンドを許可</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>テストのためのネットワークを使用</translation>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>HTTPサーバを開始できませんでした。詳細はデバッグログをご確認ください。</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
@@ -2829,16 +2996,12 @@
         <translation>ウォレットの取引を変更する際にコマンドを実行 (cmd の %s は TxID に置換される)</translation>
     </message>
     <message>
-        <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>ひとつのウォレットトランザクションで使用する合計手数料の最大値。低すぎる値を指定すると巨大なトランザクションの作成ができなくなります (規定値: %s)</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>古いブロックを剪定する（削除する）ことで記憶容量の必要量を削減する。このモードを有効にするとウォレット機能のサポートは無効になり、-txindexとも互換性がなくなります。警告: この設定の再有効化には全ブロックチェインの再ダウンロードが必要となります。(規定値: 0 = ブロックの剪定無効、&gt;%u = ブロックファイルに使用するMiB単位の目標サイズ)</translation>
-    </message>
-    <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
         <translation>スクリプト検証スレッドを設定 (%uから%dの間, 0 = 自動, &lt;0 = たくさんのコアを自由にしておく, 初期値: %d)</translation>
+    </message>
+    <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>ブロックのデータベースに未来の時刻のブロックが含まれています。これはおそらくお使いのコンピュータに設定されている日時が間違っていることを示しています。お使いのコンピュータの日時が本当に正しい場合にのみ、ブロックのデータベースの再構築を行ってください。</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -2849,16 +3012,16 @@
         <translation>このコンピュータの %s にバインドすることができません。おそらく Bitcoin Core は既に実行されています。</translation>
     </message>
     <message>
+        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
+        <translation>リスン ポートの割当に UPnP を使用 (初期値: リスン中および-proxyが指定されていない場合は1)</translation>
+    </message>
+    <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
         <translation>警告：異常に多くの数のブロックが生成されています。%d ブロックが最近 %d 時間以内に受け取られました。(期待値: %d)</translation>
     </message>
     <message>
         <source>WARNING: check your network connection, %d blocks received in the last %d hours (%d expected)</source>
         <translation>警告：ネットワーク接続を確認してください。%d ブロックが最近 %d 時間以内にに受け取られました。(期待値: %d)</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>警告: -paytxfee が非常に高く設定されています! これは取引を送信する場合に支払う取引手数料です。</translation>
     </message>
     <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
@@ -2869,10 +3032,6 @@
         <translation>警告： ピアーと完全に同意しないみたいです！アップグレードは必要かもしれません、それとも他のノードはアップグレードは必要かもしれません。</translation>
     </message>
     <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>警告: wallet.dat の読み込みエラー! すべてのキーは正しく読み取れますが、取引データやアドレス帳のエントリが失われたか、正しくない可能性があります。</translation>
-    </message>
-    <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>警告: wallet.dat が壊れたのでデータを復旧しました! オリジナルの wallet.dat は wallet.{timestamp}.bak として %s に保存されました; もしもあなたの残高や取引が正しくないならバックアップから復元してください。</translation>
     </message>
@@ -2881,16 +3040,12 @@
         <translation>与えられたネットマスクやIPアドレスから接続を行う、ホワイトリストのピア。複数回指定できます。</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(デフォルト: 1)</translation>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-maxmempoolは最低でも %d MB必要です</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt;は以下の値を指定できます：</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>壊れた wallet.dat から秘密鍵を復旧することを試す</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2922,6 +3077,22 @@
         <translation>ブロック データベースを今すぐ再構築しますか?</translation>
     </message>
     <message>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation>&lt;address&gt;に対し、ハッシュブロックの公開を有効にする</translation>
+    </message>
+    <message>
+        <source>Enable publish hash transaction in &lt;address&gt;</source>
+        <translation>&lt;address&gt; に対し、ハッシュトランザクションの公開を有効にする</translation>
+    </message>
+    <message>
+        <source>Enable publish raw block in &lt;address&gt;</source>
+        <translation>&lt;address&gt; に対し、生ブロックの公開を有効にする</translation>
+    </message>
+    <message>
+        <source>Enable publish raw transaction in &lt;address&gt;</source>
+        <translation>&lt;address&gt; に対し、生トランザクションの公開を有効にする</translation>
+    </message>
+    <message>
         <source>Error initializing block database</source>
         <translation>ブロック データベースの初期化中にエラー</translation>
     </message>
@@ -2938,20 +3109,12 @@
         <translation>ブロック データベースの開始エラー</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>エラー：致命的な内部エラーが発生しました。詳細はdebug.logを参照してください</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>エラー: ディスク容量不足!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>ポートのリスンに失敗しました。必要であれば -listen=0 を使用してください。</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>&lt;category&gt; が与えられなかった場合には、すべてのデバッグ情報が出力されます。</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2964,6 +3127,10 @@
     <message>
         <source>Invalid -onion address: '%s'</source>
         <translation>無効な -onion アドレス：'%s'</translation>
+    </message>
+    <message>
+        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
+        <translation>トランザクションのメモリ・プールの総量を &lt;n&gt; メガバイト以下に維持する (初期値: %u)</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
@@ -2994,8 +3161,24 @@
         <translation>ウォレットのファイルを指定　(データ・ディレクトリの中に)</translation>
     </message>
     <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>サポートされていない引数 -benchmark は無視されました。-debug=bench を使用してください。</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>サポートされていない引数 -debugnet は無視されました。-debug=net を使用してください。</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>サポートされていない引数 -tor が見つかりました。-onion を使用してください。</translation>
+    </message>
+    <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
         <translation>リッスンポートの割当に UPnP を使用 (初期値: %u)</translation>
+    </message>
+    <message>
+        <source>User Agent comment (%s) contains unsafe characters.</source>
+        <translation>ユーザエージェントのコメント (%s) には安全でない文字が含まれています。</translation>
     </message>
     <message>
         <source>Verifying blocks...</source>
@@ -3022,16 +3205,8 @@
         <translation>-txindex を変更するには -reindex を使用してデータベースを再構築する必要があります</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>外部の blk000??.dat ファイルからブロックをインポート</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>指定したアクセス元からのJSON-RPC接続を許可する。有効な&lt;ip&gt;は、単一のIP (例 1.2.3.4)、ネットワーク/ネットマスク (1.2.3.4/255.255.255.0)、またはネットワーク/CIDR (1.2.3.4/24)です。このオプションは複数回指定できます。</translation>
-    </message>
-    <message>
-        <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
-        <translation>リッスンする RPC アドレス %s、ポート %u の設定中にエラーが発生しました: %s</translation>
     </message>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
@@ -3058,16 +3233,12 @@
         <translation>エラー: 内向きの接続をリッスンするのに失敗しました (エラー %s が返却されました)</translation>
     </message>
     <message>
-        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>エラー: サポートされていない引数 -socks が見つかりました。SOCKSバージョンの設定はできないようになりました。SOCKS5プロキシのみがサポートされています。</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>関連のアラートをもらってもすごく長いのフォークを見てもコマンドを実行 (コマンドの中にあるの%sはメッセージから置き換えさせる)</translation>
     </message>
     <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>中継の際、この値未満の手数料 (BTC/Kb単位) はゼロであるとみなす (デフォルト: %s)</translation>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
+        <translation>トランザクションの中継、採掘および作成の際には、この値未満の手数料 (%s/kB単位) はゼロであるとみなす (デフォルト: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3080,10 +3251,6 @@
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>中継および採掘を行う際の、データ運送トランザクションの中のデータの最大サイズ (初期値: %u)</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MB.  Please use a higher number.</source>
-        <translation>剪定が最小値の %d MB以下に設定されています。もっと大きな値を使用してください。</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
@@ -3110,38 +3277,6 @@
         <translation>この製品はOpenSSLプロジェクトにより開発されたソフトウェアをOpenSSLツールキットとして利用しています &lt;https://www.openssl.org/&gt;。また、Eric Young氏により開発された暗号ソフトウェア、Thomas Bernard氏により書かれたUPnPソフトウェアを用いています。</translation>
     </message>
     <message>
-        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>bitcoindを用いる場合や、-server オプションをbitcoin-qtに指定する場合には、設定ファイルにrpcpasswordを設定しなければなりません:
-%s
-以下のランダムなパスワードを用いることが推奨されます:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(このパスワードを暗記する必要はありません)
-ユーザ名とパスワードは一致してはいけません。
-ファイルが存在しない場合には、所有者のみ読み込み可能なファイルパーミッションでファイルを作成してください。
-またalertnotifyを設定し、問題発生時に通知が行くようにすることをおすすめします;
-例: alertnotify=echo %%s | mail -s "Bitcoinアラート" admin@foo.com
-</translation>
-    </message>
-    <message>
-        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>警告: -maxtxfee が非常に高く設定されています！ひとつのトランザクションでこの量の手数料が支払われてしまうことがあります。</translation>
-    </message>
-    <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>警告： あなたのPCの日付と時刻が正しいことを確認して下さい！ もしあなたの時計が正しくなければBitcoin Coreが正確に動作しません。</translation>
-    </message>
-    <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>ホワイトリストのピアはDoSによるアクセス禁止処理が無効化され、トランザクションは例えmempool内に既に存在していたとしても常にリレーされます。これは例えばゲートウェイに対して有用です</translation>
     </message>
@@ -3162,16 +3297,20 @@ rpcpassword=%s
         <translation>最優良のチェインを有効化しています...</translation>
     </message>
     <message>
-        <source>Can't run with a wallet in prune mode.</source>
-        <translation>剪定モードではウォレット機能付きで起動できません。</translation>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>ホワイトリストにあるピアから受け取ったトランザクションを常にリレーする (初期値: %d)</translation>
+    </message>
+    <message>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation>起動時に壊れた wallet.dat から秘密鍵を復旧することを試す</translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Tor秘匿サービスを自動的に作成する (初期値: %d)</translation>
     </message>
     <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>-whitebind アドレス '%s' を解決できません</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>起動時にデータ ディレクトリを選ぶ (初期値: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3182,10 +3321,6 @@ rpcpassword=%s
         <translation>Copyright (C) 2009-%i Bitcoin Core 開発者</translation>
     </message>
     <message>
-        <source>Could not parse -rpcbind value %s as network address</source>
-        <translation>-rpcbind の値 %s をネットワークアドレスとして解釈できませんでした</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
         <translation>wallet.dat の読み込みに失敗しました: ウォレットの読み込みにはより新しいバージョンの Bitcoin Core が必要です</translation>
     </message>
@@ -3194,12 +3329,8 @@ rpcpassword=%s
         <translation>データベースの読み込みエラー。シャットダウンします。</translation>
     </message>
     <message>
-        <source>Error: Unsupported argument -tor found, use -onion.</source>
-        <translation>エラー: サポートされていない引数 -tor が見つかりました。-onion を使用してください。</translation>
-    </message>
-    <message>
-        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
-        <translation>送信するトランザクションに付加する手数料 (BTC/kB単位) (初期値: %s)</translation>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>起動時に外部の blk000??.dat ファイルからブロックをインポート</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3242,16 +3373,8 @@ rpcpassword=%s
         <translation>ノード中継オプション:</translation>
     </message>
     <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>RPC SSL オプション: (SSLのセットアップ手順はビットコインWikiを参照してください)</translation>
-    </message>
-    <message>
         <source>RPC server options:</source>
         <translation>RPCサーバのオプション:</translation>
-    </message>
-    <message>
-        <source>RPC support for HTTP persistent connections (default: %d)</source>
-        <translation>RPCにおけるHTTPの持続的接続のサポート (初期値: %d)</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
@@ -3262,6 +3385,14 @@ rpcpassword=%s
         <translation>P2Pネットワークのアラートの受け取りと表示を行う (デフォルト: %u)</translation>
     </message>
     <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>システム上の制約から、-maxconnections を %d から %d に削減しました。</translation>
+    </message>
+    <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>起動時に失ったウォレットの取引のブロック チェーンを再スキャン</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>トレース/デバッグ情報を debug.log ファイルの代わりにコンソールへ送る</translation>
     </message>
@@ -3270,20 +3401,8 @@ rpcpassword=%s
         <translation>可能な場合には手数料ゼロのトランザクションとしてトランザクションを送信する (初期値: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>支払いリクエスト用にSSLルート証明書を設定する（デフォルト：-system-）</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>言語設定 例: "de_DE" (初期値: システムの言語)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>すべてのデバッグオプションを表示する (使い方: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>起動時にスプラッシュ画面を表示する (初期値: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3294,16 +3413,20 @@ rpcpassword=%s
         <translation>取引の署名に失敗しました</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>最小化された状態で起動する</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>トランザクションの金額が小さすぎて手数料を支払えません</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
         <translation>これは実験的なソフトウェアです。</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Tor管理ポートのパスワード (初期値: 空文字)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>Onion のリッスンが有効になっている場合に使用するTor管理ポート (初期値: %s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3322,16 +3445,12 @@ rpcpassword=%s
         <translation>取引が大き過ぎます</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>UIオプション:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>このコンピュータの %s にバインドすることができません (バインドが返したエラーは %s)</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>リスン ポートの割当に UPnP を使用 (初期値: リスン中は1)</translation>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>起動時にウォレットを最新のフォーマットにアップグレード</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3346,20 +3465,16 @@ rpcpassword=%s
         <translation>警告</translation>
     </message>
     <message>
-        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>警告: サポートされていない引数 -benchmark は無視されました。-debug=bench を使用してください。</translation>
-    </message>
-    <message>
-        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>警告: サポートされていない引数 -debugnet は無視されました。-debug=net を使用してください。</translation>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>ブロック限定モードにおいて動作を行うかどうか (初期値: %u)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>ウォレットからすべてのトランザクションを消去しています...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>起動時</translation>
+        <source>ZeroMQ notification options:</source>
+        <translation>ZeroMQ通知オプション:</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -3372,18 +3487,6 @@ rpcpassword=%s
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>最良のブロックに変更する際にコマンドを実行 (cmd の %s はブロック ハッシュに置換される)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>ウォレットを最新のフォーマットにアップグレード</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>失ったウォレットの取引のブロック チェーンを再スキャン</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>JSON-RPC 接続に OpenSSL (https) を使用</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3406,6 +3509,26 @@ rpcpassword=%s
         <translation>(1 = トランザクションのメタデータ、例えばアカウントの所有者や支払リクエストの内容を保持する, 2 = トランザクションのメタデータを破棄する)</translation>
     </message>
     <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee が非常に高く設定されています！ひとつのトランザクションでこの量の手数料が支払われてしまうことがあります。</translation>
+    </message>
+    <message>
+        <source>-paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>-paytxfee が非常に高く設定されています! これは取引を送信する場合に支払う取引手数料です。</translation>
+    </message>
+    <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>mempool内でトランザクションを &lt;n&gt; 時間以上保持しない (初期値: %u)</translation>
+    </message>
+    <message>
+        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>wallet.dat の読み込みエラー! すべてのキーは正しく読み取れますが、取引データやアドレス帳のエントリが失われたか、正しくない可能性があります。</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>トランザクション作成の際、この値未満の手数料 (%s/kB単位) はゼロであるとみなす (デフォルト: %s)</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>-checkblocks のブロックの検証レベル (0-4, 初期値: %u)</translation>
     </message>
@@ -3422,16 +3545,32 @@ rpcpassword=%s
         <translation>デバッグ情報を出力する (初期値: %u, &lt;category&gt; の指定は任意です)</translation>
     </message>
     <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>Bloomフィルタによる、ブロックおよびトランザクションのフィルタリングを有効化する (初期値: %u)</translation>
+    </message>
+    <message>
+        <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
+        <translation>ネットワークバージョン文字 (%i) の長さが最大の長さ (%i) を超えています。UAコメントの数や長さを削減してください。</translation>
+    </message>
+    <message>
+        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
+        <translation>送信転送量を与えられた目標値以下に維持するようにする (24時間あたり何MiBかで指定)。0 の場合は無制限 (初期値: %d)</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>サポートされていない引数 -socks が見つかりました。SOCKSバージョンの設定はできないようになりました。SOCKS5プロキシのみがサポートされています。</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Tor 秘匿サービスを通し、別々の SOCKS5 プロキシを用いることでピアに到達する (初期値: %s)</translation>
     </message>
     <message>
-        <source>(default: %s)</source>
-        <translation>(デフォルト: %s)</translation>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>JSON-RPC接続時のユーザ名とハッシュ化されたパスワード。&lt;userpw&gt; フィールドのフォーマットは &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;。標準的な Python スクリプトが share/rpcuser 内に含まれています。このオプションは複数回指定できます。</translation>
     </message>
     <message>
-        <source>Acceptable ciphers (default: %s)</source>
-        <translation>受付可能な暗号化方式 (初期値: %s)</translation>
+        <source>(default: %s)</source>
+        <translation>(デフォルト: %s)</translation>
     </message>
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
@@ -3492,14 +3631,6 @@ rpcpassword=%s
     <message>
         <source>Relay non-P2SH multisig (default: %u)</source>
         <translation>P2SHでないマルチシグトランザクションをリレーする (初期値: %u)</translation>
-    </message>
-    <message>
-        <source>Server certificate file (default: %s)</source>
-        <translation>サーバ証明書ファイル (初期値: %s)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: %s)</source>
-        <translation>サーバの秘密鍵 (初期値: %s)</translation>
     </message>
     <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>

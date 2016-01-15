@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 '''
-Run this scrip every time you change one of the png files. Using pngcrush, it will optimize the png files, remove various color profiles, remove ancillary chunks (alla) and text chunks (text).
+Run this script every time you change one of the png files. Using pngcrush, it will optimize the png files, remove various color profiles, remove ancillary chunks (alla) and text chunks (text).
 #pngcrush -brute -ow -rem gAMA -rem cHRM -rem iCCP -rem sRGB -rem alla -rem text
 '''
 import os
@@ -18,12 +18,12 @@ def content_hash(filename):
     '''Return hash of RGBA contents of image'''
     i = Image.open(filename)
     i = i.convert('RGBA')
-    data = i.tostring()
+    data = i.tobytes()
     return hashlib.sha256(data).hexdigest()
 
 pngcrush = 'pngcrush'
 git = 'git'
-folders = ["src/qt/res/movies", "src/qt/res/icons"]
+folders = ["src/qt/res/movies", "src/qt/res/icons", "share/pixmaps"]
 basePath = subprocess.check_output([git, 'rev-parse', '--show-toplevel']).rstrip('\n')
 totalSaveBytes = 0
 noHashChange = True

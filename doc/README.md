@@ -1,4 +1,4 @@
-Bitcoin Core 0.11.99
+Bitcoin Core 0.12.99
 =====================
 
 Setup
@@ -7,7 +7,7 @@ Setup
 
 Running
 ---------------------
-The following are some helpful notes on how to run Bitcoin on your native platform. 
+The following are some helpful notes on how to run Bitcoin on your native platform.
 
 ### Unix
 
@@ -26,9 +26,9 @@ Unpack the files into a directory and run:
 
 Unpack the files into a directory, and then run bitcoin-qt.exe.
 
-### OSX
+### OS X
 
-Drag Bitcoin-Qt to your applications folder, and then run Bitcoin-Qt.
+Drag Bitcoin-Core to your applications folder, and then run Bitcoin-Core.
 
 ### Need Help?
 
@@ -41,8 +41,10 @@ Building
 ---------------------
 The following are developer notes on how to build Bitcoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
-- [OSX Build Notes](build-osx.md)
+- [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
+- [Windows Build Notes](build-windows.md)
+- [OpenBSD Build Notes](build-openbsd.md)
 - [Gitian Building Guide](gitian-building.md)
 
 Development

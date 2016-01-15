@@ -46,7 +46,9 @@ template<typename X> static inline size_t DynamicUsage(const X * const &v) { ret
 static inline size_t MallocUsage(size_t alloc)
 {
     // Measured on libc6 2.19 on Linux.
-    if (sizeof(void*) == 8) {
+    if (alloc == 0) {
+        return 0;
+    } else if (sizeof(void*) == 8) {
         return ((alloc + 31) >> 4) << 4;
     } else if (sizeof(void*) == 4) {
         return ((alloc + 15) >> 3) << 3;
@@ -72,6 +74,12 @@ template<typename X>
 static inline size_t DynamicUsage(const std::vector<X>& v)
 {
     return MallocUsage(v.capacity() * sizeof(X));
+}
+
+template<unsigned int N, typename X, typename S, typename D>
+static inline size_t DynamicUsage(const prevector<N, X, S, D>& v)
+{
+    return MallocUsage(v.allocated_memory());
 }
 
 template<typename X, typename Y>
@@ -121,4 +129,4 @@ static inline size_t DynamicUsage(const boost::unordered_map<X, Y, Z>& m)
 
 }
 
-#endif
+#endif // BITCOIN_MEMUSAGE_H
