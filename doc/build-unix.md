@@ -36,6 +36,7 @@ These dependencies are required:
  libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
  libboost    | Utility          | Library for threading, data structures, etc
  libevent    | Networking       | OS independent asynchronous networking
+ univalue    | Utility          | JSON parsing and encoding
 
 Optional dependencies:
 
@@ -174,6 +175,15 @@ If you need to build Boost yourself:
 	sudo su
 	./bootstrap.sh
 	./bjam install
+
+
+Univalue
+--------
+If you need to build UniValue yourself:
+
+	./autogen.sh
+	./configure
+	make install
 
 
 Security
