@@ -8,6 +8,10 @@ define $(package)_preprocess_cmds
   cd $($(package)_build_subdir); ./autogen.sh
 endef
 
+define $(package)_set_vars
+$(package)_config_opts=--disable-shared
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
