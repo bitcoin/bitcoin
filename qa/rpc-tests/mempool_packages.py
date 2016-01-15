@@ -87,9 +87,18 @@ class MempoolPackagesTest(BitcoinTestFramework):
             print "too-long-ancestor-chain successfully rejected"
 
         # Check that prioritising a tx before it's added to the mempool works
+        # First clear the mempool by mining a block.
         self.nodes[0].generate(1)
+        sync_blocks(self.nodes)
+        assert_equal(len(self.nodes[0].getrawmempool()), 0)
+        # Prioritise a transaction that has been mined, then add it back to the
+        # mempool by using invalidateblock.
         self.nodes[0].prioritisetransaction(chain[-1], 0, 2000)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
+        # Keep node1's tip synced with node0
+        self.nodes[1].invalidateblock(self.nodes[1].getbestblockhash())
+
+        # Now check that the transaction is in the mempool, with the right modified fee
         mempool = self.nodes[0].getrawmempool(True)
 
         descendant_fees = 0
