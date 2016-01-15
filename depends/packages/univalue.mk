@@ -1,8 +1,8 @@
 package=univalue
-$(package)_version=1.0.1
+$(package)_version=1.0.2
 $(package)_download_path=https://codeload.github.com/jgarzik/$(package)/tar.gz
 $(package)_file_name=v$($(package)_version)
-$(package)_sha256_hash=1699d5dcaabc29dde024dbfd42cb49915d4c135dfbbb5cc846de0654ca30cdab
+$(package)_sha256_hash=685ca5d2db9c0475d88bfd0a444a90ade770f7e98dacfed55921775c36d28e51
 
 define $(package)_preprocess_cmds
   cd $($(package)_build_subdir); ./autogen.sh
