@@ -4,7 +4,7 @@
 
 #include "base58.h"
 #include "chain.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "init.h"
 #include "main.h"
 #include "script/script.h"
