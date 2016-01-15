@@ -1,9 +1,9 @@
-<TS language="ko_KR" version="2.0">
+<TS language="ko_KR" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>지갑 주소나 이름을 수정하려면 우클릭하세요.</translation>
+        <translation>지갑 주소나 라벨을 수정하려면 우클릭하세요.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>계좌 복사(&amp;C)</translation>
+        <translation>주소 복사(&amp;C)</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -59,11 +59,11 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>보내는 주소들</translation>
+        <translation>타인 계좌 주소목록</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>받은 주소들</translation>
+        <translation>내 계좌 주소목록</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -75,7 +75,7 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>표 복사</translation>
+        <translation>라벨 복사</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -87,7 +87,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>각각의 파일에 쉼표하기(*.csv)</translation>
+        <translation>쉼표로 구분된 파일(*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -95,14 +95,14 @@
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>%1으로 주소 리스트를 저장하는 동안 오류가 발생했습니다. 다시 시도해주세요.</translation>
+        <translation>%1으로 주소 목록을 저장하는 동안 오류가 발생했습니다. 다시 시도해주세요.</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>표</translation>
+        <translation>라벨</translation>
     </message>
     <message>
         <source>Address</source>
@@ -110,7 +110,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(표 없음)</translation>
+        <translation>(라벨 없음)</translation>
     </message>
 </context>
 <context>
@@ -129,7 +129,7 @@
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>새 암호 반복</translation>
+        <translation>새로운 암호 재확인</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -141,7 +141,7 @@
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>지갑 열기</translation>
+        <translation>지갑 잠금해제</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
@@ -157,11 +157,11 @@
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>지갑의 암호화를 확정</translation>
+        <translation>지갑 암호화 승인</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>경고: 만약 암호화된 지갑의 비밀번호를 잃어버릴 경우, 모든 비트코인들을 잃어버릴 수 있습니다!</translation>
+        <translation>경고: 만약 암호화 된 지갑의 비밀번호를 잃어버릴 경우, &lt;b&gt;모든 비트코인들을 잃어버릴 수 있습니다&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -169,15 +169,19 @@
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>중요: 본인 지갑파일에서 만든 예전 백업들은 새로 생성한 암화화된 지갑 파일로 교체됩니다. 보안상 이유로 이전에 암호화 하지 않은 지갑 파일 백업은 사용할 수 없게 되니 빠른 시일 내로 새로 암화화된 지갑을 사용하시기 바랍니다.</translation>
+        <translation>중요: 본인 지갑파일에서 만든 예전 백업들은 새로 생성한 암호화 된 지갑 파일로 교체됩니다. 보안상 이유로 이전에 암호화 하지 않은 지갑 파일 백업은 사용할 수 없게 되니 빠른 시일 내로 새로 암호화 된 지갑을 사용하시기 바랍니다.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>경고: 캡스록 키가 켜져있습니다!</translation>
+        <translation>경고: Caps Lock키가 켜져있습니다!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>지갑 암호화 완료</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>지갑의 기존 암호와 새로운 암호를 입력해주세요.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -208,6 +212,9 @@
         <translation>지갑 비밀번호가 성공적으로 변경되었습니다.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -344,11 +351,11 @@
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>주 창 보이기 또는 숨기기</translation>
+        <translation>메인창 보이기 또는 숨기기</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>소유 지갑 개인키 암호화</translation>
+        <translation>지갑에 포함된 개인키 암호화하기</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -396,7 +403,7 @@
     </message>
     <message>
         <source>Open a bitcoin: URI or payment request</source>
-        <translation>비트코인: URI 또는 지불요청 열기</translation>
+        <translation>bitcoin: URI 또는 지불요청 열기</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -425,6 +432,10 @@
     <message>
         <source>%1 and %2</source>
         <translation>%1 그리고 %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n년</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -457,6 +468,36 @@
     <message>
         <source>Catching up...</source>
         <translation>블록 따라잡기...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>날짜: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>금액: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>종류: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>라벨: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>주소: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -498,7 +539,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>거래량:</translation>
+        <translation>금액:</translation>
     </message>
     <message>
         <source>Priority:</source>
@@ -769,7 +810,7 @@
         <source>command-line options</source>
         <translation>명령줄 옵션</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -927,6 +968,18 @@
         <translation>프록시의 포트번호입니다(예: 9050)</translation>
     </message>
     <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>창(&amp;W)</translation>
     </message>
@@ -1034,6 +1087,10 @@
         <translation>아직 사용 가능하지 않은 채굴된 잔액</translation>
     </message>
     <message>
+        <source>Balances</source>
+        <translation>잔액</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>총액:</translation>
     </message>
@@ -1044,6 +1101,10 @@
     <message>
         <source>Your current balance in watch-only addresses</source>
         <translation>모니터링 지갑의 현재 잔액</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>최근 거래</translation>
     </message>
     </context>
 <context>
@@ -1115,10 +1176,26 @@
         <translation>비트코인 주소를 입력하기 (예. %1)</translation>
     </message>
     <message>
+        <source>%1 h</source>
+        <translation>%1 시간</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 분</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 초</translation>
+    </message>
+    <message>
         <source>N/A</source>
         <translation>없음</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1166,7 +1243,11 @@
     </message>
     <message>
         <source>Using OpenSSL version</source>
-        <translation>오픈SSL 버전을 사용합니다</translation>
+        <translation>사용중인 OpenSSL 버전</translation>
+    </message>
+    <message>
+        <source>Using BerkeleyDB version</source>
+        <translation>사용중인 BerkeleyDB 버전</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1191,6 +1272,22 @@
     <message>
         <source>Current number of blocks</source>
         <translation>현재 블럭 수</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>받음</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>보냄</translation>
+    </message>
+    <message>
+        <source>&amp;Peers</source>
+        <translation>&amp;피어</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>버전</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1244,6 +1341,22 @@
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>사용할 수 있는 명령을 둘러보려면 &lt;b&gt;help&lt;/b&gt;를 입력하십시오.</translation>
     </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 바이트</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 킬로바이트</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 메가바이트</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 기가바이트</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -1253,7 +1366,7 @@
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>표:</translation>
+        <translation>라벨:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -1395,7 +1508,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(표 없음)</translation>
+        <translation>(라벨 없음)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -1461,6 +1574,14 @@
         <translation>주소변경</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>거래 수수료:</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>권장:</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>다수의 수령인들에게 한번에 보내기</translation>
     </message>
@@ -1523,10 +1644,6 @@
     <message>
         <source>Copy priority</source>
         <translation>우선도 복사</translation>
-    </message>
-    <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>총 액수 %1(=%2)</translation>
     </message>
     <message>
         <source>or</source>
@@ -2108,6 +2225,10 @@
         <translation>거래 기록 내보내기</translation>
     </message>
     <message>
+        <source>Watch-only</source>
+        <translation>모니터링 지갑</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>내보내기 실패</translation>
     </message>
@@ -2239,10 +2360,6 @@
         <translation>데몬으로 백그라운드에서 실행하고 명령을 허용</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>테스트 네트워크 사용</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>외부 접속을 승인합니다</translation>
     </message>
@@ -2259,10 +2376,6 @@
         <translation>이 빌드 버전은 정식 출시 전 테스트의 목적이며, 예기치 않은 위험과 오류가 발생할 수 있습니다. 채굴과 상점용 소프트웨어로 사용하는 것을 권하지 않습니다.</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>경고: -paytxfee값이 너무 큽니다! 이 값은 송금할때 지불할 송금 수수료입니다.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>경고 : 모든 네트워크가 동의해야 하나, 일부 채굴자들에게 문제가 있는 것으로 보입니다. </translation>
     </message>
@@ -2271,20 +2384,8 @@
         <translation>경고: 현재 비트코인 버전이 다른 네트워크 참여자들과 동일하지 않는 것 같습니다. 당신 또는 다른 참여자들이 동일한 비트코인 버전으로 업그레이드 할 필요가 있습니다.</translation>
     </message>
     <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>경고 : wallet.dat 파일을 읽는 중 에러가 발생했습니다. 주소 키는 모두 정확하게 로딩되었으나 거래 데이터와 주소록 필드에서 누락이나 오류가 존재할 수 있습니다. </translation>
-    </message>
-    <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>경고 : wallet.dat가 손상되어 데이터가 복구되었습니다. 원래의 wallet.dat 파일은 %s 후에 wallet.{timestamp}.bak 이름으로 저장됩니다. 잔액과 거래 내역이 정확하지 않다면 백업 파일로 부터 복원해야 합니다. </translation>
-    </message>
-    <message>
-        <source>(default: 1)</source>
-        <translation>(기본값: 1)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>손상된 wallet.dat에서 개인키 복원을 시도합니다</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2319,6 +2420,10 @@
         <translation>블록 데이터베이스를 초기화하는데 오류</translation>
     </message>
     <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation>지갑 데이터베이스 환경 초기화하는데 오류 %s</translation>
+    </message>
+    <message>
         <source>Error loading block database</source>
         <translation>블록 데이터베이스를 불러오는데 오류</translation>
     </message>
@@ -2333,10 +2438,6 @@
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>어떤 포트도 반응하지 않습니다. 사용자 반응=0 만약 원한다면</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>&lt;카테고리&gt;가 제공되지 않을 경우, 모든 디버깅 정보를 출력</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -2387,10 +2488,6 @@
         <translation>-txindex를 바꾸기 위해서는 -reindex를 사용해서 데이터베이스를 재구성해야 합니다. </translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>외부 blk000??.dat 파일에서 블록을 가져옵니다.</translation>
-    </message>
-    <message>
         <source>Cannot obtain a lock on data directory %s. Bitcoin Core is probably already running.</source>
         <translation>데이터 디렉토리 %s에 락을 걸 수 없었습니다. 비트코인 코어가 이미 실행 중인 것으로 보입니다.</translation>
     </message>
@@ -2403,12 +2500,16 @@
         <translation>최대 크기를 최우선으로 설정 / 바이트당 최소 수수료로 거래(기본값: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>파일목록을 선택하여 시작하시오(기본값: 0)</translation>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>-whitebind 주소를 확인할 수 없습니다: '%s'</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>정보</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>-maxtxfee=&lt;amount&gt;에 대한 양이 잘못되었습니다: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2419,10 +2520,6 @@
         <translation>최저 거래 수수료가 부족합니다. -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>RPC SSL 옵션: (비트코인 위키의 SSL 설정 설명서 참고)</translation>
-    </message>
-    <message>
         <source>RPC server options:</source>
         <translation>RPC 서버 설정</translation>
     </message>
@@ -2431,20 +2528,8 @@
         <translation>추적오류 정보를 degug.log 자료로 보내는 대신 콘솔로 보내기</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>지불 요청을 위해 SSL 최상위 인증을 설정합니다. (기본값: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>"de_DE"와 같이 언어를 설정하십시오 (기본값: 시스템 로캘)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>모든 디버그 설정 보기(설정: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>시작시 시작 화면 표시 (기본값: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2453,10 +2538,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>거래를 서명하는것을 실패하였습니다.</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>최소화 상태에서 시작</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -2471,10 +2552,6 @@
         <translation>너무 큰 거래</translation>
     </message>
     <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>UPnP사용하여 지도에서 포트 반응기다리는 중  (기본값: 1 반응이 생기면)</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC 연결에 사용할 사용자 이름</translation>
     </message>
@@ -2487,10 +2564,6 @@
         <translation>지갑의 모든거래내역 건너뛰기...</translation>
     </message>
     <message>
-        <source>on startup</source>
-        <translation>구동 중</translation>
-    </message>
-    <message>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat 파일이 손상되었고 복구가 실패하였습니다.</translation>
     </message>
@@ -2501,18 +2574,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>최고의 블럭이 변하면 명령을 실행(cmd 에 있는 %s 는 블럭 해시에 의해 대체되어 짐)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>지갑을 최근 형식으로 개선하시오</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>누락된 지갑 송금에 대한 블록 체인 다시 검색</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>JSON-RPC 연결에 OpenSSL(https) 사용</translation>
     </message>
     <message>
         <source>This help message</source>

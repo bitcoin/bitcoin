@@ -1,4 +1,4 @@
-<TS language="ky" version="2.0">
+<TS language="ky" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -23,6 +23,9 @@
 </context>
 <context>
     <name>AskPassphraseDialog</name>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -123,6 +126,10 @@
         <translation>&amp;Тармак</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>Капчык</translation>
+    </message>
+    <message>
         <source>&amp;Port:</source>
         <translation>&amp;Порт:</translation>
     </message>
@@ -173,6 +180,10 @@
         <translation>Жалпы</translation>
     </message>
     <message>
+        <source>Network</source>
+        <translation>&amp;Тармак</translation>
+    </message>
+    <message>
         <source>Name</source>
         <translation>Аты</translation>
     </message>
@@ -191,6 +202,10 @@
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Билдирүү:</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>

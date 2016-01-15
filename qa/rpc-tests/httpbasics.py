@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -96,6 +96,20 @@ class HTTPBasicsTest (BitcoinTestFramework):
         out1 = conn.getresponse().read();
         assert_equal('"error":null' in out1, True)
         assert_equal(conn.sock!=None, True) #connection must be closed because bitcoind should use keep-alive by default
+
+        # Check excessive request size
+        conn = httplib.HTTPConnection(urlNode2.hostname, urlNode2.port)
+        conn.connect()
+        conn.request('GET', '/' + ('x'*1000), '', headers)
+        out1 = conn.getresponse()
+        assert_equal(out1.status, httplib.NOT_FOUND)
+
+        conn = httplib.HTTPConnection(urlNode2.hostname, urlNode2.port)
+        conn.connect()
+        conn.request('GET', '/' + ('x'*10000), '', headers)
+        out1 = conn.getresponse()
+        assert_equal(out1.status, httplib.BAD_REQUEST)
+
 
 if __name__ == '__main__':
     HTTPBasicsTest ().main ()

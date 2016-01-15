@@ -1,7 +1,7 @@
 Translation Strings Policy
 ===========================
 
-This document provides guidelines for internationalization of the Bitcoin Core software. 
+This document provides guidelines for internationalization of the Bitcoin Core software.
 
 How to translate?
 ------------------
@@ -52,7 +52,7 @@ Try to write translation strings in an understandable way, for both the user and
 ### Do not translate internal errors
 
 Do not translate internal errors, or log messages, or messages that appear on the RPC interface. If an error is to be shown to the user,
-use a generic message, then log the detailed message to the log. E.g. "Error: A fatal internal error occurred, see debug.log for details".
+use a translatable generic message, then log the detailed message to the log. E.g. "A fatal internal error occurred, see debug.log for details".
 This helps troubleshooting; if the error is the same for everyone, the likelihood is increased that it can be found using a search engine.
 
 ### Avoid fragments
@@ -107,4 +107,3 @@ The second example reduces the number of pluralized words that translators have 
 During a string freeze (often before a major release), no translation strings are to be added, modified or removed.
 
 This can be checked by executing `make translate` in the `src` directory, then verifying that `bitcoin_en.ts` remains unchanged.
-

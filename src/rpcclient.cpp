@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -76,6 +76,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getrawtransaction", 1 },
     { "createrawtransaction", 0 },
     { "createrawtransaction", 1 },
+    { "createrawtransaction", 2 },
     { "signrawtransaction", 1 },
     { "signrawtransaction", 2 },
     { "sendrawtransaction", 1 },
@@ -95,6 +96,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "getrawmempool", 0 },
     { "estimatefee", 0 },
     { "estimatepriority", 0 },
+    { "estimatesmartfee", 0 },
+    { "estimatesmartpriority", 0 },
     { "prioritisetransaction", 1 },
     { "prioritisetransaction", 2 },
     { "setban", 2 },

@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,7 +47,7 @@ def run_allowip_test(tmpdir, allow_ips, rpchost, rpcport):
     try:
         # connect to node through non-loopback interface
         url = "http://rt:rt@%s:%d" % (rpchost, rpcport,)
-        node = AuthServiceProxy(url)
+        node = get_rpc_proxy(url, 1)
         node.getinfo()
     finally:
         node = None # make sure connection will be garbage collected and closed

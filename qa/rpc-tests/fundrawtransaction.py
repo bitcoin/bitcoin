@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,7 +28,20 @@ class RawTransactionsTest(BitcoinTestFramework):
 
     def run_test(self):
         print "Mining blocks..."
-        feeTolerance = Decimal(0.00000002) #if the fee's positive delta is higher than this value tests will fail, neg. delta always fail the tests
+
+        min_relay_tx_fee = self.nodes[0].getnetworkinfo()['relayfee']
+        # This test is not meant to test fee estimation and we'd like
+        # to be sure all txs are sent at a consistent desired feerate
+        for node in self.nodes:
+            node.settxfee(min_relay_tx_fee)
+
+        # if the fee's positive delta is higher than this value tests will fail,
+        # neg. delta always fail the tests.
+        # The size of the signature of every input may be at most 2 bytes larger
+        # than a minimum sized signature.
+
+        #            = 2 bytes * minRelayTxFeePerByte
+        feeTolerance = 2 * min_relay_tx_fee/1000
 
         self.nodes[2].generate(1)
         self.sync_all()
@@ -439,6 +452,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         wait_bitcoinds()
 
         self.nodes = start_nodes(4, self.options.tmpdir)
+        # This test is not meant to test fee estimation and we'd like
+        # to be sure all txs are sent at a consistent desired feerate
+        for node in self.nodes:
+            node.settxfee(min_relay_tx_fee)
 
         connect_nodes_bi(self.nodes,0,1)
         connect_nodes_bi(self.nodes,1,2)

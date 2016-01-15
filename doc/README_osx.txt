@@ -1,12 +1,12 @@
-Deterministic OSX Dmg Notes.
+Deterministic OS X Dmg Notes.
 
-Working OSX DMGs are created in Linux by combining a recent clang,
+Working OS X DMGs are created in Linux by combining a recent clang,
 the Apple's binutils (ld, ar, etc), and DMG authoring tools.
 
 Apple uses clang extensively for development and has upstreamed the necessary
 functionality so that a vanilla clang can take advantage. It supports the use
 of -F, -target, -mmacosx-version-min, and --sysroot, which are all necessary
-when building for OSX. A pre-compiled version of 3.2 is used because it was not
+when building for OS X. A pre-compiled version of 3.2 is used because it was not
 available in the Precise repositories at the time this work was started. In the
 future, it can be switched to use system packages instead.
 
@@ -29,18 +29,18 @@ originally done in toolchain4.
 
 To complicate things further, all builds must target an Apple SDK. These SDKs
 are free to download, but not redistributable.
-To obtain it, register for a developer account, then download the XCode 6.1.1 dmg:
+To obtain it, register for a developer account, then download the Xcode 6.1.1 dmg:
 https://developer.apple.com/devcenter/download.action?path=/Developer_Tools/xcode_6.1.1/xcode_6.1.1.dmg
 
 This file is several gigabytes in size, but only a single directory inside is
 needed: Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk
 
 Unfortunately, the usual linux tools (7zip, hpmount, loopback mount) are incapable of opening this file.
-To create a tarball suitable for gitian input, mount the dmg in OSX, then create it with:
+To create a tarball suitable for Gitian input, mount the dmg in OS X, then create it with:
   $ tar -C /Volumes/Xcode/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/ -czf MacOSX10.9.sdk.tar.gz MacOSX10.9.sdk
 
 
-The gitian descriptors build 2 sets of files: Linux tools, then Apple binaries
+The Gitian descriptors build 2 sets of files: Linux tools, then Apple binaries
 which are created using these tools. The build process has been designed to
 avoid including the SDK's files in Gitian's outputs. All interim tarballs are
 fully deterministic and may be freely redistributed.
@@ -64,20 +64,20 @@ Ideally, the creation could be fixed and genisoimage would no longer be necessar
 
 Background images and other features can be added to DMG files by inserting a
 .DS_Store before creation. The easiest way to create this file is to build a
-DMG without one, move it to a device running OSX, customize the layout, then
+DMG without one, move it to a device running OS X, customize the layout, then
 grab the .DS_Store file for later use. That is the approach taken here.
 
-As of OSX Mavericks (10.9), using an Apple-blessed key to sign binaries is a
+As of OS X Mavericks (10.9), using an Apple-blessed key to sign binaries is a
 requirement in order to satisfy the new Gatekeeper requirements. Because this
 private key cannot be shared, we'll have to be a bit creative in order for the
 build process to remain somewhat deterministic. Here's how it works:
 
-- Builders use gitian to create an unsigned release. This outputs an unsigned
+- Builders use Gitian to create an unsigned release. This outputs an unsigned
   dmg which users may choose to bless and run. It also outputs an unsigned app
   structure in the form of a tarball, which also contains all of the tools
   that have been previously (deterministically) built in order to create a
   final dmg.
 - The Apple keyholder uses this unsigned app to create a detached signature,
   using the script that is also included there.
-- Builders feed the unsigned app + detached signature back into gitian. It
+- Builders feed the unsigned app + detached signature back into Gitian. It
   uses the pre-built tools to recombine the pieces into a deterministic dmg.

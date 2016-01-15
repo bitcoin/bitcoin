@@ -1,10 +1,2 @@
-
-libunivalue-uninstalled.pc
-libunivalue.pc
-libunivalue.a
 gen
-
 .libs
-*.lo
-*.la
-

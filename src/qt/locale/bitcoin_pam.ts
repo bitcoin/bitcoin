@@ -1,4 +1,4 @@
-<TS language="pam" version="2.0">
+<TS language="pam" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -189,6 +189,9 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
@@ -245,6 +248,10 @@
     <message>
         <source>&amp;Change Passphrase...</source>
         <translation>&amp;Alilan ing Passphrase...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Address king pamag-Tanggap</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -307,6 +314,10 @@
         <translation>Kapilubluban ning Bitcoin</translation>
     </message>
     <message>
+        <source>&amp;Command-line options</source>
+        <translation>Pipamilian command-line</translation>
+    </message>
+    <message>
         <source>Last received block was generated %1 ago.</source>
         <translation>Ing tatauling block a metanggap,  me-generate ya %1 ing milabas</translation>
     </message>
@@ -360,6 +371,10 @@
 </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Alaga:</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation>Alaga</translation>
@@ -461,7 +476,7 @@
         <source>command-line options</source>
         <translation>pipamilian command-line</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -637,6 +652,10 @@
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>I-Debug ing awang</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>Gagamit bersion na ning OpenSSL</translation>
     </message>
@@ -715,6 +734,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Kopyan ing address</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Address</translation>
     </message>
@@ -759,6 +782,18 @@
     <message>
         <source>Send Coins</source>
         <translation>Magpadalang Barya</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Kulang a pondo</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Alaga:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Bayad king Transaksion:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -838,6 +873,14 @@
     <message>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mensayi:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Ibayad kang:</translation>
     </message>
     </context>
 <context>
@@ -1327,16 +1370,8 @@
         <translation>Gumana king gulut bilang daemon at tumanggap commands</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Gamitan ing test network</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Tumanggap koneksion menibat king kilwal (default: 1 if no -proxy or -connect)</translation>
-    </message>
-    <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Kapabaluan: Sobra ya katas ing makalage king -paytxfee. Ini ing maging bayad mu para king bayad na ning transaksion istung pepadala me ing transaksion a ini.</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -1371,24 +1406,28 @@
         <translation>Memali ya ing pamakiramdam kareng gang nanung port. Gamita me ini -listen=0 nung buri me ini.</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Eya me-resolve ing -whitebind address: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>&amp;Impormasion</translation>
     </message>
     <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Eya maliari ing alaga keng -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Eya maliari ing alaga keng -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Eya maliari ing alaga keng -mintxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Magpadalang trace/debug info okeng console kesa keng debug.log file</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Mamiling Amanu, alimbawa "de_DE"(default: system locale)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Ipalto ing splash screen keng umpisa (default: 1)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Umpisan ing pamaglati</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -1409,18 +1448,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>I-execute ing command istung mialilan ya ing best block (%s in cmd is replaced by block hash)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>I-upgrade ing wallet king pekabayung porma</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>I-scan pasibayu ing block chain para kareng mauaualang transaksion</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Gumamit OpenSSL(https) para king JSON-RPC koneksion</translation>
     </message>
     <message>
         <source>This help message</source>

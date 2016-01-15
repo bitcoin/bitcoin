@@ -6,7 +6,7 @@
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
-from test_framework.comptool import TestManager, TestInstance
+from test_framework.comptool import TestManager, TestInstance, RejectResult
 from test_framework.mininode import *
 from test_framework.blocktools import *
 import logging
@@ -97,7 +97,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         assert(block2_orig.vtx != block2.vtx)
 
         self.tip = block2.sha256
-        yield TestInstance([[block2, False], [block2_orig, True]])
+        yield TestInstance([[block2, RejectResult(16,'bad-txns-duplicate')], [block2_orig, True]])
         height += 1
 
         '''
@@ -112,7 +112,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         block3.rehash()
         block3.solve()
 
-        yield TestInstance([[block3, False]])
+        yield TestInstance([[block3, RejectResult(16,'bad-cb-amount')]])
 
 
 if __name__ == '__main__':

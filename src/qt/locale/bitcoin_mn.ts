@@ -1,4 +1,4 @@
-<TS language="mn" version="2.0">
+<TS language="mn" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -48,6 +48,10 @@
     <message>
         <source>Choose the address to receive coins with</source>
         <translation>Зооснуудыг хүлээн авах хаягийг сонгоно уу</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>С&amp;онго</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -173,6 +177,9 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
@@ -227,6 +234,10 @@
         <translation>&amp;Нууц Үгийг Солих...</translation>
     </message>
     <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Хүлээн авах хаяг</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Түрүйвчийг цоожлох нууц үгийг солих</translation>
     </message>
@@ -261,6 +272,10 @@
     <message>
         <source>Error</source>
         <translation>Алдаа</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>Мэдээллэл</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -415,6 +430,14 @@
         <translation>проксигийн IP хаяг (жишээ нь: IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>&amp;Network</source>
+        <translation>Сүлжээ</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Түрүйвч</translation>
+    </message>
+    <message>
         <source>Client restart required to activate changes.</source>
         <translation>Ѳѳрчлѳлтүүдийг идэвхижүүлхийн тулд клиентийг ахин эхлүүлэх шаардлагтай</translation>
     </message>
@@ -516,8 +539,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Хэмжээ:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Шошго:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Зурвас:</translation>
     </message>
     <message>
         <source>Show</source>
@@ -546,6 +577,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Хаягийг &amp;Хуулбарлах</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Хаяг</translation>
@@ -649,10 +684,6 @@
         <translation>Ѳѳрчлѳлтийг санах</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Нийт дүн %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>эсвэл</translation>
     </message>
@@ -710,6 +741,10 @@
     <message>
         <source>Message:</source>
         <translation>Зурвас:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Тѳлѳх хаяг:</translation>
     </message>
     </context>
 <context>
@@ -1031,8 +1066,8 @@
         <translation>Түрүйвчийн сонголтууд:</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Түрүйвчийг хамгийн сүүлийн үеийн форматруу шинэчлэх</translation>
+        <source>Information</source>
+        <translation>Мэдээллэл</translation>
     </message>
     <message>
         <source>Loading addresses...</source>

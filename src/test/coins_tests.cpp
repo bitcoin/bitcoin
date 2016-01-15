@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2014-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,6 +6,8 @@
 #include "random.h"
 #include "uint256.h"
 #include "test/test_bitcoin.h"
+#include "main.h"
+#include "consensus/validation.h"
 
 #include <vector>
 #include <map>
@@ -45,15 +47,18 @@ public:
     bool BatchWrite(CCoinsMap& mapCoins, const uint256& hashBlock)
     {
         for (CCoinsMap::iterator it = mapCoins.begin(); it != mapCoins.end(); ) {
-            map_[it->first] = it->second.coins;
-            if (it->second.coins.IsPruned() && insecure_rand() % 3 == 0) {
-                // Randomly delete empty entries on write.
-                map_.erase(it->first);
+            if (it->second.flags & CCoinsCacheEntry::DIRTY) {
+                // Same optimization used in CCoinsViewDB is to only write dirty entries.
+                map_[it->first] = it->second.coins;
+                if (it->second.coins.IsPruned() && insecure_rand() % 3 == 0) {
+                    // Randomly delete empty entries on write.
+                    map_.erase(it->first);
+                }
             }
             mapCoins.erase(it++);
         }
-        mapCoins.clear();
-        hashBestBlock_ = hashBlock;
+        if (!hashBlock.IsNull())
+            hashBestBlock_ = hashBlock;
         return true;
     }
 
@@ -160,13 +165,22 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
         }
 
         if (insecure_rand() % 100 == 0) {
+            // Every 100 iterations, flush an intermediate cache
+            if (stack.size() > 1 && insecure_rand() % 2 == 0) {
+                unsigned int flushIndex = insecure_rand() % (stack.size() - 1);
+                stack[flushIndex]->Flush();
+            }
+        }
+        if (insecure_rand() % 100 == 0) {
             // Every 100 iterations, change the cache stack.
             if (stack.size() > 0 && insecure_rand() % 2 == 0) {
+                //Remove the top cache
                 stack.back()->Flush();
                 delete stack.back();
                 stack.pop_back();
             }
             if (stack.size() == 0 || (stack.size() < 4 && insecure_rand() % 2)) {
+                //Add a new cache
                 CCoinsView* tip = &base;
                 if (stack.size() > 0) {
                     tip = stack.back();
@@ -195,6 +209,142 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
     BOOST_CHECK(updated_an_entry);
     BOOST_CHECK(found_an_entry);
     BOOST_CHECK(missed_an_entry);
+}
+
+// This test is similar to the previous test
+// except the emphasis is on testing the functionality of UpdateCoins
+// random txs are created and UpdateCoins is used to update the cache stack
+// In particular it is tested that spending a duplicate coinbase tx
+// has the expected effect (the other duplicate is overwitten at all cache levels)
+BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
+{
+    bool spent_a_duplicate_coinbase = false;
+    // A simple map to track what we expect the cache stack to represent.
+    std::map<uint256, CCoins> result;
+
+    // The cache stack.
+    CCoinsViewTest base; // A CCoinsViewTest at the bottom.
+    std::vector<CCoinsViewCacheTest*> stack; // A stack of CCoinsViewCaches on top.
+    stack.push_back(new CCoinsViewCacheTest(&base)); // Start with one cache.
+
+    // Track the txids we've used and whether they have been spent or not
+    std::map<uint256, CAmount> coinbaseids;
+    std::set<uint256> alltxids;
+    std::set<uint256> duplicateids;
+
+    for (unsigned int i = 0; i < NUM_SIMULATION_ITERATIONS; i++) {
+        {
+            CMutableTransaction tx;
+            tx.vin.resize(1);
+            tx.vout.resize(1);
+            tx.vout[0].nValue = i; //Keep txs unique unless intended to duplicate
+            unsigned int height = insecure_rand();
+
+            // 1/10 times create a coinbase
+            if (insecure_rand() % 10 == 0 || coinbaseids.size() < 10) {
+                // 1/100 times create a duplicate coinbase
+                if (insecure_rand() % 10 == 0 && coinbaseids.size()) {
+                    std::map<uint256, CAmount>::iterator coinbaseIt = coinbaseids.lower_bound(GetRandHash());
+                    if (coinbaseIt == coinbaseids.end()) {
+                        coinbaseIt = coinbaseids.begin();
+                    }
+                    //Use same random value to have same hash and be a true duplicate
+                    tx.vout[0].nValue = coinbaseIt->second;
+                    assert(tx.GetHash() == coinbaseIt->first);
+                    duplicateids.insert(coinbaseIt->first);
+                }
+                else {
+                    coinbaseids[tx.GetHash()] = tx.vout[0].nValue;
+                }
+                assert(CTransaction(tx).IsCoinBase());
+            }
+            // 9/10 times create a regular tx
+            else {
+                uint256 prevouthash;
+                // equally likely to spend coinbase or non coinbase
+                std::set<uint256>::iterator txIt = alltxids.lower_bound(GetRandHash());
+                if (txIt == alltxids.end()) {
+                    txIt = alltxids.begin();
+                }
+                prevouthash = *txIt;
+
+                // Construct the tx to spend the coins of prevouthash
+                tx.vin[0].prevout.hash = prevouthash;
+                tx.vin[0].prevout.n = 0;
+
+                // Update the expected result of prevouthash to know these coins are spent
+                CCoins& oldcoins = result[prevouthash];
+                oldcoins.Clear();
+
+                // It is of particular importance here that once we spend a coinbase tx hash
+                // it is no longer available to be duplicated (or spent again)
+                // BIP 34 in conjunction with enforcing BIP 30 (at least until BIP 34 was active)
+                // results in the fact that no coinbases were duplicated after they were already spent
+                alltxids.erase(prevouthash);
+                coinbaseids.erase(prevouthash);
+
+                // The test is designed to ensure spending a duplicate coinbase will work properly
+                // if that ever happens and not resurrect the previously overwritten coinbase
+                if (duplicateids.count(prevouthash))
+                    spent_a_duplicate_coinbase = true;
+
+                assert(!CTransaction(tx).IsCoinBase());
+            }
+            // Track this tx to possibly spend later
+            alltxids.insert(tx.GetHash());
+
+            // Update the expected result to know about the new output coins
+            CCoins &coins = result[tx.GetHash()];
+            coins.FromTx(tx, height);
+
+            CValidationState dummy;
+            UpdateCoins(tx, dummy, *(stack.back()), height);
+        }
+
+        // Once every 1000 iterations and at the end, verify the full cache.
+        if (insecure_rand() % 1000 == 1 || i == NUM_SIMULATION_ITERATIONS - 1) {
+            for (std::map<uint256, CCoins>::iterator it = result.begin(); it != result.end(); it++) {
+                const CCoins* coins = stack.back()->AccessCoins(it->first);
+                if (coins) {
+                    BOOST_CHECK(*coins == it->second);
+                 } else {
+                    BOOST_CHECK(it->second.IsPruned());
+                 }
+            }
+        }
+
+        if (insecure_rand() % 100 == 0) {
+            // Every 100 iterations, flush an intermediate cache
+            if (stack.size() > 1 && insecure_rand() % 2 == 0) {
+                unsigned int flushIndex = insecure_rand() % (stack.size() - 1);
+                stack[flushIndex]->Flush();
+            }
+        }
+        if (insecure_rand() % 100 == 0) {
+            // Every 100 iterations, change the cache stack.
+            if (stack.size() > 0 && insecure_rand() % 2 == 0) {
+                stack.back()->Flush();
+                delete stack.back();
+                stack.pop_back();
+            }
+            if (stack.size() == 0 || (stack.size() < 4 && insecure_rand() % 2)) {
+                CCoinsView* tip = &base;
+                if (stack.size() > 0) {
+                    tip = stack.back();
+                }
+                stack.push_back(new CCoinsViewCacheTest(tip));
+           }
+        }
+    }
+
+    // Clean up the stack.
+    while (stack.size() > 0) {
+        delete stack.back();
+        stack.pop_back();
+    }
+
+    // Verify coverage.
+    BOOST_CHECK(spent_a_duplicate_coinbase);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

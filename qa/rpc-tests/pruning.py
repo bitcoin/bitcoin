@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,24 +23,7 @@ class PruneTest(BitcoinTestFramework):
     def __init__(self):
         self.utxo = []
         self.address = ["",""]
-
-        # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
-        # So we have big transactions and full blocks to fill up our block files
-
-        # create one script_pubkey
-        script_pubkey = "6a4d0200" #OP_RETURN OP_PUSH2 512 bytes
-        for i in xrange (512):
-            script_pubkey = script_pubkey + "01"
-        # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-        self.txouts = "81"
-        for k in xrange(128):
-            # add txout value
-            self.txouts = self.txouts + "0000000000000000"
-            # add length of script_pubkey
-            self.txouts = self.txouts + "fd0402"
-            # add script_pubkey
-            self.txouts = self.txouts + script_pubkey
-
+        self.txouts = gen_return_txouts()
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -60,6 +43,9 @@ class PruneTest(BitcoinTestFramework):
 
         self.address[0] = self.nodes[0].getnewaddress()
         self.address[1] = self.nodes[1].getnewaddress()
+
+        # Determine default relay fee
+        self.relayfee = self.nodes[0].getnetworkinfo()["relayfee"]
 
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[1], 2)
@@ -239,7 +225,7 @@ class PruneTest(BitcoinTestFramework):
             outputs = {}
             t = self.utxo.pop()
             inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
-            remchange = t["amount"] - Decimal("0.001000")
+            remchange = t["amount"] - 100*self.relayfee # Fee must be above min relay rate for 66kb tx
             outputs[address]=remchange
             # Create a basic transaction that will send change back to ourself after account for a fee
             # And then insert the 128 generated transaction outs in the middle rawtx[92] is where the #

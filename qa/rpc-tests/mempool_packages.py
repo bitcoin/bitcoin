@@ -8,8 +8,8 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-def satoshi_round(amount):
-    return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+MAX_ANCESTORS = 25
+MAX_DESCENDANTS = 25
 
 class MempoolPackagesTest(BitcoinTestFramework):
 
@@ -45,17 +45,17 @@ class MempoolPackagesTest(BitcoinTestFramework):
         value = utxo[0]['amount']
 
         fee = Decimal("0.0001")
-        # 100 transactions off a confirmed tx should be fine
+        # MAX_ANCESTORS transactions off a confirmed tx should be fine
         chain = []
-        for i in xrange(100):
+        for i in xrange(MAX_ANCESTORS):
             (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, 0, value, fee, 1)
             value = sent_value
             chain.append(txid)
 
-        # Check mempool has 100 transactions in it, and descendant
+        # Check mempool has MAX_ANCESTORS transactions in it, and descendant
         # count and fees should look correct
         mempool = self.nodes[0].getrawmempool(True)
-        assert_equal(len(mempool), 100)
+        assert_equal(len(mempool), MAX_ANCESTORS)
         descendant_count = 1
         descendant_fees = 0
         descendant_size = 0
@@ -64,16 +64,40 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for x in reversed(chain):
             assert_equal(mempool[x]['descendantcount'], descendant_count)
             descendant_fees += mempool[x]['fee']
+            assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee'])
             assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees)
             descendant_size += mempool[x]['size']
             assert_equal(mempool[x]['descendantsize'], descendant_size)
             descendant_count += 1
+
+        # Check that descendant modified fees includes fee deltas from
+        # prioritisetransaction
+        self.nodes[0].prioritisetransaction(chain[-1], 0, 1000)
+        mempool = self.nodes[0].getrawmempool(True)
+
+        descendant_fees = 0
+        for x in reversed(chain):
+            descendant_fees += mempool[x]['fee']
+            assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees+1000)
 
         # Adding one more transaction on to the chain should fail.
         try:
             self.chain_transaction(self.nodes[0], txid, vout, value, fee, 1)
         except JSONRPCException as e:
             print "too-long-ancestor-chain successfully rejected"
+
+        # Check that prioritising a tx before it's added to the mempool works
+        self.nodes[0].generate(1)
+        self.nodes[0].prioritisetransaction(chain[-1], 0, 2000)
+        self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
+        mempool = self.nodes[0].getrawmempool(True)
+
+        descendant_fees = 0
+        for x in reversed(chain):
+            descendant_fees += mempool[x]['fee']
+            if (x == chain[-1]):
+                assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee']+satoshi_round(0.00002))
+            assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees+2000)
 
         # TODO: check that node1's mempool is as expected
 
@@ -91,18 +115,18 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for i in xrange(10):
             transaction_package.append({'txid': txid, 'vout': i, 'amount': sent_value})
 
-        for i in xrange(1000):
+        for i in xrange(MAX_DESCENDANTS):
             utxo = transaction_package.pop(0)
             try:
                 (txid, sent_value) = self.chain_transaction(self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
                 for j in xrange(10):
                     transaction_package.append({'txid': txid, 'vout': j, 'amount': sent_value})
-                if i == 998:
+                if i == MAX_DESCENDANTS - 2:
                     mempool = self.nodes[0].getrawmempool(True)
-                    assert_equal(mempool[parent_transaction]['descendantcount'], 1000)
+                    assert_equal(mempool[parent_transaction]['descendantcount'], MAX_DESCENDANTS)
             except JSONRPCException as e:
                 print e.error['message']
-                assert_equal(i, 999)
+                assert_equal(i, MAX_DESCENDANTS - 1)
                 print "tx that would create too large descendant package successfully rejected"
 
         # TODO: check that node1's mempool is as expected
