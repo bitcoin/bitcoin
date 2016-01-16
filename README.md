@@ -1,9 +1,9 @@
-Bitcoin Core integration/staging tree
-=====================================
+Bitcoin Core integration/staging tree (Bitcoin Classic)
+=======================================================
 
 https://www.bitcoin.org
 
-Copyright (c) 2009-2014 Bitcoin Core Developers
+Copyright (c) 2009-2016 Bitcoin Core Developers
 
 What is Bitcoin?
 ----------------
