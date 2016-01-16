@@ -445,7 +445,7 @@ int64_t GetNtpOffset() {
 }
 
 void ThreadNtpSamples(void* parg) {
-    const int64_t nMaxOffset = 86400; // Not a real limit, just sanity threshold.
+    const int64_t nMaxOffset = nOneDay; // Not a real limit, just sanity threshold.
 
     printf("Trying to find NTP server at localhost...\n");
 
