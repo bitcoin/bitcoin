@@ -133,6 +133,9 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, max_datacarrier_bytes, whichType)) {
             reason = "scriptpubkey";
+            if (whichType == TxoutType::WITNESS_UNKNOWN) {
+                reason += "-unknown-witnessversion";
+            }
             return false;
         }
 
@@ -174,7 +177,7 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
  *
  * Note that only the non-witness portion of the transaction is checked here.
  */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason)
 {
     if (tx.IsCoinBase()) {
         return true; // Coinbases don't use vin normally
@@ -185,21 +188,32 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 
         std::vector<std::vector<unsigned char> > vSolutions;
         TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
-        if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::WITNESS_UNKNOWN) {
+        if (whichType == TxoutType::NONSTANDARD) {
+            out_reason = reason_prefix + "script-unknown";
+            return false;
+        } else if (whichType == TxoutType::WITNESS_UNKNOWN) {
             // WITNESS_UNKNOWN failures are typically also caught with a policy
             // flag in the script interpreter, but it can be helpful to catch
             // this type of NONSTANDARD transaction earlier in transaction
             // validation.
+            out_reason = reason_prefix + "witness-unknown";
             return false;
         } else if (whichType == TxoutType::SCRIPTHASH) {
             std::vector<std::vector<unsigned char> > stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
             if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
+            {
+                out_reason = reason_prefix + "scriptsig-failure";
                 return false;
+            }
             if (stack.empty())
+            {
+                out_reason = reason_prefix + "scriptcheck-missing";
                 return false;
+            }
             CScript subscript(stack.back().begin(), stack.back().end());
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
+                out_reason = reason_prefix + "scriptcheck-sigops";
                 return false;
             }
         }

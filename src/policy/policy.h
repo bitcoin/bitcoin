@@ -143,7 +143,13 @@ bool IsStandardTx(const CTransaction& tx, const std::optional<unsigned>& max_dat
 * @param[in] mapInputs       Map of previous transactions that have outputs we're spending
 * @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason);
+
+inline bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs) {
+    std::string reason;
+    return AreInputsStandard(tx, mapInputs, reason, reason);
+}
+
 /**
 * Check if the transaction is over standard P2WSH resources limit:
 * 3600bytes witnessScript size, 80bytes per witness stack element, 100 witness stack elements
