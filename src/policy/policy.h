@@ -108,7 +108,13 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
 * @param[in] taproot_active  Whether or taproot consensus rules are active (used to decide whether spends of them are permitted)
 * @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active);
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active, const std::string& reason_prefix, std::string& out_reason);
+
+inline bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active) {
+    std::string reason;
+    return AreInputsStandard(tx, mapInputs, taproot_active, reason, reason);
+}
+
 /**
 * Check if the transaction is over standard P2WSH resources limit:
 * 3600bytes witnessScript size, 80bytes per witness stack element, 100 witness stack elements

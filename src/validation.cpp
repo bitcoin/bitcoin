@@ -686,8 +686,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Check for non-standard pay-to-script-hash in inputs
     const bool taproot_active = DeploymentActiveAfter(m_active_chainstate.m_chain.Tip(), args.m_chainparams.GetConsensus(), Consensus::DEPLOYMENT_TAPROOT);
-    if (fRequireStandard && !AreInputsStandard(tx, m_view, taproot_active)) {
-        return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs");
+    if (fRequireStandard && !AreInputsStandard(tx, m_view, taproot_active, "bad-txns-input-", reason)) {
+        return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, reason);
     }
 
     // Check for non-standard witnesses.
