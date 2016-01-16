@@ -150,7 +150,7 @@ novacoind.exe: $(OBJS:obj/%=obj/%)
 	g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
 
 clean:
-	-del /Q novacoind
+	-del /Q novacoind.exe
 	-del /Q obj\*
 	-del /Q crypto\scrypt\asm\obj\*
 
