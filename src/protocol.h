@@ -138,6 +138,22 @@ extern const char *HEADERS;
  */
 extern const char *BLOCK;
 /**
+ * BUIP010 Xtreme Thinblocks: The thinblock message transmits a single serialized thinblock.
+ */
+extern const char *THINBLOCK;
+/**
+ * BUIP010 Xtreme Thinblocks: The xthinblock message transmits a single serializexd xthinblock.
+ */
+extern const char *XTHINBLOCK;
+/**
+ * BUIP010 Xtreme Thinblocks: The xblocktx message transmits a single serialized xblocktx.
+ */
+extern const char *XBLOCKTX;
+/**
+ * BUIP010 Xtreme Thinblocks: The get_xblocktx message transmits a single serialized get_xblocktx.
+ */
+extern const char *GET_XBLOCKTX;
+/**
  * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
  * @see https://bitcoin.org/en/developer-reference#getaddr
@@ -316,6 +332,12 @@ enum {
     // Nodes may always request a MSG_FILTERED_BLOCK in a getdata, however,
     // MSG_FILTERED_BLOCK should not appear in any invs except as a part of getdata.
     MSG_FILTERED_BLOCK,
+    // BUIP010 Xtreme Thinblocks: a thin block contains all the transactions hashes in a block
+    // and also provides the missing transactions that are needed at the other end to reconstruct the block
+    MSG_THINBLOCK,
+    // BUIP010 Xtreme Thinblocks: an Xtreme thin block contains the first 8 bytes of all the tx hashes 
+    // and also provides the missing transactions that are needed at the other end to reconstruct the block
+    MSG_XTHINBLOCK,
 };
 
 #endif // BITCOIN_PROTOCOL_H

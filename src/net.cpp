@@ -1510,7 +1510,8 @@ void static ProcessOneShot()
 void ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0)
+    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0 ||
+        mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0) // BUIP010 Xtreme Thinblocks
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
@@ -1525,6 +1526,10 @@ void ThreadOpenConnections()
                 }
             }
             MilliSleep(500);
+
+           // BUIP010 Xtreme Thinblocks: begin section
+           ConnectToThinBlockNodes();
+           // BUIP010 Xtreme Thinblocks: end section
         }
     }
 
@@ -2380,6 +2385,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nPingUsecTime = 0;
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
+    thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
 
     {
         LOCK(cs_nLastNodeId);
