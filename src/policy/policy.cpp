@@ -160,7 +160,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
     return true;
 }
 
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, const std::string& reason_prefix, std::string& out_reason)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
@@ -173,19 +173,26 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         txnouttype whichType;
         // get the scriptPubKey corresponding to this input:
         const CScript& prevScript = prev.scriptPubKey;
-        if (!Solver(prevScript, whichType, vSolutions))
+        if (!Solver(prevScript, whichType, vSolutions)) {
+            out_reason = reason_prefix + "script-unknown";
             return false;
+        }
 
         if (whichType == TX_SCRIPTHASH)
         {
             std::vector<std::vector<unsigned char> > stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
-            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE))
+            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SIGVERSION_BASE)) {
+                out_reason = reason_prefix + "scriptsig-failure";
                 return false;
-            if (stack.empty())
+            }
+            if (stack.empty()) {
+                out_reason = reason_prefix + "scriptcheck-missing";
                 return false;
+            }
             CScript subscript(stack.back().begin(), stack.back().end());
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
+                out_reason = reason_prefix + "scriptcheck-sigops";
                 return false;
             }
         }
