@@ -2072,6 +2072,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(block.vtx.size());
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
+    int nChecked = 0;      
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
@@ -2103,9 +2104,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
-                return error("ConnectBlock(): CheckInputs on %s failed with %s",
-                    tx.GetHash().ToString(), FormatStateMessage(state));
+            // Only check inputs when the tx hash in not in the setPreVerifiedTxHash as would only
+            // happen if this were a regular block or when a tx is found w?ithin the returning XThinblock.
+            uint256 hash = tx.GetHash(); 
+            if (!setPreVerifiedTxHash.count(hash)) {          
+                nChecked++;
+                if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, nScriptCheckThreads ? &vChecks : NULL))
+                    return error("ConnectBlock(): CheckInputs on %s failed with %s",
+                        tx.GetHash().ToString(), FormatStateMessage(state));
+            }
+            else
+                setPreVerifiedTxHash.erase(hash);
             control.Add(vChecks);
         }
 
@@ -2118,6 +2127,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
+    LogPrint("thin", "Number of CheckInputs() performed is %d\n", nChecked);
+
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
 
@@ -5077,19 +5088,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             const uint256 hash = mapPartialTxHash[cheapHash];
             CTransaction tx;
             if (!hash.IsNull())
-              {
+            {
                 bool inMemPool = mempool.lookup(hash, tx);
                 bool inMissingTx = thinBlock.mapMissingTx.count(hash) > 0;
-                if (inMemPool && inMissingTx) {
-                  unnecessaryCount++;
-                }
-                if (!inMemPool) {
-                  if (inMissingTx)
+                if (inMemPool && inMissingTx)
+                    unnecessaryCount++;
+
+                if (inMemPool)
+                    setPreVerifiedTxHash.insert(hash);
+                else if (inMissingTx)
                     tx = thinBlock.mapMissingTx[hash];
-                }
-              }
+            }
             if (tx.IsNull())
-                missingCount++;             
+                missingCount++;
             // This will push an empty/invalid transaction if we don't have it yet
             pfrom->thinBlock.vtx.push_back(tx);
         }
@@ -5152,13 +5163,22 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->thinBlockHashes = thinBlock.vTxHashes;
 
         int missingCount = 0;
+        int unnecessaryCount = 0;
         LOCK(cs_main);
         // Look for each transaction in our various pools and buffers.
         BOOST_FOREACH(const uint256 &hash, thinBlock.vTxHashes) 
         {
             CTransaction tx;
-            if (!mempool.lookup(hash, tx)) {
-                if (thinBlock.mapMissingTx.count(hash))
+            if (!hash.IsNull())
+            {
+                bool inMemPool = mempool.lookup(hash, tx);
+                bool inMissingTx = thinBlock.mapMissingTx.count(hash) > 0;
+                if (inMemPool && inMissingTx)
+                    unnecessaryCount++;
+
+                if (inMemPool)
+                    setPreVerifiedTxHash.insert(hash);
+                else if (inMissingTx)
                     tx = thinBlock.mapMissingTx[hash];
             }
             if (tx.IsNull())
@@ -5167,6 +5187,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->thinBlock.vtx.push_back(tx);
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
+        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), thinBlock.mapMissingTx.size());
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
@@ -5187,6 +5208,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             vector<CInv> vGetData;
             vGetData.push_back(CInv(MSG_BLOCK, thinBlock.header.GetHash())); 
             pfrom->PushMessage("getdata", vGetData);
+            setPreVerifiedTxHash.clear(); // Xpress Validation - clear the set since we do not do XVal on regular blocks
             LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
                        pfrom->thinBlockWaitingForTxns);
         }
