@@ -35,6 +35,12 @@ const char *FILTERADD="filteradd";
 const char *FILTERCLEAR="filterclear";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
+// BUIP010 Xtreme Thinblocks - begin section
+const char *THINBLOCK="thinblock";
+const char *XTHINBLOCK="xthinblock";
+const char *XBLOCKTX="xblocktx";
+const char *GET_XBLOCKTX="get_xblocktx";
+// BUIP010 Xtreme Thinblocks - end section
 };
 
 static const char* ppszTypeName[] =
@@ -42,7 +48,13 @@ static const char* ppszTypeName[] =
     "ERROR", // Should never occur
     NetMsgType::TX,
     NetMsgType::BLOCK,
-    "filtered block" // Should never occur
+    "filtered block", // Should never occur
+    // BUIP010 Xtreme Thinblocks - begin section
+    NetMsgType::THINBLOCK,
+    NetMsgType::XTHINBLOCK,
+    NetMsgType::XBLOCKTX,
+    NetMsgType::GET_XBLOCKTX,
+    // BUIP010 Xtreme Thinblocks - end section
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -70,7 +82,13 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERADD,
     NetMsgType::FILTERCLEAR,
     NetMsgType::REJECT,
-    NetMsgType::SENDHEADERS
+    NetMsgType::SENDHEADERS,
+    // BUIP010 Xtreme Thinbocks - begin section
+    NetMsgType::THINBLOCK,
+    NetMsgType::XTHINBLOCK,
+    NetMsgType::XBLOCKTX,
+    NetMsgType::GET_XBLOCKTX,
+    // BUIP010 Xtreme Thinbocks - end section
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

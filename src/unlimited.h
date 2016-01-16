@@ -6,6 +6,7 @@
 #define BITCOIN_UNLIMITED_H
 
 #include "leakybucket.h"
+#include "net.h"
 #include <univalue.h>
 
 enum {
@@ -19,6 +20,7 @@ class CBlock;
 class CBlockIndex;
 class CValidationState;
 class CDiskBlockPos;
+class CNode;
 
 extern uint64_t maxGeneratedBlock;
 extern unsigned int excessiveBlockSize;
@@ -54,5 +56,14 @@ extern UniValue setexcessiveblock(const UniValue& params, bool fHelp);
 extern CLeakyBucket receiveShaper;
 extern CLeakyBucket sendShaper;
 
+// BUIP010 Xtreme Thinblocks:
+extern bool HaveThinblockNodeConnections();
+extern bool IsThinBlocksEnabled();
+extern bool IsChainNearlySyncd();
+extern void SendSeededBloomFilter(CNode *pto);
+extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
+extern void ConnectToThinBlockNodes();
+extern void CheckNodeSupportForThinBlocks();
+extern void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
 
 #endif
