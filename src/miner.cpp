@@ -133,13 +133,14 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     {
         LOCK2(cs_main, mempool.cs);
         CBlockIndex* pindexPrev = chainActive.Tip();
-        const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
-        const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
+        CCoinsViewCache view(pcoinsTip);
 
-        int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
-                                ? nMedianTimePast
-                                : pblock->GetBlockTime();
+        CBlockIndex index;
+        index.nHeight = pindexPrev->nHeight + 1;
+        index.nTime = pblock->nTime;
+        index.pprev = pindexPrev;
+        std::vector<int> prevheights;
 
         bool fPriorityBlock = nBlockPrioritySize > 0;
         if (fPriorityBlock) {
@@ -147,7 +148,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
                  mi != mempool.mapTx.end(); ++mi)
             {
-                double dPriority = mi->GetPriority(nHeight);
+                double dPriority = mi->GetPriority(index.nHeight);
                 CAmount dummy;
                 mempool.ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
                 vecPriority.push_back(TxCoinAgePriority(dPriority, mi));
@@ -220,7 +221,24 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 continue;
             }
 
-            if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
+            prevheights.resize(0);
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            {
+                // Read prev transaction
+                if (view.HaveCoins(txin.prevout.hash))
+                {
+                    const CCoins* coins = view.AccessCoins(txin.prevout.hash);
+                    assert(coins);
+                    prevheights.push_back(coins->nHeight);
+                }
+                else
+                {
+                    //Assume it is in mempool
+                    prevheights.push_back(index.nHeight);
+                }
+            }
+
+            if (LockTime(tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &prevheights, index))
                 continue;
 
             unsigned int nTxSigOps = iter->GetSigOpCount();
@@ -243,7 +261,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 
             if (fPrintPriority)
             {
-                double dPriority = iter->GetPriority(nHeight);
+                double dPriority = iter->GetPriority(index.nHeight);
                 CAmount dummy;
                 mempool.ApplyDeltas(tx.GetHash(), dPriority, dummy);
                 LogPrintf("priority %.1f fee %s txid %s\n",
@@ -276,8 +294,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nBlockSigOps);
 
         // Compute final coinbase transaction.
-        txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
+        txNew.vout[0].nValue = nFees + GetBlockSubsidy(index.nHeight, chainparams.GetConsensus());
+        txNew.vin[0].scriptSig = CScript() << index.nHeight << OP_0;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
 
