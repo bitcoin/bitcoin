@@ -29,10 +29,10 @@ class CTxMemPool;
  * included in blocks before transactions of lower fee/priority.   So for
  * example if you wanted to know what fee you should put on a transaction to
  * be included in a block within the next 5 blocks, you would start by looking
- * at the bucket with with the highest fee transactions and verifying that a
+ * at the bucket with the highest fee transactions and verifying that a
  * sufficiently high percentage of them were confirmed within 5 blocks and
  * then you would look at the next highest fee bucket, and so on, stopping at
- * the last bucket to pass the test.   The average fee of transactions in this
+ * the last bucket to pass the test.  The average fee of transactions in this
  * bucket will give you an indication of the lowest fee you can put on a
  * transaction and still have a sufficiently high chance of being confirmed
  * within your desired 5 blocks.
@@ -71,7 +71,7 @@ class CTxMemPool;
  * We will instantiate two instances of this class, one to track transactions
  * that were included in a block due to fee, and one for tx's included due to
  * priority.  We will lump transactions into a bucket according to their approximate
- * fee or priority and then track how long it took for those txs to be included in a block
+ * fee or priority and then track how long it took for those txs to be included in a block.
  *
  * The tracking of unconfirmed (mempool) transactions is completely independent of the
  * historical tracking of transactions that have been confirmed in a block.
@@ -79,7 +79,7 @@ class CTxMemPool;
 class TxConfirmStats
 {
 private:
-    //Define the buckets we will group transactions into (both fee buckets and priority buckets)
+    // Define the buckets we will group transactions into (both fee buckets and priority buckets)
     std::vector<double> buckets;              // The upper-bound of the range for the bucket (inclusive)
     std::map<double, unsigned int> bucketMap; // Map of bucket upper-bound to index into all vectors by bucket
 
@@ -87,13 +87,13 @@ private:
     // Count the total # of txs in each bucket
     // Track the historical moving average of this total over blocks
     std::vector<double> txCtAvg;
-    // and calcuate the total for the current block to update the moving average
+    // and calculate the total for the current block to update the moving average
     std::vector<int> curBlockTxCt;
 
     // Count the total # of txs confirmed within Y blocks in each bucket
     // Track the historical moving average of theses totals over blocks
     std::vector<std::vector<double> > confAvg; // confAvg[Y][X]
-    // and calcuate the totals for the current block to update the moving averages
+    // and calculate the totals for the current block to update the moving averages
     std::vector<std::vector<int> > curBlockConf; // curBlockConf[Y][X]
 
     // Sum the total priority/fee of all tx's in each bucket
@@ -137,10 +137,10 @@ public:
      */
     void Record(int blocksToConfirm, double val);
 
-    /** Record a new transaction entering the mempool*/
+    /** Record a new transaction entering the mempool */
     unsigned int NewTx(unsigned int nBlockHeight, double val);
 
-    /** Remove a transaction from mempool tracking stats*/
+    /** Remove a transaction from mempool tracking stats */
     void removeTx(unsigned int entryHeight, unsigned int nBestSeenHeight,
                   unsigned int bucketIndex);
 
@@ -165,7 +165,7 @@ public:
     /** Return the max number of confirms we're tracking */
     unsigned int GetMaxConfirms() { return confAvg.size(); }
 
-    /** Write state of estimation data to a file*/
+    /** Write state of estimation data to a file */
     void Write(CAutoFile& fileout);
 
     /**
@@ -211,9 +211,9 @@ static const double FEE_SPACING = 1.1;
 static const double PRI_SPACING = 2;
 
 /**
- *  We want to be able to estimate fees or priorities that are needed on tx's to be included in
+ * We want to be able to estimate fees or priorities that are needed on tx's to be included in
  * a certain number of blocks.  Every time a block is added to the best chain, this class records
- * stats on the transactions included in that block
+ * stats on the transactions included in that block.
  */
 class CBlockPolicyEstimator
 {
@@ -225,19 +225,19 @@ public:
     void processBlock(unsigned int nBlockHeight,
                       std::vector<CTxMemPoolEntry>& entries, bool fCurrentEstimate);
 
-    /** Process a transaction confirmed in a block*/
+    /** Process a transaction confirmed in a block */
     void processBlockTx(unsigned int nBlockHeight, const CTxMemPoolEntry& entry);
 
-    /** Process a transaction accepted to the mempool*/
+    /** Process a transaction accepted to the mempool */
     void processTransaction(const CTxMemPoolEntry& entry, bool fCurrentEstimate);
 
-    /** Remove a transaction from the mempool tracking stats*/
+    /** Remove a transaction from the mempool tracking stats */
     void removeTx(uint256 hash);
 
-    /** Is this transaction likely included in a block because of its fee?*/
+    /** Is this transaction likely included in a block because of its fee? */
     bool isFeeDataPoint(const CFeeRate &fee, double pri);
 
-    /** Is this transaction likely included in a block because of its priority?*/
+    /** Is this transaction likely included in a block because of its priority? */
     bool isPriDataPoint(const CFeeRate &fee, double pri);
 
     /** Return a fee estimate */
@@ -286,4 +286,4 @@ private:
     CFeeRate feeLikely, feeUnlikely;
     double priLikely, priUnlikely;
 };
-#endif /*BITCOIN_POLICYESTIMATOR_H */
+#endif /* BITCOIN_POLICYESTIMATOR_H */
