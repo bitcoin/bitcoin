@@ -41,7 +41,7 @@ synchronised 0.10 node may be usable in older versions as-is, but this is not
 supported and may break as soon as the older version attempts to reindex.
 
 This does not affect wallet forward or backward compatibility. There are no
-known problems when downgrading from 0.11.x to 0.10.x.
+known problems when downgrading from 0.12.x to a version >= 0.10.0.
 
 Notable changes
 ===============
@@ -81,16 +81,17 @@ Whitelisted peers will never be disconnected, although their traffic counts for
 calculating the target.
 
 A more detailed documentation about keeping traffic low can be found in
-[/doc/reducetraffic.md](/doc/reducetraffic.md).
+[/doc/reduce-traffic.md](/doc/reduce-traffic.md).
 
 Direct headers announcement (BIP 130)
 -------------------------------------
 
-Between compatible peers, BIP 130 direct headers announcement is used. This
-means that blocks are advertized by announcing their headers directly, instead
-of just announcing the hash. In a reorganization, all new headers are sent,
-instead of just the new tip. This can often prevent an extra roundtrip before
-the actual block is downloaded.
+Between compatible peers, [BIP 130]
+(https://github.com/bitcoin/bips/blob/master/bip-0130.mediawiki)
+direct headers announcement is used. This means that blocks are advertized by
+announcing their headers directly, instead of just announcing the hash. In a
+reorganization, all new headers are sent, instead of just the new tip. This
+can often prevent an extra roundtrip before the actual block is downloaded.
 
 Memory pool limiting
 --------------------
@@ -106,10 +107,11 @@ relay fee.
 Bitcoin Core 0.12 will have a strict maximum size on the mempool. The
 default value is 300 MB and can be configured with the `-maxmempool`
 parameter. Whenever a transaction would cause the mempool to exceed
-its maximum size, the transaction with the lowest feerate will be
-evicted and the node's minimum relay fee will be increased to match
-this feerate. The initial minimum relay fee is set to 1000 satoshis
-per kB.
+its maximum size, the transaction that (along with in-mempool descendants) has
+the lowest total feerate (as a package) will be evicted and the node's effective
+minimum relay feerate will be increased to match this feerate plus the initial
+minimum relay feerate. The initial minimum relay feerate is set to
+1000 satoshis per kB.
 
 Replace-by-fee transactions
 ---------------------------
@@ -141,10 +143,10 @@ Relay: Any sequence of pushdatas in OP_RETURN outputs now allowed
 
 Previously OP_RETURN outputs with a payload were only relayed and mined if they
 had a single pushdata. This restriction has been lifted to allow any
-combination of data pushes and numeric constant opcodes (OP_1 to OP_16). The
-limit on OP_RETURN output size is now applied to the entire serialized
-scriptPubKey, 83 bytes by default. (the previous 80 byte default plus three
-bytes overhead)
+combination of data pushes and numeric constant opcodes (OP_1 to OP_16) after
+the OP_RETURN. The limit on OP_RETURN output size is now applied to the entire
+serialized scriptPubKey, 83 bytes by default. (the previous 80 byte default plus
+three bytes overhead)
 
 Relay: Priority transactions
 ----------------------------
@@ -156,9 +158,10 @@ setting of `-limitfreerelay=<r>` (default: `r=15` kB per minute) and
 `-blockprioritysize=<s>` (default: `50000` bytes of a block's
 priority space).
 
-Priority code is planned to get moved out of from Bitcoin Core 0.13
-and the default block priority size has been set to `0` in Bitcoin Core
-0.12.
+Priority code is scheduled for removal in Bitcoin Core 0.13. In
+Bitcoin Core 0.12, the default block priority size has been set to `0`
+and priority transactions are not accepted to the mempool if mempool
+limiting has triggered a higher effective minimum relay fee.
 
 Automatically use Tor hidden services
 -------------------------------------
@@ -185,7 +188,7 @@ Bitcoind can now (optionally) asynchronously notify clients through a
 ZMQ-based PUB socket of the arrival of new transactions and blocks.
 This feature requires installation of the ZMQ C API library 4.x and
 configuring its use through the command line or configuration file.
-Please see docs/zmq.md for details of operation.
+Please see [docs/zmq.md](/doc/zmq.md) for details of operation.
 
 Wallet: Transaction fees
 ------------------------
