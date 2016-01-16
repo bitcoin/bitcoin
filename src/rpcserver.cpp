@@ -658,7 +658,7 @@ void StartRPCThreads()
         vEndpoints.push_back(ip::tcp::endpoint(asio::ip::address_v6::any(), defaultPort));
         vEndpoints.push_back(ip::tcp::endpoint(asio::ip::address_v4::any(), defaultPort));
         // Prefer making the socket dual IPv6/IPv4 instead of binding
-        // to both addresses seperately.
+        // to both addresses separately.
         bBindAny = true;
     }
 

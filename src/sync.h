@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////
 //                                            //
-// THE SIMPLE DEFINITON, EXCLUDING DEBUG CODE //
+// THE SIMPLE DEFINITION, EXCLUDING DEBUG CODE //
 //                                            //
 ////////////////////////////////////////////////
 
