@@ -619,6 +619,17 @@ if test x$use_boost = xyes; then
 
 BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_PROGRAM_OPTIONS_LIB $BOOST_THREAD_LIB $BOOST_CHRONO_LIB"
 
+
+dnl If boost (prior to 1.57) was built without c++11, it emulated scoped enums
+dnl using c++98 constructs. Unfortunately, this implementation detail leaked into
+dnl the abi. This was fixed in 1.57.
+
+dnl When building against that installed version using c++11, the headers pick up
+dnl on the native c++11 scoped enum support and enable it, however it will fail to
+dnl link. This can be worked around by disabling c++11 scoped enums if linking will
+dnl fail.
+dnl BOOST_NO_SCOPED_ENUMS was changed to BOOST_NO_CXX11_SCOPED_ENUMS in 1.51.
+
 TEMP_LIBS="$LIBS"
 LIBS="$BOOST_LIBS $LIBS"
 TEMP_CPPFLAGS="$CPPFLAGS"
@@ -640,7 +651,7 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
     choke;
   #endif
   ]])],
-  [AC_MSG_RESULT(mismatched); AC_DEFINE(FORCE_BOOST_EMULATED_SCOPED_ENUMS, 1, [Define this symbol if boost scoped enums are emulated])], [AC_MSG_RESULT(ok)])
+  [AC_MSG_RESULT(mismatched); BOOST_CPPFLAGS="$BOOST_CPPFLAGS -DBOOST_NO_SCOPED_ENUMS -DBOOST_NO_CXX11_SCOPED_ENUMS"], [AC_MSG_RESULT(ok)])
 LIBS="$TEMP_LIBS"
 CPPFLAGS="$TEMP_CPPFLAGS"
 
