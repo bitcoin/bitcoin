@@ -187,15 +187,22 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     // the block didn't arrive from some other peer.  This code ALSO cleans up the thin block that
     // was passed to us (&block), so do not use it after this.
     {
+        int nTotalThinBlocksInFlight = 0;
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes) {
             if (pnode->mapThinBlocksInFlight.count(inv.hash)) {
                 pnode->mapThinBlocksInFlight.erase(inv.hash); 
                 pnode->thinBlockWaitingForTxns = -1;
                 pnode->thinBlock.SetNull();
-                if (pnode != pfrom) LogPrintf("Removing thinblock in flight %s from %s (%d)\n",inv.hash.ToString(), pnode->addrName.c_str(), pnode->id);
             }
+            if (pnode->mapThinBlocksInFlight.size() > 0)
+                nTotalThinBlocksInFlight++;
         }
+
+        // When we no longer have any thinblocks in flight then clear the set
+        // just to make sure we don't somehow get growth over time.
+        if (nTotalThinBlocksInFlight == 0)
+            setPreVerifiedTxHash.clear();
     }
 
     // Clear the thinblock timer used for preferential download
@@ -308,7 +315,4 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
             LogPrint("thin", "Sent regular block instead - thinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.mapMissingTx.size(), pfrom->id);
         }
     }
-
 }
-
-
