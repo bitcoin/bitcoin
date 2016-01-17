@@ -484,6 +484,23 @@ private:
         TxValidationState m_state;
     };
 
+    static inline bool MaybeReject_(TxValidationResult reason, const std::string& reason_str, const std::string& debug_msg, const ignore_rejects_type& ignore_rejects, TxValidationState& state) {
+        if (ignore_rejects.count(reason_str)) {
+            return false;
+        }
+
+        state.Invalid(reason, reason_str, debug_msg);
+        return true;
+    }
+
+#define MaybeRejectDbg(reason, reason_str, debug_msg)  do {  \
+    if (MaybeReject_(reason, reason_str, debug_msg, ignore_rejects, state)) {  \
+        return false;  \
+    }  \
+} while(0)
+
+#define MaybeReject(reason, reason_str)  MaybeRejectDbg(reason, reason_str, "")
+
     // Run the policy checks on a given transaction, excluding any script checks.
     // Looks up inputs, calculates feerate, considers replacement, evaluates
     // package limits, etc. As this function can be invoked for "free" by a peer,
@@ -528,10 +545,10 @@ private:
     CChainState& m_active_chainstate;
 
     // The package limits in effect at the time of invocation.
-    const size_t m_limit_ancestors;
-    const size_t m_limit_ancestor_size;
     // These may be modified while evaluating a transaction (eg to account for
     // in-mempool conflicts; see below).
+    size_t m_limit_ancestors;
+    size_t m_limit_ancestor_size;
     size_t m_limit_descendants;
     size_t m_limit_descendant_size;
 };
@@ -544,6 +561,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Copy/alias what we need out of args
     const int64_t nAcceptTime = args.m_accept_time;
+    const ignore_rejects_type& ignore_rejects = args.m_ignore_rejects;
     std::vector<COutPoint>& coins_to_uncache = args.m_coins_to_uncache;
 
     // Alias what we need out of ws
@@ -575,13 +593,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Transactions smaller than this are not relayed to mitigate CVE-2017-12842 by not relaying
     // 64-byte transactions.
     if (::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) < MIN_STANDARD_TX_NONWITNESS_SIZE)
-        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "tx-size-small");
+        MaybeReject(TxValidationResult::TX_NOT_STANDARD, "tx-size-small");
 
     // Only accept nLockTime-using transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
     if (!CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
-        return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
+        MaybeReject(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
     if (m_pool.exists(GenTxid(true, tx.GetWitnessHash()))) {
         // Exact transaction already exists in the mempool.
@@ -603,6 +621,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             }
             if (!setConflicts.count(ptxConflicting->GetHash()))
             {
+                if (!ignore_rejects.count("txn-mempool-conflict")) {
+
                 // Allow opt-out of transaction replacement by setting
                 // nSequence > MAX_BIP125_RBF_SEQUENCE (SEQUENCE_FINAL-2) on all inputs.
                 //
@@ -630,6 +650,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 if (fReplacementOptOut) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
                 }
+
+                }  // ignore_rejects
 
                 setConflicts.insert(ptxConflicting->GetHash());
             }
@@ -676,6 +698,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // be mined yet.
     // Pass in m_view which has all of the relevant inputs cached. Note that, since m_view's
     // backend was removed, it no longer pulls coins from the mempool.
+    // NOTE: The miner doesn't check this again, so for now it may not be overridden.
     if (!CheckSequenceLocks(m_active_chainstate.m_chain.Tip(), m_view, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
@@ -691,7 +714,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Check for non-standard witnesses.
     if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, m_view))
-        return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+        MaybeReject(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
 
     int64_t nSigOpsCost = GetTransactionSigOpCost(tx, m_view, STANDARD_SCRIPT_VERIFY_FLAGS);
 
@@ -715,7 +738,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     unsigned int nSize = entry->GetTxSize();
 
     if (nSigOpsCost > MAX_STANDARD_TX_SIGOPS_COST)
-        return state.Invalid(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
+        MaybeRejectDbg(TxValidationResult::TX_NOT_STANDARD, "bad-txns-too-many-sigops",
                 strprintf("%d", nSigOpsCost));
 
     // No transactions are allowed below minRelayTxFee except from disconnected
@@ -759,6 +782,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         m_limit_descendant_size += conflict->GetSizeWithDescendants();
     }
 
+    if (ignore_rejects.count("too-long-mempool-chain")) {
+        m_limit_ancestors = m_limit_ancestor_size = m_limit_descendants = m_limit_descendant_size = std::numeric_limits<size_t>::max();
+    }
     std::string errString;
     if (!m_pool.CalculateMemPoolAncestors(*entry, setAncestors, m_limit_ancestors, m_limit_ancestor_size, m_limit_descendants, m_limit_descendant_size, errString)) {
         setAncestors.clear();
@@ -830,7 +856,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             CFeeRate oldFeeRate(mi->GetModifiedFee(), mi->GetTxSize());
             if (newFeeRate <= oldFeeRate)
             {
-                return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
+                MaybeRejectDbg(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
                         strprintf("rejecting replacement %s; new feerate %s <= old feerate %s",
                             hash.ToString(),
                             newFeeRate.ToString(),
@@ -847,7 +873,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // This potentially overestimates the number of actual descendants
         // but we just want to be conservative to avoid doing too much
         // work.
-        if (nConflictingCount <= maxDescendantsToVisit) {
+        if (nConflictingCount <= maxDescendantsToVisit || ignore_rejects.count("too-many-replacements")) {
             // If not too many to replace, then calculate the set of
             // transactions that would have to be evicted
             for (CTxMemPool::txiter it : setIterConflicting) {
@@ -864,6 +890,8 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                         nConflictingCount,
                         maxDescendantsToVisit));
         }
+
+        if (!ignore_rejects.count("replacement-adds-unconfirmed")) {
 
         for (unsigned int j = 0; j < tx.vin.size(); j++)
         {
@@ -889,12 +917,14 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
             }
         }
 
+        }  // ignore_rejects
+
         // The replacement must pay greater fees than the transactions it
         // replaces - if we did the bandwidth used by those conflicting
         // transactions would not be paid for.
         if (nModifiedFees < nConflictingFees)
         {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
+            MaybeRejectDbg(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
                     strprintf("rejecting replacement %s, less fees than conflicting txs; %s < %s",
                         hash.ToString(), FormatMoney(nModifiedFees), FormatMoney(nConflictingFees)));
         }
@@ -904,7 +934,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         CAmount nDeltaFees = nModifiedFees - nConflictingFees;
         if (nDeltaFees < ::incrementalRelayFee.GetFee(nSize))
         {
-            return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
+            MaybeRejectDbg(TxValidationResult::TX_MEMPOOL_POLICY, "insufficient fee",
                     strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
                         hash.ToString(),
                         FormatMoney(nDeltaFees),
