@@ -837,6 +837,11 @@ static RPCHelpMan sendrawtransaction()
                     {"maxfeerate", RPCArg::Type::AMOUNT, RPCArg::Default{FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK())},
                         "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
                             "/kvB.\nSet to 0 to accept any fee rate.\n"},
+                    {"ignore_rejects", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "Rejection conditions to ignore, eg 'txn-mempool-conflict'",
+                        {
+                            {"reject_reason", RPCArg::Type::STR, RPCArg::Optional::OMITTED, ""},
+                        },
+                        },
                 },
                 RPCResult{
                     RPCResult::Type::STR_HEX, "", "The transaction hash in hex"
@@ -856,6 +861,7 @@ static RPCHelpMan sendrawtransaction()
     RPCTypeCheck(request.params, {
         UniValue::VSTR,
         UniValueType(), // VNUM or VSTR, checked inside AmountFromValue()
+        UniValue::VARR,
     });
 
     CMutableTransaction mtx;
@@ -864,6 +870,8 @@ static RPCHelpMan sendrawtransaction()
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
 
+    const UniValue* json_ign_rejs = &request.params[2];
+
     const CFeeRate max_raw_tx_fee_rate = request.params[1].isNull() ?
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
                                              CFeeRate(AmountFromValue(request.params[1]));
@@ -871,10 +879,18 @@ static RPCHelpMan sendrawtransaction()
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
 
+    ignore_rejects_type ignore_rejects;
+    if (!json_ign_rejs->isNull()) {
+        for (size_t i = 0; i < json_ign_rejs->size(); ++i) {
+            const UniValue& json_ign_rej = (*json_ign_rejs)[i];
+            ignore_rejects.insert(json_ign_rej.get_str());
+        }
+    }
+
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureAnyNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true, ignore_rejects);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
