@@ -11,8 +11,10 @@
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
+#include "consensus/blockruleindex.h"
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
+#include "consensus/softforks.h"
 #include "consensus/validation.h"
 #include "hash.h"
 #include "init.h"
@@ -75,6 +77,7 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
+Consensus::VersionBits::BlockRuleIndex g_blockRuleIndex;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
@@ -2285,6 +2288,7 @@ void PruneAndFlush() {
 /** Update chainActive and related internal data structures. */
 void static UpdateTip(CBlockIndex *pindexNew) {
     const CChainParams& chainParams = Params();
+    const Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex;
     chainActive.SetTip(pindexNew);
 
     // New best block
@@ -2306,18 +2310,22 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         const CBlockIndex* pindex = chainActive.Tip();
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
-            if (pindex->nVersion > CBlock::CURRENT_VERSION)
-                ++nUpgraded;
+            if (Consensus::SoftForks::CheckVersion(*pindex, blockRuleIndex, chainParams.GetConsensus()) ==
+                Consensus::SoftForks::UNRECOGNIZED)
+                    ++nUpgraded;
             pindex = pindex->pprev;
         }
         if (nUpgraded > 0)
-            LogPrintf("%s: %d of last 100 blocks above version %d\n", __func__, nUpgraded, (int)CBlock::CURRENT_VERSION);
+            LogPrintf("%s: %d of last 100 blocks have unrecognized version.\n", __func__, nUpgraded);
+
         if (nUpgraded > 100/2)
+            fWarned = true;
+
+        if (fWarned)
         {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
             CAlert::Notify(strMiscWarning, true);
-            fWarned = true;
         }
     }
 }
@@ -2739,6 +2747,8 @@ bool ReconsiderBlock(CValidationState& state, CBlockIndex *pindex) {
 
 CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
 {
+    Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex;
+
     // Check for duplicate
     uint256 hash = block.GetHash();
     BlockMap::iterator it = mapBlockIndex.find(hash);
@@ -2767,6 +2777,9 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
         pindexBestHeader = pindexNew;
 
     setDirtyBlockIndex.insert(pindexNew);
+
+    // Insert into versionbits block rule index and compute soft fork deployment states
+    blockRuleIndex.InsertBlockIndex(pindexNew);
 
     return pindexNew;
 }
@@ -3418,6 +3431,8 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
 bool static LoadBlockIndexDB()
 {
     const CChainParams& chainparams = Params();
+    Consensus::VersionBits::BlockRuleIndex& blockRuleIndex = g_blockRuleIndex;
+
     if (!pblocktree->LoadBlockIndexGuts())
         return false;
 
@@ -3458,6 +3473,9 @@ bool static LoadBlockIndexDB()
             pindex->BuildSkip();
         if (pindex->IsValid(BLOCK_VALID_TREE) && (pindexBestHeader == NULL || CBlockIndexWorkComparator()(pindexBestHeader, pindex)))
             pindexBestHeader = pindex;
+
+        // Insert into versionbits block rule index and recompute soft fork deployment states for chain
+        blockRuleIndex.InsertBlockIndex(pindex);
     }
 
     // Load block file info
