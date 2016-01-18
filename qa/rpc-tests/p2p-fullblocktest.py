@@ -8,14 +8,10 @@
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
 from test_framework.comptool import TestManager, TestInstance, RejectResult
-from test_framework.mininode import *
 from test_framework.blocktools import *
-import logging
-import copy
 import time
-import numbers
 from test_framework.key import CECKey
-from test_framework.script import CScript, CScriptOp, SignatureHash, SIGHASH_ALL, OP_TRUE, OP_FALSE
+from test_framework.script import CScript, SignatureHash, SIGHASH_ALL, OP_TRUE, OP_FALSE
 
 class PreviousSpendableOutput(object):
     def __init__(self, tx = CTransaction(), n = -1):

@@ -14,7 +14,8 @@ Functionality to build scripts, as well as SignatureHash().
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from test_framework.mininode import CTransaction, CTxOut, hash256
+from .mininode import CTransaction, CTxOut, hash256
+from binascii import hexlify
 
 import sys
 bchr = chr
@@ -24,10 +25,9 @@ if sys.version > '3':
     bchr = lambda x: bytes([x])
     bord = lambda x: x
 
-import copy
 import struct
 
-from test_framework.bignum import bn2vch
+from .bignum import bn2vch
 
 MAX_SCRIPT_SIZE = 10000
 MAX_SCRIPT_ELEMENT_SIZE = 520
@@ -777,7 +777,7 @@ class CScript(bytes):
         # need to change
         def _repr(o):
             if isinstance(o, bytes):
-                return "x('%s')" % binascii.hexlify(o).decode('utf8')
+                return "x('%s')" % hexlify(o).decode('utf8')
             else:
                 return repr(o)
 

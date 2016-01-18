@@ -54,8 +54,7 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
     tx2.vout = [CTxOut(amount, scriptPubKey)]
     tx2.rehash()
 
-    tx2_hex = binascii.hexlify(tx2.serialize()).decode('utf-8')
-    #print tx2_hex
+    binascii.hexlify(tx2.serialize()).decode('utf-8')
 
     signed_tx = node.signrawtransaction(binascii.hexlify(tx2.serialize()).decode('utf-8'))
 

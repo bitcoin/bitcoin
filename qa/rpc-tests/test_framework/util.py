@@ -102,12 +102,12 @@ def initialize_datadir(dirname, n):
     if not os.path.isdir(datadir):
         os.makedirs(datadir)
     with open(os.path.join(datadir, "bitcoin.conf"), 'w') as f:
-        f.write("regtest=1\n");
-        f.write("rpcuser=rt\n");
-        f.write("rpcpassword=rt\n");
-        f.write("port="+str(p2p_port(n))+"\n");
-        f.write("rpcport="+str(rpc_port(n))+"\n");
-        f.write("listenonion=0\n");
+        f.write("regtest=1\n")
+        f.write("rpcuser=rt\n")
+        f.write("rpcpassword=rt\n")
+        f.write("port="+str(p2p_port(n))+"\n")
+        f.write("rpcport="+str(rpc_port(n))+"\n")
+        f.write("listenonion=0\n")
     return datadir
 
 def initialize_chain(test_dir):

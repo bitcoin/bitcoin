@@ -10,6 +10,7 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
+
 class DisableWalletTest (BitcoinTestFramework):
 
     def setup_chain(self):
