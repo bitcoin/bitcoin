@@ -7,6 +7,18 @@ clang-format.py
 
 A script to format cpp source code according to [.clang-format](../../src/.clang-format). This should only be applied to new files or files which are currently not actively developed on. Also, git subtrees are not subject to formatting.
 
+clang-format-diff.py
+===================
+
+A script to format unified git diffs according to [.clang-format](../../src/.clang-format).
+
+For instance, to format the last commit with 0 lines of context,
+the script should be called from the git root folder as follows.
+
+```
+git diff -U0 HEAD~1.. | ./contrib/devtools/clang-format-diff.py -p1 -i -v
+```
+
 fix-copyright-headers.py
 ========================
 
