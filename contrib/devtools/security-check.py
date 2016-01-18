@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 '''
 Perform basic ELF security checks on a series of executables.
-Exit status will be 0 if succesful, and the program will be silent.
+Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
 Needs `readelf` (for ELF) and `objdump` (for PE).
 '''
