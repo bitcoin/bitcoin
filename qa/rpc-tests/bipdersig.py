@@ -9,8 +9,6 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import os
-import shutil
 
 class BIP66Test(BitcoinTestFramework):
 
@@ -46,7 +44,7 @@ class BIP66Test(BitcoinTestFramework):
         self.nodes[2].generate(1)
         self.sync_all()
         if (self.nodes[0].getblockcount() != cnt + 851):
-            raise AssertionFailure("Failed to mine a version=3 blocks")
+            raise AssertionError("Failed to mine a version=3 blocks")
 
         # TODO: check that new DERSIG rules are enforced
 

@@ -9,8 +9,6 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import os
-import shutil
 
 class BIP65Test(BitcoinTestFramework):
 
@@ -46,7 +44,7 @@ class BIP65Test(BitcoinTestFramework):
         self.nodes[2].generate(1)
         self.sync_all()
         if (self.nodes[0].getblockcount() != cnt + 851):
-            raise AssertionFailure("Failed to mine a version=4 blocks")
+            raise AssertionError("Failed to mine a version=4 blocks")
 
         # TODO: check that new CHECKLOCKTIMEVERIFY rules are enforced
 

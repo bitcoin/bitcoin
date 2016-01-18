@@ -7,7 +7,7 @@
 # Test RPC calls related to blockchain state.
 #
 
-import decimal
+from decimal import Decimal
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -39,7 +39,7 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
-        assert_equal(res[u'total_amount'], decimal.Decimal('8725.00000000'))
+        assert_equal(res[u'total_amount'], Decimal('8725.00000000'))
         assert_equal(res[u'transactions'], 200)
         assert_equal(res[u'height'], 200)
         assert_equal(res[u'txouts'], 200)

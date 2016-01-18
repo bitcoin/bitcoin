@@ -9,8 +9,6 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import os
-import shutil
 
 class ForkNotifyTest(BitcoinTestFramework):
 
