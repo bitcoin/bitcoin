@@ -22,6 +22,8 @@ bitcoind/bitcoin-qt (on Linux).
 Downgrade warning
 ------------------
 
+### Downgrade to a version < 0.10.0
+
 Because release 0.10.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
 backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
@@ -40,8 +42,17 @@ bootstrap.dat) anew afterwards. It is possible that the data from a completely
 synchronised 0.10 node may be usable in older versions as-is, but this is not
 supported and may break as soon as the older version attempts to reindex.
 
-This does not affect wallet forward or backward compatibility. There are no
-known problems when downgrading from 0.12.x to a version >= 0.10.0.
+This does not affect wallet forward or backward compatibility.
+
+### Downgrade to a version < 0.12.0
+
+Because release 0.12.0 and later will obfuscate the chainstate on every
+fresh sync or reindex, the chainstate is not backwards-compatible with
+pre-0.12 versions of Bitcoin Core or other software.
+
+If you want to downgrade after you have done a reindex with 0.12.0 or later,
+you will need to reindex when you first start Bitcoin Core version 0.11 or
+earlier.
 
 Notable changes
 ===============
