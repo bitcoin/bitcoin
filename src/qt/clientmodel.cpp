@@ -132,7 +132,7 @@ double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 void ClientModel::updateTimer1()
 {
     // no locking required at this point
-    // the following calls will aquire the required lock
+    // the following calls will acquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
     Q_EMIT transactionsPerSecondChanged(getTransactionsPerSecond());
 }
