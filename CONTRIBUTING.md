@@ -50,13 +50,13 @@ Using merge windows allows Bitcoin Classic to remain focused on specific issues 
 Emergencies and bug fixes are outside the scope of merge windows.
 
 ## <a name="considerit"></a> Consider.it
-By voting on issues, Bitcoin Classic creates a democratic consensus amoung all those using this implementation. Every vote must be respected by 3 groups: users, miners, and developers. **The votes are interpreted as such:**
+By voting on issues, Bitcoin Classic aims to create a collective deliberation among all those using this implementation. Every vote must be respected by 3 groups: users, miners, and developers. **The votes are interpreted as such:**
 
 - Each vote goes from -1 to 1, with 0 at neutral/undecided
 - In the Miner vote, each Miner's vote is multiplied by their hashpower
 - Only verified users have votes.
 
-Voting is a continous process.
+As voting is a continuous process, all voters are encouraged to vote for a pull request only if they believe it has been thoroughly tested, reviewed, and fitting of any other criteria the voter holds fit. If any vote is found to be subject of vote manipulation the vote will be considered void.
 
 ## <a name="codeofconduct"></a> Code of Conduct
 
