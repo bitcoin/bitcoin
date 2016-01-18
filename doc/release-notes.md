@@ -113,6 +113,12 @@ minimum relay feerate will be increased to match this feerate plus the initial
 minimum relay feerate. The initial minimum relay feerate is set to
 1000 satoshis per kB.
 
+Bitcoin Core 0.12 also introduces new default policy limits on the length and
+size of unconfirmed transaction chains that are allowed in the mempool
+(generally limiting the length of unconfirmed chains to 25 transactions, with a
+total size of 101 KB).  These limits can be overriden using command line
+arguments; see the extended help (`--help -help-debug`) for more information.
+
 Replace-by-fee transactions
 ---------------------------
 
