@@ -263,6 +263,17 @@ sanity check. Since 0.12, these are no longer stored. When loading a
 0.12 wallet into an older version, it will automatically rescan to avoid
 failed checks.
 
+Wallet: Pruning
+---------------
+
+With 0.12 it is possible to use wallet functionality in pruned mode.
+However, rescans as well as the RPCs `importwallet`, `importaddress`,
+`importprivkey` are disabled.
+
+To enable block pruning set `prune=<N>` on the command line or in
+`bitcoin.conf`, where `N` is the number of MiB to allot for
+raw block & undo data.
+
 `NODE_BLOOM` service bit
 ------------------------
 
