@@ -191,7 +191,10 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
   [build bitcoin-cli bitcoin-tx (default=yes)])],
-  [],
+  [
+    build_bitcoin_tx=yes
+    build_bitcoin_cli=yes
+  ],
   [
     build_bitcoin_tx=yes
     if test x$use_libevent = xno; then
