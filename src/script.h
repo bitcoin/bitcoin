@@ -36,7 +36,7 @@ enum
     SIGHASH_ALL = 1,
     SIGHASH_NONE = 2,
     SIGHASH_SINGLE = 3,
-    SIGHASH_ANYONECANPAY = 0x80,
+    SIGHASH_ANYONECANPAY = 0x80
 };
 
 /** Script verification flags */
@@ -47,7 +47,7 @@ enum
     SCRIPT_VERIFY_STRICTENC = (1U << 1), // enforce strict conformance to DER and SEC2 for signatures and pubkeys
     SCRIPT_VERIFY_LOW_S     = (1U << 2), // enforce low S values in signatures (depends on STRICTENC)
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
-    SCRIPT_VERIFY_NULLDUMMY = (1U << 4), // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
+    SCRIPT_VERIFY_NULLDUMMY = (1U << 4)  // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
 };
 
 // Strict verification:
@@ -79,7 +79,7 @@ enum txnouttype
     TX_PUBKEYHASH,
     TX_SCRIPTHASH,
     TX_MULTISIG,
-    TX_NULL_DATA,
+    TX_NULL_DATA
 };
 
 const char* GetTxnOutputType(txnouttype t);
@@ -228,7 +228,7 @@ enum opcodetype
     OP_PUBKEYHASH = 0xfd,
     OP_PUBKEY = 0xfe,
 
-    OP_INVALIDOPCODE = 0xff,
+    OP_INVALIDOPCODE = 0xff
 };
 
 const char* GetOpName(opcodetype opcode);
