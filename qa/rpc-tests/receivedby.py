@@ -53,6 +53,11 @@ def check_array_result(object_array, to_match, expected, should_not_find = False
 
 class ReceivedByTest(BitcoinTestFramework):
 
+    def setup_nodes(self):
+        #This test requires mocktime
+        enable_mocktime()
+        return start_nodes(4, self.options.tmpdir)
+
     def run_test(self):
         '''
         listreceivedbyaddress Test
