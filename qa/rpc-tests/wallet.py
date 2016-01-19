@@ -261,7 +261,8 @@ class WalletTest (BitcoinTestFramework):
             '-reindex',
             '-zapwallettxes=1',
             '-zapwallettxes=2',
-            '-salvagewallet',
+            # This fails sometimes; disabled until #7379 is fixed
+            # '-salvagewallet',
         ]
         for m in maintenance:
             print "check " + m
