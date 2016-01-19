@@ -2954,14 +2954,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                              REJECT_INVALID, "bad-txns-duplicate", true);
     }
 
+    // Size limits
+    unsigned int nSizeLimit = MaxBlockSize(block.nTime);
+
+    if (block.vtx.empty() || block.vtx.size() > nSizeLimit || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nSizeLimit)
+        return state.DoS(100, error("CheckBlock(): size limits failed"),
+                         REJECT_INVALID, "bad-blk-length");
+
     // All potential-corruption validation must be done before we do any
     // transaction validation, as otherwise we may mark the header as invalid
     // because we receive the wrong transactions for it.
-
-    // Size limits
-    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return state.DoS(100, error("CheckBlock(): size limits failed"),
-                         REJECT_INVALID, "bad-blk-length");
 
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0].IsCoinBase())
@@ -5664,6 +5666,14 @@ bool SendMessages(CNode* pto)
  std::string CBlockFileInfo::ToString() const {
      return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst), DateTimeStrFormat("%Y-%m-%d", nTimeLast));
  }
+
+/** Maximum size of a block */
+unsigned int MaxBlockSize(uint32_t nBLockTime)
+{
+    if (true) // TODO: activation condition
+        return MAX_BLOCK_SIZE;
+    return OLD_MAX_BLOCK_SIZE;
+}
 
 
 
