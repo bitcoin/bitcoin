@@ -192,6 +192,32 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue);
  */
 bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
+class CVarInfo {
+private:
+    const std::type_info *ptype;
+    void *pVar;
+
+public:
+    template <typename T> CVarInfo(T& var) : ptype(&typeid(var)), pVar(&var) { }
+    const std::type_info& type() { return *ptype; }
+    template <typename T> void assign(const T newvalue) {
+        assert(typeid(newvalue) == *ptype);
+        *(T*)pVar = newvalue;
+    }
+};
+
+typedef std::map<std::string, CVarInfo> RegisteredArgsType;
+extern RegisteredArgsType RegisteredArgs;
+
+/**
+ * Initialise a boolean argument
+ *
+ * @param fArgVar Variable that will hold the value for this argument for the duration of the program
+ * @param strArgName Argument to set (e.g. "foo")
+ * @param fDefaultValue Default value if not set (e.g. false)
+ */
+void RegisterArg(bool& fArgVar, const std::string strArgName, const bool fDefaultValue);
+
 /**
  * Format a string to be used as group of options in help messages
  *

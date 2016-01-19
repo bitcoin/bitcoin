@@ -414,6 +414,14 @@ bool SoftSetBoolArg(const std::string& strArg, bool fValue)
         return SoftSetArg(strArg, std::string("0"));
 }
 
+RegisteredArgsType RegisteredArgs;
+
+void RegisterArg(bool& fArgVar, const std::string strArgName, const bool fDefaultValue)
+{
+    RegisteredArgs.insert(RegisteredArgsType::value_type(strArgName, CVarInfo(fArgVar)));
+    fArgVar = GetBoolArg("-" + strArgName, fDefaultValue);
+}
+
 static const int screenWidth = 79;
 static const int optIndent = 2;
 static const int msgIndent = 7;

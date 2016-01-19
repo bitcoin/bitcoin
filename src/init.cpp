@@ -772,10 +772,10 @@ static std::string AmountErrMsg(const char * const optname, const std::string& s
 
 void InitLogging()
 {
-    fPrintToConsole = GetBoolArg("-printtoconsole", false);
-    fLogTimestamps = GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
-    fLogTimeMicros = GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
-    fLogIPs = GetBoolArg("-logips", DEFAULT_LOGIPS);
+    RegisterArg(fPrintToConsole, "printtoconsole", false);
+    RegisterArg(fLogTimestamps, "logtimestamps", DEFAULT_LOGTIMESTAMPS);
+    RegisterArg(fLogTimeMicros, "logtimemicros", DEFAULT_LOGTIMEMICROS);
+    RegisterArg(fLogIPs, "logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     LogPrintf("Bitcoin version %s (%s)\n", FormatFullVersion(), CLIENT_DATE);
@@ -1008,17 +1008,17 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
     nTxConfirmTarget = GetArg("-txconfirmtarget", DEFAULT_TX_CONFIRM_TARGET);
-    bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
-    fSendFreeTransactions = GetBoolArg("-sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
+    RegisterArg(bSpendZeroConfChange, "spendzeroconfchange", DEFAULT_SPEND_ZEROCONF_CHANGE);
+    RegisterArg(fSendFreeTransactions, "sendfreetransactions", DEFAULT_SEND_FREE_TRANSACTIONS);
 
     std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif // ENABLE_WALLET
 
-    fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
-    fAcceptDatacarrier = GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
+    RegisterArg(fIsBareMultisigStd, "permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
+    RegisterArg(fAcceptDatacarrier, "datacarrier", DEFAULT_ACCEPT_DATACARRIER);
     nMaxDatacarrierBytes = GetArg("-datacarriersize", nMaxDatacarrierBytes);
 
-    fAlerts = GetBoolArg("-alerts", DEFAULT_ALERTS);
+    RegisterArg(fAlerts, "alerts", DEFAULT_ALERTS);
 
     // Option to startup with mocktime set (used for regression testing):
     SetMockTime(GetArg("-mocktime", 0)); // SetMockTime(0) is a no-op
