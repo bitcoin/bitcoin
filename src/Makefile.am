@@ -119,6 +119,7 @@ BITCOIN_CORE_H = \
   rpc/server.h \
   rpc/register.h \
   scheduler.h \
+  script/cachedhashesmap.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
@@ -186,6 +187,7 @@ libbitcoin_server_a_SOURCES = \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
+  script/cachedhashesmap.cpp \
   script/sigcache.cpp \
   script/ismine.cpp \
   timedata.cpp \
