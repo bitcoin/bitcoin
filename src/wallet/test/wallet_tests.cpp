@@ -67,6 +67,9 @@ static bool equal_sets(CoinSet a, CoinSet b)
 
 BOOST_AUTO_TEST_CASE(coin_selection_tests)
 {
+    const CAmount MIN_CHANGE = wallet.GetMinChange();
+    BOOST_CHECK(MIN_CHANGE > 0);
+
     CoinSet setCoinsRet, setCoinsRet2;
     CAmount nValueRet;
 

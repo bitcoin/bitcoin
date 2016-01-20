@@ -1792,6 +1792,19 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
     return nTotal;
 }
 
+CAmount CWallet::GetMinChange() const
+{
+    LOCK(cs_main);
+    // Coupling the minimum change with the minimum relay fee has two reasons:
+    // A user should be able to create transactions even though their wallet is
+    //  filled with small inputs: Small change avoidance would otherwise add
+    //  many unspents, such that the transaction exceeds the maximum allowed
+    //  size.
+    // However, creating change too small would instead fragment the user's
+    //  wallet into small unspents over time.
+    return ::minRelayTxFee.GetFee(MAX_STANDARD_TX_SIZE);
+}
+
 void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const CCoinControl *coinControl, bool fIncludeZeroValue) const
 {
     vCoins.clear();
@@ -1897,6 +1910,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     setCoinsRet.clear();
     nValueRet = 0;
 
+    const CAmount nMinChange = GetMinChange();
+
     // List of values less than target
     pair<CAmount, pair<const CWalletTx*,unsigned int> > coinLowestLarger;
     coinLowestLarger.first = std::numeric_limits<CAmount>::max();
@@ -1926,9 +1941,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
             setCoinsRet.insert(coin.second);
             nValueRet += coin.first;
             return true;
-        }
-        else if (n < nTargetValue + MIN_CHANGE)
-        {
+        } else if (n < nTargetValue + nMinChange) {
             vValue.push_back(coin);
             nTotalLower += n;
         }
@@ -1964,14 +1977,13 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     CAmount nBest;
 
     ApproximateBestSubset(vValue, nTotalLower, nTargetValue, vfBest, nBest);
-    if (nBest != nTargetValue && nTotalLower >= nTargetValue + MIN_CHANGE)
-        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + MIN_CHANGE, vfBest, nBest);
+    if (nBest != nTargetValue && nTotalLower >= nTargetValue + nMinChange)
+        ApproximateBestSubset(vValue, nTotalLower, nTargetValue + nMinChange, vfBest, nBest);
 
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
     if (coinLowestLarger.second.first &&
-        ((nBest != nTargetValue && nBest < nTargetValue + MIN_CHANGE) || coinLowestLarger.first <= nBest))
-    {
+        ((nBest != nTargetValue && nBest < nTargetValue + nMinChange) || coinLowestLarger.first <= nBest)) {
         setCoinsRet.insert(coinLowestLarger.second);
         nValueRet += coinLowestLarger.first;
     }
