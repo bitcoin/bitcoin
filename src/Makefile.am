@@ -192,6 +192,7 @@ BITCOIN_CORE_H = \
   versionbits.h \
   wallet/crypter.h \
   wallet/db.h \
+  wallet/rpcwallet.h \
   wallet/wallet.h \
   wallet/wallet_ismine.h \
   wallet/walletdb.h \
