@@ -259,15 +259,15 @@ adduser debian sudo
 Then set up LXC and the rest with the following, which is a complex jumble of settings and workarounds:
 
 ```bash
-# the version of lxc-start in Debian 7.4 needs to run as root, so make sure
+# the version of lxc-start in Debian needs to run as root, so make sure
 # that the build script can execute it without providing a password
 echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc
-# add cgroup for LXC
-echo "cgroup  /sys/fs/cgroup  cgroup  defaults  0   0" >> /etc/fstab
 # make /etc/rc.local script that sets up bridge between guest and host
 echo '#!/bin/sh -e' > /etc/rc.local
 echo 'brctl addbr br0' >> /etc/rc.local
 echo 'ifconfig br0 10.0.3.2/24 up' >> /etc/rc.local
+echo 'iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE' >> /etc/rc.local
+echo 'echo 1 > /proc/sys/net/ipv4/ip_forward' >> /etc/rc.local
 echo 'exit 0' >> /etc/rc.local
 # make sure that USE_LXC is always set when logging in as debian,
 # and configure LXC IP addresses
