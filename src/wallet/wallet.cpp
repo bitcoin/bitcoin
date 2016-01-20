@@ -2576,7 +2576,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
     }
 
     // Solve subset sum by stochastic approximation
-    sort(vValue.rbegin(), vValue.rend(), CompareValueOnly());
+    std::sort(vValue.begin(), vValue.end(), CompareValueOnly());
+    std::reverse(vValue.begin(), vValue.end());
     vector<char> vfBest;
     CAmount nBest;
 
