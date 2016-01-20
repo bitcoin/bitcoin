@@ -56,14 +56,14 @@ Usage: `git-subtree-check.sh DIR COMMIT`
 
 `COMMIT` may be omitted, in which case `HEAD` is used.
 
-github-merge.sh
+github-merge.py
 ===============
 
 A small script to automate merging pull-requests securely and sign them with GPG.
 
 For example:
 
-  ./github-merge.sh bitcoin/bitcoin 3077
+  ./github-merge.py 3077
 
 (in any git repository) will help you merge pull request #3077 for the
 bitcoin/bitcoin repository.
