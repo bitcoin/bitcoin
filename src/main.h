@@ -137,6 +137,9 @@ extern CBlockIndex *pindexBestHeader;
 /** Minimum disk space required - used in CheckDiskSpace() */
 static const uint64_t nMinDiskSpace = 52428800;
 
+static const signed int DEFAULT_CHECKBLOCKS = 288;
+static const unsigned int DEFAULT_CHECKLEVEL = 3;
+
 /** Register a wallet to receive updates from core */
 void RegisterValidationInterface(CValidationInterface* pwalletIn);
 /** Unregister a wallet from core */

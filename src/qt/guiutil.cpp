@@ -61,6 +61,10 @@
 #include <QUrlQuery>
 #endif
 
+#if QT_VERSION >= 0x50200
+#include <QFontDatabase>
+#endif
+
 #if BOOST_FILESYSTEM_VERSION >= 3
 static boost::filesystem::detail::utf8_codecvt_facet utf8;
 #endif
@@ -89,6 +93,9 @@ QString dateTimeStr(qint64 nTime)
 
 QFont bitcoinAddressFont()
 {
+#if QT_VERSION >= 0x50200
+    return QFontDatabase::systemFont(QFontDatabase::FixedFont);
+#else
     QFont font("Monospace");
 #if QT_VERSION >= 0x040800
     font.setStyleHint(QFont::Monospace);
@@ -96,6 +103,7 @@ QFont bitcoinAddressFont()
     font.setStyleHint(QFont::TypeWriter);
 #endif
     return font;
+#endif
 }
 
 void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
@@ -649,6 +657,11 @@ boost::filesystem::path static GetAutostartDir()
 
 boost::filesystem::path static GetAutostartFilePath()
 {
+    if (GetBoolArg("-testnet", false))
+        return GetAutostartDir() / "bitcoin-test.desktop";
+    else if (GetBoolArg("-regtest", false))
+        return GetAutostartDir() / "bitcoin-regtest.desktop";
+
     return GetAutostartDir() / "bitcoin.desktop";
 }
 
@@ -843,10 +856,16 @@ QString formatServicesStr(quint64 mask)
             switch (check)
             {
             case NODE_NETWORK:
-                strList.append(QObject::tr("NETWORK"));
+                strList.append("NETWORK");
+                break;
+            case NODE_GETUTXO:
+                strList.append("GETUTXO");
+                break;
+            case NODE_BLOOM:
+                strList.append("BLOOM");
                 break;
             default:
-                strList.append(QString("%1[%2]").arg(QObject::tr("UNKNOWN")).arg(check));
+                strList.append(QString("%1[%2]").arg("UNKNOWN").arg(check));
             }
         }
     }

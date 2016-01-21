@@ -31,6 +31,7 @@ struct TestingSetup {
 
     TestingSetup() {
         SetupEnvironment();
+        SetupNetworking();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(CBaseChainParams::UNITTEST);
@@ -41,8 +42,9 @@ struct TestingSetup {
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
         boost::filesystem::create_directories(pathTemp);
         mapArgs["-datadir"] = pathTemp.string();
-        pblocktree = new CBlockTreeDB(1 << 20, true);
-        pcoinsdbview = new CCoinsViewDB(1 << 23, true);
+        bool isObfuscated;
+        pblocktree = new CBlockTreeDB(1 << 20, isObfuscated, true);
+        pcoinsdbview = new CCoinsViewDB(1 << 23, isObfuscated, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
         InitBlockIndex();
 #ifdef ENABLE_WALLET
