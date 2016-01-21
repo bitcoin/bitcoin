@@ -75,6 +75,7 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
+bool fPermitReplacement = DEFAULT_PERMIT_REPLACEMENT;
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
@@ -865,12 +866,15 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                 // unconfirmed ancestors anyway; doing otherwise is hopelessly
                 // insecure.
                 bool fReplacementOptOut = true;
-                BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
+                if (fPermitReplacement)
                 {
-                    if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
+                    BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
                     {
-                        fReplacementOptOut = false;
-                        break;
+                        if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
+                        {
+                            fReplacementOptOut = false;
+                            break;
+                        }
                     }
                 }
                 if (fReplacementOptOut)
