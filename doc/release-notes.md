@@ -104,6 +104,9 @@ announcing their headers directly, instead of just announcing the hash. In a
 reorganization, all new headers are sent, instead of just the new tip. This
 can often prevent an extra roundtrip before the actual block is downloaded.
 
+With this change, pruning nodes are now able to relay new blocks to compatible
+peers.
+
 Memory pool limiting
 --------------------
 
@@ -134,11 +137,31 @@ Replace-by-fee transactions
 ---------------------------
 
 It is now possible to replace transactions in the transaction memory pool of
-Bitcoin Core 0.12 nodes. Bitcoin Core will only replace transactions which
-have any of their inputs' `nSequence` number set to less than `0xffffffff - 1`.
-Moreover, a replacement transaction may only be accepted when it pays
-sufficient fee, as described in [BIP 125]
+Bitcoin Core 0.12 nodes. Bitcoin Core will only allow replacement of
+transactions which have any of their inputs' `nSequence` number set to less
+than `0xffffffff - 1`.  Moreover, a replacement transaction may only be
+accepted when it pays sufficient fee, as described in [BIP 125]
 (https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki).
+
+Transaction replacement can be disabled with a new command line option,
+`-permitrbf=false`.  Transactions signaling replacement under BIP125 will still
+be allowed into the mempool in this configuration, but replacements will be
+rejected.  This option is intended for miners who want to continue the
+transaction selection behavior of previous releases.
+
+The `-permitrbf` option is *not recommended* for wallet users seeking to avoid
+receipt of unconfirmed opt-in transactions, because this option does not
+prevent transactions which are replaceable under BIP 125 from being accepted
+(only subsequent replacements, which other nodes on the network that implement
+BIP 125 are likely to relay and mine).  Wallet users wishing to detect whether
+a transaction is subject to replacement under BIP 125 should instead use the
+updated RPC calls `gettransaction` and `listtransactions`, which now have an
+additional field in the output indicating if a transaction is replaceable under
+BIP125 ("bip125-replaceable").
+
+Note that the wallet in Bitcoin Core 0.12 does not yet have support for
+creating transactions that would be replaceable under BIP 125.
+
 
 RPC: Random-cookie RPC authentication
 ---------------------------------------
@@ -395,6 +418,14 @@ memory. As part of these changes, consensus critical calculations are cached on 
 transaction's acceptance into the mempool and the mining code now relies on the
 consistency of the mempool to assemble blocks. However all blocks are still tested
 for validity after assembly.
+
+Other P2P Changes
+-----------------
+
+The list of banned peers is now stored on disk rather than in memory.
+Restarting bitcoind will no longer clear out the list of banned peers; instead
+a new RPC call (`clearbanned`) can be used to manually clear the list.  The new
+`setban` RPC call can also be used to manually ban or unban a peer.
 
 0.12.0 Change log
 =================
