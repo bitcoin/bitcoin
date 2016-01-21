@@ -132,45 +132,20 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         const CScript& prevScript = prev.scriptPubKey;
         if (!Solver(prevScript, whichType, vSolutions))
             return false;
-        int nArgsExpected = ScriptSigArgsExpected(whichType, vSolutions);
-        if (nArgsExpected < 0)
-            return false;
-
-        // Transactions with extra stuff in their scriptSigs are
-        // non-standard. Note that this EvalScript() call will
-        // be quick, because if there are any operations
-        // beside "push data" in the scriptSig
-        // IsStandardTx() will have already returned false
-        // and this method isn't called.
-        std::vector<std::vector<unsigned char> > stack;
-        if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker()))
-            return false;
 
         if (whichType == TX_SCRIPTHASH)
         {
+            std::vector<std::vector<unsigned char> > stack;
+            // convert the scriptSig into a stack, so we can inspect the redeemScript
+            if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), 0))
+                return false;
             if (stack.empty())
                 return false;
             CScript subscript(stack.back().begin(), stack.back().end());
-            std::vector<std::vector<unsigned char> > vSolutions2;
-            txnouttype whichType2;
-            if (Solver(subscript, whichType2, vSolutions2))
-            {
-                int tmpExpected = ScriptSigArgsExpected(whichType2, vSolutions2);
-                if (tmpExpected < 0)
-                    return false;
-                nArgsExpected += tmpExpected;
-            }
-            else
-            {
-                // Any other Script with less than 15 sigops OK:
-                unsigned int sigops = subscript.GetSigOpCount(true);
-                // ... extra data left on the stack after execution is OK, too:
-                return (sigops <= MAX_P2SH_SIGOPS);
+            if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
+                return false;
             }
         }
-
-        if (stack.size() != (unsigned int)nArgsExpected)
-            return false;
     }
 
     return true;
