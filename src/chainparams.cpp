@@ -97,6 +97,11 @@ public:
 
         genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
+        // Timestamps for forking consensus rule changes:
+        // Allow bigger blocks if:
+        consensus.nActivateSizeForkMajority = 750; // 75% of hashpower to activate fork
+        consensus.nSizeForkGracePeriod = 60*60*24*28; // four week grace period after activation
+        consensus.nSizeForkExpiration = 1514764800; // 2018-01-01 00:00:00 GMT
         assert(consensus.hashGenesisBlock == uint256S("0x000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
@@ -172,8 +177,13 @@ public:
         nMaxTipAge = 0x7fffffff;
         nPruneAfterHeight = 1000;
 
+        //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis = CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
+
+        consensus.nActivateSizeForkMajority = 75; // 75 of 100 to activate fork
+        consensus.nSizeForkGracePeriod = 60*60*24; // 1-day grace period
+        consensus.nSizeForkExpiration = 1514764800; // 2018-01-01 00:00:00 GMT
         assert(consensus.hashGenesisBlock == uint256S("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
@@ -217,9 +227,9 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.nMajorityEnforceBlockUpgrade = 750;
-        consensus.nMajorityRejectBlockOutdated = 950;
-        consensus.nMajorityWindow = 1000;
+        consensus.nMajorityEnforceBlockUpgrade = 75;
+        consensus.nMajorityRejectBlockOutdated = 95;
+        consensus.nMajorityWindow = 100;
         consensus.BIP34Height = -1; // BIP34 has not necessarily activated on regtest
         consensus.BIP34Hash = uint256();
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -238,6 +248,9 @@ public:
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
+        consensus.nActivateSizeForkMajority = 75; // 75 of 100 to activate fork
+        consensus.nSizeForkGracePeriod = 60*60*24; // 1-day grace period
+        consensus.nSizeForkExpiration = 1514764800; // 2018-01-01 00:00:00 GMT
         assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
