@@ -520,7 +520,8 @@ UniValue decodescript(const UniValue& params, bool fHelp)
     }
     ScriptPubKeyToJSON(script, r, false);
 
-    r.push_back(Pair("p2sh", CBitcoinAddress(CScriptID(script)).ToString()));
+    if (script.IsPayToScriptHash())
+        r.push_back(Pair("p2sh", CBitcoinAddress(CScriptID(script)).ToString()));
     return r;
 }
 
