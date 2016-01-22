@@ -469,6 +469,8 @@ git merge commit are mentioned.
 - #6896 `d482c0a` Make -checkmempool=1 not fail through int32 overflow
 - #6993 `b632145` Add -blocksonly option
 - #7323 `a344880` 0.12: Backport -bytespersigop option
+- #7386 `da83ecd` Add option `-permitrbf` to set transaction replacement policy
+- #7290 `b16b5bc` Add missing options help
 
 ### Block and transaction handling
 
@@ -508,6 +510,7 @@ git merge commit are mentioned.
 - #7062 `12c469b` [Mempool] Fix mempool limiting and replace-by-fee for PrioritiseTransaction
 - #7276 `76de36f` Report non-mandatory script failures correctly
 - #7217 `e08b7cb` Mark blocks with too many sigops as failed
+- #7387 `f4b2ce8` Get rid of inaccurate ScriptSigArgsExpected
 
 ### P2P protocol and network code
 
@@ -596,6 +599,7 @@ git merge commit are mentioned.
 - #7296 `a36d79b` Add sane fallback for fee estimation
 - #7293 `ff9b610` Add regression test for vValue sort order 
 - #7306 `4707797` Make sure conflicted wallet tx's update balances
+- #7381 `621bbd8` [walletdb] Fix syntax error in key parser
 
 ### GUI
 
@@ -624,6 +628,8 @@ git merge commit are mentioned.
 - #7282 `5cadf3e` fix coincontrol update issue when deleting a send coins entry
 - #7319 `1320300` Intro: Display required space
 - #7318 `9265e89` quickfix for RPC timer interface problem
+- #7327 `b16b5bc` [Wallet] Transaction View: LastMonth calculation fixed
+- #7364 `7726c48` [qt] Windows: Make rpcconsole monospace font larger
 
 ### Tests and QA
 
