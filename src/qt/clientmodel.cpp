@@ -88,7 +88,7 @@ QDateTime ClientModel::getLastBlockDate() const
     return QDateTime::fromTime_t(Params().GenesisBlock().GetBlockTime()); // Genesis block's time of current network
 }
 
-long ClientModel::getMempoolSize() const
+size_t ClientModel::getMempoolSize() const
 {
     return mempool.size();
 }

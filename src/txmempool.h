@@ -493,7 +493,7 @@ public:
     /** Expire all transaction (and their dependencies) in the mempool older than time. Return the number of removed transactions. */
     int Expire(int64_t time);
 
-    unsigned long size()
+    size_t size()
     {
         LOCK(cs);
         return mapTx.size();

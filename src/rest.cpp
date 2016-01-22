@@ -156,7 +156,7 @@ static bool rest_headers(HTTPRequest* req,
         const CBlockIndex *pindex = (it != mapBlockIndex.end()) ? it->second : NULL;
         while (pindex != NULL && chainActive.Contains(pindex)) {
             headers.push_back(pindex);
-            if (headers.size() == (unsigned long)count)
+            if (headers.size() == (size_t) count)
                 break;
             pindex = chainActive.Next(pindex);
         }
