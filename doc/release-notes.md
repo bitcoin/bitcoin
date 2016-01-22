@@ -452,6 +452,7 @@ git merge commit are mentioned.
 - #7022 `9afbd96` Change default block priority size to 0
 - #7141 `c0c08c7` rpc: Don't translate warning messages
 - #7312 `fd4bd50` Add RPC call abandontransaction
+- #7222 `e25b158` RPC: indicate which transactions are replaceable
 
 ### Configuration and command-line options
 
