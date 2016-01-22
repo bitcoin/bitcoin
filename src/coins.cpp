@@ -117,11 +117,17 @@ CCoinsModifier CCoinsViewCache::ModifyCoins(const uint256 &txid) {
     return CCoinsModifier(*this, ret.first, cachedCoinUsage);
 }
 
-CCoinsModifier CCoinsViewCache::ModifyNewCoins(const uint256 &txid) {
+// ModifyNewCoins has to know whether the new outputs its creating are for a
+// coinbase or not.  If they are for a coinbase, it can not mark them as fresh.
+// This is to ensure that the historical duplicate coinbases before BIP30 was
+// in effect will still be properly overwritten when spent.
+CCoinsModifier CCoinsViewCache::ModifyNewCoins(const uint256 &txid, bool coinbase) {
     assert(!hasModifier);
     std::pair<CCoinsMap::iterator, bool> ret = cacheCoins.insert(std::make_pair(txid, CCoinsCacheEntry()));
     ret.first->second.coins.Clear();
-    ret.first->second.flags = CCoinsCacheEntry::FRESH;
+    if (!coinbase) {
+        ret.first->second.flags = CCoinsCacheEntry::FRESH;
+    }
     ret.first->second.flags |= CCoinsCacheEntry::DIRTY;
     return CCoinsModifier(*this, ret.first, 0);
 }
