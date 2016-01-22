@@ -2,12 +2,28 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>Pravým klikem editujte adresu nebo popisek</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>Vytvořit novou adresu</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Kopírovat aktuálně vybrané adresy do schránky</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>Odstraní aktuálně vybrané adresy ze seznamu</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportovat aktuální pohled do souboru</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exportovat</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -622,6 +638,14 @@
     </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Exportovat</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>Exportovat aktuální pohled do souboru</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>

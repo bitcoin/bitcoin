@@ -387,7 +387,7 @@
     </message>
     <message>
         <source>&amp;Settings</source>
-        <translation>&amp;definições</translation>
+        <translation>&amp;Definições</translation>
     </message>
     <message>
         <source>&amp;Help</source>
@@ -723,7 +723,7 @@
     </message>
     <message>
         <source>none</source>
-        <translation>nenhum</translation>
+        <translation>Nenhum</translation>
     </message>
     <message>
         <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
@@ -1033,7 +1033,7 @@
     </message>
     <message>
         <source>Active command-line options that override above options:</source>
-        <translation>Ativa as opções de linha de comando que sobrescreve as opções acima:</translation>
+        <translation>Opções de linha de comando ativas que sobrescreve as opções acima:</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1185,7 +1185,7 @@
     </message>
     <message>
         <source>none</source>
-        <translation>nenhum</translation>
+        <translation>Nenhum</translation>
     </message>
     <message>
         <source>Confirm options reset</source>
@@ -1975,7 +1975,7 @@
     </message>
     <message>
         <source>collapse fee-settings</source>
-        <translation>colapso Taxa de definições</translation>
+        <translation>Ocultar painel</translation>
     </message>
     <message>
         <source>per kilobyte</source>

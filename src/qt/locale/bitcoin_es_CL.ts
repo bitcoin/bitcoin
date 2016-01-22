@@ -46,6 +46,10 @@
         <translation>&amp;Borrar</translation>
     </message>
     <message>
+        <source>Choose the address to send coins to</source>
+        <translation>Selecciona la direccion para enviar coins</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Copia &amp;etiqueta</translation>
     </message>
@@ -226,6 +230,14 @@
         <translation>&amp;Cambiar la contraseña...</translation>
     </message>
     <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>Mandando direcciones</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Recibiendo direcciones</translation>
+    </message>
+    <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir y url...</translation>
     </message>
@@ -258,6 +270,10 @@
         <translation>Abre consola de depuración y diagnóstico</translation>
     </message>
     <message>
+        <source>&amp;Verify message...</source>
+        <translation>Verificar mensaje....</translation>
+    </message>
+    <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
     </message>
@@ -272,6 +288,10 @@
     <message>
         <source>&amp;Receive</source>
         <translation>y recibir</translation>
+    </message>
+    <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>Mostrar informacion sobre Bitcoin Core</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -300,6 +320,18 @@
     <message>
         <source>Bitcoin Core</source>
         <translation>bitcoin core</translation>
+    </message>
+    <message>
+        <source>Request payments (generates QR codes and bitcoin: URIs)</source>
+        <translation>Pide pagos (genera codigos QR and bitcoin: URls)</translation>
+    </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>&amp;Sobre Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for Bitcoin Core</source>
+        <translation>Modifica las opciones para BitCoin Core</translation>
     </message>
     <message>
         <source>%1 and %2</source>

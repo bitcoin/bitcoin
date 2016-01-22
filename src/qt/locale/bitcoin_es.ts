@@ -1116,6 +1116,10 @@
         <translation>Tor</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Conectar a la red Bitcoin mediante un proxy SOCKS5 por separado para los servicios ocultos de Tor.</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
         <translation>Usar distintos proxys SOCKS5 para comunicarse vía Tor de forma anónima:</translation>
     </message>
@@ -1490,6 +1494,14 @@
         <translation>Número actual de bloques</translation>
     </message>
     <message>
+        <source>Current number of transactions</source>
+        <translation>Número actual de transacciones</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Uso de memoria</translation>
+    </message>
+    <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Abre el archivo de registro de depuración de Bitcoin desde el directorio de datos actual. Esto puede tardar unos segundos para ficheros de registro de gran tamaño.</translation>
     </message>
@@ -1512,6 +1524,10 @@
     <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Seleccionar un par para ver su información detallada.</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>En la lista blanca</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1560,6 +1576,10 @@
     <message>
         <source>Ping Time</source>
         <translation>Ping</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>Espera de Ping</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -1612,6 +1632,10 @@
     <message>
         <source>&amp;Disconnect Node</source>
         <translation>Nodo &amp;Desconectado</translation>
+    </message>
+    <message>
+        <source>Ban Node for</source>
+        <translation>Prohibir Nodo para</translation>
     </message>
     <message>
         <source>1 &amp;hour</source>
@@ -2729,6 +2753,10 @@
         <translation>Copiar identificador de transacción</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Copiar traducción en crudo</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Editar etiqueta</translation>
     </message>
@@ -2876,6 +2904,10 @@
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Aceptar comandos consola y JSON-RPC
 </translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>Por favor, mira si la fecha y la hora en tu computador son correctas! Si tu hara es errónea Bitcoin Core no funcionará correctamente.</translation>
     </message>
     <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
@@ -3326,6 +3358,10 @@
     <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Eliminando todas las transacciones del monedero...</translation>
+    </message>
+    <message>
+        <source>ZeroMQ notification options:</source>
+        <translation>Opciones de notificación ZeroQM:</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
