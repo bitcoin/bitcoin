@@ -245,6 +245,8 @@ RES_ICONS = \
   qt/res/icons/eye_minus.png \
   qt/res/icons/eye_plus.png \
   qt/res/icons/filesave.png \
+  qt/res/icons/fontbigger.png \
+  qt/res/icons/fontsmaller.png \
   qt/res/icons/history.png \
   qt/res/icons/info.png \
   qt/res/icons/key.png \
