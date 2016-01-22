@@ -42,13 +42,44 @@
        root.
 */
 
+typedef enum {
+    MERKLE_COMPUTATION_MUTABLE = 0x1,
+    MERKLE_COMPUTATION_FAST    = 0x2
+} merklecomputationopts;
+
+static void MerkleHash_Hash256(uint256& parent, const uint256& left, const uint256& right) {
+    CHash256().Write(left.begin(), 32).Write(right.begin(), 32).Finalize(parent.begin());
+}
+
+/* Calculated by using standard FIPS-180 SHA-256 to hash the first 512
+ * bits of the fractional part of the square root of 2 then extracting
+ * the midstate. This initial data, expressed in hexadecimal notation
+ * is:
+ *
+ *   6a09e667f3bcc908 b2fb1366ea957d3e 3adec17512775099 da2f590b0667322a
+ *   95f9060875714587 5163fcdfb907b672 1ee950bc8738f694 f0090e6c7bf44ed1
+ */
+static unsigned char _MidstateIV[32] =
+    { 0x91, 0x06, 0x6c, 0x2b, 0x97, 0x5c, 0xc8, 0x32,
+      0xe7, 0x6c, 0xd4, 0x01, 0x68, 0x21, 0x8d, 0x36,
+      0x18, 0xd0, 0x9b, 0xe1, 0x9a, 0x7b, 0xff, 0xc0,
+      0xec, 0x1d, 0xcc, 0xf0, 0x8f, 0x77, 0x5b, 0xbd };
+static void MerkleHash_Sha256Midstate(uint256& parent, const uint256& left, const uint256& right) {
+    CSHA256(_MidstateIV).Write(left.begin(), 32).Write(right.begin(), 32).Midstate(parent.begin(), NULL, NULL);
+}
+
 /* This implements a constant-space merkle root/path calculator, limited to 2^32 leaves. */
-static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot, bool* pmutated, uint32_t branchpos, std::vector<uint256>* pbranch) {
+static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot, bool* pmutated, uint32_t branchpos, std::vector<uint256>* pbranch, merklecomputationopts flags) {
     if (pbranch) pbranch->clear();
     if (leaves.size() == 0) {
         if (pmutated) *pmutated = false;
         if (proot) *proot = uint256();
         return;
+    }
+    bool is_mutable = flags & MERKLE_COMPUTATION_MUTABLE;
+    auto MerkleHash = MerkleHash_Hash256;
+    if (flags & MERKLE_COMPUTATION_FAST) {
+        MerkleHash = MerkleHash_Sha256Midstate;
     }
     bool mutated = false;
     // count is the number of leaves processed so far.
@@ -80,7 +111,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                 }
             }
             mutated |= (inner[level] == h);
-            CHash256().Write(inner[level].begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+            MerkleHash(h, inner[level], h);
         }
         // Store the resulting hash at inner position level.
         inner[level] = h;
@@ -103,10 +134,12 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
         // If we reach this point, h is an inner value that is not the top.
         // We combine it with itself (Bitcoin's special rule for odd levels in
         // the tree) to produce a higher level one.
-        if (pbranch && matchh) {
+        if (is_mutable && pbranch && matchh) {
             pbranch->push_back(h);
         }
-        CHash256().Write(h.begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+        if (is_mutable) {
+            MerkleHash(h, h, h);
+        }
         // Increment count to the value it would have if two entries at this
         // level had existed.
         count += (((uint32_t)1) << level);
@@ -121,7 +154,7 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
                     matchh = true;
                 }
             }
-            CHash256().Write(inner[level].begin(), 32).Write(h.begin(), 32).Finalize(h.begin());
+            MerkleHash(h, inner[level], h);
             level++;
         }
     }
@@ -132,13 +165,13 @@ static void MerkleComputation(const std::vector<uint256>& leaves, uint256* proot
 
 uint256 ComputeMerkleRoot(const std::vector<uint256>& leaves, bool* mutated) {
     uint256 hash;
-    MerkleComputation(leaves, &hash, mutated, -1, nullptr);
+    MerkleComputation(leaves, &hash, mutated, -1, nullptr, MERKLE_COMPUTATION_MUTABLE);
     return hash;
 }
 
 std::vector<uint256> ComputeMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
     std::vector<uint256> ret;
-    MerkleComputation(leaves, nullptr, nullptr, position, &ret);
+    MerkleComputation(leaves, nullptr, nullptr, position, &ret, MERKLE_COMPUTATION_MUTABLE);
     return ret;
 }
 
@@ -151,6 +184,51 @@ uint256 ComputeMerkleRootFromBranch(const uint256& leaf, const std::vector<uint2
             hash = Hash(BEGIN(hash), END(hash), BEGIN(*it), END(*it));
         }
         nIndex >>= 1;
+    }
+    return hash;
+}
+
+uint256 ComputeFastMerkleRoot(const std::vector<uint256>& leaves) {
+    uint256 hash;
+    if (leaves.empty()) {
+        hash = CHashWriter(SER_GETHASH, PROTOCOL_VERSION).GetHash();
+    } else {
+        MerkleComputation(leaves, &hash, nullptr, -1, nullptr, MERKLE_COMPUTATION_FAST);
+    }
+    return hash;
+}
+
+std::pair<std::vector<uint256>, uint32_t> ComputeFastMerkleBranch(const std::vector<uint256>& leaves, uint32_t position) {
+    std::vector<uint256> branch;
+    MerkleComputation(leaves, nullptr, nullptr, position, &branch, MERKLE_COMPUTATION_FAST);
+    std::size_t max = 0;
+    for (int i = 0; i < 32; ++i)
+        if (position & ((uint32_t)1)<<i)
+            max = i + 1;
+    uint32_t path = position;
+    while (max > branch.size()) {
+        int i;
+        for (i = max-1; i >= 0; --i)
+            if (!(path & ((uint32_t)1)<<i))
+                break;
+        if (i < 0) // Should never happen
+            return {};
+        path = ((path & ~((((uint32_t)1)<<(i+1))-1))>>1)
+             |  (path &  ((((uint32_t)1)<< i   )-1));
+        --max;
+    }
+    return {branch, path};
+}
+
+uint256 ComputeFastMerkleRootFromBranch(const uint256& leaf, const std::vector<uint256>& branch, uint32_t path) {
+    uint256 hash = leaf;
+    for (std::vector<uint256>::const_iterator it = branch.begin(); it != branch.end(); ++it) {
+        if (path & 1) {
+            MerkleHash_Sha256Midstate(hash, *it, hash);
+        } else {
+            MerkleHash_Sha256Midstate(hash, hash, *it);
+        }
+        path >>= 1;
     }
     return hash;
 }
