@@ -480,7 +480,7 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>Decrease Font Size</string>
+            <string>Decrease font size</string>
            </property>
            <property name="text">
             <string/>
@@ -512,7 +512,7 @@
             </size>
            </property>
            <property name="toolTip">
-            <string>Increase Font Size</string>
+            <string>Increase font size</string>
            </property>
            <property name="text">
             <string/>

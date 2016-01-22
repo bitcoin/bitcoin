@@ -490,8 +490,10 @@ void RPCConsole::setFontSize(int newSize)
     settings.setValue(fontSizeSettingsKey, consoleFontSize);
 
     // clear console (reset icon sizes, default stylesheet) and re-add the content
+    float oldPosFactor = 1.0 / ui->messagesWidget->verticalScrollBar()->maximum() * ui->messagesWidget->verticalScrollBar()->value();
     clear();
     ui->messagesWidget->setHtml(str);
+    ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
 
 void RPCConsole::clear()
