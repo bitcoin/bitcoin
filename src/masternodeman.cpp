@@ -354,6 +354,8 @@ void CMasternodeMan::Clear()
     mAskedUsForMasternodeList.clear();
     mWeAskedForMasternodeList.clear();
     mWeAskedForMasternodeListEntry.clear();
+    mapSeenMasternodeBroadcast.clear();
+    mapSeenMasternodePing.clear();
     nDsqCount = 0;
 }
 
