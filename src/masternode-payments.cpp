@@ -182,7 +182,7 @@ void DumpMasternodePayments()
     LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 }
 
-bool IsBlockValueValid(const CBlock& block, int64_t nExpectedValue){
+bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue){
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return true;
 
@@ -267,7 +267,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
 }
 
 
-void FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
+void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
@@ -288,7 +288,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
     }
 }
 
-void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFees)
+void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 {
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;

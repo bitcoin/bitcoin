@@ -46,9 +46,9 @@ class CActiveMasternode;
 #define DARKSEND_RELAY_OUT                2
 #define DARKSEND_RELAY_SIG                3
 
-static const int64_t DARKSEND_COLLATERAL = (0.01*COIN);
-static const int64_t DARKSEND_POOL_MAX = (999.99*COIN);
-static const int64_t DENOMS_COUNT_MAX = 100;
+static const CAmount DARKSEND_COLLATERAL = (0.01*COIN);
+static const CAmount DARKSEND_POOL_MAX = (999.99*COIN);
+static const CAmount DENOMS_COUNT_MAX = 100;
 
 extern CDarksendPool darkSendPool;
 extern CDarkSendSigner darkSendSigner;
@@ -99,7 +99,7 @@ public:
     bool isSet;
     std::vector<CTxDSIn> sev;
     std::vector<CTxDSOut> vout;
-    int64_t amount;
+    CAmount amount;
     CTransaction collateral;
     CTransaction txSupporting;
     int64_t addedTime; // time in UTC milliseconds
@@ -112,7 +112,7 @@ public:
     }
 
     /// Add entries to use for Darksend
-    bool Add(const std::vector<CTxIn> vinIn, int64_t amountIn, const CTransaction collateralIn, const std::vector<CTxOut> voutIn)
+    bool Add(const std::vector<CTxIn> vinIn, CAmount amountIn, const CTransaction collateralIn, const std::vector<CTxOut> voutIn)
     {
         if(isSet){return false;}
 
@@ -291,7 +291,7 @@ private:
 
     int64_t lastNewBlock;
 
-    std::vector<int64_t> darkSendDenominationsSkipped;
+    std::vector<CAmount> darkSendDenominationsSkipped;
 
     //debugging data
     std::string strAutoDenomResult;
@@ -369,8 +369,8 @@ public:
         darkSendDenominationsSkipped.clear();
     }
 
-    bool IsDenomSkipped(int64_t denom) {
-        BOOST_FOREACH(int64_t d, darkSendDenominationsSkipped) {
+    bool IsDenomSkipped(CAmount denom) {
+        BOOST_FOREACH(CAmount d, darkSendDenominationsSkipped) {
             if (d == denom) {
                 return true;
             }
@@ -450,7 +450,7 @@ public:
     bool IsCompatibleWithEntries(std::vector<CTxOut>& vout);
 
     /// Is this amount compatible with other client in the pool?
-    bool IsCompatibleWithSession(int64_t nAmount, CTransaction txCollateral, int &errorID);
+    bool IsCompatibleWithSession(CAmount nAmount, CTransaction txCollateral, int &errorID);
 
     /// Passively run Darksend in the background according to the configuration in settings (only for QT)
     bool DoAutomaticDenominating(bool fDryRun=false);
@@ -470,13 +470,13 @@ public:
     /// If the collateral is valid given by a client
     bool IsCollateralValid(const CTransaction& txCollateral);
     /// Add a clients entry to the pool
-    bool AddEntry(const std::vector<CTxIn>& newInput, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, int& errorID);
+    bool AddEntry(const std::vector<CTxIn>& newInput, const CAmount& nAmount, const CTransaction& txCollateral, const std::vector<CTxOut>& newOutput, int& errorID);
     /// Add signature to a vin
     bool AddScriptSig(const CTxIn& newVin);
     /// Check that all inputs are signed. (Are all inputs signed?)
     bool SignaturesComplete();
     /// As a client, send a transaction to a Masternode to start the denomination process
-    void SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, int64_t amount);
+    void SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, CAmount amount);
     /// Get Masternode updates about the progress of Darksend
     bool StatusUpdate(int newState, int newEntriesCount, int newAccepted, int &errorID, int newSessionID=0);
 
@@ -494,7 +494,7 @@ public:
 
     /// Split up large inputs or make fee sized inputs
     bool MakeCollateralAmounts();
-    bool CreateDenominated(int64_t nTotalValue);
+    bool CreateDenominated(CAmount nTotalValue);
 
     /// Get the denominations for a list of outputs (returns a bitshifted integer)
     int GetDenominations(const std::vector<CTxOut>& vout, bool fSingleRandomDenom = false);
@@ -503,8 +503,8 @@ public:
     void GetDenominationsToString(int nDenom, std::string& strDenom);
 
     /// Get the denominations for a specific amount of dash.
-    int GetDenominationsByAmount(int64_t nAmount, int nDenomTarget=0); // is not used anymore?
-    int GetDenominationsByAmounts(std::vector<int64_t>& vecAmount);
+    int GetDenominationsByAmount(CAmount nAmount, int nDenomTarget=0); // is not used anymore?
+    int GetDenominationsByAmounts(std::vector<CAmount>& vecAmount);
 
     std::string GetMessageByID(int messageID);
 
@@ -515,7 +515,7 @@ public:
     void RelayFinalTransaction(const int sessionID, const CTransaction& txNew);
     void RelaySignaturesAnon(std::vector<CTxIn>& vin);
     void RelayInAnon(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout);
-    void RelayIn(const std::vector<CTxDSIn>& vin, const int64_t& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout);
+    void RelayIn(const std::vector<CTxDSIn>& vin, const CAmount& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout);
     void RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const int errorID=MSG_NOERR);
     void RelayCompletedTransaction(const int sessionID, const bool error, const int errorID);
 };

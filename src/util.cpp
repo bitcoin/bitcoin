@@ -119,7 +119,7 @@ bool fSucessfullyLoaded = false;
 bool fEnableDarksend = false;
 bool fDarksendMultiSession = false;
 /** All denominations used by darksend */
-std::vector<int64_t> darkSendDenominations;
+std::vector<CAmount> darkSendDenominations;
 string strBudgetMode = "";
 
 map<string, string> mapArgs;

@@ -1534,14 +1534,14 @@ double ConvertBitsToDouble(unsigned int nBits)
     return dDiff;
 }
 
-int64_t GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
+CAmount GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
 {
     double dDiff = (double)0x0000ffff / (double)(nBits & 0x00ffffff);
 
     /* fixed bug caused diff to not be correctly calculated */
     if(nHeight > 4500 || Params().NetworkID() == CBaseChainParams::TESTNET) dDiff = ConvertBitsToDouble(nBits);
 
-    int64_t nSubsidy = 0;
+    CAmount nSubsidy = 0;
     if(nHeight >= 5465) {
         if((nHeight >= 17000 && dDiff > 75) || nHeight >= 24000) { // GPU/ASIC difficulty calc
             // 2222222/(((x+2600)/9)^2)
@@ -1584,9 +1584,9 @@ int64_t GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
     return nSubsidy + nFees;
 }
 
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue)
+CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 {
-    int64_t ret = blockValue/5; // start at 20%
+    CAmount ret = blockValue/5; // start at 20%
 
     if(Params().NetworkID() == CBaseChainParams::TESTNET) {
         if(nHeight > 46000)             ret += blockValue / 20; //25% - 2014-10-07
