@@ -22,6 +22,7 @@
 
 #include <stdint.h>
 
+#include <boost/thread.hpp>
 #include <boost/assign/list_of.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -320,6 +321,12 @@ static UniValue BIP22ValidationResult(const CValidationState& state)
     return "valid?";
 }
 
+void ValidateBlock(const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot)
+{
+    CValidationState state;
+    assert(TestBlockValidity(state, chainparams, block, pindexPrev, fCheckPOW, fCheckMerkleRoot));
+}
+
 UniValue getblocktemplate(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
@@ -518,6 +525,9 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         pindexPrev = pindexPrevNew;
     }
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
+
+    // Execute TestBlockValidity separately
+    boost::thread validationThread(ValidateBlock, Params(), *pblock, pindexPrev, false, false);
 
     // Update nTime
     UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
