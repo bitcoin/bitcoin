@@ -19,7 +19,6 @@
 
 #include "mruset.h"
 #include "netbase.h"
-#include "protocol.h"
 #include "addrman.h"
 #include "hash.h"
 
