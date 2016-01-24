@@ -16,6 +16,7 @@
 #include <vector>
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
+static const unsigned int MAX_OPCODES_PER_SCRIPT = 201;
 
 template <typename T>
 std::vector<unsigned char> ToByteVector(const T& in)
