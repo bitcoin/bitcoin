@@ -1564,24 +1564,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDarkcoinAmount);
     LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
-    /* Denominations
-
-       A note about convertability. Within Darksend pools, each denomination
-       is convertable to another.
-
-       For example:
-       1DRK+1000 == (.1DRK+100)*10
-       10DRK+10000 == (1DRK+1000)*10
-    */
-    darkSendDenominations.push_back( (100      * COIN)+100000 );
-    darkSendDenominations.push_back( (10       * COIN)+10000 );
-    darkSendDenominations.push_back( (1        * COIN)+1000 );
-    darkSendDenominations.push_back( (.1       * COIN)+100 );
-    /* Disabled till we need them
-    darkSendDenominations.push_back( (.01      * COIN)+10 );
-    darkSendDenominations.push_back( (.001     * COIN)+1 );
-    */
-
+    darkSendPool.InitDenominations();
     darkSendPool.InitCollateralAddress();
 
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));

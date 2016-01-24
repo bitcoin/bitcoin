@@ -2,9 +2,10 @@
 #include "addrman.h"
 #include "protocol.h"
 #include "activemasternode.h"
-#include "masternodeman.h"
 #include "masternode.h"
+#include "masternode-sync.h"
 #include "masternodeconfig.h"
+#include "masternodeman.h"
 #include "spork.h"
 
 //

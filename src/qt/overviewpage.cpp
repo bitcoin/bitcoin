@@ -17,6 +17,7 @@
 #include "transactiontablemodel.h"
 #include "walletmodel.h"
 #include "init.h"
+#include "masternode-sync.h"
 
 #include <QAbstractItemDelegate>
 #include <QPainter>

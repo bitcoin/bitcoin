@@ -299,7 +299,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, CAmount nFe
     //spork
     if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
         //no masternode detected
-        CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
+        CMasternode* winningNode = mnodeman.GetCurrentMasterNode();
         if(winningNode){
             payee = GetScriptForDestination(winningNode->pubkey.GetID());
         } else {

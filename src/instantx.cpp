@@ -9,8 +9,9 @@
 #include "protocol.h"
 #include "instantx.h"
 #include "activemasternode.h"
-#include "masternodeman.h"
 #include "darksend.h"
+#include "masternode-sync.h"
+#include "masternodeman.h"
 #include "spork.h"
 #include <boost/lexical_cast.hpp>
 
@@ -206,7 +207,7 @@ bool IsIXTXValid(const CTransaction& txCollateral){
         return true;
     }
 
-    if(nValueIn-nValueOut < COIN*0.01) {
+    if(nValueIn-nValueOut < CENT) {
         LogPrint("instantx", "IsIXTXValid - did not include enough fees in transaction %d\n%s\n", nValueOut-nValueIn, txCollateral.ToString().c_str());
         return false;
     }

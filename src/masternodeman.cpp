@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "masternodeman.h"
-#include "masternode.h"
 #include "activemasternode.h"
 #include "darksend.h"
+#include "masternode.h"
+#include "masternode-payments.h"
+#include "masternode-sync.h"
 #include "util.h"
 #include "addrman.h"
 #include "spork.h"
@@ -454,7 +456,7 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         mn.Check();
         if(!mn.IsEnabled()) continue;
 
-        // //check protocol version
+        //check protocol version
         if(mn.protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it

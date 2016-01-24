@@ -6,10 +6,11 @@
 #include "db.h"
 #include "init.h"
 #include "activemasternode.h"
-#include "masternodeman.h"
-#include "masternode-payments.h"
 #include "masternode-budget.h"
+#include "masternode-payments.h"
+#include "masternode-sync.h"
 #include "masternodeconfig.h"
+#include "masternodeman.h"
 #include "rpcserver.h"
 #include "utilmoneystr.h"
 #include <boost/lexical_cast.hpp>

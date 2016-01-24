@@ -14,9 +14,10 @@
 #include "init.h"
 #include "instantx.h"
 #include "darksend.h"
-#include "masternodeman.h"
-#include "masternode-payments.h"
 #include "masternode-budget.h"
+#include "masternode-payments.h"
+#include "masternode-sync.h"
+#include "masternodeman.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "pow.h"
@@ -1578,7 +1579,7 @@ CAmount GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
     if(Params().NetworkID() == CBaseChainParams::TESTNET){
         if(nHeight > 77900+576) nSubsidy -= nSubsidy/10;
     } else {
-        if(nHeight > 309759+(553*33)) nSubsidy -= nSubsidy/10; // 328008 - 10.0% - September 6, 2015
+        if(nHeight > 309759+(553*33)) nSubsidy -= nSubsidy/10; // 328008 - 10.0% - 2015-08-30
     }
     
     return nSubsidy + nFees;
