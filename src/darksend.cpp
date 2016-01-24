@@ -1509,8 +1509,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             LogPrint("darksend", "  vecMasternodesUsed size %d threshold %d\n", (int)vecMasternodesUsed.size(), nThreshold);
         }
 
-        //don't use the queues all of the time for mixing
-        if(nUseQueue > 33){
+        // don't use the queues all of the time for mixing unless we are a liquidity provider
+        if(nLiquidityProvider || nUseQueue > 33){
 
             // Look through the queues and see if anything matches
             BOOST_FOREACH(CDarksendQueue& dsq, vecDarksendQueue){
