@@ -87,7 +87,7 @@ NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from 
 ```
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
-###Build and sign Bitcoin Core for Linux, Windows, and OS X:
+###Build and sign Bitcoin Classic for Linux, Windows, and OS X:
 
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
@@ -183,7 +183,7 @@ rm SHA256SUMS
 Note: check that SHA256SUMS itself doesn't end up in SHA256SUMS, which is a spurious/nonsensical entry.
 
 - Upload zips and installers, as well as `SHA256SUMS.asc` from last step, to the bitcoin.org server
-  into `/var/www/bin/bitcoin-core-${VERSION}`
+  into `/var/www/bin/bitcoin-classic-${VERSION}`
 
 - Update bitcoin.org version
 

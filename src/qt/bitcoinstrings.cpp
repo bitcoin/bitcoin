@@ -33,7 +33,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "notation for IPv6. This option can be specified multiple times (default: "
 "bind to all interfaces)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Cannot obtain a lock on data directory %s. Bitcoin Core is probably already "
+"Cannot obtain a lock on data directory %s. Bitcoin Classic is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Create new files with system default permissions, instead of umask 077 (only "
@@ -146,7 +146,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = "
 "no limit (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Unable to bind to %s on this computer. Bitcoin Core is probably already "
+"Unable to bind to %s on this computer. Bitcoin Classic is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Unsupported argument -socks found. Setting SOCKS version isn't possible "

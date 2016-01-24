@@ -227,11 +227,11 @@ const std::vector<std::string> &getAllNetMessageTypes();
 /** nServices flags */
 enum {
     // NODE_NETWORK means that the node is capable of serving the block chain. It is currently
-    // set by all Bitcoin Core nodes, and is unset by SPV clients or other peers that just want
+    // set by all Bitcoin Classic nodes, and is unset by SPV clients or other peers that just want
     // network services but don't provide them.
     NODE_NETWORK = (1 << 0),
     // NODE_GETUTXO means the node is capable of responding to the getutxo protocol request.
-    // Bitcoin Core does not support this but a patch set called Bitcoin XT does.
+    // Bitcoin Classic does not support this but a patch set called Bitcoin XT does.
     // See BIP 64 for details on how this is implemented.
     NODE_GETUTXO = (1 << 1),
     // NODE_BLOOM means the node is capable and willing to handle bloom-filtered connections.

@@ -54,7 +54,7 @@ System requirements
 --------------------
 
 C++ compilers are memory-hungry. It is recommended to have at least 1 GB of
-memory available when compiling Bitcoin Core. With 512MB of memory or less
+memory available when compiling Bitcoin Classic. With 512MB of memory or less
 compilation will take much longer due to swap thrashing.
 
 Dependency Build Instructions: Ubuntu & Debian
@@ -159,7 +159,7 @@ cd db-4.8.30.NC/build_unix/
 ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 make install
 
-# Configure Bitcoin Core to use our own-built instance of BDB
+# Configure Bitcoin Classic to use our own-built instance of BDB
 cd $BITCOIN_ROOT
 ./autogen.sh
 ./configure LDFLAGS="-L${BDB_PREFIX}/lib/" CPPFLAGS="-I${BDB_PREFIX}/include/" # (other args...)

@@ -4,7 +4,7 @@ Gitian building
 *Setup instructions for a Gitian build of Bitcoin using a Debian VM or physical system.*
 
 Gitian is the deterministic build process that is used to build the Bitcoin
-Core executables. It provides a way to be reasonably sure that the
+Classic executables. It provides a way to be reasonably sure that the
 executables are really built from the source on GitHub. It also makes sure that
 the same, tested dependencies are used and statically built into the executable.
 
