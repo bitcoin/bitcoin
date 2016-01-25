@@ -9,10 +9,25 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 #include "crypto/common.h"
+#include "sph_keccak.h"
+#include "streams.h"
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    if (nTime < 0x57100000)  // 2016 Apr 14 20:39:28 UTC
+        return SerializeHash(*this);
+
+    CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
+    ss << *this;
+
+    sph_keccak256_context ctx_keccak;
+    uint256 hash;
+
+    sph_keccak256_init(&ctx_keccak);
+    sph_keccak256(&ctx_keccak, (void*)&*ss.begin(), ss.size());
+    sph_keccak256_close(&ctx_keccak, static_cast<void*>(&hash));
+
+    return hash;
 }
 
 std::string CBlock::ToString() const

@@ -142,6 +142,8 @@ BITCOIN_CORE_H = \
   script/sign.h \
   script/standard.h \
   serialize.h \
+  sph_types.h \
+  sph_keccak.h \
   streams.h \
   support/allocators/secure.h \
   support/allocators/zeroafterfree.h \
@@ -276,6 +278,7 @@ libbitcoin_common_a_SOURCES = \
   core_read.cpp \
   core_write.cpp \
   hash.cpp \
+  keccak.cpp \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
