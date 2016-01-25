@@ -24,6 +24,15 @@ import subprocess
 GIT = os.getenv('GIT','git')
 BASH = os.getenv('BASH','bash')
 
+# OS specific configuration for terminal attributes
+ATTR_RESET = ''
+ATTR_PR = ''
+COMMIT_FORMAT = '%h %s (%an)%d'
+if os.name == 'posix': # if posix, assume we can use basic terminal escapes
+    ATTR_RESET = '\033[0m'
+    ATTR_PR = '\033[1;36m'
+    COMMIT_FORMAT = '%C(bold blue)%h%Creset %s %C(cyan)(%an)%Creset%C(green)%d%Creset'
+
 def git_config_get(option, default=None):
     '''
     Get named configuration option from git repository.
@@ -150,6 +159,9 @@ def main():
             print("ERROR: Creating merge failed (already merged?).",file=stderr)
             exit(4)
 
+        print('%s#%s%s %s' % (ATTR_RESET+ATTR_PR,pull,ATTR_RESET,title))
+        subprocess.check_call([GIT,'log','--graph','--topo-order','--pretty=format:'+COMMIT_FORMAT,base_branch+'..'+head_branch])
+        print()
         # Run test command if configured.
         if testcmd:
             # Go up to the repository's root.
