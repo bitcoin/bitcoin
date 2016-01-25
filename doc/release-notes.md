@@ -268,7 +268,7 @@ Wallet: Pruning
 
 With 0.12 it is possible to use wallet functionality in pruned mode.
 This can reduce the disk usage from currently around 60 GB to
-less than 1 GB.
+less than 2 GB.
 
 However, rescans as well as the RPCs `importwallet`, `importaddress`,
 `importprivkey` are disabled.
