@@ -1,110 +1,96 @@
-Contributing to Bitcoin Core
-============================
+# Contributing to Bitcoin Classic
 
-The Bitcoin Core project operates an open contributor model where anyone is welcome to contribute towards development in the form of peer review, testing and patches. This document explains the practical process and guidelines for contributing.
+Bitcoin Classic is hard forking bitcoin to a 2 MB blocksize limit. Please come and join us.
 
-Firstly in terms of structure, there is no particular concept of “Core developers” in the sense of privileged people. Open source often naturally revolves around meritocracy where longer term contributors gain more trust from the developer community. However, some hierarchy is necessary for practical purposes. As such there are repository “maintainers” who are responsible for merging pull requests as well as a “lead maintainer” who is responsible for the release cycle, overall merging, moderation and appointment of maintainers.
+ - [Contribution Guidelines](#contribution-guidelines)
+ - [Communication](#communication)
+ - [Merge Window](#merge-window)
+ - [Consider.it](#considerit)
+ - [Code of Conduct](#codeofconduct)
 
+## <a name="contribution-guidelines"></a> Contribution Guidelines
 
-Contributor Workflow
---------------------
+**Any change to Bitcoin must be respected by 3 groups:**
 
-The codebase is maintained using the “contributor workflow” where everyone without exception contributes patch proposals using “pull requests”. This facilitates social contribution, easy testing and peer review.
+- Developers: which implement changes
+- Miners: which give them computation
+- Users: which give them value
 
-To contribute a patch, the workflow is as follows:
+**We accept pull requests using this rubric:**
 
-  - Fork repository
-  - Create topic branch
-  - Commit patches
+- All pull requests must be within the [merge window](#merge-window).
+- If the pull request has a majority on [consider.it](https://bitcoinclassic.consider.it/). All pull requests must have a vote. A proposal that does not have majority support on [consider.it](#considerit) can be closed at any time by the maintainers.
+- If both Miners and Users want a feature, then we will accept the best pull request for that feature that Developers have implemented
+- If both Miners and Users reject a feature, we will reject pull requests for it.
+- A proposal is in conflict if: (1) Miners and Users disagree on it, or (2) another approved proposal disagrees with it. Github committers can break a tie until Miners and Users resolve their conflicts.
+- If two or more voter-approved pull requests conflict either in code or on concept, then a run-off vote will be held comparing the conflicts.
+- If either miners or users reject a pull request, it cannot be merged until such rejection is resolved.
+- A proposal is in limbo if no Miners or Users have given an opinion. Github committers are free to act on any pull request in limbo, but may have to change their action if the proposal receives the missing votes.
+- Any pull request can be removed for violation of these guidelines.
 
-The project coding conventions in [doc/developer-notes.md](doc/developer-notes.md) must be adhered to.
+Github committers do the actual merging of pull requests and create the official releases. If voters change their mind, committers will un-merge the pull request or reopen a pull request. Please remember to read through pull requests before submitting your own to avoid conflicting requests. 
 
-In general [commits should be atomic](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention) and diffs should be easy to read. For this reason do not mix any formatting fixes or code moves with actual code changes.
+Issues are to be submitted [here](https://github.com/bitcoinclassic/bitcoinclassic/issues).
 
-Commit messages should be verbose by default consisting of a short subject line (50 chars max), a blank line and detailed explanatory text as separate paragraph(s); unless the title alone is self-explanatory (like "Corrected typo in main.cpp") then a single title line is sufficient. Commit messages should be helpful to people reading your code in the future, so explain the reasoning for your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
+## <a name="communication"></a> Communication
+Bitcoin Classic is designed to allow users, miners, and developers to express their opinions equally and transparently. To do so, multiple channels of communication have been set up, see below.
 
-If a particular commit references another issue, please add the reference, for example "refs #1234", or "fixes #4321". Using "fixes or closes" keywords will cause the corresponding issue to be closed when the pull request is merged.
+- [Slack Channel](http://invite.bitcoinclassic.com/)
+- [Subreddit](https://www.reddit.com/r/bitcoin_classic)
+- [Consider.it](https://bitcoinclassic.consider.it/)
 
-Please refer to the [Git manual](https://git-scm.com/doc) for more information about Git.
+## <a name="merge-window"></a> Merge Window
+Using merge windows allows Bitcoin Classic to remain focused on specific issues at hand without distraction. A merge window decides the focus of development for the continuation of that window. In this window, code which is deemed to be sufficiently stable (and which is accepted by the community) is merged. Merge windows will be closed based on a vote via [consider.it](https://bitcoinclassic.consider.it/) and another vote will be held to open the next merge window. For details on the current merge window see below.
 
-  - Push changes to your fork
-  - Create pull request
+ - `Hard fork bitcoin to a 2 MB blocksize limit.`
+ - `2 MB Test Net`
+ - `Consensus Rule changes - O(n^2) protections`
+ - `Activication / versionbits code`
 
-The title of the pull request should be prefixed by the component or area that the pull request affects. Examples:
+Emergencies and bug fixes are outside the scope of merge windows.
 
-    Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
-    Net: Automatically create hidden service, listen on Tor
-    Qt: Add feed bump button
-    Trivial: fix typo
+## <a name="considerit"></a> Consider.it
+By voting on issues, Bitcoin Classic aims to create a collective deliberation among all those using this implementation. Every vote must be respected by 3 groups: users, miners, and developers. **The votes are interpreted as such:**
 
-If a pull request is specifically not to be considered for merging (yet) please prefix the title with [WIP] or use [Tasks Lists](https://github.com/blog/1375-task-lists-in-gfm-issues-pulls-comments) in the body of the pull request to indicate tasks are pending.
+- Each vote goes from -1 to 1, with 0 at neutral/undecided
+- In the Miner vote, each Miner's vote is multiplied by their hashpower
+- Only verified users have votes.
 
-The body of the pull request should contain enough description about what the patch does together with any justification/reasoning. You should include references to any discussions (for example other tickets or mailing list discussions).
+As voting is a continuous process, all voters are encouraged to vote for a pull request only if they believe it has been thoroughly tested, reviewed, and fitting of any other criteria the voter holds fit. If any vote is found to be subject of vote manipulation the vote will be considered void.
 
-At this stage one should expect comments and review from other contributors. You can add more commits to your pull request by committing them locally and pushing to your fork until you have satisfied all feedback. If your pull request is accepted for merging, you may be asked by a maintainer to squash and or rebase your commits before it will be merged. The length of time required for peer review is unpredictable and will vary from patch to patch.
+## <a name="codeofconduct"></a> Code of Conduct
 
+We want a productive, happy and agile community that can welcome new ideas in a complex field, improve every process every year, and foster collaboration between groups with very different needs, interests and skills. We gain strength from diversity, and actively seek participation from those who enhance it. This code of conduct exists to ensure that diverse groups collaborate to mutual advantage and enjoyment. We will challenge prejudice that could jeopardise the participation of any person in the project.
 
-Pull Request Philosophy
------------------------
+The Code of Conduct governs how we behave in public or in private whenever the project will be judged by our actions. We expect it to be honoured by everyone who represents the project officially or informally, claims affiliation with the project, or participates directly.
 
-Patchsets should always be focused. For example, a pull request could add a feature, fix a bug, or refactor code; but not a mixture. Please also avoid super pull requests which attempt to do too much, are overly large, or overly complex as this makes review difficult.
+**We strive to:**
 
+- Be considerate
+	- Our work will be used by other people, and we, in turn, will depend on the work of others. Any decision we take will affect users and colleagues, and we should consider them when making decisions.
 
-###Features
+- Be respectful
+	- Disagreement is no excuse for poor manners. We work together to resolve conflict, assume good intentions and do our best to act in an empathic fashion. We don't allow frustration to turn into a personal attack. A community where people feel uncomfortable or threatened is not a productive one.
 
-When adding a new feature, thought must be given to the long term technical debt and maintenance that feature may require after inclusion. Before proposing a new feature that will require maintenance, please consider if you are willing to maintain it (including bug fixing). If features get orphaned with no maintainer in the future, they may be removed by the Repository Maintainer.
+- Take responsibility for our words and our actions
+	- We can all make mistakes; when we do, we take responsibility for them. If someone has been harmed or offended, we listen carefully and respectfully, and work to right the wrong.
 
+- Be collaborative
+	- What we produce is a complex whole made of many parts, it is the sum of many dreams. Collaboration between teams that each have their own goal and vision is essential; for the whole to be more than the sum of its parts, each part must make an effort to understand the whole.
+	Collaboration reduces redundancy and improves the quality of our work. Internally and externally, we celebrate good collaboration. Wherever possible, we work closely with upstream projects and others in the Bitcoin community to coordinate our efforts. We prefer to work transparently and involve interested parties as early as possible.
 
-###Refactoring
+- Value decisiveness, clarity and consensus
+	- Disagreements, social and technical, are normal, but we do not allow them to persist and fester leaving others uncertain of the agreed direction.
+	We expect participants in the project to resolve disagreements constructively. When they cannot, we escalate the matter to structures with designated leaders to arbitrate and provide clarity and direction.
 
-Refactoring is a necessary part of any software project's evolution. The following guidelines cover refactoring pull requests for the project.
+- Ask for help when unsure
+	- Nobody is expected to be perfect in this community. Asking questions early avoids many problems later, so questions are encouraged, though they may be directed to the appropriate forum. Those who are asked should be responsive and helpful.
 
-There are three categories of refactoring, code only moves, code style fixes, code refactoring. In general refactoring pull requests should not mix these three kinds of activity in order to make refactoring pull requests easy to review and uncontroversial. In all cases, refactoring PRs must not change the behaviour of code within the pull request (bugs must be preserved as is).
+- Step down considerately
+	- When somebody leaves or disengages from the project, we ask that they do so in a way that minimises disruption to the project. They should tell people they are leaving and take the proper steps to ensure that others can pick up where they left off.
 
-Project maintainers aim for a quick turnaround on refactoring pull requests, so where possible keep them short, uncomplex and easy to verify. 
+**Conflicts of interest**
 
+We expect leaders to be aware when they are in conflict due to employment or other projects they are involved in and abstain or delegate decisions that may be seen to be self-interested. We expect that everyone who participates in the project does so with the goal of making life better for its users. When in doubt, ask for a second opinion. Perceived conflicts of interest are important to address; as a leader, act to ensure that decisions are credible even if they must occasionally be unpopular, difficult or favourable to the interests of one group over another.
 
-"Decision Making" Process
--------------------------
-
-The following applies to code changes to the Bitcoin Core project (and related projects such as libsecp256k1), and is not to be confused with overall Bitcoin Network Protocol consensus changes.
-
-Whether a pull request is merged into Bitcoin Core rests with the project merge maintainers and ultimately the project lead. 
-
-Maintainers will take into consideration if a patch is in line with the general principles of the project; meets the minimum standards for inclusion; and will judge the general consensus of contributors.
-
-In general, all pull requests must:
-
-  - have a clear use case, fix a demonstrable bug or serve the greater good of the project (for example refactoring for modularisation);
-  - be well peer reviewed;
-  - have unit tests and functional tests where appropriate;
-  - follow code style guidelines;
-  - not break the existing test suite;
-  - where bugs are fixed, where possible, there should be unit tests demonstrating the bug and also proving the fix. This helps prevent regression.
-
-Patches that change Bitcoin consensus rules are considerably more involved than normal because they affect the entire ecosystem and so must be preceded by extensive mailing list discussions and have a numbered BIP. While each case will be different, one should be prepared to expend more time and effort than for other kinds of patches because of increased peer review and consensus building requirements.
-
-
-###Peer Review
-
-Anyone may participate in peer review which is expressed by comments in the pull request. Typically reviewers will review the code for obvious errors, as well as test out the patch set and opine on the technical merits of the patch. Project maintainers take into account the peer review when determining if there is consensus to merge a pull request (remember that discussions may have been spread out over github, mailing list and IRC discussions). The following language is used within pull-request comments:
-
-  - ACK means "I have tested the code and I agree it should be merged";
-  - NACK means "I disagree this should be merged", and must be accompanied by sound technical justification. NACKs without accompanying reasoning may be disregarded;
-  - utACK means "I have not tested the code, but I have reviewed it and it looks OK, I agree it can be merged";
-  - Concept ACK means "I agree in the general principle of this pull request";
-  - Nit refers to trivial, often non-blocking issues.
-
-Reviewers should include the commit hash which they reviewed in their comments.
-
-Project maintainers reserve the right to weigh the opinions of peer reviewers using common sense judgement and also may weight based on meritocracy: Those that have demonstrated a deeper commitment and understanding towards the project (over time) or have clear domain expertise may naturally have more weight, as one would expect in all walks of life.
-
-Where a patch set affects consensus critical code, the bar will be set much higher in terms of discussion and peer review requirements, keeping in mind that mistakes could be very costly to the wider community. This includes refactoring of consensus critical code.
-
-Where a patch set proposes to change the Bitcoin consensus, it must have been discussed extensively on the mailing list and IRC, be accompanied by a widely discussed BIP and have a generally widely perceived technical consensus of being a worthwhile change based on the judgement of the maintainers.
-
-
-Release Policy
---------------
-
-The project leader is the release manager for each Bitcoin Core release.
+This Code is not exhaustive or complete. It is not a rulebook; it serves to distil our common understanding of a collaborative, shared environment and goals. We expect it to be followed in spirit as much as in the letter.
