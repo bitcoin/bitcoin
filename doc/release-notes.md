@@ -267,12 +267,23 @@ Wallet: Pruning
 ---------------
 
 With 0.12 it is possible to use wallet functionality in pruned mode.
+This can reduce the disk usage from currently around 60 GB to
+less than 1 GB.
+
 However, rescans as well as the RPCs `importwallet`, `importaddress`,
 `importprivkey` are disabled.
 
 To enable block pruning set `prune=<N>` on the command line or in
 `bitcoin.conf`, where `N` is the number of MiB to allot for
 raw block & undo data.
+
+A value of 0 disables pruning. The minimal value above 0 is 550. Your
+wallet is as secure with high values as it is with low ones. Higher
+values merely reduce the network traffic in case of reorganization of
+the blockchain. In future releases, a higher value may also help the
+network as a whole: The stored blocks could be served to other nodes.
+Currently, nodes with pruning enabled do not serve block data at all
+and thus could be considered as "leechers".
 
 `NODE_BLOOM` service bit
 ------------------------
