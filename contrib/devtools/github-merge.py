@@ -165,7 +165,7 @@ def main():
         # Run test command if configured.
         if testcmd:
             # Go up to the repository's root.
-            toplevel = subprocess.check_output([GIT,'rev-parse','--show-toplevel'])
+            toplevel = subprocess.check_output([GIT,'rev-parse','--show-toplevel']).strip()
             os.chdir(toplevel)
             if subprocess.call(testcmd,shell=True):
                 print("ERROR: Running %s failed." % testcmd,file=stderr)
