@@ -130,8 +130,8 @@ size of unconfirmed transaction chains that are allowed in the mempool
 total size of 101 KB).  These limits can be overriden using command line
 arguments; see the extended help (`--help -help-debug`) for more information.
 
-Replace-by-fee transactions
----------------------------
+Opt-in Replace-by-fee transactions
+----------------------------------
 
 It is now possible to replace transactions in the transaction memory pool of
 Bitcoin Core 0.12 nodes. Bitcoin Core will only replace transactions which
