@@ -282,8 +282,6 @@ wallet is as secure with high values as it is with low ones. Higher
 values merely reduce the network traffic in case of reorganization of
 the blockchain. In future releases, a higher value may also help the
 network as a whole: The stored blocks could be served to other nodes.
-Currently, nodes with pruning enabled do not serve block data at all
-and thus could be considered as "leechers".
 
 `NODE_BLOOM` service bit
 ------------------------
