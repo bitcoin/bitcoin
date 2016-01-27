@@ -144,6 +144,24 @@ calculating the target.
 A more detailed documentation about keeping traffic low can be found in
 [/doc/reduce-traffic.md](/doc/reduce-traffic.md).
 
+Wallet: Negative confirmations and conflict detection
+-----------------------------------------------------
+
+The wallet will now report a negative number for confirmations that indicates
+how deep in the block chain the conflict is found. For example, if a transaction
+A has 5 confirmations and spends the same input as a wallet transaction B, B
+will be reported as having -5 confirmations. If another wallet transaction C
+spends an output from B, it will also be reported as having -5 confirmations.
+To detect conflicts with historical transactions in the chain a one-time
+`-rescan` may be needed.
+
+Unlike earlier versions, unconfirmed but non-conflicting transactions will never
+get a negative confirmation count. They are not treated as spendable unless
+they're coming from ourself (change) and accepted into our local mempool,
+however. The new "trusted" field in the `listtransactions` RPC output
+indicates whether outputs of an unconfirmed transaction are considered
+spendable.
+
 Automatically use Tor hidden services
 -------------------------------------
 
@@ -282,24 +300,6 @@ Furthermore, Bitcoin Core will never create transactions smaller than
 the current minimum relay fee.
 Finally, a user can set the minimum fee rate for all transactions with
 `-mintxfee=<i>`, which defaults to 1000 satoshis per kB.
-
-Wallet: Negative confirmations and conflict detection
------------------------------------------------------
-
-The wallet will now report a negative number for confirmations that indicates
-how deep in the block chain the conflict is found. For example, if a transaction
-A has 5 confirmations and spends the same input as a wallet transaction B, B
-will be reported as having -5 confirmations. If another wallet transaction C
-spends an output from B, it will also be reported as having -5 confirmations.
-To detect conflicts with historical transactions in the chain a one-time
-`-rescan` may be needed.
-
-Unlike earlier versions, unconfirmed but non-conflicting transactions will never
-get a negative confirmation count. They are not treated as spendable unless
-they're coming from ourself (change) and accepted into our local mempool,
-however. The new "trusted" field in the `listtransactions` RPC output
-indicates whether outputs of an unconfirmed transaction are considered
-spendable.
 
 Wallet: Merkle branches removed
 -------------------------------
