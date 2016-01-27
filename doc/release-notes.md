@@ -144,6 +144,24 @@ calculating the target.
 A more detailed documentation about keeping traffic low can be found in
 [/doc/reduce-traffic.md](/doc/reduce-traffic.md).
 
+Automatically use Tor hidden services
+-------------------------------------
+
+Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
+API, to create and destroy 'ephemeral' hidden services programmatically.
+Bitcoin Core has been updated to make use of this.
+
+This means that if Tor is running (and proper authorization is available),
+Bitcoin Core automatically creates a hidden service to listen on, without
+manual configuration. Bitcoin Core will also use Tor automatically to connect
+to other .onion nodes if the control socket can be successfully opened. This
+will positively affect the number of available .onion nodes and their usage.
+
+This new feature is enabled by default if Bitcoin Core is listening, and
+a connection to Tor can be made. It can be configured with the `-listenonion`,
+`-torcontrol` and `-torpassword` settings. To show verbose debugging
+information, pass `-debug=tor`.
+
 Direct headers announcement (BIP 130)
 -------------------------------------
 
@@ -229,24 +247,6 @@ coin age of inputs that were in the blockchain at the time the transaction
 was accepted into the mempool.  In addition priority transactions are not
 accepted to the mempool if mempool limiting has triggered a higher effective
 minimum relay fee.
-
-Automatically use Tor hidden services
--------------------------------------
-
-Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
-API, to create and destroy 'ephemeral' hidden services programmatically.
-Bitcoin Core has been updated to make use of this.
-
-This means that if Tor is running (and proper authorization is available),
-Bitcoin Core automatically creates a hidden service to listen on, without
-manual configuration. Bitcoin Core will also use Tor automatically to connect
-to other .onion nodes if the control socket can be successfully opened. This
-will positively affect the number of available .onion nodes and their usage.
-
-This new feature is enabled by default if Bitcoin Core is listening, and
-a connection to Tor can be made. It can be configured with the `-listenonion`,
-`-torcontrol` and `-torpassword` settings. To show verbose debugging
-information, pass `-debug=tor`.
 
 Notifications through ZMQ
 -------------------------
