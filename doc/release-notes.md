@@ -222,7 +222,6 @@ BIP125 ("bip125-replaceable").
 Note that the wallet in Bitcoin Core 0.12 does not yet have support for
 creating transactions that would be replaceable under BIP 125.
 
-
 RPC: Random-cookie RPC authentication
 ---------------------------------------
 
