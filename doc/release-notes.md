@@ -96,6 +96,32 @@ as a whole: stored blocks could be served to other nodes.
 For further information about pruning, you may also consult the [release
 notes of v0.11.0](https://github.com/bitcoin/bitcoin/blob/v0.11.0/doc/release-notes.md#block-file-pruning).
 
+Memory pool limiting
+--------------------
+
+Previous versions of Bitcoin Core had their mempool limited by checking
+a transaction's fees against the node's minimum relay fee. There was no
+upper bound on the size of the mempool and attackers could send a large
+number of transactions paying just slighly more than the default minimum
+relay fee to crash nodes with relatively low RAM. A temporary workaround
+for previous versions of Bitcoin Core was to raise the default minimum
+relay fee.
+
+Bitcoin Core 0.12 will have a strict maximum size on the mempool. The
+default value is 300 MB and can be configured with the `-maxmempool`
+parameter. Whenever a transaction would cause the mempool to exceed
+its maximum size, the transaction that (along with in-mempool descendants) has
+the lowest total feerate (as a package) will be evicted and the node's effective
+minimum relay feerate will be increased to match this feerate plus the initial
+minimum relay feerate. The initial minimum relay feerate is set to
+1000 satoshis per kB.
+
+Bitcoin Core 0.12 also introduces new default policy limits on the length and
+size of unconfirmed transaction chains that are allowed in the mempool
+(generally limiting the length of unconfirmed chains to 25 transactions, with a
+total size of 101 KB).  These limits can be overriden using command line
+arguments; see the extended help (`--help -help-debug`) for more information.
+
 Reduce upload traffic
 ---------------------
 
@@ -130,32 +156,6 @@ can often prevent an extra roundtrip before the actual block is downloaded.
 
 With this change, pruning nodes are now able to relay new blocks to compatible
 peers.
-
-Memory pool limiting
---------------------
-
-Previous versions of Bitcoin Core had their mempool limited by checking
-a transaction's fees against the node's minimum relay fee. There was no
-upper bound on the size of the mempool and attackers could send a large
-number of transactions paying just slighly more than the default minimum
-relay fee to crash nodes with relatively low RAM. A temporary workaround
-for previous versions of Bitcoin Core was to raise the default minimum
-relay fee.
-
-Bitcoin Core 0.12 will have a strict maximum size on the mempool. The
-default value is 300 MB and can be configured with the `-maxmempool`
-parameter. Whenever a transaction would cause the mempool to exceed
-its maximum size, the transaction that (along with in-mempool descendants) has
-the lowest total feerate (as a package) will be evicted and the node's effective
-minimum relay feerate will be increased to match this feerate plus the initial
-minimum relay feerate. The initial minimum relay feerate is set to
-1000 satoshis per kB.
-
-Bitcoin Core 0.12 also introduces new default policy limits on the length and
-size of unconfirmed transaction chains that are allowed in the mempool
-(generally limiting the length of unconfirmed chains to 25 transactions, with a
-total size of 101 KB).  These limits can be overriden using command line
-arguments; see the extended help (`--help -help-debug`) for more information.
 
 Opt-in Replace-by-fee transactions
 ----------------------------------
