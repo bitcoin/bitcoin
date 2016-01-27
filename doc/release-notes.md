@@ -281,9 +281,8 @@ A value of 0 disables pruning. The minimal value above 0 is 550. Your
 wallet is as secure with high values as it is with low ones. Higher
 values merely ensure that your node will not shut down upon blockchain
 reorganizations of more than 2 days - which are unlikely to happen in
-practice unless there is a hard fork. In future releases, a higher value
-may also help the network as a whole: stored blocks could be served to
-other nodes.
+practice. In future releases, a higher value may also help the network
+as a whole: stored blocks could be served to other nodes.
 
 For further information about pruning, you may also consult the [release
 notes of v0.11.0](https://github.com/bitcoin/bitcoin/blob/v0.11.0/doc/release-notes.md#block-file-pruning).
