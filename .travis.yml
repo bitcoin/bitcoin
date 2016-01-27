@@ -15,7 +15,7 @@ env:
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
     - CCACHE_COMPRESS=1
     - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
-    - SDK_URL=https://bitcoincore.org/depends-sources/sdks
+    - SDK_URL=https://dash.org/depends-sources/sdks
 cache:
   apt: true
   directories:
