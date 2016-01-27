@@ -72,6 +72,30 @@ Libsecp256k1 has undergone very extensive testing and validation.
 
 A side effect of this change is that libconsensus no longer depends on OpenSSL.
 
+Wallet: Pruning
+---------------
+
+With 0.12 it is possible to use wallet functionality in pruned mode.
+This can reduce the disk usage from currently around 60 GB to
+around 2 GB.
+
+However, rescans as well as the RPCs `importwallet`, `importaddress`,
+`importprivkey` are disabled.
+
+To enable block pruning set `prune=<N>` on the command line or in
+`bitcoin.conf`, where `N` is the number of MiB to allot for
+raw block & undo data.
+
+A value of 0 disables pruning. The minimal value above 0 is 550. Your
+wallet is as secure with high values as it is with low ones. Higher
+values merely ensure that your node will not shut down upon blockchain
+reorganizations of more than 2 days - which are unlikely to happen in
+practice. In future releases, a higher value may also help the network
+as a whole: stored blocks could be served to other nodes.
+
+For further information about pruning, you may also consult the [release
+notes of v0.11.0](https://github.com/bitcoin/bitcoin/blob/v0.11.0/doc/release-notes.md#block-file-pruning).
+
 Reduce upload traffic
 ---------------------
 
@@ -285,30 +309,6 @@ presence in blocks. This wasn't being used for more than an expensive
 sanity check. Since 0.12, these are no longer stored. When loading a
 0.12 wallet into an older version, it will automatically rescan to avoid
 failed checks.
-
-Wallet: Pruning
----------------
-
-With 0.12 it is possible to use wallet functionality in pruned mode.
-This can reduce the disk usage from currently around 60 GB to
-around 2 GB.
-
-However, rescans as well as the RPCs `importwallet`, `importaddress`,
-`importprivkey` are disabled.
-
-To enable block pruning set `prune=<N>` on the command line or in
-`bitcoin.conf`, where `N` is the number of MiB to allot for
-raw block & undo data.
-
-A value of 0 disables pruning. The minimal value above 0 is 550. Your
-wallet is as secure with high values as it is with low ones. Higher
-values merely ensure that your node will not shut down upon blockchain
-reorganizations of more than 2 days - which are unlikely to happen in
-practice. In future releases, a higher value may also help the network
-as a whole: stored blocks could be served to other nodes.
-
-For further information about pruning, you may also consult the [release
-notes of v0.11.0](https://github.com/bitcoin/bitcoin/blob/v0.11.0/doc/release-notes.md#block-file-pruning).
 
 `NODE_BLOOM` service bit
 ------------------------
