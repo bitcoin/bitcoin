@@ -3,167 +3,249 @@
 # Generate seeds.txt from Pieter's DNS seeder
 #
 
-NSEEDS=512
+import collections
+import dns.resolver
+import logging
+import re
+import socket
+import struct
+import sys
+from itertools import islice
+from UserDict import UserDict
 
-MAX_SEEDS_PER_ASN=2
 
+MAX_ENTRIES = 512
+MAX_ENTRIES_PER_ASN = 2
 MIN_BLOCKS = 337600
+
+PATTERN_IPV4 = re.compile(
+        r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
+PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
+PATTERN_ONION = re.compile(
+        r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):(\d+)$")
+PATTERN_AGENT = re.compile(
+        r"^(\/Satoshi:0\.8\.6\/|"
+        r"\/Satoshi:0\.9\.(2|3|4|5)\/|"
+        r"\/Satoshi:0\.10\.\d{1,2}\/|"
+        r"\/Satoshi:0\.11\.\d{1,2}\/)$")
+
 
 # These are hosts that have been observed to be behaving strangely (e.g.
 # aggressively connecting to every node).
-SUSPICIOUS_HOSTS = set([
-    "130.211.129.106", "178.63.107.226",
-    "83.81.130.26", "88.198.17.7", "148.251.238.178", "176.9.46.6",
-    "54.173.72.127", "54.174.10.182", "54.183.64.54", "54.194.231.211",
-    "54.66.214.167", "54.66.220.137", "54.67.33.14", "54.77.251.214",
-    "54.94.195.96", "54.94.200.247"
-])
+with open('suspicious_hosts.txt') as f:
+    SUSPICIOUS_HOSTS = set(f.readlines())
 
-import re
-import sys
-import dns.resolver
-import collections
 
-PATTERN_IPV4 = re.compile(r"^((\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})):(\d+)$")
-PATTERN_IPV6 = re.compile(r"^\[([0-9a-z:]+)\]:(\d+)$")
-PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):(\d+)$")
-PATTERN_AGENT = re.compile(r"^(\/Satoshi:0\.8\.6\/|\/Satoshi:0\.9\.(2|3|4|5)\/|\/Satoshi:0\.10\.\d{1,2}\/|\/Satoshi:0\.11\.\d{1,2}\/)$")
+class Address(object):
 
-def parseline(line):
-    sline = line.split()
-    if len(sline) < 11:
-       return None
-    m = PATTERN_IPV4.match(sline[0])
-    sortkey = None
-    ip = None
-    if m is None:
-        m = PATTERN_IPV6.match(sline[0])
-        if m is None:
-            m = PATTERN_ONION.match(sline[0])
-            if m is None:
-                return None
-            else:
-                net = 'onion'
-                ipstr = sortkey = m.group(1)
-                port = int(m.group(2))
-        else:
-            net = 'ipv6'
-            if m.group(1) in ['::']: # Not interested in localhost
-                return None
-            ipstr = m.group(1)
-            sortkey = ipstr # XXX parse IPv6 into number, could use name_to_ipv6 from generate-seeds
-            port = int(m.group(2))
-    else:
-        # Do IPv4 sanity check
-        ip = 0
-        for i in range(0,4):
-            if int(m.group(i+2)) < 0 or int(m.group(i+2)) > 255:
-                return None
-            ip = ip + (int(m.group(i+2)) << (8*(3-i)))
-        if ip == 0:
+    PATTERNS = {'ipv4': PATTERN_IPV4,
+                'ipv6': PATTERN_IPV6,
+                'onion': PATTERN_ONION}
+
+    INET_FORMATS = {'ipv4': (socket.AF_INET, '!L'),
+                    'ipv6': (socket.AF_INET6, '!QQ')}
+
+    def __init__(self, host, port, address_type, sortable_host):
+        self.host = host
+        self.port = port
+        self.address_type = address_type
+        self.sortable_host = sortable_host
+
+    @property
+    def asn(self):
+        if hasattr(self, '_asn'):
+            return self._asn
+
+    def get_asn(self):
+        """Discover the ASN (Autonomous System Number) for this entry.
+
+        This also caches the value to avoid future DNS requests."""
+        if self.address_type == 'onion':
             return None
-        net = 'ipv4'
-        sortkey = ip
-        ipstr = m.group(1)
-        port = int(m.group(6))
-    # Skip bad results.
-    if sline[1] == 0:
+
+        if self.address_type == 'ipv4':
+            reversed_ip = '.'.join(reversed(self.host.split('.')))
+            domain = reversed_ip + '.origin.asn.cymru.com'
+            try:
+                answer = dns.resolver.query(domain, 'TXT').response.answer[0][0]
+                self._asn = int(answer.strings[0].split('|')[0])
+            except:
+                return None
+
+            return self._asn
+
         return None
-    # Extract uptime %.
-    uptime30 = float(sline[7][:-1])
-    # Extract Unix timestamp of last success.
-    lastsuccess = int(sline[2])
-    # Extract protocol version.
-    version = int(sline[10])
-    # Extract user agent.
-    agent = sline[11][1:-1]
-    # Extract service flags.
-    service = int(sline[9], 16)
-    # Extract blocks.
-    blocks = int(sline[8])
-    # Construct result.
-    return {
-        'net': net,
-        'ip': ipstr,
-        'port': port,
-        'ipnum': ip,
-        'uptime': uptime30,
-        'lastsuccess': lastsuccess,
-        'version': version,
-        'agent': agent,
-        'service': service,
-        'blocks': blocks,
-        'sortkey': sortkey,
-    }
 
-def filtermultiport(ips):
-    '''Filter out hosts with more nodes per IP'''
-    hist = collections.defaultdict(list)
-    for ip in ips:
-        hist[ip['sortkey']].append(ip)
-    return [value[0] for (key,value) in hist.items() if len(value)==1]
+    @classmethod
+    def get_address_type(cls, address_string):
+        """Returns ipv4, ipv6, onion, or None for a given address."""
+        for address_type, pattern in cls.PATTERNS.items():
+            if pattern.match(address_string):
+                return address_type
+        return None
 
-# Based on Greg Maxwell's seed_filter.py
-def filterbyasn(ips, max_per_asn, max_total):
-    # Sift out ips by type
-    ips_ipv4 = [ip for ip in ips if ip['net'] == 'ipv4']
-    ips_ipv6 = [ip for ip in ips if ip['net'] == 'ipv6']
-    ips_onion = [ip for ip in ips if ip['net'] == 'onion']
+    @classmethod
+    def from_combined_string(cls, address_string):
+        """Given an address, return a parsed Address object."""
 
-    # Filter IPv4 by ASN
-    result = []
-    asn_count = {}
-    for ip in ips_ipv4:
-        if len(result) == max_total:
-            break
-        try:
-            asn = int([x.to_text() for x in dns.resolver.query('.'.join(reversed(ip['ip'].split('.'))) + '.origin.asn.cymru.com', 'TXT').response.answer][0].split('\"')[1].split(' ')[0])
-            if asn not in asn_count:
-                asn_count[asn] = 0
-            if asn_count[asn] == max_per_asn:
-                continue
-            asn_count[asn] += 1
-            result.append(ip)
-        except:
-            sys.stderr.write('ERR: Could not resolve ASN for "' + ip['ip'] + '"\n')
+        address_type = cls.get_address_type(address_string)
+        if not address_type:
+            raise ValueError('Invalid address ("%s")' % address_string)
 
-    # TODO: filter IPv6 by ASN
+        host, port = address_string.rsplit(':', 1)
+        if address_type == 'ipv6':
+            host = host[1:-1]
 
-    # Add back non-IPv4
-    result.extend(ips_ipv6)
-    result.extend(ips_onion)
-    return result
+        if not host or not port:
+            raise ValueError('Invalid address ("%s")' % address_string)
+
+        sortable_host = host
+
+        if address_type in cls.INET_FORMATS:
+            type_id, struct_format = cls.INET_FORMATS[address_type]
+            try:
+                packed_ip = socket.inet_pton(type_id, host)
+                sortable_host = struct.unpack(struct_format, packed_ip)[0]
+            except:
+                raise ValueError('Invalid %s host ("%s")' %
+                                 (address_type, host))
+
+        return cls(host, int(port), address_type, sortable_host)
+
+    def __repr__(self):
+        return str({"host": self.host, "port": self.port, "asn": self.asn,
+                    "address_type": self.address_type,
+                    "sortable_host": self.sortable_host})
+
+    def __str__(self):
+        pattern = u'%s:%i'
+        if self.address_type == 'ipv6':
+            pattern = u'[%s];%i'
+        return pattern % (self.host, self.port)
+
+    __unicode__ = __str__
+
+
+class Entry(UserDict):
+    """Represents a single line in the seeds.txt file."""
+
+    _percent = lambda _: float(_[:-1])
+    SCHEMA = [
+            ('address', Address.from_combined_string),
+            ('good', bool),
+            ('lastSuccess', int),
+            ('uptime2h', _percent),
+            ('uptime8h', _percent),
+            ('uptime1d', _percent),
+            ('uptime7d', _percent),
+            ('uptime30d', _percent),
+            ('blocks', int),
+            ('services', lambda _: int(_, 16)),
+            ('version', int),
+            ('agent', lambda _: _[1:-1])]
+
+    @classmethod
+    def from_raw_line(cls, line):
+        """Given a line from the seeds.txt file, return an Entry.
+
+        If the line is invalid, return None.
+        """
+        if not line or line.startswith('#'):
+            return None
+
+        pieces = line.split()
+        if len(pieces) < 11:
+            logging.warning('Not enough fields (only %d): %s' %
+                            (len(pieces), line))
+            return None
+
+        entry = cls()
+        for (key, cast), value in zip(cls.SCHEMA, pieces):
+            try:
+                entry[key] = cast(value)
+            except:
+                logging.error('Invalid value for %s ("%s")' % (key, value))
+                return None
+        return entry
+
+    @property
+    def address(self):
+        return self['address']
+
+    def is_valid(self):
+        """Decides whether a given entry is valid."""
+        # Skip over any hosts that are telling us they're not good.
+        if not self['good']: return False
+
+        # Skip over any suspicious hosts.
+        if self['address'].host in SUSPICIOUS_HOSTS: return False
+
+        # Skip over hosts that don't have enough blocks.
+        if self['blocks'] < MIN_BLOCKS: return False
+
+        # Skip over hosts that don't have service bit 1.
+        if not self['services'] & 1: return False
+
+        # Skip over hosts that don't have 50% 30d uptime.
+        if self['uptime30d'] < 50: return False
+
+        # Skip over hosts with unknown agents.
+        if not PATTERN_AGENT.match(self['agent']): return False
+
+        return True
+
+    @property
+    def sort_key(self):
+        """Returns a sortable tuple, in thie case using uptime and success."""
+        return (self['uptime30d'], self['lastSuccess'])
+
+    def __hash__(self):
+        return self.address.sortable_host
+
+    def __eq__(self, other):
+        """For purposes of uniqueness, entries are equal based on address."""
+        return self.address.sortable_host == other.address.sortable_host
+
+
+def get_entries_limited_by_asn(entries, max_per_asn=MAX_ENTRIES_PER_ASN):
+    """Return entries limited to a certain number per ASN."""
+    asn_counter = {}
+    for entry in entries:
+        asn = entry.address.get_asn()
+        if not asn:
+            yield entry
+            continue
+
+        count = asn_counter.get(asn, 0) + 1
+        if count > max_per_asn:
+            continue
+
+        # Update the counter
+        asn_counter[asn] = count
+        yield entry
+
 
 def main():
-    lines = sys.stdin.readlines()
-    ips = [parseline(line) for line in lines]
+    # Use stdin as the input.
+    lines = sys.stdin
 
-    # Skip entries with valid address.
-    ips = [ip for ip in ips if ip is not None]
-    # Skip entries from suspicious hosts.
-    ips = [ip for ip in ips if ip['ip'] not in SUSPICIOUS_HOSTS]
-    # Enforce minimal number of blocks.
-    ips = [ip for ip in ips if ip['blocks'] >= MIN_BLOCKS]
-    # Require service bit 1.
-    ips = [ip for ip in ips if (ip['service'] & 1) == 1]
-    # Require at least 50% 30-day uptime.
-    ips = [ip for ip in ips if ip['uptime'] > 50]
-    # Require a known and recent user agent.
-    ips = [ip for ip in ips if PATTERN_AGENT.match(ip['agent'])]
-    # Sort by availability (and use last success as tie breaker)
-    ips.sort(key=lambda x: (x['uptime'], x['lastsuccess'], x['ip']), reverse=True)
-    # Filter out hosts with multiple bitcoin ports, these are likely abusive
-    ips = filtermultiport(ips)
-    # Look up ASNs and limit results, both per ASN and globally.
-    ips = filterbyasn(ips, MAX_SEEDS_PER_ASN, NSEEDS)
-    # Sort the results by IP address (for deterministic output).
-    ips.sort(key=lambda x: (x['net'], x['sortkey']))
+    # Parse all the lines and ignore None values.
+    entries = filter(None, map(Entry.from_raw_line, lines))
 
-    for ip in ips:
-        if ip['net'] == 'ipv6':
-            print '[%s]:%i' % (ip['ip'], ip['port'])
-        else:
-            print '%s:%i' % (ip['ip'], ip['port'])
+    # Only include entries we consider to be valid.
+    entries = filter(lambda e: e.is_valid(), entries)
+
+    # Sort the entries using their sort key (uptime, last success)
+    entries = sorted(entries, key=lambda e: e.sort_key,
+                     reverse=True)
+
+    # Limit the number of entries per ASN.
+    entries = get_entries_limited_by_asn(entries)
+
+    # Iterate through and print out a limited number of entries.
+    for entry in islice(entries, MAX_ENTRIES):
+        print entry.address
+
 
 if __name__ == '__main__':
     main()
