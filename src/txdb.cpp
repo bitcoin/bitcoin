@@ -175,7 +175,7 @@ bool CBlockTreeDB::ReadFlag(const std::string &name, bool &fValue) {
     return true;
 }
 
-bool CBlockTreeDB::LoadBlockIndexGuts()
+bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams)
 {
     boost::scoped_ptr<CDBIterator> pcursor(NewIterator());
 
@@ -203,7 +203,8 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
+                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams) &&
+                    pindexNew->GetBlockHash() != consensusParams.hashGenesisBlock)
                     return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());
 
                 pcursor->Next();
