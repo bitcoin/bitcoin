@@ -3,9 +3,9 @@ Dash Core staging tree 0.12
 
 https://www.dashpay.io
 
-Copyright (c) 2009-2015 Bitcoin Core Developers
+Copyright (c) 2009-2016 Bitcoin Core Developers
 
-Copyright (c) 2014-2015 Dash Core Developers
+Copyright (c) 2014-2016 Dash Core Developers
 
 
 What is Dash?
