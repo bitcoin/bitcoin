@@ -899,8 +899,6 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
                 continue;
             if (node->fDisconnect)
                 continue;
-            if (node->addr.IsLocal())
-                continue;
             vEvictionCandidates.push_back(CNodeRef(node));
         }
     }
