@@ -149,10 +149,10 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=no])
 
 AC_ARG_WITH([system-univalue],
-  [AS_HELP_STRING([--without-system-univalue],
-  [Build with system UniValue (default is auto)])],
+  [AS_HELP_STRING([--with-system-univalue],
+  [Build with system UniValue (default is no)])],
   [system_univalue=$withval],
-  [system_univalue=auto]
+  [system_univalue=no]
 )
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
