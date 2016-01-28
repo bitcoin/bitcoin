@@ -12,6 +12,7 @@
 #include "masternodeconfig.h"
 #include "rpcserver.h"
 #include "utilmoneystr.h"
+#include <boost/lexical_cast.hpp>
 
 #include <fstream>
 using namespace json_spirit;
@@ -26,7 +27,7 @@ Value mnbudget(const Array& params, bool fHelp)
     if (fHelp  ||
         (strCommand != "vote-many" && strCommand != "prepare" && strCommand != "submit" &&
          strCommand != "vote" && strCommand != "getvotes" && strCommand != "getproposal" && strCommand != "getproposalhash" &&
-         strCommand != "list" && strCommand != "projection" && strCommand != "check" && strCommand != "nextblock"))
+         strCommand != "list" && strCommand != "projection" && strCommand != "check" && strCommand != "nextblock" && strCommand != "nextsuperblocksize"))
         throw runtime_error(
                 "mnbudget \"command\"...\n"
                 "Manage proposals\n"
@@ -39,6 +40,7 @@ Value mnbudget(const Array& params, bool fHelp)
                 "  getvotes           - Show detailed votes list for proposal\n"
                 "  list               - List all proposals\n"
                 "  nextblock          - Get info about next superblock for budget system\n"
+                "  nextsuperblocksize     - Get superblock size for a given blockheight\n"
                 "  projection         - Show the projection of which proposals will be paid the next cycle\n"
                 "  vote               - Vote on a proposal by single masternode (using dash.conf setup)\n"
                 "  vote-many          - Vote on a proposal by all masternodes (using masternode.conf setup)\n"
@@ -51,6 +53,17 @@ Value mnbudget(const Array& params, bool fHelp)
 
         int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
         return nNext;
+    }
+
+    if(strCommand == "nextsuperblocksize")
+    {
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(!pindexPrev) return "unknown";
+
+        int nHeight = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+
+        CAmount nTotal = budget.GetTotalBudget(nHeight);
+        return nTotal;
     }
 
     if(strCommand == "prepare")
