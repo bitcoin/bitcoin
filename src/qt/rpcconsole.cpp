@@ -27,6 +27,7 @@
 #include <QKeyEvent>
 #include <QMenu>
 #include <QScrollBar>
+#include <QSettings>
 #include <QSignalMapper>
 #include <QThread>
 #include <QTime>
@@ -41,9 +42,9 @@
 // TODO: receive errors and debug messages through ClientModel
 
 const int CONSOLE_HISTORY = 50;
-const QSize ICON_SIZE(24, 24);
-
 const int INITIAL_TRAFFIC_GRAPH_MINS = 30;
+const QSize FONT_RANGE(4, 40);
+const char fontSizeSettingsKey[] = "consoleFontSize";
 
 const struct {
     const char *url;
@@ -245,7 +246,8 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
     cachedNodeid(-1),
     platformStyle(platformStyle),
     peersTableContextMenu(0),
-    banTableContextMenu(0)
+    banTableContextMenu(0),
+    consoleFontSize(0)
 {
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
@@ -254,12 +256,16 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
         ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
     }
     ui->clearButton->setIcon(platformStyle->SingleColorIcon(":/icons/remove"));
+    ui->fontBiggerButton->setIcon(platformStyle->SingleColorIcon(":/icons/fontbigger"));
+    ui->fontSmallerButton->setIcon(platformStyle->SingleColorIcon(":/icons/fontsmaller"));
 
     // Install event filter for up and down arrow
     ui->lineEdit->installEventFilter(this);
     ui->messagesWidget->installEventFilter(this);
 
     connect(ui->clearButton, SIGNAL(clicked()), this, SLOT(clear()));
+    connect(ui->fontBiggerButton, SIGNAL(clicked()), this, SLOT(fontBigger()));
+    connect(ui->fontSmallerButton, SIGNAL(clicked()), this, SLOT(fontSmaller()));
     connect(ui->btnClearTrafficGraph, SIGNAL(clicked()), ui->trafficGraph, SLOT(clear()));
 
     // set library version labels
@@ -288,6 +294,8 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
     ui->detailWidget->hide();
     ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 
+    QSettings settings;
+    consoleFontSize = settings.value(fontSizeSettingsKey, QFontInfo(QFont()).pointSize()).toInt();
     clear();
 }
 
@@ -453,6 +461,41 @@ static QString categoryClass(int category)
     }
 }
 
+void RPCConsole::fontBigger()
+{
+    setFontSize(consoleFontSize+1);
+}
+
+void RPCConsole::fontSmaller()
+{
+    setFontSize(consoleFontSize-1);
+}
+
+void RPCConsole::setFontSize(int newSize)
+{
+    QSettings settings;
+
+    //don't allow a insane font size
+    if (newSize < FONT_RANGE.width() || newSize > FONT_RANGE.height())
+        return;
+
+    // temp. store the console content
+    QString str = ui->messagesWidget->toHtml();
+
+    // replace font tags size in current content
+    str.replace(QString("font-size:%1pt").arg(consoleFontSize), QString("font-size:%1pt").arg(newSize));
+
+    // store the new font size
+    consoleFontSize = newSize;
+    settings.setValue(fontSizeSettingsKey, consoleFontSize);
+
+    // clear console (reset icon sizes, default stylesheet) and re-add the content
+    float oldPosFactor = 1.0 / ui->messagesWidget->verticalScrollBar()->maximum() * ui->messagesWidget->verticalScrollBar()->value();
+    clear();
+    ui->messagesWidget->setHtml(str);
+    ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
+}
+
 void RPCConsole::clear()
 {
     ui->messagesWidget->clear();
@@ -468,26 +511,20 @@ void RPCConsole::clear()
         ui->messagesWidget->document()->addResource(
                     QTextDocument::ImageResource,
                     QUrl(ICON_MAPPING[i].url),
-                    platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(ICON_SIZE, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
+                    platformStyle->SingleColorImage(ICON_MAPPING[i].source).scaled(QSize(consoleFontSize*2, consoleFontSize*2), Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
     }
 
     // Set default style sheet
     QFontInfo fixedFontInfo(GUIUtil::fixedPitchFont());
-    // Try to make fixed font adequately large on different OS
-#ifdef WIN32
-    QString ptSize = QString("%1pt").arg(QFontInfo(QFont()).pointSize() * 10 / 8);
-#else
-    QString ptSize = QString("%1pt").arg(QFontInfo(QFont()).pointSize() * 8.5 / 9);
-#endif
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"
-                "td.time { color: #808080; padding-top: 3px; } "
+                "td.time { color: #808080; font-size: %2; padding-top: 3px; } "
                 "td.message { font-family: %1; font-size: %2; white-space:pre-wrap; } "
                 "td.cmd-request { color: #006060; } "
                 "td.cmd-error { color: red; } "
                 "b { color: #006060; } "
-            ).arg(fixedFontInfo.family(), ptSize)
+            ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
         );
 
     message(CMD_REPLY, (tr("Welcome to the Bitcoin Core RPC console.") + "<br>" +
