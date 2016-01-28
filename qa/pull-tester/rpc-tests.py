@@ -36,8 +36,8 @@ if not vars().has_key('ENABLE_WALLET'):
     ENABLE_WALLET=0
 if not vars().has_key('ENABLE_BITCOIND'):
     ENABLE_BITCOIND=0
-if not vars().has_key('ENABLE_UTILS'):
-    ENABLE_UTILS=0
+if not vars().has_key('ENABLE_CLI'):
+    ENABLE_CLI=0
 if not vars().has_key('ENABLE_ZMQ'):
     ENABLE_ZMQ=0
 
@@ -140,7 +140,7 @@ def runtests():
         coverage = RPCCoverage()
         print("Initializing coverage directory at %s\n" % coverage.dir)
 
-    if(ENABLE_WALLET == 1 and ENABLE_UTILS == 1 and ENABLE_BITCOIND == 1):
+    if(ENABLE_WALLET == 1 and ENABLE_CLI == 1 and ENABLE_BITCOIND == 1):
         rpcTestDir = buildDir + '/qa/rpc-tests/'
         run_extended = '-extended' in opts
         cov_flag = coverage.flag if coverage else ''
@@ -186,7 +186,7 @@ def runtests():
             coverage.cleanup()
 
     else:
-        print "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
+        print "No rpc tests to run. Wallet, cli, and bitcoind must all be enabled"
 
 
 class RPCCoverage(object):
