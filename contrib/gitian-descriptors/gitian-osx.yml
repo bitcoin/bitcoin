@@ -22,7 +22,7 @@ packages:
 - "python"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
+- "url": "https://github.com/bitcoinclassic/bitcoinclassic.git"
   "dir": "bitcoin"
 files:
 - "MacOSX10.9.sdk.tar.gz"
