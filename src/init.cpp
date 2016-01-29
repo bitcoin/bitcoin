@@ -1039,12 +1039,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         std::string strReplacementModeList = GetArg("-replacebyfee", "");  // default is impossible
         std::vector<std::string> vstrReplacementModes;
         boost::split(vstrReplacementModes, strReplacementModeList, boost::is_any_of(","));
-        BOOST_FOREACH(const std::string& strReplacementMode, vstrReplacementModes) {
-            if (strReplacementMode == "opt-in") {
-                fEnableReplacement = true;
-                break;
-            }
-        }
+        fEnableReplacement = (std::find(vstrReplacementModes.begin(), vstrReplacementModes.end(), "opt-in") != vstrReplacementModes.end());
     }
 
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
