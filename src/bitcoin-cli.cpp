@@ -236,6 +236,16 @@ int CommandLineRPC(int argc, char *argv[])
 
         // Parameters default to strings
         std::vector<std::string> strParams(&argv[2], &argv[argc]);
+
+        // mask all command line arguments so that passwords and private keys
+        // will not display in the process table
+        for(int i = 2; i < argc; i++) {
+           int len = strlen(argv[i]);
+           for(int j = 0; j < len; j++) {
+               argv[i][j] = 'X';
+           }
+        }
+
         UniValue params = RPCConvertValues(strMethod, strParams);
 
         // Execute and handle connection failures with -rpcwait
