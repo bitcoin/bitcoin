@@ -223,7 +223,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
                 CScript::const_iterator pc = script.begin();
                 script.GetOp(pc, scriptOp);
 
-                if ((out.amount() > 0 && scriptOp != OP_RETURN) || (scriptOp == OP_RETURN && out.amount() == 0))
+                if (out.amount() > 0 || scriptOp == OP_RETURN)
                 {
                   subtotal += out.amount();
                   CAmount nAmount = out.amount();

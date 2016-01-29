@@ -556,23 +556,6 @@ bool PaymentServer::processPaymentRequest(const PaymentRequestPlus& request, Sen
     QStringList addresses;
 
     Q_FOREACH(const PAIRTYPE(CScript, CAmount)& sendingTo, sendingTos) {
-        opcodetype scriptOp;
-        CScript::const_iterator pc = sendingTo.first.begin();
-        sendingTo.first.GetOp(pc, scriptOp);
-
-        // Only allow zero value OP_RETURNs
-        if (scriptOp == OP_RETURN) {
-            std::vector<unsigned char> data;
-            opcodetype opcode;
-            sendingTo.first.GetOp(pc, opcode, data);
-            if (sendingTo.second != 0) {
-                Q_EMIT message(tr("Payment request rejected"),
-                    tr("OP_RETURN scripts must be zero value."),
-                    CClientUIInterface::MSG_ERROR);
-                return false;
-            }
-        }
-
         // Extract and check destination addresses
         CTxDestination dest;
         if (ExtractDestination(sendingTo.first, dest)) {
