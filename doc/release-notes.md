@@ -144,13 +144,13 @@ accepted when it pays sufficient fee, as described in [BIP 125]
 (https://github.com/bitcoin/bips/blob/master/bip-0125.mediawiki).
 
 Transaction replacement can be disabled with a new command line option,
-`-permitrbf=false`.  Transactions signaling replacement under BIP125 will still
+`-replacebyfee=0`.  Transactions signaling replacement under BIP125 will still
 be allowed into the mempool in this configuration, but replacements will be
 rejected.  This option is intended for miners who want to continue the
 transaction selection behavior of previous releases.
 
-The `-permitrbf` option is *not recommended* for wallet users seeking to avoid
-receipt of unconfirmed opt-in transactions, because this option does not
+The `-replacebyfee` option is *not recommended* for wallet users seeking to
+avoid receipt of unconfirmed opt-in transactions, because this option does not
 prevent transactions which are replaceable under BIP 125 from being accepted
 (only subsequent replacements, which other nodes on the network that implement
 BIP 125 are likely to relay and mine).  Wallet users wishing to detect whether
