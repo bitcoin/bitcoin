@@ -50,12 +50,15 @@ Optional dependencies:
 
 For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
 
-System requirements
+Memory Requirements
 --------------------
 
-C++ compilers are memory-hungry. It is recommended to have at least 1 GB of
-memory available when compiling Bitcoin Core. With 512MB of memory or less
-compilation will take much longer due to swap thrashing.
+C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
+memory available when compiling Bitcoin Core. On systems with less, gcc can be
+tuned to conserve memory with additional CXXFLAGS:
+
+
+    ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
