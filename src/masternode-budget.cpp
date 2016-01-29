@@ -236,6 +236,7 @@ bool CBudgetDB::Write(const CBudgetManager& objToSave)
     fileout.fclose();
 
     LogPrintf("Written info to budget.dat  %dms\n", GetTimeMillis() - nStart);
+    LogPrintf("Budget manager - %s\n", objToSave.ToString());
 
     return true;
 }
@@ -324,8 +325,7 @@ CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& objToLoad, bool fDryRun)
     if(!fDryRun) {
         LogPrintf("Budget manager - cleaning....\n");
         objToLoad.CheckAndRemove();
-        LogPrintf("Budget manager - result:\n");
-        LogPrintf("  %s\n", objToLoad.ToString());
+        LogPrintf("Budget manager - %s\n", objToLoad.ToString());
     }
 
     return Ok;
@@ -394,6 +394,10 @@ void CBudgetManager::CheckAndRemove()
 {
     LogPrintf("CBudgetManager::CheckAndRemove \n");
 
+    CBlockIndex* pindexPrev = chainActive.Tip();
+    if(!pindexPrev) return;
+
+
     std::string strError = "";
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
@@ -403,9 +407,13 @@ void CBudgetManager::CheckAndRemove()
         pfinalizedBudget->fValid = pfinalizedBudget->IsValid(strError);
         if(pfinalizedBudget->fValid) {
             pfinalizedBudget->AutoCheck();
+            ++it;
+        
+        // if it's too old, remove it
+        } else if(pfinalizedBudget->nBlockStart != 0 && pfinalizedBudget->nBlockStart < pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()) {
+            mapFinalizedBudgets.erase(it++);
+            LogPrintf("CBudgetManager::CheckAndRemove - removing budget %s\n", pfinalizedBudget->GetHash().ToString());
         }
-
-        ++it;
     }
 
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
@@ -482,9 +490,9 @@ CBudgetProposal *CBudgetManager::FindProposal(const std::string &strProposalName
 
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end()){
-        if((*it).second.strProposalName == strProposalName && (*it).second.GetYeas() > nYesCount){
+        if((*it).second.strProposalName == strProposalName && (*it).second.GetYesCount() > nYesCount){
             pbudgetProposal = &((*it).second);
-            nYesCount = pbudgetProposal->GetYeas();
+            nYesCount = pbudgetProposal->GetYesCount();
         }
         ++it;
     }
@@ -638,7 +646,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end()){
         (*it).second.CleanAndRemove(false);
-        vBudgetPorposalsSort.push_back(make_pair(&((*it).second), (*it).second.GetYeas()-(*it).second.GetNays()));
+        vBudgetPorposalsSort.push_back(make_pair(&((*it).second), (*it).second.GetYesCount()-(*it).second.GetNoCount()));
         ++it;
     }
 
@@ -653,7 +661,7 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     if(pindexPrev == NULL) return vBudgetProposalsRet;
 
     int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    int nBlockEnd  =  nBlockStart + GetBudgetPaymentCycleBlocks() - 1;
+    int nBlockEnd  =  nBlockStart + 100;
     CAmount nTotalBudget = GetTotalBudget(nBlockStart);
 
 
@@ -662,16 +670,31 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     {
         CBudgetProposal* pbudgetProposal = (*it2).first;
 
+
+        printf("-> Budget Name : %s\n", pbudgetProposal->strProposalName.c_str());
+        printf("------- nBlockStart : %d\n", pbudgetProposal->nBlockStart);
+        printf("------- nBlockEnd : %d\n", pbudgetProposal->nBlockEnd);
+        printf("------- nBlockStart2 : %d\n", nBlockStart);
+        printf("------- nBlockEnd2 : %d\n", nBlockEnd);
+
+        printf("------- 1 : %d\n", pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart);
+        printf("------- 2 : %d\n", pbudgetProposal->nBlockEnd >= nBlockEnd);
+        printf("------- 3 : %d\n", pbudgetProposal->GetYesCount() - pbudgetProposal->GetNoCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10);
+        printf("------- 4 : %d\n", pbudgetProposal->IsEstablished());
+
         //prop start/end should be inside this period
         if(pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart &&
                 pbudgetProposal->nBlockEnd >= nBlockEnd &&
-                pbudgetProposal->GetYeas() - pbudgetProposal->GetNays() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10 && 
+                pbudgetProposal->GetYesCount() - pbudgetProposal->GetNoCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10 && 
                 pbudgetProposal->IsEstablished())
         {
+            printf("------- In range \n");
+
             if(pbudgetProposal->GetAmount() + nBudgetAllocated <= nTotalBudget) {
                 pbudgetProposal->SetAllotted(pbudgetProposal->GetAmount());
                 nBudgetAllocated += pbudgetProposal->GetAmount();
                 vBudgetProposalsRet.push_back(pbudgetProposal);
+                printf("------- YES \n");
             } else {
                 pbudgetProposal->SetAllotted(0);
             }
@@ -1288,7 +1311,7 @@ CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strU
 
     int nPaymentsStart = nBlockStart - nBlockStart % GetBudgetPaymentCycleBlocks();
     //calculate the end of the cycle for this vote, add half a cycle (vote will be deleted after that block)
-    nBlockEnd = nPaymentsStart + GetBudgetPaymentCycleBlocks() * nPaymentCount + GetBudgetPaymentCycleBlocks()/2;
+    nBlockEnd = nPaymentsStart + GetBudgetPaymentCycleBlocks() * nPaymentCount;
 
     address = addressIn;
     nAmount = nAmountIn;
@@ -1298,7 +1321,7 @@ CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strU
 
 bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
 {
-    if(GetNays() - GetYeas() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
+    if(GetNoCount() - GetYesCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
          strError = "Active removal";
          return false;
     }
@@ -1372,15 +1395,11 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
         return false;
     }
 
-    //if proposal doesn't gain traction within 2 weeks, remove it
-    // nTime not being saved correctly
-    // -- TODO: We should keep track of the last time the proposal was valid, if it's invalid for 2 weeks, erase it
-    // if(nTime + (60*60*24*2) < GetAdjustedTime()) {
-    //     if(GetYeas()-GetNays() < (mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)) {
-    //         strError = "Not enough support";
-    //         return false;
-    //     }
-    // }
+    // -- If GetAbsoluteYesCount is more than -10% of the network, flag as invalid
+    if(GetAbsoluteYesCount() < -(mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)) {
+        strError = "Voted Down";
+        return false;
+    }
 
     //can only pay out 10% of the possible coins (min value of coins)
     if(nAmount > budget.GetTotalBudget(nBlockStart)) {
@@ -1388,7 +1407,7 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
         return false;
     }
 
-    if(GetBlockEnd() < pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()/2 ) return false;
+    if(GetBlockEnd()+100 < pindexPrev->nHeight) return false;
 
 
     return true;
@@ -1452,7 +1471,12 @@ double CBudgetProposal::GetRatio()
     return ((double)(yeas) / (double)(yeas+nays));
 }
 
-int CBudgetProposal::GetYeas()
+int CBudgetProposal::GetAbsoluteYesCount()
+{
+    return GetYesCount() - GetNoCount();
+}
+
+int CBudgetProposal::GetYesCount()
 {
     int ret = 0;
 
@@ -1465,7 +1489,7 @@ int CBudgetProposal::GetYeas()
     return ret;
 }
 
-int CBudgetProposal::GetNays()
+int CBudgetProposal::GetNoCount()
 {
     int ret = 0;
 
@@ -1478,7 +1502,7 @@ int CBudgetProposal::GetNays()
     return ret;
 }
 
-int CBudgetProposal::GetAbstains()
+int CBudgetProposal::GetAbstainCount()
 {
     int ret = 0;
 
@@ -1522,10 +1546,18 @@ int CBudgetProposal::GetTotalPaymentCount()
 
 int CBudgetProposal::GetRemainingPaymentCount()
 {
-    // If this budget starts in the future, this value will be wrong
-    int nPayments = (GetBlockEndCycle() - GetBlockCurrentCycle()) / GetBudgetPaymentCycleBlocks() - 1;
-    // Take the lowest value
-    return std::min(nPayments, GetTotalPaymentCount());
+    int nBlockHeight = nBlockStart;
+    int nPayments = 0;
+    // printf("-> Budget Name : %s\n", strProposalName.c_str());
+    // printf("------- nBlockStart : %d\n", nBlockStart);
+    // printf("------- nBlockEnd : %d\n", nBlockEnd);
+    while(nBlockHeight + GetBudgetPaymentCycleBlocks() < nBlockEnd)
+    {
+        // printf("------- P : %d %d - %d < %d - %d\n", nBlockHeight, nPayments, nBlockHeight + GetBudgetPaymentCycleBlocks(), nBlockEnd, nBlockHeight + GetBudgetPaymentCycleBlocks() < nBlockEnd);
+        nBlockHeight += GetBudgetPaymentCycleBlocks();
+        nPayments++;
+    }
+    return nPayments;
 }
 
 void CBudgetProposalBroadcast::Relay()

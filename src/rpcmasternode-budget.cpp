@@ -331,9 +331,10 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
             bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
             bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
-            bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
-            bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
-            bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
+            bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
+            bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
+            bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
+            bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
             bObj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
             bObj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
             bObj.push_back(Pair("Alloted",  ValueFromAmount(pbudgetProposal->GetAllotted())));
@@ -383,9 +384,10 @@ Value mnbudget(const Array& params, bool fHelp)
             bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
             bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
             bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
-            bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
-            bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
-            bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
+            bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
+            bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
+            bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
+            bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
             bObj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
             bObj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
 
@@ -425,22 +427,7 @@ Value mnbudget(const Array& params, bool fHelp)
             ExtractDestination(pbudgetProposal->GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
-            Object bObj;
-            bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
-            bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
-            bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
-            bObj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
-            bObj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
-            bObj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
-
-            bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
-
-            std::string strError = "";
-            bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
-            bObj.push_back(Pair("IsValidReason",  strError.c_str()));
-            bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
-
-            resultObj.push_back(Pair(pbudgetProposal->GetHash().ToString(), bObj));
+            resultObj.push_back(Pair(pbudgetProposal->GetHash().ToString(), pbudgetProposal->GetHash().ToString()));
         }
 
         if(resultObj.size() > 1) return resultObj;
@@ -474,9 +461,10 @@ Value mnbudget(const Array& params, bool fHelp)
         obj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
         obj.push_back(Pair("PaymentAddress",   address2.ToString()));
         obj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
-        obj.push_back(Pair("Yeas",  (int64_t)pbudgetProposal->GetYeas()));
-        obj.push_back(Pair("Nays",  (int64_t)pbudgetProposal->GetNays()));
-        obj.push_back(Pair("Abstains",  (int64_t)pbudgetProposal->GetAbstains()));
+        obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
+        obj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
+        obj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
+        obj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
         obj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
         obj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
         
