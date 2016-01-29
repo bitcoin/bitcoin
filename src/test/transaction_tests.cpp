@@ -338,10 +338,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     string reason;
     BOOST_CHECK(IsStandardTx(t, reason));
 
-    t.vout[0].nValue = 501; // dust
+    // Dash minRelayTxFee is 10000, typical tx is dust below 5460 sat    
+    t.vout[0].nValue = 5010; // dust
     BOOST_CHECK(!IsStandardTx(t, reason));
 
-    t.vout[0].nValue = 601; // not dust
+    // Dash minRelayTxFee is 10000, typical tx is dust below 5460 sat
+    t.vout[0].nValue = 6010; // not dust
     BOOST_CHECK(IsStandardTx(t, reason));
 
     t.vout[0].scriptPubKey = CScript() << OP_1;

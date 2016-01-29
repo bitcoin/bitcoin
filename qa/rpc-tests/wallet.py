@@ -45,8 +45,8 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[1].setgenerate(True, 101)
         self.sync_all()
 
-        assert_equal(self.nodes[0].getbalance(), 50)
-        assert_equal(self.nodes[1].getbalance(), 50)
+        assert_equal(self.nodes[0].getbalance(), 500)
+        assert_equal(self.nodes[1].getbalance(), 500)
         assert_equal(self.nodes[2].getbalance(), 0)
 
         # Send 21 BTC from 0 to 2 using sendtoaddress call.
@@ -64,7 +64,7 @@ class WalletTest (BitcoinTestFramework):
 
         # node0 should end up with 100 btc in block rewards plus fees, but
         # minus the 21 plus fees sent to node2
-        assert_equal(self.nodes[0].getbalance(), 100-21)
+        assert_equal(self.nodes[0].getbalance(), 1000-21)
         assert_equal(self.nodes[2].getbalance(), 21)
 
         # Node0 should have two unspent outputs.
@@ -92,8 +92,8 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 0)
-        assert_equal(self.nodes[2].getbalance(), 100)
-        assert_equal(self.nodes[2].getbalance("from1"), 100-21)
+        assert_equal(self.nodes[2].getbalance(), 1000)
+        assert_equal(self.nodes[2].getbalance("from1"), 1000-21)
 
 
 if __name__ == '__main__':
