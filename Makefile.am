@@ -184,10 +184,12 @@ cov: test_dash.coverage/.dirstamp total.coverage/.dirstamp
 
 endif
 
+# Dash: disable the test until upstream switches from convoluted comparison tool
+# Ref https://github.com/bitcoin/bitcoin/issues/4545
 if USE_COMPARISON_TOOL
 check-local:
-	$(MKDIR_P) qa/tmp
-	@qa/pull-tester/run-bitcoind-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS) 2>&1
+	## $(MKDIR_P) qa/tmp
+	## @qa/pull-tester/run-bitcoind-for-test.sh $(JAVA) -jar $(JAVA_COMPARISON_TOOL) qa/tmp/compTool $(COMPARISON_TOOL_REORG_TESTS) 2>&1
 endif
 
 dist_noinst_SCRIPTS = autogen.sh
