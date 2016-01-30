@@ -250,6 +250,7 @@ extern json_spirit::Value omni_gettradehistoryforpair(const json_spirit::Array& 
 extern json_spirit::Value omni_getcurrentconsensushash(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getpayload(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_getseedblocks(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_getmetadexhash(const json_spirit::Array& params, bool fHelp);
 
 /* Omni Core configuration calls */
 extern json_spirit::Value omni_setautocommit(const json_spirit::Array& params, bool fHelp);

@@ -245,4 +245,37 @@ uint256 GetConsensusHash()
     return consensusHash;
 }
 
+uint256 GetMetaDExHash(const uint32_t propertyId)
+{
+    SHA256_CTX shaCtx;
+    SHA256_Init(&shaCtx);
+
+    LOCK(cs_tally);
+
+    std::vector<std::pair<uint256, std::string> > vecMetaDExTrades;
+    for (md_PropertiesMap::const_iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
+        if (propertyId == 0 || propertyId == my_it->first) {
+            const md_PricesMap& prices = my_it->second;
+            for (md_PricesMap::const_iterator it = prices.begin(); it != prices.end(); ++it) {
+                const md_Set& indexes = it->second;
+                for (md_Set::const_iterator it = indexes.begin(); it != indexes.end(); ++it) {
+                    const CMPMetaDEx& obj = *it;
+                    std::string dataStr = GenerateConsensusString(obj);
+                    vecMetaDExTrades.push_back(std::make_pair(obj.getHash(), dataStr));
+                }
+            }
+        }
+    }
+    std::sort (vecMetaDExTrades.begin(), vecMetaDExTrades.end());
+    for (std::vector<std::pair<uint256, std::string> >::iterator it = vecMetaDExTrades.begin(); it != vecMetaDExTrades.end(); ++it) {
+        const std::string& dataStr = it->second;
+        SHA256_Update(&shaCtx, dataStr.c_str(), dataStr.length());
+    }
+
+    uint256 metadexHash;
+    SHA256_Final((unsigned char*)&metadexHash, &shaCtx);
+
+    return metadexHash;
+}
+
 } // namespace mastercore
