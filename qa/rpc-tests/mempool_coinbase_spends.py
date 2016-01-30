@@ -55,9 +55,9 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # and make sure the mempool code behaves correctly.
         b = [ self.nodes[0].getblockhash(n) for n in range(102, 105) ]
         coinbase_txids = [ self.nodes[0].getblock(h)['tx'][0] for h in b ]
-        spend_101_raw = self.create_tx(coinbase_txids[0], node1_address, 50)
-        spend_102_raw = self.create_tx(coinbase_txids[1], node0_address, 50)
-        spend_103_raw = self.create_tx(coinbase_txids[2], node0_address, 50)
+        spend_101_raw = self.create_tx(coinbase_txids[0], node1_address, 500)
+        spend_102_raw = self.create_tx(coinbase_txids[1], node0_address, 500)
+        spend_103_raw = self.create_tx(coinbase_txids[2], node0_address, 500)
 
         # Broadcast and mine spend_102 and 103:
         spend_102_id = self.nodes[0].sendrawtransaction(spend_102_raw)
@@ -65,8 +65,8 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.nodes[0].setgenerate(True, 1)
 
         # Create 102_1 and 103_1:
-        spend_102_1_raw = self.create_tx(spend_102_id, node1_address, 50)
-        spend_103_1_raw = self.create_tx(spend_103_id, node1_address, 50)
+        spend_102_1_raw = self.create_tx(spend_102_id, node1_address, 500)
+        spend_103_1_raw = self.create_tx(spend_103_id, node1_address, 500)
 
         # Broadcast and mine 103_1:
         spend_103_1_id = self.nodes[0].sendrawtransaction(spend_103_1_raw)
