@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Copyright (c) 2014 Wladimir J. van der Laan
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 '''
 Script to generate list of seed nodes for chainparams.cpp.
 

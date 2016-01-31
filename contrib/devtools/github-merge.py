@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # Copyright (c) 2016 Bitcoin Core Developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 # This script will locally construct a merge commit for a pull request on a
 # github repository, inspect it, sign it and optionally push it.

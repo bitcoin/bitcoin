@@ -5,7 +5,7 @@
 # This file is copied from python-bitcoinlib.
 #
 # Distributed under the MIT/X11 software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 #
 
 """Bignum routines"""
