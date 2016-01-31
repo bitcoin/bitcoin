@@ -1688,7 +1688,7 @@ bool CWallet::CreateTransaction(CScript scriptPubKey, int64_t nValue, CWalletTx&
 
 void CWallet::GetStakeWeightFromValue(const int64_t& nTime, const int64_t& nValue, uint64_t& nWeight)
 {
-    int64_t nTimeWeight = GetWeight(nTime, (int64_t)GetTime());
+    int64_t nTimeWeight = GetWeight(nTime, GetTime());
 
     // If time weight is lower or equal to zero then weight is zero.
     if (nTimeWeight <= 0)

@@ -467,7 +467,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
     scriptPubKey.SetDestination(address.Get());
     if (!IsMine(*pwalletMain,scriptPubKey))
-        return (double)0.0;
+        return 0.0;
 
     // Minimum confirmations
     int nMinDepth = 1;

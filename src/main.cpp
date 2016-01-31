@@ -3672,7 +3672,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
 
         if (!GetBoolArg("-allowreceivebyip"))
         {
-            pfrom->PushMessage("reply", hashReply, (int)2, string(""));
+            pfrom->PushMessage("reply", hashReply, 2, string(""));
             return true;
         }
 
@@ -3688,7 +3688,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         // Send back approval of order and pubkey to use
         CScript scriptPubKey;
         scriptPubKey << mapReuseKey[pfrom->addr] << OP_CHECKSIG;
-        pfrom->PushMessage("reply", hashReply, (int)0, scriptPubKey);
+        pfrom->PushMessage("reply", hashReply, 0, scriptPubKey);
     }
 
 
