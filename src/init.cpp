@@ -422,7 +422,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -enabledarksend=<n>          " + strprintf(_("Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)"), fEnableDarksend) + "\n";
     strUsage += "  -darksendmultisession=<n>    " + strprintf(_("Enable multiple darksend mixing sessions per block, experimental (0-1, default: %u)"), fDarksendMultiSession) + "\n";
     strUsage += "  -darksendrounds=<n>          " + strprintf(_("Use N separate masternodes to anonymize funds  (2-8, default: %u)"), nDarksendRounds) + "\n";
-    strUsage += "  -anonymizedashamount=<n>     " + strprintf(_("Keep N DASH anonymized (default: %u)"), nAnonymizeDarkcoinAmount) + "\n";
+    strUsage += "  -anonymizedashamount=<n>     " + strprintf(_("Keep N DASH anonymized (default: %u)"), nAnonymizeDashAmount) + "\n";
     strUsage += "  -liquidityprovider=<n>       " + strprintf(_("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), nLiquidityProvider) + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
@@ -1545,8 +1545,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     fDarksendMultiSession = GetBoolArg("-darksendmultisession", fDarksendMultiSession);
     nDarksendRounds = GetArg("-darksendrounds", nDarksendRounds);
     nDarksendRounds = std::min(std::max(nDarksendRounds, 1), 99999);
-    nAnonymizeDarkcoinAmount = GetArg("-anonymizedashamount", nAnonymizeDarkcoinAmount);
-    nAnonymizeDarkcoinAmount = std::min(std::max(nAnonymizeDarkcoinAmount, 2), 999999);
+    nAnonymizeDashAmount = GetArg("-anonymizedashamount", nAnonymizeDashAmount);
+    nAnonymizeDashAmount = std::min(std::max(nAnonymizeDashAmount, 2), 999999);
 
     fEnableInstantX = GetBoolArg("-enableinstantx", fEnableInstantX);
     nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
@@ -1561,7 +1561,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
     LogPrintf("Darksend rounds %d\n", nDarksendRounds);
-    LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDarkcoinAmount);
+    LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDashAmount);
     LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
     darkSendPool.InitDenominations();
