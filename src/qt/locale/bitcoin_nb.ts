@@ -2988,8 +2988,8 @@
         <translation>Slett alle transaksjoner i lommeboken og gjenopprett kun de delene av blokkjeden gjennom -rescan ved oppstart</translation>
     </message>
     <message>
-        <source>Distributed under the MIT software license, see the accompanying file COPYING or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
-        <translation>Distribuert under MIT programvarelisensen, se medfølgende fil COPYING eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
+        <source>Distributed under the MIT software license, see the accompanying file LICENSE or &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</source>
+        <translation>Distribuert under MIT programvarelisensen, se medfølgende fil LICENSE eller &lt;http://www.opensource.org/licenses/mit-license.php&gt;.</translation>
     </message>
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>

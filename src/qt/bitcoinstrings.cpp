@@ -1,6 +1,6 @@
 // Copyright (c) 2013-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+// file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
 #include <QtGlobal>
 
@@ -48,7 +48,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "proxy)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Distributed under the MIT software license, see the accompanying file "
-"COPYING or <http://www.opensource.org/licenses/mit-license.php>."),
+"LICENSE or <http://www.opensource.org/licenses/mit-license.php>."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Do not keep transactions in the mempool longer than <n> hours (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
