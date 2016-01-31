@@ -135,7 +135,7 @@ You can confirm that remote server is on the correct block by issuing
 
 ```dashd getinfo```
 
-and comparing with the official explorer at http://explorer.dashpay.io/chain/Dash
+and comparing with the official explorer at http://explorer.dash.org/chain/Dash
 
 ### Local
 
