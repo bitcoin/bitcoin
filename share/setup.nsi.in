@@ -15,7 +15,7 @@ Unicode true
 !define URL @CLIENT_URL@
 
 # MUI Symbol Definitions
-!define MUI_ICON "@abs_top_srcdir@/share/pixmaps/bitcoin.ico"
+!define MUI_ICON "@abs_top_srcdir@/src/qt/res/icons/bitcoin.ico"
 !define MUI_WELCOMEFINISHPAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-wizard.bmp"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
