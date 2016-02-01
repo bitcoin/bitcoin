@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2013 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+static const bool DEFAULT_FLUSHWALLET = true;
 
 class CAccount;
 class CAccountingEntry;
@@ -110,6 +112,9 @@ public:
 
     bool WriteMinVersion(int nVersion);
 
+    /// This writes directly to the database, and will not update the CWallet's cached accounting entries!
+    /// Use wallet.AddAccountingEntry instead, to write *and* update its caches.
+    bool WriteAccountingEntry_Backend(const CAccountingEntry& acentry);
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
 
@@ -118,7 +123,6 @@ public:
     /// Erase destination data tuple from wallet database
     bool EraseDestData(const std::string &address, const std::string &key);
 
-    bool WriteAccountingEntry(const CAccountingEntry& acentry);
     CAmount GetAccountCreditDebit(const std::string& strAccount);
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 

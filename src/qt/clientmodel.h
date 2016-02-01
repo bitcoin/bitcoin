@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,7 @@ class PeerTableModel;
 class TransactionTableModel;
 
 class CWallet;
+class CBlockIndex;
 
 QT_BEGIN_NAMESPACE
 class QTimer;
@@ -51,10 +52,15 @@ public:
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
     int getNumBlocks() const;
 
+    //! Return number of transactions in the mempool
+    long getMempoolSize() const;
+    //! Return the dynamic memory usage of the mempool
+    size_t getMempoolDynamicUsage() const;
+    
     quint64 getTotalBytesRecv() const;
     quint64 getTotalBytesSent() const;
 
-    double getVerificationProgress() const;
+    double getVerificationProgress(const CBlockIndex *tip) const;
     QDateTime getLastBlockDate() const;
 
     //! Return true if core is doing initial block download
@@ -76,11 +82,6 @@ private:
     PeerTableModel *peerTableModel;
     BanTableModel *banTableModel;
 
-    int cachedNumBlocks;
-    QDateTime cachedBlockDate;
-    bool cachedReindexing;
-    bool cachedImporting;
-
     QTimer *pollTimer;
 
     void subscribeToCoreSignals();
@@ -88,7 +89,8 @@ private:
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void numBlocksChanged(int count, const QDateTime& blockDate);
+    void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress);
+    void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
 

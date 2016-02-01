@@ -1,4 +1,4 @@
-<TS language="cy" version="2.0">
+<TS language="cy" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -6,12 +6,60 @@
         <translation>Creu cyfeiriad newydd</translation>
     </message>
     <message>
+        <source>&amp;New</source>
+        <translation>&amp;Newydd</translation>
+    </message>
+    <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>Copio'r cyfeiriad sydd wedi'i ddewis i'r clipfwrdd system</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;Copïo</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>C&amp;au</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;Cyfeiriad Copi</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Allforio</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;Dileu</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>&amp;Dewis</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Cyfeiriadau anfon</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Cyfeiriadau derbyn</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>Copïo &amp;Label</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;Golygu</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>Allforio Rhestr Cyfeiriad</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Methodd Allfor</translation>
     </message>
     </context>
 <context>
@@ -72,6 +120,10 @@
         <translation>Cadarnau amgryptiad y waled</translation>
     </message>
     <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>Ydych chi'n siwr eich bod chi eisiau amgryptio dy waled di?</translation>
+    </message>
+    <message>
         <source>Wallet encrypted</source>
         <translation>Waled wedi'i amgryptio</translation>
     </message>
@@ -97,6 +149,9 @@
     </message>
     </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
@@ -119,16 +174,68 @@
         <translation>Pori hanes trafodion</translation>
     </message>
     <message>
+        <source>E&amp;xit</source>
+        <translation>A&amp;llanfa</translation>
+    </message>
+    <message>
         <source>Quit application</source>
         <translation>Gadael rhaglen</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>Ynghylch &amp;Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
         <translation>&amp;Opsiynau</translation>
     </message>
     <message>
+        <source>&amp;Encrypt Wallet...</source>
+        <translation>&amp;Amgryptio'r waled...</translation>
+    </message>
+    <message>
+        <source>&amp;Change Passphrase...</source>
+        <translation>&amp;Newid cyfrinymadrodd...</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses...</source>
+        <translation>&amp;Cyfeiriadau anfon...</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>&amp;Cyfeiriadau derbyn...</translation>
+    </message>
+    <message>
+        <source>Open &amp;URI...</source>
+        <translation>Agor &amp;URI...</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Newid y cyfrinymadrodd a ddefnyddiwyd ar gyfer amgryptio'r waled</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Waled</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>&amp;Anfon</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;Derbyn</translation>
+    </message>
+    <message>
+        <source>Show information about Bitcoin Core</source>
+        <translation>Dangos gwybodaeth am Graidd Bitcoin</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;Dangos / Cuddio</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -145,6 +252,34 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Bar offer tabiau</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Craidd Bitcoin</translation>
+    </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>&amp;Ynghylch Craidd Bitcoin</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform><numerusform>%n awr</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform><numerusform>%n dydd</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform><numerusform>%n wythnos</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 a %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform><numerusform>%n blwydd</numerusform></translation>
     </message>
     <message>
         <source>Error</source>
@@ -165,6 +300,30 @@
     <message>
         <source>Catching up...</source>
         <translation>Dal i fyny</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Dyddiad: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Math: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Label: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Cyfeiriad: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -189,14 +348,30 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Amount:</source>
+        <translation>Maint</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Dyddiad</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Cyfeiriad copi</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Copïo label</translation>
     </message>
     <message>
         <source>(no label)</source>
         <translation>(heb label)</translation>
     </message>
-    </context>
+    <message>
+        <source>(change)</source>
+        <translation>(newid)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -242,12 +417,40 @@
 </context>
 <context>
     <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation>enw</translation>
+    </message>
     </context>
 <context>
     <name>HelpMessageDialog</name>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Craidd Bitcoin</translation>
+    </message>
+    <message>
+        <source>About Bitcoin Core</source>
+        <translation>Ynghylch Craidd Bitcoin</translation>
+    </message>
+    <message>
+        <source>Usage:</source>
+        <translation>Cynefod:</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation>Croeso</translation>
+    </message>
+    <message>
+        <source>Welcome to Bitcoin Core.</source>
+        <translation>Croeso i Graidd Bitcoin</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Craidd Bitcoin</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>Gwall</translation>
@@ -255,12 +458,48 @@
     </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open URI</source>
+        <translation>Agor URI</translation>
+    </message>
+    <message>
+        <source>URI:</source>
+        <translation>URI:</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
     <message>
         <source>Options</source>
         <translation>Opsiynau</translation>
+    </message>
+    <message>
+        <source>&amp;Network</source>
+        <translation>&amp;Rhwydwaith</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>W&amp;aled</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Ffenestr</translation>
+    </message>
+    <message>
+        <source>&amp;Display</source>
+        <translation>&amp;Dangos</translation>
     </message>
     </context>
 <context>
@@ -288,6 +527,14 @@
         <source>&amp;Information</source>
         <translation>Gwybodaeth</translation>
     </message>
+    <message>
+        <source>Network</source>
+        <translation>Rhwydwaith</translation>
+    </message>
+    <message>
+        <source>&amp;Open</source>
+        <translation>&amp;Agor</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -295,9 +542,17 @@
         <source>&amp;Label:</source>
         <translation>&amp;Label:</translation>
     </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Copïo label</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Cyfeiriad Copi</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Cyfeiriad</translation>
@@ -335,6 +590,10 @@
     <message>
         <source>Send Coins</source>
         <translation>Anfon arian</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Maint</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -379,6 +638,10 @@
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
+    <message>
+        <source>Message:</source>
+        <translation>Neges:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -400,6 +663,14 @@
     </context>
 <context>
     <name>SplashScreen</name>
+    <message>
+        <source>Bitcoin Core</source>
+        <translation>Craidd Bitcoin</translation>
+    </message>
+    <message>
+        <source>The Bitcoin Core developers</source>
+        <translation>Datblygwyr Graidd Bitcoin</translation>
+    </message>
     <message>
         <source>[testnet]</source>
         <translation>[testnet]</translation>
@@ -456,6 +727,18 @@
         <translation>Eleni</translation>
     </message>
     <message>
+        <source>Copy address</source>
+        <translation>Cyfeiriad copi</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>Copïo label</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Methodd Allfor</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Dyddiad</translation>
     </message>
@@ -487,9 +770,17 @@
 </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;Allforio</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>Opsiynau:</translation>
+    </message>
     <message>
         <source>Information</source>
         <translation>Gwybodaeth</translation>

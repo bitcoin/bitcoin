@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,7 @@
 #include "pubkey.h"
 #include "random.h"
 #include "txdb.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
@@ -36,6 +37,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 {
         ECC_Start();
         SetupEnvironment();
+        SetupNetworking();
         fPrintToDebugLog = false; // don't want to write to debug.log file
         fCheckBlockIndex = true;
         SelectParams(chainName);
@@ -49,8 +51,10 @@ BasicTestingSetup::~BasicTestingSetup()
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
+    const CChainParams& chainparams = Params();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
+        walletRegisterRPCCommands();
 #endif
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
@@ -59,7 +63,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-        InitBlockIndex();
+        InitBlockIndex(chainparams);
 #ifdef ENABLE_WALLET
         bool fFirstRun;
         pwalletMain = new CWallet("wallet.dat");
@@ -113,7 +117,8 @@ TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 CBlock
 TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns, const CScript& scriptPubKey)
 {
-    CBlockTemplate *pblocktemplate = CreateNewBlock(scriptPubKey);
+    const CChainParams& chainparams = Params();
+    CBlockTemplate *pblocktemplate = CreateNewBlock(chainparams, scriptPubKey);
     CBlock& block = pblocktemplate->block;
 
     // Replace mempool-selected txns with just coinbase plus passed-in txns:
@@ -124,10 +129,10 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     unsigned int extraNonce = 0;
     IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, Params(CBaseChainParams::REGTEST).GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     CValidationState state;
-    ProcessNewBlock(state, NULL, &block, true, NULL);
+    ProcessNewBlock(state, chainparams, NULL, &block, true, NULL);
 
     CBlock result = block;
     delete pblocktemplate;
@@ -136,6 +141,17 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
 
 TestChain100Setup::~TestChain100Setup()
 {
+}
+
+
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(CMutableTransaction &tx, CTxMemPool *pool) {
+    CTransaction txn(tx);
+    bool hasNoDependencies = pool ? pool->HasNoInputsOf(tx) : hadNoDependencies;
+    // Hack to assume either its completely dependent on other mempool txs or not at all
+    CAmount inChainValue = hasNoDependencies ? txn.GetValueOut() : 0;
+
+    return CTxMemPoolEntry(txn, nFee, nTime, dPriority, nHeight,
+                           hasNoDependencies, inChainValue, spendsCoinbase, sigOpCount);
 }
 
 void Shutdown(void* parg)

@@ -1,4 +1,4 @@
-<TS language="cs" version="2.0">
+<TS language="cs" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -220,6 +220,9 @@
         <translation>Heslo k peněžence bylo v pořádku změněno.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -871,7 +874,7 @@
         <source>command-line options</source>
         <translation>možnosti příkazové řádky</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1067,6 +1070,10 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port proxy (např. 9050)</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Použít samostatnou SOCKS5 proxy ke spojení s protějšky přes skryté služby v Toru:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1287,10 +1294,6 @@
         <translation>Platební požadavek %1 je moc velký (%2 bajtů, povoleno %3 bajtů).</translation>
     </message>
     <message>
-        <source>Payment request DoS protection</source>
-        <translation>DoS ochrana platebního požadavku</translation>
-    </message>
-    <message>
         <source>Error communicating with %1: %2</source>
         <translation>Chyba při komunikaci s %1: %2</translation>
     </message>
@@ -1479,14 +1482,6 @@
         <translation>Služby</translation>
     </message>
     <message>
-        <source>Starting Height</source>
-        <translation>Prvotní výška</translation>
-    </message>
-    <message>
-        <source>Sync Height</source>
-        <translation>Aktuální výška</translation>
-    </message>
-    <message>
         <source>Ban Score</source>
         <translation>Skóre pro klatbu</translation>
     </message>
@@ -1501,14 +1496,6 @@
     <message>
         <source>Last Receive</source>
         <translation>Poslední příjem</translation>
-    </message>
-    <message>
-        <source>Bytes Sent</source>
-        <translation>Bajtů odesláno</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Bajtů přijato</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1607,12 +1594,16 @@
         <translation>Ven</translation>
     </message>
     <message>
-        <source>Unknown</source>
-        <translation>Neznámá</translation>
+        <source>Yes</source>
+        <translation>Ano</translation>
     </message>
     <message>
-        <source>Fetching...</source>
-        <translation>Stahuji...</translation>
+        <source>No</source>
+        <translation>Ne</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Neznámá</translation>
     </message>
 </context>
 <context>
@@ -1979,10 +1970,6 @@
         <translation>Kopíruj drobné</translation>
     </message>
     <message>
-        <source>Total Amount %1 (= %2)</source>
-        <translation>Celková částka %1 (= %2)</translation>
-    </message>
-    <message>
         <source>or</source>
         <translation>nebo</translation>
     </message>
@@ -2017,10 +2004,6 @@
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
         <translation><numerusform>Potvrzování by podle odhadu mělo začít během %n bloku.</numerusform><numerusform>Potvrzování by podle odhadu mělo začít během %n bloků.</numerusform><numerusform>Potvrzování by podle odhadu mělo začít během %n bloků.</numerusform></translation>
-    </message>
-    <message>
-        <source>Pay only the minimum fee of %1</source>
-        <translation>Zaplatit pouze minimální poplatek %1</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2805,10 +2788,6 @@
         <translation>Běžet na pozadí jako démon a akceptovat příkazy</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Použít testovací síť (testnet)</translation>
-    </message>
-    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Přijímat spojení zvenčí (výchozí: 1, pokud není zadáno -proxy nebo -connect)</translation>
     </message>
@@ -2827,14 +2806,6 @@
     <message>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Spustit příkaz, když se objeví transakce týkající se peněženky (%s se v příkazu nahradí za TxID)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Horní hranice pro celkový poplatek za jednu transakci z peněženky; příliš nízká hodnota může zmařit velké transakce (výchozí: %s)</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by pruning (deleting) old blocks. This mode disables wallet support and is incompatible with -txindex. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, &gt;%u = target size in MiB to use for block files)</source>
-        <translation>Omezit nároky na úložný prostor prořezáváním (mazáním) starých bloků. V tomto režimu chybí peněženka a rovněž tento režim není slučitelný s -txindex. Upozornění: opětovná změna tohoto nastavení bude vyžadovat nové stažení celého řetězce bloků. (výchozí: 0 = bloky neprořezávat, &gt;%u = cílová velikost souborů s bloky, v MiB)</translation>
     </message>
     <message>
         <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
@@ -2857,20 +2828,12 @@
         <translation>UPOZORNĚNÍ: zkontroluj své spojení do sítě – bylo přijato %d bloků za posledních %d hodin (očekáváno %d)</translation>
     </message>
     <message>
-        <source>Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>Upozornění: -paytxfee je nastaveno velmi vysoko! Toto je transakční poplatek, který zaplatíš za každou poslanou transakci.</translation>
-    </message>
-    <message>
         <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
         <translation>Upozornění: Síť podle všeho není v konzistentním stavu. Někteří těžaři jsou zřejmě v potížích.</translation>
     </message>
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Upozornění: Nesouhlasím zcela se svými protějšky! Možná potřebuji aktualizovat nebo ostatní uzly potřebují aktualizovat.</translation>
-    </message>
-    <message>
-        <source>Warning: error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
-        <translation>Upozornění: nastala chyba při čtení souboru wallet.dat! Všechny klíče se přečetly správně, ale data o transakcích nebo záznamy v adresáři mohou chybět či být nesprávné.</translation>
     </message>
     <message>
         <source>Warning: wallet.dat corrupt, data salvaged! Original wallet.dat saved as wallet.{timestamp}.bak in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
@@ -2881,16 +2844,8 @@
         <translation>Umístit na bílou listinu protějšky připojující se z dané podsítě či IP adresy. Lze zadat i vícekrát.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(výchozí: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; může být:</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Pokusit se zachránit soukromé klíče z poškozeného souboru wallet.dat</translation>
     </message>
     <message>
         <source>Block creation options:</source>
@@ -2937,20 +2892,12 @@
         <translation>Chyba při otevírání databáze bloků</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Chyba: Stala se fatální vnitřní chyba. detaily viz v debug.log</translation>
-    </message>
-    <message>
         <source>Error: Disk space is low!</source>
         <translation>Problém: Na disku je málo místa!</translation>
     </message>
     <message>
         <source>Failed to listen on any port. Use -listen=0 if you want this.</source>
         <translation>Nepodařilo se naslouchat na žádném portu. Použij -listen=0, pokud to byl tvůj záměr.</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied, output all debugging information.</source>
-        <translation>Pokud není &lt;category&gt; zadána, bude tisknout veškeré ladicí informace.</translation>
     </message>
     <message>
         <source>Importing...</source>
@@ -3021,16 +2968,8 @@
         <translation>Je třeba přestavět databázi použitím -reindex, aby bylo možné změnit -txindex</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importovat bloky z externího souboru blk000??.dat</translation>
-    </message>
-    <message>
         <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
         <translation>Povolit JSON-RPC spojení ze specifikovaného zdroje. Platnou hodnotou &lt;ip&gt; je jednotlivá IP adresa (např. 1.2.3.4), síť/maska (např. 1.2.3.4/255.255.255.0) nebo síť/CIDR (např. 1.2.3.4/24). Tuto volbu lze použít i vícekrát</translation>
-    </message>
-    <message>
-        <source>An error occurred while setting up the RPC address %s port %u for listening: %s</source>
-        <translation>Při nastavování naslouchací RPC adresy %s a portu %u nastala chyba: %s</translation>
     </message>
     <message>
         <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
@@ -3057,16 +2996,8 @@
         <translation>Chyba: Nelze naslouchat příchozí spojení (listen vrátil chybu %s)</translation>
     </message>
     <message>
-        <source>Error: Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
-        <translation>Chyba: Byl použit nepodporovaný argument -socks. Nastavení verze SOCKS už není možné, podporovány jsou pouze SOCKS5 proxy.</translation>
-    </message>
-    <message>
         <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
         <translation>Spustit příkaz, když přijde relevantní upozornění nebo když dojde k opravdu dlouhému rozštěpení řetezce bloků (%s se v příkazu nahradí zprávou)</translation>
-    </message>
-    <message>
-        <source>Fees (in BTC/Kb) smaller than this are considered zero fee for relaying (default: %s)</source>
-        <translation>Poplatky (v BTC/kB) menší než tato hodnota jsou považovány za nulové pro účely přeposílání transakcí (výchozí: %s)</translation>
     </message>
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
@@ -3079,10 +3010,6 @@
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
         <translation>Maximální velikost dat v transakcích nesoucích data, se kterou jsme ochotni je ještě přeposílat a těžit (výchozí: %u)</translation>
-    </message>
-    <message>
-        <source>Prune configured below the minimum of %d MB.  Please use a higher number.</source>
-        <translation>Prořezávání je nastaveno pod minimum %d MB.  Použij prosím nějaké vyšší číslo.</translation>
     </message>
     <message>
         <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect)</source>
@@ -3109,38 +3036,6 @@
         <translation>Tento produkt zahrnuje programy vyvinuté OpenSSL Projektem pro použití v OpenSSL Toolkitu &lt;https://www.openssl.org/&gt; a kryptografický program od Erika Younga a program UPnP od Thomase Bernarda.</translation>
     </message>
     <message>
-        <source>To use bitcoind, or the -server option to bitcoin-qt, you must set an rpcpassword in the configuration file:
-%s
-It is recommended you use the following random password:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(you do not need to remember this password)
-The username and password MUST NOT be the same.
-If the file does not exist, create it with owner-readable-only file permissions.
-It is also recommended to set alertnotify so you are notified of problems;
-for example: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</source>
-        <translation>K používání bitcoind nebo volby -server u bitcoin-qt musíš nastavit rpcpassword v konfiguračním souboru:
-%s
-Je vhodné použít následující náhodné heslo:
-rpcuser=bitcoinrpc
-rpcpassword=%s
-(není potřeba si ho pamatovat)
-rpcuser a rpcpassword NESMÍ být stejné.
-Pokud konfigurační soubor ještě neexistuje, vytvoř ho tak, aby ho mohl číst pouze vlastník.
-Je také doporučeno si nastavit alertnotify, abys byl upozorněn na případné problémy;
-například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
-</translation>
-    </message>
-    <message>
-        <source>Warning: -maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
-        <translation>Upozornění: -maxtxfee je nastaveno velmi vysoko! Takto vysoký poplatek může být zaplacen v jednotlivé transakci.</translation>
-    </message>
-    <message>
-        <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
-        <translation>Upozornění: Zkontroluj, že máš v počítači správně nastavený datum a čas! Pokud jsou nastaveny špatně, Bitcoin Core nebude fungovat správně.</translation>
-    </message>
-    <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
         <translation>Na protějšky na bílé listině se nevztahuje DoS klatba a jejich transakce jsou vždy přeposílány, i když už třeba jsou v mempoolu, což je užitečné např. pro bránu</translation>
     </message>
@@ -3161,16 +3056,8 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Aktivuji nejlepší řetězec...</translation>
     </message>
     <message>
-        <source>Can't run with a wallet in prune mode.</source>
-        <translation>V prořezávacím režimu se s pěněženkou nemůžu spustit.</translation>
-    </message>
-    <message>
         <source>Cannot resolve -whitebind address: '%s'</source>
         <translation>Nemohu přeložit -whitebind adresu: '%s'</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Zvolit adresář pro data při startu (výchozí: 0)</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3181,24 +3068,12 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Copyright (C) 2009-%i Vývojáři Bitcoin Core</translation>
     </message>
     <message>
-        <source>Could not parse -rpcbind value %s as network address</source>
-        <translation>Nejde mi přečíst hodnotu -rpcbind %s jako síťovou adresu</translation>
-    </message>
-    <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
         <translation>Chyba při načítání wallet.dat: peněženka vyžaduje novější verzi Bitcoin Core</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Chyba při čtení z databáze, ukončuji se.</translation>
-    </message>
-    <message>
-        <source>Error: Unsupported argument -tor found, use -onion.</source>
-        <translation>Chyba: Argument -tor již není podporovaný, použij -onion.</translation>
-    </message>
-    <message>
-        <source>Fee (in BTC/kB) to add to transactions you send (default: %s)</source>
-        <translation>Poplatek (v BTC/kB), který se přidá ke každé odeslané transakci (výchozí: %s)</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3241,16 +3116,8 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Možnosti přeposílání:</translation>
     </message>
     <message>
-        <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>Možnosti SSL pro RPC: (viz instrukce nastavení SSL na Bitcoin Wiki)</translation>
-    </message>
-    <message>
         <source>RPC server options:</source>
         <translation>Možnosti RPC serveru:</translation>
-    </message>
-    <message>
-        <source>RPC support for HTTP persistent connections (default: %d)</source>
-        <translation>Podpora RPC pro perzistentní HTTP spojení (výchozí: %d)</translation>
     </message>
     <message>
         <source>Rebuild block chain index from current blk000??.dat files on startup</source>
@@ -3269,20 +3136,8 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Posílat transakce pokud možno bez poplatků (výchozí: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastavit kořenové SSL certifikáty pro platební požadavky (výchozí: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastavit jazyk, například „de_DE“ (výchozí: systémové nastavení)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Zobrazit všechny možnosti ladění (užití: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Zobrazit startovací obrazovku (výchozí: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3291,10 +3146,6 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Signing transaction failed</source>
         <translation>Nepodařilo se podepsat transakci</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Nastartovat minimalizovaně</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3321,16 +3172,8 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Transakce je příliš velká</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Možnosti UI:</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Nedaří se mi připojit na %s na tomhle počítači (operace bind vrátila chybu %s)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening)</source>
-        <translation>Použít UPnP k namapování naslouchacího portu (výchozí: 1, pokud naslouchá)</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3345,20 +3188,8 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Upozornění</translation>
     </message>
     <message>
-        <source>Warning: Unsupported argument -benchmark ignored, use -debug=bench.</source>
-        <translation>Upozornění: Nepodporovaný argument -benchmark se ignoruje, použij -debug=bench.</translation>
-    </message>
-    <message>
-        <source>Warning: Unsupported argument -debugnet ignored, use -debug=net.</source>
-        <translation>Upozornění: Nepodporovaný argument -debugnet se ignoruje, použij -debug=net.</translation>
-    </message>
-    <message>
         <source>Zapping all transactions from wallet...</source>
         <translation>Vymazat všechny transakce z peněženky...</translation>
-    </message>
-    <message>
-        <source>on startup</source>
-        <translation>při startu</translation>
     </message>
     <message>
         <source>wallet.dat corrupt, salvage failed</source>
@@ -3371,18 +3202,6 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Spustit příkaz, když se změní nejlepší blok (%s se v příkazu nahradí hashem bloku)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Převést peněženku na nejnovější formát</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Přeskenovat řetězec bloků na chybějící transakce tvé pěněženky</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Použít OpenSSL (https) pro JSON-RPC spojení</translation>
     </message>
     <message>
         <source>This help message</source>
@@ -3427,10 +3246,6 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>(default: %s)</source>
         <translation>(výchozí: %s)</translation>
-    </message>
-    <message>
-        <source>Acceptable ciphers (default: %s)</source>
-        <translation>Akceptovatelné šifry (výchozí: %s)</translation>
     </message>
     <message>
         <source>Always query for peer addresses via DNS lookup (default: %u)</source>
@@ -3493,14 +3308,6 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
         <translation>Přeposílat ne-P2SH multisig (výchozí: %u)</translation>
     </message>
     <message>
-        <source>Server certificate file (default: %s)</source>
-        <translation>Soubor se serverovým certifikátem (výchozí: %s)</translation>
-    </message>
-    <message>
-        <source>Server private key (default: %s)</source>
-        <translation>Soubor se serverovým soukromým klíčem (výchozí: %s)</translation>
-    </message>
-    <message>
         <source>Set key pool size to &lt;n&gt; (default: %u)</source>
         <translation>Nastavit zásobník klíčů na velikost &lt;n&gt; (výchozí: %u)</translation>
     </message>
@@ -3519,6 +3326,10 @@ například: alertnotify=echo %%s | mail -s "Bitcoin Alert" admin@foo.com
     <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
         <translation>Zadej časový limit spojení v milivteřinách (minimum: 1, výchozí: %d)</translation>
+    </message>
+    <message>
+        <source>Specify pid file (default: %s)</source>
+        <translation>PID soubor (výchozí: %s)</translation>
     </message>
     <message>
         <source>Spend unconfirmed change when sending transactions (default: %u)</source>

@@ -1,4 +1,4 @@
-<TS language="be_BY" version="2.0">
+<TS language="be_BY" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -220,6 +220,9 @@
         <translation>Парольная фраза гаманца паспяхова зменена.</translation>
     </message>
 </context>
+<context>
+    <name>BanTableModel</name>
+    </context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -795,7 +798,7 @@
         <source>command-line options</source>
         <translation>опцыі каманднага радка</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -840,6 +843,10 @@
         <source>MB</source>
         <translation>Мб</translation>
     </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Гаманец</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
@@ -866,9 +873,21 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation>Інфармацыя</translation>
+    </message>
+    <message>
+        <source>Debug window</source>
+        <translation>Вакно адладкі</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>&amp;Колькасць:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>Метка:</translation>
@@ -884,6 +903,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>Капіяваць адрас</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Адрас</translation>
@@ -929,6 +952,10 @@
     <message>
         <source>Send Coins</source>
         <translation>Даслаць Манеты</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Недастаткова сродкаў</translation>
     </message>
     <message>
         <source>Quantity:</source>
@@ -1040,6 +1067,14 @@
     <message>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Паведамленне:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Заплаціць да:</translation>
     </message>
     <message>
         <source>Memo:</source>
@@ -1373,10 +1408,6 @@
         <translation>Запусціць у фоне як дэман і прымаць каманды</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Ужываць тэставае сеціва</translation>
-    </message>
-    <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>Ці жадаеце вы перабудаваць зараз базу звестак блокаў?</translation>
     </message>
@@ -1395,10 +1426,6 @@
     <message>
         <source>Error opening block database</source>
         <translation>Памылка адчынення базы звестак блокаў</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occured, see debug.log for details</source>
-        <translation>Памылка: здарылася Фатальная унутраная памылка, глядзі debug.log для падрабязнасцяў</translation>
     </message>
     <message>
         <source>Error: Disk space is low!</source>
@@ -1429,10 +1456,6 @@
         <translation>Опцыі гаманца:</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Імпартаванне блокаў з вонкавага blk000??.dat файла</translation>
-    </message>
-    <message>
         <source>Activating best chain...</source>
         <translation>Актывацыя лепшага ланцуга...</translation>
     </message>
@@ -1451,10 +1474,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Памылка подпісу транзакцыі</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Стартаваць ммінімізаванай</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -1483,18 +1502,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Выканаць каманду калі лепшы блок зменіцца (%s замяняецца на хэш блока)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Абнавіць гаманец на новы фармат</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Перасканаваць ланцуг блокаў дзеля пошуку адсутных транзакцый</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Ужываць OpenSSL (https) для JSON-RPC злучэнняў</translation>
     </message>
     <message>
         <source>Loading addresses...</source>

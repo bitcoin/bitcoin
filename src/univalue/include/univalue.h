@@ -243,6 +243,39 @@ extern enum jtokentype getJsonToken(std::string& tokenVal,
                                     unsigned int& consumed, const char *raw);
 extern const char *uvTypeName(UniValue::VType t);
 
+static inline bool jsonTokenIsValue(enum jtokentype jtt)
+{
+    switch (jtt) {
+    case JTOK_KW_NULL:
+    case JTOK_KW_TRUE:
+    case JTOK_KW_FALSE:
+    case JTOK_NUMBER:
+    case JTOK_STRING:
+        return true;
+
+    default:
+        return false;
+    }
+
+    // not reached
+}
+
+static inline bool json_isspace(int ch)
+{
+    switch (ch) {
+    case 0x20:
+    case 0x09:
+    case 0x0a:
+    case 0x0d:
+        return true;
+
+    default:
+        return false;
+    }
+
+    // not reached
+}
+
 extern const UniValue NullUniValue;
 
 const UniValue& find_value( const UniValue& obj, const std::string& name);

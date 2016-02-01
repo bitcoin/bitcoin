@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-#
+# Copyright (c) 2015 The Bitcoin Core developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -10,7 +10,7 @@ from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript
-from binascii import hexlify, unhexlify
+from binascii import unhexlify
 import cStringIO
 import time
 

@@ -19,10 +19,11 @@ public:
 
     static CZMQNotificationInterface* CreateWithArguments(const std::map<std::string, std::string> &args);
 
+protected:
     bool Initialize();
     void Shutdown();
 
-protected: // CValidationInterface
+    // CValidationInterface
     void SyncTransaction(const CTransaction &tx, const CBlock *pblock);
     void UpdatedBlockTip(const CBlockIndex *pindex);
 

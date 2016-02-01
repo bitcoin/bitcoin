@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,6 +52,11 @@ def check_array_result(object_array, to_match, expected, should_not_find = False
         raise AssertionError("Objects was matched %s"%(str(to_match)))
 
 class ReceivedByTest(BitcoinTestFramework):
+
+    def setup_nodes(self):
+        #This test requires mocktime
+        enable_mocktime()
+        return start_nodes(4, self.options.tmpdir)
 
     def run_test(self):
         '''

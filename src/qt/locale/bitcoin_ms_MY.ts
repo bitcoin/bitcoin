@@ -1,4 +1,4 @@
-<TS language="ms_MY" version="2.0">
+<TS language="ms_MY" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -55,6 +55,9 @@
     </context>
 <context>
     <name>AskPassphraseDialog</name>
+    </context>
+<context>
+    <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
@@ -118,6 +121,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Salin Alamat</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Alamat</translation>

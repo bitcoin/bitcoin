@@ -1,4 +1,4 @@
-<TS language="sr" version="2.0">
+<TS language="sr" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -133,6 +133,9 @@
     </message>
 </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
@@ -217,6 +220,10 @@
     <message>
         <source>Tabs toolbar</source>
         <translation>Трака са картицама</translation>
+    </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>O Bitcoin Coru</translation>
     </message>
     <message>
         <source>Up to date</source>
@@ -335,6 +342,10 @@
         <translation>Поставке</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>новчаник</translation>
+    </message>
+    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Јединица за приказивање износа:</translation>
     </message>
@@ -372,8 +383,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Iznos:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Етикета</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Poruka:</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -387,6 +406,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>Kopirajte adresu</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Адреса</translation>
     </message>
@@ -398,6 +421,10 @@
         <source>Label</source>
         <translation>Етикета</translation>
     </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -408,6 +435,10 @@
     <message>
         <source>Label</source>
         <translation>Етикета</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -447,6 +478,10 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>Iznos:</translation>
+    </message>
     <message>
         <source>&amp;Label:</source>
         <translation>&amp;Етикета</translation>
@@ -509,6 +544,14 @@
     <message>
         <source>label</source>
         <translation>етикета</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>transakcije</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -751,24 +794,12 @@
         <translation>Radi u pozadini kao daemon servis i prihvati komande</translation>
     </message>
     <message>
-        <source>Use the test network</source>
-        <translation>Koristi testnu mrežu</translation>
-    </message>
-    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>Korisničko ime za JSON-RPC konekcije</translation>
     </message>
     <message>
         <source>Password for JSON-RPC connections</source>
         <translation>Lozinka za JSON-RPC konekcije</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Ponovo skeniraj lanac blokova za nedostajuće transakcije iz novčanika</translation>
-    </message>
-    <message>
-        <source>Use OpenSSL (https) for JSON-RPC connections</source>
-        <translation>Koristi OpenSSL (https) za  JSON-RPC konekcije</translation>
     </message>
     <message>
         <source>This help message</source>

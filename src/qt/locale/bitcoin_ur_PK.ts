@@ -1,4 +1,4 @@
-<TS language="ur_PK" version="2.0">
+<TS language="ur_PK" version="2.1">
 <context>
     <name>AddressBookPage</name>
     <message>
@@ -109,6 +109,9 @@
     </message>
     </context>
 <context>
+    <name>BanTableModel</name>
+    </context>
+<context>
     <name>BitcoinGUI</name>
     <message>
         <source>Error</source>
@@ -120,6 +123,10 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>رقم:</translation>
+    </message>
     <message>
         <source>Amount</source>
         <translation>رقم</translation>
@@ -135,6 +142,14 @@
     </context>
 <context>
     <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>چٹ</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation> پتہ</translation>
+    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -183,6 +198,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>کاپی پتہ</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation> پتہ</translation>
     </message>
@@ -216,6 +235,14 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>ناکافی فنڈز</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>رقم:</translation>
+    </message>
     <message>
         <source>Balance:</source>
         <translation>بیلنس:</translation>

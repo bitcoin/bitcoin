@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -36,7 +36,9 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
-// Dump addresses to peers.dat every 15 minutes (900s)
+#include <math.h>
+
+// Dump addresses to peers.dat and banlist.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
 
 #if !defined(HAVE_MSG_NOSIGNAL) && !defined(MSG_NOSIGNAL)
@@ -66,6 +68,8 @@ namespace {
         ListenSocket(SOCKET socket, bool whitelisted) : socket(socket), whitelisted(whitelisted) {}
     };
 }
+
+const static std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
 //
 // Global state variables
@@ -216,6 +220,7 @@ void AdvertizeLocal(CNode *pnode)
         }
         if (addrLocal.IsRoutable())
         {
+            LogPrintf("AdvertizeLocal: advertizing address %s\n", addrLocal.ToString());
             pnode->PushAddress(addrLocal);
         }
     }
@@ -260,6 +265,14 @@ bool AddLocal(const CService& addr, int nScore)
 bool AddLocal(const CNetAddr &addr, int nScore)
 {
     return AddLocal(CService(addr, GetListenPort()), nScore);
+}
+
+bool RemoveLocal(const CService& addr)
+{
+    LOCK(cs_mapLocalHost);
+    LogPrintf("RemoveLocal(%s)\n", addr.ToString());
+    mapLocalHost.erase(addr);
+    return true;
 }
 
 /** Make a particular network entirely off-limits (no automatic connects to it) */
@@ -452,8 +465,8 @@ void CNode::PushVersion()
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
     else
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
-    PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, strSubVersion, nBestHeight, true);
+    PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
+                nLocalHostNonce, strSubVersion, nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
 }
 
 
@@ -514,11 +527,10 @@ void CNode::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t banti
     banEntry.banReason = banReason;
     if (bantimeoffset <= 0)
     {
-        bantimeoffset = GetArg("-bantime", 60*60*24); // Default 24-hour ban
+        bantimeoffset = GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME);
         sinceUnixEpoch = false;
     }
     banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime() )+bantimeoffset;
-
 
     LOCK(cs_setBanned);
     if (setBanned[subNet].nBanUntil < banEntry.nBanUntil)
@@ -563,11 +575,13 @@ void CNode::SweepBanned()
     banmap_t::iterator it = setBanned.begin();
     while(it != setBanned.end())
     {
+        CSubNet subNet = (*it).first;
         CBanEntry banEntry = (*it).second;
         if(now > banEntry.nBanUntil)
         {
             setBanned.erase(it++);
             setBannedIsDirty = true;
+            LogPrint("net", "%s: Removed banned node ip/subnet from banlist.dat: %s\n", __func__, subNet.ToString());
         }
         else
             ++it;
@@ -610,6 +624,7 @@ void CNode::copyStats(CNodeStats &stats)
 {
     stats.nodeid = this->GetId();
     X(nServices);
+    X(fRelayTxes);
     X(nLastSend);
     X(nLastRecv);
     X(nTimeConnected);
@@ -620,7 +635,9 @@ void CNode::copyStats(CNodeStats &stats)
     X(fInbound);
     X(nStartingHeight);
     X(nSendBytes);
+    X(mapSendBytesPerMsgCmd);
     X(nRecvBytes);
+    X(mapRecvBytesPerMsgCmd);
     X(fWhitelisted);
 
     // It is common for nodes with good ping times to suddenly become lagged,
@@ -675,6 +692,15 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
         nBytes -= handled;
 
         if (msg.complete()) {
+
+            //store received bytes per message command
+            //to prevent a memory DOS, only allow valid commands
+            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.hdr.pchCommand);
+            if (i == mapRecvBytesPerMsgCmd.end())
+                i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
+            assert(i != mapRecvBytesPerMsgCmd.end());
+            i->second += msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+
             msg.nTime = GetTimeMicros();
             messageHandlerCondition.notify_one();
         }
@@ -1383,7 +1409,7 @@ void ThreadMapPort()
                     LogPrintf("AddPortMapping(%s, %s, %s) failed with code %d (%s)\n",
                         port, port, lanaddr, r, strupnperror(r));
                 else
-                    LogPrintf("UPnP Port Mapping successful.\n");;
+                    LogPrintf("UPnP Port Mapping successful.\n");
 
                 MilliSleep(20*60*1000); // Refresh every 20 minutes
             }
@@ -1441,7 +1467,7 @@ void ThreadDNSAddressSeed()
 {
     // goal: only query DNS seeds if address need is acute
     if ((addrman.size() > 0) &&
-        (!GetBoolArg("-forcednsseed", false))) {
+        (!GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED))) {
         MilliSleep(11 * 1000);
 
         LOCK(cs_vNodes);
@@ -1505,12 +1531,7 @@ void DumpAddresses()
 void DumpData()
 {
     DumpAddresses();
-
-    if (CNode::BannedSetIsDirty())
-    {
-        DumpBanlist();
-        CNode::SetBannedSetDirty(false);
-    }
+    DumpBanlist();
 }
 
 void static ProcessOneShot()
@@ -1748,11 +1769,6 @@ void ThreadMessageHandler()
             }
         }
 
-        // Poll the connected nodes for messages
-        CNode* pnodeTrickle = NULL;
-        if (!vNodesCopy.empty())
-            pnodeTrickle = vNodesCopy[GetRand(vNodesCopy.size())];
-
         bool fSleep = true;
 
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
@@ -1783,7 +1799,7 @@ void ThreadMessageHandler()
             {
                 TRY_LOCK(pnode->cs_vSend, lockSend);
                 if (lockSend)
-                    g_signals.SendMessages(pnode, pnode == pnodeTrickle || pnode->fWhitelisted);
+                    g_signals.SendMessages(pnode);
             }
             boost::this_thread::interruption_point();
         }
@@ -1956,31 +1972,36 @@ void static Discover(boost::thread_group& threadGroup)
 void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 {
     uiInterface.InitMessage(_("Loading addresses..."));
-    // Load addresses for peers.dat
+    // Load addresses from peers.dat
     int64_t nStart = GetTimeMillis();
     {
         CAddrDB adb;
-        if (!adb.Read(addrman))
+        if (adb.Read(addrman))
+            LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman.size(), GetTimeMillis() - nStart);
+        else
             LogPrintf("Invalid or missing peers.dat; recreating\n");
     }
 
-    //try to read stored banlist
+    uiInterface.InitMessage(_("Loading banlist..."));
+    // Load addresses from banlist.dat
+    nStart = GetTimeMillis();
     CBanDB bandb;
     banmap_t banmap;
-    if (!bandb.Read(banmap))
+    if (bandb.Read(banmap)) {
+        CNode::SetBanned(banmap); // thread save setter
+        CNode::SetBannedSetDirty(false); // no need to write down, just read data
+        CNode::SweepBanned(); // sweep out unused entries
+
+        LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
+            banmap.size(), GetTimeMillis() - nStart);
+    } else
         LogPrintf("Invalid or missing banlist.dat; recreating\n");
 
-    CNode::SetBanned(banmap); //thread save setter
-    CNode::SetBannedSetDirty(false); //no need to write down just read or nonexistent data
-    CNode::SweepBanned(); //sweap out unused entries
-
-    LogPrintf("Loaded %i addresses from peers.dat  %dms\n",
-           addrman.size(), GetTimeMillis() - nStart);
     fAddressesInitialized = true;
 
     if (semOutbound == NULL) {
         // initialize semaphore
-        int nMaxOutbound = min(MAX_OUTBOUND_CONNECTIONS, nMaxConnections);
+        int nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, nMaxConnections);
         semOutbound = new CSemaphore(nMaxOutbound);
     }
 
@@ -2149,8 +2170,8 @@ void CNode::SetMaxOutboundTarget(uint64_t limit)
     uint64_t recommendedMinimum = (nMaxOutboundTimeframe / 600) * MAX_BLOCK_SIZE;
     nMaxOutboundLimit = limit;
 
-    if (limit < recommendedMinimum)
-        LogPrintf("Max outbound target is very small (%s) and will be overshot. Recommended minimum is %s\n.", nMaxOutboundLimit, recommendedMinimum);
+    if (limit > 0 && limit < recommendedMinimum)
+        LogPrintf("Max outbound target is very small (%s bytes) and will be overshot. Recommended minimum is %s bytes.\n", nMaxOutboundLimit, recommendedMinimum);
 }
 
 uint64_t CNode::GetMaxOutboundTarget()
@@ -2199,7 +2220,7 @@ bool CNode::OutboundTargetReached(bool historicalBlockServingLimit)
 
     if (historicalBlockServingLimit)
     {
-        // keep a large enought buffer to at least relay each block once
+        // keep a large enough buffer to at least relay each block once
         uint64_t timeLeftInCycle = GetMaxOutboundTimeLeftInCycle();
         uint64_t buffer = timeLeftInCycle / 600 * MAX_BLOCK_SIZE;
         if (buffer >= nMaxOutboundLimit || nMaxOutboundTotalBytesSentInCycle >= nMaxOutboundLimit - buffer)
@@ -2368,13 +2389,13 @@ bool CAddrDB::Read(CAddrMan& addr)
     return true;
 }
 
-unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", 5*1000); }
-unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", 1*1000); }
+unsigned int ReceiveFloodSize() { return 1000*GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER); }
+unsigned int SendBufferSize() { return 1000*GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER); }
 
 CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn) :
     ssSend(SER_NETWORK, INIT_PROTO_VERSION),
     addrKnown(5000, 0.001),
-    setInventoryKnown(SendBufferSize() / 1000)
+    filterInventoryKnown(50000, 0.000001)
 {
     nServices = 0;
     hSocket = hSocketIn;
@@ -2401,7 +2422,11 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nSendOffset = 0;
     hashContinue = uint256();
     nStartingHeight = -1;
+    filterInventoryKnown.reset();
     fGetAddr = false;
+    nNextLocalAddrSend = 0;
+    nNextAddrSend = 0;
+    nNextInvSend = 0;
     fRelayTxes = false;
     pfilter = new CBloomFilter();
     nPingNonceSent = 0;
@@ -2409,6 +2434,9 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nPingUsecTime = 0;
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
+    BOOST_FOREACH(const std::string &msg, getAllNetMessageTypes())
+        mapRecvBytesPerMsgCmd[msg] = 0;
+    mapRecvBytesPerMsgCmd[NET_MESSAGE_COMMAND_OTHER] = 0;
 
     {
         LOCK(cs_nLastNodeId);
@@ -2439,8 +2467,12 @@ CNode::~CNode()
 
 void CNode::AskFor(const CInv& inv)
 {
-    if (mapAskFor.size() > MAPASKFOR_MAX_SZ)
+    if (mapAskFor.size() > MAPASKFOR_MAX_SZ || setAskFor.size() > SETASKFOR_MAX_SZ)
         return;
+    // a peer may not have multiple non-responded queue positions for a single inv item
+    if (!setAskFor.insert(inv.hash).second)
+        return;
+
     // We're using mapAskFor as a priority queue,
     // the key is the earliest time the request can be sent
     int64_t nRequestTime;
@@ -2485,7 +2517,7 @@ void CNode::AbortMessage() UNLOCK_FUNCTION(cs_vSend)
     LogPrint("net", "(aborted)\n");
 }
 
-void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
+void CNode::EndMessage(const char* pszCommand) UNLOCK_FUNCTION(cs_vSend)
 {
     // The -*messagestest options are intentionally not documented in the help message,
     // since they are only used during development to debug the networking code and are
@@ -2507,6 +2539,9 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     // Set the size
     unsigned int nSize = ssSend.size() - CMessageHeader::HEADER_SIZE;
     WriteLE32((uint8_t*)&ssSend[CMessageHeader::MESSAGE_SIZE_OFFSET], nSize);
+
+    //log total amount of bytes per command
+    mapSendBytesPerMsgCmd[std::string(pszCommand)] += nSize + CMessageHeader::HEADER_SIZE;
 
     // Set the checksum
     uint256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());
@@ -2618,28 +2653,36 @@ bool CBanDB::Read(banmap_t& banSet)
         // ... verify the network matches ours
         if (memcmp(pchMsgTmp, Params().MessageStart(), sizeof(pchMsgTmp)))
             return error("%s: Invalid network magic number", __func__);
-        
+
         // de-serialize address data into one CAddrMan object
         ssBanlist >> banSet;
     }
     catch (const std::exception& e) {
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
-    
+
     return true;
 }
 
 void DumpBanlist()
 {
-    int64_t nStart = GetTimeMillis();
+    CNode::SweepBanned(); // clean unused entries (if bantime has expired)
 
-    CNode::SweepBanned(); //clean unused entries (if bantime has expired)
+    if (!CNode::BannedSetIsDirty())
+        return;
+
+    int64_t nStart = GetTimeMillis();
 
     CBanDB bandb;
     banmap_t banmap;
     CNode::GetBanned(banmap);
-    bandb.Write(banmap);
+    if (bandb.Write(banmap))
+        CNode::SetBannedSetDirty(false);
 
     LogPrint("net", "Flushed %d banned node ips/subnets to banlist.dat  %dms\n",
-             banmap.size(), GetTimeMillis() - nStart);
+        banmap.size(), GetTimeMillis() - nStart);
+}
+
+int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds) {
+    return nNow + (int64_t)(log1p(GetRand(1ULL << 48) * -0.0000000000000035527136788 /* -1/2^48 */) * average_interval_seconds * -1000000.0 + 0.5);
 }

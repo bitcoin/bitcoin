@@ -2,7 +2,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <ctype.h>
 #include <iomanip>
 #include <sstream>
 #include <stdio.h>
@@ -25,10 +24,10 @@ static string json_escape(const string& inS)
         if (escStr)
             outS += escStr;
 
-        else if (isprint(ch))
+        else if (ch < 0x80)
             outS += ch;
 
-        else {
+        else { // TODO handle UTF-8 properly
             char tmpesc[16];
             sprintf(tmpesc, "\\u%04x", ch);
             outS += tmpesc;
@@ -113,7 +112,7 @@ void UniValue::writeObject(unsigned int prettyIndent, unsigned int indentLevel, 
         s += "\"" + json_escape(keys[i]) + "\":";
         if (prettyIndent)
             s += " ";
-        s += values[i].write(prettyIndent, indentLevel + 1);
+        s += values.at(i).write(prettyIndent, indentLevel + 1);
         if (i != (values.size() - 1))
             s += ",";
         if (prettyIndent)

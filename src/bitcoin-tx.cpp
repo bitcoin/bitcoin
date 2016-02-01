@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,7 +37,7 @@ static bool AppInitRawTx(int argc, char* argv[])
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     try {
         SelectParams(ChainNameFromCommandLine());
-    } catch(std::exception &e) {
+    } catch (const std::exception& e) {
         fprintf(stderr, "Error: %s\n", e.what());
         return false;
     }
@@ -477,9 +477,15 @@ static void MutateTxSign(CMutableTransaction& tx, const string& flagStr)
 
 class Secp256k1Init
 {
+    ECCVerifyHandle globalVerifyHandle;
+
 public:
-    Secp256k1Init() { ECC_Start(); }
-    ~Secp256k1Init() { ECC_Stop(); }
+    Secp256k1Init() {
+        ECC_Start();
+    }
+    ~Secp256k1Init() {
+        ECC_Stop();
+    }
 };
 
 static void MutateTx(CMutableTransaction& tx, const string& command,

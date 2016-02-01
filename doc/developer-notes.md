@@ -204,3 +204,172 @@ If a set of tools is used by the build system or scripts the repository (for
 example, lcov) it is perfectly acceptable to add its files to `.gitignore`
 and commit them.
 
+Development guidelines
+============================
+
+A few non-style-related recommendations for developers, as well as points to
+pay attention to for reviewers of Bitcoin Core code.
+
+General Bitcoin Core
+----------------------
+
+- New features should be exposed on RPC first, then can be made available in the GUI
+
+  - *Rationale*: RPC allows for better automatic testing. The test suite for
+    the GUI is very limited
+
+- Make sure pull requests pass Travis CI before merging
+
+  - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
+     on the master branch. Otherwise all new pull requests will start failing the tests, resulting in
+     confusion and mayhem
+ 
+  - *Explanation*: If the test suite is to be updated for a change, this has to
+    be done first 
+
+Wallet
+-------
+
+- Make sure that no crashes happen with run-time option `-disablewallet`.
+
+  - *Rationale*: In RPC code that conditionally uses the wallet (such as
+    `validateaddress`) it is easy to forget that global pointer `pwalletMain`
+    can be NULL. See `qa/rpc-tests/disablewallet.py` for functional tests
+    exercising the API with `-disablewallet`
+
+- Include `db_cxx.h` (BerkeleyDB header) only when `ENABLE_WALLET` is set
+
+  - *Rationale*: Otherwise compilation of the disable-wallet build will fail in environments without BerkeleyDB
+
+General C++
+-------------
+
+- Assertions should not have side-effects
+
+  - *Rationale*: Even though the source code is set to to refuse to compile
+    with assertions disabled, having side-effects in assertions is unexpected and
+    makes the code harder to understand
+
+- If you use the `.h`, you must link the `.cpp`
+
+  - *Rationale*: Include files define the interface for the code in implementation files. Including one but
+      not linking the other is confusing. Please avoid that. Moving functions from
+      the `.h` to the `.cpp` should not result in build errors
+
+- Use the RAII (Resource Acquisition Is Initialization) paradigm where possible. For example by using
+  `scoped_pointer` for allocations in a function.
+
+  - *Rationale*: This avoids memory and resource leaks, and ensures exception safety
+
+C++ data structures
+--------------------
+
+- Never use the `std::map []` syntax when reading from a map, but instead use `.find()`
+
+  - *Rationale*: `[]` does an insert (of the default element) if the item doesn't
+    exist in the map yet. This has resulted in memory leaks in the past, as well as
+    race conditions (expecting read-read behavior). Using `[]` is fine for *writing* to a map
+
+- Do not compare an iterator from one data structure with an iterator of
+  another data structure (even if of the same type)
+
+  - *Rationale*: Behavior is undefined. In C++ parlor this means "may reformat
+    the universe", in practice this has resulted in at least one hard-to-debug crash bug
+
+- Watch out for vector out-of-bounds exceptions. `&vch[0]` is illegal for an
+  empty vector, `&vch[vch.size()]` is always illegal. Use `begin_ptr(vch)` and
+  `end_ptr(vch)` to get the begin and end pointer instead (defined in
+  `serialize.h`)
+
+- Vector bounds checking is only enabled in debug mode. Do not rely on it
+
+- Make sure that constructors initialize all fields. If this is skipped for a
+  good reason (i.e., optimization on the critical path), add an explicit
+  comment about this
+
+  - *Rationale*: Ensure determinism by avoiding accidental use of uninitialized
+    values. Also, static analyzers balk about this.
+
+- Use explicitly signed or unsigned `char`s, or even better `uint8_t` and
+  `int8_t`. Do not use bare `char` unless it is to pass to a third-party API.
+  This type can be signed or unsigned depending on the architecture, which can
+  lead to interoperability problems or dangerous conditions such as
+  out-of-bounds array accesses
+
+- Prefer explicit constructions over implicit ones that rely on 'magical' C++ behavior
+
+  - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
+  that are not language lawyers
+
+Strings and formatting
+------------------------
+
+- Be careful of `LogPrint` versus `LogPrintf`. `LogPrint` takes a `category` argument, `LogPrintf` does not.
+
+  - *Rationale*: Confusion of these can result in runtime exceptions due to
+    formatting mismatch, and it is easy to get wrong because of subtly similar naming
+
+- Use `std::string`, avoid C string manipulation functions
+
+  - *Rationale*: C++ string handling is marginally safer, less scope for
+    buffer overflows and surprises with `\0` characters. Also some C string manipulations
+    tend to act differently depending on platform, or even the user locale
+
+- Use `ParseInt32`, `ParseInt64`, `ParseDouble` from `utilstrencodings.h` for number parsing
+
+  - *Rationale*: These functions do overflow checking, and avoid pesky locale issues
+
+- For `strprintf`, `LogPrint`, `LogPrintf` formatting characters don't need size specifiers
+
+  - *Rationale*: Bitcoin Core uses tinyformat, which is type safe. Leave them out to avoid confusion
+
+Threads and synchronization
+----------------------------
+
+- Build and run tests with `-DDEBUG_LOCKORDER` to verify that no potential
+  deadlocks are introduced. As of 0.12, this is defined by default when
+  configuring with `--enable-debug`
+
+- When using `LOCK`/`TRY_LOCK` be aware that the lock exists in the context of
+  the current scope, so surround the statement and the code that needs the lock
+  with braces
+
+  OK:
+
+```c++
+{
+    TRY_LOCK(cs_vNodes, lockNodes);
+    ...
+}
+```
+
+  Wrong:
+
+```c++
+TRY_LOCK(cs_vNodes, lockNodes);
+{
+    ...
+}
+```
+
+Source code organization
+--------------------------
+
+- Implementation code should go into the `.cpp` file and not the `.h`, unless necessary due to template usage or
+  when performance due to inlining is critical
+
+  - *Rationale*: Shorter and simpler header files are easier to read, and reduce compile time
+
+- Don't import anything into the global namespace (`using namespace ...`). Use
+  fully specified types such as `std::string`.
+
+  - *Rationale*: Avoids symbol conflicts
+
+GUI
+-----
+
+- Do not display or manipulate dialogs in model code (classes `*Model`)
+
+  - *Rationale*: Model classes pass through events and data from the core, they
+    should not interact with the user. That's where View classes come in. The converse also
+    holds: try to not directly access core data structures from Views.
