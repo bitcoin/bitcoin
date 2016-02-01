@@ -98,7 +98,7 @@ public:
                     break;
                 genesis.nNonce=genesis.nNonce+10000;
                 if (genesis.nNonce == 0){
-                    printf("NONCE WRAPPED, incrementing time\n");
+                    LogPrintf("NONCE WRAPPED, incrementing time\n");
                     ++genesis.nTime;
                 }
             }
