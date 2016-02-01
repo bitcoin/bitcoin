@@ -558,12 +558,16 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                               bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
                               std::vector<COutPoint>& coins_to_uncache, bool fDryRun)
 {
+    const uint256 hash = tx.GetHash();
     AssertLockHeld(cs_main);
     if (pfMissingInputs)
         *pfMissingInputs = false;
 
-    if (!CheckTransaction(tx, state) || !ContextualCheckTransaction(tx, state, chainActive.Tip()))
-        return false;
+    if (!CheckTransaction(tx, state))
+        return error("%s: CheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+
+    if (!ContextualCheckTransaction(tx, state, chainActive.Tip()))
+        return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
@@ -589,7 +593,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         return state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
 
     // is it already in the memory pool?
-    uint256 hash = tx.GetHash();
     if (pool.exists(hash))
         return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-in-mempool");
 
@@ -964,7 +967,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
-            return false;
+            return error("%s: CheckInputs: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
@@ -1963,7 +1966,7 @@ static bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockInd
 
     // Check it again in case a previous version let a bad block in
     if (!CheckBlock(block, state, !fJustCheck, !fJustCheck))
-        return false;
+        return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
 
     // verify that the view's current state corresponds to the previous block
     uint256 hashPrevBlock = pindex->pprev == NULL ? uint256() : pindex->pprev->GetBlockHash();
@@ -3111,13 +3114,11 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
 {
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus()))
-        return state.DoS(50, error("CheckBlockHeader(): proof of work failed"),
-                         REJECT_INVALID, "high-hash");
+        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     // Check timestamp
     if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
-        return state.Invalid(error("CheckBlockHeader(): block timestamp too far in the future"),
-                             REJECT_INVALID, "time-too-new");
+        return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
     return true;
 }
@@ -3139,15 +3140,13 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         bool mutated;
         uint256 hashMerkleRoot2 = BlockMerkleRoot(block, &mutated);
         if (block.hashMerkleRoot != hashMerkleRoot2)
-            return state.DoS(100, error("CheckBlock(): hashMerkleRoot mismatch"),
-                             REJECT_INVALID, "bad-txnmrklroot", true);
+            return state.DoS(100, false, REJECT_INVALID, "bad-txnmrklroot", true, "hashMerkleRoot mismatch");
 
         // Check for merkle tree malleability (CVE-2012-2459): repeating sequences
         // of transactions in a block without affecting the merkle root of a block,
         // while still invalidating it.
         if (mutated)
-            return state.DoS(100, error("CheckBlock(): duplicate transaction"),
-                             REJECT_INVALID, "bad-txns-duplicate", true);
+            return state.DoS(100, false, REJECT_INVALID, "bad-txns-duplicate", true, "duplicate transaction");
     }
 
     // All potential-corruption validation must be done before we do any
@@ -3156,17 +3155,14 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
 
     // Size limits (relaxed)
     if (block.vtx.empty() || block.vtx.size() > MaxBlockSize(true) || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MaxBlockSize(true))
-        return state.DoS(100, error("%s: size limits failed", __func__),
-                         REJECT_INVALID, "bad-blk-length");
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
     if (block.vtx.empty() || !block.vtx[0].IsCoinBase())
-        return state.DoS(100, error("CheckBlock(): first tx is not coinbase"),
-                         REJECT_INVALID, "bad-cb-missing");
+        return state.DoS(100, false, REJECT_INVALID, "bad-cb-missing", false, "first tx is not coinbase");
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i].IsCoinBase())
-            return state.DoS(100, error("CheckBlock(): more than one coinbase"),
-                             REJECT_INVALID, "bad-cb-multiple");
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
 
 
     // DASH : CHECK TRANSACTIONS FOR INSTANTSEND
@@ -3186,9 +3182,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                     // relaying instantsend data won't help it.
                     LOCK(cs_main);
                     mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-                    return state.DoS(0, error("CheckBlock(DASH): transaction %s conflicts with transaction lock %s",
-                                                tx.GetHash().ToString(), hashLocked.ToString()),
-                                     REJECT_INVALID, "conflict-tx-lock");
+                    return state.DoS(100, false, REJECT_INVALID, "conflict-tx-lock", false, 
+                                     strprintf("transaction %s conflicts with transaction lock %s", tx.GetHash().ToString(), hashLocked.ToString()));
                 }
             }
         }
@@ -3201,9 +3196,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // Check transactions
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
         if (!CheckTransaction(tx, state))
-            return error("CheckBlock(): CheckTransaction of %s failed with %s",
-                tx.GetHash().ToString(),
-                FormatStateMessage(state));
+            return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
+                                 strprintf("Transaction check failed (tx hash %s) %s", tx.GetHash().ToString(), state.GetDebugMessage()));
 
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
@@ -3212,8 +3206,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     }
     // sigops limits (relaxed)
     if (nSigOps > MaxBlockSigOps(true))
-        return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
-                         REJECT_INVALID, "bad-blk-sigops");
+        return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
@@ -3251,29 +3244,18 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
                             REJECT_INVALID, "bad-diffbits");
     } else {
         if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
-            return state.DoS(100, error("%s : incorrect proof of work at %d", __func__, nHeight),
-                            REJECT_INVALID, "bad-diffbits");
+            return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, strprintf("incorrect proof of work at %d", nHeight));
     }
 
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
-        return state.Invalid(error("%s: block's timestamp is too early", __func__),
-                             REJECT_INVALID, "time-too-old");
+        return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
 
-    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 2 && IsSuperMajority(2, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(error("%s: rejected nVersion=1 block", __func__),
-                             REJECT_OBSOLETE, "bad-version");
-
-    // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 3 && IsSuperMajority(3, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(error("%s: rejected nVersion=2 block", __func__),
-                             REJECT_OBSOLETE, "bad-version");
-
-    // Reject block.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded:
-    if (block.nVersion < 4 && IsSuperMajority(4, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
-        return state.Invalid(error("%s : rejected nVersion=3 block", __func__),
-                             REJECT_OBSOLETE, "bad-version");
+    // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
+    for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
+        if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+            return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(v%d)", version - 1),
+                                 strprintf("rejected nVersion=%d block", version - 1));
 
     return true;
 }
@@ -3298,26 +3280,24 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     // Size limits
     unsigned int nMaxBlockSize = MaxBlockSize(fDIP0001Active_context);
     if (block.vtx.empty() || block.vtx.size() > nMaxBlockSize || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > nMaxBlockSize)
-        return state.DoS(100, error("%s: size limits failed", __func__),
-                         REJECT_INVALID, "bad-blk-length");
+        return state.DoS(10, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // Check that all transactions are finalized and not over-sized
     // Also count sigops
     unsigned int nSigOps = 0;
     BOOST_FOREACH(const CTransaction& tx, block.vtx) {
         if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
-            return state.DoS(10, error("%s: contains a non-final transaction", __func__), REJECT_INVALID, "bad-txns-nonfinal");
+            return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
         }
         if (fDIP0001Active_context && ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_STANDARD_TX_SIZE) {
-            return state.DoS(100, error("%s: contains an over-sized transaction", __func__), REJECT_INVALID, "bad-txns-oversized");
+            return state.DoS(10, false, REJECT_INVALID, "bad-txns-oversized", false, "contains an over-sized transaction");
         }
         nSigOps += GetLegacySigOpCount(tx);
     }
 
     // Check sigops
     if (nSigOps > MaxBlockSigOps(fDIP0001Active_context))
-        return state.DoS(100, error("%s: out-of-bounds SigOpCount", __func__),
-                         REJECT_INVALID, "bad-blk-sigops");
+        return state.DoS(10, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     // Enforce block.nVersion=2 rule that the coinbase starts with serialized block height
     // if 750 of the last 1,000 blocks are version 2 or greater (51/100 if testnet):
@@ -3326,7 +3306,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
         CScript expect = CScript() << nHeight;
         if (block.vtx[0].vin[0].scriptSig.size() < expect.size() ||
             !std::equal(expect.begin(), expect.end(), block.vtx[0].vin[0].scriptSig.begin())) {
-            return state.DoS(100, error("%s: block height mismatch in coinbase", __func__), REJECT_INVALID, "bad-cb-height");
+            return state.DoS(100, false, REJECT_INVALID, "bad-cb-height", false, "block height mismatch in coinbase");
         }
     }
 
@@ -3355,7 +3335,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
         }
 
         if (!CheckBlockHeader(block, state))
-            return false;
+            return error("%s: Consensus::CheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
 
         // Get prev block index
         CBlockIndex* pindexPrev = NULL;
@@ -3371,7 +3351,7 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
             return error("%s: CheckIndexAgainstCheckpoint(): %s", __func__, state.GetRejectReason().c_str());
 
         if (!ContextualCheckBlockHeader(block, state, pindexPrev))
-            return false;
+            return error("%s: Consensus::ContextualCheckBlockHeader: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
     }
     if (pindex == NULL)
         pindex = AddToBlockIndex(block);
@@ -3446,7 +3426,7 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
             pindex->nStatus |= BLOCK_FAILED_VALID;
             setDirtyBlockIndex.insert(pindex);
         }
-        return false;
+        return error("%s: %s", __func__, FormatStateMessage(state));
     }
 
     int nHeight = pindex->nHeight;
@@ -3528,11 +3508,11 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
 
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
-        return false;
+        return error("%s: Consensus::ContextualCheckBlockHeader: %s", __func__, FormatStateMessage(state));
     if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
-        return false;
+        return error("%s: Consensus::CheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ContextualCheckBlock(block, state, pindexPrev))
-        return false;
+        return error("%s: Consensus::ContextualCheckBlock: %s", __func__, FormatStateMessage(state));
     if (!ConnectBlock(block, state, &indexDummy, viewNew, true))
         return false;
     assert(state.IsValid());
@@ -3874,7 +3854,8 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 1: verify block validity
         if (nCheckLevel >= 1 && !CheckBlock(block, state))
-            return error("VerifyDB(): *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString());
+            return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__, 
+                         pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
             CBlockUndo undo;
