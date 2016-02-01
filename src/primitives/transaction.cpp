@@ -4,10 +4,18 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "primitives/transaction.h"
+#include "amount.h"
+#include "pow.h"
+#include "arith_uint256.h"
+
+
 
 #include "hash.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
+#include "math.h"
+
+#include "test/bignum.h"
 
 std::string COutPoint::ToString() const
 {
@@ -139,4 +147,123 @@ std::string CTransaction::ToString() const
     for (unsigned int i = 0; i < vout.size(); i++)
         str += "    " + vout[i].ToString() + "\n";
     return str;
+}
+
+
+CAmount CTxOut::GetValueWithInterest(int outputBlockHeight, int valuationHeight) const{
+
+    return GetInterest(nValue, outputBlockHeight, valuationHeight, scriptPubKey.GetTermDepositReleaseBlock());
+    //return nValue;
+}
+
+static int THIRTYDAYS=561*30;
+static int ONEYEAR=561*365;
+static int ONEYEARPLUS1=ONEYEAR+1;
+static int TWOYEARS=ONEYEAR*2;
+
+static uint64_t rateTable[561*365+1];
+static uint64_t bonusTable[561*365+1];
+
+CAmount getBonusForAmount(int periods, CAmount theAmount){
+
+    CBigNum amount256(theAmount);
+    CBigNum rate256(bonusTable[periods]);
+    CBigNum rate0256(bonusTable[0]);
+    CBigNum result=(amount256*rate256)/rate0256;
+    return result.getuint64()-theAmount;
+}
+
+CAmount getRateForAmount(int periods, CAmount theAmount){
+
+    CBigNum amount256(theAmount);
+    CBigNum rate256(rateTable[periods]);
+    CBigNum rate0256(rateTable[0]);
+    CBigNum result=(amount256*rate256)/rate0256;
+    return  result.getuint64()-theAmount;
+
+    /* This should work, but won't compile
+    const arith_uint256 amount256=arith_uint256(theAmount);
+    const arith_uint256 rate256=arith_uint256(rateTable[periods]);
+    const arith_uint256 rate0256=arith_uint256(rateTable[0]);
+    const arith_uint256 product=amount256*rate256;
+    const arith_uint256 result=product/rate0256;
+    return result.GetLow64();
+    */
+
+}
+
+std::string initRateTable(){
+    std::string str;
+
+    rateTable[0]=1;
+    rateTable[0]=rateTable[0]<<62;
+    bonusTable[0]=1;
+    bonusTable[0]=bonusTable[0]<<54;
+
+    //Interest rate on each block 1+(1/2^22)
+    for(int i=1;i<ONEYEARPLUS1;i++){
+        rateTable[i]=rateTable[i-1]+(rateTable[i-1]>>22);
+        bonusTable[i]=bonusTable[i-1]+(bonusTable[i-1]>>16);
+        str += strprintf("%d %x %x\n",i,rateTable[i], bonusTable[i]);
+    }
+
+    for(int i=0;i<ONEYEAR;i++){
+        str += strprintf("rate: %d %d %d\n",i,getRateForAmount(i,COIN*100),getBonusForAmount(i,COIN*100));
+    }
+
+    return str;
+}
+
+
+
+
+CAmount GetInterest(CAmount nValue, int outputBlockHeight, int valuationHeight, int maturationBlock){
+
+    //These conditions generally should not occur
+    if(maturationBlock >= 500000000 || outputBlockHeight<0 || valuationHeight<0 || valuationHeight<outputBlockHeight){
+        return nValue;
+    }
+
+    //Regular deposits can have a maximum of 30 days interest
+    int blocks=std::min(THIRTYDAYS,valuationHeight-outputBlockHeight);
+
+    //Term deposits may have up to 1 year of interest
+    if(maturationBlock>0){
+        blocks=std::min(ONEYEAR,valuationHeight-outputBlockHeight);
+    }
+
+    CAmount standardInterest=getRateForAmount(blocks, nValue);
+
+    CAmount bonusAmount=0;
+    //Reward balances more in early stages
+    if(outputBlockHeight<TWOYEARS){
+        //Calculate bonus rate based on outputBlockHeight
+        bonusAmount=getBonusForAmount(blocks, nValue);
+        CBigNum am(bonusAmount);
+        CBigNum fac(TWOYEARS-outputBlockHeight);
+        CBigNum div(TWOYEARS);
+        CBigNum result=((am*fac*fac*fac*fac)/(div*div*div*div));
+        bonusAmount=result.getuint64();
+    }
+
+
+    CAmount interestAmount=standardInterest+bonusAmount;
+
+    CAmount termDepositAmount=0;
+
+    //Reward term deposits more
+    if(maturationBlock>0){
+        int term=std::min(ONEYEAR,maturationBlock-outputBlockHeight);
+
+        //No advantage to term deposits of less than 2 days
+        if(term>561*2){
+            CBigNum am(interestAmount);
+            CBigNum fac(TWOYEARS-term);
+            CBigNum div(TWOYEARS);
+            CBigNum result=am - ((am*fac*fac*fac*fac*fac*fac)/(div*div*div*div*div*div));
+            termDepositAmount=result.getuint64();
+        }
+    }
+
+    return nValue+interestAmount+termDepositAmount;
 }

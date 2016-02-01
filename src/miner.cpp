@@ -17,6 +17,8 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "base58.h"
+
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
@@ -276,7 +278,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
             if (!view.HaveInputs(tx))
                 continue;
 
-            CAmount nTxFees = view.GetValueIn(tx)-tx.GetValueOut();
+            CAmount nTxFees = view.GetValueIn(tx,nHeight)-tx.GetValueOut();
 
             nTxSigOps += GetP2SHSigOpCount(tx, view);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
@@ -327,6 +329,8 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         nLastBlockTx = nBlockTx;
         nLastBlockSize = nBlockSize;
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
+        LogPrintf("CreateNewBlock(): nfees %d\n", nFees);
+
 
         // Compute final coinbase transaction.
         txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
@@ -417,6 +421,13 @@ CBlockTemplate* CreateNewBlockWithKey(CReserveKey& reservekey)
     return CreateNewBlock(scriptPubKey);
 }
 
+CBlockTemplate* CreateNewBlockWithAddress(std::string address)
+{
+    CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(address).Get());
+            //CScript() << ToByteVector(CBitcoinAddress(address).Get()) << OP_CHECKSIG;
+    return CreateNewBlock(scriptPubKey);
+}
+
 static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
 {
     LogPrintf("%s\n", pblock->ToString());
@@ -426,7 +437,7 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-            return error("BitcoinMiner: generated block is stale");
+            return error("HOdlcoinMiner: generated block is stale");
     }
 
     // Remove key from key pool
@@ -441,14 +452,26 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
     // Process this block the same as if we had received it from another node
     CValidationState state;
     if (!ProcessNewBlock(state, NULL, pblock, true, NULL))
-        return error("BitcoinMiner: ProcessNewBlock, block not accepted");
+        return error("HOdlcoinMiner: ProcessNewBlock, block not accepted");
 
     return true;
 }
 
-void static BitcoinMiner(CWallet *pwallet)
+vector<string> split(string str, string sep){
+    char* cstr=const_cast<char*>(str.c_str());
+    char* current;
+    vector<std::string> arr;
+    current=strtok(cstr,sep.c_str());
+    while(current != NULL){
+        arr.push_back(current);
+        current=strtok(NULL, sep.c_str());
+    }
+    return arr;
+}
+
+void static BitcoinMiner(CWallet *pwallet, int nThreads)
 {
-    LogPrintf("BitcoinMiner started\n");
+    LogPrintf("HOdlcoinMiner started\n");
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcoin-miner");
     const CChainParams& chainparams = Params();
@@ -456,6 +479,9 @@ void static BitcoinMiner(CWallet *pwallet)
     // Each thread has its own key and counter
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
+
+    char *scratchpad;
+    scratchpad=new char[(1<<30)];
 
     try {
         while (true) {
@@ -480,16 +506,25 @@ void static BitcoinMiner(CWallet *pwallet)
             unsigned int nTransactionsUpdatedLast = mempool.GetTransactionsUpdated();
             CBlockIndex* pindexPrev = chainActive.Tip();
 
-            auto_ptr<CBlockTemplate> pblocktemplate(CreateNewBlockWithKey(reservekey));
+            auto_ptr<CBlockTemplate> pblocktemplate;
+
+            string ma=GetArg("-miningaddress", "");
+            if(ma!=""){
+                std::vector<std::string> arr;
+                arr=split(ma,";");
+                pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(arr[rand() % arr.size()]));
+            }else{
+                pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));
+            }
             if (!pblocktemplate.get())
             {
-                LogPrintf("Error in BitcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
+                LogPrintf("Error in HOdlcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-            LogPrintf("Running BitcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
+            LogPrintf("Running HOdlcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                 ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
             //
@@ -501,16 +536,20 @@ void static BitcoinMiner(CWallet *pwallet)
             uint32_t nNonce = 0;
             while (true) {
                 // Check if something found
-                if (ScanHash(pblock, nNonce, &hash))
-                {
-                    if (UintToArith256(hash) <= hashTarget)
-                    {
-                        // Found a solution
-                        pblock->nNonce = nNonce;
-                        assert(hash == pblock->GetHash());
 
+                pblock->nNonce = nNonce;
+
+                for(int i=0;i<1;i++){
+                    pblock->nNonce=pblock->nNonce+1;
+                    int collisions=0;
+                    hash=pblock->FindBestPatternHash(collisions,scratchpad,nThreads);
+                    LogPrintf("HOdlcoinMiner:\n");
+                    LogPrintf("proof-of-work found  \n  hash: %s  gethash:%s ba:%d bb:%d \ntarget: %s\n", hash.GetHex(), pblock->GetHash().GetHex(), pblock->nStartLocation, pblock->nFinalCalculation, hashTarget.GetHex());
+
+                    if (UintToArith256(hash) <= hashTarget){
+                        assert(hash == pblock->GetHash());
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
-                        LogPrintf("BitcoinMiner:\n");
+                        LogPrintf("HOdlcoinMiner:\n");
                         LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", hash.GetHex(), hashTarget.GetHex());
                         ProcessBlockFound(pblock, *pwallet, reservekey);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -547,12 +586,14 @@ void static BitcoinMiner(CWallet *pwallet)
     }
     catch (const boost::thread_interrupted&)
     {
-        LogPrintf("BitcoinMiner terminated\n");
+        LogPrintf("HOdlcoinMiner terminated\n");
+        delete [] scratchpad;
         throw;
     }
     catch (const std::runtime_error &e)
     {
-        LogPrintf("BitcoinMiner runtime error: %s\n", e.what());
+        LogPrintf("HOdlcoinMiner runtime error: %s\n", e.what());
+        delete [] scratchpad;
         return;
     }
 }
@@ -563,9 +604,9 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     if (nThreads < 0) {
         // In regtest threads defaults to 1
-        if (Params().DefaultMinerThreads())
-            nThreads = Params().DefaultMinerThreads();
-        else
+        //if (Params().DefaultMinerThreads())
+        //    nThreads = Params().DefaultMinerThreads();
+        //else
             nThreads = boost::thread::hardware_concurrency();
     }
 
@@ -580,8 +621,7 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
         return;
 
     minerThreads = new boost::thread_group();
-    for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet));
+    minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet, nThreads));
 }
 
 #endif // ENABLE_WALLET

@@ -61,6 +61,11 @@ public:
         setvch(vch);
     }
 
+    unsigned long getulong() const
+    {
+        return BN_get_word(this);
+    }
+
     int getint() const
     {
         BN_ULONG n = BN_get_word(this);
@@ -69,6 +74,21 @@ public:
         else
             return (n > (BN_ULONG)std::numeric_limits<int>::max() ? std::numeric_limits<int>::min() : -(int)n);
     }
+
+   uint64_t getuint64()
+        {
+            unsigned int nSize = BN_bn2mpi(this, NULL);
+            if (nSize < 4)
+                return 0;
+            std::vector<unsigned char> vch(nSize);
+            BN_bn2mpi(this, &vch[0]);
+            if (vch.size() > 4)
+                vch[4] &= 0x7f;
+            uint64_t n = 0;
+            for (int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+                ((unsigned char*)&n)[i] = vch[j];
+            return n;
+        }
 
     void setint64(int64_t sn)
     {
@@ -146,6 +166,27 @@ public:
 };
 
 
+inline const CBigNum operator*(const CBigNum& a, const CBigNum& b)
+{
+    CBigNum r;
+    BN_CTX *ctx = BN_CTX_new();
+    if (!BN_mul(&r, &a, &b, ctx))
+        throw bignum_error("CBigNum::operator*: BN_mul failed");
+    BN_CTX_free(ctx);
+    return r;
+}
+
+inline const CBigNum operator/(const CBigNum& a, const CBigNum& b)
+{
+    CBigNum r;
+    BIGNUM *rem = BN_new();
+    BN_CTX *ctx = BN_CTX_new();
+    if (!BN_div(&r, rem, &a, &b, ctx))
+        throw bignum_error("CBigNum::operator/: BN_div failed");
+    BN_free(rem);
+    BN_CTX_free(ctx);
+    return r;
+}
 
 inline const CBigNum operator+(const CBigNum& a, const CBigNum& b)
 {

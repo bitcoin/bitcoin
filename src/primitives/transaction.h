@@ -135,6 +135,10 @@ public:
 
     uint256 GetHash() const;
 
+    bool IsTermDeposit() const;
+
+    CAmount GetValueWithInterest(int outputBlockHeight, int valuationHeight) const;
+
     CAmount GetDustThreshold(const CFeeRate &minRelayTxFee) const
     {
         // "Dust" is defined in terms of CTransaction::minRelayTxFee,
@@ -278,5 +282,9 @@ struct CMutableTransaction
      */
     uint256 GetHash() const;
 };
+
+CAmount getRateForAmount(int periods, CAmount theAmount);
+std::string initRateTable();
+CAmount GetInterest(CAmount nValue, int outputBlockHeight, int valuationHeight, int maturationBlock);
 
 #endif // BITCOIN_PRIMITIVES_TRANSACTION_H

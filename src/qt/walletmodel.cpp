@@ -24,6 +24,7 @@
 #include <QDebug>
 #include <QSet>
 #include <QTimer>
+#include "util.h"
 
 using namespace std;
 
@@ -64,7 +65,7 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
         wallet->AvailableCoins(vCoins, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
             if(out.fSpendable)
-                nBalance += out.tx->vout[out.i].nValue;
+                nBalance += out.tx->vout[out.i].GetValueWithInterest((chainActive.Height()+1)-out.tx->GetDepthInMainChain(),chainActive.Height()+1);
 
         return nBalance;
     }
@@ -189,7 +190,7 @@ bool WalletModel::validateAddress(const QString &address)
     return addressParsed.IsValid();
 }
 
-WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl)
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransaction &transaction, std::string &termdepositquestion, const CCoinControl *coinControl)
 {
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
@@ -244,7 +245,44 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            //This uses a special code, so when a transaction amount ends in '89', it is sent as a term deposit
+            //Example: amount 1.00550089 will be sent as a term deposit, released in 5500 blocks from current height
+            CAmount remainder=rcp.amount%COIN;
+            CAmount instruction=remainder%100;
+            CScript scriptPubKey;
+            if(instruction==89){
+                int termDepositLength=(remainder-instruction)/100;
+
+                //Special code to send term deposit
+                std::ostringstream ss;
+                if(termDepositLength<561*2){
+                    ss <<"!!!!!WARNING: There is no interest rate advantage of using a Term Deposit for a period of less than 1,122 blocks. It is recommended that you cancel this transaction. ";
+                }
+                if(termDepositLength>561*365){
+                    ss <<"!!!!!WARNING: There is no interest rate advantage of using a Term Deposit for a period of more than 204,765 blocks. It is recommended that you cancel this transaction. ";
+                }
+                ss <<"Term Deposit Instruction Detected: ";
+                ss <<"This will send the amount of " << (0.0+rcp.amount)/COIN <<" HODL ";
+                ss <<"to be locked for " << termDepositLength << " blocks. ";
+                ss <<"This is approximately " << (0.0+termDepositLength)/(561) << " days. ";
+                CAmount withInterest=GetInterest(rcp.amount, chainActive.Height()+1, chainActive.Height()+1+termDepositLength, chainActive.Height()+1+termDepositLength);
+                ss <<"Upon maturation, it will be worth " << (0.0+withInterest)/COIN << " HODL. ";
+                CAmount interestOnly=withInterest-rcp.amount;
+                double interestRateForTime=(0.0+interestOnly)/(rcp.amount);
+                double fractionOfaYear=204765.0/termDepositLength;
+
+                double interestRatePerBlock=pow(1+interestRateForTime,1.0/termDepositLength)-1;
+                //ss <<" IRPB = " << interestRatePerBlock;
+                //ss <<" IRFT = " << interestRateForTime;
+                //ss <<" Periods = " << fractionOfaYear;
+                //ss <<" APR = " << (pow(1+interestRateForTime,fractionOfaYear)-1)*100 <<"%";
+
+                termdepositquestion = ss.str();
+                scriptPubKey = GetTimeLockScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get(),chainActive.Height()+1+termDepositLength);
+            }else{
+                scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            }
+
             CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
             vecSend.push_back(recipient);
 

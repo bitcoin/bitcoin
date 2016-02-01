@@ -144,6 +144,8 @@ public:
     unsigned int nTime;
     unsigned int nBits;
     unsigned int nNonce;
+    uint32_t nStartLocation;
+    uint32_t nFinalCalculation;
 
     //! (memory only) Sequential id assigned to distinguish order in which blocks are received.
     uint32_t nSequenceId;
@@ -168,6 +170,8 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+        nStartLocation     = 0;
+        nFinalCalculation     = 0;
     }
 
     CBlockIndex()
@@ -179,11 +183,13 @@ public:
     {
         SetNull();
 
-        nVersion       = block.nVersion;
-        hashMerkleRoot = block.hashMerkleRoot;
-        nTime          = block.nTime;
-        nBits          = block.nBits;
-        nNonce         = block.nNonce;
+        nVersion            = block.nVersion;
+        hashMerkleRoot      = block.hashMerkleRoot;
+        nTime               = block.nTime;
+        nBits               = block.nBits;
+        nNonce              = block.nNonce;
+        nStartLocation      = block.nStartLocation;
+        nFinalCalculation   = block.nFinalCalculation;
     }
 
     CDiskBlockPos GetBlockPos() const {
@@ -207,13 +213,15 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
+        block.nVersion          = nVersion;
         if (pprev)
             block.hashPrevBlock = pprev->GetBlockHash();
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.hashMerkleRoot    = hashMerkleRoot;
+        block.nTime             = nTime;
+        block.nBits             = nBits;
+        block.nNonce            = nNonce;
+        block.nStartLocation    = nStartLocation;
+        block.nFinalCalculation = nFinalCalculation;
         return block;
     }
 
@@ -245,10 +253,10 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
+        return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s, nNonce=%s, nTime=%s, location=%s, finalcalculation=%s)",
             pprev, nHeight,
             hashMerkleRoot.ToString(),
-            GetBlockHash().ToString());
+            GetBlockHash().ToString(), nNonce, nTime, nStartLocation,nFinalCalculation);
     }
 
     //! Check whether this block index entry is valid up to the passed validity level.
@@ -320,17 +328,21 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(nStartLocation);
+        READWRITE(nFinalCalculation);
     }
 
     uint256 GetBlockHash() const
     {
         CBlockHeader block;
-        block.nVersion        = nVersion;
-        block.hashPrevBlock   = hashPrev;
-        block.hashMerkleRoot  = hashMerkleRoot;
-        block.nTime           = nTime;
-        block.nBits           = nBits;
-        block.nNonce          = nNonce;
+        block.nVersion          = nVersion;
+        block.hashPrevBlock     = hashPrev;
+        block.hashMerkleRoot    = hashMerkleRoot;
+        block.nTime             = nTime;
+        block.nBits             = nBits;
+        block.nNonce            = nNonce;
+        block.nStartLocation    = nStartLocation;
+        block.nFinalCalculation = nFinalCalculation;
         return block.GetHash();
     }
 

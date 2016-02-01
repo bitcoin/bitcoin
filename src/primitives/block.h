@@ -28,6 +28,8 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
+    uint32_t nStartLocation=0;
+    uint32_t nFinalCalculation=0;
 
     CBlockHeader()
     {
@@ -45,6 +47,8 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        READWRITE(nStartLocation);
+        READWRITE(nFinalCalculation);
     }
 
     void SetNull()
@@ -55,6 +59,8 @@ public:
         nTime = 0;
         nBits = 0;
         nNonce = 0;
+        nStartLocation = 0;
+        nFinalCalculation = 0;
     }
 
     bool IsNull() const
@@ -63,6 +69,8 @@ public:
     }
 
     uint256 GetHash() const;
+    uint256 GetMidHash() const;
+    uint256 FindBestPatternHash(int& collisions,char *scratchpad,int nThreads);
 
     int64_t GetBlockTime() const
     {
@@ -109,12 +117,14 @@ public:
     CBlockHeader GetBlockHeader() const
     {
         CBlockHeader block;
-        block.nVersion       = nVersion;
-        block.hashPrevBlock  = hashPrevBlock;
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
+        block.nVersion          = nVersion;
+        block.hashPrevBlock     = hashPrevBlock;
+        block.hashMerkleRoot    = hashMerkleRoot;
+        block.nTime             = nTime;
+        block.nBits             = nBits;
+        block.nNonce            = nNonce;
+        block.nStartLocation    = nStartLocation;
+        block.nFinalCalculation = nFinalCalculation;
         return block;
     }
 

@@ -211,19 +211,21 @@ bool CBlockTreeDB::LoadBlockIndexGuts()
                 ssValue >> diskindex;
 
                 // Construct block index object
-                CBlockIndex* pindexNew = InsertBlockIndex(diskindex.GetBlockHash());
-                pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
-                pindexNew->nHeight        = diskindex.nHeight;
-                pindexNew->nFile          = diskindex.nFile;
-                pindexNew->nDataPos       = diskindex.nDataPos;
-                pindexNew->nUndoPos       = diskindex.nUndoPos;
-                pindexNew->nVersion       = diskindex.nVersion;
-                pindexNew->hashMerkleRoot = diskindex.hashMerkleRoot;
-                pindexNew->nTime          = diskindex.nTime;
-                pindexNew->nBits          = diskindex.nBits;
-                pindexNew->nNonce         = diskindex.nNonce;
-                pindexNew->nStatus        = diskindex.nStatus;
-                pindexNew->nTx            = diskindex.nTx;
+                CBlockIndex* pindexNew          = InsertBlockIndex(diskindex.GetBlockHash());
+                pindexNew->pprev                = InsertBlockIndex(diskindex.hashPrev);
+                pindexNew->nHeight              = diskindex.nHeight;
+                pindexNew->nFile                = diskindex.nFile;
+                pindexNew->nDataPos             = diskindex.nDataPos;
+                pindexNew->nUndoPos             = diskindex.nUndoPos;
+                pindexNew->nVersion             = diskindex.nVersion;
+                pindexNew->hashMerkleRoot       = diskindex.hashMerkleRoot;
+                pindexNew->nTime                = diskindex.nTime;
+                pindexNew->nBits                = diskindex.nBits;
+                pindexNew->nNonce               = diskindex.nNonce;
+                pindexNew->nStatus              = diskindex.nStatus;
+                pindexNew->nTx                  = diskindex.nTx;
+                pindexNew->nStartLocation       = diskindex.nStartLocation;
+                pindexNew->nFinalCalculation    = diskindex.nFinalCalculation;
 
                 if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, Params().GetConsensus()))
                     return error("LoadBlockIndex(): CheckProofOfWork failed: %s", pindexNew->ToString());

@@ -187,7 +187,7 @@ void PaymentServerTests::paymentServerTests()
     tempFile.close();
     QCOMPARE(PaymentServer::readPaymentRequestFromFile(tempFile.fileName(), r.paymentRequest), false);
 
-    // Payment request with amount overflow (amount is set to 21000001 BTC):
+    // Payment request with amount overflow (amount is set to 21000001 HODL):
     data = DecodeBase64(paymentrequest5_cert2_BASE64);
     byteArray = QByteArray((const char*)&data[0], data.size());
     r.paymentRequest.parse(byteArray);

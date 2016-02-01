@@ -26,6 +26,8 @@
 
 using namespace std;
 
+typedef std::vector<unsigned char> valtype;
+
 /**
  * Settings
  */
@@ -825,11 +827,12 @@ isminetype CWallet::IsMine(const CTxOut& txout) const
     return ::IsMine(*this, txout.scriptPubKey);
 }
 
-CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
+CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter, const int& depthInMainChain) const
 {
-    if (!MoneyRange(txout.nValue))
+    CAmount afterInterest=txout.GetValueWithInterest((chainActive.Height()+1)-depthInMainChain,chainActive.Height()+1);
+    if (!MoneyRange(afterInterest))
         throw std::runtime_error("CWallet::GetCredit(): value out of range");
-    return ((IsMine(txout) & filter) ? txout.nValue : 0);
+    return ((IsMine(txout) & filter) ? afterInterest : 0);
 }
 
 bool CWallet::IsChange(const CTxOut& txout) const
@@ -886,12 +889,12 @@ CAmount CWallet::GetDebit(const CTransaction& tx, const isminefilter& filter) co
     return nDebit;
 }
 
-CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter) const
+CAmount CWallet::GetCredit(const CTransaction& tx, const isminefilter& filter, const int& nDepth) const
 {
     CAmount nCredit = 0;
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
-        nCredit += GetCredit(txout, filter);
+        nCredit += GetCredit(txout, filter, nDepth);
         if (!MoneyRange(nCredit))
             throw std::runtime_error("CWallet::GetCredit(): value out of range");
     }
@@ -1200,7 +1203,7 @@ CAmount CWalletTx::GetCredit(const isminefilter& filter) const
             credit += nCreditCached;
         else
         {
-            nCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
+            nCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE, GetDepthInMainChain());
             fCreditCached = true;
             credit += nCreditCached;
         }
@@ -1211,12 +1214,26 @@ CAmount CWalletTx::GetCredit(const isminefilter& filter) const
             credit += nWatchCreditCached;
         else
         {
-            nWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
+            nWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY, GetDepthInMainChain());
             fWatchCreditCached = true;
             credit += nWatchCreditCached;
         }
     }
     return credit;
+}
+
+CAmount CWalletTx::GetImmatureTermDepositCredit() const
+{
+    CAmount sum =0;
+    for (unsigned int i = 0; i < vout.size(); i++) {
+        //isminetype mine = IsMine(vout[i]);
+
+        //Check if coin is locked in a term deposit
+        if(isOutputTermDeposit(i) && GetTermDepositReleaseBlock(i)>chainActive.Height()){
+            sum=sum+vout[i].GetValueWithInterest((chainActive.Height()+1)-this->GetDepthInMainChain(),chainActive.Height()+1);
+        }
+    }
+    return sum;
 }
 
 CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
@@ -1225,7 +1242,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     {
         if (fUseCache && fImmatureCreditCached)
             return nImmatureCreditCached;
-        nImmatureCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
+        nImmatureCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE, GetDepthInMainChain());
         fImmatureCreditCached = true;
         return nImmatureCreditCached;
     }
@@ -1252,7 +1269,10 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
         if (!pwallet->IsSpent(hashTx, i))
         {
             const CTxOut &txout = vout[i];
-            nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+            if(txout.scriptPubKey.GetTermDepositReleaseBlock()>chainActive.Height()){
+                continue;
+            }
+            nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE, GetDepthInMainChain());
             if (!MoneyRange(nCredit))
                 throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
         }
@@ -1269,7 +1289,7 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool& fUseCache) const
     {
         if (fUseCache && fImmatureWatchCreditCached)
             return nImmatureWatchCreditCached;
-        nImmatureWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY);
+        nImmatureWatchCreditCached = pwallet->GetCredit(*this, ISMINE_WATCH_ONLY, GetDepthInMainChain());
         fImmatureWatchCreditCached = true;
         return nImmatureWatchCreditCached;
     }
@@ -1295,7 +1315,7 @@ CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool& fUseCache) const
         if (!pwallet->IsSpent(GetHash(), i))
         {
             const CTxOut &txout = vout[i];
-            nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
+            nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY, GetDepthInMainChain());
             if (!MoneyRange(nCredit))
                 throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
         }
@@ -1340,6 +1360,30 @@ bool CWalletTx::IsTrusted() const
             return false;
     }
     return true;
+}
+
+int CWalletTx::GetTermDepositReleaseBlock(int i) const{
+    vector<valtype> vSolutions;
+    txnouttype whichType;
+    int releaseBlockNum;
+    Solver(vout[i].scriptPubKey, whichType, vSolutions, releaseBlockNum);
+    if(whichType==TX_CHECKLOCKTIMEVERIFY){
+        //return CScriptNum nLockTime(vSolutions[0], fRequireMinimal, 5);
+        //return CScriptNum(vSolutions.front(), false).getint();
+        LogPrintf("releaseBlockNum:%d\n",releaseBlockNum);
+        return releaseBlockNum;//uint256(vSolutions[0]);
+    }
+    return 0;
+}
+
+bool CWalletTx::isOutputTermDeposit(int i) const{
+    vector<valtype> vSolutions;
+    txnouttype whichType;
+    Solver(vout[i].scriptPubKey, whichType, vSolutions);
+    if(whichType==TX_CHECKLOCKTIMEVERIFY){
+        return true;
+    }
+    return false;
 }
 
 std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime)
@@ -1409,7 +1453,7 @@ CAmount CWallet::GetBalance() const
         {
             const CWalletTx* pcoin = &(*it).second;
             if (pcoin->IsTrusted())
-                nTotal += pcoin->GetAvailableCredit();
+                nTotal += pcoin->GetAvailableCredit(false);
         }
     }
 
@@ -1425,7 +1469,7 @@ CAmount CWallet::GetUnconfirmedBalance() const
         {
             const CWalletTx* pcoin = &(*it).second;
             if (!CheckFinalTx(*pcoin) || (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0))
-                nTotal += pcoin->GetAvailableCredit();
+                nTotal += pcoin->GetAvailableCredit(false);
         }
     }
     return nTotal;
@@ -1439,7 +1483,7 @@ CAmount CWallet::GetImmatureBalance() const
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
         {
             const CWalletTx* pcoin = &(*it).second;
-            nTotal += pcoin->GetImmatureCredit();
+            nTotal += pcoin->GetImmatureCredit(false)+pcoin->GetImmatureTermDepositCredit();
         }
     }
     return nTotal;
@@ -1518,6 +1562,10 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
                 continue;
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
+                //Check if coin is locked in a term deposit
+                if(pcoin->isOutputTermDeposit(i) && pcoin->GetTermDepositReleaseBlock(i)>chainActive.Height()){
+                    continue;
+                }
                 isminetype mine = IsMine(pcoin->vout[i]);
                 if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
                     !IsLockedCoin((*it).first, i) && (pcoin->vout[i].nValue > 0 || fIncludeZeroValue) &&
@@ -1600,7 +1648,8 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
             continue;
 
         int i = output.i;
-        CAmount n = pcoin->vout[i].nValue;
+        CAmount n = pcoin->vout[i].GetValueWithInterest((chainActive.Height()+1)-pcoin->GetDepthInMainChain(),chainActive.Height()+1);
+
 
         pair<CAmount,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
 
@@ -1687,7 +1736,7 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
         {
             if(!out.fSpendable)
                 continue;
-            nValueRet += out.tx->vout[out.i].nValue;
+            nValueRet += out.tx->vout[out.i].GetValueWithInterest((chainActive.Height()+1)-out.tx->GetDepthInMainChain(),chainActive.Height()+1);
             setCoinsRet.insert(make_pair(out.tx, out.i));
         }
         return (nValueRet >= nTargetValue);
@@ -1735,15 +1784,17 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend,
     // going ten blocks back. Doesn't yet do anything for sniping, but does act
     // to shake out wallet bugs like not showing nLockTime'd transactions at
     // all.
-    txNew.nLockTime = std::max(0, chainActive.Height() - 10);
+    //txNew.nLockTime = std::max(0, chainActive.Height() - 10);
 
     // Secondly occasionally randomly pick a nLockTime even further back, so
     // that transactions that are delayed after signing for whatever reason,
     // e.g. high-latency mix networks and some CoinJoin implementations, have
     // better privacy.
-    if (GetRandInt(10) == 0)
-        txNew.nLockTime = std::max(0, (int)txNew.nLockTime - GetRandInt(100));
+    //if (GetRandInt(10) == 0)
+    //    txNew.nLockTime = std::max(0, (int)txNew.nLockTime - GetRandInt(100));
 
+    //Need the locktime to be the current block to ensure that CLTV transactions are valid
+    txNew.nLockTime = chainActive.Height();
     assert(txNew.nLockTime <= (unsigned int)chainActive.Height());
     assert(txNew.nLockTime < LOCKTIME_THRESHOLD);
 
@@ -2309,7 +2360,7 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances()
                 if(!ExtractDestination(pcoin->vout[i].scriptPubKey, addr))
                     continue;
 
-                CAmount n = IsSpent(walletEntry.first, i) ? 0 : pcoin->vout[i].nValue;
+                CAmount n = IsSpent(walletEntry.first, i) ? 0 : pcoin->vout[i].GetValueWithInterest((chainActive.Height()+1)-pcoin->GetDepthInMainChain(),chainActive.Height()+1);
 
                 if (!balances.count(addr))
                     balances[addr] = 0;

@@ -203,16 +203,20 @@ const CTxOut &CCoinsViewCache::GetOutputFor(const CTxIn& input) const
     return coins->vout[input.prevout.n];
 }
 
-CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
+CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx, int valuationHeight) const
 {
     if (tx.IsCoinBase())
         return 0;
 
-    CAmount nResult = 0;
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += GetOutputFor(tx.vin[i]).nValue;
+    CAmount nValueIn = 0;
+    for (unsigned int i = 0; i < tx.vin.size(); i++){
+        CTxOut outTX=GetOutputFor(tx.vin[i]);
+        const COutPoint &prevout = tx.vin[i].prevout;
+        const CCoins* coins = AccessCoins(prevout.hash);
+        nValueIn += outTX.GetValueWithInterest(coins->nHeight,valuationHeight);
+    }
 
-    return nResult;
+    return nValueIn;
 }
 
 bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const

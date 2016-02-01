@@ -110,6 +110,7 @@ BITCOIN_CORE_H = \
   net.h \
   netbase.h \
   noui.h \
+  patternsearch.h \
   policy/fees.h \
   pow.h \
   primitives/block.h \
@@ -187,6 +188,7 @@ libbitcoin_server_a_SOURCES = \
   miner.cpp \
   net.cpp \
   noui.cpp \
+  patternsearch.cpp \
   policy/fees.cpp \
   pow.cpp \
   rest.cpp \
@@ -259,6 +261,7 @@ libbitcoin_common_a_SOURCES = \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
+  patternsearch.cpp \
   primitives/block.cpp \
   primitives/transaction.cpp \
   protocol.cpp \

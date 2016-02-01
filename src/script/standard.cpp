@@ -29,15 +29,22 @@ const char* GetTxnOutputType(txnouttype t)
     case TX_PUBKEYHASH: return "pubkeyhash";
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
+    case TX_CHECKLOCKTIMEVERIFY: return "checklocktimeverify";
     case TX_NULL_DATA: return "nulldata";
     }
     return NULL;
 }
 
+bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsigned char> >& vSolutionsRet)
+{
+    int CLTVreleaseBlock;
+    return Solver(scriptPubKey, typeRet, vSolutionsRet, CLTVreleaseBlock);
+}
+
 /**
  * Return public keys or hashes from scriptPubKey, for 'standard' transaction types.
  */
-bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsigned char> >& vSolutionsRet)
+bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsigned char> >& vSolutionsRet, int& CLTVreleaseBlock)
 {
     // Templates
     static multimap<txnouttype, CScript> mTemplates;
@@ -51,6 +58,8 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
 
         // Sender provides N pubkeys, receivers provides M signatures
         mTemplates.insert(make_pair(TX_MULTISIG, CScript() << OP_SMALLINTEGER << OP_PUBKEYS << OP_SMALLINTEGER << OP_CHECKMULTISIG));
+
+        mTemplates.insert(make_pair(TX_CHECKLOCKTIMEVERIFY, CScript() << OP_LOCKTIMEINTEGER << OP_CHECKLOCKTIMEVERIFY << OP_DROP <<  OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG));
 
         // Empty, provably prunable, data-carrying output
         if (GetBoolArg("-datacarrier", true))
@@ -140,6 +149,14 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 else
                     break;
             }
+            else if (opcode2 == OP_LOCKTIMEINTEGER)
+            {
+                if(opcode1>0 && opcode1<6){
+                    CLTVreleaseBlock=CScriptNum(vch1, true, 5).getint();
+                }else{
+                    break;
+                }
+            }
             else if (opcode2 == OP_SMALLDATA)
             {
                 // small pushdata, <= nMaxDatacarrierBytes
@@ -168,6 +185,7 @@ int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned c
         return -1;
     case TX_PUBKEY:
         return 1;
+    case TX_CHECKLOCKTIMEVERIFY:
     case TX_PUBKEYHASH:
         return 2;
     case TX_MULTISIG:
@@ -217,6 +235,11 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         return true;
     }
     else if (whichType == TX_PUBKEYHASH)
+    {
+        addressRet = CKeyID(uint160(vSolutions[0]));
+        return true;
+    }
+    else if (whichType == TX_CHECKLOCKTIMEVERIFY)
     {
         addressRet = CKeyID(uint160(vSolutions[0]));
         return true;
@@ -285,7 +308,7 @@ public:
     }
 
     bool operator()(const CKeyID &keyID) const {
-        script->clear();
+        //script->clear();
         *script << OP_DUP << OP_HASH160 << ToByteVector(keyID) << OP_EQUALVERIFY << OP_CHECKSIG;
         return true;
     }
@@ -301,7 +324,16 @@ public:
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
     CScript script;
+    script.clear();
+    boost::apply_visitor(CScriptVisitor(&script), dest);
+    return script;
+}
 
+CScript GetTimeLockScriptForDestination(const CTxDestination& dest, const int64_t smallInt)
+{
+    CScript script;
+    script.clear();
+    script << CScriptNum(smallInt) << OP_CHECKLOCKTIMEVERIFY << OP_DROP;
     boost::apply_visitor(CScriptVisitor(&script), dest);
     return script;
 }
