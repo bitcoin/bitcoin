@@ -18,88 +18,49 @@
 #include <fstream>
 using namespace json_spirit;
 
-void SendMoney(const CTxDestination &address, CAmount nValue, CWalletTx& wtxNew, AvailableCoinsType coin_type=ALL_COINS)
-{
-    // Check amount
-    if (nValue <= 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
-
-    if (nValue > pwalletMain->GetBalance())
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-
-    string strError;
-    if (pwalletMain->IsLocked())
-    {
-        strError = "Error: Wallet locked, unable to create transaction!";
-        LogPrintf("SendMoney() : %s", strError);
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    }
-
-    // Parse Dash address
-    CScript scriptPubKey = GetScriptForDestination(address);
-
-    // Create and send the transaction
-    CReserveKey reservekey(pwalletMain);
-    CAmount nFeeRequired;
-    if (!pwalletMain->CreateTransaction(scriptPubKey, nValue, wtxNew, reservekey, nFeeRequired, strError, NULL, coin_type))
-    {
-        if (nValue + nFeeRequired > pwalletMain->GetBalance())
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
-        LogPrintf("SendMoney() : %s\n", strError);
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    }
-    if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
-}
-
 Value darksend(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() == 0)
+    if (fHelp || params.size() != 1)
         throw runtime_error(
-            "darksend <dashaddress> <amount>\n"
-            "dashaddress, reset, or auto (AutoDenominate)"
-            "<amount> is a real and will be rounded to the next 0.1"
+            "darksend \"command\"\n"
+            "\nArguments:\n"
+            "1. \"command\"        (string or set of strings, required) The command to execute\n"
+            "\nAvailable commands:\n"
+            "  start       - Start mixing\n"
+            "  stop        - Stop mixing\n"
+            "  reset       - Reset mixing\n"
+            "  status      - Print mixing status\n"
             + HelpRequiringPassphrase());
 
-    if (pwalletMain->IsLocked())
-        throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+    if(params[0].get_str() == "start"){
+        if (pwalletMain->IsLocked())
+            throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
-    if(params[0].get_str() == "auto"){
         if(fMasterNode)
-            return "DarkSend is not supported from masternodes";
+            return "Mixing is not supported from masternodes";
 
-        return "DoAutomaticDenominating " + (darkSendPool.DoAutomaticDenominating() ? "successful" : ("failed: " + darkSendPool.GetStatus()));
+        fEnableDarksend = true;
+        bool result = darkSendPool.DoAutomaticDenominating();
+//        fEnableDarksend = result;
+        return "Mixing " + (result ? "started successfully" : ("start failed: " + darkSendPool.GetStatus() + ", will retry"));
+    }
+
+    if(params[0].get_str() == "stop"){
+        fEnableDarksend = false;
+        return "Mixing was stopped";
     }
 
     if(params[0].get_str() == "reset"){
         darkSendPool.Reset();
-        return "successfully reset darksend";
+        return "Mixing was reset";
     }
 
-    if (params.size() != 2)
-        throw runtime_error(
-            "darksend <dashaddress> <amount>\n"
-            "dashaddress, denominate, or auto (AutoDenominate)"
-            "<amount> is a real and will be rounded to the next 0.1"
-            + HelpRequiringPassphrase());
+    if(params[0].get_str() == "status"){
+        return "Mixing status: " + darkSendPool.GetStatus();
+    }
 
-    CBitcoinAddress address(params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
-
-    // Amount
-    CAmount nAmount = AmountFromValue(params[1]);
-
-    // Wallet comments
-    CWalletTx wtx;
-//    string strError = pwalletMain->SendMoneyToDestination(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
-    SendMoney(address.Get(), nAmount, wtx, ONLY_DENOMINATED);
-//    if (strError != "")
-//        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-
-    return wtx.GetHash().GetHex();
+    return "Unknown command, please see \"help darksend\"";
 }
-
 
 Value getpoolinfo(const Array& params, bool fHelp)
 {
