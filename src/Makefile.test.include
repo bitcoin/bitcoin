@@ -47,7 +47,6 @@ BITCOIN_TESTS =\
   test/compress_tests.cpp \
   test/crypto_tests.cpp \
   test/DoS_tests.cpp \
-  test/excessiveblock_test.cpp \
   test/getarg_tests.cpp \
   test/hash_tests.cpp \
   test/key_tests.cpp \
@@ -73,6 +72,7 @@ BITCOIN_TESTS =\
   test/skiplist_tests.cpp \
   test/test_bitcoin.cpp \
   test/test_bitcoin.h \
+  test/thinblock_tests.cpp \
   test/timedata_tests.cpp \
   test/transaction_tests.cpp \
   test/uint256_tests.cpp \
