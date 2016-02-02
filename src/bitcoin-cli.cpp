@@ -66,9 +66,9 @@ static bool AppInitRPC(int argc, char* argv[])
         std::string strUsage = _("HOdlcoin Core RPC client version") + " " + FormatFullVersion() + "\n";
         if (!mapArgs.count("-version")) {
             strUsage += "\n" + _("Usage:") + "\n" +
-                  "  bitcoin-cli [options] <command> [params]  " + _("Send command to HOdlcoin Core") + "\n" +
-                  "  bitcoin-cli [options] help                " + _("List commands") + "\n" +
-                  "  bitcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
+                  "  hodlcoin-cli [options] <command> [params]  " + _("Send command to HOdlcoin Core") + "\n" +
+                  "  hodlcoin-cli [options] help                " + _("List commands") + "\n" +
+                  "  hodlcoin-cli [options] help <command>      " + _("Get help for a command") + "\n";
 
             strUsage += "\n" + HelpMessageCli();
         }
