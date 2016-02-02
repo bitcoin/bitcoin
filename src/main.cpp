@@ -812,6 +812,9 @@ std::string FormatStateMessage(const CValidationState &state)
         state.GetRejectCode());
 }
 
+bool IsNewTransaction(CTxMemPool& pool, CValidationState &state, const CTransaction& tx, CCoinsViewCache& view, CAmount& nValueIn, bool* pfMissingInputs, std::vector<uint256>& vHashTxnToUncache);
+bool IsRateLimited (unsigned int nSize, CAmount nModifiedFees);
+
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                               bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee,
                               std::vector<uint256>& vHashTxnToUncache)
@@ -845,101 +848,33 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
     // Check for conflicts with in-memory transactions
     set<uint256> setConflicts;
-    {
-    LOCK(pool.cs); // protect pool.mapNextTx
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
-    {
-        if (pool.mapNextTx.count(txin.prevout))
-        {
-            const CTransaction *ptxConflicting = pool.mapNextTx[txin.prevout].ptx;
-            if (!setConflicts.count(ptxConflicting->GetHash()))
-            {
-                // Allow opt-out of transaction replacement by setting
-                // nSequence >= maxint-1 on all inputs.
-                //
-                // maxint-1 is picked to still allow use of nLockTime by
-                // non-replacable transactions. All inputs rather than just one
-                // is for the sake of multi-party protocols, where we don't
-                // want a single party to be able to disable replacement.
-                //
-                // The opt-out ignores descendants as anyone relying on
-                // first-seen mempool behavior should be checking all
-                // unconfirmed ancestors anyway; doing otherwise is hopelessly
-                // insecure.
-                bool fReplacementOptOut = true;
-                if (fPermitReplacement)
-                {
-                    BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
-                    {
-                        if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
-                        {
-                            fReplacementOptOut = false;
-                            break;
-                        }
-                    }
-                }
-                if (fReplacementOptOut)
-                    return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
-
-                setConflicts.insert(ptxConflicting->GetHash());
-            }
-        }
-    }
-    }
+    if (pool.GetConflicts(tx, setConflicts))
+        return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
 
     {
         CCoinsView dummy;
         CCoinsViewCache view(&dummy);
 
         CAmount nValueIn = 0;
+
         {
-        LOCK(pool.cs);
-        CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
-        view.SetBackend(viewMemPool);
+            LOCK(pool.cs);
 
-        // do we already have it?
-        bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
-        if (view.HaveCoins(hash)) {
-            if (!fHadTxInCache)
-                vHashTxnToUncache.push_back(hash);
-            return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
-        }
+            CCoinsViewMemPool viewMemPool(pcoinsTip, pool);
+            view.SetBackend(viewMemPool);
 
-        // do all inputs exist?
-        // Note that this does not check for the presence of actual outputs (see the next check for that),
-        // and only helps with filling in pfMissingInputs (to determine missing vs spent).
-        BOOST_FOREACH(const CTxIn txin, tx.vin) {
-            if (!pcoinsTip->HaveCoinsInCache(txin.prevout.hash))
-                vHashTxnToUncache.push_back(txin.prevout.hash);
-            if (!view.HaveCoins(txin.prevout.hash)) {
-                if (pfMissingInputs)
-                    *pfMissingInputs = true;
-                return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
-            }
-        }
+            if (!IsNewTransaction(pool, state, tx, view, nValueIn, pfMissingInputs, vHashTxnToUncache)) return false;
 
-        // are the actual inputs available?
-        if (!view.HaveInputs(tx))
-            return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
-
-        // Bring the best block into scope
-        view.GetBestBlock();
-
-        nValueIn = view.GetValueIn(tx);
-
-        // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
-        view.SetBackend(dummy);
+            // we have all inputs cached now, so switch back to dummy, so we don't need to keep lock on mempool
+            view.SetBackend(dummy);
         }
 
         // Check for non-standard pay-to-script-hash in inputs
         if (fRequireStandard && !AreInputsStandard(tx, view))
             return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
 
-        unsigned int nSigOps = GetLegacySigOpCount(tx);
-        nSigOps += GetP2SHSigOpCount(tx, view);
-
         CAmount nValueOut = tx.GetValueOut();
-        CAmount nFees = nValueIn-nValueOut;
+        CAmount nFees = nValueIn - nValueOut;
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
         CAmount nModifiedFees = nFees;
         double nPriorityDummy = 0;
@@ -958,6 +893,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                 break;
             }
         }
+
+        unsigned int nSigOps = GetLegacySigOpCount(tx);
+        nSigOps += GetP2SHSigOpCount(tx, view);
 
         CTxMemPoolEntry entry(tx, nFees, GetTime(), dPriority, chainActive.Height(), pool.HasNoInputsOf(tx), inChainInputValue, fSpendsCoinbase, nSigOps);
         unsigned int nSize = entry.GetTxSize();
@@ -982,24 +920,8 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // Continuously rate-limit free (really, very-low-fee) transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
-        if (fLimitFree && nModifiedFees < ::minRelayTxFee.GetFee(nSize))
-        {
-            static CCriticalSection csFreeLimiter;
-            static double dFreeCount;
-            static int64_t nLastTime;
-            int64_t nNow = GetTime();
-
-            LOCK(csFreeLimiter);
-
-            // Use an exponentially decaying ~10-minute window:
-            dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
-            nLastTime = nNow;
-            // -limitfreerelay unit is thousand-bytes-per-minute
-            // At default rate it would take over a month to fill 1GB
-            if (dFreeCount + nSize >= GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) * 10 * 1000)
-                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "rate limited free transaction");
-            LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
-            dFreeCount += nSize;
+        if (fLimitFree && IsRateLimited(nSize, nModifiedFees)) {
+            return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "rate limited free transaction");
         }
 
         if (fRejectAbsurdFee && nFees > maxTxFee)
@@ -1229,6 +1151,67 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
             pcoinsTip->Uncache(hashTx);
     }
     return res;
+}
+
+// TODO: move to policy/
+
+bool IsNewTransaction(CTxMemPool& pool, CValidationState &state, const CTransaction& tx, CCoinsViewCache& view, CAmount& nValueIn, bool* pfMissingInputs, std::vector<uint256>& vHashTxnToUncache) {
+    const uint256 hash = tx.GetHash();
+
+    // do we already have it?
+    bool fHadTxInCache = pcoinsTip->HaveCoinsInCache(hash);
+    if (view.HaveCoins(hash)) {
+        if (!fHadTxInCache)
+            vHashTxnToUncache.push_back(hash);
+        return state.Invalid(false, REJECT_ALREADY_KNOWN, "txn-already-known");
+    }
+
+    // do all inputs exist?
+    // Note that this does not check for the presence of actual outputs (see the next check for that),
+    // and only helps with filling in pfMissingInputs (to determine missing vs spent).
+    BOOST_FOREACH(const CTxIn txin, tx.vin) {
+        if (!pcoinsTip->HaveCoinsInCache(txin.prevout.hash))
+            vHashTxnToUncache.push_back(txin.prevout.hash);
+        if (!view.HaveCoins(txin.prevout.hash)) {
+            if (pfMissingInputs)
+                *pfMissingInputs = true;
+            return false; // fMissingInputs and !state.IsInvalid() is used to detect this condition, don't set state.Invalid()
+        }
+    }
+
+    // are the actual inputs available?
+    if (!view.HaveInputs(tx))
+        return state.Invalid(false, REJECT_DUPLICATE, "bad-txns-inputs-spent");
+
+    // Bring the best block into scope
+    view.GetBestBlock();
+
+    nValueIn = view.GetValueIn(tx);
+
+    return true;
+}
+
+bool IsRateLimited (unsigned int nSize, CAmount nModifiedFees) {
+    if (nModifiedFees >= ::minRelayTxFee.GetFee(nSize)) return false;
+
+    static CCriticalSection csFreeLimiter;
+    static double dFreeCount;
+    static int64_t nLastTime;
+    int64_t nNow = GetTime();
+
+    LOCK(csFreeLimiter);
+
+    // Use an exponentially decaying ~10-minute window:
+    dFreeCount *= pow(1.0 - 1.0/600.0, (double)(nNow - nLastTime));
+    nLastTime = nNow;
+
+    // -limitfreerelay unit is thousand-bytes-per-minute
+    // At default rate it would take over a month to fill 1GB
+    if (dFreeCount + nSize >= GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY) * 10 * 1000)
+        return true;
+
+    LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
+    dFreeCount += nSize;
 }
 
 /** Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock */
@@ -3545,7 +3528,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
         // check level 1: verify block validity
         if (nCheckLevel >= 1 && !CheckBlock(block, state))
-            return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__, 
+            return error("%s: *** found bad block at %d, hash=%s (%s)\n", __func__,
                          pindex->nHeight, pindex->GetBlockHash().ToString(), FormatStateMessage(state));
         // check level 2: verify undo validity
         if (nCheckLevel >= 2 && pindex) {
@@ -3633,7 +3616,7 @@ bool LoadBlockIndex()
     return true;
 }
 
-bool InitBlockIndex(const CChainParams& chainparams) 
+bool InitBlockIndex(const CChainParams& chainparams)
 {
     LOCK(cs_main);
 
