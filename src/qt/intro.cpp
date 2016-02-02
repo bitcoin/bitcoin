@@ -191,7 +191,7 @@ void Intro::pickDataDirectory()
         settings.setValue("strDataDir", dataDir);
     }
     /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the bitcoin.conf file in the default data directory
+     * override -datadir in the hodlcoin.conf file in the default data directory
      * (to be consistent with bitcoind behavior)
      */
     if(dataDir != getDefaultDataDirectory())
