@@ -812,7 +812,6 @@ std::string FormatStateMessage(const CValidationState &state)
         state.GetRejectCode());
 }
 
-bool HasReplacableConflicts(CTxMemPool& pool, const CTransaction& tx, set<uint256>& setConflicts);
 bool IsNewTransaction(CTxMemPool& pool, CValidationState &state, const CTransaction& tx, CCoinsViewCache& view, CAmount& nValueIn, bool* pfMissingInputs, std::vector<uint256>& vHashTxnToUncache);
 bool IsRateLimited (unsigned int nSize, CAmount nModifiedFees);
 
@@ -849,7 +848,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
     // Check for conflicts with in-memory transactions
     set<uint256> setConflicts;
-    if (HasReplacableConflicts(pool, tx, setConflicts))
+    if (pool.GetConflicts(tx, setConflicts))
         return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
 
     {
@@ -1155,49 +1154,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 }
 
 // TODO: move to policy/
-bool HasReplacableConflicts(CTxMemPool& pool, const CTransaction& tx, set<uint256>& setConflicts) {
-    LOCK(pool.cs); // protect pool.mapNextTx
-    BOOST_FOREACH(const CTxIn &txin, tx.vin)
-    {
-        if (pool.mapNextTx.count(txin.prevout))
-        {
-            const CTransaction *ptxConflicting = pool.mapNextTx[txin.prevout].ptx;
-            if (!setConflicts.count(ptxConflicting->GetHash()))
-            {
-                // Allow opt-out of transaction replacement by setting
-                // nSequence >= maxint-1 on all inputs.
-                //
-                // maxint-1 is picked to still allow use of nLockTime by
-                // non-replacable transactions. All inputs rather than just one
-                // is for the sake of multi-party protocols, where we don't
-                // want a single party to be able to disable replacement.
-                //
-                // The opt-out ignores descendants as anyone relying on
-                // first-seen mempool behavior should be checking all
-                // unconfirmed ancestors anyway; doing otherwise is hopelessly
-                // insecure.
-                bool fReplacementOptOut = true;
-                if (fPermitReplacement)
-                {
-                    BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
-                    {
-                        if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
-                        {
-                            fReplacementOptOut = false;
-                            break;
-                        }
-                    }
-                }
-                if (fReplacementOptOut)
-                    return true;
-
-                setConflicts.insert(ptxConflicting->GetHash());
-            }
-        }
-    }
-
-    return false;
-}
 
 bool IsNewTransaction(CTxMemPool& pool, CValidationState &state, const CTransaction& tx, CCoinsViewCache& view, CAmount& nValueIn, bool* pfMissingInputs, std::vector<uint256>& vHashTxnToUncache) {
     const uint256 hash = tx.GetHash();

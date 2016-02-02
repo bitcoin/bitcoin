@@ -55,6 +55,51 @@ CTxMemPoolEntry::GetPriority(unsigned int currentHeight) const
     return dResult;
 }
 
+bool GetConflicts(const CTransaction& tx, set<uint256>& setConflicts) {
+    LOCK(cs);
+
+    BOOST_FOREACH(const CTxIn &txin, tx.vin)
+    {
+        if (this->mapNextTx.count(txin.prevout))
+        {
+            const CTransaction *ptxConflicting = this->mapNextTx[txin.prevout].ptx;
+            if (!setConflicts.count(ptxConflicting->GetHash()))
+            {
+                // Allow opt-out of transaction replacement by setting
+                // nSequence >= maxint-1 on all inputs.
+                //
+                // maxint-1 is picked to still allow use of nLockTime by
+                // non-replacable transactions. All inputs rather than just one
+                // is for the sake of multi-party protocols, where we don't
+                // want a single party to be able to disable replacement.
+                //
+                // The opt-out ignores descendants as anyone relying on
+                // first-seen mempool behavior should be checking all
+                // unconfirmed ancestors anyway; doing otherwise is hopelessly
+                // insecure.
+                bool fReplacementOptOut = true;
+                if (fPermitReplacement)
+                {
+                    BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
+                    {
+                        if (txin.nSequence < std::numeric_limits<unsigned int>::max()-1)
+                        {
+                            fReplacementOptOut = false;
+                            break;
+                        }
+                    }
+                }
+                if (fReplacementOptOut)
+                    return true;
+
+                setConflicts.insert(ptxConflicting->GetHash());
+            }
+        }
+    }
+
+    return false;
+}
+
 void CTxMemPoolEntry::UpdateFeeDelta(int64_t newFeeDelta)
 {
     nModFeesWithDescendants += newFeeDelta - feeDelta;
@@ -274,7 +319,7 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove)
         // should be a bit faster.
         // However, if we happen to be in the middle of processing a reorg, then
         // the mempool can be in an inconsistent state.  In this case, the set
-        // of ancestors reachable via mapLinks will be the same as the set of 
+        // of ancestors reachable via mapLinks will be the same as the set of
         // ancestors whose packages include this transaction, because when we
         // add a new transaction to the mempool in addUnchecked(), we assume it
         // has no children, and in the case of a reorg where that assumption is

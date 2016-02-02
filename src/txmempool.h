@@ -102,6 +102,12 @@ public:
     int64_t GetModifiedFee() const { return nFee + feeDelta; }
     size_t DynamicMemoryUsage() const { return nUsageSize; }
 
+    /*
+     * Fills setConflicts with any conflicting non-final transactions for tx.
+     * Returns false if any conflicts exist with final transactions.
+     */
+    bool GetConflicts (const CTransaction& tx, std::set<uint256>& setConflicts) const;
+
     // Adjusts the descendant state, if this entry is not dirty.
     void UpdateState(int64_t modifySize, CAmount modifyFee, int64_t modifyCount);
     // Updates the fee delta used for mining priority score, and the
@@ -530,7 +536,7 @@ public:
 
     /** Estimate priority needed to get into the next nBlocks */
     double estimatePriority(int nBlocks) const;
-    
+
     /** Write/Read estimates to disk */
     bool WriteFeeEstimates(CAutoFile& fileout) const;
     bool ReadFeeEstimates(CAutoFile& filein);
@@ -576,7 +582,7 @@ private:
     void removeUnchecked(txiter entry);
 };
 
-/** 
+/**
  * CCoinsView that brings transactions from a memorypool into view.
  * It does not check for spendings by memory pool transactions.
  */
