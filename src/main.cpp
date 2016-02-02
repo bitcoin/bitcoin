@@ -812,7 +812,7 @@ std::string FormatStateMessage(const CValidationState &state)
         state.GetRejectCode());
 }
 
-bool HasConflicts(CTxMemPool& pool, const CTransaction& tx, set<uint256>& setConflicts);
+bool HasReplacableConflicts(CTxMemPool& pool, const CTransaction& tx, set<uint256>& setConflicts);
 bool IsNewTransaction(CTxMemPool& pool, CValidationState &state, const CTransaction& tx, CCoinsViewCache& view, CAmount& nValueIn, bool* pfMissingInputs, std::vector<uint256>& vHashTxnToUncache);
 bool IsRateLimited (unsigned int nSize, CAmount nModifiedFees);
 
@@ -849,7 +849,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
     // Check for conflicts with in-memory transactions
     set<uint256> setConflicts;
-    if (HasConflicts(pool, tx, setConflicts))
+    if (HasReplacableConflicts(pool, tx, setConflicts))
         return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
 
     {
@@ -1155,7 +1155,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 }
 
 // TODO: move to policy/
-bool HasConflicts(CTxMemPool& pool, const CTransaction& tx, set<uint256>& setConflicts) {
+bool HasReplacableConflicts(CTxMemPool& pool, const CTransaction& tx, set<uint256>& setConflicts) {
     LOCK(pool.cs); // protect pool.mapNextTx
     BOOST_FOREACH(const CTxIn &txin, tx.vin)
     {
