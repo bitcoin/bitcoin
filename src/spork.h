@@ -1,20 +1,15 @@
 
-// Copyright (c) 2009-2012 The Dash developers
+// Copyright (c) 2009-2012 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef SPORK_H
 #define SPORK_H
 
-#include "sync.h"
-#include "net.h"
-#include "key.h"
-#include "util.h"
 #include "base58.h"
-#include "main.h"
-
+#include "hash.h"
 #include "protocol.h"
-#include "darksend.h"
-#include <boost/lexical_cast.hpp>
+#include "util.h"
+#include "utilstrencodings.h"
 
 using namespace std;
 using namespace boost;

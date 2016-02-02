@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2016 The Dash Core developers
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -185,7 +185,7 @@ public:
     CTxBudgetPayment() {
         payee = CScript();
         nAmount = 0;
-        nProposalHash = 0;
+        nProposalHash = uint256();
     }
 
     ADD_SERIALIZE_METHODS;
@@ -193,7 +193,7 @@ public:
     //for saving to the serialized db
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(payee);
+        READWRITE(*(CScriptBase*)(&payee));
         READWRITE(nAmount);
         READWRITE(nProposalHash);
     }
@@ -424,7 +424,7 @@ public:
 
     bool IsEstablished() {
         //Proposals must be at least a day old to make it into a budget
-        if(Params().NetworkID() == CBaseChainParams::MAIN) return (nTime < GetTime() - (60*60*24));
+        if(Params().NetworkIDString() == CBaseChainParams::MAIN) return (nTime < GetTime() - (60*60*24));
 
         //for testing purposes - 20 minutes
         return (nTime < GetTime() - (60*20));
@@ -458,7 +458,7 @@ public:
         ss << nBlockStart;
         ss << nBlockEnd;
         ss << nAmount;
-        ss << address;
+        ss << *(CScriptBase*)(&address);
         uint256 h1 = ss.GetHash();
 
         return h1;
@@ -476,7 +476,7 @@ public:
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
 
-        READWRITE(address);
+        READWRITE(*(CScriptBase*)(&address));
         READWRITE(nTime);
         READWRITE(nFeeTXHash);
 
@@ -532,7 +532,7 @@ public:
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
-        READWRITE(address);
+        READWRITE(*(CScriptBase*)(&address));
         READWRITE(nFeeTXHash);
     }
 };

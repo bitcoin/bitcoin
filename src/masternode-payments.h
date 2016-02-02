@@ -1,14 +1,17 @@
 
 
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef MASTERNODE_PAYMENTS_H
 #define MASTERNODE_PAYMENTS_H
 
+#include "core_io.h"
 #include "key.h"
 #include "main.h"
 #include "masternode.h"
+#include "utilstrencodings.h"
+
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -78,7 +81,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(scriptPubKey);
+        READWRITE(*(CScriptBase*)(&scriptPubKey));
         READWRITE(nVotes);
      }
 };
@@ -175,7 +178,7 @@ public:
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << payee;
+        ss << *(CScriptBase*)(&payee);
         ss << nBlockHeight;
         ss << vinMasternode.prevout;
 
@@ -198,7 +201,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(vinMasternode);
         READWRITE(nBlockHeight);
-        READWRITE(payee);
+        READWRITE(*(CScriptBase*)(&payee));
         READWRITE(vchSig);
     }
 
@@ -207,7 +210,7 @@ public:
         std::string ret = "";
         ret += vinMasternode.ToString();
         ret += ", " + boost::lexical_cast<std::string>(nBlockHeight);
-        ret += ", " + payee.ToString();
+        ret += ", " + ScriptToAsmStr(payee);
         ret += ", " + boost::lexical_cast<std::string>((int)vchSig.size());
         return ret;
     }
@@ -227,7 +230,7 @@ private:
 public:
     std::map<uint256, CMasternodePaymentWinner> mapMasternodePayeeVotes;
     std::map<int, CMasternodeBlockPayees> mapMasternodeBlocks;
-    std::map<uint256, int> mapMasternodesLastVote; //prevout.hash + prevout.n, nBlockHeight
+    std::map<uint256, int> mapMasternodesLastVote; //Hash(BEGIN(prevout.hash), END(prevout.n)), nBlockHeight
 
     CMasternodePayments() {
         nSyncedFromPeer = 0;
@@ -254,14 +257,14 @@ public:
     bool CanVote(COutPoint outMasternode, int nBlockHeight) {
         LOCK(cs_mapMasternodePayeeVotes);
 
-        if(mapMasternodesLastVote.count(outMasternode.hash + outMasternode.n)) {
-            if(mapMasternodesLastVote[outMasternode.hash + outMasternode.n] == nBlockHeight) {
+        if(mapMasternodesLastVote.count(Hash(BEGIN(outMasternode.hash), END(outMasternode.n)))) {
+            if(mapMasternodesLastVote[Hash(BEGIN(outMasternode.hash), END(outMasternode.n))] == nBlockHeight) {
                 return false;
             }
         }
 
         //record this masternode voted
-        mapMasternodesLastVote[outMasternode.hash + outMasternode.n] = nBlockHeight;
+        mapMasternodesLastVote[Hash(BEGIN(outMasternode.hash), END(outMasternode.n))] = nBlockHeight;
         return true;
     }
 

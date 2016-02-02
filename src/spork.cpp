@@ -1,4 +1,6 @@
-
+// Copyright (c) 2014-2016 The Dash Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
 #include "sync.h"
@@ -6,10 +8,12 @@
 #include "key.h"
 #include "util.h"
 #include "base58.h"
+#include "darksend.h"
 #include "protocol.h"
 #include "spork.h"
 #include "main.h"
 #include "masternode-budget.h"
+#include "consensus/validation.h"
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
@@ -166,7 +170,7 @@ void ReprocessBlocks(int nBlocks)
     }
 
     if (state.IsValid()) {
-        ActivateBestChain(state);
+        ActivateBestChain(state, Params());
     }
 }
 

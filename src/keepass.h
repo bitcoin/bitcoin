@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Dash developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,13 +9,14 @@
 #define KEEPASS_CRYPTO_BLOCK_SIZE 16
 #define KEEPASS_KEEPASSHTTP_HOST "localhost"
 #define KEEPASS_KEEPASSHTTP_PORT 19455
+#define KEEPASS_KEEPASSHTTP_CONNECT_TIMEOUT 30
 
 #include <string>
 #include <vector>
 #include <map>
 
-#include "json/json_spirit_value.h"
-#include "allocators.h"
+#include <univalue.h>
+#include "support/allocators/secure.h"
 
 class CKeePassIntegrator {
 
@@ -30,7 +31,7 @@ class CKeePassIntegrator {
 
     class CKeePassRequest {
 
-        json_spirit::Object requestObj;
+        UniValue requestObj;
         std::string sType;
         std::string sIV;
         SecureString sKey;
@@ -92,7 +93,7 @@ class CKeePassIntegrator {
         void parseResponse(std::string sResponse);
 
     public:
-        json_spirit::Object responseObj;
+        UniValue responseObj;
         CKeePassResponse(SecureString sKey, std::string sResponse) {
             this->sKey = sKey;
             parseResponse(sResponse);

@@ -1,9 +1,12 @@
-// Copyright (c) 2013-2014 The Bitcoin developers
+// Copyright (c) 2013-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "hash.h"
+#include "crypto/common.h"
 #include "crypto/hmac_sha512.h"
+#include "pubkey.h"
+
 
 inline uint32_t ROTL32(uint32_t x, int8_t r)
 {
@@ -23,10 +26,10 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 
         //----------
         // body
-        const uint32_t* blocks = (const uint32_t*)(&vDataToHash[0] + nblocks * 4);
+        const uint8_t* blocks = &vDataToHash[0] + nblocks * 4;
 
         for (int i = -nblocks; i; i++) {
-            uint32_t k1 = blocks[i];
+            uint32_t k1 = ReadLE32(blocks + i*4);
 
             k1 *= c1;
             k1 = ROTL32(k1, 15);
@@ -69,15 +72,12 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
     return h1;
 }
 
-void BIP32Hash(const unsigned char chainCode[32], unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64])
+void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64])
 {
     unsigned char num[4];
     num[0] = (nChild >> 24) & 0xFF;
     num[1] = (nChild >> 16) & 0xFF;
     num[2] = (nChild >>  8) & 0xFF;
     num[3] = (nChild >>  0) & 0xFF;
-    CHMAC_SHA512(chainCode, 32).Write(&header, 1)
-                               .Write(data, 32)
-                               .Write(num, 4)
-                               .Finalize(output);
+    CHMAC_SHA512(chainCode.begin(), chainCode.size()).Write(&header, 1).Write(data, 32).Write(num, 4).Finalize(output);
 }
