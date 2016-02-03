@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -65,19 +65,6 @@ public:
 };
 static CBaseRegTestParams regTestParams;
 
-/*
- * Unit test
- */
-class CBaseUnitTestParams : public CBaseMainParams
-{
-public:
-    CBaseUnitTestParams()
-    {
-        strDataDir = "unittest";
-    }
-};
-static CBaseUnitTestParams unitTestParams;
-
 static CBaseChainParams* pCurrentBaseParams = 0;
 
 const CBaseChainParams& BaseParams()
@@ -86,16 +73,21 @@ const CBaseChainParams& BaseParams()
     return *pCurrentBaseParams;
 }
 
-void SelectBaseParams(const std::string& chain)
+CBaseChainParams& BaseParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN)
-        pCurrentBaseParams = &mainParams;
+        return mainParams;
     else if (chain == CBaseChainParams::TESTNET)
-        pCurrentBaseParams = &testNetParams;
+        return testNetParams;
     else if (chain == CBaseChainParams::REGTEST)
-        pCurrentBaseParams = &regTestParams;
+        return regTestParams;
     else
         throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
+}
+
+void SelectBaseParams(const std::string& chain)
+{
+    pCurrentBaseParams = &BaseParams(chain);
 }
 
 std::string ChainNameFromCommandLine()

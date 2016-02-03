@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2014-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -165,13 +165,22 @@ BOOST_AUTO_TEST_CASE(coins_cache_simulation_test)
         }
 
         if (insecure_rand() % 100 == 0) {
+            // Every 100 iterations, flush an intermediate cache
+            if (stack.size() > 1 && insecure_rand() % 2 == 0) {
+                unsigned int flushIndex = insecure_rand() % (stack.size() - 1);
+                stack[flushIndex]->Flush();
+            }
+        }
+        if (insecure_rand() % 100 == 0) {
             // Every 100 iterations, change the cache stack.
             if (stack.size() > 0 && insecure_rand() % 2 == 0) {
+                //Remove the top cache
                 stack.back()->Flush();
                 delete stack.back();
                 stack.pop_back();
             }
             if (stack.size() == 0 || (stack.size() < 4 && insecure_rand() % 2)) {
+                //Add a new cache
                 CCoinsView* tip = &base;
                 if (stack.size() > 0) {
                     tip = stack.back();
@@ -304,6 +313,13 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             }
         }
 
+        if (insecure_rand() % 100 == 0) {
+            // Every 100 iterations, flush an intermediate cache
+            if (stack.size() > 1 && insecure_rand() % 2 == 0) {
+                unsigned int flushIndex = insecure_rand() % (stack.size() - 1);
+                stack[flushIndex]->Flush();
+            }
+        }
         if (insecure_rand() % 100 == 0) {
             // Every 100 iterations, change the cache stack.
             if (stack.size() > 0 && insecure_rand() % 2 == 0) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -51,8 +51,10 @@ BasicTestingSetup::~BasicTestingSetup()
 
 TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(chainName)
 {
+    const CChainParams& chainparams = Params();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
+        walletRegisterRPCCommands();
 #endif
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
@@ -61,7 +63,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         pblocktree = new CBlockTreeDB(1 << 20, true);
         pcoinsdbview = new CCoinsViewDB(1 << 23, true);
         pcoinsTip = new CCoinsViewCache(pcoinsdbview);
-        InitBlockIndex();
+        InitBlockIndex(chainparams);
 #ifdef ENABLE_WALLET
         bool fFirstRun;
         pwalletMain = new CWallet("wallet.dat");
@@ -143,8 +145,13 @@ TestChain100Setup::~TestChain100Setup()
 
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(CMutableTransaction &tx, CTxMemPool *pool) {
-    return CTxMemPoolEntry(tx, nFee, nTime, dPriority, nHeight,
-                           pool ? pool->HasNoInputsOf(tx) : hadNoDependencies);
+    CTransaction txn(tx);
+    bool hasNoDependencies = pool ? pool->HasNoInputsOf(tx) : hadNoDependencies;
+    // Hack to assume either its completely dependent on other mempool txs or not at all
+    CAmount inChainValue = hasNoDependencies ? txn.GetValueOut() : 0;
+
+    return CTxMemPoolEntry(txn, nFee, nTime, dPriority, nHeight,
+                           hasNoDependencies, inChainValue, spendsCoinbase, sigOpCount);
 }
 
 void Shutdown(void* parg)

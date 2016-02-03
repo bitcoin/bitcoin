@@ -409,9 +409,21 @@
         <source>No block source available...</source>
         <translation>Neniu fonto de blokoj trovebla...</translation>
     </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n tago</numerusform><numerusform>%n tagoj</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n semajno</numerusform><numerusform>%n semajnoj</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 kaj %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n jaro</numerusform><numerusform>%n jaroj</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -444,6 +456,30 @@
     <message>
         <source>Catching up...</source>
         <translation>Ĝisdatigante...</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>Dato: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Sumo: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Tipo: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Etikedo: %1
+</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -776,7 +812,7 @@
         <source>command-line options</source>
         <translation>komandliniaj agordaĵoj</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -854,6 +890,14 @@
         <translation>MB</translation>
     </message>
     <message>
+        <source>Accept connections from outside</source>
+        <translation>Akcepti konektojn el ekstere</translation>
+    </message>
+    <message>
+        <source>Allow incoming connections</source>
+        <translation>Permesi envenantajn konektojn</translation>
+    </message>
+    <message>
         <source>Reset all client options to default.</source>
         <translation>Reagordi ĉion al defaŭlataj valoroj.</translation>
     </message>
@@ -864,6 +908,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Reto</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Monujo</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -888,6 +936,14 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>la pordo de la prokurilo (ekz. 9050)</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -977,12 +1033,24 @@
         <translation>Minita saldo, kiu ankoraŭ ne maturiĝis</translation>
     </message>
     <message>
+        <source>Balances</source>
+        <translation>Saldoj</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>Totalo:</translation>
     </message>
     <message>
         <source>Your current total balance</source>
         <translation>via aktuala totala saldo</translation>
+    </message>
+    <message>
+        <source>Spendable:</source>
+        <translation>Elspezebla:</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>Lastaj transakcioj</translation>
     </message>
     </context>
 <context>
@@ -1044,6 +1112,10 @@
     <message>
         <source>%1 m</source>
         <translation>%1 m</translation>
+    </message>
+    <message>
+        <source>None</source>
+        <translation>Neniu</translation>
     </message>
     <message>
         <source>N/A</source>
@@ -1122,6 +1194,22 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Aktuala nombro de blokoj</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>Ricevita</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>Sendita</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>Versio</translation>
+    </message>
+    <message>
+        <source>Services</source>
+        <translation>Servoj</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1374,6 +1462,10 @@
     <message>
         <source>Change:</source>
         <translation>Restmono:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Krompago:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2210,12 +2302,16 @@
         <translation>Plenumi komandon kiam rilata alerto riceviĝas, aŭ kiam ni vidas tre longan forkon (%s en cms anstataŭiĝas per mesaĝo)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Elekti dosierujon por datumoj dum lanĉo (defaŭlte: 0)</translation>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Ne eblas trovi la adreson -whitebind: '%s'</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Informoj</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nevalida sumo por -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2230,24 +2326,12 @@
         <translation>Sendi spurajn/sencimigajn informojn al la konzolo anstataŭ al dosiero debug.log</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Agordi lingvon, ekzemple "de_DE" (defaŭlte: tiu de la sistemo)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Montri salutŝildon dum lanĉo (defaŭlte: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Malpligrandigi la sencimigan protokol-dosieron kiam kliento lanĉiĝas (defaŭlte: 1 kiam mankas -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Subskriba transakcio fiaskis</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Lanĉiĝi plejete</translation>
     </message>
     <message>
         <source>This is experimental software.</source>

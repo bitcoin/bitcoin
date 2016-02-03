@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,17 +22,16 @@
 #include <QDebug>
 #include <QTimer>
 
+class CBlockIndex;
+
 static const int64_t nClientStartupTime = GetTime();
+static int64_t nLastBlockTipUpdateNotification = 0;
 
 ClientModel::ClientModel(OptionsModel *optionsModel, QObject *parent) :
     QObject(parent),
     optionsModel(optionsModel),
     peerTableModel(0),
     banTableModel(0),
-    cachedNumBlocks(0),
-    cachedBlockDate(QDateTime()),
-    cachedReindexing(0),
-    cachedImporting(0),
     pollTimer(0)
 {
     peerTableModel = new PeerTableModel(this);
@@ -99,40 +98,21 @@ size_t ClientModel::getMempoolDynamicUsage() const
     return mempool.DynamicMemoryUsage();
 }
 
-double ClientModel::getVerificationProgress() const
+double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 {
-    LOCK(cs_main);
-    return Checkpoints::GuessVerificationProgress(Params().Checkpoints(), chainActive.Tip());
+    CBlockIndex *tip = const_cast<CBlockIndex *>(tipIn);
+    if (!tip)
+    {
+        LOCK(cs_main);
+        tip = chainActive.Tip();
+    }
+    return Checkpoints::GuessVerificationProgress(Params().Checkpoints(), tip);
 }
 
 void ClientModel::updateTimer()
 {
-    // Get required lock upfront. This avoids the GUI from getting stuck on
-    // periodical polls if the core is holding the locks for a longer time -
-    // for example, during a wallet rescan.
-    TRY_LOCK(cs_main, lockMain);
-    if (!lockMain)
-        return;
-
-    // Some quantities (such as number of blocks) change so fast that we don't want to be notified for each change.
-    // Periodically check and update with a timer.
-    int newNumBlocks = getNumBlocks();
-    QDateTime newBlockDate = getLastBlockDate();
-
-    // check for changed number of blocks we have, number of blocks peers claim to have, reindexing state and importing state
-    if (cachedNumBlocks != newNumBlocks ||
-        cachedBlockDate != newBlockDate ||
-        cachedReindexing != fReindex ||
-        cachedImporting != fImporting)
-    {
-        cachedNumBlocks = newNumBlocks;
-        cachedBlockDate = newBlockDate;
-        cachedReindexing = fReindex;
-        cachedImporting = fImporting;
-
-        Q_EMIT numBlocksChanged(newNumBlocks, newBlockDate);
-    }
-
+    // no locking required at this point
+    // the following calls will acquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
 }
@@ -178,7 +158,7 @@ enum BlockSource ClientModel::getBlockSource() const
 
 QString ClientModel::getStatusBarWarnings() const
 {
-    return QString::fromStdString(GetWarnings("statusbar"));
+    return QString::fromStdString(GetWarnings("gui"));
 }
 
 OptionsModel *ClientModel::getOptionsModel()
@@ -261,6 +241,26 @@ static void BannedListChanged(ClientModel *clientmodel)
     QMetaObject::invokeMethod(clientmodel, "updateBanlist", Qt::QueuedConnection);
 }
 
+static void BlockTipChanged(ClientModel *clientmodel, bool initialSync, const CBlockIndex *pIndex)
+{
+    // lock free async UI updates in case we have a new block tip
+    // during initial sync, only update the UI if the last update
+    // was > 250ms (MODEL_UPDATE_DELAY) ago
+    int64_t now = 0;
+    if (initialSync)
+        now = GetTimeMillis();
+
+    // if we are in-sync, update the UI regardless of last update time
+    if (!initialSync || now - nLastBlockTipUpdateNotification > MODEL_UPDATE_DELAY) {
+        //pass a async signal to the UI thread
+        QMetaObject::invokeMethod(clientmodel, "numBlocksChanged", Qt::QueuedConnection,
+                                  Q_ARG(int, pIndex->nHeight),
+                                  Q_ARG(QDateTime, QDateTime::fromTime_t(pIndex->GetBlockTime())),
+                                  Q_ARG(double, clientmodel->getVerificationProgress(pIndex)));
+        nLastBlockTipUpdateNotification = now;
+    }
+}
+
 void ClientModel::subscribeToCoreSignals()
 {
     // Connect signals to client
@@ -268,6 +268,7 @@ void ClientModel::subscribeToCoreSignals()
     uiInterface.NotifyNumConnectionsChanged.connect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.connect(boost::bind(NotifyAlertChanged, this, _1, _2));
     uiInterface.BannedListChanged.connect(boost::bind(BannedListChanged, this));
+    uiInterface.NotifyBlockTip.connect(boost::bind(BlockTipChanged, this, _1, _2));
 }
 
 void ClientModel::unsubscribeFromCoreSignals()
@@ -277,4 +278,5 @@ void ClientModel::unsubscribeFromCoreSignals()
     uiInterface.NotifyNumConnectionsChanged.disconnect(boost::bind(NotifyNumConnectionsChanged, this, _1));
     uiInterface.NotifyAlertChanged.disconnect(boost::bind(NotifyAlertChanged, this, _1, _2));
     uiInterface.BannedListChanged.disconnect(boost::bind(BannedListChanged, this));
+    uiInterface.NotifyBlockTip.disconnect(boost::bind(BlockTipChanged, this, _1, _2));
 }

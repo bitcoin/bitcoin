@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-linux-0.12"
+name: "bitcoin-linux-0.13"
 enable_cache: true
 suites:
 - "trusty"
@@ -15,7 +15,9 @@ packages:
 - "faketime"
 - "bsdmainutils"
 - "binutils-gold"
-reference_datetime: "2015-06-01 00:00:00"
+- "ca-certificates"
+- "python"
+reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
@@ -94,6 +96,8 @@ script: |
 
     ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
+    make ${MAKEOPTS} -C src check-security
+    make ${MAKEOPTS} -C src check-symbols
     make install-strip
     cd installed
     find . -name "lib*.la" -delete

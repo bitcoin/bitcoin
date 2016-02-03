@@ -3,9 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import socket
-import traceback, sys
-from binascii import hexlify
-import time, os
 
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
 from test_framework.test_framework import BitcoinTestFramework
@@ -34,7 +31,8 @@ addnode connect to onion
 addnode connect to generic DNS name
 '''
 
-class ProxyTest(BitcoinTestFramework):        
+
+class ProxyTest(BitcoinTestFramework):
     def __init__(self):
         # Create two proxies on different ports
         # ... one unauthenticated

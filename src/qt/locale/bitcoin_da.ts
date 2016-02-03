@@ -882,6 +882,34 @@
         <source>command-line options</source>
         <translation>kommandolinjetilvalg</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Indstillinger for brugergrænseflade:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Vælg datamappe under opstart (standard: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Vælg sprog; fx "da_DK" (standard: systemsprog)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Start minimeret</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Opsæt SSL-rodcertifikater til betalingsadmodninger (standard: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Vis startskærm under opstart (standard: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Nulstil alle indstillinger, der er foretaget i den grafiske brugerflade</translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -925,7 +953,11 @@
         <source>%n GB of free space available</source>
         <translation><numerusform>%n GB fri plads tilgængelig</numerusform><numerusform>%n GB fri plads tilgængelig</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(ud af %n GB behøvet)</numerusform><numerusform>(ud af %n GB behøvet)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1097,7 +1129,7 @@
     </message>
     <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Forbind til Bitcoin-netværket gennem en separat SOCKS5-proxy for skjulte tjenester via Tor.</translation>
+        <translation>Forbind til Bitcoin-netværket gennem en separat SOCKS5-proxy for skjulte Tor-tjenester.</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
@@ -1472,6 +1504,18 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Nuværende antal blokke</translation>
+    </message>
+    <message>
+        <source>Memory Pool</source>
+        <translation>Hukommelsespulje</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>Aktuelt antal transaktioner</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Hukommelsesforbrug</translation>
     </message>
     <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2733,6 +2777,10 @@
         <translation>Kopiér transaktions-ID</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Kopiér rå transaktion</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Redigér mærkat</translation>
     </message>
@@ -2992,10 +3040,6 @@
         <translation>Sæt andre knuder, der forbinder fra den angivne netmaske eller IP, på hvidliste. Kan angives flere gange.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(standard: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool skal være mindst %d MB</translation>
     </message>
@@ -3252,16 +3296,20 @@
         <translation>Aktiverer bedste kæde…</translation>
     </message>
     <message>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>Videresend altid transaktioner, der modtages fra hvidlistede knuder (standard: %d)</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
         <translation>Forsøg at genskabe private nøgler fra en ødelagt wallet.dat under opstart</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Kan ikke løse -whitebind adresse: "%s"</translation>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Opret automatisk skjult Tor-tjeneste (standard: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Vælg datamappe ved opstart (standard: 0)</translation>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Kan ikke løse -whitebind adresse: "%s"</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3352,20 +3400,8 @@
         <translation>Send transaktioner som nul-gebyr-transaktioner hvis muligt (standard: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Sæt SSL-rodcertifikater for betalingsanmodning (standard: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Angiv sprog, fx "da_DK" (standard: systemlokalitet)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Vis alle tilvalg for fejlsøgning (brug: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Vis opstartsbillede ved opstart (standard: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3376,16 +3412,20 @@
         <translation>Underskrift af transaktion mislykkedes</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>Start minimeret</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Transaktionsbeløbet er for lille til at betale gebyret</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
         <translation>Dette er eksperimentelt software.</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Adgangskode for Tor kontrolport (standard: tom)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>Tor kontrolport, der skal bruges, hvis onion-lytning er slået til (standard: %s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3402,10 +3442,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transaktionen er for stor</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Indstillinger for brugerflade:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -3426,6 +3462,10 @@
     <message>
         <source>Warning</source>
         <translation>Advarsel</translation>
+    </message>
+    <message>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>Hvorvidt der skal arbejdes i kun-blokke-tilstand (standard: %u)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -3484,6 +3524,10 @@
         <translation>Fejl under læsning af wallet.dat! Alle nøgler blev læst korrekt, men transaktionsdata eller indgange i adressebogen kan mangle eller være ukorrekte.</translation>
     </message>
     <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Gebyrer (i %s/kB) mindre end dette opfattes som intet gebyr under oprettelse af transaktioner (standard: %s)</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Hvor gennemarbejdet blokverificeringen for -checkblocks er (0-4; standard: %u)</translation>
     </message>
@@ -3500,6 +3544,10 @@
         <translation>Udskriv fejlsøgningsinformation (standard: %u, angivelse af &lt;kategori&gt; er valgfri)</translation>
     </message>
     <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>Understøt filtrering af blokke og transaktioner med Bloom-filtre (standard: %u)</translation>
+    </message>
+    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Den totale længde på netværksversionsstrengen (%i) overstiger maksimallængden (%i). Reducér antaller af eller størrelsen på uacomments.</translation>
     </message>
@@ -3513,7 +3561,11 @@
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Brug separat SOCS5-proxy for at nå andre knuder via Tor skjulte tjenester (standard: %s)</translation>
+        <translation>Brug separat SOCS5-proxy for at nå knuder via skjulte Tor-tjenester (standard: %s)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>Brugernavn og hashet adgangskode for JSON-RPC-forbindelser. Feltet &lt;userpw&gt; er i formatet: &lt;BRUGERNAVN&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Et kanonisk Python-skript inkluderes i share/rpcuser. Dette tilvalg kan angives flere gange</translation>
     </message>
     <message>
         <source>(default: %s)</source>

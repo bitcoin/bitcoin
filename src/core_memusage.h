@@ -10,7 +10,7 @@
 #include "memusage.h"
 
 static inline size_t RecursiveDynamicUsage(const CScript& script) {
-    return memusage::DynamicUsage(*static_cast<const std::vector<unsigned char>*>(&script));
+    return memusage::DynamicUsage(*static_cast<const CScriptBase*>(&script));
 }
 
 static inline size_t RecursiveDynamicUsage(const COutPoint& out) {

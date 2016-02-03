@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>지갑 주소나 이름을 수정하려면 우클릭하세요.</translation>
+        <translation>지갑 주소나 라벨을 수정하려면 우클릭하세요.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>계좌 복사(&amp;C)</translation>
+        <translation>주소 복사(&amp;C)</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
@@ -59,11 +59,11 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>보내는 주소들</translation>
+        <translation>타인 계좌 주소목록</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>받은 주소들</translation>
+        <translation>내 계좌 주소목록</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -75,7 +75,7 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>표 복사</translation>
+        <translation>라벨 복사</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -87,7 +87,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>각각의 파일에 쉼표하기(*.csv)</translation>
+        <translation>쉼표로 구분된 파일(*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -95,14 +95,14 @@
     </message>
     <message>
         <source>There was an error trying to save the address list to %1. Please try again.</source>
-        <translation>%1으로 주소 리스트를 저장하는 동안 오류가 발생했습니다. 다시 시도해주세요.</translation>
+        <translation>%1으로 주소 목록을 저장하는 동안 오류가 발생했습니다. 다시 시도해주세요.</translation>
     </message>
 </context>
 <context>
     <name>AddressTableModel</name>
     <message>
         <source>Label</source>
-        <translation>표</translation>
+        <translation>라벨</translation>
     </message>
     <message>
         <source>Address</source>
@@ -110,7 +110,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(표 없음)</translation>
+        <translation>(라벨 없음)</translation>
     </message>
 </context>
 <context>
@@ -129,7 +129,7 @@
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>새 암호 반복</translation>
+        <translation>새로운 암호 재확인</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -141,7 +141,7 @@
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>지갑 열기</translation>
+        <translation>지갑 잠금해제</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
@@ -157,11 +157,11 @@
     </message>
     <message>
         <source>Confirm wallet encryption</source>
-        <translation>지갑의 암호화를 확정</translation>
+        <translation>지갑 암호화 승인</translation>
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>경고: 만약 암호화된 지갑의 비밀번호를 잃어버릴 경우, 모든 비트코인들을 잃어버릴 수 있습니다!</translation>
+        <translation>경고: 만약 암호화 된 지갑의 비밀번호를 잃어버릴 경우, &lt;b&gt;모든 비트코인들을 잃어버릴 수 있습니다&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -169,15 +169,19 @@
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>중요: 본인 지갑파일에서 만든 예전 백업들은 새로 생성한 암화화된 지갑 파일로 교체됩니다. 보안상 이유로 이전에 암호화 하지 않은 지갑 파일 백업은 사용할 수 없게 되니 빠른 시일 내로 새로 암화화된 지갑을 사용하시기 바랍니다.</translation>
+        <translation>중요: 본인 지갑파일에서 만든 예전 백업들은 새로 생성한 암호화 된 지갑 파일로 교체됩니다. 보안상 이유로 이전에 암호화 하지 않은 지갑 파일 백업은 사용할 수 없게 되니 빠른 시일 내로 새로 암호화 된 지갑을 사용하시기 바랍니다.</translation>
     </message>
     <message>
         <source>Warning: The Caps Lock key is on!</source>
-        <translation>경고: 캡스록 키가 켜져있습니다!</translation>
+        <translation>경고: Caps Lock키가 켜져있습니다!</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>지갑 암호화 완료</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>지갑의 기존 암호와 새로운 암호를 입력해주세요.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -806,7 +810,7 @@
         <source>command-line options</source>
         <translation>명령줄 옵션</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -964,6 +968,18 @@
         <translation>프록시의 포트번호입니다(예: 9050)</translation>
     </message>
     <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>창(&amp;W)</translation>
     </message>
@@ -1071,6 +1087,10 @@
         <translation>아직 사용 가능하지 않은 채굴된 잔액</translation>
     </message>
     <message>
+        <source>Balances</source>
+        <translation>잔액</translation>
+    </message>
+    <message>
         <source>Total:</source>
         <translation>총액:</translation>
     </message>
@@ -1081,6 +1101,10 @@
     <message>
         <source>Your current balance in watch-only addresses</source>
         <translation>모니터링 지갑의 현재 잔액</translation>
+    </message>
+    <message>
+        <source>Recent transactions</source>
+        <translation>최근 거래</translation>
     </message>
     </context>
 <context>
@@ -1152,10 +1176,26 @@
         <translation>비트코인 주소를 입력하기 (예. %1)</translation>
     </message>
     <message>
+        <source>%1 h</source>
+        <translation>%1 시간</translation>
+    </message>
+    <message>
+        <source>%1 m</source>
+        <translation>%1 분</translation>
+    </message>
+    <message>
+        <source>%1 s</source>
+        <translation>%1 초</translation>
+    </message>
+    <message>
         <source>N/A</source>
         <translation>없음</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 ms</source>
+        <translation>%1 ms</translation>
+    </message>
+</context>
 <context>
     <name>QRImageWidget</name>
     <message>
@@ -1203,7 +1243,11 @@
     </message>
     <message>
         <source>Using OpenSSL version</source>
-        <translation>오픈SSL 버전을 사용합니다</translation>
+        <translation>사용중인 OpenSSL 버전</translation>
+    </message>
+    <message>
+        <source>Using BerkeleyDB version</source>
+        <translation>사용중인 BerkeleyDB 버전</translation>
     </message>
     <message>
         <source>Startup time</source>
@@ -1228,6 +1272,22 @@
     <message>
         <source>Current number of blocks</source>
         <translation>현재 블럭 수</translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>받음</translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>보냄</translation>
+    </message>
+    <message>
+        <source>&amp;Peers</source>
+        <translation>&amp;피어</translation>
+    </message>
+    <message>
+        <source>Version</source>
+        <translation>버전</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1281,6 +1341,22 @@
         <source>Type &lt;b&gt;help&lt;/b&gt; for an overview of available commands.</source>
         <translation>사용할 수 있는 명령을 둘러보려면 &lt;b&gt;help&lt;/b&gt;를 입력하십시오.</translation>
     </message>
+    <message>
+        <source>%1 B</source>
+        <translation>%1 바이트</translation>
+    </message>
+    <message>
+        <source>%1 KB</source>
+        <translation>%1 킬로바이트</translation>
+    </message>
+    <message>
+        <source>%1 MB</source>
+        <translation>%1 메가바이트</translation>
+    </message>
+    <message>
+        <source>%1 GB</source>
+        <translation>%1 기가바이트</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -1290,7 +1366,7 @@
     </message>
     <message>
         <source>&amp;Label:</source>
-        <translation>표:</translation>
+        <translation>라벨:</translation>
     </message>
     <message>
         <source>&amp;Message:</source>
@@ -1432,7 +1508,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(표 없음)</translation>
+        <translation>(라벨 없음)</translation>
     </message>
     <message>
         <source>(no message)</source>
@@ -1496,6 +1572,14 @@
     <message>
         <source>Custom change address</source>
         <translation>주소변경</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>거래 수수료:</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>권장:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2141,6 +2225,10 @@
         <translation>거래 기록 내보내기</translation>
     </message>
     <message>
+        <source>Watch-only</source>
+        <translation>모니터링 지갑</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>내보내기 실패</translation>
     </message>
@@ -2300,10 +2388,6 @@
         <translation>경고 : wallet.dat가 손상되어 데이터가 복구되었습니다. 원래의 wallet.dat 파일은 %s 후에 wallet.{timestamp}.bak 이름으로 저장됩니다. 잔액과 거래 내역이 정확하지 않다면 백업 파일로 부터 복원해야 합니다. </translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(기본값: 1)</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>블록 생성 옵션:</translation>
     </message>
@@ -2334,6 +2418,10 @@
     <message>
         <source>Error initializing block database</source>
         <translation>블록 데이터베이스를 초기화하는데 오류</translation>
+    </message>
+    <message>
+        <source>Error initializing wallet database environment %s!</source>
+        <translation>지갑 데이터베이스 환경 초기화하는데 오류 %s</translation>
     </message>
     <message>
         <source>Error loading block database</source>
@@ -2412,12 +2500,16 @@
         <translation>최대 크기를 최우선으로 설정 / 바이트당 최소 수수료로 거래(기본값: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>파일목록을 선택하여 시작하시오(기본값: 0)</translation>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>-whitebind 주소를 확인할 수 없습니다: '%s'</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>정보</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>-maxtxfee=&lt;amount&gt;에 대한 양이 잘못되었습니다: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2436,20 +2528,8 @@
         <translation>추적오류 정보를 degug.log 자료로 보내는 대신 콘솔로 보내기</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>지불 요청을 위해 SSL 최상위 인증을 설정합니다. (기본값: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>"de_DE"와 같이 언어를 설정하십시오 (기본값: 시스템 로캘)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>모든 디버그 설정 보기(설정: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>시작시 시작 화면 표시 (기본값: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2458,10 +2538,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>거래를 서명하는것을 실패하였습니다.</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>최소화 상태에서 시작</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

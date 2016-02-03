@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -85,7 +85,7 @@ bool CDBEnv::Open(const boost::filesystem::path& pathIn)
     LogPrintf("CDBEnv::Open: LogDir=%s ErrorFile=%s\n", pathLogDir.string(), pathErrorFile.string());
 
     unsigned int nEnvFlags = 0;
-    if (GetBoolArg("-privdb", true))
+    if (GetBoolArg("-privdb", DEFAULT_WALLET_PRIVDB))
         nEnvFlags |= DB_PRIVATE;
 
     dbenv->set_lg_dir(pathLogDir.string().c_str());
@@ -205,7 +205,7 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     std::string keyHex, valueHex;
     while (!strDump.eof() && keyHex != "DATA=END") {
         getline(strDump, keyHex);
-        if (keyHex != "DATA_END") {
+        if (keyHex != "DATA=END") {
             getline(strDump, valueHex);
             vResult.push_back(make_pair(ParseHex(keyHex), ParseHex(valueHex)));
         }

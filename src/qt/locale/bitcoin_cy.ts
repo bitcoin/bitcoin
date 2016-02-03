@@ -348,6 +348,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Amount:</source>
+        <translation>Maint</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Dyddiad</translation>
     </message>
@@ -546,6 +550,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Cyfeiriad Copi</translation>
+    </message>
+    <message>
         <source>Address</source>
         <translation>Cyfeiriad</translation>
     </message>
@@ -582,6 +590,10 @@
     <message>
         <source>Send Coins</source>
         <translation>Anfon arian</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Maint</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -625,6 +637,10 @@
     <message>
         <source>Alt+P</source>
         <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Neges:</translation>
     </message>
     </context>
 <context>
@@ -761,6 +777,10 @@
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>Opsiynau:</translation>
+    </message>
     <message>
         <source>Information</source>
         <translation>Gwybodaeth</translation>
