@@ -1357,7 +1357,7 @@ public:
             unsigned int pos = (unsigned int)(nReadPos % vchBuf.size());
             size_t nNow = nSize;
             if (nNow + pos > vchBuf.size())
-                nNow = (size_t)(vchBuf.size() - pos);
+                nNow = vchBuf.size() - pos;
             if (nNow + nReadPos > nSrcPos)
                 nNow = (size_t)(nSrcPos - nReadPos);
             memcpy(pch, &vchBuf[pos], nNow);

@@ -486,7 +486,7 @@ public:
         if (opcode == OP_0)
             return 0;
         assert(opcode >= OP_1 && opcode <= OP_16);
-        return (int)opcode - (int)(OP_1 - 1);
+        return (opcode - (OP_1 - 1));
     }
     static opcodetype EncodeOP_N(int n)
     {
