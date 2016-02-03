@@ -149,5 +149,7 @@ bool Lookup(const char *pszName, std::vector<CService>& vAddr, uint16_t portDefa
 bool LookupNumeric(const char *pszName, CService& addr, uint16_t portDefault = 0);
 bool ConnectSocket(const CService &addr, SOCKET& hSocketRet, int nTimeout = nConnectTimeout);
 bool ConnectSocketByName(CService &addr, SOCKET& hSocketRet, const char *pszDest, uint16_t portDefault = 0, int nTimeout = nConnectTimeout);
+/** Close socket and set hSocket to INVALID_SOCKET */
+bool CloseSocket(SOCKET& hSocket);
 
 #endif

@@ -49,6 +49,7 @@
 #include <errno.h>
 
 #include "ministun.h"
+#include "netbase.h"
 
 extern int GetRandInt(int nMax);
 extern uint64_t GetRand(uint64_t nMax);
@@ -499,6 +500,7 @@ static int StunRequest(const char *host, uint16_t port, struct sockaddr_in *mapp
     if(hostinfo == NULL)
         return -1;
 
+    SOCKET sock = INVALID_SOCKET;
     struct sockaddr_in server, client;
     memset(&server, 0, sizeof(server));
     memset(&client, 0, sizeof(client));
@@ -507,8 +509,8 @@ static int StunRequest(const char *host, uint16_t port, struct sockaddr_in *mapp
     server.sin_addr = *(struct in_addr*) hostinfo->h_addr;
     server.sin_port = htons(port);
 
-    int sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if(sock < 0)
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if(sock == INVALID_SOCKET)
         return -2;
 
     client.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -516,11 +518,7 @@ static int StunRequest(const char *host, uint16_t port, struct sockaddr_in *mapp
     int rc = -3;
     if(bind(sock, (struct sockaddr*)&client, sizeof(client)) >= 0)
         rc = StunRequest2(sock, &server, mapped);
-#ifndef WIN32
-    close(sock);
-#else
-    closesocket(sock);
-#endif
+    CloseSocket(sock);
     return rc;
 } // StunRequest
 

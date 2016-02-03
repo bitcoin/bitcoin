@@ -447,8 +447,7 @@ void CNode::CloseSocketDisconnect()
     if (hSocket != INVALID_SOCKET)
     {
         printf("disconnecting node %s\n", addrName.c_str());
-        closesocket(hSocket);
-        hSocket = INVALID_SOCKET;
+        CloseSocket(hSocket);
         vRecv.clear();
     }
 
@@ -777,13 +776,13 @@ void ThreadSocketHandler2(void* parg)
                 {
                     LOCK(cs_setservAddNodeAddresses);
                     if (!setservAddNodeAddresses.count(addr))
-                        closesocket(hSocket);
+                        CloseSocket(hSocket);
                 }
             }
             else if (CNode::IsBanned(addr))
             {
                 printf("connection from %s dropped (banned)\n", addr.ToString().c_str());
-                closesocket(hSocket);
+                CloseSocket(hSocket);
             }
             else
             {
@@ -1607,7 +1606,7 @@ bool BindListenPort(const CService &addrBind, string& strError)
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %d, %s)"), addrBind.ToString().c_str(), nErr, strerror(nErr));
         printf("%s\n", strError.c_str());
-        closesocket(hListenSocket);
+        CloseSocket(hListenSocket);
         return false;
     }
     printf("Bound to %s\n", addrBind.ToString().c_str());
@@ -1617,7 +1616,7 @@ bool BindListenPort(const CService &addrBind, string& strError)
     {
         strError = strprintf("Error: Listening for incoming connections failed (listen returned error %d)", WSAGetLastError());
         printf("%s\n", strError.c_str());
-        closesocket(hListenSocket);
+        CloseSocket(hListenSocket);
         return false;
     }
 
@@ -1803,11 +1802,11 @@ public:
         // Close sockets
         BOOST_FOREACH(CNode* pnode, vNodes)
             if (pnode->hSocket != INVALID_SOCKET)
-                closesocket(pnode->hSocket);
+                CloseSocket(pnode->hSocket);
         BOOST_FOREACH(SOCKET hListenSocket, vhListenSocket)
             if (hListenSocket != INVALID_SOCKET)
-                if (closesocket(hListenSocket) == SOCKET_ERROR)
-                    printf("closesocket(hListenSocket) failed with error %d\n", WSAGetLastError());
+                if (!CloseSocket(hListenSocket))
+                    printf("CloseSocket(hListenSocket) failed with error %d\n", WSAGetLastError());
 
         // clean up some globals (to help leak detection)
         BOOST_FOREACH(CNode *pnode, vNodes)
