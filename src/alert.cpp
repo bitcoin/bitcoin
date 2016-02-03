@@ -253,8 +253,10 @@ void CAlert::NotifyInternal(const std::string& strMessage)
     static CAlert internalAlert;
     internalAlert.vchMsg = std::vector<unsigned char>(strMessage.begin(), strMessage.end());
     uint256 zero;
-    LOCK(cs_mapAlerts);
-    mapAlerts[zero] = internalAlert;
+    {
+        LOCK(cs_mapAlerts);
+        mapAlerts[zero] = internalAlert;
+    }
     uiInterface.NotifyAlertChanged(zero, CT_NEW);
 
     Notify(strMessage, true);
