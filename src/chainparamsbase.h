@@ -1,4 +1,4 @@
-// Copyright (c) 2014 The Bitcoin Core developers
+// Copyright (c) 2014-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,6 +41,8 @@ void AppendParamsHelpMessages(std::string& strUsage, bool debugHelp=true);
  * startup, except for unit tests.
  */
 const CBaseChainParams& BaseParams();
+
+CBaseChainParams& BaseParams(const std::string& chain);
 
 /** Sets the params returned by Params() to those for the given network. */
 void SelectBaseParams(const std::string& chain);

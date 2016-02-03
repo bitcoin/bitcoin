@@ -882,6 +882,34 @@
         <source>command-line options</source>
         <translation>kommandolinjevalg</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Grensesnittvalg:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Velg datakatalog for oppstart (default: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Sett språk, for eksempel "nb_NO" (default: system-«locale»)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Begynn minimert</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Sett SSL-rootsertifikat for betalingshenvendelser (default: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Vis velkomstbilde ved oppstart (default: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Nullstill alle oppsettendringer gjort via det grafiske grensesnittet</translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -1476,6 +1504,18 @@
     <message>
         <source>Current number of blocks</source>
         <translation>Nåværende antall blokker</translation>
+    </message>
+    <message>
+        <source>Memory Pool</source>
+        <translation>Minnepool</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>Nåværende antall transaksjoner</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Minnebruk</translation>
     </message>
     <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2737,6 +2777,10 @@
         <translation>Kopier transaksjons-ID</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Kopier råtransaksjon</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Rediger merkelapp</translation>
     </message>
@@ -2916,6 +2960,10 @@
         <translation>Feil: En fatal intern feil oppstod, se debug.log for detaljer</translation>
     </message>
     <message>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation>Gebyr (i %s/kB) for å legge til i transaksjoner du sender (standardverdi: %s)</translation>
+    </message>
+    <message>
         <source>Pruning blockstore...</source>
         <translation>Beskjærer blokklageret...</translation>
     </message>
@@ -2992,10 +3040,6 @@
         <translation>Hvitelist noder som kobler til fra den oppgitte nettmasken eller IP-adressen. Kan oppgis flere ganger.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(standardverdi: 1)</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool må være minst %d MB</translation>
     </message>
@@ -3041,11 +3085,11 @@
     </message>
     <message>
         <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>Slå på publish raw block i &lt;address&gt;</translation>
+        <translation>Slå på publisering av råblokk i &lt;address&gt;</translation>
     </message>
     <message>
         <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>Slå på publish raw transaction i &lt;address&gt;</translation>
+        <translation>Slå på publisering av råtransaksjon i &lt;address&gt;</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -3252,16 +3296,20 @@
         <translation>Aktiverer beste kjede...</translation>
     </message>
     <message>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>Alltid videresend transaksjoner mottatt fra hvitlistede noder (standardverdi: %d)</translation>
+    </message>
+    <message>
         <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
         <translation>Forsøk å berge private nøkler fra en korrupt wallet.dat ved oppstart</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Kan ikke løse -whitebind-adresse: '%s'</translation>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Automatisk opprette Tor skjult tjeneste (standardverdi: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Velg datamappe ved oppstart (standard: 0)</translation>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Kan ikke løse -whitebind-adresse: '%s'</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3352,20 +3400,8 @@
         <translation>Send transaksjoner uten transaksjonsgebyr hvis mulig (standardverdi: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Sett SSL-rotsertifikat for betalingsetterspørring (standard: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Sett språk, for eksempel "nb_NO" (standardverdi: fra operativsystem)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Vis alle feilsøkingsvalg (bruk: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Vis splashskjerm ved oppstart (standardverdi: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3376,16 +3412,20 @@
         <translation>Signering av transaksjon feilet</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>Start minimert</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Transaksjonsbeløpet er for lite til å betale gebyr</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
         <translation>Dette er eksperimentell programvare.</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Passord for Tor-kontrollport (standardverdi: tom)</translation>
+    </message>
+    <message>
+        <source>Tor control port to use if onion listening enabled (default: %s)</source>
+        <translation>Tor-kontrollport å bruke hvis onion-lytting er aktivert (standardverdi: %s)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3402,10 +3442,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transaksjonen er for stor</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Innstillinger for Brukergrensesnitt:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
@@ -3426,6 +3462,10 @@
     <message>
         <source>Warning</source>
         <translation>Advarsel</translation>
+    </message>
+    <message>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>Hvorvidt å operere i modus med kun blokker (standardverdi: %u)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -3484,6 +3524,10 @@
         <translation>Feil ved lesing av wallet.dat! Alle nøkler lest riktig, men transaksjonsdataene eller oppføringer i adresseboken mangler kanskje eller er feil.</translation>
     </message>
     <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>Gebyrer (i %s/Kb) mindre enn dette anses som null gebyr for laging av transaksjoner (standardverdi: %s)</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Hvor grundig blokkverifiseringen til -checkblocks er (0-4, standardverdi: %u)</translation>
     </message>
@@ -3500,6 +3544,10 @@
         <translation>Ta ut feilsøkingsinformasjon (standardverdi: %u, bruk av &lt;category&gt; er valgfritt)</translation>
     </message>
     <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>Støtte filtrering av blokker og transaksjoner med bloomfiltre (standardverdi: %u)</translation>
+    </message>
+    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Total lengde av nettverks-versionstreng (%i) er over maks lengde (%i). Reduser tallet eller størrelsen av uacomments.</translation>
     </message>
@@ -3514,6 +3562,10 @@
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>Bruk separate SOCKS5 proxyer for å nå noder via Tor skjulte tjenester (standardverdi: %s)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>Brukernavn og hashet passord for JSON-RPC tilkoblinger. Feltet &lt;userpw&gt; kommer i formatet: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Et Python-skript er inkludert i share/rpcuser. Dette alternativet kan angis flere ganger</translation>
     </message>
     <message>
         <source>(default: %s)</source>

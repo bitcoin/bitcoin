@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -29,11 +29,11 @@
  * - VARINT(nHeight)
  *
  * The nCode value consists of:
- * - bit 1: IsCoinBase()
- * - bit 2: vout[0] is not spent
- * - bit 4: vout[1] is not spent
+ * - bit 0: IsCoinBase()
+ * - bit 1: vout[0] is not spent
+ * - bit 2: vout[1] is not spent
  * - The higher bits encode N, the number of non-zero bytes in the following bitvector.
- *   - In case both bit 2 and bit 4 are unset, they encode N-1, as there must be at
+ *   - In case both bit 1 and bit 2 are unset, they encode N-1, as there must be at
  *     least one non-spent output).
  *
  * Example: 0104835800816115944e077fe7c803cfa57f29b36bf87c1d358bb85e
@@ -58,7 +58,7 @@
  *
  *  - version = 1
  *  - code = 9 (coinbase, neither vout[0] or vout[1] are unspent,
- *                2 (1, +1 because both bit 2 and bit 4 are unset) non-zero bitvector bytes follow)
+ *                2 (1, +1 because both bit 1 and bit 2 are unset) non-zero bitvector bytes follow)
  *  - unspentness bitvector: bits 2 (0x04) and 14 (0x4000) are set, so vout[2+2] and vout[14+2] are unspent
  *  - vout[4]: 86ef97d5790061b01caab50f1b8e9c50a5057eb43c2d9563a4ee
  *             * 86ef97d579: compact amount representation for 234925952 (2.35 BTC)
@@ -406,6 +406,13 @@ public:
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock);
 
     /**
+     * Check if we have the given tx already loaded in this cache.
+     * The semantics are the same as HaveCoins(), but no calls to
+     * the backing CCoinsView are made.
+     */
+    bool HaveCoinsInCache(const uint256 &txid) const;
+
+    /**
      * Return a pointer to CCoins in the cache, or NULL if not found. This is
      * more efficient than GetCoins. Modifications to other cache entries are
      * allowed while accessing the returned pointer.
@@ -428,7 +435,7 @@ public:
      * would not properly overwrite the first coinbase of the pair. Simultaneous modifications
      * are not allowed.
      */
-    CCoinsModifier ModifyNewCoins(const uint256 &txid);
+    CCoinsModifier ModifyNewCoins(const uint256 &txid, bool coinbase);
 
     /**
      * Push the modifications applied to this cache to its base.
@@ -436,6 +443,12 @@ public:
      * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
     bool Flush();
+
+    /**
+     * Removes the transaction with the given hash from the cache, if it is
+     * not modified.
+     */
+    void Uncache(const uint256 &txid);
 
     //! Calculate the size of the cache (in number of transactions)
     unsigned int GetCacheSize() const;
@@ -456,8 +469,12 @@ public:
     //! Check whether all prevouts of the transaction are present in the UTXO set represented by this view
     bool HaveInputs(const CTransaction& tx) const;
 
-    //! Return priority of tx at height nHeight
-    double GetPriority(const CTransaction &tx, int nHeight) const;
+    /**
+     * Return priority of tx at height nHeight. Also calculate the sum of the values of the inputs
+     * that are already in the chain.  These are the inputs that will age and increase priority as
+     * new blocks are added to the chain.
+     */
+    double GetPriority(const CTransaction &tx, int nHeight, CAmount &inChainInputValue) const;
 
     const CTxOut &GetOutputFor(const CTxIn& input) const;
 

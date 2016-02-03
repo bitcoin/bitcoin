@@ -721,6 +721,10 @@
         <translation>Par Bitcoin Core</translation>
     </message>
     <message>
+        <source>Command-line options</source>
+        <translation>Komandrindas iespējas</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Lietojums:</translation>
     </message>
@@ -728,7 +732,7 @@
         <source>command-line options</source>
         <translation>komandrindas izvēles</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1374,6 +1378,10 @@
     <message>
         <source>Custom change address</source>
         <translation>Pielāgota atlikuma adrese</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Transakcijas maksa:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2114,10 +2122,6 @@
         <translation>Darbināt fonā kā servisu un pieņemt komandas</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(noklusējums: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; var būt:</translation>
     </message>
@@ -2162,8 +2166,24 @@
         <translation>Maciņa iespējas:</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Nevar atrisināt -whitebind adresi: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informācija</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nederīgs daudzums priekš -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nederīgs daudzums priekš -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nederīgs daudzums priekš -mintxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>RPC server options:</source>
@@ -2174,20 +2194,8 @@
         <translation>Debug/trace informāciju izvadīt konsolē, nevis debug.log failā</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Uzstādiet valodu, piemēram "de_DE" (pēc noklusēšanas: sistēmas lokāle)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Uzsākot, parādīt programmas informācijas logu (pēc noklusēšanas: 1)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Transakcijas parakstīšana neizdevās</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Sākt minimizētu</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

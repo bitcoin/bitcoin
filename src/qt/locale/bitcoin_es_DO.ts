@@ -740,7 +740,7 @@
         <source>command-line options</source>
         <translation>opciones de la línea de órdenes</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -828,6 +828,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Red</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Monedero</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -1368,6 +1372,10 @@
         <translation>Dirección propia</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>Comisión de transacción:</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Enviar a múltiples destinatarios de una vez</translation>
     </message>
@@ -1517,6 +1525,10 @@
     <message>
         <source>Remove this entry</source>
         <translation>Eliminar esta transacción</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Mensaje:</translation>
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
@@ -2221,12 +2233,16 @@
         <translation>Establecer tamaño máximo de las transacciones de alta prioridad/comisión baja en bytes (por defecto: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Elegir directorio de datos al iniciar (predeterminado: 0)</translation>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>No se puede resolver la dirección de -whitebind: '%s'</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Información</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Inválido por el monto -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2245,16 +2261,8 @@
         <translation>Enviar información de trazas/depuración a la consola en lugar de al archivo debug.log</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Establecer el idioma, por ejemplo, "es_ES" (predeterminado: configuración regional del sistema)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Mostrar todas las opciones de depuración (uso: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostrar pantalla de bienvenida en el inicio (predeterminado: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -2263,10 +2271,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Transacción falló</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Arrancar minimizado</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>

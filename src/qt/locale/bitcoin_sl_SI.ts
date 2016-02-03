@@ -874,7 +874,7 @@
         <source>command-line options</source>
         <translation>možnosti ukazne vrstice</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -917,7 +917,11 @@
         <source>%n GB of free space available</source>
         <translation><numerusform>%n GiB prostega prostora na voljo</numerusform><numerusform>%n GiB prostega prostora na voljo</numerusform><numerusform>%n GiB prostega prostora na voljo</numerusform><numerusform>%n GiB prostega prostora na voljo</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(of %n GB needed)</source>
+        <translation><numerusform>(od potrebnih %n GiB)</numerusform><numerusform>(od potrebnih %n GiB)</numerusform><numerusform>(od potrebnih %n GiB)</numerusform><numerusform>(od potrebnih %n GiB)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
     <message>
@@ -1066,6 +1070,10 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Vrata posredniškega strežnika (npr. 9050)</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Za dostop do soležnikov preko skritih storitev Tor uporabi drug posredniški strežnik SOCKS5:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -2832,10 +2840,6 @@
         <translation>Sprejemaj povezave samo od soležnikov, ki so na naslovih, ki ustrezajo navedeni omrežni maski ali naslovu. Opcijo lahko navedete večkrat.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(privzeto: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; je lahko:</translation>
     </message>
@@ -3012,10 +3016,6 @@
         <translation>Naslova %s, podanega pri opciji -whitebind ni mogoče razrešiti.</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Ob zagonu pozovi uporabnika, naj izbere podatkovno mapo (privzeto: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Poveži se preko posredniškega strežnika SOCKS5</translation>
     </message>
@@ -3028,6 +3028,18 @@
         <translation>Informacije</translation>
     </message>
     <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Neveljavna količina za -maxtxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Neveljavna količina za -minrelaytxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Neveljavna količina za -mintxfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Pri opciji -whitebind morate navesti vrata: %s</translation>
     </message>
@@ -3036,28 +3048,12 @@
         <translation>Pošilja sledilne/razhroščevalne informacije na konzolo namesto v datoteko debug.log</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Nastavi korenske certifikate SSL za preverjanje zahtevkov za plačilo (privzeto: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Nastavi jezik, npr. "sl_SI" (privzeto: jezik sistema)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Ob zagonu prikaži uvodni zaslon (privzeto: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Ob zagonu skrajšaj datoteko debug.log (privzeto: 1, če ni vklopljena opcija -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Transakcije ni bilo mogoče podpisati.</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Zaženi v minimiranem oknu</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -3074,10 +3070,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>Transkacija je prevelika</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Možnosti uporabniškega vmesnika:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

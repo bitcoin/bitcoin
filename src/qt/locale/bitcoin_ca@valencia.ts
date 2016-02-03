@@ -434,6 +434,10 @@
         <translation>No hi ha cap font de bloc disponible...</translation>
     </message>
     <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>Proccessats %n bloc de l'historial de transaccions.</numerusform><numerusform>Proccessats %n blocs de l'historial de transaccions.</numerusform></translation>
+    </message>
+    <message numerus="yes">
         <source>%n hour(s)</source>
         <translation><numerusform>%n hora</numerusform><numerusform>%n hores</numerusform></translation>
     </message>
@@ -870,7 +874,7 @@
         <source>command-line options</source>
         <translation>Opcions de la línia d'ordes</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1066,6 +1070,10 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port del proxy (per exemple 9050)</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Utilitza un proxy SOCKS4 apart per a arribar als iguals a través de serveis ocults de Tor:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -2836,10 +2844,6 @@
         <translation>Afig a la llista blanca els iguals que es connecten de la màscara de xarxa o adreça IP donada. Es pot especificar moltes vegades.</translation>
     </message>
     <message>
-        <source>(default: 1)</source>
-        <translation>(per defecte: 1)</translation>
-    </message>
-    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;category&gt; pot ser:</translation>
     </message>
@@ -3056,10 +3060,6 @@
         <translation>No es pot resoldre l'adreça -whitebind: «%s»</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Tria el directori de dades a l'inici (per defecte: 0)</translation>
-    </message>
-    <message>
         <source>Connect through SOCKS5 proxy</source>
         <translation>Connecta a través del proxy SOCKS5</translation>
     </message>
@@ -3136,20 +3136,8 @@
         <translation>Envia les transaccions com a transaccions de comissió zero sempre que siga possible (per defecte: %u) </translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Defineix certificats arrel SSL per a la sol·licitud de pagament (per defecte: -sistema-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Defineix un idioma, per exemple «de_DE» (per defecte: preferències locals de sistema)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Mostra totes les opcions de depuració (ús: --help  --help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Mostra la finestra de benvinguda a l'inici (per defecte: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3158,10 +3146,6 @@
     <message>
         <source>Signing transaction failed</source>
         <translation>Ha fallat la signatura de la transacció</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Inicia minimitzat</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>
@@ -3186,10 +3170,6 @@
     <message>
         <source>Transaction too large</source>
         <translation>La transacció és massa gran</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Opcions d'interfície:</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>

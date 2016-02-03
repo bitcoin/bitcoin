@@ -397,6 +397,10 @@
         <source>Show the list of used receiving addresses and labels</source>
         <translation>نمایش لیست آدرس های دریافت و لیبل ها</translation>
     </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>گزینه‌های خط‌فرمان</translation>
+    </message>
     <message numerus="yes">
         <source>%n active connection(s) to Bitcoin network</source>
         <translation><numerusform>%n ارتباط فعال با شبکهٔ بیت‌کوین</numerusform></translation>
@@ -416,6 +420,14 @@
     <message numerus="yes">
         <source>%n week(s)</source>
         <translation><numerusform>%n هفته</numerusform></translation>
+    </message>
+    <message>
+        <source>%1 and %2</source>
+        <translation>%1 و %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n سال</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -712,7 +724,7 @@
         <source>command-line options</source>
         <translation>گزینه‌های خط فرمان</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -743,6 +755,10 @@
         <source>Error</source>
         <translation>خطا</translation>
     </message>
+    <message numerus="yes">
+        <source>%n GB of free space available</source>
+        <translation><numerusform>%n گیگابایت فضا موجود است</numerusform></translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -768,6 +784,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;شبکه</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>کیف پول</translation>
     </message>
     <message>
         <source>Expert</source>
@@ -976,6 +996,10 @@
         <translation>&amp;اطلاعات</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>پنجرهٔ اشکالزدایی</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>نسخهٔ OpenSSL استفاده شده</translation>
     </message>
@@ -1067,8 +1091,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>مبلغ:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;برچسب:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>پیام:</translation>
     </message>
     <message>
         <source>Show</source>
@@ -1092,6 +1124,10 @@
     <message>
         <source>QR Code</source>
         <translation>کد QR</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;کپی نشانی</translation>
     </message>
     <message>
         <source>Address</source>
@@ -1148,6 +1184,10 @@
         <translation>ارسال سکه</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>بود جه نا کافی </translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>تعداد:</translation>
     </message>
@@ -1174,6 +1214,10 @@
     <message>
         <source>Change:</source>
         <translation>پول خورد:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>هزینهٔ تراکنش:</translation>
     </message>
     <message>
         <source>fast</source>
@@ -1289,6 +1333,10 @@
     <message>
         <source>Message:</source>
         <translation>پیام:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>پرداخت به:</translation>
     </message>
     </context>
 <context>
@@ -1926,36 +1974,28 @@
         <translation>در حال بازبینی کیف پول...</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>انتخاب مسیر داده‌ها در ابتدای اجرای برنامه (پیش‌فرض: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>اطلاعات</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان وجه اشتباه برای maxtxfee=&lt;میزان وجه&gt;: %s</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان وجه اشتباه برای minrelaytxfee=&lt;میزان وجه&gt;: %s</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>میزان وجه اشتباه برای mintxfee=&lt;میزان وجه&gt;: %s</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>اطلاعات ردگیری/اشکال‌زدایی را به جای فایل لاگ اشکال‌زدایی به کنسول بفرستید</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>زبان را تنظیم کنید؛ برای مثال «de_DE» (زبان پیش‌فرض محلی)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>نمایش پنجرهٔ خوشامدگویی در ابتدای اجرای برنامه (پیش‌فرض: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>فایل debug.log  را در startup مشتری کوچک کن (پیش فرض:1 اگر اشکال زدایی روی نداد)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>اجرای برنامه به صورت کوچک‌شده</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>گزینه‌های رابط کاربری:</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>

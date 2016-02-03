@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,9 +19,15 @@
 #include <QSettings>
 #include <QMessageBox>
 
-/* Minimum free space (in bytes) needed for data directory */
+#include <cmath>
+
 static const uint64_t GB_BYTES = 1000000000LL;
-static const uint64_t BLOCK_CHAIN_SIZE = 20LL * GB_BYTES;
+/* Minimum free space (in GB) needed for data directory */
+static const uint64_t BLOCK_CHAIN_SIZE = 80;
+/* Minimum free space (in GB) needed for data directory when pruned; Does not include prune target */
+static const uint64_t CHAIN_STATE_SIZE = 2;
+/* Total required space (in GB) depending on user choice (prune, not prune) */
+static uint64_t requiredSpace;
 
 /* Check free space asynchronously to prevent hanging the UI thread.
 
@@ -118,7 +124,11 @@ Intro::Intro(QWidget *parent) :
     ui->setupUi(this);
     ui->welcomeLabel->setText(ui->welcomeLabel->text().arg(tr(PACKAGE_NAME)));
     ui->storageLabel->setText(ui->storageLabel->text().arg(tr(PACKAGE_NAME)));
-    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(tr(PACKAGE_NAME)).arg(BLOCK_CHAIN_SIZE/GB_BYTES));
+    uint64_t pruneTarget = std::max<int64_t>(0, GetArg("-prune", 0));
+    requiredSpace = BLOCK_CHAIN_SIZE;
+    if (pruneTarget)
+        requiredSpace = CHAIN_STATE_SIZE + std::ceil(pruneTarget * 1024 * 1024.0 / GB_BYTES);
+    ui->sizeWarningLabel->setText(ui->sizeWarningLabel->text().arg(tr(PACKAGE_NAME)).arg(requiredSpace));
     startThread();
 }
 
@@ -168,7 +178,7 @@ void Intro::pickDataDirectory()
     /* 2) Allow QSettings to override default dir */
     dataDir = settings.value("strDataDir", dataDir).toString();
 
-    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", false))
+    if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR))
     {
         /* If current default data directory does not exist, let the user choose one */
         Intro intro;
@@ -222,9 +232,9 @@ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable
         ui->freeSpace->setText("");
     } else {
         QString freeString = tr("%n GB of free space available", "", bytesAvailable/GB_BYTES);
-        if(bytesAvailable < BLOCK_CHAIN_SIZE)
+        if(bytesAvailable < requiredSpace * GB_BYTES)
         {
-            freeString += " " + tr("(of %n GB needed)", "", BLOCK_CHAIN_SIZE/GB_BYTES);
+            freeString += " " + tr("(of %n GB needed)", "", requiredSpace);
             ui->freeSpace->setStyleSheet("QLabel { color: #800000 }");
         } else {
             ui->freeSpace->setStyleSheet("");

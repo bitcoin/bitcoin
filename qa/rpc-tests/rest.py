@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,9 +12,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from struct import *
 import binascii
-import json
 import StringIO
-import decimal
 
 try:
     import http.client as httplib
@@ -143,9 +141,9 @@ class RESTTest (BitcoinTestFramework):
 
         binaryRequest = b'\x01\x02'
         binaryRequest += binascii.unhexlify(txid)
-        binaryRequest += pack("i", n);
-        binaryRequest += binascii.unhexlify(vintx);
-        binaryRequest += pack("i", 0);
+        binaryRequest += pack("i", n)
+        binaryRequest += binascii.unhexlify(vintx)
+        binaryRequest += pack("i", 0)
 
         bin_response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'bin', binaryRequest)
         output = StringIO.StringIO()
@@ -206,7 +204,7 @@ class RESTTest (BitcoinTestFramework):
         json_request = '/checkmempool/'
         for x in range(0, 15):
             json_request += txid+'-'+str(n)+'/'
-        json_request = json_request.rstrip("/");
+        json_request = json_request.rstrip("/")
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
         assert_equal(response.status, 200) #must be a 500 because we exceeding the limits
 
@@ -254,7 +252,7 @@ class RESTTest (BitcoinTestFramework):
         response_header_json = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"json", True)
         assert_equal(response_header_json.status, 200)
         response_header_json_str = response_header_json.read()
-        json_obj = json.loads(response_header_json_str, parse_float=decimal.Decimal)
+        json_obj = json.loads(response_header_json_str, parse_float=Decimal)
         assert_equal(len(json_obj), 1) #ensure that there is one header in the json response
         assert_equal(json_obj[0]['hash'], bb_hash) #request/response hash should be the same
 
@@ -282,7 +280,7 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(len(json_obj), 5) #now we should have 5 header objects
 
         # do tx test
-        tx_hash = block_json_obj['tx'][0]['txid'];
+        tx_hash = block_json_obj['tx'][0]['txid']
         json_string = http_get_call(url.hostname, url.port, '/rest/tx/'+tx_hash+self.FORMAT_SEPARATOR+"json")
         json_obj = json.loads(json_string)
         assert_equal(json_obj['txid'], tx_hash)

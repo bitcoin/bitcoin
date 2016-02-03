@@ -1,15 +1,13 @@
 #!/usr/bin/env python2
-#
+# Copyright (c) 2015 The Bitcoin Core developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
-from test_framework.comptool import TestManager, TestInstance
-from test_framework.mininode import *
+from test_framework.comptool import TestManager, TestInstance, RejectResult
 from test_framework.blocktools import *
-import logging
 import copy
 import time
 
@@ -97,7 +95,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         assert(block2_orig.vtx != block2.vtx)
 
         self.tip = block2.sha256
-        yield TestInstance([[block2, False], [block2_orig, True]])
+        yield TestInstance([[block2, RejectResult(16,'bad-txns-duplicate')], [block2_orig, True]])
         height += 1
 
         '''
@@ -112,7 +110,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         block3.rehash()
         block3.solve()
 
-        yield TestInstance([[block3, False]])
+        yield TestInstance([[block3, RejectResult(16,'bad-cb-amount')]])
 
 
 if __name__ == '__main__':

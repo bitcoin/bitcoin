@@ -1,3 +1,7 @@
+// Copyright (c) 2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include "torcontrol.h"
 #include "utilstrencodings.h"
 #include "net.h"
@@ -79,7 +83,7 @@ public:
     /**
      * Connect to a Tor control port.
      * target is address of the form host:port.
-     * connected is the handler that is called when connection is succesfully established.
+     * connected is the handler that is called when connection is successfully established.
      * disconnected is a handler that is called when the connection is broken.
      * Return true on success.
      */
@@ -177,7 +181,7 @@ void TorControlConnection::eventcb(struct bufferevent *bev, short what, void *ct
 {
     TorControlConnection *self = (TorControlConnection*)ctx;
     if (what & BEV_EVENT_CONNECTED) {
-        LogPrint("tor", "tor: Succesfully connected!\n");
+        LogPrint("tor", "tor: Successfully connected!\n");
         self->connected(*self);
     } else if (what & (BEV_EVENT_EOF|BEV_EVENT_ERROR)) {
         if (what & BEV_EVENT_ERROR)
@@ -303,7 +307,7 @@ static std::map<std::string,std::string> ParseTorReplyMapping(const std::string 
 
 /** Read full contents of a file and return them in a std::string.
  * Returns a pair <status, string>.
- * If an error occured, status will be false, otherwise status will be true and the data will be returned in string.
+ * If an error occurred, status will be false, otherwise status will be true and the data will be returned in string.
  *
  * @param maxsize Puts a maximum size limit on the file that is read. If the file is larger than this, truncated data
  *         (with len > maxsize) will be returned.
@@ -380,7 +384,7 @@ private:
     void authchallenge_cb(TorControlConnection& conn, const TorControlReply& reply);
     /** Callback for PROTOCOLINFO result */
     void protocolinfo_cb(TorControlConnection& conn, const TorControlReply& reply);
-    /** Callback after succesful connection */
+    /** Callback after successful connection */
     void connected_cb(TorControlConnection& conn);
     /** Callback after connection lost or failed connection attempt */
     void disconnected_cb(TorControlConnection& conn);
@@ -419,7 +423,7 @@ TorController::~TorController()
 void TorController::add_onion_cb(TorControlConnection& conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
-        LogPrint("tor", "tor: ADD_ONION succesful\n");
+        LogPrint("tor", "tor: ADD_ONION successful\n");
         BOOST_FOREACH(const std::string &s, reply.lines) {
             std::map<std::string,std::string> m = ParseTorReplyMapping(s);
             std::map<std::string,std::string>::iterator i;
@@ -448,7 +452,16 @@ void TorController::add_onion_cb(TorControlConnection& conn, const TorControlRep
 void TorController::auth_cb(TorControlConnection& conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
-        LogPrint("tor", "tor: Authentication succesful\n");
+        LogPrint("tor", "tor: Authentication successful\n");
+
+        // Now that we know Tor is running setup the proxy for onion addresses
+        // if -onion isn't set to something else.
+        if (GetArg("-onion", "") == "") {
+            proxyType addrOnion = proxyType(CService("127.0.0.1", 9050), true);
+            SetProxy(NET_TOR, addrOnion);
+            SetReachable(NET_TOR);
+        }
+
         // Finally - now create the service
         if (private_key.empty()) // No private key, generate one
             private_key = "NEW:BEST";
@@ -492,7 +505,7 @@ static std::vector<uint8_t> ComputeResponse(const std::string &key, const std::v
 void TorController::authchallenge_cb(TorControlConnection& conn, const TorControlReply& reply)
 {
     if (reply.code == 250) {
-        LogPrint("tor", "tor: SAFECOOKIE authentication challenge succesful\n");
+        LogPrint("tor", "tor: SAFECOOKIE authentication challenge successful\n");
         std::pair<std::string,std::string> l = SplitTorReplyLine(reply.lines[0]);
         if (l.first == "AUTHCHALLENGE") {
             std::map<std::string,std::string> m = ParseTorReplyMapping(l.second);
@@ -608,7 +621,9 @@ void TorController::disconnected_cb(TorControlConnection& conn)
     service = CService();
     if (!reconnect)
         return;
-    LogPrintf("tor: Disconnected from Tor control port %s, trying to reconnect\n", target);
+
+    LogPrint("tor", "tor: Not connected to Tor control port %s, trying to reconnect\n", target);
+
     // Single-shot timer for reconnect. Use exponential backoff.
     struct timeval time = MillisToTimeval(int64_t(reconnect_timeout * 1000.0));
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);

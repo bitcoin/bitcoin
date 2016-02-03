@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,6 +16,7 @@ using namespace std;
 
 typedef vector<unsigned char> valtype;
 
+bool fAcceptDatacarrier = DEFAULT_ACCEPT_DATACARRIER;
 unsigned nMaxDatacarrierBytes = MAX_OP_RETURN_RELAY;
 
 CScriptID::CScriptID(const CScript& in) : uint160(Hash160(in.begin(), in.end())) {}
@@ -158,27 +159,6 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
     vSolutionsRet.clear();
     typeRet = TX_NONSTANDARD;
     return false;
-}
-
-int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned char> >& vSolutions)
-{
-    switch (t)
-    {
-    case TX_NONSTANDARD:
-    case TX_NULL_DATA:
-        return -1;
-    case TX_PUBKEY:
-        return 1;
-    case TX_PUBKEYHASH:
-        return 2;
-    case TX_MULTISIG:
-        if (vSolutions.size() < 1 || vSolutions[0].size() < 1)
-            return -1;
-        return vSolutions[0][0] + 1;
-    case TX_SCRIPTHASH:
-        return 1; // doesn't include args needed by the script
-    }
-    return -1;
 }
 
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)

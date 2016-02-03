@@ -222,7 +222,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP/Maska Sieci</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Blokada do</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -870,6 +878,34 @@
         <source>command-line options</source>
         <translation>opcje konsoli</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Opcje interfejsu</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Katalog danych używany podczas uruchamiania programu (domyślny: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Wybierz język, na przykład "de_DE" (domyślnie: język systemowy)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Uruchom zminimalizowany</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Ustaw certyfikaty główne SSL dla żądań płatności (domyślnie: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Wyświetl okno powitalne podczas uruchamiania (domyślnie: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Ustaw jako domyślne wszystkie ustawienia interfejsu</translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -1066,6 +1102,26 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port proxy (np. 9050)</translation>
+    </message>
+    <message>
+        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Pokazuje, czy wspierane domyślnie proxy SOCKS5 jest używane do łączenia się z peerami w tej sieci</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Użyj oddzielnego prozy SOCKS5 aby osiągnąć węzły w ukrytych usługach Tor:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1438,6 +1494,14 @@
         <translation>Aktualna liczba bloków</translation>
     </message>
     <message>
+        <source>Current number of transactions</source>
+        <translation>Obecna liczba transakcji</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>Zużycie pamięci</translation>
+    </message>
+    <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Otwórz plik logowania debugowania Bitcoin Core z obecnego katalogu z danymi. Może to potrwać kilka sekund przy większych plikach.</translation>
     </message>
@@ -1454,8 +1518,16 @@
         <translation>&amp;Węzły</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Blokowane węzły</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Wybierz węzeł żeby zobaczyć szczegóły.</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>Biała lista</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1464,6 +1536,18 @@
     <message>
         <source>Version</source>
         <translation>Wersja</translation>
+    </message>
+    <message>
+        <source>Starting Block</source>
+        <translation>Blok startowy</translation>
+    </message>
+    <message>
+        <source>Synced Headers</source>
+        <translation>Zsynchronizowane nagłówki</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Zsynchronizowane bloki</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -1491,6 +1575,10 @@
     </message>
     <message>
         <source>Ping Time</source>
+        <translation>Czas odpowiedzi</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
         <translation>Czas odpowiedzi</translation>
     </message>
     <message>
@@ -1542,6 +1630,14 @@
         <translation>Wyczyść konsolę</translation>
     </message>
     <message>
+        <source>Ban Node for</source>
+        <translation>Blokuj węzeł na okres</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>Odblokuj węzeł</translation>
+    </message>
+    <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
         <translation>Witaj w konsoli Bitcoin Core RPC.</translation>
     </message>
@@ -1570,6 +1666,10 @@
         <translation>%1 GB</translation>
     </message>
     <message>
+        <source>(node id: %1)</source>
+        <translation>(id węzła: %1)</translation>
+    </message>
+    <message>
         <source>via %1</source>
         <translation>przez %1</translation>
     </message>
@@ -1584,6 +1684,14 @@
     <message>
         <source>Outbound</source>
         <translation>Wyjściowy</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation>Tak</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation>Nie</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -1607,6 +1715,10 @@
     <message>
         <source>Reuse one of the previously used receiving addresses. Reusing addresses has security and privacy issues. Do not use this unless re-generating a payment request made before.</source>
         <translation>Użyj jednego z poprzednio użytych adresów odbiorczych. Podczas ponownego używania adresów występują problemy z bezpieczeństwem i prywatnością. Nie korzystaj z tej opcji, chyba że odtwarzasz żądanie płatności wykonane już wcześniej.</translation>
+    </message>
+    <message>
+        <source>R&amp;euse an existing receiving address (not recommended)</source>
+        <translation>U&amp;żyj ponownie istniejącego adresu odbiorczego (niepolecane)</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
@@ -1950,6 +2062,10 @@
         <translation>Skopiuj resztę</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Łączna kwota %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>lub</translation>
     </message>
@@ -1980,6 +2096,10 @@
     <message>
         <source>Payment request expired.</source>
         <translation>Żądanie płatności upłynęło.</translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Zapłać tylko wymaganą opłatę %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -2613,6 +2733,10 @@
         <translation>Skopiuj ID transakcji</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>Skopiuj surowe dane transakcji</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>Zmień etykietę</translation>
     </message>
@@ -2764,12 +2888,20 @@
         <translation>Błąd: Wystąpił fatalny błąd wewnętrzny, sprawdź szczegóły w debug.log</translation>
     </message>
     <message>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation>Prowizja (w %s/kB) dodawana do wysyłanych transakcji (domyślnie: %s)</translation>
+    </message>
+    <message>
         <source>Pruning blockstore...</source>
         <translation>Przycinanie zapisu bloków...</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>
         <translation>Uruchom w tle jako daemon i przyjmuj polecenia</translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>Uruchomienie serwera HTTP nie powiodło się. Zobacz dziennik debugowania, aby uzyskać więcej szczegółów.</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
@@ -2826,10 +2958,6 @@
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>Dodawaj do białej listy węzły łączące się z podanej maski sieciowej lub adresu IP. Może być określona kilka razy.</translation>
-    </message>
-    <message>
-        <source>(default: 1)</source>
-        <translation>(domyślnie: 1)</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2926,6 +3054,14 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Określ plik portfela (w obrębie folderu danych)</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>Niewspierany argument -benchmark zignorowany, użyj -debug=bench.</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>Niewspierany argument -debugnet zignorowany, użyj -debug=net.</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -3036,12 +3172,20 @@
         <translation>Aktywuje najlepszy łańcuch</translation>
     </message>
     <message>
-        <source>Cannot resolve -whitebind address: '%s'</source>
-        <translation>Nie można rozwiązać adresu -whitebind: '%s'</translation>
+        <source>Always relay transactions received from whitelisted peers (default: %d)</source>
+        <translation>Zawsze przekazuj informacje o transakcjach otrzymanych od osób z białej listy (domyślnie: %d)</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Wybierz folder danych przy starcie (domyślnie: 0)</translation>
+        <source>Attempt to recover private keys from a corrupt wallet.dat on startup</source>
+        <translation>Próbuj podczas uruchamiania programu odzyskać klucze prywatne z uszkodzonego pliku wallet.dat</translation>
+    </message>
+    <message>
+        <source>Automatically create Tor hidden service (default: %d)</source>
+        <translation>Stwórz automatycznie ukrytą usługę Tora (domyślnie: %d)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Nie można rozwiązać adresu -whitebind: '%s'</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>
@@ -3058,6 +3202,10 @@
     <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Błąd odczytu z bazy danych, wyłączam się.</translation>
+    </message>
+    <message>
+        <source>Imports blocks from external blk000??.dat file on startup</source>
+        <translation>Importuj bloki z zewnętrznego pliku blk000??.dat podczas uruchamiania programu</translation>
     </message>
     <message>
         <source>Information</source>
@@ -3092,6 +3240,10 @@
         <translation>Przechowuj w pamięci maksymalnie &lt;n&gt; transakcji nie możliwych do połączenia (domyślnie: %u)</translation>
     </message>
     <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>Musisz określić port z -whitebind: '%s'</translation>
+    </message>
+    <message>
         <source>Node relay options:</source>
         <translation>Opcje przekaźnikowe węzła:</translation>
     </message>
@@ -3108,6 +3260,10 @@
         <translation>Odbieranie i wyświetlanie alertów sieci P2P (domyślnie: %u)</translation>
     </message>
     <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>Przeskanuj podczas ładowania programu łańcuch bloków w poszukiwaniu zaginionych transakcji portfela</translation>
+    </message>
+    <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
         <translation>Wyślij informację/raport do konsoli zamiast do pliku debug.log.</translation>
     </message>
@@ -3116,20 +3272,8 @@
         <translation>Wyślij bez opłaty jeżeli to możliwe (domyślnie: %u)</translation>
     </message>
     <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ustaw certyfikaty główne SSL dla żądań płatności (domyślnie: -system-)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Ustaw Język, na przykład "pl_PL" (domyślnie: systemowy)</translation>
-    </message>
-    <message>
         <source>Show all debugging options (usage: --help -help-debug)</source>
         <translation>Pokaż wszystkie opcje odpluskwiania (użycie: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Pokazuj okno powitalne przy starcie (domyślnie: 1)</translation>
     </message>
     <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
@@ -3140,16 +3284,16 @@
         <translation>Podpisywanie transakcji nie powiodło się</translation>
     </message>
     <message>
-        <source>Start minimized</source>
-        <translation>Uruchom zminimalizowany</translation>
-    </message>
-    <message>
         <source>The transaction amount is too small to pay the fee</source>
         <translation>Zbyt niska kwota transakcji by zapłacić opłatę</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
         <translation>To oprogramowanie eksperymentalne.</translation>
+    </message>
+    <message>
+        <source>Tor control port password (default: empty)</source>
+        <translation>Hasło zabezpieczające portu kontrolnego Tora (domyślnie: puste)</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -3168,12 +3312,12 @@
         <translation>Transakcja zbyt duża</translation>
     </message>
     <message>
-        <source>UI Options:</source>
-        <translation>Opcje UI</translation>
-    </message>
-    <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>Nie można przywiązać do %s na tym komputerze (bind zwrócił błąd %s)</translation>
+    </message>
+    <message>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>Zaktualizuj portfel do najnowszego formatu podczas ładowania programu</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -3224,6 +3368,14 @@
         <translation>(1 = zachowaj wysłane metadane np. właściciel konta i informacje o żądaniach płatności, 2 = porzuć wysłane metadane)</translation>
     </message>
     <message>
+        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
+        <translation>Nie trzymaj w pamięci transakcji starszych niż &lt;n&gt; godzin (domyślnie: %u)</translation>
+    </message>
+    <message>
+        <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
+        <translation>Ostrzeżenie: błąd odczytu wallet.dat! Wszystkie klucze zostały odczytane, ale może brakować pewnych danych transakcji lub wpisów w książce adresowej lub mogą one być nieprawidłowe.</translation>
+    </message>
+    <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
         <translation>Jak dokładna jest weryfikacja bloków przy -checkblocks (0-4, domyślnie: %u)</translation>
     </message>
@@ -3238,6 +3390,10 @@
     <message>
         <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
         <translation>Wypuść informacje debugowania (domyślnie: %u, podanie &lt;category&gt; jest opcjonalne)</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
+        <translation>Znaleziono niewspierany argument -socks. Wybieranie wersji SOCKS nie jest już możliwe, wsparcie programu obejmuje tylko proxy SOCKS5</translation>
     </message>
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>

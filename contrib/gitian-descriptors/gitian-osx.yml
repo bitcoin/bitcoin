@@ -1,11 +1,12 @@
 ---
-name: "bitcoin-osx-0.12"
+name: "bitcoin-osx-0.13"
 enable_cache: true
 suites:
 - "trusty"
 architectures:
 - "amd64"
 packages: 
+- "ca-certificates"
 - "g++"
 - "git-core"
 - "pkg-config"
@@ -21,10 +22,11 @@ packages:
 - "libcap-dev"
 - "libz-dev"
 - "libbz2-dev"
+- "python"
 - "python-dev"
 - "python-setuptools"
 - "fonts-tuffy"
-reference_datetime: "2015-06-01 00:00:00"
+reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"

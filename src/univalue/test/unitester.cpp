@@ -19,24 +19,37 @@
 
 using namespace std;
 string srcdir(JSON_TEST_SRC);
+static bool test_failed = false;
+
+#define d_assert(expr) { if (!(expr)) { test_failed = true; fprintf(stderr, "%s failed\n", filename.c_str()); } }
+
+static std::string rtrim(std::string s)
+{
+    s.erase(s.find_last_not_of(" \n\r\t")+1);
+    return s;
+}
 
 static void runtest(string filename, const string& jdata)
 {
-        fprintf(stderr, "test %s\n", filename.c_str());
-
         string prefix = filename.substr(0, 4);
 
-        bool wantPass = (prefix == "pass");
+        bool wantPass = (prefix == "pass") || (prefix == "roun");
         bool wantFail = (prefix == "fail");
+        bool wantRoundTrip = (prefix == "roun");
         assert(wantPass || wantFail);
 
         UniValue val;
         bool testResult = val.read(jdata);
 
         if (wantPass) {
-            assert(testResult == true);
+            d_assert(testResult == true);
         } else {
-            assert(testResult == false);
+            d_assert(testResult == false);
+        }
+
+        if (wantRoundTrip) {
+            std::string odata = val.write(0, 0);
+            assert(odata == rtrim(jdata));
         }
 }
 
@@ -92,6 +105,9 @@ static const char *filenames[] = {
         "fail32.json",
         "fail33.json",
         "fail34.json",
+        "fail35.json",
+        "fail36.json",
+        "fail37.json",
         "fail3.json",
         "fail4.json",                // extra comma
         "fail5.json",
@@ -102,6 +118,7 @@ static const char *filenames[] = {
         "pass1.json",
         "pass2.json",
         "pass3.json",
+        "round1.json",              // round-trip test
 };
 
 int main (int argc, char *argv[])
@@ -110,6 +127,6 @@ int main (int argc, char *argv[])
         runtest_file(filenames[fidx]);
     }
 
-    return 0;
+    return test_failed ? 1 : 0;
 }
 

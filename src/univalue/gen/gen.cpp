@@ -8,7 +8,6 @@
 // $ ./gen > univalue_escapes.h
 //
 
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include "univalue.h"
@@ -16,10 +15,17 @@
 using namespace std;
 
 static bool initEscapes;
-static const char *escapes[256];
+static std::string escapes[256];
 
 static void initJsonEscape()
 {
+    // Escape all lower control characters (some get overridden with smaller sequences below)
+    for (int ch=0x00; ch<0x20; ++ch) {
+        char tmpbuf[20];
+        snprintf(tmpbuf, sizeof(tmpbuf), "\\u%04x", ch);
+        escapes[ch] = std::string(tmpbuf);
+    }
+
     escapes[(int)'"'] = "\\\"";
     escapes[(int)'\\'] = "\\\\";
     escapes[(int)'\b'] = "\\b";
@@ -27,6 +33,7 @@ static void initJsonEscape()
     escapes[(int)'\n'] = "\\n";
     escapes[(int)'\r'] = "\\r";
     escapes[(int)'\t'] = "\\t";
+    escapes[(int)'\x7f'] = "\\u007f"; // U+007F DELETE
 
     initEscapes = true;
 }
@@ -39,13 +46,13 @@ static void outputEscape()
 		"static const char *escapes[256] = {\n");
 
 	for (unsigned int i = 0; i < 256; i++) {
-		if (!escapes[i]) {
+		if (escapes[i].empty()) {
 			printf("\tNULL,\n");
 		} else {
 			printf("\t\"");
 
 			unsigned int si;
-			for (si = 0; si < strlen(escapes[i]); si++) {
+			for (si = 0; si < escapes[i].size(); si++) {
 				char ch = escapes[i][si];
 				switch (ch) {
 				case '"':
