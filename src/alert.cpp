@@ -245,8 +245,20 @@ bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThre
     return true;
 }
 
-void
-CAlert::Notify(const std::string& strMessage, bool fThread)
+// static
+void CAlert::NotifyInternal(const std::string& strMessage)
+{
+    static CAlert internalAlert;
+    internalAlert.vchMsg = std::vector<unsigned char>(strMessage.begin(), strMessage.end());
+    uint256 zero;
+    mapAlerts[zero] = internalAlert;
+    uiInterface.NotifyAlertChanged(zero, CT_NEW);
+
+    Notify(strMessage, true);
+}
+
+// static
+void CAlert::Notify(const std::string& strMessage, bool fThread)
 {
     std::string strCmd = GetArg("-alertnotify", "");
     if (strCmd.empty()) return;
