@@ -342,7 +342,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
         pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
         UpdateTime(pblock, Params().GetConsensus(), pindexPrev);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, Params().GetConsensus());
-        pblock->nNonce         = 0;
+        pblock->nNonce         = clock();
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CValidationState state;
@@ -472,6 +472,10 @@ vector<string> split(string str, string sep){
 void static BitcoinMiner(CWallet *pwallet, int nThreads)
 {
     LogPrintf("HOdlcoinMiner started\n");
+    srand(clock());
+    string ma=GetArg("-miningaddress", "");
+    std::vector<std::string> arr=split(ma+"",";");
+
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcoin-miner");
     const CChainParams& chainparams = Params();
@@ -508,11 +512,10 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
 
             auto_ptr<CBlockTemplate> pblocktemplate;
 
-            string ma=GetArg("-miningaddress", "");
             if(ma!=""){
-                std::vector<std::string> arr;
-                arr=split(ma,";");
-                pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(arr[rand() % arr.size()]));
+                long theClock=clock()+rand();
+                long theRemainder=theClock%arr.size();
+                pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(theRemainder));
             }else{
                 pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));
             }
@@ -537,14 +540,14 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
             while (true) {
                 // Check if something found
 
-                pblock->nNonce = nNonce;
+                pblock->nNonce = (clock()+rand())%9999;
 
                 for(int i=0;i<1;i++){
                     pblock->nNonce=pblock->nNonce+1;
                     int collisions=0;
                     hash=pblock->FindBestPatternHash(collisions,scratchpad,nThreads);
                     LogPrintf("HOdlcoinMiner:\n");
-                    LogPrintf("proof-of-work found  \n  hash: %s  gethash:%s ba:%d bb:%d \ntarget: %s\n", hash.GetHex(), pblock->GetHash().GetHex(), pblock->nStartLocation, pblock->nFinalCalculation, hashTarget.GetHex());
+                    LogPrintf("search finished - best hash  \n  hash: %s  gethash:%s ba:%d bb:%d nonce:%d \ntarget: %s\n", hash.GetHex(), pblock->GetHash().GetHex(), pblock->nStartLocation, pblock->nFinalCalculation, pblock->nNonce, hashTarget.GetHex());
 
                     if (UintToArith256(hash) <= hashTarget){
                         assert(hash == pblock->GetHash());
