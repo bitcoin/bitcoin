@@ -76,7 +76,7 @@ size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
-bool fPermitReplacement = DEFAULT_PERMIT_REPLACEMENT;
+bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
@@ -867,7 +867,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                 // unconfirmed ancestors anyway; doing otherwise is hopelessly
                 // insecure.
                 bool fReplacementOptOut = true;
-                if (fPermitReplacement)
+                if (fEnableReplacement)
                 {
                     BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
                     {
