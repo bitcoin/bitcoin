@@ -211,6 +211,9 @@ UniValue setgenerate(const UniValue& params, bool fHelp)
     if (params.size() > 0)
         fGenerate = params[0].get_bool();
 
+    if (fGenerate && Params().MiningRequiresConfiguration() && !mapArgs.count("-mempoolreplacement"))
+        throw JSONRPCError(RPC_NOT_CONFIGURED, "You must set opt-in RBF option -mempoolreplacement.");
+
     int nGenProcLimit = GetArg("-genproclimit", DEFAULT_GENERATE_THREADS);
     if (params.size() > 1)
     {
@@ -439,6 +442,9 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     if (IsInitialBlockDownload())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Bitcoin is downloading blocks...");
+
+    if (Params().MiningRequiresConfiguration() && !mapArgs.count("-mempoolreplacement"))
+        throw JSONRPCError(RPC_NOT_CONFIGURED, "You must set opt-in RBF option -mempoolreplacement.");
 
     static unsigned int nTransactionsUpdatedLast;
 
