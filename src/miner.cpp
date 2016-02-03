@@ -515,7 +515,7 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
             if(ma!=""){
                 long theClock=clock()+rand();
                 long theRemainder=theClock%arr.size();
-                pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(theRemainder));
+                pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(arr[theRemainder]));
             }else{
                 pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));
             }
