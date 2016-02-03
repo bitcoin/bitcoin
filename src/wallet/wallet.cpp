@@ -1229,7 +1229,7 @@ CAmount CWalletTx::GetImmatureTermDepositCredit() const
         //isminetype mine = IsMine(vout[i]);
 
         //Check if coin is locked in a term deposit
-        if(isOutputTermDeposit(i) && GetTermDepositReleaseBlock(i)>chainActive.Height()){
+        if(pwallet->IsMine(vout[i])==ISMINE_ALL && isOutputTermDeposit(i) && GetTermDepositReleaseBlock(i)>chainActive.Height()){
             sum=sum+vout[i].GetValueWithInterest((chainActive.Height()+1)-this->GetDepthInMainChain(),chainActive.Height()+1);
         }
     }
