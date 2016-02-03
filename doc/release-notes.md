@@ -516,6 +516,7 @@ git merge commit are mentioned.
 - #7323 `a344880` 0.12: Backport -bytespersigop option
 - #7386 `da83ecd` Add option `-permitrbf` to set transaction replacement policy
 - #7290 `b16b5bc` Add missing options help
+- #7440 `c76bfff` Rename permitrbf to mempoolreplacement and provide minimal string-list forward compatibility
 
 ### Block and transaction handling
 
@@ -589,6 +590,9 @@ git merge commit are mentioned.
 - #7179 `44fef99` net: Fix sent reject messages for blocks and transactions
 - #7181 `8fc174a` net: Add and document network messages in protocol.h
 - #7125 `10b88be` Replace global trickle node with random delays
+- #7415 `cb83beb` net: Hardcoded seeds update January 2016
+- #7438 `e2d9a58` Do not absolutely protect local peers; decide group ties based on time
+- #7439 `86755bc` Add whitelistforcerelay to control forced relaying. [#7099 redux]
 
 ### Validation
 
@@ -618,6 +622,7 @@ git merge commit are mentioned.
 - #6938 `193f7b5` build: If both Qt4 and Qt5 are installed, use Qt5
 - #7092 `348b281` build: Set osx permissions in the dmg to make Gatekeeper happy
 - #6980 `eccd671` [Depends] Bump Boost, miniupnpc, ccache & zeromq
+- #7424 `aa26ee0` Add security/export checks to gitian and fix current failures
 
 ### Wallet
 
@@ -675,6 +680,7 @@ git merge commit are mentioned.
 - #7318 `9265e89` quickfix for RPC timer interface problem
 - #7327 `b16b5bc` [Wallet] Transaction View: LastMonth calculation fixed
 - #7364 `7726c48` [qt] Windows: Make rpcconsole monospace font larger
+- #7384 `294f432` [qt] Peertable: Increase SUBVERSION_COLUMN_WIDTH
 
 ### Tests and QA
 
@@ -852,6 +858,7 @@ Thanks to everyone who directly contributed to this release:
 - unsystemizer
 - Veres Lajos
 - Wladimir J. van der Laan
+- xor-freenet
 - Zak Wilcox
 - zathras-crypto
 
