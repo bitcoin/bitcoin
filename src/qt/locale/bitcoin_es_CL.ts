@@ -50,6 +50,18 @@
         <translation>Selecciona la direccion para enviar coins</translation>
     </message>
     <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>Selecciona la dirección para recibir coins</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>Dirección de envio</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>Dirección para recibir</translation>
+    </message>
+    <message>
         <source>Copy &amp;Label</source>
         <translation>Copia &amp;etiqueta</translation>
     </message>
@@ -58,8 +70,16 @@
         <translation>&amp;Editar</translation>
     </message>
     <message>
+        <source>Export Address List</source>
+        <translation>Exportar lista de direcciones</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>Archivos separados por coma (*.csv)</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportado fallo</translation>
     </message>
     </context>
 <context>
@@ -392,12 +412,21 @@
         <translation>prioridad:</translation>
     </message>
     <message>
+        <source>Fee:</source>
+        <translation>comisión:
+</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Cantidad</translation>
     </message>
     <message>
         <source>Date</source>
         <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>Confirmations</source>
+        <translation>Confirmaciones</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -420,8 +449,24 @@
         <translation>Copiar Cantidad</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>copiar cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>copiar comision</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>copiar bytes</translation>
+    </message>
+    <message>
         <source>medium</source>
         <translation>medio</translation>
+    </message>
+    <message>
+        <source>low</source>
+        <translation>bajo</translation>
     </message>
     <message>
         <source>yes</source>
@@ -499,6 +544,10 @@
     <message>
         <source>version</source>
         <translation>versión</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>opciones de linea de comando</translation>
     </message>
     <message>
         <source>Usage:</source>
@@ -826,8 +875,21 @@
         <translation>prioridad:</translation>
     </message>
     <message>
+        <source>Fee:</source>
+        <translation>comisión:
+</translation>
+    </message>
+    <message>
         <source>Transaction Fee:</source>
         <translation>Comisión transacción:</translation>
+    </message>
+    <message>
+        <source>normal</source>
+        <translation>normal</translation>
+    </message>
+    <message>
+        <source>fast</source>
+        <translation>rapido</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -858,8 +920,20 @@
         <translation>Confirmar el envio de monedas</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>copiar cantidad</translation>
+    </message>
+    <message>
         <source>Copy amount</source>
         <translation>Copiar Cantidad</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>copiar comision</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>copiar bytes</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -1146,8 +1220,16 @@
         <translation>Generado pero no acceptado</translation>
     </message>
     <message>
+        <source>Offline</source>
+        <translation>fuera de linea</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>Unconfirmed</source>
+        <translation>no confirmado</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -1267,6 +1349,10 @@
     <message>
         <source>Show transaction details</source>
         <translation>Mostrar detalles de la transacción</translation>
+    </message>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>Exportado fallo</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>

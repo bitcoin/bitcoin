@@ -214,7 +214,11 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Със забранен достъп до</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
