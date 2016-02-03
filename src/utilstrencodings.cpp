@@ -478,34 +478,40 @@ bool ParseDouble(const std::string& str, double *out)
 std::string FormatParagraph(const std::string& in, size_t width, size_t indent)
 {
     std::stringstream out;
-    size_t col = 0;
     size_t ptr = 0;
-    while(ptr < in.size())
+    size_t indented = 0;
+    while (ptr < in.size())
     {
-        // Find beginning of next word
-        ptr = in.find_first_not_of(' ', ptr);
-        if (ptr == std::string::npos)
-            break;
-        // Find end of next word
-        size_t endword = in.find_first_of(' ', ptr);
-        if (endword == std::string::npos)
-            endword = in.size();
-        // Add newline and indentation if this wraps over the allowed width
-        if (col > 0)
-        {
-            if ((col + endword - ptr) > width)
-            {
-                out << '\n';
-                for(size_t i=0; i<indent; ++i)
-                    out << ' ';
-                col = 0;
-            } else
-                out << ' ';
+        size_t lineend = in.find_first_of('\n', ptr);
+        if (lineend == std::string::npos) {
+            lineend = in.size();
         }
-        // Append word
-        out << in.substr(ptr, endword - ptr);
-        col += endword - ptr + 1;
-        ptr = endword;
+        const size_t linelen = lineend - ptr;
+        const size_t rem_width = width - indented;
+        if (linelen <= rem_width) {
+            out << in.substr(ptr, linelen + 1);
+            ptr = lineend + 1;
+            indented = 0;
+        } else {
+            size_t finalspace = in.find_last_of(" \n", ptr + rem_width);
+            if (finalspace == std::string::npos || finalspace < ptr) {
+                // No place to break; just include the entire word and move on
+                finalspace = in.find_first_of("\n ", ptr);
+                if (finalspace == std::string::npos) {
+                    // End of the string, just add it and break
+                    out << in.substr(ptr);
+                    break;
+                }
+            }
+            out << in.substr(ptr, finalspace - ptr) << "\n";
+            if (in[finalspace] == '\n') {
+                indented = 0;
+            } else if (indent) {
+                out << std::string(indent, ' ');
+                indented = indent;
+            }
+            ptr = finalspace + 1;
+        }
     }
     return out.str();
 }
