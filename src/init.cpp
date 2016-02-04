@@ -38,7 +38,6 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "utilmoneystr.h"
-#include "utilstrencodings.h"
 #include "validationinterface.h"
 #ifdef ENABLE_WALLET
 #include "wallet/db.h"
@@ -642,15 +641,13 @@ std::string HelpMessage(HelpMessageMode mode)
 std::string LicenseInfo()
 {
     // todo: remove urls from translations on next change
-    return FormatParagraph(strprintf(_("Copyright (C) 2009-%i The Bitcoin Core Developers"), COPYRIGHT_YEAR)) + "\n" +
+    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
            "\n" +
-           FormatParagraph(strprintf(_("Copyright (C) 2014-%i The Dash Core Developers"), COPYRIGHT_YEAR)) + "\n" +
+           _("This is experimental software.") + "\n" +
            "\n" +
-           FormatParagraph(_("This is experimental software.")) + "\n" +
+           _("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.") + "\n" +
            "\n" +
-           FormatParagraph(_("Distributed under the MIT software license, see the accompanying file COPYING or <http://www.opensource.org/licenses/mit-license.php>.")) + "\n" +
-           "\n" +
-           FormatParagraph(_("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.")) +
+           _("This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.") +
            "\n";
 }
 
@@ -1234,7 +1231,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // Sanity check
     if (!InitSanityCheck())
-        return InitError(_("Initialization sanity check failed. Dash Core is shutting down."));
+        return InitError(strprintf(_("Initialization sanity check failed. %s is shutting down."), _(PACKAGE_NAME)));
 
     std::string strDataDir = GetDataDir().string();
 #ifdef ENABLE_WALLET
@@ -1251,9 +1248,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         static boost::interprocess::file_lock lock(pathLockFile.string().c_str());
         // Wait maximum 10 seconds if an old wallet is still running. Avoids lockup during restart
         if (!lock.timed_lock(boost::get_system_time() + boost::posix_time::seconds(10)))
-            return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Dash Core is probably already running."), strDataDir));
+            return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running."), strDataDir, _(PACKAGE_NAME)));
     } catch(const boost::interprocess::interprocess_exception& e) {
-        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. Dash Core is probably already running.") + " %s.", strDataDir, e.what()));
+        return InitError(strprintf(_("Cannot obtain a lock on data directory %s. %s is probably already running.") + " %s.", strDataDir, _(PACKAGE_NAME), e.what()));
     }
 
 #ifndef WIN32
@@ -1716,10 +1713,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                              " or address book entries might be missing or incorrect."));
             }
             else if (nLoadWalletRet == DB_TOO_NEW)
-                strErrors << _("Error loading wallet.dat: Wallet requires newer version of Dash Core") << "\n";
+                strErrors << strprintf(_("Error loading wallet.dat: Wallet requires newer version of %s"), _(PACKAGE_NAME)) << "\n";
             else if (nLoadWalletRet == DB_NEED_REWRITE)
             {
-                strErrors << _("Wallet needed to be rewritten: restart Dash Core to complete") << "\n";
+                strErrors << strprintf(_("Wallet needed to be rewritten: restart %s to complete"), _(PACKAGE_NAME)) << "\n";
                 LogPrintf("%s", strErrors.str());
                 return InitError(strErrors.str());
             }

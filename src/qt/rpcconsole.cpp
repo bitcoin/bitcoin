@@ -3,6 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include "config/dash-config.h"
+#endif
+
 #include "rpcconsole.h"
 #include "ui_debugwindow.h"
 
@@ -262,6 +266,9 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
 {
     ui->setupUi(this);
     GUIUtil::restoreWindowGeometry("nRPCConsoleWindow", this->size(), this);
+
+    ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(tr(PACKAGE_NAME)));
+
     QString theme = GUIUtil::getThemeName();
     if (platformStyle->getImagesOnButtons()) {
         ui->openDebugLogfileButton->setIcon(QIcon(":/icons/" + theme + "/export"));
@@ -643,7 +650,7 @@ void RPCConsole::clear(bool clearHistory)
             ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
         );
 
-    message(CMD_REPLY, (tr("Welcome to the Dash Core RPC console.") + "<br>" +
+    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(tr(PACKAGE_NAME)) + "<br>" +
                         tr("Use up and down arrows to navigate history, and <b>Ctrl-L</b> to clear screen.") + "<br>" +
                         tr("Type <b>help</b> for an overview of available commands.")), true);
 }

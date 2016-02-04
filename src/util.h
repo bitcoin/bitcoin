@@ -271,6 +271,7 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
+std::string CopyrightHolders(const std::string& strPrefix);
 
 /**
  * @brief Converts version strings to 4-byte unsigned integer
