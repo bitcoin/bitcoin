@@ -11,6 +11,7 @@
 class AddressTableModel;
 class BanTableModel;
 class OptionsModel;
+class UnlimitedModel;
 class PeerTableModel;
 class TransactionTableModel;
 
@@ -41,7 +42,7 @@ class ClientModel : public QObject
     Q_OBJECT
 
 public:
-    explicit ClientModel(OptionsModel *optionsModel, QObject *parent = 0);
+    explicit ClientModel(OptionsModel *optionsModel, UnlimitedModel* ul, QObject *parent = 0);
     ~ClientModel();
 
     OptionsModel *getOptionsModel();
@@ -76,6 +77,7 @@ public:
     bool isReleaseVersion() const;
     QString clientName() const;
     QString formatClientStartupTime() const;
+    UnlimitedModel *unlimitedModel;
 
 private:
     OptionsModel *optionsModel;

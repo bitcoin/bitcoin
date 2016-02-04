@@ -90,7 +90,7 @@ All dependencies should be compiled with these flags:
  -arch x86_64
  -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 
-Once dependencies are compiled, see [doc/release-process.md](release-process.md) for how the Bitcoin Core
+Once dependencies are compiled, see [doc/release-process.md](release-process.md) for how the Bitcoin
 bundle is packaged and signed to create the .dmg disk image that is distributed.
 
 Running

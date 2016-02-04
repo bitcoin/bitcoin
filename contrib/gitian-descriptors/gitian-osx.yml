@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-osx-0.12"
+name: "BitcoinUnlimited-osx-0.12"
 enable_cache: true
 suites:
 - "trusty"
@@ -22,7 +22,7 @@ packages:
 - "python"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
+- "url": "https://github.com/BitcoinUnlimited/BitcoinUnlimited.git"
   "dir": "bitcoin"
 files:
 - "MacOSX10.9.sdk.tar.gz"

@@ -1,0 +1,42 @@
+--- 
+name: bitcoin
+urls:
+- http://bitcoin.org/bitcoin-latest-linux-gitian.zip
+rss:
+- url: 
+  xpath: //item/link/text()
+  pattern: bitcoin-\d+.\d+.\d+-linux-gitian.zip
+signers:
+  0A82509767C7D4A5D14DA2301AE1D35043E08E54:
+    name: BlueMatt
+    key: bluematt
+  BF6273FAEF7CC0BA1F562E50989F6B3048A116B5:
+    name: Devrandom
+    key: devrandom
+  E463A93F5F3117EEDE6C7316BD02942421F4889F:
+    name: Luke-Jr
+    key: luke-jr
+  D762373D24904A3E42F33B08B9A408E71DAAC974:
+    name: "Pieter Wuille"
+    key: sipa
+  77E72E69DA7EE0A148C06B21B34821D4944DE5F7:
+    name: tcatm
+    key: tcatm
+  01CDF4627A3B88AAE4A571C87588242FBE38D3A8:
+    name: "Gavin Andresen"
+    key: gavinandresen
+  71A3B16735405025D447E8F274810B012346C9A6:
+    name: "Wladimir J. van der Laan"
+    key: laanwj
+  AEC1884398647C47413C1C3FB1179EB7347DC10D:
+    name: "Warren Togami"
+    key: wtogami
+  9692B91BBF0E8D34DFD33B1882C5C009628ECF0C:
+    name: michagogo
+    key: michagogo
+  E944AE667CF960B1004BC32FCA662BE18B877A60:
+    name: "Andreas Schildbach"
+    key: aschildbach
+  C060A6635913D98A3587D7DB1C2491FFEB0EF770:
+    name: "Cory Fields"
+    key: "cfields"

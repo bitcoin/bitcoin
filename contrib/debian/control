@@ -23,9 +23,9 @@ Build-Depends: debhelper,
  libprotobuf-dev, protobuf-compiler,
  python
 Standards-Version: 3.9.2
-Homepage: https://bitcoincore.org/
-Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: https://github.com/bitcoin/bitcoin
+Homepage: https://www.bitcoinunlimited.info/
+Vcs-Git: git://github.com/BitcoinUnlimited/BitcoinUnlimited.git
+Vcs-Browser: https://github.com/BitcoinUnlimited/BitcoinUnlimited
 
 Package: bitcoind
 Architecture: any
@@ -59,8 +59,7 @@ Description: peer-to-peer digital currency - standalone transaction tool
  Bitcoin is an experimental new digital currency that enables instant
  payments to anyone, anywhere in the world. Bitcoin uses peer-to-peer
  technology to operate with no central authority: managing transactions
- and issuing money are carried out collectively by the network. Bitcoin Core
- is the name of the open source software which enables the use of this currency.
+ and issuing money are carried out collectively by the network.
  .
  This package provides bitcoin-tx, a command-line transaction creation
  tool which can be used without a bitcoin daemon.  Some means of

@@ -82,6 +82,7 @@ QT_TS = \
   qt/locale/bitcoin_zh_TW.ts
 
 QT_FORMS_UI = \
+  qt/forms/unlimited.ui \
   qt/forms/addressbookpage.ui \
   qt/forms/askpassphrasedialog.ui \
   qt/forms/coincontroldialog.ui \
@@ -121,6 +122,8 @@ QT_MOC_CPP = \
   qt/moc_openuridialog.cpp \
   qt/moc_optionsdialog.cpp \
   qt/moc_optionsmodel.cpp \
+  qt/moc_unlimiteddialog.cpp \
+  qt/moc_unlimitedmodel.cpp \
   qt/moc_overviewpage.cpp \
   qt/moc_peertablemodel.cpp \
   qt/moc_paymentserver.cpp \
@@ -187,6 +190,8 @@ BITCOIN_QT_H = \
   qt/networkstyle.h \
   qt/notificator.h \
   qt/openuridialog.h \
+  qt/unlimiteddialog.h \
+  qt/unlimitedmodel.h \
   qt/optionsdialog.h \
   qt/optionsmodel.h \
   qt/overviewpage.h \
@@ -279,6 +284,8 @@ BITCOIN_QT_CPP = \
   qt/intro.cpp \
   qt/networkstyle.cpp \
   qt/notificator.cpp \
+  qt/unlimiteddialog.cpp \
+  qt/unlimitedmodel.cpp \
   qt/optionsdialog.cpp \
   qt/optionsmodel.cpp \
   qt/peertablemodel.cpp \

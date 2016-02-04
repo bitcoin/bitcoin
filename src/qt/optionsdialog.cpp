@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core, Unlimited, and XT developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,7 @@
 
 #include "main.h" // for DEFAULT_SCRIPTCHECK_THREADS and MAX_SCRIPTCHECK_THREADS
 #include "netbase.h"
+#include "net.h"  // for access to the network traffic shapers
 #include "txdb.h" // for -dbcache defaults
 
 #ifdef ENABLE_WALLET
@@ -22,6 +23,7 @@
 #endif
 
 #include <boost/thread.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <QDataWidgetMapper>
 #include <QDir>
@@ -33,11 +35,11 @@
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
+    portValidator(1, 65536, this),
     model(0),
     mapper(0)
 {
     ui->setupUi(this);
-
     /* Main elements init */
     ui->databaseCache->setMinimum(nMinDbCache);
     ui->databaseCache->setMaximum(nMaxDbCache);
@@ -51,7 +53,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     ui->proxyIp->setEnabled(false);
     ui->proxyPort->setEnabled(false);
-    ui->proxyPort->setValidator(new QIntValidator(1, 65535, this));
+    ui->proxyPort->setValidator(&portValidator); //new QIntValidator(1, 65535, this));
 
     ui->proxyIpTor->setEnabled(false);
     ui->proxyPortTor->setEnabled(false);
@@ -93,9 +95,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
             /** display language strings as "language - country (locale name)", e.g. "German - Germany (de)" */
             ui->lang->addItem(QLocale::languageToString(locale.language()) + QString(" - ") + QLocale::countryToString(locale.country()) + QString(" (") + langStr + QString(")"), QVariant(langStr));
 #endif
-        }
-        else
-        {
+        } else {
 #if QT_VERSION >= 0x040800
             /** display language strings as "native language (locale name)", e.g. "Deutsch (de)" */
             ui->lang->addItem(locale.nativeLanguageName() + QString(" (") + langStr + QString(")"), QVariant(langStr));
@@ -130,12 +130,13 @@ OptionsDialog::~OptionsDialog()
     delete ui;
 }
 
-void OptionsDialog::setModel(OptionsModel *model)
+
+
+void OptionsDialog::setModel(OptionsModel* model)
 {
     this->model = model;
 
-    if(model)
-    {
+    if (model) {
         /* check if client restart is needed and show persistent message */
         if (model->isRestartRequired())
             showRestartWarning(true);
@@ -165,7 +166,7 @@ void OptionsDialog::setModel(OptionsModel *model)
     connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
-    connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
+    connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString&)), this, SLOT(showRestartWarning()));
 }
 
 void OptionsDialog::setMapper()
@@ -192,6 +193,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->proxyPortTor, OptionsModel::ProxyPortTor);
 
     /* Window */
+
 #ifndef Q_OS_MAC
     mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
     mapper->addMapping(ui->minimizeOnClose, OptionsModel::MinimizeOnClose);
@@ -210,14 +212,11 @@ void OptionsDialog::setOkButtonState(bool fState)
 
 void OptionsDialog::on_resetButton_clicked()
 {
-    if(model)
-    {
+    if (model) {
         // confirmation dialog
-        QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shut down. Do you want to proceed?"),
-            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+        QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"), tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shut down. Do you want to proceed?"), QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
 
-        if(btnRetVal == QMessageBox::Cancel)
+        if (btnRetVal == QMessageBox::Cancel)
             return;
 
         /* reset all options and close GUI */
@@ -242,12 +241,9 @@ void OptionsDialog::showRestartWarning(bool fPersistent)
 {
     ui->statusLabel->setStyleSheet("QLabel { color: red; }");
 
-    if(fPersistent)
-    {
+    if (fPersistent) {
         ui->statusLabel->setText(tr("Client restart required to activate changes."));
-    }
-    else
-    {
+    } else {
         ui->statusLabel->setText(tr("This change would require a client restart."));
         // clear non-persistent status label after 10 seconds
         // Todo: should perhaps be a class attribute, if we extend the use of statusLabel

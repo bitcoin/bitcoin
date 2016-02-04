@@ -33,7 +33,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "notation for IPv6. This option can be specified multiple times (default: "
 "bind to all interfaces)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Cannot obtain a lock on data directory %s. Bitcoin Core is probably already "
+"Cannot obtain a lock on data directory %s. Bitcoin is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Create new files with system default permissions, instead of umask 077 (only "
@@ -146,7 +146,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = "
 "no limit (default: %d)"),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
-"Unable to bind to %s on this computer. Bitcoin Core is probably already "
+"Unable to bind to %s on this computer. Bitcoin is probably already "
 "running."),
 QT_TRANSLATE_NOOP("bitcoin-core", ""
 "Unsupported argument -socks found. Setting SOCKS version isn't possible "
@@ -224,7 +224,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Error initializing wallet database environmen
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading block database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet corrupted"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet requires newer version of Bitcoin Core"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Error loading wallet.dat: Wallet requires newer version of Bitcoin software"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error opening block database"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error reading from database, shutting down."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Error"),
@@ -239,7 +239,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Imports blocks from external blk000??.dat fil
 QT_TRANSLATE_NOOP("bitcoin-core", "Include IP addresses in debug output (default: %u)"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Information"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Initialization sanity check failed. Bitcoin Core is shutting down."),
+QT_TRANSLATE_NOOP("bitcoin-core", "Initialization sanity check failed. Bitcoin is shutting down."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Insufficient funds"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid -onion address: '%s'"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Invalid -proxy address: '%s'"),
@@ -319,7 +319,7 @@ QT_TRANSLATE_NOOP("bitcoin-core", "Username for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Verifying wallet..."),
 QT_TRANSLATE_NOOP("bitcoin-core", "Wallet %s resides outside data directory %s"),
-QT_TRANSLATE_NOOP("bitcoin-core", "Wallet needed to be rewritten: restart Bitcoin Core to complete"),
+QT_TRANSLATE_NOOP("bitcoin-core", "Wallet needed to be rewritten: restart Bitcoin to complete"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Wallet options:"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning"),
 QT_TRANSLATE_NOOP("bitcoin-core", "Warning: This version is obsolete; upgrade required!"),

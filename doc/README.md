@@ -1,9 +1,9 @@
-Bitcoin Core 0.12.0
+Bitcoin Unlimited 0.12.0
 =====================
 
 Setup
 ---------------------
-[Bitcoin Core](http://bitcoin.org/en/download) is the original Bitcoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Bitcoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+[Bitcoin Unlimited](http://www.bitcoinunlimited.info) is a fork of the original Bitcoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Bitcoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
 Running
 ---------------------

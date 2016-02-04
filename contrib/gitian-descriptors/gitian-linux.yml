@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-linux-0.12"
+name: "BitcoinUnlimited-linux-0.12"
 enable_cache: true
 suites:
 - "trusty"
@@ -17,9 +17,10 @@ packages:
 - "binutils-gold"
 - "ca-certificates"
 - "python"
+- "libstdc++6-4.6-pic"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
+- "url": "https://github.com/BitcoinUnlimited/BitcoinUnlimited.git"
   "dir": "bitcoin"
 files: []
 script: |

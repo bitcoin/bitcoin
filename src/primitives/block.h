@@ -10,6 +10,11 @@
 #include "serialize.h"
 #include "uint256.h"
 
+const uint32_t BIP_009_MASK = 0x20000000;
+const uint32_t BASE_VERSION = 0x20000000;  // Will accept 2MB blocks
+const uint32_t FORK_BIT_2MB = 0x10000000;  // Vote for 2MB fork
+const bool DEFAULT_2MB_VOTE = false;
+
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -21,7 +26,7 @@ class CBlockHeader
 {
 public:
     // header
-    static const int32_t CURRENT_VERSION=4;
+    static const int32_t CURRENT_VERSION=BASE_VERSION;
     int32_t nVersion;
     uint256 hashPrevBlock;
     uint256 hashMerkleRoot;
@@ -78,7 +83,9 @@ public:
     std::vector<CTransaction> vtx;
 
     // memory only
+        // 0.11: mutable std::vector<uint256> vMerkleTree;
     mutable bool fChecked;
+    mutable bool fExcessive;  // BU: is the block "excessive" (bigger than this node prefers to accept)
 
     CBlock()
     {
@@ -91,6 +98,20 @@ public:
         *((CBlockHeader*)this) = header;
     }
 
+    static bool VersionKnown(int32_t nVersion, int32_t voteBits)
+    {
+        if (nVersion >= 1 && nVersion <= 4)
+            return true;
+        // BIP009 / versionbits:
+        if (nVersion & BIP_009_MASK)
+        {
+            uint32_t v = nVersion & ~BIP_009_MASK;
+            if ((v & ~voteBits) == 0)
+                return true;
+        }
+        return false;
+    }
+    
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
@@ -103,7 +124,9 @@ public:
     {
         CBlockHeader::SetNull();
         vtx.clear();
+        // vMerkleTree.clear();
         fChecked = false;
+        fExcessive = false;
     }
 
     CBlockHeader GetBlockHeader() const

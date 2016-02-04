@@ -34,6 +34,7 @@
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "unlimited.h" // This is here because many files include util, so hopefully it will minimize diffs
 
 #include <sstream>
 
@@ -751,8 +752,9 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
-        return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
+    // BU: size limits removed
+    //if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    //    return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
     CAmount nValueOut = 0;
@@ -977,7 +979,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             // Require that free transactions have sufficient priority to be mined in the next block.
             return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "insufficient priority");
         }
-
+        
         // Continuously rate-limit free (really, very-low-fee) transactions
         // This mitigates 'penny-flooding' -- sending thousands of free transactions just to
         // be annoying or make others' transactions take longer to confirm.
@@ -1216,7 +1218,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
     SyncWithWallets(tx, NULL);
 
     return true;
-}
+    }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fOverrideMempoolLimit, bool fRejectAbsurdFee)
@@ -2067,9 +2069,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         nInputs += tx.vin.size();
         nSigOps += GetLegacySigOpCount(tx);
-        if (nSigOps > MAX_BLOCK_SIGOPS)
-            return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                             REJECT_INVALID, "bad-blk-sigops");
+        //if (nSigOps > MAX_BLOCK_SIGOPS)
+        //    return state.DoS(100, error("ConnectBlock(): too many sigops"),
+        //                    REJECT_INVALID, "bad-blk-sigops");
 
         if (!tx.IsCoinBase())
         {
@@ -2083,9 +2085,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                 // this is to prevent a "rogue miner" from creating
                 // an incredibly-expensive-to-validate block.
                 nSigOps += GetP2SHSigOpCount(tx, view);
-                if (nSigOps > MAX_BLOCK_SIGOPS)
-                    return state.DoS(100, error("ConnectBlock(): too many sigops"),
-                                     REJECT_INVALID, "bad-blk-sigops");
+                //if (nSigOps > MAX_BLOCK_SIGOPS)
+                //    return state.DoS(100, error("ConnectBlock(): too many sigops"),
+                //                     REJECT_INVALID, "bad-blk-sigops");
             }
 
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
@@ -2462,7 +2464,8 @@ static CBlockIndex* FindMostWorkChain() {
         // Just going until the active chain is an optimization, as we know all blocks in it are valid already.
         CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
-        while (pindexTest && !chainActive.Contains(pindexTest)) {
+        uint64_t depth=0;
+        while (pindexTest && !chainActive.Contains(pindexTest)) {  // follow the chain all the way back to where it joins the current active chain.
             assert(pindexTest->nChainTx || pindexTest->nHeight == 0);
 
             // Pruned nodes may have entries in setBlockIndexCandidates for
@@ -2471,7 +2474,8 @@ static CBlockIndex* FindMostWorkChain() {
             // to a chain unless we have all the non-active-chain parent blocks.
             bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
             bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
-            if (fFailedChain || fMissingData) {
+            bool fExcessive = (depth < excessiveAcceptDepth) && (pindexTest->nStatus & BLOCK_EXCESSIVE);  // Unlimited: deny this candidate chain if there's a recent excessive block
+            if (fFailedChain || fMissingData || fExcessive) {
                 // Candidate chain is not usable (either invalid or missing data)
                 if (fFailedChain && (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
                     pindexBestInvalid = pindexNew;
@@ -2480,7 +2484,7 @@ static CBlockIndex* FindMostWorkChain() {
                 while (pindexTest != pindexFailed) {
                     if (fFailedChain) {
                         pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
-                    } else if (fMissingData) {
+                    } else if (fMissingData || fExcessive) {
                         // If we're missing data, then add back to mapBlocksUnlinked,
                         // so that if the block arrives in the future we can try adding
                         // to setBlockIndexCandidates again.
@@ -2494,6 +2498,7 @@ static CBlockIndex* FindMostWorkChain() {
                 break;
             }
             pindexTest = pindexTest->pprev;
+            depth++;
         }
         if (!fInvalidAncestor)
             return pindexNew;
@@ -2784,6 +2789,7 @@ bool ReceivedBlockTransactions(const CBlock &block, CValidationState& state, CBl
     pindexNew->nDataPos = pos.nPos;
     pindexNew->nUndoPos = 0;
     pindexNew->nStatus |= BLOCK_HAVE_DATA;
+    if (block.fExcessive) pindexNew->nStatus |= BLOCK_EXCESSIVE;
     pindexNew->RaiseValidity(BLOCK_VALID_TRANSACTIONS);
     setDirtyBlockIndex.insert(pindexNew);
 
@@ -2957,7 +2963,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // because we receive the wrong transactions for it.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
+    uint64_t blockSize = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+    if (block.vtx.empty()) // || block.vtx.size() > MAX_BLOCK_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_SIZE)
         return state.DoS(100, error("CheckBlock(): size limits failed"),
                          REJECT_INVALID, "bad-blk-length");
 
@@ -2977,17 +2984,22 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
                 tx.GetHash().ToString(),
                 FormatStateMessage(state));
 
-    unsigned int nSigOps = 0;
+    uint64_t nSigOps = 0;
+    uint64_t nTx = 0;  // BU: count the number of transactions in case the CheckExcessive function wants to use this as criteria
     BOOST_FOREACH(const CTransaction& tx, block.vtx)
     {
+        nTx++;
         nSigOps += GetLegacySigOpCount(tx);
     }
-    if (nSigOps > MAX_BLOCK_SIGOPS)
-        return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
-                         REJECT_INVALID, "bad-blk-sigops");
+
+    // if (nSigOps > MAX_BLOCK_SIGOPS)
+    //    return state.DoS(100, error("CheckBlock(): out-of-bounds SigOpCount"),
+    //                     REJECT_INVALID, "bad-blk-sigops", true);
 
     if (fCheckPOW && fCheckMerkleRoot)
         block.fChecked = true;
+
+    block.fExcessive = CheckExcessive(block,blockSize, nSigOps,nTx);  // BU: Check whether this block exceeds what we want to relay.
 
     return true;
 }
@@ -3027,6 +3039,11 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     // Reject block.nVersion=2 blocks when 95% (75% on testnet) of the network has upgraded:
     if (block.nVersion < 3 && IsSuperMajority(3, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
         return state.Invalid(error("%s: rejected nVersion=2 block", __func__),
+                             REJECT_OBSOLETE, "bad-version");
+
+    // Reject block.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded:
+    if (block.nVersion < 4 && IsSuperMajority(4, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
+        return state.Invalid(error("%s : rejected nVersion=3 block", __func__),
                              REJECT_OBSOLETE, "bad-version");
 
     // Reject block.nVersion=3 blocks when 95% (75% on testnet) of the network has upgraded:
@@ -3195,7 +3212,12 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
 {
     // Preliminary checks
     bool checked = CheckBlock(*pblock, state);
-
+    if (!checked)
+      {
+        int byteLen = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
+        LogPrintf("Invalid block: ver:%x time:%d Tx size:%d len:%d\n", pblock->nVersion, pblock->nTime, pblock->vtx.size(),byteLen);
+      }
+    
     {
         LOCK(cs_main);
         bool fRequested = MarkBlockAsReceived(pblock->GetHash());
@@ -3708,7 +3730,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
     int nLoaded = 0;
     try {
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
-        CBufferedFile blkdat(fileIn, 2*MAX_BLOCK_SIZE, MAX_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
+        CBufferedFile blkdat(fileIn, 2*BU_MAX_BLOCK_SIZE, BU_MAX_BLOCK_SIZE+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
         while (!blkdat.eof()) {
             boost::this_thread::interruption_point();
@@ -3727,7 +3749,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                     continue;
                 // read size
                 blkdat >> nSize;
-                if (nSize < 80 || nSize > MAX_BLOCK_SIZE)
+                if (nSize < 80 || nSize > BU_MAX_BLOCK_SIZE)
                     continue;
             } catch (const std::exception&) {
                 // no valid block header found; don't complain
@@ -3891,9 +3913,8 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
                 // is valid and we have all data for its parents, it must be in
                 // setBlockIndexCandidates.  chainActive.Tip() must also be there
                 // even if some data has been pruned.
-                if (pindexFirstMissing == NULL || pindex == chainActive.Tip()) {
-                    assert(setBlockIndexCandidates.count(pindex));
-                }
+              if ((!isChainExcessive(pindex)) && (pindexFirstMissing == NULL || pindex == chainActive.Tip()) )  // BU: if the chain is excessive it won't be on the list of active chain candidates
+                assert(setBlockIndexCandidates.count(pindex));
                 // If some parent is missing, then it could be that this block was in
                 // setBlockIndexCandidates but had to be removed because of the missing data.
                 // In this case it must be in mapBlocksUnlinked -- see test below.
@@ -3917,7 +3938,10 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
             assert(foundInUnlinked);
         }
         if (!(pindex->nStatus & BLOCK_HAVE_DATA)) assert(!foundInUnlinked); // Can't be in mapBlocksUnlinked if we don't HAVE_DATA
-        if (pindexFirstMissing == NULL) assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked.
+        if ((pindexFirstMissing == NULL)&&(!isChainExcessive(pindex))) // BU: why is this needed here?
+          {
+          assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked.
+          }
         if (pindex->pprev && (pindex->nStatus & BLOCK_HAVE_DATA) && pindexFirstNeverProcessed == NULL && pindexFirstMissing != NULL) {
             // We HAVE_DATA for this block, have received data for all parents at some point, but we're currently missing data for some parent.
             assert(fHavePruned); // We must have pruned.
@@ -4128,6 +4152,11 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         if (!send) {
                             LogPrintf("%s: ignoring request from peer=%i for old block that isn't in the main chain\n", __func__, pfrom->GetId());
                         }
+                        else {  // BU: don't relay excessive blocks
+                          if (mi->second->nStatus & BLOCK_EXCESSIVE) send=false;
+                          if (!send) LogPrintf("%s: ignoring request from peer=%i for excessive block of height %d not on the main chain\n", __func__, pfrom->GetId(), mi->second->nHeight);
+                          }
+                        // BU: in the future we can throttle old block requests by setting send=false if we are out of bandwidth
                     }
                 }
                 // disconnect node in case we have reached the outbound limit for serving historical blocks
@@ -4236,6 +4265,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
 bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, int64_t nTimeReceived)
 {
+    int64_t receiptTime = GetTime();
     const CChainParams& chainparams = Params();
     RandAddSeedPerfmon();
     LogPrint("net", "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->id);
@@ -4700,6 +4730,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->setAskFor.erase(inv.hash);
         mapAlreadyAskedFor.erase(inv);
 
+        // Check for recently rejected (and do other quick existence checks)
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
             mempool.check(pcoinsTip);
@@ -4920,6 +4951,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         CInv inv(MSG_BLOCK, block.GetHash());
         LogPrint("net", "received block %s peer=%d\n", inv.hash.ToString(), pfrom->id);
+        UnlimitedLogBlock(block,inv.hash.ToString(),receiptTime);
 
         pfrom->AddInventoryKnown(inv);
 

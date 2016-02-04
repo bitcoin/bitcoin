@@ -334,8 +334,16 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
     if (size() == 0)
         return CAddrInfo();
 
-    if (newOnly && nNew == 0)
+    if (newOnly && nNew == 0) // If we only want a new address, but there are no new addresses, return error
         return CAddrInfo();
+
+    // BU: select is stuck never finding an address in vvNew, if network connectivity drops.  It is interesting because dumping
+    // vvNew shows there there are one or two valid entries.  However, breakpoints set outside of the 
+    // loop are never hit.  Could there be an issue with pseudo-random # generation?  
+    // The chosen approach (aborting after a time) is a compromise between
+    // quality and changing the code as little as possible.  Higher layer code does handle invalid addreses with a
+    // delay loop.
+    int nTries=0;  
 
     // Use a 50% chance for choosing between tried and new table entries.
     if (!newOnly &&
@@ -343,6 +351,8 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
         // use a tried node
         double fChanceFactor = 1.0;
         while (1) {
+            nTries++;
+            if (nTries > 10000) return CAddrInfo();
             int nKBucket = GetRandInt(ADDRMAN_TRIED_BUCKET_COUNT);
             int nKBucketPos = GetRandInt(ADDRMAN_BUCKET_SIZE);
             while (vvTried[nKBucket][nKBucketPos] == -1) {
@@ -360,6 +370,8 @@ CAddrInfo CAddrMan::Select_(bool newOnly)
         // use a new node
         double fChanceFactor = 1.0;
         while (1) {
+            nTries++;
+            if (nTries > 10000) return CAddrInfo();
             int nUBucket = GetRandInt(ADDRMAN_NEW_BUCKET_COUNT);
             int nUBucketPos = GetRandInt(ADDRMAN_BUCKET_SIZE);
             while (vvNew[nUBucket][nUBucketPos] == -1) {

@@ -104,3 +104,4 @@ This new feature is enabled by default if Bitcoin Core is listening, and
 a connection to Tor can be made. It can be configured with the `-listenonion`,
 `-torcontrol` and `-torpassword` settings. To show verbose debugging
 information, pass `-debug=tor`.
+

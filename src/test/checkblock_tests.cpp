@@ -15,9 +15,6 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/test/unit_test.hpp>
 
-
-BOOST_FIXTURE_TEST_SUITE(CheckBlock_tests, BasicTestingSetup)
-
 bool read_block(const std::string& filename, CBlock& block)
 {
     namespace fs = boost::filesystem;
@@ -37,30 +34,27 @@ bool read_block(const std::string& filename, CBlock& block)
     if (filein.IsNull()) return false;
 
     filein >> block;
-
     return true;
 }
 
-BOOST_AUTO_TEST_CASE(May15)
-{
-    // Putting a 1MB binary file in the git repository is not a great
-    // idea, so this test is only run if you manually download
-    // test/data/Mar12Fork.dat from
-    // http://sourceforge.net/projects/bitcoin/files/Bitcoin/blockchain/Mar12Fork.dat/download
-    unsigned int tMay15 = 1368576000;
-    SetMockTime(tMay15); // Test as if it was right at May 15
+BOOST_FIXTURE_TEST_SUITE(CheckBlock_tests, BasicTestingSetup)
 
-    CBlock forkingBlock;
-    if (read_block("Mar12Fork.dat", forkingBlock))
+
+BOOST_AUTO_TEST_CASE(TestBlock)
+{
+    CBlock testblock;
+    if (read_block("testblock.dat", testblock))
     {
         CValidationState state;
 
-        // After May 15'th, big blocks are OK:
-        forkingBlock.nTime = tMay15; // Invalidates PoW
-        BOOST_CHECK(CheckBlock(forkingBlock, state, false, false));
-    }
+        uint64_t blockSize = ::GetSerializeSize(testblock, SER_NETWORK, PROTOCOL_VERSION); //53298 B for test.dat
 
-    SetMockTime(0);
+        BOOST_CHECK_MESSAGE(CheckBlock(testblock, state, false, false), "Basic CheckBlock failed");
+        BOOST_CHECK_MESSAGE(!testblock.fExcessive, "Block with size " << blockSize << " ought not to have been excessive when excessiveBlockSize is " << excessiveBlockSize );
+        excessiveBlockSize = blockSize -1;
+        BOOST_CHECK_MESSAGE(CheckBlock(testblock, state, false, false), "Basic CheckBlock failed");
+        BOOST_CHECK_MESSAGE(testblock.fExcessive, "Block with size " << blockSize << " ought to have been excessive when excessiveBlockSize is " << excessiveBlockSize );
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
