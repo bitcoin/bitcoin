@@ -2,6 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include "config/bitcoin-config.h"
+#endif
+
 #include "timedata.h"
 
 #include "netbase.h"
@@ -99,7 +103,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
                 if (!fMatch)
                 {
                     fDone = true;
-                    string strMessage = _("Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.");
+                    string strMessage = strprintf(_("Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly."), _(PACKAGE_NAME));
                     strMiscWarning = strMessage;
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
                 }

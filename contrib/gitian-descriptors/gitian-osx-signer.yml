@@ -32,6 +32,7 @@ script: |
   SIGNED=bitcoin-osx-signed.dmg
 
   tar -xf ${UNSIGNED}
+  OSX_VOLNAME="$(cat osx_volname)"
   ./detached-sig-apply.sh ${UNSIGNED} signature/osx
-  ${WRAP_DIR}/genisoimage -no-cache-inodes -D -l -probe -V "Bitcoin-Core" -no-pad -r -apple -o uncompressed.dmg signed-app
+  ${WRAP_DIR}/genisoimage -no-cache-inodes -D -l -probe -V "${OSX_VOLNAME}" -no-pad -r -apple -o uncompressed.dmg signed-app
   ${WRAP_DIR}/dmg dmg uncompressed.dmg ${OUTDIR}/${SIGNED}

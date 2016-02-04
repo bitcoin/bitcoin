@@ -6,20 +6,26 @@ suites:
 architectures:
 - "amd64"
 packages: 
+- "ca-certificates"
 - "g++"
 - "git-core"
 - "pkg-config"
 - "autoconf"
+- "librsvg2-bin"
+- "libtiff-tools"
 - "libtool"
 - "automake"
 - "faketime"
 - "bsdmainutils"
 - "cmake"
+- "imagemagick"
 - "libcap-dev"
 - "libz-dev"
 - "libbz2-dev"
-- "ca-certificates"
 - "python"
+- "python-dev"
+- "python-setuptools"
+- "fonts-tuffy"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
@@ -109,8 +115,11 @@ script: |
     make ${MAKEOPTS}
     make install-strip
 
+    make osx_volname
     make deploydir
+    OSX_VOLNAME="$(cat osx_volname)"
     mkdir -p unsigned-app-${i}
+    cp osx_volname unsigned-app-${i}/
     cp contrib/macdeploy/detached-sig-apply.sh unsigned-app-${i}
     cp contrib/macdeploy/detached-sig-create.sh unsigned-app-${i}
     cp ${BASEPREFIX}/${i}/native/bin/dmg ${BASEPREFIX}/${i}/native/bin/genisoimage unsigned-app-${i}
@@ -122,7 +131,7 @@ script: |
     popd
 
     make deploy
-    ${WRAP_DIR}/dmg dmg Bitcoin-Core.dmg ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
+    ${WRAP_DIR}/dmg dmg "${OSX_VOLNAME}.dmg" ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
 
     cd installed
     find . -name "lib*.la" -delete
