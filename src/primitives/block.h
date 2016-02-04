@@ -28,8 +28,8 @@ public:
     uint32_t nTime;
     uint32_t nBits;
     uint32_t nNonce;
-    uint32_t nStartLocation=0;
-    uint32_t nFinalCalculation=0;
+    uint32_t nStartLocation;
+    uint32_t nFinalCalculation;
 
     CBlockHeader()
     {
