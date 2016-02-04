@@ -470,7 +470,7 @@ vector<string> split(string str, string sep){
 }
 
 void static BitcoinMiner(CWallet *pwallet, int nThreads)
-{
+{    
     LogPrintf("HOdlcoinMiner started\n");
     srand(clock());
     string ma=GetArg("-miningaddress", "");
@@ -487,6 +487,8 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
     char *scratchpad;
     scratchpad=new char[(1<<30)];
 
+    clock_t startTime = clock();
+    long totalHashes=0;
     try {
         while (true) {
             if (chainparams.MiningRequiresPeers()) {
@@ -501,9 +503,10 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
                     if (!fvNodesEmpty && !IsInitialBlockDownload())
                         break;
                     MilliSleep(1000);
+                    startTime = clock();
+                    totalHashes=0;
                 } while (true);
             }
-
             //
             // Create new block
             //
@@ -546,9 +549,10 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
                     pblock->nNonce=pblock->nNonce+1;
                     int collisions=0;
                     hash=pblock->FindBestPatternHash(collisions,scratchpad,nThreads);
+                    totalHashes=totalHashes+collisions;
                     LogPrintf("HOdlcoinMiner:\n");
                     LogPrintf("search finished - best hash  \n  hash: %s collisions:%d gethash:%s ba:%d bb:%d nonce:%d \ntarget: %s\n", hash.GetHex(), collisions, pblock->GetHash().GetHex(), pblock->nStartLocation, pblock->nFinalCalculation, pblock->nNonce, hashTarget.GetHex());
-
+                    LogPrintf("Hashes Per Second=%d (total seconds=%d hashes=%d)\n",totalHashes/((clock()-startTime)/CLOCKS_PER_SEC),((clock()-startTime)/CLOCKS_PER_SEC),totalHashes);
                     if (UintToArith256(hash) <= hashTarget){
                         assert(hash == pblock->GetHash());
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
