@@ -5,6 +5,8 @@
 #   command. See: https://github.com/travis-ci/travis-ci/issues/4393
 
 os: linux
+sudo: required
+group: legacy
 language: cpp
 compiler: gcc
 env:
