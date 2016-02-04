@@ -131,19 +131,19 @@ void CMasternodeSync::GetNextAsset()
         case(MASTERNODE_SYNC_INITIAL):
         case(MASTERNODE_SYNC_FAILED): // should never be used here actually, use Reset() instead
             ClearFulfilledRequest();
-            printf("MASTERNODE_SYNC_SPORKS\n");
+            //printf("MASTERNODE_SYNC_SPORKS\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
         case(MASTERNODE_SYNC_SPORKS):
-            printf("MASTERNODE_SYNC_LIST\n");
+            //printf("MASTERNODE_SYNC_LIST\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
             break;
         case(MASTERNODE_SYNC_LIST):
-            printf("MASTERNODE_SYNC_MNW\n");
+            //printf("MASTERNODE_SYNC_MNW\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_MNW;
             break;
         case(MASTERNODE_SYNC_MNW):
-            printf("MASTERNODE_SYNC_BUDGET\n");
+            //printf("MASTERNODE_SYNC_BUDGET\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_BUDGET;
             break;
         case(MASTERNODE_SYNC_BUDGET):
@@ -251,7 +251,7 @@ void CMasternodeSync::Process()
         if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
     }
 
-    printf("CMasternodeSync::Process() TICK - %d %d \n", tick, RequestedMasternodeAssets);
+    //printf("CMasternodeSync::Process() TICK - %d %d \n", tick, RequestedMasternodeAssets);
 
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
@@ -260,12 +260,12 @@ void CMasternodeSync::Process()
             !IsBlockchainSynced() && RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
 
 
-    printf("CMasternodeSync::Process() TICK2 - %d %d \n", tick, RequestedMasternodeAssets);
+    //printf("CMasternodeSync::Process() TICK2 - %d %d \n", tick, RequestedMasternodeAssets);
 
     TRY_LOCK(cs_vNodes, lockRecv);
     if(!lockRecv) return;
 
-    printf("CMasternodeSync::Process() TICK3 - %d %d \n", tick, RequestedMasternodeAssets);
+    //printf("CMasternodeSync::Process() TICK3 - %d %d \n", tick, RequestedMasternodeAssets);
 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
@@ -312,15 +312,15 @@ void CMasternodeSync::Process()
 
             // MODE : MASTERNODE_SYNC_LIST
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
-                printf("MASTERNODE_SYNC_LIST Timeout at %d\n", lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT);
+                //printf("MASTERNODE_SYNC_LIST Timeout at %d\n", lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
                 // shall we move onto the next asset?
 
-                printf("Masternode count %d est %d\n", nMnCount, mnodeman.GetEstimatedMasternodes(chainActive.Height())) ;             
+                //printf("Masternode count %d est %d\n", nMnCount, mnodeman.GetEstimatedMasternodes(chainActive.Height())) ;             
                 if(nMnCount > mnodeman.GetEstimatedMasternodes(chainActive.Height())*0.9)
                 {
                     GetNextAsset();
-                    printf("synced masternode list successfully\n");
+                    //printf("synced masternode list successfully\n");
                     return;
                 }
 
@@ -345,7 +345,7 @@ void CMasternodeSync::Process()
 
             // MODE : MASTERNODE_SYNC_MNW
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
-                printf("MASTERNODE_SYNC_MNW Timeout at %d\n", lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT);
+                //printf("MASTERNODE_SYNC_MNW Timeout at %d\n", lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
                 // Shall we move onto the next asset?
                 // --
@@ -355,16 +355,16 @@ void CMasternodeSync::Process()
                     return;
                 }
 
-                printf("MASTERNODE_SYNC_MNW BlockCount %d, mnCount %d\n", mnpayments.GetBlockCount(), nMnCount);
+                //printf("MASTERNODE_SYNC_MNW BlockCount %d, mnCount %d\n", mnpayments.GetBlockCount(), nMnCount);
 
                 // target blocks count
                 if(mnpayments.GetBlockCount() > nMnCount)
                 {   
-                    printf("MASTERNODE_SYNC_MNW VoteCount %d, mnCount*6 %d\n", mnpayments.GetVoteCount(), nMnCount*6);
+                    //printf("MASTERNODE_SYNC_MNW VoteCount %d, mnCount*6 %d\n", mnpayments.GetVoteCount(), nMnCount*6);
                     // target votes, max ten per item. 6 average should be fine
                     if(mnpayments.GetVoteCount() > nMnCount*6)
                     {
-                        printf("Successfully synced mnw blocks and votes %d %d\n", mnpayments.GetBlockCount(), mnpayments.GetVoteCount());
+                        //printf("Successfully synced mnw blocks and votes %d %d\n", mnpayments.GetBlockCount(), mnpayments.GetVoteCount());
                         GetNextAsset();
                         return;
                     }
@@ -388,20 +388,20 @@ void CMasternodeSync::Process()
 
             // MODE : MASTERNODE_SYNC_BUDGET
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
-                printf("MASTERNODE_SYNC_BUDGET Timeout at %d\n", lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT);
+                //printf("MASTERNODE_SYNC_BUDGET Timeout at %d\n", lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
                 // shall we move onto the next asset
                 if(countBudgetItemProp > 0 && countBudgetItemFin)
                 {
-                    printf("MASTERNODE_SYNC_BUDGET countBudgetItemProp %d - %d\n", (sumBudgetItemProp / countBudgetItemProp), budget.CountProposalInventoryItems());
-                    printf("MASTERNODE_SYNC_BUDGET countBudgetItemFin %d - %d\n", (sumBudgetItemFin / countBudgetItemFin), budget.CountFinalizedInventoryItems());
+                    //printf("MASTERNODE_SYNC_BUDGET countBudgetItemProp %d - %d\n", (sumBudgetItemProp / countBudgetItemProp), budget.CountProposalInventoryItems());
+                    //printf("MASTERNODE_SYNC_BUDGET countBudgetItemFin %d - %d\n", (sumBudgetItemFin / countBudgetItemFin), budget.CountFinalizedInventoryItems());
 
                     if(budget.CountProposalInventoryItems() >= (sumBudgetItemProp / countBudgetItemProp)*0.9)
                     {
-                        printf("HAVE BUDGETS\n");
+                        //printf("HAVE BUDGETS\n");
                         if(budget.CountFinalizedInventoryItems() >= (sumBudgetItemFin / countBudgetItemFin)*0.9)
                         {
-                            printf("HAVE FINAL BUDGETS\n");
+                            //printf("HAVE FINAL BUDGETS\n");
                             GetNextAsset();
                             return;
                         }
