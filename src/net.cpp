@@ -19,6 +19,8 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
+#include "crypto/common.h"
+#include "unlimited.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -33,6 +35,7 @@
 #include <miniupnpc/upnperrors.h>
 #endif
 
+#include <boost/lexical_cast.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
@@ -457,11 +460,12 @@ void CNode::PushVersion()
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
     else
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
+
+    // BUIP005 add our special subversion string
     PushMessage(NetMsgType::VERSION, PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-                nLocalHostNonce, strSubVersion, nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
+                nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, BUComments),
+                nBestHeight, !GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY));
 }
-
-
 
 
 
