@@ -293,11 +293,13 @@ void CMasternodeSync::Process()
             NORMAL NETWORK MODE - TESTNET/MAINNET
         */
 
-        // ALWAYS ASK FOR SPORKS AS WE SYNC
+        // ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
         {
-            if(pnode->HasFulfilledRequest("getspork")) continue;
-            pnode->FulfilledRequest("getspork");
-            pnode->PushMessage("getsporks"); //get current network sporks
+            if(!pnode->HasFulfilledRequest("getspork"))
+            {
+                pnode->FulfilledRequest("getspork");
+                pnode->PushMessage("getsporks"); //get current network sporks
+            }
 
             //we always ask for sporks, so just skip this
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
@@ -307,21 +309,11 @@ void CMasternodeSync::Process()
         }
 
         if (pnode->nVersion >= mnpayments.GetMinMasternodePaymentsProto()) {
-            printf("MASTERNODE_SYNC_LIST Timeout at %d\n", lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
             // MODE : MASTERNODE_SYNC_LIST
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
-                if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", GetTime() - MASTERNODE_SYNC_TIMEOUT);
+                printf("MASTERNODE_SYNC_LIST Timeout at %d\n", lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
-                if(pnode->HasFulfilledRequest("mnsync")) continue;
-                pnode->FulfilledRequest("mnsync");
-
-                //see if we've synced the masternode list
-                /* note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock) */
- 
-                mnodeman.DsegUpdate(pnode);
-                RequestedMasternodeAttempt++;
-               
                 // shall we move onto the next asset?
 
                 printf("Masternode count %d est %d\n", nMnCount, mnodeman.GetEstimatedMasternodes(chainActive.Height())) ;             
@@ -337,11 +329,48 @@ void CMasternodeSync::Process()
                     return;
                 }
 
+                // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
+
+                if(pnode->HasFulfilledRequest("mnsync")) continue;
+                pnode->FulfilledRequest("mnsync");
+
+                //see if we've synced the masternode list
+                /* note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock) */
+ 
+                mnodeman.DsegUpdate(pnode);
+                RequestedMasternodeAttempt++;
+
+                return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
             // MODE : MASTERNODE_SYNC_MNW
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
                 printf("MASTERNODE_SYNC_MNW Timeout at %d\n", lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT);
+
+                // Shall we move onto the next asset?
+                // --
+                // This might take a lot longer than 2 minutes due to new blocks, but that's OK. It will eventually time out if needed
+                if(lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    GetNextAsset();
+                    return;
+                }
+
+                printf("MASTERNODE_SYNC_MNW BlockCount %d, mnCount %d\n", mnpayments.GetBlockCount(), nMnCount);
+
+                // target blocks count
+                if(mnpayments.GetBlockCount() > nMnCount)
+                {   
+                    printf("MASTERNODE_SYNC_MNW VoteCount %d, mnCount*6 %d\n", mnpayments.GetVoteCount(), nMnCount*6);
+                    // target votes, max ten per item. 6 average should be fine
+                    if(mnpayments.GetVoteCount() > nMnCount*6)
+                    {
+                        printf("Successfully synced mnw blocks and votes %d %d\n", mnpayments.GetBlockCount(), mnpayments.GetVoteCount());
+                        GetNextAsset();
+                        return;
+                    }
+                }
+
+                // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
 
                 if(pnode->HasFulfilledRequest("mnwsync")) continue;
                 pnode->FulfilledRequest("mnwsync");
@@ -353,45 +382,19 @@ void CMasternodeSync::Process()
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 RequestedMasternodeAttempt++;
 
-                // shall we move onto the next asset?
 
-                if(lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    GetNextAsset();
-                    return;
-                }
-
-                // target blocks count
-                if(mnpayments.GetBlockCount() > nMnCount)
-                {   
-                    // target votes, max ten per item. 6 average should be fine
-                    if(mnpayments.GetVoteCount() > nMnCount*6)
-                    {
-                        printf("Successfully synced mnw blocks and votes %d %d\n", mnpayments.GetBlockCount(), mnpayments.GetVoteCount());
-                        GetNextAsset();
-                        return;
-                    }
-                }
-
-                return;
+                return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
             // MODE : MASTERNODE_SYNC_BUDGET
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
                 printf("MASTERNODE_SYNC_BUDGET Timeout at %d\n", lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
-                if(pnode->HasFulfilledRequest("busync")) continue;
-                pnode->FulfilledRequest("busync");
-
-                uint256 n = 0;
-                pnode->PushMessage("mnvs", n); //sync masternode votes
-                RequestedMasternodeAttempt++;
-
-                // shall we move onto the next asset?
-
+                // shall we move onto the next asset
                 if(countBudgetItemProp > 0 && countBudgetItemFin)
                 {
                     printf("MASTERNODE_SYNC_BUDGET countBudgetItemProp %d - %d\n", (sumBudgetItemProp / countBudgetItemProp), budget.CountProposalInventoryItems());
-                    printf("MASTERNODE_SYNC_BUDGET countBudgetItemProp %d - %d\n", (sumBudgetItemFin / countBudgetItemFin), budget.CountFinalizedInventoryItems());
+                    printf("MASTERNODE_SYNC_BUDGET countBudgetItemFin %d - %d\n", (sumBudgetItemFin / countBudgetItemFin), budget.CountFinalizedInventoryItems());
 
                     if(budget.CountProposalInventoryItems() >= (sumBudgetItemProp / countBudgetItemProp)*0.9)
                     {
@@ -405,7 +408,7 @@ void CMasternodeSync::Process()
                     }
                 }
 
-                //we'll start rejecting votes if we accidentally get set as synced too soon
+                //we'll start rejecting votes if we accidentally get set as synced too soon, this allows plenty of time
                 if(lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){
                     GetNextAsset();
 
@@ -414,7 +417,16 @@ void CMasternodeSync::Process()
                     return;
                 }
 
-                return;
+                // requesting is the last thing we do, incase we needed to move to the next asset and we've requested from each peer already
+
+                if(pnode->HasFulfilledRequest("busync")) continue;
+                pnode->FulfilledRequest("busync");
+
+                uint256 n = 0;
+                pnode->PushMessage("mnvs", n); //sync masternode votes
+                RequestedMasternodeAttempt++;
+
+                return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
         }

@@ -276,7 +276,7 @@ public:
 
     int GetBlockCount()
     {
-        return mapMasternodePayeeVotes.size();
+        return mapMasternodeBlocks.size();
     }
     int GetVoteCount()
     {

@@ -15,7 +15,7 @@
 #define MASTERNODE_SYNC_FAILED            998
 #define MASTERNODE_SYNC_FINISHED          999
 
-#define MASTERNODE_SYNC_TIMEOUT           180
+#define MASTERNODE_SYNC_TIMEOUT           120
 
 class CMasternodeSync;
 extern CMasternodeSync masternodeSync;
