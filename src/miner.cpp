@@ -591,7 +591,7 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
     {
         LogPrintf("HOdlcoinMiner terminated\n");
         delete [] scratchpad;
-        throw;
+        return;
     }
     catch (const std::runtime_error &e)
     {
