@@ -74,11 +74,16 @@ void OptionsModel::Init()
     if (!settings.contains("nDarksendRounds"))
         settings.setValue("nDarksendRounds", 2);
 
-    if (!settings.contains("nAnonymizeDarkcoinAmount"))
-        settings.setValue("nAnonymizeDarkcoinAmount", 1000);
+    if (!settings.contains("nAnonymizeDashAmount")) {
+        // for migration from old settings
+        if (!settings.contains("nAnonymizeDarkcoinAmount"))
+            settings.setValue("nAnonymizeDashAmount", 1000);
+        else
+            settings.setValue("nAnonymizeDashAmount", settings.value("nAnonymizeDarkcoinAmount"));
+    }
 
     nDarksendRounds = settings.value("nDarksendRounds").toLongLong();
-    nAnonymizeDarkcoinAmount = settings.value("nAnonymizeDarkcoinAmount").toLongLong();
+    nAnonymizeDashAmount = settings.value("nAnonymizeDashAmount").toLongLong();
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
@@ -140,8 +145,8 @@ void OptionsModel::Init()
 
     if (settings.contains("nDarksendRounds"))
         SoftSetArg("-darksendrounds", settings.value("nDarksendRounds").toString().toStdString());
-    if (settings.contains("nAnonymizeDarkcoinAmount"))
-        SoftSetArg("-anonymizedashamount", settings.value("nAnonymizeDarkcoinAmount").toString().toStdString());
+    if (settings.contains("nAnonymizeDashAmount"))
+        SoftSetArg("-anonymizedashamount", settings.value("nAnonymizeDashAmount").toString().toStdString());
 
     language = settings.value("language").toString();
 }
@@ -221,8 +226,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case DarksendRounds:
             return QVariant(nDarksendRounds);
-        case AnonymizeDarkcoinAmount:
-            return QVariant(nAnonymizeDarkcoinAmount);
+        case AnonymizeDashAmount:
+            return QVariant(nAnonymizeDashAmount);
         case Listen:
             return settings.value("fListen");
         default:
@@ -329,10 +334,10 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             settings.setValue("nDarksendRounds", nDarksendRounds);
             emit darksendRoundsChanged(nDarksendRounds);
             break;
-        case AnonymizeDarkcoinAmount:
-            nAnonymizeDarkcoinAmount = value.toInt();
-            settings.setValue("nAnonymizeDarkcoinAmount", nAnonymizeDarkcoinAmount);
-            emit anonymizeDarkcoinAmountChanged(nAnonymizeDarkcoinAmount);
+        case AnonymizeDashAmount:
+            nAnonymizeDashAmount = value.toInt();
+            settings.setValue("nAnonymizeDashAmount", nAnonymizeDashAmount);
+            emit anonymizeDashAmountChanged(nAnonymizeDashAmount);
             break;
         case CoinControlFeatures:
             fCoinControlFeatures = value.toBool();

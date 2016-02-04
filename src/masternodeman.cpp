@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "masternodeman.h"
-#include "masternode.h"
 #include "activemasternode.h"
 #include "darksend.h"
+#include "masternode.h"
+#include "masternode-payments.h"
+#include "masternode-sync.h"
 #include "util.h"
 #include "addrman.h"
 #include "spork.h"

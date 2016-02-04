@@ -19,6 +19,7 @@
 #ifdef ENABLE_WALLET
 #include "db.h"
 #include "wallet.h"
+#include "masternode-sync.h"
 #endif
 
 #include <stdint.h>
@@ -583,8 +584,6 @@ Value getblocktemplate(const Array& params, bool fHelp)
         aMutable.push_back("prevblock");
     }
 
-    Array aVotes;
-
     Object result;
     result.push_back(Pair("capabilities", aCaps));
     result.push_back(Pair("version", pblock->nVersion));
@@ -602,7 +601,6 @@ Value getblocktemplate(const Array& params, bool fHelp)
     result.push_back(Pair("curtime", pblock->GetBlockTime()));
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
-    result.push_back(Pair("votes", aVotes));
 
 
     if(pblock->payee != CScript()){

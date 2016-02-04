@@ -396,6 +396,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += "  -maxsigcachesize=<n>   " + strprintf(_("Limit size of signature cache to <n> entries (default: %u)"), 50000) + "\n";
     }
     strUsage += "  -minrelaytxfee=<amt>   " + strprintf(_("Fees (in DASH/Kb) smaller than this are considered zero fee for relaying (default: %s)"), FormatMoney(::minRelayTxFee.GetFeePerK())) + "\n";
+    strUsage += "  -printtodebuglog       " + strprintf(_("Send trace/debug info to debug.log file (default: %u)"), 1) + "\n";
     strUsage += "  -printtoconsole        " + strprintf(_("Send trace/debug info to console instead of debug.log file (default: %u)"), 0) + "\n";
     if (GetBoolArg("-help-debug", false))
     {
@@ -421,7 +422,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += "  -enabledarksend=<n>          " + strprintf(_("Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)"), fEnableDarksend) + "\n";
     strUsage += "  -darksendmultisession=<n>    " + strprintf(_("Enable multiple darksend mixing sessions per block, experimental (0-1, default: %u)"), fDarksendMultiSession) + "\n";
     strUsage += "  -darksendrounds=<n>          " + strprintf(_("Use N separate masternodes to anonymize funds  (2-8, default: %u)"), nDarksendRounds) + "\n";
-    strUsage += "  -anonymizedashamount=<n>     " + strprintf(_("Keep N DASH anonymized (default: %u)"), nAnonymizeDarkcoinAmount) + "\n";
+    strUsage += "  -anonymizedashamount=<n>     " + strprintf(_("Keep N DASH anonymized (default: %u)"), nAnonymizeDashAmount) + "\n";
     strUsage += "  -liquidityprovider=<n>       " + strprintf(_("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), nLiquidityProvider) + "\n";
 
     strUsage += "\n" + _("InstantX options:") + "\n";
@@ -642,6 +643,7 @@ bool AppInit2(boost::thread_group& threadGroup)
     // ********************************************************* Step 2: parameter interactions
     // Set this early so that parameter interactions go to console
     fPrintToConsole = GetBoolArg("-printtoconsole", false);
+    fPrintToDebugLog = GetBoolArg("-printtodebuglog", true) && !fPrintToConsole;
     fLogTimestamps = GetBoolArg("-logtimestamps", true);
     fLogIPs = GetBoolArg("-logips", false);
 
@@ -1543,8 +1545,8 @@ bool AppInit2(boost::thread_group& threadGroup)
     fDarksendMultiSession = GetBoolArg("-darksendmultisession", fDarksendMultiSession);
     nDarksendRounds = GetArg("-darksendrounds", nDarksendRounds);
     nDarksendRounds = std::min(std::max(nDarksendRounds, 1), 99999);
-    nAnonymizeDarkcoinAmount = GetArg("-anonymizedashamount", nAnonymizeDarkcoinAmount);
-    nAnonymizeDarkcoinAmount = std::min(std::max(nAnonymizeDarkcoinAmount, 2), 999999);
+    nAnonymizeDashAmount = GetArg("-anonymizedashamount", nAnonymizeDashAmount);
+    nAnonymizeDashAmount = std::min(std::max(nAnonymizeDashAmount, 2), 999999);
 
     fEnableInstantX = GetBoolArg("-enableinstantx", fEnableInstantX);
     nInstantXDepth = GetArg("-instantxdepth", nInstantXDepth);
@@ -1559,27 +1561,10 @@ bool AppInit2(boost::thread_group& threadGroup)
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
     LogPrintf("Darksend rounds %d\n", nDarksendRounds);
-    LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDarkcoinAmount);
+    LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDashAmount);
     LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
 
-    /* Denominations
-
-       A note about convertability. Within Darksend pools, each denomination
-       is convertable to another.
-
-       For example:
-       1DRK+1000 == (.1DRK+100)*10
-       10DRK+10000 == (1DRK+1000)*10
-    */
-    darkSendDenominations.push_back( (100      * COIN)+100000 );
-    darkSendDenominations.push_back( (10       * COIN)+10000 );
-    darkSendDenominations.push_back( (1        * COIN)+1000 );
-    darkSendDenominations.push_back( (.1       * COIN)+100 );
-    /* Disabled till we need them
-    darkSendDenominations.push_back( (.01      * COIN)+10 );
-    darkSendDenominations.push_back( (.001     * COIN)+1 );
-    */
-
+    darkSendPool.InitDenominations();
     darkSendPool.InitCollateralAddress();
 
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));

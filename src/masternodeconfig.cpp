@@ -3,7 +3,10 @@
 #include "masternodeconfig.h"
 #include "util.h"
 #include "ui_interface.h"
-#include <base58.h>
+#include "chainparams.h"
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 
 CMasternodeConfig masternodeConfig;
 

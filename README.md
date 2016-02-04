@@ -1,11 +1,11 @@
 Dash Core staging tree 0.12
 ===============================
 
-https://www.dashpay.io
+https://www.dash.org
 
-Copyright (c) 2009-2015 Bitcoin Core Developers
+Copyright (c) 2009-2016 Bitcoin Core Developers
 
-Copyright (c) 2014-2015 Dash Core Developers
+Copyright (c) 2014-2016 Dash Core Developers
 
 
 What is Dash?
@@ -18,7 +18,7 @@ are carried out collectively by the network. Dash Core is the name of open
 source software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Dash Core software, see https://www.dashpay.io/downloads.
+the Dash Core software, see https://www.dash.org/downloads.
 
 
 License

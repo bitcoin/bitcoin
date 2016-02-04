@@ -22,7 +22,7 @@ Build-Depends: debhelper,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler
 Standards-Version: 3.9.2
-Homepage: http://www.dashpay.io/
+Homepage: http://www.dash.org/
 Vcs-Git: git://github.com/dashpay/dash.git
 Vcs-Browser: http://github.com/dashpay/dash
 

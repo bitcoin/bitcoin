@@ -111,7 +111,7 @@ bool fLiteMode = false;
 bool fEnableInstantX = true;
 int nInstantXDepth = 5;
 int nDarksendRounds = 2;
-int nAnonymizeDarkcoinAmount = 1000;
+int nAnonymizeDashAmount = 1000;
 int nLiquidityProvider = 0;
 /** Spork enforcement enabled time */
 int64_t enforceMasternodePaymentsTime = 4085657524;
@@ -119,7 +119,7 @@ bool fSucessfullyLoaded = false;
 bool fEnableDarksend = false;
 bool fDarksendMultiSession = false;
 /** All denominations used by darksend */
-std::vector<int64_t> darkSendDenominations;
+std::vector<CAmount> darkSendDenominations;
 string strBudgetMode = "";
 
 map<string, string> mapArgs;

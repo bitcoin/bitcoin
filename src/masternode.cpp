@@ -2,9 +2,11 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "masternode.h"
-#include "masternodeman.h"
 #include "darksend.h"
+#include "masternode.h"
+#include "masternode-payments.h"
+#include "masternode-sync.h"
+#include "masternodeman.h"
 #include "util.h"
 #include "sync.h"
 #include "addrman.h"
