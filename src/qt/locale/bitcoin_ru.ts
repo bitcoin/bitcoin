@@ -15,16 +15,16 @@
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="97"/>
-        <source>Copyright © 2009-2015 The Bitcoin developers
+        <source>Copyright © 2009-2016 The Bitcoin developers
 Copyright © 2011-2012 The PPCoin Developers
 Copyright © 2014 The Peerunity Developers
 Copyright © 2014 The EmerCoin Developers
-Copyright © 2012-2015 The NovaCoin developers</source>
-        <translation>Все права защищены © 2009-2015 Разработчики Bitcoin
+Copyright © 2012-2016 The NovaCoin developers</source>
+        <translation>Все права защищены © 2009-2016 Разработчики Bitcoin
 Все права защищены © 2011-2012 Разработчики PPCoin
 Все права защищены © 2014 Разработчики Peerunity
 Все права защищены © 2014 Разработчики EmerCoin
-Все права защищены © 2012-2015 Разработчики NovaCoin</translation>
+Все права защищены © 2012-2016 Разработчики NovaCoin</translation>
     </message>
     <message>
         <location filename="../forms/aboutdialog.ui" line="114"/>
