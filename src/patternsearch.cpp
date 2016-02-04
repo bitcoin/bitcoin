@@ -46,7 +46,7 @@ namespace patternsearch
 		//Create references to data as 32 bit arrays
 		uint32_t* cacheMemoryOperatingData32 = (uint32_t*)cacheMemoryOperatingData;
 		uint32_t* cacheMemoryOperatingData322 = (uint32_t*)cacheMemoryOperatingData2;
-		uint32_t* mainMemoryPsuedoRandomData32 = (uint32_t*)mainMemoryPsuedoRandomData;
+        //uint32_t* mainMemoryPsuedoRandomData32 = (uint32_t*)mainMemoryPsuedoRandomData;
 		
 		//Search for pattern in psuedorandom data
 		

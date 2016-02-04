@@ -500,11 +500,11 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
                         LOCK(cs_vNodes);
                         fvNodesEmpty = vNodes.empty();
                     }
+                    startTime = time(NULL);
+                    totalHashes=0;
                     if (!fvNodesEmpty && !IsInitialBlockDownload())
                         break;
                     MilliSleep(1000);
-                    startTime = time(NULL);
-                    totalHashes=0;
                 } while (true);
             }
             //
