@@ -78,8 +78,6 @@ class CAddress : public CService
         CAddress();
         explicit CAddress(CService ipIn, uint64_t nServicesIn=NODE_NETWORK);
 
-        void Init();
-
         IMPLEMENT_SERIALIZE
             (
              CAddress* pthis = const_cast<CAddress*>(this);
