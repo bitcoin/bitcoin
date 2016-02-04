@@ -1,17 +1,8 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-#ifndef BITCOIN_QT_OPTIONSMODEL_H
-#define BITCOIN_QT_OPTIONSMODEL_H
-
-#include "amount.h"
+#ifndef OPTIONSMODEL_H
+#define OPTIONSMODEL_H
 
 #include <QAbstractListModel>
-
-QT_BEGIN_NAMESPACE
-class QNetworkProxy;
-QT_END_NAMESPACE
+#include <QStringList>
 
 /** Interface from Qt to configuration data structure for Bitcoin client.
    To Qt, the options are presented as a list with the different options
@@ -24,69 +15,89 @@ class OptionsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit OptionsModel(QObject *parent = 0, bool resetSettings = false);
+    explicit OptionsModel(QObject *parent = 0);
 
     enum OptionID {
-        StartAtStartup,         // bool
-        MinimizeToTray,         // bool
-        MapPortUPnP,            // bool
-        MinimizeOnClose,        // bool
-        ProxyUse,               // bool
-        ProxyIP,                // QString
-        ProxyPort,              // int
-        ProxyUseTor,            // bool
-        ProxyIPTor,             // QString
-        ProxyPortTor,           // int
-        DisplayUnit,            // BitcoinUnits::Unit
-        ThirdPartyTxUrls,       // QString
-        Language,               // QString
-        CoinControlFeatures,    // bool
-        ThreadsScriptVerif,     // int
-        DatabaseCache,          // int
-        SpendZeroConfChange,    // bool
-        Listen,                 // bool
+        /// Main Options
+        Fee,                 /**< Transaction Fee. qint64 - Optional transaction fee per kB that helps make sure your transactions are processed quickly.
+                               *< Most transactions are 1 kB. Fee 0.01 recommended. 0.0001 GAMEUNITS */
+        ReserveBalance,      /**< Reserve Balance. qint64 - Reserved amount does not participate in staking and is therefore spendable at any time. */
+        StartAtStartup,      /**< Default Transaction Fee. bool */
+        DetachDatabases,     /**< Default Transaction Fee. bool */
+        Staking,             /**< Default Transaction Fee. bool */
+        MinStakeInterval,
+        SecureMessaging,     /**< Default Transaction Fee. bool */
+        ThinMode,            /**< Default Transaction Fee. bool */
+        ThinFullIndex,
+        ThinIndexWindow,
+        AutoRingSize,        /**< Default Transaction Fee. bool */
+        AutoRedeemGameunitsX,    /**< Default Transaction Fee. bool */
+        MinRingSize,         /**< Default Transaction Fee. int */
+        MaxRingSize,         /**< Default Transaction Fee. int */
+        /// Network Related Options
+        MapPortUPnP,         /**< Default Transaction Fee. bool */
+        ProxyUse,            /**< Default Transaction Fee. bool */
+        ProxyIP,             // QString
+        ProxyPort,           // int
+        ProxySocksVersion,   // int
+        /// Window Options
+        MinimizeToTray,      /**< Default Transaction Fee. bool */
+        MinimizeOnClose,     /**< Default Transaction Fee. bool */
+        /// Display Options
+        Language,            // QString
+        DisplayUnit,         // Bitcoinnits::Unit
+        DisplayAddresses,    /**< Default Transaction Fee. bool */
+        RowsPerPage,         // int
+        Notifications,       // QStringList
+        VisibleTransactions, // QStringList
         OptionIDRowCount,
     };
 
-    void Init(bool resetSettings = false);
-    void Reset();
+    QString optionIDName(int row);
+    int optionNameID(QString name);
+
+    void Init();
 
     int rowCount(const QModelIndex & parent = QModelIndex()) const;
     QVariant data(const QModelIndex & index, int role = Qt::DisplayRole) const;
     bool setData(const QModelIndex & index, const QVariant & value, int role = Qt::EditRole);
-    /** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
-    void setDisplayUnit(const QVariant &value);
 
     /* Explicit getters */
-    bool getMinimizeToTray() { return fMinimizeToTray; }
-    bool getMinimizeOnClose() { return fMinimizeOnClose; }
-    int getDisplayUnit() { return nDisplayUnit; }
-    QString getThirdPartyTxUrls() { return strThirdPartyTxUrls; }
-    bool getProxySettings(QNetworkProxy& proxy) const;
-    bool getCoinControlFeatures() { return fCoinControlFeatures; }
-    const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
-
-    /* Restart flag helper */
-    void setRestartRequired(bool fRequired);
-    bool isRestartRequired();
+    qint64 getTransactionFee();
+    qint64 getReserveBalance();
+    bool getMinimizeToTray();
+    bool getMinimizeOnClose();
+    bool getDisplayAddresses();
+    bool getAutoRingSize();
+    bool getAutoRedeemGameunitsX();
+    int getDisplayUnit();
+    int getRowsPerPage();
+    int getMinRingSize();
+    int getMaxRingSize();
+    QStringList getNotifications();
+    QStringList getVisibleTransactions();
+    QString getLanguage() { return language; }
 
 private:
-    /* Qt-only settings */
+    int nDisplayUnit;
+    int nRowsPerPage;
+    int nMinRingSize;
+    int nMaxRingSize;
+    bool bDisplayAddresses;
     bool fMinimizeToTray;
     bool fMinimizeOnClose;
+    bool fAutoRingSize;
+    bool fAutoRedeemGameunitsX;
     QString language;
-    int nDisplayUnit;
-    QString strThirdPartyTxUrls;
-    bool fCoinControlFeatures;
-    /* settings that were overriden by command-line */
-    QString strOverriddenByCommandLine;
+    QStringList notifications;
+    QStringList visibleTransactions;
 
-    /// Add option to list of GUI options overridden through command line/config file
-    void addOverriddenOption(const std::string &option);
-
-Q_SIGNALS:
+signals:
     void displayUnitChanged(int unit);
-    void coinControlFeaturesChanged(bool);
+    void transactionFeeChanged(qint64);
+    void reserveBalanceChanged(qint64);
+    void rowsPerPageChanged(int);
+    void visibleTransactionsChanged(QStringList);
 };
 
-#endif // BITCOIN_QT_OPTIONSMODEL_H
+#endif // OPTIONSMODEL_H

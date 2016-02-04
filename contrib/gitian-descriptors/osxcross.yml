@@ -1,0 +1,61 @@
+---
+name: "osxcross"
+suites:
+- "trusty"
+architectures:
+- "amd64"
+packages:
+- "clang"
+- "llvm-dev"
+- "libxml2-dev"
+- "uuid-dev"
+- "libssl-dev"
+- "bsdmainutils"
+- "zip"
+- "cmake"
+reference_datetime: "2013-06-01 00:00:00"
+remotes:
+- "url": "https://github.com/tpoechtrager/osxcross.git"
+  "dir": "osxcross"
+- "url": "https://github.com/planetbeing/libdmg-hfsplus"
+  "dir": "libdmg-hfsplus"
+files:
+- "MacOSX10.9.sdk.tar.xz"
+script: |
+  # Defines
+  export TZ=UTC
+  export TAR_OPTIONS="-m --mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  BUILDDIR=$HOME/build
+  PREFIX=$HOME/install
+  mkdir -p $BUILDDIR $PREFIX
+  cd $BUILDDIR
+  PATH=$PATH:$BUILDDIR
+
+  # Build OSX Cross
+  cd osxcross
+  ln -s $HOME/build/MacOSX10.9.sdk.tar.xz tarballs/
+  UNATTENDED=1 ./build.sh
+  cd target
+  mv * $PREFIX
+  # Fix broken symlinks
+  rm -f $PREFIX/bin/osxcross-macports $PREFIX/bin/osxcross-mp $PREFIX/bin/omp
+  mv ../tools/osxcross-macports $PREFIX/bin
+  cd $PREFIX/bin
+  ln -sf osxcross-macports osxcross-mp 
+  ln -sf osxcross-macports omp 
+  cd $PREFIX/SDK/MacOSX10.9.sdk/usr/include
+  rm stdarg.h
+  ln -sf ../../System/Library/Frameworks/Kernel.framework/Versions/A/Headers/stdarg.h .
+  cd ../share
+  rm -rf man # No need for manuals...
+  # Build hdutil and .dmg dependencies
+  cd $BUILDDIR/libdmg-hfsplus
+  cmake CMakeLists.txt
+  make
+  mv dmg/dmg $PREFIX/bin
+  mv hfs/hfsplus $PREFIX/bin
+  mv hdutil/hdutil $PREFIX/bin
+  cd $PREFIX
+  # Adjust timestamps on files, for deterministic tar output
+  find . -print0 | xargs -r0 touch -t 200001010000
+  find | sort | tar --no-recursion -cJf $OUTDIR/osxcross.tar.xz -T -

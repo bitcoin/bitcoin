@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2015 The Bitcoin Core developers
+// Copyright (c) 2013 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,6 @@
 #include "key.h"
 #include "uint256.h"
 #include "util.h"
-#include "utilstrencodings.h"
-#include "test/test_bitcoin.h"
 
 #include <string>
 #include <vector>
@@ -38,44 +36,44 @@ struct TestVector {
 
 TestVector test1 =
   TestVector("000102030405060708090a0b0c0d0e0f")
-    ("xpub661MyMwAqRbcFtXgS5sYJABqqG9YLmC4Q1Rdap9gSE8NqtwybGhePY2gZ29ESFjqJoCu1Rupje8YtGqsefD265TMg7usUDFdp6W1EGMcet8",
-     "xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbPy6cq3jPPqjiChkVvvNKmPGJxWUtg6LnF5kejMRNNU3TGtRBeJgk33yuGBxrMPHi",
+    ("gameunitspmphCJNSUos9rNrtJLHBihz4Gtqa7LMjjAGt4SH5a4tQH9ykYb3cNnp8VvGGAYtfH7phiveYFfYKjQGNNNj6aKTYTW1ztB9buBzJXsCCKg7hY",
+     "gameunitsvmnKmFxG9k6UnN54BRiwaq8PwLWAgSN7FaQmbitre71x318T8NPjZLCYsGTVcZq1HqLCmtataXdcxjR4T9rrZdCpHom1HAucKgENFhTARR3qu",
      0x80000000)
-    ("xpub68Gmy5EdvgibQVfPdqkBBCHxA5htiqg55crXYuXoQRKfDBFA1WEjWgP6LHhwBZeNK1VTsfTFUHCdrfp1bgwQ9xv5ski8PX9rL2dZXvgGDnw",
-     "xprv9uHRZZhk6KAJC1avXpDAp4MDc3sQKNxDiPvvkX8Br5ngLNv1TxvUxt4cV1rGL5hj6KCesnDYUhd7oWgT11eZG7XnxHrnYeSvkzY7d2bhkJ7",
+    ("gameunitspmpjTiN9nGxQyN1VS3UwbLs6P1APfgjpDAxVVLFAxBrbUSM2qmTquswGrL3XjFdyBepv1VWmo6GxoVEmLWg8JhXRvEDdgS4uoQWEfRVoaXBqn",
+     "gameunitsvmnN2fwyTDBjuMDfK8vhTU1S3SpzEnkBjb6P2crx2Dz9EHVjRYoy6RKhDgEkxuEifo3FfaxBuQ1yoc8pUsWSqoztNKpsxK9a2ZwNtYtF4VFaT",
      1)
-    ("xpub6ASuArnXKPbfEwhqN6e3mwBcDTgzisQN1wXN9BJcM47sSikHjJf3UFHKkNAWbWMiGj7Wf5uMash7SyYq527Hqck2AxYysAA7xmALppuCkwQ",
-     "xprv9wTYmMFdV23N2TdNG573QoEsfRrWKQgWeibmLntzniatZvR9BmLnvSxqu53Kw1UmYPxLgboyZQaXwTCg8MSY3H2EU4pWcQDnRnrVA1xe8fs",
+    ("gameunitspmpmdqZwLAM7rRqwUVDCVDTqGfDmenjqwTtpAAqSizoEGeaaLuBeLBtqkZTcBq3utznddYJCFCPZHxq55L9TUbD5kAWqXHYYog8yCCnnzVCUb",
+     "gameunitsvmnQCo9m16aSnR47MaexMLcAw6tNDtkDTt2hhTTDo2vn2VjGvgXmWjHG7uep9xqeSqVLRGm1Vq6gm2Gm16dndnn3rmLev3DKoRcBCvRBBcr6u",
      0x80000002)
-    ("xpub6D4BDPcP2GT577Vvch3R8wDkScZWzQzMMUm3PWbmWvVJrZwQY4VUNgqFJPMM3No2dFDFGTsxxpG5uJh7n7epu4trkrX7x7DogT5Uv6fcLW5",
-     "xprv9z4pot5VBttmtdRTWfWQmoH1taj2axGVzFqSb8C9xaxKymcFzXBDptWmT7FwuEzG3ryjH4ktypQSAewRiNMjANTtpgP4mLTj34bhnZX7UiM",
+    ("gameunitspmppF7cUA23zhqi7GaTntapqJoSvXK1PXTEMPr5n29y6e5zRY1zQAcoHJV1dNfVnLK99jGuaDomVrwHQDcrZ28GXu16jVRdVsMrf7Lt3e2p74",
+     "gameunitsvmnSp5CHpxHKdpvH9fuYkhyAyF7X6R1m3sNEw8hZ6C6ePw987oLXMABhfqCrNaosxKzoSfMUSkX6avVxjrDoYyu9JRhGUbNG3NDSx93nffRrZ",
      2)
-    ("xpub6FHa3pjLCk84BayeJxFW2SP4XRrFd1JYnxeLeU8EqN3vDfZmbqBqaGJAyiLjTAwm6ZLRQUMv1ZACTj37sR62cfN7fe5JnJ7dh8zL4fiyLHV",
-     "xprvA2JDeKCSNNZky6uBCviVfJSKyQ1mDYahRjijr5idH2WwLsEd4Hsb2Tyh8RfQMuPh7f7RtyzTtdrbdqqsunu5Mm3wDvUAKRHSC34sJ7in334",
+    ("gameunitspmprUWSuGyEUNpnakJA46fiLU7Xjp3dyqefqH9LjYdHYChMXAP4AryzrmQgxN3uaV3cTrT3ahkpEm3qpZcwrTKz8NG1X3cTgmBsM2C2fbX7jP",
+     "gameunitsvmnV3U2iwuToJozkdPboxnrg8ZCLP9eMN4oipRxWcfR5xYWDkAQJ3XPH8ktAn3GYMm4baMyPgKRv35y9eJRE6L6XtU6WZgvLs5NRRJZK86GzL",
      1000000000)
-    ("xpub6H1LXWLaKsWFhvm6RVpEL9P4KfRZSW7abD2ttkWP3SSQvnyA8FSVqNTEcYFgJS2UaFcxupHiYkro49S8yGasTvXEYBVPamhGW6cFJodrTHy",
-     "xprvA41z7zogVVwxVSgdKUHDy1SKmdb533PjDz7J6N6mV6uS3ze1ai8FHa8kmHScGpWmj4WggLyQjgPie1rFSruoUihUZREPSL39UNdE3BBDu76",
+    ("gameunitspmptCGvatDMbm2JvXkGbfQ23U7KyPMTUegU5fhb1vmVcbC4eZmab7eFxvUKnGzkqZm6A8zYvdZMSTeSExe3hxAqPXNt4ThGALpgJe7GmrkQ3d",
+     "gameunitsvmnWmEWQZ9avh1X6QqiMXXAP8YzZxTTrB6byCzCnzodAM3DM9YviJBePHpX2ZFBTUqfzyckkfGGxaCyKefxJ74DVY1S1Kv3FcnekyfJPP6sPi",
      0);
 
 TestVector test2 =
   TestVector("fffcf9f6f3f0edeae7e4e1dedbd8d5d2cfccc9c6c3c0bdbab7b4b1aeaba8a5a29f9c999693908d8a8784817e7b7875726f6c696663605d5a5754514e4b484542")
-    ("xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB",
-     "xprv9s21ZrQH143K31xYSDQpPDxsXRTUcvj2iNHm5NUtrGiGG5e2DtALGdso3pGz6ssrdK4PFmM8NSpSBHNqPqm55Qn3LqFtT2emdEXVYsCzC2U",
+    ("gameunitspmphCJNSUos9rNrVofPLnzSFzf5mFm3MyyxTrAa2JtrnQ2GjZnDm9jF2fWcNFXbue5jFxiZCupwQEezA6brHVUbTTSsw5dz6PrJgCyU7FQ7E2",
+     "gameunitsvmnKmFxG9k6UnN4fgkq6f7abf6kMps3jWQ6MPTBoNvzL9sRS9ZZtLGdT2roZPd1WqvaFXKLB2yuizvWbBFuGxKpBcaDRMR3xEQocsvp83bv6g",
      0)
-    ("xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH",
-     "xprv9vHkqa6EV4sPZHYqZznhT2NPtPCjKuDKGY38FBWLvgaDx45zo9WQRUT3dKYnjwih2yJD9mkrocEZXo1ex8G81dwSM1fwqWpWkeS3v86pgKt",
+    ("gameunitspmpkU3eAAmMAgTNmPxX8AsW4QBSj11kLUGWdbXjqLLwCFyxi1ko2VoPsEmBqDRPzeWwaStRRuaLV5d9KXHjSBtw47j9ypJtSYESAKduHfhAwT",
+     "gameunitsvmnP31DyqhaVcSawH3xt2zeQ4d7Ka7khzgeX8pMcQP4k1q7QbY99gLnHc7P4fReagkyum9EBSiLtR3s6p5TZTNkQmyDbmUSSQ9w2nVBRAQusZ",
      0xFFFFFFFF)
-    ("xpub6ASAVgeehLbnwdqV6UKMHVzgqAG8Gr6riv3Fxxpj8ksbH9ebxaEyBLZ85ySDhKiLDBrQSARLq1uNRts8RuJiHjaDMBU4Zn9h8LZNnBC5y4a",
-     "xprv9wSp6B7kry3Vj9m1zSnLvN3xH8RdsPP1Mh7fAaR7aRLcQMKTR2vidYEeEg2mUCTAwCd6vnxVrcjfy2kRgVsFawNzmjuHc2YmYRmagcEPdU9",
+    ("gameunitspmpmd6tmCHj4rZYdc8waAWyQ5jqUDvHpdxbng4fEF7aw2NR1FDQuv7bw2MoDTY9jFcj6NS5GmBdhWDozPdWLg1fCaMh4SNFAoFJYbEk8qTdBJ",
+     "gameunitsvmnQC4UasDxPnYkoVEPL2e7jkBW4o2JCANjgDMH1K9iUnDZhpzm36ezMPhzR9QNqREt9631CeMPtvAJLYrBw4WKiDXeKzpCx8Qip81wnR9zqt",
      1)
-    ("xpub6DF8uhdarytz3FWdA8TvFSvvAh8dP3283MY7p2V4SeE2wyWmG5mg5EwVvmdMVCQcoNJxGoWaU9DCWh89LojfZ537wTfunKau47EL2dhHKon",
-     "xprv9zFnWC6h2cLgpmSA46vutJzBcfJ8yaJGg8cX1e5StJh45BBciYTRXSd25UEPVuesF9yog62tGAQtHjXajPPdbRCHuWS6T8XA2ECKADdw4Ef",
+    ("gameunitspmppS5JnBDti9keFHH1EK5wM1yB16RQ1ZDvEAvWHuStpNp5q7NiRSpVqQje1efwbwuKGpyuurRGpp3tneeRF6xvY3GHLeDTiETEKGBzYUstev",
+     "gameunitsvmnT12tbrA835jrRANSzBD5ggQqbfXQP5e47iD84yV2N8fEXhA4YdMtFn5qDM2QYcwC6SjkVijoSbNd3L1EpatLC2pn6Xd446oCcYkRQz9q1Q",
      0xFFFFFFFE)
-    ("xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL",
-     "xprvA1RpRA33e1JQ7ifknakTFpgNXPmW2YvmhqLQYMmrj4xJXXWYpDPS3xz7iAxn8L39njGVyuoseXzU6rcxFLJ8HFsTjSyQbLYnMpCqE2VbFWc",
+    ("gameunitspmpqc7Dk7aW77TwCWsji8dJriA5jZnSzBiwvtp31brjae4YBSJp6Nq2MmqGfnB8yUMGiUciQv8KS8uYRp378DUdtjiZExi21Ks6YLmXVBrpCw",
+     "gameunitsvmnUB4oZnWjS3T9NPyBTzkTCNbkL8tTMi95pS6enfts8Pugt26ADZNQn9BTv5R2y1DjfjS4KVjBpAxSARNkmVP22hzc34wCG8RYCZGVG3ZpQr",
      2)
-    ("xpub6FnCn6nSzZAw5Tw7cgR9bi15UV96gLZhjDstkXXxvCLsUXBGXPdSnLFbdpq8p9HmGsApME5hQTZ3emM2rnY5agb9rXpVGyy3bdW6EEgAtqt",
-     "xprvA2nrNbFZABcdryreWet9Ea4LvTJcGsqrMzxHx98MMrotbir7yrKCEXw7nadnHM8Dq38EGfSh6dqA9QWTyefMLEcBYJUuekgW4BYPJcr9E7j",
+    ("gameunitspmpry9BBL62HRhgThmTnGKHc68Uo6thK6oc6WhSnxMNNVecNmsyjJbCviqM4rTGYq3nmgqzLRYD99u2rsXwDuNx9bJCQnnxNcbmqXxC9nTA4W",
+     "gameunitsvmnVY6m112FcMgtdaruY8SRwka9PfzhgdDjz3z4a2PVvFVm5MfKrV8bM6BYKkRBz6HmybAM58Ydv1eUiJtV5rc51SiQtaSFgG9EZtpZrEG3j9",
      0);
 
 void RunTest(const TestVector &test) {
@@ -88,23 +86,14 @@ void RunTest(const TestVector &test) {
         unsigned char data[74];
         key.Encode(data);
         pubkey.Encode(data);
-
         // Test private key
-        CBitcoinExtKey b58key; b58key.SetKey(key);
+        CBitcoinExtKey b58key;
+        b58key.SetKey(key);
         BOOST_CHECK(b58key.ToString() == derive.prv);
-
-        CBitcoinExtKey b58keyDecodeCheck(derive.prv);
-        CExtKey checkKey = b58keyDecodeCheck.GetKey();
-        assert(checkKey == key); //ensure a base58 decoded key also matches
-
         // Test public key
-        CBitcoinExtPubKey b58pubkey; b58pubkey.SetKey(pubkey);
+        CBitcoinExtPubKey b58pubkey;
+        b58pubkey.SetKey(pubkey);
         BOOST_CHECK(b58pubkey.ToString() == derive.pub);
-
-        CBitcoinExtPubKey b58PubkeyDecodeCheck(derive.pub);
-        CExtPubKey checkPubKey = b58PubkeyDecodeCheck.GetKey();
-        assert(checkPubKey == pubkey); //ensure a base58 decoded pubkey also matches
-
         // Derive new keys
         CExtKey keyNew;
         BOOST_CHECK(key.Derive(keyNew, derive.nChild));
@@ -120,7 +109,8 @@ void RunTest(const TestVector &test) {
     }
 }
 
-BOOST_FIXTURE_TEST_SUITE(bip32_tests, BasicTestingSetup)
+
+BOOST_AUTO_TEST_SUITE(bip32_tests)
 
 BOOST_AUTO_TEST_CASE(bip32_test1) {
     RunTest(test1);

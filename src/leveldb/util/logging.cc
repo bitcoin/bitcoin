@@ -45,6 +45,15 @@ std::string EscapeString(const Slice& value) {
   return r;
 }
 
+bool ConsumeChar(Slice* in, char c) {
+  if (!in->empty() && (*in)[0] == c) {
+    in->remove_prefix(1);
+    return true;
+  } else {
+    return false;
+  }
+}
+
 bool ConsumeDecimalNumber(Slice* in, uint64_t* val) {
   uint64_t v = 0;
   int digits = 0;

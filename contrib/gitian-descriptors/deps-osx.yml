@@ -1,0 +1,112 @@
+---
+name: "gameunits-deps"
+suites:
+- "trusty"
+architectures:
+- "amd64"
+packages:
+- "git-core"
+- "clang"
+- "llvm-dev"
+- "faketime"
+- "psmisc"
+reference_datetime: "2011-01-30 00:00:00"
+remotes: []
+files:
+- "openssl-1.0.2d.tar.gz"
+- "db-4.8.30.NC.tar.gz"
+- "miniupnpc-1.9.20151008.tar.gz"
+- "zlib-1.2.8.tar.gz"
+- "icu4c-55_1-src.tgz"
+- "boost_1_55_0.tar.bz2"
+- "osxcross.tar.xz"
+script: |
+  #
+  # Input Integrity Check
+  echo "671c36487785628a703374c652ad2cebea45fa920ae5681515df25d9f2c9a8c8  openssl-1.0.2d.tar.gz"         | sha256sum -c
+  echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"           | sha256sum -c
+  echo "e444ac3b587ce82709c4d0cfca1fe71f44f9fc433e9f946b12b9e1bfe667a633  miniupnpc-1.9.20151008.tar.gz" | sha256sum -c
+  echo "36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d  zlib-1.2.8.tar.gz"             | sha256sum -c
+  echo "e16b22cbefdd354bec114541f7849a12f8fc2015320ca5282ee4fd787571457b  icu4c-55_1-src.tgz"            | sha256sum -c
+  echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2"          | shasum -c
+  #
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  BUILDDIR=$HOME/build
+  INSTALLPREFIX=$HOME/install
+  TEMPDIR=$HOME/tmp
+  DEPSDIR=$HOME/deps
+  SDK=$DEPSDIR/SDK/MacOSX10.9.sdk
+  HOST=x86_64-apple-darwin13
+  MIN_VERSION=10.6
+  #
+  mkdir -p $INSTALLPREFIX $BUILDDIR $DEPSDIR
+  cd $DEPSDIR
+  tar xf $BUILDDIR/osxcross.tar.xz
+  PATH=$PATH:$DEPSDIR/bin
+  #
+  cd $BUILDDIR
+  tar xzf openssl-1.0.2d.tar.gz
+  cd openssl-1.0.2d
+  CC=cc ./Configure --cross-compile-prefix=$HOST- darwin64-x86_64-cc no-shared no-dso --openssldir=$INSTALLPREFIX
+  make
+  make install_sw
+  #
+  cd $BUILDDIR
+  tar xzf db-4.8.30.NC.tar.gz
+  cd db-4.8.30.NC/build_unix
+  sed -i 's/__atomic_compare_exchange/__atomic_compare_exchange_db/g' ../dbinc/atomic.h
+  ../dist/configure --prefix=$INSTALLPREFIX --enable-cxx --host=$HOST --disable-shared --disable-replication
+  make $MAKEOPTS library_build
+  make install_lib install_include
+  cd ../..
+  #
+  tar xzf miniupnpc-1.9.20151008.tar.gz
+  cd miniupnpc-1.9.20151008
+  make -f Makefile OS=Darwin CC=$HOST-cc AR=$HOST-ar libminiupnpc.a
+  install -d $INSTALLPREFIX/include/miniupnpc
+  install *.h $INSTALLPREFIX/include/miniupnpc
+  install libminiupnpc.a  $INSTALLPREFIX/lib
+  #
+  cd $BUILDDIR
+  mkdir -p icuCross
+  cd icuCross
+  tar xzf $BUILDDIR/icu4c-55_1-src.tgz
+  cd icu/source
+  mkdir -p $TEMPDIR/icu
+  ./runConfigureICU MacOSX --prefix=$TEMPDIR/icu --enable-static --disable-shared
+  make
+  make install
+  #rm  -rf icu
+  cd $BUILDDIR
+  tar xzf icu4c-55_1-src.tgz
+  cd icu/source
+  ./runConfigureICU MacOSX --host=$HOST --with-cross-build=$BUILDDIR/icuCross/icu/source --prefix=$INSTALLPREFIX --enable-static --disable-shared
+  make
+  make install
+  #
+  cd $BUILDDIR
+  tar --warning=no-timestamp -xjf boost_1_55_0.tar.bz2
+  cd boost_1_55_0
+  ./bootstrap.sh --with-libraries=chrono,filesystem,program_options,system,thread,test
+  echo "using darwin : : ${HOST}-clang++
+        :
+        <cxxflags>\"-target ${HOST} -mmacosx-version-min=${MIN_VERSION} --sysroot ${SDK} -msse2 -Qunused-arguments -I${INSTALLPREFIX}/include -DBOOST_HAS_INT128=1\"
+        <linkflags>\"-L${INSTALLPREFIX}/lib -B${DEPSDIR}/bin\"
+        <archiver>\"${HOST}-libtool\"
+        <striper>\"${HOST}-strip\" :
+  ;" > user-config.jam
+  ./b2 -d2 --layout=tagged --build-type=complete --prefix="${INSTALLPREFIX}" --toolset=darwin-4.2.1 --user-config=user-config.jam variant=release threading=multi link=static install
+  #
+  # post-process all generated libraries to be deterministic
+  # extract them to a temporary directory then re-build them deterministically
+  #for LIB in $(find $INSTALLPREFIX -name \*.a); do
+  #    rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+  #    $HOST-ar xv $LIB | cut -b5- > /tmp/list.txt
+  #    rm $LIB
+  #    $HOST-ar crs $LIB $(cat /tmp/list.txt)
+  #done
+  #
+  cd $INSTALLPREFIX
+  find include lib | sort | tar --no-recursion -cJf $OUTDIR/gameunits-deps-osx-gitian.tar.xz -T -

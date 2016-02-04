@@ -1,145 +1,115 @@
 ---
-name: "bitcoin-win-0.13"
-enable_cache: true
+name: "gameunits"
 suites:
 - "trusty"
 architectures:
 - "amd64"
-packages: 
-- "g++"
-- "git-core"
-- "pkg-config"
-- "autoconf"
-- "libtool"
-- "automake"
-- "faketime"
-- "bsdmainutils"
+packages:
 - "mingw-w64"
 - "g++-mingw-w64"
+- "git-core"
 - "nsis"
-- "zip"
-- "ca-certificates"
-- "python"
-reference_datetime: "2016-01-01 00:00:00"
+- "faketime"
+- "autoconf2.13"
+- "libtool"
+- "automake"
+- "pkg-config"
+- "bsdmainutils"
+reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
-files: []
+- "url": "https://github.com/KingCaper/gameunits.git"
+  "dir": "gameunits"
+files:
+- "qt-win32-5.5.0-gitian.tar.xz"
+- "qt-win64-5.5.0-gitian.tar.xz"
+- "gameunits-deps-win32-gitian.tar.xz"
+- "gameunits-deps-win64-gitian.tar.xz"
 script: |
-  WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
-  CONFIGFLAGS="--enable-reduce-exports"
-  FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip"
-  FAKETIME_PROGS="date makensis zip"
-
+  # Defines
+  export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  INDIR=$HOME/build
+  OPTFLAGS='-O2'
+  TEMPDIR="$HOME/tempdir"
+  
+  NEEDDIST=1
+  # Qt: workaround for determinism in resource ordering
+  #  Qt5's rcc uses a QHash to store the files for the resource.
+  #  A security fix in QHash makes the ordering of keys to be different on every run
+  #  (https://qt.gitorious.org/qt/qtbase/commit/c01eaa438200edc9a3bbcd8ae1e8ded058bea268).
+  #  This is good in general but qrc shouldn't be doing a traversal over a randomized container.
+  #  The thorough solution would be to use QMap instead of QHash, but this requires patching Qt.
+  #  For now luckily there is a test mode that forces a fixed seed.
   export QT_RCC_TEST=1
-  export GZIP="-9n"
-  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
-  export TZ="UTC"
-  export BUILD_DIR=`pwd`
-  mkdir -p ${WRAP_DIR}
-  if test -n "$GBUILD_CACHE_ENABLED"; then
-    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
-    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
-    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
-  fi
+  for BITS in 32 64; do # for architectures
+    #
+    STAGING=$HOME/staging${BITS}
+    BUILDDIR=$HOME/build${BITS}
+    BINDIR=$OUTDIR/$BITS
+    DEPSDIR=$HOME/deps${BITS}
+    if [ "$BITS" == "32" ]; then
+      HOST=i686-w64-mingw32
+      DISTNAME=i686-win
+    else
+      HOST=x86_64-w64-mingw32
+      DISTNAME=x86_64-win
+    fi
+    export PATH=$STAGING/host/bin:$PATH
+    rm -rf $DEPSDIR
+    rm -rf $BUILDDIR
+    rm -rf $STAGING
+    mkdir -p $STAGING $BUILDDIR $BINDIR $DEPSDIR
+    #
+    cd $STAGING
+    #mkdir qt
+    #cd qt
+    #5edf8d14e47eb6438d3b5a20ed577343a07512eb220e6f83cbb3fbd33112a776  qt-win32-5.5.0-gitian-r3.zip
+    #75a3b425f08969983b2faf0af83b01fd753f99a15ced0b6f998d4db0a1c077f3  qt-win64-5.5.0-gitian-r3.zip
 
-  # Create global faketime wrappers
-  for prog in ${FAKETIME_PROGS}; do
-    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
-    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
-    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
-    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
-    chmod +x ${WRAP_DIR}/${prog}
-  done
-
-  # Create per-host faketime wrappers
-  for i in $HOSTS; do
-    for prog in ${FAKETIME_HOST_PROGS}; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
-        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
-        chmod +x ${WRAP_DIR}/${i}-${prog}
-    done
-  done
-
-  # Create per-host linker wrapper
-  # This is only needed for trusty, as the mingw linker leaks a few bytes of
-  # heap, causing non-determinism. See discussion in https://github.com/bitcoin/bitcoin/pull/6900
-  for i in $HOSTS; do
-    mkdir -p ${WRAP_DIR}/${i}
-    for prog in collect2; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}/${prog}
-        REAL=$(${i}-gcc -print-prog-name=${prog})
-        echo "export MALLOC_PERTURB_=255" >> ${WRAP_DIR}/${i}/${prog}
-        echo "${REAL} \$@" >> $WRAP_DIR/${i}/${prog}
-        chmod +x ${WRAP_DIR}/${i}/${prog}
-    done
-    for prog in gcc g++; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
-        echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
-        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
-        chmod +x ${WRAP_DIR}/${i}-${prog}
-    done
-  done
-
-  export PATH=${WRAP_DIR}:${PATH}
-
-  cd bitcoin
-  BASEPREFIX=`pwd`/depends
-  # Build dependencies for each host
-  for i in $HOSTS; do
-    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
-  done
-
-  # Create the release tarball using (arbitrarily) the first host
-  ./autogen.sh
-  ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
-  make dist
-  SOURCEDIST=`echo bitcoin-*.tar.gz`
-  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
-
-  # Correct tar file order
-  mkdir -p temp
-  pushd temp
-  tar xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+    tar xf $INDIR/qt-win${BITS}-5.5.0-gitian.tar.xz
+    cd $DEPSDIR
+    tar xf $INDIR/gameunits-deps-win${BITS}-gitian.tar.xz
+    #
+    cd $BUILDDIR
+    cp -r ../build/gameunits .
+    cd gameunits
+    mkdir -p $OUTDIR/src
+    git archive HEAD | tar -x -C $OUTDIR/src
+    cp $OUTDIR/src/doc/README_windows.txt $OUTDIR/readme.txt
+    cp $OUTDIR/src/COPYING $OUTDIR/COPYING.txt
+    #
+    cd src
+    make -f makefile.linux-mingw HOST="$HOST" DEPSDIR="$DEPSDIR" CURDIR="$BUILDDIR/gameunits/src" STATIC=1 $MAKEOPTS USE_UPNP=1 BOOST_LIB_SUFFIX="-mt-s" DEBUGFLAGS= 
+    cp gameunitsd.exe $BINDIR/
+    cd ..
+    #
+    #$DEPSDIR/qt/host/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/lib BOOST_INCLUDE_PATH=$HOME/build/include BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1h OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1h/include INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
+    $STAGING/host/bin/qmake -xplatform win32-g++ RELEASE=1 QMAKE_LRELEASE="$STAGING/host/bin/lrelease" MINIUPNPC_LIB_PATH="$DEPSDIR/lib" MINIUPNPC_INCLUDE_PATH="$DEPSDIR/include" BDB_LIB_PATH="$DEPSDIR/lib" BDB_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_PATH="$DEPSDIR/lib" BOOST_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_SUFFIX="-mt-s" BOOST_THREAD_LIB_SUFFIX="_win32-mt-s" OPENSSL_LIB_PATH="$DEPSDIR/lib" OPENSSL_INCLUDE_PATH="$DEPSDIR/include" INCLUDEPATH="$DEPSDIR/include" DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_CXXFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
+    make $MAKEOPTS
+    cp release/gameunits.exe $BINDIR/
+    #
+    # windeployqt !?
+    #
+    cp $STAGING/host/bin/*.dll $BINDIR/
+    if [ "$BITS" == "32" ]; then
+      cp /usr/lib/gcc/i686-w64-mingw32/4.8/*.dll $BINDIR/
+      cp /usr/i686-w64-mingw32/lib/*.dll $BINDIR/
+    else
+      cp /usr/lib/gcc/x86_64-w64-mingw32/4.8/*.dll $BINDIR/
+      cp /usr/x86_64-w64-mingw32/lib/*.dll $BINDIR/
+    fi
+    mkdir -p $BINDIR/platforms
+    cp $STAGING/plugins/platforms/*.dll $BINDIR/platforms/
+    #
+    unset LD_PRELOAD
+    unset FAKETIME
+  done # for BITS in
+  #
+  # sort distribution tar file and normalize user/group/mtime information for deterministic output
   mkdir -p $OUTDIR/src
-  cp ../$SOURCEDIST $OUTDIR/src
-  popd
-
-  ORIGPATH="$PATH"
-  # Extract the release tarball into a dir for each host and build
-  for i in ${HOSTS}; do
-    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
-    mkdir -p distsrc-${i}
-    cd distsrc-${i}
-    INSTALLPATH=`pwd`/installed/${DISTNAME}
-    mkdir -p ${INSTALLPATH}
-    tar --strip-components=1 -xf ../$SOURCEDIST
-
-    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
-    make ${MAKEOPTS}
-    make ${MAKEOPTS} -C src check-security
-    make deploy
-    make install-strip
-    cp -f bitcoin-*setup*.exe $OUTDIR/
-    cd installed
-    mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/
-    find . -name "lib*.la" -delete
-    find . -name "lib*.a" -delete
-    rm -rf ${DISTNAME}/lib/pkgconfig
-    find ${DISTNAME} -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i}.zip
-    cd ../..
-  done
-  cd $OUTDIR
-  rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
-  find . -name "*-setup-unsigned.exe" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz
-  mv ${OUTDIR}/${DISTNAME}-x86_64-*.zip ${OUTDIR}/${DISTNAME}-win64.zip
-  mv ${OUTDIR}/${DISTNAME}-i686-*.zip ${OUTDIR}/${DISTNAME}-win32.zip
+  rm -rf $TEMPDIR
+  mkdir -p $TEMPDIR
+  cd $TEMPDIR
+  cd $BINDIR
+  #tar -xvf $HOME/build/gameunits/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME

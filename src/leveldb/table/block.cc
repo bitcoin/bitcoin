@@ -46,7 +46,7 @@ Block::~Block() {
 // Helper routine: decode the next block entry starting at "p",
 // storing the number of shared key bytes, non_shared key bytes,
 // and the length of the value in "*shared", "*non_shared", and
-// "*value_length", respectively.  Will not dereference past "limit".
+// "*value_length", respectively.  Will not derefence past "limit".
 //
 // If any errors are detected, returns NULL.  Otherwise, returns a
 // pointer to the key delta (just past the three decoded values).

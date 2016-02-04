@@ -1,0 +1,233 @@
+Download a 64bit debian netinstall iso from : http://cdimage.debian.org/debian-cd/
+I used debian-8.1.0-amd64-netinst.iso
+
+
+Follow this guide part way:
+https://github.com/bitcoin/bitcoin/blob/master/doc/gitian-building.md#setting-up-debian-for-gitian-building
+( up to cloning gitian-builder ) 
+Or follow these text only instructions:
+Create a new VirtualBox VM
+
+Name: gitianbuild
+Type: Linux (64bit)
+Version: Debian
+
+Memory: 1400MB or more
+Hard Drive: Create a virtual hard drive now
+Hard drive file type: VDI ( Virtualbox disk image )
+Storage on physical hard drive : Dynamically allocated
+File location and size: 40GB (20GB should work)
+
+<CREATE> 
+
+After creating the VM, we need to configure it.
+
+    Click the Settings button, then go to the Network tab. Adapter 1 should be attached to NAT
+
+
+
+    Click Advanced, then Port Forwarding. We want to set up a port through which we can reach the VM to get files in and out.
+    Create a new rule by clicking the plus icon.
+
+    Set up the new rule the following way:
+        Name: SSH
+        Protocol: TCP
+        Leave Host IP empty
+        Host Port: 22222
+        Leave Guest IP empty
+        Guest Port: 22
+
+    Click Ok twice to save.
+
+Then start the VM. On the first launch you will be asked for a CD or DVD image. Choose the downloaded iso.
+
+Choose the non-graphical installer. We do not need the graphical environment; it will only increase installation time and disk usage.
+Choose locale and keyboard settings (doesn't matter, you can just go with the defaults or select your own information)
+The VM will detect network settings using DHCP, this should all proceed automatically
+    Configure the network:
+        System name debian.
+        Leave domain name empty.
+
+Choose a root password and enter it twice (remember it for later) 
+
+Name the new user debian (the full name doesn't matter, you can leave it empty) 
+Choose a user password and enter it twice (remember it for later) 
+
+The installer will set up the clock using a time server; this process should be automatic
+Set up the clock: choose a time zone (depends on the locale settings that you picked earlier; specifics don't matter)
+
+Disk setup
+    Partitioning method: Guided - Use the entire disk
+
+Select disk to partition: SCSI1 (0,0,0) 
+Partitioning scheme: All files in one partition 
+Finish partitioning and write changes to disk -> Yes
+
+
+The base system will be installed, this will take a minute or so
+    Choose a mirror (any will do - preferably one that is close to you and you should get the best download speeds)
+
+Enter proxy information (unless you are on an intranet, you can leave this empty)
+
+
+Wait a bit while 'Select and install software' runs
+Participate in popularity contest -> No
+    Choose software to install. We need just the base system. Make sure only 'SSH server' and 'Standard System Utilities' are checked. Uncheck 'Debian Desktop Environment' and 'Print Server'
+
+
+Install the GRUB boot loader to the master boot record? -> Yes
+
+
+Installation Complete -> Continue
+After installation, the VM will reboot and you will have a working Debian VM.
+
+Congratulations!
+
+
+On your debian virtual machine log in as root and run the following commands to get the show on the road.
+
+Install base packages:
+# apt-get install git ruby sudo apt-cacher-ng qemu-utils debootstrap lxc python-cheetah parted kpartx bridge-utils
+Add the debian user to the superusers list:
+# adduser debian sudo
+
+When you get a colorful screen with a question about the 'LXC directory', just go with the default (/var/lib/lxc).
+Then set up LXC and the rest with the following, which is a complex jumble of settings and workarounds:
+
+Add the following to a script and execute it:
+
+# make sure the build script can exectute it without providing a password
+echo "%sudo ALL=NOPASSWD: /usr/bin/lxc-start" > /etc/sudoers.d/gitian-lxc
+# add cgroup for LXC
+echo "cgroup  /sys/fs/cgroup  cgroup  defaults  0   0" >> /etc/fstab
+# make /etc/rc.local script that sets up bridge between guest and host
+echo '#!/bin/sh -e' > /etc/rc.local
+echo 'brctl addbr br0' >> /etc/rc.local
+echo 'ifconfig br0 10.0.3.2/24 up' >> /etc/rc.local
+echo 'exit 0' >> /etc/rc.local
+# make sure that USE_LXC is always set when logging in as debian,
+# and configure LXC IP addresses
+echo 'export USE_LXC=1' >> /home/debian/.profile
+echo 'export GITIAN_HOST_IP=10.0.3.2' >> /home/debian/.profile
+echo 'export LXC_GUEST_IP=10.0.3.5' >> /home/debian/.profile
+
+
+reboot 
+
+The debian box will be rebooted and our setup should be complete
+
+************************ THIS IS WHERE YOU CAN STOP USING THE LINKED GUIDE *******************************
+
+
+ssh debian@localhost -p 22222
+
+git clone https://github.com/devrandom/gitian-builder.git
+git clone https://github.com/KingCaper/GAMEUNITS
+
+cd gitian-builder
+
+May be necessary to edit bin/make-base-vm - add sudo before mkfs.
+
+./bin/make-base-vm --lxc --arch amd64 --suite trusty
+./bin/make-base-vm --lxc --arch i386 --suite trusty
+
+mkdir inputs;
+cd inputs;
+wget http://liquidtelecom.dl.sourceforge.net/project/flex/flex-2.5.38.tar.gz;
+wget http://download.icu-project.org/files/icu4c/55.1/icu4c-55_1-src.tgz;
+wget http://wtogami.fedorapeople.org/boost-mingw-gas-cross-compile-2013-03-03.patch;
+wget http://miniupnp.free.fr/files/download.php?file=miniupnpc-1.9.20151008.tar.gz -Ominiupnpc-1.9.20151008.tar.gz;
+wget http://www.openssl.org/source/openssl-1.0.2d.tar.gz;
+wget http://download.oracle.com/berkeley-db/db-4.8.30.NC.tar.gz;
+wget http://download.qt.io/official_releases/qt/5.4/5.4.2/single/qt-everywhere-opensource-src-5.5.0.tar.xz
+wget http://sourceforge.net/projects/boost/files/boost/1.55.0/boost_1_55_0.tar.bz2/download -Oboost_1_55_0.tar.bz2;
+
+Mirror - http://mindstalk.net/host/boost-mingw-gas-cross-compile-2013-03-03.patch 
+
+
+$ cd ..;
+$ LXC_EXECUTE=lxc-execute; PATH="$(pwd)/libexec/:$PATH";
+
+$ ./bin/gbuild ../gameunits/contrib/gitian-descriptors/boost-linux.yml
+$ mv build/out/boost-*.zip inputs/
+
+$ ./bin/gbuild ../gameunits/contrib/gitian-descriptors/deps-linux.yml
+$ mv build/out/gameunits-deps-*.zip inputs/
+   
+$ ./bin/gbuild --commit gameunits=HEAD ../gameunits/contrib/gitian-descriptors/gitian-linux.yml
+$ mkdir -p ../compiled/linux
+$ mv build/out/* ../compiled/linux/
+
+$ ./bin/gbuild ../gameunits/contrib/gitian-descriptors/boost-win.yml
+$ mv build/out/boost-*.zip inputs/
+
+$ ./bin/gbuild ../gameunits/contrib/gitian-descriptors/deps-win.yml
+$ mv build/out/gameunits-deps-*.zip inputs/
+
+$ ./bin/gbuild ../gameunits/contrib/gitian-descriptors/qt-win.yml
+$ mv build/out/qt-win*.zip inputs/
+
+$ ./bin/gbuild --commit gameunits=HEAD ../gameunits/contrib/gitian-descriptors/gitian-win.yml
+$ mkdir -p ../compiled/win
+$ mv build/out/* ../compiled/win/
+
+$ ./bin/gbuild --commit osxcross=master,libdmg-hfsplus=master ../gameunits/contrib/gitian-descriptors/osxcross.yml
+$ mv build/out/osxcross.tar.xz inputs/
+
+$ ./bin/gbuild ../gameunits/contrib/gitian-descriptors/deps-osx.yml
+$ mv build/out/gameunits-deps-osx-gitian inputs/
+
+$ ./bin/gbuild ../gameunits/contrib/gitian-descriptors/qt-osx.yml
+$ mv build/out/qt-osx*.tar.xz inputs/
+
+$ ./bin/gbuild --commit gameunits=HEAD ../gameunits/contrib/gitian-descriptors/gitian-osx.yml
+$ mkdir -p ../compiled/osx
+$ mv build/out/* ../compiled/osx/
+
+Notes:
+    To check the progress of the script:
+        login to the vm on a new terminal (ssh debian@localhost -p 22222)
+        cd gitian-builder
+        tail -f var/install.log
+        or
+        tail -f var/build.log
+
+
+
+
+
+
+
+
+Gavin's notes on getting gitian builds up and running:
+
+You need the right hardware: you need a 64-bit-capable CPU with hardware virtualization support (Intel VT-x or AMD-V). Not all modern CPUs support hardware virtualization.
+
+You probably need to enable hardware virtualization in your machine's BIOS.
+
+You need to be running a recent version of 64-bit-Ubuntu, and you need to install several prerequisites:
+  sudo apt-get install apache2 git apt-cacher-ng python-vm-builder qemu-kvm
+
+Sanity checks:
+  sudo service apt-cacher-ng status   # Should return apt-cacher-ng is running
+  ls -l /dev/kvm   # Should show a /dev/kvm device
+
+Once you've got the right hardware and software:
+
+    git clone git://github.com/bitcoin/bitcoin.git
+    git clone git://github.com/devrandom/gitian-builder.git
+    mkdir gitian-builder/inputs
+    wget 'http://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-1.6.tar.gz' -O gitian-builder/inputs/miniupnpc-1.6.tar.gz
+
+    cd gitian-builder
+    bin/make-base-vm --arch i386
+    bin/make-base-vm --arch amd64
+    cd ..
+
+    # To build
+    cd bitcoin
+    git pull
+    cd ../gitian-builder
+    git pull
+    ./bin/gbuild --commit bitcoin=HEAD ../bitcoin/contrib/gitian.yml
+

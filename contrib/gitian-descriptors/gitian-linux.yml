@@ -1,113 +1,65 @@
 ---
-name: "bitcoin-linux-0.13"
-enable_cache: true
+name: "gameunits"
 suites:
 - "trusty"
 architectures:
+- "i386"
 - "amd64"
 packages: 
-- "g++-multilib"
+- "g++"
+- "libqt5webkit5-dev"
+- "qt5-qmake"
+- "qt5-default"
+- "qttools5-dev-tools"
 - "git-core"
+- "unzip"
 - "pkg-config"
-- "autoconf"
 - "libtool"
 - "automake"
 - "faketime"
 - "bsdmainutils"
-- "binutils-gold"
-- "ca-certificates"
-- "python"
-reference_datetime: "2016-01-01 00:00:00"
+reference_datetime: "2015-05-25 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
-files: []
+- "url": "https://github.com/KingCaper/GAMEUNITS.git"
+  "dir": "gameunits"	
+files:
+- "gameunits-deps-linux32-gitian.zip"
+- "gameunits-deps-linux64-gitian.zip"
 script: |
-  WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-unknown-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
-  FAKETIME_HOST_PROGS=""
-  FAKETIME_PROGS="date ar ranlib nm strip"
-
-  export QT_RCC_TEST=1
-  export GZIP="-9n"
-  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
-  export TZ="UTC"
-  export BUILD_DIR=`pwd`
-  mkdir -p ${WRAP_DIR}
-  if test -n "$GBUILD_CACHE_ENABLED"; then
-    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
-    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
-    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+  #Integrity check
+  echo "03319496b897507fe0c49a13bd96a09edb795ed0b54528459acd760d8c2c763a  gameunits-deps-linux32-gitian.zip" |sha256sum -c
+  echo "7710a73c4b965b59de099ab33c982e3c113b14faf21786f018ad01f01f7b84b3  gameunits-deps-linux64-gitian.zip" |sha256sum -c
+  STAGING="$HOME/install"
+  OPTFLAGS='-O2'
+  BINDIR="${OUTDIR}/bin/${GBUILD_BITS}" # 32/64 bit build specific output directory
+  TEMPDIR="$HOME/tempdir"
+  if [ "$GBUILD_BITS" == "32" ]; then
+    export LD_PRELOAD=/usr/lib/i386-linux-gnu/faketime/libfaketime.so.1;
+  else
+    export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1;
   fi
-
-  # Create global faketime wrappers
-  for prog in ${FAKETIME_PROGS}; do
-    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
-    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
-    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
-    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
-    chmod +x ${WRAP_DIR}/${prog}
-  done
-
-  # Create per-host faketime wrappers
-  for i in $HOSTS; do
-    for prog in ${FAKETIME_HOST_PROGS}; do
-        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
-        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
-        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
-        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
-        chmod +x ${WRAP_DIR}/${i}-${prog}
-    done
-  done
-  export PATH=${WRAP_DIR}:${PATH}
-
-  cd bitcoin
-  BASEPREFIX=`pwd`/depends
-  # Build dependencies for each host
-  for i in $HOSTS; do
-    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
-  done
-
-  # Create the release tarball using (arbitrarily) the first host
-  ./autogen.sh
-  ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
-  make dist
-  SOURCEDIST=`echo bitcoin-*.tar.gz`
-  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
-  # Correct tar file order
-  mkdir -p temp
-  pushd temp
-  tar xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
-  popd
-
-  ORIGPATH="$PATH"
-  # Extract the release tarball into a dir for each host and build
-  for i in ${HOSTS}; do
-    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
-    mkdir -p distsrc-${i}
-    cd distsrc-${i}
-    INSTALLPATH=`pwd`/installed/${DISTNAME}
-    mkdir -p ${INSTALLPATH}
-    tar --strip-components=1 -xf ../$SOURCEDIST
-
-    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
-    make ${MAKEOPTS}
-    make ${MAKEOPTS} -C src check-security
-    make ${MAKEOPTS} -C src check-symbols
-    make install-strip
-    cd installed
-    find . -name "lib*.la" -delete
-    find . -name "lib*.a" -delete
-    rm -rf ${DISTNAME}/lib/pkgconfig
-    find ${DISTNAME} | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
-    cd ../../
-  done
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LIBRARY_PATH="$STAGING/lib"
+  mkdir -p ${BINDIR}
+  #
+  mkdir -p $STAGING
+  cd $STAGING
+  unzip ../build/gameunits-deps-linux${GBUILD_BITS}-gitian-r4.zip
+  unzip ../build/boost-linux${GBUILD_BITS}-1.55.0-gitian-r1.zip
+  cd ../build
+  #
+  cd gameunits 
   mkdir -p $OUTDIR/src
-  mv $SOURCEDIST $OUTDIR/src
-  mv ${OUTDIR}/${DISTNAME}-x86_64-*.tar.gz ${OUTDIR}/${DISTNAME}-linux64.tar.gz
-  mv ${OUTDIR}/${DISTNAME}-i686-*.tar.gz ${OUTDIR}/${DISTNAME}-linux32.tar.gz
-
+  git archive HEAD | tar -x -C $OUTDIR/src
+  cp $OUTDIR/src/doc/README $OUTDIR
+  cp $OUTDIR/src/COPYING $OUTDIR
+  cd src
+  make -f makefile.unix STATIC=1 OPENSSL_INCLUDE_PATH="$STAGING/include" OPENSSL_LIB_PATH="$STAGING/lib" $MAKEOPTS gameunitsd USE_UPNP=1 BOOST_LIB_SUFFIX="-mt" DEBUGFLAGS= 
+  mkdir -p $STAGING/bin/$GBUILD_BITS
+  install -s gameunitsd $OUTDIR/bin/$GBUILD_BITS
+  #
+  cd ..
+  qmake INCLUDEPATH="$STAGING/include" LIBS="-L$STAGING/lib" BOOST_LIB_SUFFIX="-mt" RELEASE=1 USE_QRCODE=1
+  make $MAKEOPTS
+  install gameunits $OUTDIR/bin/$GBUILD_BITS

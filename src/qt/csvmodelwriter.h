@@ -1,12 +1,8 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#ifndef CSVMODELWRITER_H
+#define CSVMODELWRITER_H
 
-#ifndef BITCOIN_QT_CSVMODELWRITER_H
-#define BITCOIN_QT_CSVMODELWRITER_H
-
-#include <QList>
 #include <QObject>
+#include <QList>
 
 QT_BEGIN_NAMESPACE
 class QAbstractItemModel;
@@ -18,7 +14,6 @@ QT_END_NAMESPACE
 class CSVModelWriter : public QObject
 {
     Q_OBJECT
-
 public:
     explicit CSVModelWriter(const QString &filename, QObject *parent = 0);
 
@@ -41,6 +36,11 @@ private:
         int role;
     };
     QList<Column> columns;
+
+signals:
+
+public slots:
+
 };
 
-#endif // BITCOIN_QT_CSVMODELWRITER_H
+#endif // CSVMODELWRITER_H

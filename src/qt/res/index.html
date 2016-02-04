@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html>
+<head>
+        <title>Gameunits</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link href="qrc:///css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+        <link href="qrc:///css/normalize.css" rel="stylesheet" type="text/css">
+        <link href="qrc:///css/footable.core.css" rel="stylesheet" type="text/css"/>
+        <link href="qrc:///css/footable.metro.css" rel="stylesheet" type="text/css"/>
+        <link href="qrc:///css/footable.metro.css" rel="stylesheet" type="text/css"/>
+        <link href="qrc:///css/contextMenu.css" rel="stylesheet" type="text/css"/>
+        <link href="qrc:///css/main.css" rel="stylesheet" type="text/css"/>
+
+        <script src="qrc:///js/jquery-2.1.1.min.js" type="text/javascript"></script>
+        <script src="qrc:///js/footable.js" type="text/javascript"></script>
+        <script src="qrc:///js/footable.sort.js" type="text/javascript"></script>
+        <script src="qrc:///js/footable.filter.js" type="text/javascript"></script>
+        <script src="qrc:///js/footable.paginate.js" type="text/javascript"></script>
+        <script src="qrc:///js/contextMenu.min.js" type="text/javascript"></script>
+        <script src="qrc:///js/iscroll.js" type="text/javascript"></script>
+        <script src="qrc:///js/jquery.touchSwipe.js" type="text/javascript"></script>
+        <script src="qrc:///js/jquery.transit.min.js" type="text/javascript"></script>
+        <script src="qrc:///js/qrcode.min.js" type="text/javascript"></script>
+        <script src="qrc:///js/jquery.leanModal.min.js" type="text/javascript"></script>
+        <script src="qrc:///js/markdown.min.js" type="text/javascript"></script>
+		
+</head>
+<body>
+
+<div id="layout">
+    <!-- Menu toggle -->
+    <a href="#navpanel" id="navlink">
+        <!-- Hamburger icon -->
+        <span></span>
+    </a>
+
+    <nav id="navpanel">
+        <div style="text-align:center;">
+            <a class="img-logo" = href="https://discovergameunits.com" target="_blank"><img style="margin-top:45px;margin-bottom:24px;width:131px;height:105px;"src="qrc:///images/gameunits-vertical"></a>
+        </div>
+
+        <ul id="navitems" class="vmenu">
+            <li class="selected"><a href="#overview">Overview</a></li>
+            <li><a href="#send">Send</a></li>
+            <li><a href="#receive">Receive</a></li>
+            <li><a href="#transactions">Transactions</a></li>
+            <li><a href="#addressbook">Address book</a></li>
+            <li><a href="#messages" onclick="iscrollReload(true);">Chat</a></li>
+            <li><a href="#chaindata" onclick="chainDataPage.updateAnonOutputs();">Chain Data</a></li>
+            <li><a href="#blockdata" onclick="blockExplorerPage.updateLatestBlocks();">Block Explorer</a></li>
+            <li class="none"><a href="#options">Options</a></li>
+			<li><a href="#news">News</a></li>
+        </ul>
+		
+        <div id="navinfo">
+            <a id="clientinfo" href="#about">Gameunits <span id="version"></span></a>
+            <progress id="syncProgressBar" max=100 value=1 title="Catching up...
+                                                                  downloaded 0 blocks of history..."></progress>
+        </div>
+    </nav><!-- /navpanel -->
+
+    <div class="container">
+
+
+        <div id="qrcode-modal" class="content">
+            <a class="modal_close" href="#close"><i class="fa fa-times-circle grey"></i></a>
+            <div id="qrcode"></div>
+
+            <textarea id="qrcode-data" style="width:99%;" disabled rows="3"></textarea>
+            <br><br>
+
+            <span style="white-space:nowrap;">
+                <label for="qraddress" class="recipient">Address:</label>
+                <input id="qraddress" class="pay_to input_box" style="width:250px" placeholder="Enter a Gameunits address (e.g. MXywGBZBowrppUwwNUo1GCRDTibzJi7g2M)" onchange="showQRCode();" />
+            </span>
+
+            <span style="white-space:nowrap;">
+                <label for="qrlabel" class="recipient">Label:</label>
+                <input id="qrlabel" class="label input_box" style="width:250px" placeholder="Enter a label for this address to add it to your address book" onchange="showQRCode();" />
+            </span>
+
+            <span style="white-space:nowrap;">
+                <label for="qrnarration" class="recipient">Narration:</label>
+                <input id="qrnarration" class="narration input_box" style="width:250px" placeholder="Enter a short note to send with a payment (max 24 characters)" onchange="showQRCode();" />
+            </span>
+
+            <span style="white-space:nowrap;">
+                <label for="qramount" class="recipient">Amount:</label>
+                <input id="qramount" style="width:140px;" type="number" placeholder="0.00000000" step="0.01" value="0.00000000" onchange="unit.parse(this, $('#qrunit').val());showQRCode();" />
+                <select id="qrunit" class="unit button is-inverse has-fixed-icon" style="margin-left:10px; height:43px; width:100px;" onchange="unit.format('#qramount', $(this).val());showQRCode();">
+                    <option value="0" title="Gameunits">GAMEUNITS</option>
+                    <option value="1" title="Milli-Gameunits (1 / 1000)">mGAMEUNITS</option>
+                    <option value="2" title="Micro-Gameunits (1 / 1000000)">&micro;GAMEUNITS</option>
+                    <option value="3" title="Gameunitsoshi (1 / 100000000)">Gameunitsoshi</option>
+                </select>
+            </span>
+
+        </div>
+			        <div class="menu">
+            <span><a id="settings" href="#">Settings</a></span>
+        </div>
+        <!-- Overview Page -->
+        <article id="overview">
+		
+			
+		
+            <div class="content top">
+			
+
+                <h2 class="contracted">Balance <span class="outofsync syncing">out of sync</span></h2>
+
+                <!--span class="incoming-transactions none">
+                    <i class="fa fa-sign-in margin-right-10"></i>
+                    498.<span class="cents">34000000</span>
+                    <span class="units">GAMEUNITSX</span>
+                </span-->
+
+                <div class="total-balance">
+                    <div>
+                        <span id="total-big">
+                            <span>0</span>
+                            <span class="light-grey">.</span>
+                            <span class="cents">00</span>
+                            <span class="units">GAMEUNITS</span>
+                        </span>
+                        <span id="staking-big" class="staking">
+                            <span>0</span>
+                            <span class="light-grey">.</span>
+                            <span class="cents">00</span>
+                            <span class="units">GAMEUNITS</span>
+                            <i class="fa fa-cog"></i>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="wallet">
+
+                    <div>
+                        <table id="balances">
+                            <tr><td>Spendable:      </td><td class="balance" >0.00</td><td class="unit">GAMEUNITS</td></tr>
+                            <tr><td>GAMEUNITSX:         </td><td id="gameunitsXBal"  >0.00</td><td class="unit">GAMEUNITS</td></tr>
+                            <tr><td>Reserved:       </td><td id="reserved"   >0.00</td><td class="unit">GAMEUNITS</td></tr>
+                            <tr><td>Stake:          </td><td id="stake"      >0.00</td><td class="unit">GAMEUNITS</td></tr>
+                            <tr><td>Unconfirmed:    </td><td id="unconfirmed">0.00</td><td class="unit">GAMEUNITS</td></tr>
+                            <tr><td>Immature:       </td><td id="immature"   >0.00</td><td class="unit">GAMEUNITS</td></tr>
+                            <tr><td><b>Total:   </b></td><td id="total"      >0.00</td><td class="unit">GAMEUNITS</td></tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom">
+                 <div id="overview-list ">
+                    <div class="content flex">
+                        <div class="flex-item grow one-third-width">
+                            <h2>Recent Transactions</h2>
+                            <div id="recenttxns">				
+                            </div>
+                        </div>
+      
+                    </div>
+                </div>
+            </div>
+        </article><!-- /overview page -->
+
+
+        <!-- Send Page -->
+        <article id="send" style="display:none;">
+	
+			
+            <div id="sendoptions" class="content top">
+
+                <h2>Send Options</h2>
+
+                <div id="coincontrol">
+
+                    <div id="coincontrol_enabled" style="display:block;">
+                        <a class="button is-inverse2 has-icon-spacing" class="button" id="coincontrol_inputs" onclick="bridge.openCoinControl();">Inputs</a> <label id="coincontrol_auto" for="coincontrol_inputs" class="coincontrol_inputs"> Automatically selected</label>
+                        <br/>
+                        <div id="coincontrol_labels" style="display:none;">
+                            <span style="white-space:nowrap;">
+                                <label for="coincontrol_quantity" class="coincontrol_inputs">Quantity: </label>
+                                <span id="coincontrol_quantity"></span>
+                            </span>
+
+                            <span style="white-space:nowrap;">
+                                <label for="coincontrol_amount" class="coincontrol_inputs">Amount: </label>
+                                <span id="coincontrol_amount"></span>
+                            </span>
+
+                            <span style="white-space:nowrap;">
+                                <label for="coincontrol_fee" class="coincontrol_inputs">Fee: </label>
+                                <span id="coincontrol_fee"></span>
+                            </span>
+
+                            <span style="white-space:nowrap;">
+                                <label for="coincontrol_afterfee" class="coincontrol_inputs">After Fee: </label>
+                                <span id="coincontrol_afterfee"></span>
+                            </span>
+
+                            <span style="white-space:nowrap;">
+                                <label for="coincontrol_bytes" class="coincontrol_inputs">Bytes: </label>
+                                <span id="coincontrol_bytes"></span>
+                            </span>
+
+                            <span style="white-space:nowrap;">
+                                <label for="coincontrol_priority" class="coincontrol_inputs">Priority: </label>
+                                <span id="coincontrol_priority"></span>
+                                </span>
+
+                            <span style="white-space:nowrap;">
+                                <label for="coincontrol_low" class="coincontrol_inputs">Low Output: </label>
+                                <span id="coincontrol_low"></span>
+
+                            <span style="white-space:nowrap;">
+                                <label for="coincontrol_change" class="coincontrol_inputs">Change: </label>
+                                <span id="coincontrol_change"></span>
+                            </span>
+                        </div>
+                        <br/>
+
+                        <label>Custom change address: </label>
+                        <div class="flex-left">
+                            <input id="change_address" title="Optional address to receive transaction change" placeholder="Enter a Gameunits address (e.g. MXywGBZBowrppUwwNUo1GCRDTibzJi7g2M)" maxlength="128" oninput="base58.check(this);" />
+                            <a class="button is-inverse2 has-fixed-icon"  style="margin-right:10px; margin-left:10px; height:43px; width:43px;" onclick="openAddressBook('#change_address', '', false)"><i class="fa fa-book"></i></a>
+                            <a class="button is-inverse2 has-fixed-icon"  style="margin-right:10px; height:43px; width:43px;" onclick="paste('#change_address')"><i class="fa fa-files-o"></i></a>
+                            <a class="button is-inverse2 has-fixed-icon"  style="height:43px; width:43px;" onclick="$('#change_address').val('').css('background', '').css('color', '');"><i class="fa fa-times"></i></a>
+                        </div>
+                        <br/>
+                        <br/>
+
+                         <a class="button is-inverse2 has-icon-spacing" style="margin-bottom:25px;padding: 9px 20px;margin-right:25px;" id="disable_coincontrol" href="javascript:toggleCoinControl(false);">Disable Coin Control <i class="fa fa-times"></i></a>
+                    </div>
+
+                    <div id="coincontrol_disabled" style="display:none;">
+                        <a class="button is-inverse2 has-icon-spacing"  style="margin-bottom:25px;padding: 9px 20px;margin-right:25px;" id="enable_coincontrol" href="javascript:toggleCoinControl(true);">Enable Coin Control <i class="fa fa-check"></i></a>
+                    </div>
+                </div><!-- #coincontrol -->
+
+                <select id="txn_type" class="txn_type button is-inverse2 has-fixed-icon"  style="width:160px;" onchange="changeTxnType();">
+                    <option value="0" title="UNITS to UNITS" selected>UNITS to UNITS</option>
+                    <option value="1" title="UNITS to UNITSX">UNITS to UNITSX</option>
+                    <option value="2" title="UNITSX to UNITSX">UNITSX to UNITSX</option>
+                    <option value="3" title="UNITSX to UNITS">UNITSX to UNITS</option>
+                </select>
+
+                <span id="tx_ringsize">
+                    <label for="ring_size" class="ring_size" style="margin-left:10px;margin-top:0;">Ring Size:</label>
+                    <input id="ring_size" style="font-size: 12px;" class="ring_size input_box" type="number" min="3" max="200" step="1" value="16" />
+                </span>
+            </div><!-- #sendoptions.top -->
+
+            <div class="bottom">
+                <div class="content">
+                    <div id="recipients">
+                    </div>
+                    <div class="ui-buttons">
+                        <a class="button is-inverse has-icon-spacing" onclick="addRecipient();" title="Send to multiple recipients at once"><i class="fa fa-plus"></i>Add Recipient</a>
+                        <a  class="button is-inverse has-icon-spacing" onclick="clearRecipients();" title="Remove all transaction fields"><i class="fa fa-close"></i>Clear All</a>
+                        <span title="Current spendable balance"><a class="current_spenable_balance"><b>Balance:</b> <span class="balance">0.00</span> <span class="unit">GAMEUNITS</span></span>
+                        <span></span>
+                        <a class="button is-inverse has-icon-spacing"  id="suggest_ring_size" href="javascript:suggestRingSize();">Suggest Ring Size <i class="fa fa-calculator"></i></a>
+                        <a class="button is-inverse has-icon-spacing" onclick="sendCoins();" title="Confirm the send action"><i class="fa fa-arrow-right"></i>Send</a>
+                    </div>
+                </div><!-- /content -->
+            </div><!-- /bottom -->
+        </article><!-- /send page -->
+
+        <!-- Receive Page -->
+        <article id="receive" style="display:none;">
+            <div class="content top">
+                <h2>Receive</h2>
+                These are your Gameunits addresses for receiving payments. You may want to have a different address for each sender so you can keep track of who is paying you.
+            </div>
+
+            <div class="bottom">
+
+                <div class="content flex">
+                    <input id="filter-address" style="width:100%;height:40px;padding:0 10px;margin-bottom:10px;" placeholder="Filter by label or address..." />
+
+                    <table class="footable shadow" data-page-size=20 data-filter="#filter-address">
+                        <thead>
+                            <tr>
+                                <th data-toggle="true" data-sort-initial="true">Label</th>
+                                <th data-hide="phone">Address</th>
+                                <th data-hide="phone,tablet">Public Key</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!--tr>
+                                <td class="label" class="editable">(no label)</td>
+                                <td class="address">SSz5VuQGCFJ36E7UQmr7U39w7wksm5K4KZ</td>
+                                <td class="pubkey"></td>
+                            </tr-->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3">
+                                    <div class="pagination pagination-centegrey hide-if-no-paging"></div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="ui-buttons">
+                        <a class="button is-inverse has-icon-spacing" href="#filter-address" onclick="$('#filter-address').val(bridge.newAddress(true)).trigger('keyup');resizeFooter();"><i class="fa fa-plus"></i>New Address</a>
+                        <a class="button is-inverse has-icon-spacing" href="javascript:copy('#receive .footable .selected .address');"><i class="fa fa-copy"></i>Copy Address</a>
+                        <a class="button is-inverse has-icon-spacing" href="#qrcode-modal" onclick="showQRCode($('#receive .footable .selected .address').text(), $('#receive .footable .selected .label').attr('data-value'));"><i class="fa fa-qrcode fa-lg margin-right-10"></i>Show QR Code</a>
+                        <a class="button is-inverse has-icon-spacing" href="javascript:bridge.userAction({'signMessage': $('#receive .footable .selected .address').text()});"><i class="fa fa-pencil-square-o"></i>Sign Message</a>
+                    </div>
+                </div><!-- /content -->
+            </div><!-- /bottom -->
+        </article><!-- /receive page -->
+ 
+        <div id="transaction-info-modal" style="display:none;">
+            <a class="modal_close" href="#close"><i class="fa fa-times-circle grey"></i></a>
+            <div id="transaction-info"></div>
+        </div>
+
+        <!-- Transactions Page -->
+        <article id="transactions" style="display:none;">
+            <div class="content top">
+                <h2>Transactions</h2>
+				<p>Here are the details of your incoming and outgoing transactions.</p>
+            </div>
+
+            <div class="bottom">
+
+                <div class="content">
+                    <input id="filter-transaction" style="width:100%;height:40px;padding:0 10px;margin-bottom:10px;" placeholder="Filter transactions..." />
+
+                    <table class="footable shadow" data-page-size=20 data-filter="#filter-transaction" data-manual="true">
+                        <thead>
+                            <tr>
+                                <th data-toggle="true" data-type="numeric" title="Transaction status. Hover over this field to show number of confirmations.">Status</th>
+                                <th data-type="numeric" data-sort-initial="descending" title="Date and time that the transaction was received.">Date</th>
+                                <th title="Type of transaction.">Type</th>
+                                <th data-hide="phone,tablet" title="Destination address of transaction.">Address</th>
+                                <th data-hide="phone" title="Short payment note.">Narration</th>
+                                <th data-type="numeric" title="Amount removed from or added to balance.">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- TODO: showDetails >
+                            <tr title="Unconfirmed transaction">
+                                <td class="status" data-value="0"><i class="fa fa-circle fa-lg margin-right-10"></td>
+                                <td class="date" data-value="1409357378">2014/08/30 22:09</td>
+                                <td class="type">Mined</td>
+                                <td class="address" data-value="Shk8EZEJm7Kphw8muuWzZYTgTJsPZ2ocfk"><img src="qrc:///icons/tx_mined" /><span class="editable">Shk8EZEJm7Kphw8muuWzZYTgTJsPZ2ocfk</span></td>
+                                <td class="narration"></td>
+                                <td class="anount" >0.02376503</td>
+                            </tr>
+                            <tr title="Confirmed (%.status,data-value% confirmations)
+                                       %.type% %.address% (%.address,data-value%)">
+                                <td class="status" data-value="332"><i class="fa fa-check-circle fa-lg green margin-right-10"></td>
+                                <td class="date" data-value="1409353655">2014/08/30 19:50</td>
+                                <td class="type">Received with</td>
+                                <td class="address" data-value="SdmUNgks4yF3Lsg4yHp6TeP5eMUhwD4maf"><img src="qrc:///icons/tx_input" /><span class="editable">From c-cex</span></td>
+                                <td class="narration">Coffee</td>
+                                <td class="amount" data-type="numeric">1231.325</td>
+                            </tr-->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" style="background:#131218!important;">
+                                    <div class="pagination pagination-centegrey hide-if-no-paging"></div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div><!-- /content -->
+            </div><!-- /bottom -->
+        </article><!-- /transactions page -->
+
+
+        <!-- Address Book Page -->
+        <article id="addressbook" style="display:none;">
+            <div class="content top">
+                <h2>Address Book</h2>
+				<p>Here you can store the addresses of friends and other people you transact with often.</p>
+            </div>
+            <div class="bottom">
+
+                <div class="content">
+                    <input id="filter-addressbook" style="width:100%;height:40px;padding:0 10px;margin-bottom:10px;" placeholder="Filter by label or address..." />
+
+                    <table class="footable shadow" data-page-size=20 data-filter="#filter-addressbook">
+                        <thead>
+                            <tr>
+                                <th data-toggle="true" data-sort-initial="true">Label</th>
+                                <th data-hide="phone">Address</th>
+                                <th data-hide="phone,tablet">Public Key</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!--tr>
+                                <td class="label" class="editable">(no label)</td>
+                                <td class="address" class="editable">SSz5VuQGCFJ36E7UQmr7U39w7wksm5K4KZ</td>
+                                <td class="pubkey" class="editable"></td>
+                            </tr-->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="3" style="background:#131218!important;">
+                                    <div class="pagination pagination-centegrey hide-if-no-paging"></div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="ui-buttons">
+                       <a class="button is-inverse has-icon-spacing" href="#filter-addressbook" onclick="$('#filter-addressbook').val(bridge.newAddress(false)).trigger('keyup');resizeFooter();"><i class="fa fa-plus"></i>Add Address</a>
+                       <a class="button is-inverse has-icon-spacing" href="javascript:copy('#addressbook .footable .selected .address');"><i class="fa fa-copy"></i>Copy Address</a>
+                       <a class="button is-inverse has-icon-spacing" href="#qrcode-modal" onclick="showQRCode($('#addressbook .footable .selected .address').text(), $('#addressbook .footable .selected .label').attr('data-value'));"><i class="fa fa-qrcode fa-lg margin-right-10"></i>Show QR Code</a>
+                       <a class="button is-inverse has-icon-spacing" href="javascript:bridge.userAction({'verifyMessage': $('#addressbook .footable .selected .address').text()});"><i class="fa fa-check"></i>Verify Message</a>
+                       <a class="button is-inverse has-icon-spacing" href="#filter-addressbook" onclick="var addr=$('#addressbook .footable .selected .address');if(bridge.deleteAddress(addr.text()))addr.closest('tr').remove();resizeFooter();"><i class="fa fa-close"></i>Delete</a>
+                    </div>
+                </div><!-- /content -->
+            </div><!-- /bottom -->
+        </article><!-- /addressbook page -->
+
+        <div id="message-preview-modal" style="display:none;">
+            <a class="modal_close" href="#close"><i class="fa fa-times-circle grey"></i></a>
+            <div id="message-preview"></div>
+        </div>
+
+        <div id="new-contact-modal" style="display:none;" class="content">
+            <a class="modal_close" href="#close"><i class="fa fa-times-circle grey"></i></a>
+            <div style="white-space:nowrap;">
+                <label for="new-contact-address" class="recipient">Address: </label>
+                <input id="new-contact-address"  class="recipient input_box" style="width: 300px;" title="The address to send the payment to  (e.g. SXywGBZBowrppUwwNUo1GCRDTibzJi7g2M)" placeholder="Enter a Gameunits address (e.g. MXywGBZBowrppUwwNUo1GCRDTibzJi7g2M)" onchange="if(base58.check(this)) $('#new-contact-pubkey').val(bridge.getPubKey(this.value, $('#new-contact-name').val()));" maxlength="128" oninput="base58.check(this);"/>
+                <a class="button is-inverse has-fixed-icon" title="Choose address from address book" style="margin-right:10px; margin-left:10px; height:43px; width:43px;" onclick="openAddressBook('#new-contact-address', '#new-contact-name', true)"><i class="fa fa-book"></i></a>
+                <a class="button is-inverse has-fixed-icon" title="Paste address from clipboard"     style="margin-right:10px; height:43px; width:43px;" onclick="paste('#new-contact-address')"><i class="fa fa-files-o"></i></a>
+                <a class="button is-inverse has-fixed-icon" title="Remove this recipient"            style="height:43px; width:43px;" onclick="$('#new-contact-address').val('').css('background', '').css('color', '');"><i class="fa fa-times"></i></a>
+            </div>
+            <div style="white-space:nowrap;">
+                <label for="new-contact-name" class="recipient">Name: </label>
+                <input id="new-contact-name"  class="recipient input_box" style="width: 475px;" title="Enter a label for this address to add it to your address book" placeholder="Enter a label for this address to add it to your address book" onchange="$('#new-contact-pubkey').val(bridge.getPubKey($('#new-contact-address').val(), this.value));" maxlength="128"  />
+            </div>
+            <div id="new-contact-pubkey-row" style="white-space:nowrap;">
+                <label for="new-contact-pubkey" class="recipient">Public Key: </label>
+                <input id="new-contact-pubkey"  class="recipient input_box" style="width: 475px;" title="Enter a public key for the address above" placeholder="Enter a public key for the address above" onchange="bridge.setPubKey($('#new-contact-address').val(), this.value)" />
+            </div>
+
+            <a class="button is-inverse has-icon-spacing" href="javascript:newConversation();">Start Conversation <i class="fa fa-check"></i></a>
+        </div>
+
+        <!-- Messages Page -->
+        <article id="messages" style="display:none;">
+            <div class="content top">
+                <h2>Chat</h2>
+				<p>Chat privately and securely with others using GAMEUNITS's encrypted instant messaging system.</p>
+            </div>
+
+            <div class="bottom">
+                <div id="contact-list">
+                    <div>
+                        <a id='start-conversation' href="#new-contact-modal"><i class="fa fa-plus margin-right-10"></i>Start conversation</a>
+                        <ul>
+                            <!--li id="contact3" class="contact">
+                                    <img src="qrc:///images/default">
+                                    <span class="contact-info">
+                                        <span class="contact-name">crz-</span>
+                                        <span class="contact-address">ShCEPkbdix9qBjJ6TNNatjA7YU8PAHq2PJ</span>
+                                    </span>
+                                    <span class="contact-options">
+                                        <span class="message-notifications">3</span>
+                                        <span class="delete" onclick=""></span>
+                                        <span class="favorite favorited"></span>
+                                    </span>
+                            </li-->
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="contact-profile"></div>
+                <div class="contact-discussion">
+                    <ul>
+                        <!--li class="user-message">
+                                <span class="info">
+                                    <img src="qrc:///images/default">
+                                    <span class="user-name">ffmad</span>
+                                </span>
+                                <span class="message-content">
+                                    <span class="timestamp">1-09-2014 14:50</span>
+                                    <span class="message-text">hello dev !</span>
+                                </span>
+                        </li>
+                        <li class="other-message">
+                                <span class="info">
+                                    <img src="qrc:///images/default">
+                                    <span class="user-name">GAMEUNITSDev</span>
+                                </span>
+                                <span class="message-content">
+                                    <span class="timestamp">1-09-2014 14:57</span>
+                                    <span class="message-text">How are you ?</span>
+                                </span>
+                        </li-->
+                    </ul>
+                </div>
+                <form class="text-box" action="" method="=">
+                    <input id="pasteTo" type="hidden" />
+                    <textarea id="message-text" placeholder="Type your message here ..." oninput="this.editor.update()" maxlength="4000"></textarea>
+
+                    <div class="tools-bar">
+                        <div class="left-bar">
+                            <a href="#" class="bold" onclick="editorCommand('**', '**');"><i class="fa fa-bold"></i></a>
+                            <a href="#" class="italic" onclick="editorCommand('*', '*');"><i class="fa fa-italic"></i></a>
+                            <a href="#" class="underline" onclick="editorCommand('__', '__');"><i class="fa fa-underline"></i></a>
+                            <!--a href="#" class="strikethrough" onclick="editorCommand('~~', '~~');"><i class="fa fa-strikethrough"></i></a-->
+                            <a href="#" class="link" onclick="editorCommand('[', '](https://discovergameunits.com)');"><i class="fa fa-link"></i></a>
+                            <a href="#" class="image" onclick="editorCommand('![imageinfo](', ')');"><i class="fa fa-image"></i></a>
+                        </div>
+                        <div class="right-bar">
+                            <a class="submit" href="javascript:sendMessage();">Send<i class="fa fa-caret-right"></i></a>
+                            <a id="preview-message" href="#message-preview-modal" class="submit">preview<i class="fa fa-eye"></i></a>
+                            <!--a href="#" class="emoticons">
+                                <i class="fa fa-smile-o"></i>
+                                <i class="fa fa-caret-down"></i>
+                            </a-->
+                        </div>
+                        <br>
+                    </div>
+                    <div style="white-space:nowrap;clear:both;">
+                        <label for="message-from-address" style="padding-right:5px;">From Address:</label>
+                        <select id="message-from-address" class="unit button is-inverse has-fixed-icon" style="width:265px;padding:2px;">
+                        </select>
+                        <input id="message-to-address" type="hidden" />
+                    </div>
+                    <script>
+                        function Editor(input, preview) {
+                            this.update = function () {
+                                preview.innerHTML = micromarkdown.parse(input.value);
+                            };
+                            input.editor = this;
+                            this.update();
+                        }
+
+                        new Editor($("#message-text")[0], $("#message-preview")[0]);
+
+                        $("#message-text").on('keydown', function(e) {
+                            if(e.which == 13) {
+                                e.preventDefault();
+                                if (e.shiftKey) {
+                                    var editor = $(this)[0];
+
+                                    if(typeof editor.selectionStart !== 'undefined')
+                                        editor.value = editor.value.substring(editor.selectionStart, 0) + "\n" + editor.value.substring(editor.selectionStart);
+                                    else
+                                        editor.value +=  "\n";
+
+                                    return;
+                                }
+                                sendMessage();
+                            }
+                            if(e.which == 27)
+                                $(this).val("");
+                        });
+
+                        $("#preview-message").leanModal({ top : 100, overlay : 0.5, closeButton: "#message-preview-modal .modal_close" });
+                    </script>
+                </form>
+            </div><!-- /bottom -->
+        </article><!-- /messages page -->
+
+        <!-- Chain Data Page -->
+        <article id="chaindata" style="display:none;">
+            <div class="content top">
+                <h2>Chain Data</h2>
+                               <p>Information on the number of anonymous outputs available for private GAMEUNITSX transactions.</p>
+            </div>
+
+            <div class="bottom">
+
+                <div class="content">
+                    <input id="filter-outputs" style="width:75%;height:40px;padding:0 10px;margin-bottom:10px;" placeholder="Filter outputs..." />
+                    <a id="show-own-outputs" style="width:24%;height:37px;margin-bottom:3px;"              class="button is-inverse has-icon-spacing" href="#">Show own outputs    <i class="fa fa-user"></i></a>
+                    <a id="show-all-outputs" style="width:24%;height:37px;margin-bottom:3px;display:none;" class="button is-inverse has-icon-spacing" href="#">Show system outputs <i class="fa fa-bank"></i></a>
+
+                    <table class="footable shadow" data-page=false data-filter="#filter-outputs">
+                        <thead>
+                            <tr>
+                                <th data-toggle="true"       data-type="numeric" title="Coin Value" data-sort-initial="ascending">Coin Value</th>
+                                <th data-hide="phone,tablet" data-type="numeric" title="No. Owned Mature">Owned (Mature)</th>
+                                <th data-hide="phone"        data-type="numeric" title="No. System Mature">System (Mature)</th>
+                                <th                          data-type="numeric" title="No. Spends">Spends</th>
+                                <th data-hide="phone"        data-type="numeric" title="Chain Least Depth">Least Depth</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="5" style="background:#131218!important;">
+                                    <div class="pagination pagination-centegrey hide-if-no-paging"></div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div><!-- /content -->
+            </div><!-- /bottom -->
+        </article><!-- /chaindata page -->
+
+        <div id="blkexp-txn-modal" style="display:none;">
+            <a class="modal_close" href="#close"><i class="fa fa-times-circle grey"></i></a>
+            <div class="ng-scope" data-ng-if="block.hash">
+                <div class="well well-sm ellipsis">
+                  <h2>Transaction Hash</h2> 
+                  <span class="text-muted" id="txn-hash"></span>
+                </div>
+                </br></br>    
+                <h2>Summary</h2>
+                <div class="row">
+                  <div class="col-md-6">
+                    <table class="table" style="table-layout: fixed">
+                      <tbody>
+                      <tr class="modal-tr">
+                        <td><strong>Size (bytes)</strong></td>
+                        <td class="text-muted" id="txn-size"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Received Time</strong></td>
+                        <td class="text-muted" id="txn-rcvtime"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Mined Time</strong></td>
+                        <td class="text-muted" id="txn-minetime"></td>
+                      </tr> 
+                      <tr class="modal-tr">
+                        <td><strong>Included in Block</strong></td>
+                        <td class="text-muted" id="txn-blkhash"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td id="lbl-reward-or-fee"><strong>Reward</strong></td>
+                        <td class="text-muted" id="txn-reward"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Confimations</strong></td>
+                        <td class="text-muted" id="txn-confirmations"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Value</strong></td>
+                        <td class="text-muted" id="txn-value"></a></td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                </br></br>
+                <div>
+                    <table>
+                        <tr>
+                            <td width="50%" style="vertical-align:top">
+                              <table id="txn-detail-inputs" class="footable shadow" width="50%">
+                                <thead>
+                                    <tr>
+                                      <th data-toggle="true"  title="Inputs" data-sort-initial="ascending">Inputs</th>
+                                      <th data-toggle="true"  title="Values" data-sort-initial="ascending">Values</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2" style="background:#131218!important;">
+                                            <div class="pagination pagination-centegrey hide-if-no-paging"></div>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                              </table>
+                            </td>
+                            <td width="50%" style="vertical-align:top">
+                              <table id="txn-detail-outputs" class="footable shadow" width="50%">
+                                  <thead>
+                                      <tr>
+                                        <th data-toggle="true"  title="Outputs" data-sort-initial="ascending">Outputs</th>
+                                        <th data-toggle="true"  title="Values" data-sort-initial="ascending">Values</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                  </tbody>
+                                  <tfoot>
+                                      <tr>
+                                          <td colspan="2" style="background:#131218!important;">
+                                              <div class="pagination pagination-centegrey hide-if-no-paging"></div>
+                                          </td>
+                                      </tr>
+                                  </tfoot>
+                              </table>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="error-msg"></div>
+              </div>
+        </div>
+
+
+        <div id="block-info-modal" style="display:none;">
+            <a class="modal_close" href="#close"><i class="fa fa-times-circle grey"></i></a>
+            <div class="shadow" id="block-info"></div>
+            <div class="ng-scope" data-ng-if="block.hash">
+                <div class="well well-sm ellipsis">
+                  <h2>BlockHash</h2> 
+                  <span class="text-muted" id="blk-hash"></span>
+                </div>
+                </br></br>    
+                <h2>Summary</h2>
+                <div class="row">
+                  <div class="col-md-6">
+                    <table class="table" style="table-layout: fixed">
+                      <tbody>
+                      <tr class="modal-tr">
+                        <td><strong>Transactions</strong></td>
+                        <td class="text-muted" id="blk-numtx"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Height</strong></td>
+                        <td class="text-muted" id="blk-height"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Block Type</strong></td>
+                        <td class="text-muted" id="blk-type"></td>
+                      </tr> 
+                      <tr class="modal-tr">
+                        <td><strong>Block Reward</strong></td>
+                        <td class="text-muted" id="blk-reward"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Timestamp</strong></td>
+                        <td class="text-muted" id="blk-timestamp"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Merkle Root</strong></td>
+                        <td class="text-muted" id="blk-merkleroot"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Previous Block</strong></td>
+                        <td class="text-muted" id="blk-prevblock"></a></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Next Block</strong></td>
+                        <td class="text-muted" id="blk-nextblock"></a></td>
+                      </tr>
+
+                      <tr class="modal-tr">
+                        <td><strong>Difficulty</strong></td>
+                        <td class="text-muted" id="blk-difficulty"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Bits</strong></td>
+                        <td class="text-muted" id="blk-bits"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Size (bytes)</strong></td>
+                        <td class="text-muted" id="blk-size"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Version</strong></td>
+                        <td class="text-muted" id="blk-version"></td>
+                      </tr>
+                      <tr class="modal-tr">
+                        <td><strong>Nonce</strong></td>
+                        <td class="text-muted" id="blk-nonce"></td>
+                      </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+        </div>
+                
+        <!-- Block Explorer Page -->
+        <article id="blockdata" style="display:none;">
+            <div class="content top">
+                <h2>Block Explorer</h2>
+            </div>
+            <div class="bottom">
+                <div class="content">
+                    <div>
+                    <input id="filter-blocks" style="width:75%;height:40px;padding:0 10px;vertical-align:top;" placeholder="Find Block by hash/height/transaction" onkeydown="if (event.keyCode == 13) blockExplorerPage.findBlock( this.value );" onblur="blockExplorerPage.findBlock(this.value);" />&nbsp;&nbsp;&nbsp;<img id="refreshIcon" width="24" height="24" style="cursor:default; position:relative; top:8px;"  src=""qrc:///icons/syncing_static" title="Refresh Latest Blocks" onmouseover="this.src='"qrc:///icons/syncing'" onmouseout="this.src='"qrc:///icons/syncing_static'" onclick=" $('#filter-blocks').val(''); blockExplorerPage.updateLatestBlocks();" /></div>
+                    <table id="latest-blocks-table" class="footable shadow" data-page=false data-filter="#filter-outputs">
+                        <thead>
+                            <tr>
+                                <th data-toggle="true"  title="Hash" data-sort-initial="ascending">Hash</th>
+                                <th data-toggle="true"  data-type="numeric" title="Height" data-sort-initial="ascending">Height</th>
+                                <th data-type="numeric" title="Timestamp">Timestamp</th>
+                                <th data-type="numeric" title="Transactions">Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" style="background:#131218!important;">
+                                    <div class="pagination pagination-centegrey hide-if-no-paging"></div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                    <br>
+                    <table id="block-txs-table" class="footable shadow none">
+                        <thead>
+                            <tr>
+                                <th data-toggle="true"  title="Transaction Hash" data-sort-initial="ascending">Transaction Hash</th>
+                                <th data-toggle="true"  data-type="numeric" title="Value Out" data-sort-initial="ascending">Value Out</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" style="background:#131218!important;">
+                                    <div class="pagination pagination-centegrey hide-if-no-paging"></div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div><!-- /content -->
+            </div><!-- /bottom -->
+        </article><!-- /chaindata page -->
+
+
+        <!-- Options Page -->
+        <article id="options" style="display:none;">
+            <div class="content top">
+                <h2>Options</h2>
+            </div>
+
+            <div class="bottom">
+                <div class="content">
+
+                    <div id="options-main">
+                        <h3>Main</h3>
+
+                        <div class="option">
+                            <input  id="optStartAtStartup" type="checkbox" />
+                            <label for="optStartAtStartup" class="option">Start Gameunits on system login</label>
+                        </div>
+                        <div class="option">
+                            <input  id="optDetachDatabases" type="checkbox" />
+                            <label for="optDetachDatabases" class="option">Detach databases at shutdown</label>
+                        </div>
+                        <div class="option">
+                            <p>Optional transaction fee per kB that helps make sure your transactions are processed quickly. Most transactions are 1kB. Fee 0.01 recommended.</p>
+                            <label for="optFee" class="option">Pay transaction fee:</label>
+                            <input  id="optFee" type="number" placeholder="0.00000000" step="0.01" value="0.00000000" onchange="unit.parse(this, $('#optFeeunit').val());" />
+                            <select id="optFeeunit" class="unit button is-inverse has-fixed-icon" style="margin-left:10px; height:43px; width:100px;" onchange="unit.format('#optFee', $(this).val());">
+                                <option value="0" title="Gameunits">GAMEUNITS</option>
+                                <option value="1" title="Milli-Gameunits (1 / 1000)">mGAMEUNITS</option>
+                                <option value="2" title="Micro-Gameunits (1 / 1000000)">&micro;GAMEUNITS</option>
+                                <option value="3" title="Gameunitsoshi (1 / 100000000)">Gameunitsoshi</option>
+                            </select>
+                        </div>
+                        <div class="option">
+                            <input  id="optStaking" type="checkbox" data-linked="optReserveBalance optReserveBalanceunit" />
+                            <label for="optStaking" class="option">Enable Staking</label>
+                        </div>
+                        <div class="option">
+                            <p>Reserved amount does not participate in staking and is therefore spendable at any time.</p>
+                            <label for="optReserveBalance" class="option">Reserve:</label>
+                            <input  id="optReserveBalance" type="number" placeholder="0.00000000" step="0.01" value="0.00000000" onchange="unit.parse(this, $('#optReserveBalanceunit').val());" />
+                            <select id="optReserveBalanceunit" class="unit button is-inverse has-fixed-icon" style="margin-left:10px; height:43px; width:100px;" onchange="unit.format('#optReserveBalance', $(this).val());">
+                                <option value="0" title="Gameunits">GAMEUNITS</option>
+                                <option value="1" title="Milli-Gameunits (1 / 1000)">mGAMEUNITS</option>
+                                <option value="2" title="Micro-Gameunits (1 / 1000000)">&micro;GAMEUNITS</option>
+                                <option value="3" title="Gameunitsoshi (1 / 100000000)">Gameunitsoshi</option>
+                            </select>
+                        </div>
+                        <div class="option">
+                            <label for="optMinStakeInterval" class="option" title="Minimum time in seconds between successful stakes">Minimum Stake Interval</label>
+                            <input  id="optMinStakeInterval" type="number" placeholder="30" step="1" title="Minimum time in seconds between successful stakes" />
+                        </div>
+                        <div class="option">
+                            <label for="optMinRingSize" class="option">Minimum Ring size:</label>
+                            <input  id="optMinRingSize" type="number" min="3"   placeholder="3" step="1" />
+                        </div>
+                        <div class="option">
+                            <label for="optMaxRingSize" class="option">Maximum Ring size:</label>
+                            <input  id="optMaxRingSize" type="number" max="200" placeholder="100" step="1" />
+                        </div>
+                        <!--div class="option">
+                            <input  id="optAutogreyeemGAMEUNITSX" type="checkbox" title="GAMEUNITSX will be converted to GAMEUNITS as soon as has confirmed and wallet is unlocked" />
+                            <label for="optAutogreyeemGAMEUNITSX" class="option" title="GAMEUNITSX will be converted to GAMEUNITS as soon as has confirmed and wallet is unlocked">Auto-greyeem gameunitsX</label>
+                        </div-->
+                        <div class="option">
+                            <input  id="optAutoRingSize" type="checkbox" title="Automatically select ring size based on best available output counts" />
+                            <label for="optAutoRingSize" class="option" title="Automatically select ring size based on best available output counts">Automatically select ring size</label>
+                        </div>
+                        <div class="option">
+                            <input  id="optSecureMessaging" type="checkbox" />
+                            <label for="optSecureMessaging" class="option">Enable Secure messaging</label>
+                        </div>
+                        <div class="option">
+                            <input  id="optThinMode" type="checkbox" data-linked="optThinFullIndex optThinIndexWindow" />
+                            <label for="optThinMode" class="option">Thin Mode (Requires Restart)</label>
+                        </div>
+                        <div class="option">
+                            <input  id="optThinFullIndex" type="checkbox" title="Keep the entire block index in memory" />
+                            <label for="optThinFullIndex" class="option"  title="Keep the entire block index in memory">Thin Full Index</label>
+                        </div>
+                        <div class="option">
+                            <label for="optThinIndexWindow" title="When not thinfullindex, the max number of block headers to keep in memory">Thin Index Window</label>
+                            <input  id="optThinIndexWindow" title="When not thinfullindex, the max number of block headers to keep in memory" type="number" placeholder="4096" step="64" type="checkbox" />
+                        </div>
+                    </div><!-- /#options-main -->
+
+                    <hr>
+
+                    <div id="options-network">
+                        <h3>Network</h3>
+
+                        <div class="option">
+                            <input  id="optMapPortUPnP" type="checkbox" />
+                            <label for="optMapPortUPnP" class="option">Map port using UPnP</label>
+                        </div>
+                        <div class="option">
+                            <input  id="optProxyUse" type="checkbox" data-linked="optProxyIP optProxyPort optProxySocksVersion" />
+                            <label for="optProxyUse" class="option">Connect through SOCKS proxy:</label>
+                        </div>
+                        <div class="option">
+                            <label for="optProxyIP"           class="option">Proxy IP:</label>
+                            <input  id="optProxyIP"           class="input_box" placeholder="127.0.0.1" />
+                            <label for="optProxyPort"         class="option">Port:</label>
+                            <input  id="optProxyPort"         class="input_box" placeholder="9050" />
+                            <label for="optProxySocksVersion" class="option">SOCKS Version:</label>
+                            <select id="optProxySocksVersion" class="button is-inverse has-fixed-icon" style="height:43px; width:50px;">
+                                <option>4</option>
+                                <option>5</option>
+                            </select>
+                        </div>
+                    </div><!-- /#options-network -->
+
+                    <hr>
+
+                    <div id="options-window">
+                        <h3>Window</h3>
+
+                        <div class="option">
+                            <input  id="optMinimizeToTray" type="checkbox" />
+                            <label for="optMinimizeToTray" class="option">Minimize to the tray instead of the taskbar</label>
+                        </div>
+                        <div class="option">
+                            <input  id="optMinimizeOnClose" type="checkbox" />
+                            <label for="optMinimizeOnClose" class="option">Minimize on close</label>
+                        </div>
+                    </div><!-- /#options-window -->
+
+                    <hr>
+
+                    <div id="options-display">
+                        <h3>Display</h3>
+
+                        <div class="option">
+                            <label for="optLanguage" class="option" style="width:200px;text-align:right;">User Interface language:</label>
+                            <select id="optLanguage" class="button is-inverse has-fixed-icon" style="width:200px;">
+                                <!--option>(default)</option-->
+                            </select>
+                        </div>
+                        <div class="option">
+                            <label for="optDisplayUnit" class="option" style="width:200px;text-align:right;">Unit to show amounts in:</label>
+                            <select id="optDisplayUnit" class="button is-inverse has-fixed-icon" style="width:200px;">
+                                <option value="0" title="Gameunits">GAMEUNITS</option>
+                                <option value="1" title="Milli-Gameunits (1 / 1000)">mGAMEUNITS</option>
+                                <option value="2" title="Micro-Gameunits (1 / 1000000)">&micro;GAMEUNITS</option>
+                                <option value="3" title="Gameunitsoshi (1 / 100000000)">Gameunitsoshi</option>
+                            </select>
+                        </div>
+                        <div class="option">
+                            <label for="optRowsPerPage" class="option" style="width:200px;text-align:right;">Rows per page:</label>
+                            <input  id="optRowsPerPage" type="number"  style="width:200px;" placeholder="20" step="5" value="20" />
+                        </div>
+                        <div class="option">
+                            <input  id="optDisplayAddresses" type="checkbox" />
+                            <label for="optDisplayAddresses" class="option">Display addresses in transaction list</label>
+                        </div>
+                        <div class="option select-multiple">
+                            <label for="optNotifications" class="option">Notifications:</label>
+                            <select id="optNotifications" class="button is-inverse has-fixed-icon" multiple size="8">
+                                <!--optgroup label="Transactions">
+                                    <option>Received with</option>
+                                    <option>Received from</option>
+                                    <option>Received GAMEUNITSX</option>
+                                    <option>Sent to</option>
+                                    <option>Sent GAMEUNITSX</option>
+                                    <option>Stake</option>
+                                    <option>Other</option>
+                                </optgroup>
+                                <optgroup label="Messages">
+                                    <option>Incoming Messages</option>
+                                    <option>Group Messages</option>
+                                    <option>Broadcasts</option>
+                                </optgroup-->
+                            </select>
+                        </div>
+                        <div class="option select-multiple">
+                            <label for="optVisibleTransactions" class="option">Visible Transaction Types:</label>
+                            <select id="optVisibleTransactions" class="button is-inverse has-fixed-icon" multiple size="7">
+                                <!--option>Received with</option>
+                                <option>Received from</option>
+                                <option>Received GAMEUNITSX</option>
+                                <option>Sent to</option>
+                                <option>Sent GAMEUNITSX</option>
+                                <option>Stake</option>
+                                <option>Other</option-->
+                            </select>
+                        </div>
+                    </div><!-- /#options-display -->
+
+                    <div class="ui-buttons">
+                        <a class="button is-inverse has-icon-spacing" id="options-ok"     href="#" onclick="if(this.className.indexOf('disabled') == -1){optionsPage.save();prevPage.click();}">OK <i class="fa fa-check"></i></a>
+                        <a class="button is-inverse has-icon-spacing" id="options-cancel" href="#" onclick="optionsPage.update();prevPage.click();">Cancel <i class="fa fa-times"></i></a>
+                        <a class="button is-inverse has-icon-spacing" id="options-apply"  href="#" onclick="if(this.className.indexOf('disabled') == -1) optionsPage.save();">Apply <i class="fa fa-floppy-o"></i></a>
+                    </div>
+                </div><!-- /content -->
+            </div><!-- /bottom -->
+        </article><!-- /chaindata page -->
+
+
+        <!-- News Page -->
+        <article id="news" style="display:none;">
+            <div class="content top">
+                <h2>News</h2>
+				<p>News and updates from the GAMEUNITS team. </p>
+            </div>
+
+            <div class="bottom">
+
+                <div class="content flex">
+              <div class="flex-item grow one-third-width">
+                            <h2>Announcements</h2>
+
+                            <div id="announcements">
+
+                            </div>
+                        </div>
+                </div><!-- /content -->
+            </div><!-- /bottom -->
+        </article><!-- /news page -->
+
+        <div id="footer">
+            <span id="footer-icons">
+                <i id="encryptionIcon"    style="padding-right:5px;" class="fa fa-lock fa-lg cursor-pointer grey" onclick="bridge.userAction(['toggleLock']);" title="Wallet is encrypted and currently locked"></i>
+                <i id="stakingIcon"       style="padding-right:5px;" class="fa fa-cog fa-lg not-staking" title="Not staking because wallet is locked"></i>
+                <img id="connectionsIcon" style="cursor:default; padding-right:5px" src="qrc:///icons/connect_0"/ title="0 active connection(s) to Gameunits network" />
+                <img id="syncingIcon"     style="cursor:default;"                  src="qrc:///icons/syncing_small"/ title="Wallet is syncing" />
+                <i id="blocksIcon" class="fa fa-check grey none" title="Wallet is syncing"></i>
+            </span>
+        </div><!-- /footer -->
+        <div id="network-alert" style="display:none;">
+            <i class="fa fa-exclamation-triangle network-alerts-icon"></i> <span></span>
+        </div>
+    </div><!-- /container -->
+</div><!-- /layout -->
+</body>
+<script src="qrc:///js/main.js" type="text/javascript"></script>
+</html>
+
+

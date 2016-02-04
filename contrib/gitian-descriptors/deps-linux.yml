@@ -1,0 +1,105 @@
+---
+name: "gameunits-deps"
+suites:
+- "trusty"
+architectures:
+- "i386"
+- "amd64"
+packages:
+- "g++"
+- "pkg-config"
+- "libtool"
+- "faketime"
+- "bsdmainutils"
+reference_datetime: "2015-10-01 00:00:00"
+remotes: []
+files:
+- "openssl-1.0.2d.tar.gz"
+- "miniupnpc-1.9.20151008.tar.gz"
+- "db-4.8.30.NC.tar.gz"
+- "boost_1_55_0.tar.bz2"
+script: |
+  STAGING="$HOME/install"
+  TEMPDIR="$HOME/tmp"
+  OPTFLAGS='-O2'
+  if [ "$GBUILD_BITS" == "32" ]; then
+    export LD_PRELOAD=/usr/lib/i386-linux-gnu/faketime/libfaketime.so.1;
+  else
+    export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1;
+  fi
+  export FAKETIME=$REFERENCE_DATETIME
+  export TZ=UTC
+  export LIBRARY_PATH="$STAGING/lib"
+  # Integrity Check
+  echo "671c36487785628a703374c652ad2cebea45fa920ae5681515df25d9f2c9a8c8  openssl-1.0.2d.tar.gz"         | sha256sum -c
+  echo "e444ac3b587ce82709c4d0cfca1fe71f44f9fc433e9f946b12b9e1bfe667a633  miniupnpc-1.9.20151008.tar.gz" | sha256sum -c
+  echo "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef  db-4.8.30.NC.tar.gz"           | sha256sum -c
+  echo "fff00023dd79486d444c8e29922f4072e1d451fc5a4d2b6075852ead7f2b7b52  boost_1_55_0.tar.bz2"          | sha256sum -c
+
+  #
+  tar xzf openssl-1.0.2d.tar.gz
+  cd openssl-1.0.2d
+  #   need -fPIC to avoid relocation error in 64 bit builds
+  ./config no-shared no-zlib no-dso no-krb5 --openssldir=$STAGING -fPIC
+  #   need to build OpenSSL with faketime because a timestamp is embedded into cversion.o
+  make
+  make install_sw
+  cd ..
+  #
+  tar xzf miniupnpc-1.9.20151008.tar.gz
+  cd miniupnpc-1.9.20151008
+  #   miniupnpc is always built with -fPIC
+  INSTALLPREFIX=$STAGING make $MAKEOPTS libminiupnpc.a install
+  ls $STAGING/lib/libminiupnpc.so*
+  rm -f $STAGING/lib/libminiupnpc.so* # no way to skip shared lib build
+  cd ..
+  #
+  
+  #
+  #tar xjf protobuf-2.5.0.tar.bz2
+  #cd protobuf-2.5.0
+  #mkdir -p $STAGING/host/bin
+  #unset FAKETIME # unset fake time during configure, as it does some clock sanity tests
+  #   need --with-pic to avoid relocation error in 64 bit builds
+  #./configure --prefix=$STAGING --bindir=$STAGING/host/bin --enable-static --disable-shared --with-pic --without-zlib
+  # Workaround to prevent re-configuring by make; make all files have a date in the past
+  #find . -print0 | xargs -r0 touch -t 200001010000
+  #export FAKETIME=$REFERENCE_DATETIME
+  #make $MAKEOPTS install
+  #cd ..
+  #
+  tar xzf db-4.8.30.NC.tar.gz
+  cd db-4.8.30.NC/build_unix
+  #   need --with-pic to avoid relocation error in 64 bit builds
+  ../dist/configure --prefix=$STAGING --enable-cxx --disable-shared --with-pic
+  # Workaround to prevent re-configuring by make; make all files have a date in the past
+  find . -print0 | xargs -r0 touch -t 200001010000
+  make $MAKEOPTS library_build
+  make install_lib install_include
+  cd ../..
+
+  # Input Integrity Check
+  tar --warning=no-timestamp -xjf boost_1_55_0.tar.bz2
+  cd boost_1_55_0
+  GCCVERSION=$(g++ -E -dM $(mktemp --suffix=.h) | grep __VERSION__ | cut -d ' ' -f 3 | cut -d '"' -f 2)
+  # note: bjam with -d+2 reveals that -O3 is implied by default, no need to provide it in cxxflags
+  echo "using gcc : $GCCVERSION : g++
+        :
+        <cxxflags>\"-frandom-seed=boost1 -fPIC\"
+  ;" > user-config.jam
+
+  ./bootstrap.sh --without-icu
+
+  ./bjam toolset=gcc threadapi=pthread threading=multi variant=release link=static runtime-link=shared --user-config=user-config.jam --without-mpi --without-python -sNO_BZIP2=1 --layout=tagged --build-type=complete --prefix="$STAGING" $MAKEOPTS -d+2 install
+
+  # post-process all generated libraries to be deterministic
+  # extract them to a temporary directory then re-build them deterministically
+  for LIB in $(find $STAGING -name \*.a); do
+    rm -rf $TEMPDIR && mkdir $TEMPDIR && cd $TEMPDIR
+    ar xv $LIB | cut -b5- > /tmp/list.txt
+    rm $LIB
+    ar crsD $LIB $(cat /tmp/list.txt)
+  done
+  #
+  cd $STAGING
+  find include lib | sort | tar --no-recursion -cJf $OUTDIR/gameunits-deps-linux${GBUILD_BITS}-gitian.tar.xz -T -

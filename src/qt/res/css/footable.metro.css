@@ -1,0 +1,109 @@
+.footable {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #52b9e9;
+  font-family: "Open Sans", sans-serif;
+  color: #444444;
+  -moz-border-radius: 0;
+  -webkit-border-radius: 0;
+  border-radius: 0;
+}
+.footable.breakpoint > tbody > tr.footable-row-detail {
+}
+.footable.breakpoint > tbody > tr:hover:not(.footable-row-detail) {
+  cursor: pointer;
+}
+.footable.breakpoint > tbody > tr > td.footable-row-detail-cell {
+  background: #fff;
+}
+.footable > tbody img {
+  vertical-align: middle;
+}
+.footable > tbody > tr:hover:not(.footable-row-detail) {
+
+
+}
+.footable > tbody > tr:hover:not(.footable-row-detail) > td {
+
+
+}
+.footable > tbody > tr:last-child > td {
+  border-bottom: none;
+}
+.footable > tbody > tr > td {
+  border-top: 1px solid #dddddd;
+  padding: 10px;
+  text-align: left;
+  border-left: none;
+}
+.footable > tbody > tr > td.footable-row-detail-cell,
+.footable > tbody > tr > td.footable-first-column {
+  border-left: none;
+}
+.footable > thead > tr > th {
+  border-bottom: 1px solid #ECF0F1;
+  padding: 10px;
+  text-align: left;
+}
+.footable > thead > tr > th,
+.footable > thead > tr > td {
+
+  border: 1px solid #52b9e9;
+  color: #ffffff;
+  border-top: none;
+  border-left: none;
+  font-weight: normal;
+}
+.footable > thead > tr > th.footable-first-column,
+.footable > thead > tr > td.footable-first-column {
+  border-left: none;
+}
+.footable > tfoot > tr > th,
+.footable > tfoot > tr > td {
+  border: 1px solid #52b9e9;
+  color: #ffffff;
+  border-top: none;
+  border-left: none;
+  padding: 5px;
+}
+.footable > tfoot .pagination {
+  text-align: center;
+}
+.footable > tfoot .pagination ul {
+  display: inline-block;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  vertical-align: middle;
+  margin: 0;
+  padding: 0;
+}
+.footable > tfoot .pagination ul > li {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+.footable > tfoot .pagination ul > li > a,
+.footable > tfoot .pagination ul > li > span {
+  float: left;
+  margin: 0 3px;
+  color: #ffffff;
+  background: none;
+  padding: 10px;
+  text-decoration: none;
+}
+.footable > tfoot .pagination ul > li.disabled > a {
+  color: #fff;
+}
+.footable > tfoot .pagination ul > li.active > a {
+}
+.footable > tfoot .pagination ul > li:first-child > a,
+.footable > tfoot .pagination ul > li:last-child > a,
+.footable > tfoot .pagination ul > li:first-child > span,
+.footable > tfoot .pagination ul > li:last-child > span {
+  -moz-border-radius: 0;
+  -webkit-border-radius: 0;
+  border-radius: 0;
+}
+

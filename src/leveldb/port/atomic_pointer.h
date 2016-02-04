@@ -5,13 +5,14 @@
 // AtomicPointer provides storage for a lock-free pointer.
 // Platform-dependent implementation of AtomicPointer:
 // - If the platform provides a cheap barrier, we use it with raw pointers
-// - If <atomic> is present (on newer versions of gcc, it is), we use
-//   a <atomic>-based AtomicPointer.  However we prefer the memory
+// - If cstdatomic is present (on newer versions of gcc, it is), we use
+//   a cstdatomic-based AtomicPointer.  However we prefer the memory
 //   barrier based version, because at least on a gcc 4.4 32-bit build
-//   on linux, we have encountered a buggy <atomic> implementation.
-//   Also, some <atomic> implementations are much slower than a memory-barrier
-//   based implementation (~16ns for <atomic> based acquire-load vs. ~1ns for
-//   a barrier based acquire-load).
+//   on linux, we have encountered a buggy <cstdatomic>
+//   implementation.  Also, some <cstdatomic> implementations are much
+//   slower than a memory-barrier based implementation (~16ns for
+//   <cstdatomic> based acquire-load vs. ~1ns for a barrier based
+//   acquire-load).
 // This code is based on atomicops-internals-* in Google's perftools:
 // http://code.google.com/p/google-perftools/source/browse/#svn%2Ftrunk%2Fsrc%2Fbase
 
@@ -19,8 +20,8 @@
 #define PORT_ATOMIC_POINTER_H_
 
 #include <stdint.h>
-#ifdef LEVELDB_ATOMIC_PRESENT
-#include <atomic>
+#ifdef LEVELDB_CSTDATOMIC_PRESENT
+#include <cstdatomic>
 #endif
 #ifdef OS_WIN
 #include <windows.h>
@@ -125,7 +126,7 @@ class AtomicPointer {
 };
 
 // AtomicPointer based on <cstdatomic>
-#elif defined(LEVELDB_ATOMIC_PRESENT)
+#elif defined(LEVELDB_CSTDATOMIC_PRESENT)
 class AtomicPointer {
  private:
   std::atomic<void*> rep_;
@@ -206,7 +207,7 @@ class AtomicPointer {
   inline void NoBarrier_Store(void* v) { rep_ = v; }
 };
 
-// We have neither MemoryBarrier(), nor <atomic>
+// We have neither MemoryBarrier(), nor <cstdatomic>
 #else
 #error Please implement AtomicPointer for this platform.
 

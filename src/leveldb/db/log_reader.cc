@@ -167,14 +167,14 @@ uint64_t Reader::LastRecordOffset() {
   return last_record_offset_;
 }
 
-void Reader::ReportCorruption(uint64_t bytes, const char* reason) {
+void Reader::ReportCorruption(size_t bytes, const char* reason) {
   ReportDrop(bytes, Status::Corruption(reason));
 }
 
-void Reader::ReportDrop(uint64_t bytes, const Status& reason) {
+void Reader::ReportDrop(size_t bytes, const Status& reason) {
   if (reporter_ != NULL &&
       end_of_buffer_offset_ - buffer_.size() - bytes >= initial_offset_) {
-    reporter_->Corruption(static_cast<size_t>(bytes), reason);
+    reporter_->Corruption(bytes, reason);
   }
 }
 

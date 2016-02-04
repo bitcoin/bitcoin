@@ -1,0 +1,62 @@
+/*
+ *contextMenu.js v 1.1.2
+ *Author: Sudhanshu Yadav
+ *s-yadav.github.com
+ *Copyright (c) 2013 Sudhanshu Yadav.
+ *Dual licensed under the MIT and GPL licenses
+ */
+/*Context menu css */
+.iw-contextMenu {
+    -webkit-box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    -moz-box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+    display:none;
+    z-index:1000;
+    overflow:auto;
+    font-size:0.7em;
+}
+.iw-cm-menu{
+    background:#131218;
+    color:#fff;
+    margin:0px;
+    padding:5px;
+}
+
+.iw-cm-menu li {
+    list-style:none;
+    padding:5px;
+    cursor:pointer;
+    position:relative;
+}
+.iw-mOverlay{
+    position:absolute; width:100%; height:100%; top:0px; left:0px;
+    background:#131218;
+    opacity:.5;
+}
+.iw-contextMenu li.iw-mDisable {
+    opacity:.3;
+}
+.iw-mSelected {
+    color:#829091;
+    -webkit-transition: all 0.15s ease;
+    transition: all 0.15s ease;
+}
+.iw-cm-arrow-right {
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left:5px solid #333333;
+    position:absolute;
+    right:3px;
+    top:50%;
+    margin-top:-3px;
+}
+
+.iw-mIcon{
+    width:25px;
+    height:25px;
+    padding-right:5px;
+    top:3px;
+}
+/*context menu css end */

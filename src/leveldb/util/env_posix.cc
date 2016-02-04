@@ -3,6 +3,8 @@
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 #if !defined(LEVELDB_PLATFORM_WINDOWS)
 
+#include <deque>
+#include <set>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -16,8 +18,9 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <deque>
-#include <set>
+#if defined(LEVELDB_PLATFORM_ANDROID)
+#include <sys/stat.h>
+#endif
 #include "leveldb/env.h"
 #include "leveldb/slice.h"
 #include "port/port.h"
@@ -293,8 +296,7 @@ class PosixEnv : public Env {
  public:
   PosixEnv();
   virtual ~PosixEnv() {
-    char msg[] = "Destroying Env::Default()\n";
-    fwrite(msg, 1, sizeof(msg), stderr);
+    fprintf(stderr, "Destroying Env::Default()\n");
     abort();
   }
 

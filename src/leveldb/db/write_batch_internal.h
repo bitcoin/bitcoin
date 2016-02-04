@@ -21,10 +21,10 @@ class WriteBatchInternal {
   // Set the count for the number of entries in the batch.
   static void SetCount(WriteBatch* batch, int n);
 
-  // Return the sequence number for the start of this batch.
+  // Return the seqeunce number for the start of this batch.
   static SequenceNumber Sequence(const WriteBatch* batch);
 
-  // Store the specified number as the sequence number for the start of
+  // Store the specified number as the seqeunce number for the start of
   // this batch.
   static void SetSequence(WriteBatch* batch, SequenceNumber seq);
 

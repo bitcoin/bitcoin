@@ -1,91 +1,36 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Distributed under the MIT software license, see the accompanying
+// Copyright (c) 2009-2012 The Bitcoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "protocol.h"
-
 #include "util.h"
-#include "utilstrencodings.h"
+#include "netbase.h"
 
 #ifndef WIN32
 # include <arpa/inet.h>
 #endif
 
-namespace NetMsgType {
-const char *VERSION="version";
-const char *VERACK="verack";
-const char *ADDR="addr";
-const char *INV="inv";
-const char *GETDATA="getdata";
-const char *MERKLEBLOCK="merkleblock";
-const char *GETBLOCKS="getblocks";
-const char *GETHEADERS="getheaders";
-const char *TX="tx";
-const char *HEADERS="headers";
-const char *BLOCK="block";
-const char *GETADDR="getaddr";
-const char *MEMPOOL="mempool";
-const char *PING="ping";
-const char *PONG="pong";
-const char *ALERT="alert";
-const char *NOTFOUND="notfound";
-const char *FILTERLOAD="filterload";
-const char *FILTERADD="filteradd";
-const char *FILTERCLEAR="filterclear";
-const char *REJECT="reject";
-const char *SENDHEADERS="sendheaders";
-};
-
 static const char* ppszTypeName[] =
 {
-    "ERROR", // Should never occur
-    NetMsgType::TX,
-    NetMsgType::BLOCK,
-    "filtered block" // Should never occur
+    "ERROR",
+    "tx",
+    "block",
+    "filtered block"
 };
 
-/** All known message types. Keep this in the same order as the list of
- * messages above and in protocol.h.
- */
-const static std::string allNetMessageTypes[] = {
-    NetMsgType::VERSION,
-    NetMsgType::VERACK,
-    NetMsgType::ADDR,
-    NetMsgType::INV,
-    NetMsgType::GETDATA,
-    NetMsgType::MERKLEBLOCK,
-    NetMsgType::GETBLOCKS,
-    NetMsgType::GETHEADERS,
-    NetMsgType::TX,
-    NetMsgType::HEADERS,
-    NetMsgType::BLOCK,
-    NetMsgType::GETADDR,
-    NetMsgType::MEMPOOL,
-    NetMsgType::PING,
-    NetMsgType::PONG,
-    NetMsgType::ALERT,
-    NetMsgType::NOTFOUND,
-    NetMsgType::FILTERLOAD,
-    NetMsgType::FILTERADD,
-    NetMsgType::FILTERCLEAR,
-    NetMsgType::REJECT,
-    NetMsgType::SENDHEADERS
-};
-const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
-
-CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn)
+CMessageHeader::CMessageHeader()
 {
-    memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
+    memcpy(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE);
     memset(pchCommand, 0, sizeof(pchCommand));
+    pchCommand[1] = 1;
     nMessageSize = -1;
     nChecksum = 0;
 }
 
-CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
+CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
 {
-    memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
-    memset(pchCommand, 0, sizeof(pchCommand));
+    memcpy(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE);
     strncpy(pchCommand, pszCommand, COMMAND_SIZE);
     nMessageSize = nMessageSizeIn;
     nChecksum = 0;
@@ -93,13 +38,16 @@ CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const
 
 std::string CMessageHeader::GetCommand() const
 {
-    return std::string(pchCommand, pchCommand + strnlen(pchCommand, COMMAND_SIZE));
+    if (pchCommand[COMMAND_SIZE-1] == 0)
+        return std::string(pchCommand, pchCommand + strlen(pchCommand));
+    else
+        return std::string(pchCommand, pchCommand + COMMAND_SIZE);
 }
 
-bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
+bool CMessageHeader::IsValid() const
 {
     // Check start string
-    if (memcmp(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE) != 0)
+    if (memcmp(pchMessageStart, Params().MessageStart(), MESSAGE_START_SIZE) != 0)
         return false;
 
     // Check the command string for errors
@@ -111,15 +59,15 @@ bool CMessageHeader::IsValid(const MessageStartChars& pchMessageStartIn) const
             for (; p1 < pchCommand + COMMAND_SIZE; p1++)
                 if (*p1 != 0)
                     return false;
-        }
-        else if (*p1 < ' ' || *p1 > 0x7E)
+        } else
+        if (*p1 < ' ' || *p1 > 0x7E)
             return false;
     }
 
     // Message size
     if (nMessageSize > MAX_SIZE)
     {
-        LogPrintf("CMessageHeader::IsValid(): (%s, %u bytes) nMessageSize > MAX_SIZE\n", GetCommand(), nMessageSize);
+        LogPrintf("CMessageHeader::IsValid() : (%s, %u bytes) nMessageSize > MAX_SIZE\n", GetCommand().c_str(), nMessageSize);
         return false;
     }
 
@@ -143,12 +91,13 @@ void CAddress::Init()
 {
     nServices = NODE_NETWORK;
     nTime = 100000000;
+    nLastTry = 0;
 }
 
 CInv::CInv()
 {
     type = 0;
-    hash.SetNull();
+    hash = 0;
 }
 
 CInv::CInv(int typeIn, const uint256& hashIn)
@@ -169,7 +118,7 @@ CInv::CInv(const std::string& strType, const uint256& hashIn)
         }
     }
     if (i == ARRAYLEN(ppszTypeName))
-        throw std::out_of_range(strprintf("CInv::CInv(string, uint256): unknown type '%s'", strType));
+        throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType.c_str()));
     hash = hashIn;
 }
 
@@ -186,16 +135,17 @@ bool CInv::IsKnownType() const
 const char* CInv::GetCommand() const
 {
     if (!IsKnownType())
-        throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
+        throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
     return ppszTypeName[type];
 }
 
 std::string CInv::ToString() const
 {
-    return strprintf("%s %s", GetCommand(), hash.ToString());
+    return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,20).c_str());
 }
 
-const std::vector<std::string> &getAllNetMessageTypes()
+void CInv::print() const
 {
-    return allNetMessageTypesVec;
+    LogPrintf("CInv(%s)\n", ToString().c_str());
 }
+

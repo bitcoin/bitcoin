@@ -186,7 +186,7 @@ class Repairer {
     reporter.env = env_;
     reporter.info_log = options_.info_log;
     reporter.lognum = log;
-    // We intentionally make log::Reader do checksumming so that
+    // We intentially make log::Reader do checksumming so that
     // corruptions cause entire commits to be skipped instead of
     // propagating bad information (like overly large sequence
     // numbers).

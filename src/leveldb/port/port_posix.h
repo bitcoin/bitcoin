@@ -21,11 +21,14 @@
   #else
     #define PLATFORM_IS_LITTLE_ENDIAN false
   #endif
-#elif defined(OS_FREEBSD) || defined(OS_OPENBSD) ||\
-      defined(OS_NETBSD) || defined(OS_DRAGONFLYBSD)
+#elif defined(OS_FREEBSD)
   #include <sys/types.h>
   #include <sys/endian.h>
   #define PLATFORM_IS_LITTLE_ENDIAN (_BYTE_ORDER == _LITTLE_ENDIAN)
+#elif defined(OS_OPENBSD) || defined(OS_NETBSD) ||\
+      defined(OS_DRAGONFLYBSD)
+  #include <sys/types.h>
+  #include <sys/endian.h>
 #elif defined(OS_HPUX)
   #define PLATFORM_IS_LITTLE_ENDIAN false
 #elif defined(OS_ANDROID)
@@ -52,7 +55,7 @@
 
 #if defined(OS_MACOSX) || defined(OS_SOLARIS) || defined(OS_FREEBSD) ||\
     defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_DRAGONFLYBSD) ||\
-    defined(OS_ANDROID) || defined(OS_HPUX) || defined(CYGWIN)
+    defined(OS_ANDROID) || defined(OS_HPUX)
 // Use fread/fwrite/fflush on platforms without _unlocked variants
 #define fread_unlocked fread
 #define fwrite_unlocked fwrite

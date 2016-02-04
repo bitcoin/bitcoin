@@ -1,1 +1,1 @@
-src/clientversion.cpp export-subst
+src/version.cpp export-subst
