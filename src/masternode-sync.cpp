@@ -59,9 +59,9 @@ bool CMasternodeSync::IsBlockchainSynced()
 
 void CMasternodeSync::Reset()
 {   
-    lastMasternodeList = 0;
-    lastMasternodeWinner = 0;
-    lastBudgetItem = 0;
+    lastMasternodeList = GetTime();
+    lastMasternodeWinner = GetTime();
+    lastBudgetItem = GetTime();
     mapSeenSyncMNB.clear();
     mapSeenSyncMNW.clear();
     mapSeenSyncBudget.clear();
@@ -83,10 +83,8 @@ void CMasternodeSync::Reset()
 void CMasternodeSync::AddedMasternodeList(uint256 hash)
 {
     if(mnodeman.mapSeenMasternodeBroadcast.count(hash)) {
-        if(mapSeenSyncMNB[hash] < MASTERNODE_SYNC_THRESHOLD) {
-            lastMasternodeList = GetTime();
-            mapSeenSyncMNB[hash]++;
-        }
+        lastMasternodeList = GetTime();
+        mapSeenSyncMNB[hash]++;
     } else {
         lastMasternodeList = GetTime();
         mapSeenSyncMNB.insert(make_pair(hash, 1));
@@ -95,11 +93,9 @@ void CMasternodeSync::AddedMasternodeList(uint256 hash)
 
 void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
 {
-    if(masternodePayments.mapMasternodePayeeVotes.count(hash)) {
-        if(mapSeenSyncMNW[hash] < MASTERNODE_SYNC_THRESHOLD) {
-            lastMasternodeWinner = GetTime();
-            mapSeenSyncMNW[hash]++;
-        }
+    if(mnpayments.mapMasternodePayeeVotes.count(hash)) {
+        lastMasternodeWinner = GetTime();
+        mapSeenSyncMNW[hash]++;
     } else {
         lastMasternodeWinner = GetTime();
         mapSeenSyncMNW.insert(make_pair(hash, 1));
@@ -109,11 +105,9 @@ void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
 void CMasternodeSync::AddedBudgetItem(uint256 hash)
 {
     if(budget.mapSeenMasternodeBudgetProposals.count(hash) || budget.mapSeenMasternodeBudgetVotes.count(hash) ||
-            budget.mapSeenFinalizedBudgets.count(hash) || budget.mapSeenFinalizedBudgetVotes.count(hash)) {
-        if(mapSeenSyncBudget[hash] < MASTERNODE_SYNC_THRESHOLD) {
-            lastBudgetItem = GetTime();
-            mapSeenSyncBudget[hash]++;
-        }
+        budget.mapSeenFinalizedBudgets.count(hash) || budget.mapSeenFinalizedBudgetVotes.count(hash)) {
+        lastBudgetItem = GetTime();
+        mapSeenSyncBudget[hash]++;
     } else {
         lastBudgetItem = GetTime();
         mapSeenSyncBudget.insert(make_pair(hash, 1));
@@ -137,15 +131,19 @@ void CMasternodeSync::GetNextAsset()
         case(MASTERNODE_SYNC_INITIAL):
         case(MASTERNODE_SYNC_FAILED): // should never be used here actually, use Reset() instead
             ClearFulfilledRequest();
+            printf("MASTERNODE_SYNC_SPORKS\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_SPORKS;
             break;
         case(MASTERNODE_SYNC_SPORKS):
+            printf("MASTERNODE_SYNC_LIST\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_LIST;
             break;
         case(MASTERNODE_SYNC_LIST):
+            printf("MASTERNODE_SYNC_MNW\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_MNW;
             break;
         case(MASTERNODE_SYNC_MNW):
+            printf("MASTERNODE_SYNC_BUDGET\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_BUDGET;
             break;
         case(MASTERNODE_SYNC_BUDGET):
@@ -226,27 +224,34 @@ void CMasternodeSync::ClearFulfilledRequest()
 void CMasternodeSync::Process()
 {
     static int tick = 0;
+    if(tick++ % 6 != 0) return;
 
-    if(tick++ % MASTERNODE_SYNC_TIMEOUT != 0) return;
+    //the actual count of masternodes we have currently
+    int nMnCount = mnodeman.CountEnabled();  
 
-    if(IsSynced()) {
-        /* 
-            Resync if we lose all masternodes from sleep/wake or failure to sync originally
-        */
-        if(mnodeman.CountEnabled() == 0) {
+    // RESET SYNCING INCASE OF FAILURE
+    {
+        if(IsSynced()) {
+            /* 
+                Resync if we lose all masternodes from sleep/wake or failure to sync originally
+            */
+            if(mnodeman.CountEnabled() == 0) {
+                Reset();
+            } else
+                return;
+        }
+
+        //try syncing again
+        if(RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED && lastFailure + (1*60) < GetTime()) {
             Reset();
-        } else
+        } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
             return;
+        }
+    
+        if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
     }
 
-    //try syncing again
-    if(RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED && lastFailure + (1*60) < GetTime()) {
-        Reset();
-    } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
-        return;
-    }
-
-    if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
+    printf("CMasternodeSync::Process() TICK - %d %d \n", tick, RequestedMasternodeAssets);
 
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
@@ -254,11 +259,19 @@ void CMasternodeSync::Process()
     if(Params().NetworkID() != CBaseChainParams::REGTEST &&
             !IsBlockchainSynced() && RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
 
+
+    printf("CMasternodeSync::Process() TICK2 - %d %d \n", tick, RequestedMasternodeAssets);
+
     TRY_LOCK(cs_vNodes, lockRecv);
     if(!lockRecv) return;
 
+    printf("CMasternodeSync::Process() TICK3 - %d %d \n", tick, RequestedMasternodeAssets);
+
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
+        /* 
+            REGTEST QUICK MODE
+        */ 
         if(Params().NetworkID() == CBaseChainParams::REGTEST){
             if(RequestedMasternodeAttempt <= 2) {
                 pnode->PushMessage("getsporks"); //get current network sporks
@@ -276,77 +289,62 @@ void CMasternodeSync::Process()
             return;
         }
 
-        //set to synced
-        if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
+        /*
+            NORMAL NETWORK MODE - TESTNET/MAINNET
+        */
+
+        // ALWAYS ASK FOR SPORKS AS WE SYNC
+        {
             if(pnode->HasFulfilledRequest("getspork")) continue;
             pnode->FulfilledRequest("getspork");
-
             pnode->PushMessage("getsporks"); //get current network sporks
-            if(RequestedMasternodeAttempt >= 2) GetNextAsset();
-            RequestedMasternodeAttempt++;
-            
-            return;
+
+            //we always ask for sporks, so just skip this
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_SPORKS){
+                GetNextAsset();
+                return;
+            }
         }
 
-        if (pnode->nVersion >= masternodePayments.GetMinMasternodePaymentsProto()) {
+        if (pnode->nVersion >= mnpayments.GetMinMasternodePaymentsProto()) {
+            printf("MASTERNODE_SYNC_LIST Timeout at %d\n", lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
+            // MODE : MASTERNODE_SYNC_LIST
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
-                if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", lastMasternodeList, GetTime() - MASTERNODE_SYNC_TIMEOUT);
-                if(lastMasternodeList > 0 && lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    GetNextAsset();
-                    return;
-                }
+                if(fDebug) LogPrintf("CMasternodeSync::Process() - lastMasternodeList %lld (GetTime() - MASTERNODE_SYNC_TIMEOUT) %lld\n", GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
                 if(pnode->HasFulfilledRequest("mnsync")) continue;
                 pnode->FulfilledRequest("mnsync");
 
-                // timeout
-                if(lastMasternodeList == 0 &&
-                (RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
-                    if(IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
-                        LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
-                        RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
-                        RequestedMasternodeAttempt = 0;
-                        lastFailure = GetTime();
-                        nCountFailures++;
-                    } else {
-                        GetNextAsset();
-                    }
+                //see if we've synced the masternode list
+                /* note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock) */
+ 
+                mnodeman.DsegUpdate(pnode);
+                RequestedMasternodeAttempt++;
+               
+                // shall we move onto the next asset?
+
+                printf("Masternode count %d est %d\n", nMnCount, mnodeman.GetEstimatedMasternodes(chainActive.Height())) ;             
+                if(nMnCount > mnodeman.GetEstimatedMasternodes(chainActive.Height())*0.9)
+                {
+                    GetNextAsset();
+                    printf("synced masternode list successfully\n");
                     return;
                 }
 
-                if(RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
-
-                mnodeman.DsegUpdate(pnode);
-                RequestedMasternodeAttempt++;
-                return;
-            }
-
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
-                if(lastMasternodeWinner > 0 && lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
+                if(lastMasternodeList < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
                     GetNextAsset();
                     return;
                 }
 
+            }
+
+            // MODE : MASTERNODE_SYNC_MNW
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
+                printf("MASTERNODE_SYNC_MNW Timeout at %d\n", lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT);
+
                 if(pnode->HasFulfilledRequest("mnwsync")) continue;
                 pnode->FulfilledRequest("mnwsync");
-
-                // timeout
-                if(lastMasternodeWinner == 0 &&
-                (RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
-                    if(IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)) {
-                        LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
-                        RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
-                        RequestedMasternodeAttempt = 0;
-                        lastFailure = GetTime();
-                        nCountFailures++;
-                    } else {
-                        GetNextAsset();
-                    }
-                    return;
-                }
-
-                if(RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
 
                 CBlockIndex* pindexPrev = chainActive.Tip();
                 if(pindexPrev == NULL) return;
@@ -355,49 +353,67 @@ void CMasternodeSync::Process()
                 pnode->PushMessage("mnget", nMnCount); //sync payees
                 RequestedMasternodeAttempt++;
 
+                // shall we move onto the next asset?
+
+                if(lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT){ //hasn't received a new item in the last five seconds, so we'll move to the
+                    GetNextAsset();
+                    return;
+                }
+
+                // target blocks count
+                if(mnpayments.GetBlockCount() > nMnCount)
+                {   
+                    // target votes, max ten per item. 6 average should be fine
+                    if(mnpayments.GetVoteCount() > nMnCount*6)
+                    {
+                        printf("Successfully synced mnw blocks and votes %d %d\n", mnpayments.GetBlockCount(), mnpayments.GetVoteCount());
+                        GetNextAsset();
+                        return;
+                    }
+                }
+
                 return;
             }
-        }
 
-        if (pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) {
-
+            // MODE : MASTERNODE_SYNC_BUDGET
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
-                //we'll start rejecting votes if we accidentally get set as synced too soon
-                if(lastBudgetItem > 0 && lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT*2 && RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD){ //hasn't received a new item in the last five seconds, so we'll move to the
-                    //LogPrintf("CMasternodeSync::Process - HasNextFinalizedBudget %d nCountFailures %d IsBudgetPropEmpty %d\n", budget.HasNextFinalizedBudget(), nCountFailures, IsBudgetPropEmpty());
-                    //if(budget.HasNextFinalizedBudget() || nCountFailures >= 2 || IsBudgetPropEmpty()) {
-                        GetNextAsset();
-
-                        //try to activate our masternode if possible
-                        activeMasternode.ManageStatus();
-                    // } else { //we've failed to sync, this state will reject the next budget block
-                    //     LogPrintf("CMasternodeSync::Process - ERROR - Sync has failed, will retry later\n");
-                    //     RequestedMasternodeAssets = MASTERNODE_SYNC_FAILED;
-                    //     RequestedMasternodeAttempt = 0;
-                    //     lastFailure = GetTime();
-                    //     nCountFailures++;
-                    // }
-                    return;
-                }
-
-                // timeout
-                if(lastBudgetItem == 0 &&
-                (RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3 || GetTime() - nAssetSyncStarted > MASTERNODE_SYNC_TIMEOUT*5)) {
-                    // maybe there is no budgets at all, so just finish syncing
-                    GetNextAsset();
-                    activeMasternode.ManageStatus();
-                    return;
-                }
+                printf("MASTERNODE_SYNC_BUDGET Timeout at %d\n", lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
                 if(pnode->HasFulfilledRequest("busync")) continue;
                 pnode->FulfilledRequest("busync");
 
-                if(RequestedMasternodeAttempt >= MASTERNODE_SYNC_THRESHOLD*3) return;
-
                 uint256 n = 0;
                 pnode->PushMessage("mnvs", n); //sync masternode votes
                 RequestedMasternodeAttempt++;
-                
+
+                // shall we move onto the next asset?
+
+                if(countBudgetItemProp > 0 && countBudgetItemFin)
+                {
+                    printf("MASTERNODE_SYNC_BUDGET countBudgetItemProp %d - %d\n", (sumBudgetItemProp / countBudgetItemProp), budget.CountProposalInventoryItems());
+                    printf("MASTERNODE_SYNC_BUDGET countBudgetItemProp %d - %d\n", (sumBudgetItemFin / countBudgetItemFin), budget.CountFinalizedInventoryItems());
+
+                    if(budget.CountProposalInventoryItems() >= (sumBudgetItemProp / countBudgetItemProp)*0.9)
+                    {
+                        printf("HAVE BUDGETS\n");
+                        if(budget.CountFinalizedInventoryItems() >= (sumBudgetItemFin / countBudgetItemFin)*0.9)
+                        {
+                            printf("HAVE FINAL BUDGETS\n");
+                            GetNextAsset();
+                            return;
+                        }
+                    }
+                }
+
+                //we'll start rejecting votes if we accidentally get set as synced too soon
+                if(lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){
+                    GetNextAsset();
+
+                    //try to activate our masternode if possible
+                    activeMasternode.ManageStatus();
+                    return;
+                }
+
                 return;
             }
 

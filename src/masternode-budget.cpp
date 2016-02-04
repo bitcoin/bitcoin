@@ -149,7 +149,6 @@ void CBudgetManager::SubmitFinalBudget()
 
     //create fee tx
     CTransaction tx;
-    
     if(!mapCollateral.count(tempBudget.GetHash())){
         CWalletTx wtx;
         if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), false)){
@@ -1169,14 +1168,18 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     int nInvCount = 0;
 
+
+    // todo - why does this code not always sync properly?
+    // the next place this data arrives at is main.cpp:4024 and main.cpp:4030
     std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
     while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fValid && (nProp == 0 || (*it1).first == nProp)){
+            // Push the inventory budget proposal message over to the other client
             pfrom->PushInventory(CInv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash()));
             nInvCount++;
         
-            //send votes
+            //send votes, at the same time. We should collect votes and store them if we don't have the proposal yet on the other side
             std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
             while(it2 != pbudgetProposal->mapVotes.end()){
                 if((*it2).second.fValid){
@@ -1197,6 +1200,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     nInvCount = 0;
 
+    // finalized budget -- this code has no issues as far as we can tell
     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
     while(it3 != mapSeenFinalizedBudgets.end()){
         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);

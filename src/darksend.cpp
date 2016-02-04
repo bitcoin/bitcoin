@@ -2264,7 +2264,7 @@ void ThreadCheckDarkSendPool()
             {
                 mnodeman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections();
-                masternodePayments.CleanPaymentList();
+                mnpayments.CleanPaymentList();
                 CleanTransactionLocksList();
             }
 

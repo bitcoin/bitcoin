@@ -262,7 +262,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
         if((*it).activeState == CMasternode::MASTERNODE_REMOVE ||
                 (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
                 (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED) ||
-                (*it).protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
+                (*it).protocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
             LogPrint("masternode", "CMasternodeMan: Removing inactive Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
 
             //erase all of the broadcasts we've seen from this vin
@@ -362,7 +362,7 @@ void CMasternodeMan::Clear()
 int CMasternodeMan::CountEnabled(int protocolVersion)
 {
     int i = 0;
-    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
+    protocolVersion = protocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes) {
         mn.Check();
@@ -455,10 +455,10 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
         if(!mn.IsEnabled()) continue;
 
         // //check protocol version
-        if(mn.protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) continue;
+        if(mn.protocolVersion < mnpayments.GetMinMasternodePaymentsProto()) continue;
 
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-        if(masternodePayments.IsScheduled(mn, nBlockHeight)) continue;
+        if(mnpayments.IsScheduled(mn, nBlockHeight)) continue;
 
         //it's too new, wait for a cycle
         if(fFilterSigTime && mn.sigTime + (nMnCount*2.6*60) > GetAdjustedTime()) continue;
@@ -503,7 +503,7 @@ CMasternode *CMasternodeMan::FindRandomNotInVec(std::vector<CTxIn> &vecToExclude
 {
     LOCK(cs);
 
-    protocolVersion = protocolVersion == -1 ? masternodePayments.GetMinMasternodePaymentsProto() : protocolVersion;
+    protocolVersion = protocolVersion == -1 ? mnpayments.GetMinMasternodePaymentsProto() : protocolVersion;
 
     int nCountEnabled = CountEnabled(protocolVersion);
     LogPrintf("CMasternodeMan::FindRandomNotInVec - nCountEnabled - vecToExclude.size() %d\n", nCountEnabled - vecToExclude.size());
@@ -829,4 +829,27 @@ std::string CMasternodeMan::ToString() const
             ", nDsqCount: " << (int)nDsqCount;
 
     return info.str();
+}
+
+int CMasternodeMan::GetEstimatedMasternodes(int nBlock)
+{
+    /*
+        Masternodes = (Coins/1000)*X on average
+        
+        *X = nPercentage, starting at 0.52
+        nPercentage goes up 0.01 each period
+        Period starts at 35040, which has exponential slowing growth
+
+    */ 
+
+    int nPercentage = 52; //0.52
+    int nPeriod = 35040;
+    int nCollateral = 1000;
+
+    for(int i = nPeriod; i <= nBlock; i += nPeriod)
+    {
+        nPercentage++;
+        nPeriod*=2;
+    }
+    return (GetTotalCoinEstimate(nBlock)/100*nPercentage/nCollateral);
 }

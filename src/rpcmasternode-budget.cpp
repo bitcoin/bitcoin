@@ -15,6 +15,9 @@
 #include <boost/lexical_cast.hpp>
 
 #include <fstream>
+#include <iostream>
+#include <sstream>
+
 using namespace json_spirit;
 using namespace std;
 
@@ -667,15 +670,17 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "list" && strCommand != "getvotes"))
+        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "show" && strCommand != "getvotes" && strCommand != "prepare" && strCommand != "submit"))
         throw runtime_error(
                 "mnfinalbudget \"command\"...\n"
                 "Manage current budgets\n"
                 "\nAvailable commands:\n"
-                "  list        - List existing finalized budgets\n"
-                "  vote        - Vote on a finalized budget by single masternode (using dash.conf setup)\n"
-                "  vote-many   - Vote on a finalized budget by all masternodes (using masternode.conf setup)\n"
+                "  vote-many   - Vote on a finalized budget\n"
+                "  vote        - Vote on a finalized budget\n"
+                "  show        - Show existing finalized budgets\n"
                 "  getvotes    - Get vote information for each finalized budget\n"
+                "  prepare     - Manually prepare a finalized budget\n"
+                "  submit      - Manually submit a finalized budget\n"
                 );
 
     if(strCommand == "vote-many")
@@ -822,7 +827,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
     if(strCommand == "getvotes")
     {
         if (params.size() != 2)
-            throw runtime_error("Correct usage is 'mnbudget getvotes <budget-hash>'");
+            throw runtime_error("Correct usage is 'mnfinalbudget getvotes budget-hash'");
 
         std::string strHash = params[1].get_str();
         uint256 hash(strHash);
@@ -850,6 +855,125 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         return obj;
     }
 
+    /* TODO 
+        Switch the preparation to a public key which the core team has
+        The budget should be able to be created by any high up core team member then voted on by the network separately. 
+    */
+
+    if(strCommand == "prepare")
+    {
+        if (params.size() != 2)
+            throw runtime_error("Correct usage is 'mnfinalbudget prepare comma-separated-hashes'");
+
+        std::string strHashes = params[1].get_str();
+        std::istringstream ss(strHashes);
+        std::string token;
+
+        std::vector<CTxBudgetPayment> vecTxBudgetPayments;
+
+        while(std::getline(ss, token, ',')) {
+            uint256 nHash(token);
+            CBudgetProposal* prop = budget.FindProposal(nHash);
+
+            CTxBudgetPayment txBudgetPayment;
+            txBudgetPayment.nProposalHash = prop->GetHash();
+            txBudgetPayment.payee = prop->GetPayee();
+            txBudgetPayment.nAmount = prop->GetAllotted();
+            vecTxBudgetPayments.push_back(txBudgetPayment);
+        }
+
+        if(vecTxBudgetPayments.size() < 1) {
+            return "Invalid finalized proposal";
+        }
+
+
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(!pindexPrev) return "invalid chaintip";
+
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+
+        CFinalizedBudgetBroadcast tempBudget("main", nBlockStart, vecTxBudgetPayments, 0);
+        // if(mapSeenFinalizedBudgets.count(tempBudget.GetHash())) {
+        //     return "already exists"; //already exists
+        // }
+
+        //create fee tx
+        CTransaction tx;
+        
+        CWalletTx wtx;
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), false)){
+            printf("Can't make collateral transaction\n");
+            return "can't make colateral tx";
+        }
+        
+        // make our change address
+        CReserveKey reservekey(pwalletMain);
+        //send the tx to the network
+        pwalletMain->CommitTransaction(wtx, reservekey, "ix");
+
+        return wtx.GetHash().ToString();
+    }
+
+    if(strCommand == "submit")
+    {
+        if (params.size() != 3)
+            throw runtime_error("Correct usage is 'mnfinalbudget submit comma-separated-hashes collateralhash'");
+
+        std::string strHashes = params[1].get_str();
+        std::istringstream ss(strHashes);
+        std::string token;
+
+        std::vector<CTxBudgetPayment> vecTxBudgetPayments;
+
+        uint256 nColHash(params[2].get_str());
+
+        while(std::getline(ss, token, ',')) {
+            uint256 nHash(token);
+            CBudgetProposal* prop = budget.FindProposal(nHash);
+
+            CTxBudgetPayment txBudgetPayment;
+            txBudgetPayment.nProposalHash = prop->GetHash();
+            txBudgetPayment.payee = prop->GetPayee();
+            txBudgetPayment.nAmount = prop->GetAllotted();
+            vecTxBudgetPayments.push_back(txBudgetPayment);
+
+            printf("%d\n", txBudgetPayment.nAmount);
+        }
+
+        if(vecTxBudgetPayments.size() < 1) {
+            return "Invalid finalized proposal";
+        }
+
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(!pindexPrev) return "invalid chaintip";
+
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+      
+        // CTxIn in(COutPoint(nColHash, 0));
+        // int conf = GetInputAgeIX(nColHash, in);
+        
+        //     Wait will we have 1 extra confirmation, otherwise some clients might reject this feeTX
+        //     -- This function is tied to NewBlock, so we will propagate this budget while the block is also propagating
+        
+        // if(conf < BUDGET_FEE_CONFIRMATIONS+1){
+        //     printf ("Collateral requires at least %d confirmations - %s - %d confirmations\n", BUDGET_FEE_CONFIRMATIONS, nColHash.ToString().c_str(), conf);
+        //     return "invalid collateral";
+        // }
+
+        //create the proposal incase we're the first to make it
+        CFinalizedBudgetBroadcast finalizedBudgetBroadcast("main", nBlockStart, vecTxBudgetPayments, nColHash);
+
+        std::string strError = "";
+        if(!finalizedBudgetBroadcast.IsValid(strError)){
+            printf("CBudgetManager::SubmitFinalBudget - Invalid finalized budget - %s \n", strError.c_str());
+            return "invalid finalized budget";
+        }
+
+        finalizedBudgetBroadcast.Relay();
+        budget.AddFinalizedBudget(finalizedBudgetBroadcast);
+
+        return finalizedBudgetBroadcast.GetHash().ToString();
+    }
 
     return Value::null;
 }

@@ -109,6 +109,16 @@ public:
         mapSeenFinalizedBudgetVotes.clear();
     }
 
+    int CountProposalInventoryItems()
+    {
+        return mapSeenMasternodeBudgetProposals.size() + mapSeenMasternodeBudgetVotes.size();
+    }
+
+    int CountFinalizedInventoryItems()
+    {
+        return mapSeenFinalizedBudgets.size() + mapSeenFinalizedBudgetVotes.size();
+    }
+
     int sizeFinalized() {return (int)mapFinalizedBudgets.size();}
     int sizeProposals() {return (int)mapProposals.size();}
 
