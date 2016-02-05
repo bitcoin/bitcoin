@@ -170,12 +170,20 @@ BITCOIN_QT_H = \
 RES_FONTS = \
   qt/res/fonts/RobotoMono-Bold.ttf
 
-RES_ICONS = \
+RES_RENDERED_ICON_SRC = qt/res/src/bitcoin.svg
+
+RES_RENDERED_ICONS = \
+  qt/res/rendered_icons/bitcoin.ico \
+  qt/res/rendered_icons/bitcoin1024.png
+
+RES_ALL_RENDERED_ICONS = $(RES_RENDERED_ICONS) \
+  $(patsubst %,qt/res/rendered_icons/bitcoin%.png,16 32 48 256 512 1024) \
+  qt/res/rendered_icons/bitcoin.icns
+
+RES_ICONS = $(RES_RENDERED_ICONS) \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
-  qt/res/icons/bitcoin.ico \
   qt/res/icons/bitcoin_testnet.ico \
-  qt/res/icons/bitcoin.png \
   qt/res/icons/chevron.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
@@ -289,6 +297,8 @@ RES_ANIMATION = $(wildcard $(srcdir)/qt/res/animation/spinner-*.png)
 
 BITCOIN_RC = qt/res/bitcoin-qt-res.rc
 
+$(BITCOIN_RC): qt/res/rendered_icons/bitcoin.ico
+
 BITCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS -DQT_USE_QSTRINGBUILDER
 
 qt_libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
@@ -376,7 +386,7 @@ $(QT_QRC_CPP): $(QT_QRC_BUILD) $(QT_FORMS_H) $(RES_FONTS) $(RES_ICONS) $(RES_ANI
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin --format-version 1 $< > $@
 
-CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_bitcoin_locale.qrc $(QT_QRC_BUILD)
+CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_bitcoin_locale.qrc $(QT_QRC_BUILD) $(RES_ALL_RENDERED_ICONS)
 
 CLEANFILES += $(CLEAN_QT)
 
@@ -415,3 +425,29 @@ moc_%.cpp: %.h
 	@test -f $(LRELEASE)
 	@$(MKDIR_P) $(@D)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LRELEASE) -silent $< -qm $@
+
+EXTRA_DIST += $(RES_RENDERED_ICON_SRC)
+
+if CAN_RENDER_ICONS
+
+qt/res/rendered_icons/bitcoin%.png: qt/res/src/bitcoin.svg
+	@$(MKDIR_P) $(@D)
+	$(RSVG_CONVERT) -f png -d $* -p $* < $< > $@
+
+# NOTE: ImageMagick will never convert transparent PNGs to 8-bit ICOs, but GIF is fine
+qt/res/rendered_icons/bitcoin%d8.gif: qt/res/rendered_icons/bitcoin%.png
+	$(IMAGEMAGICK_CONVERT) $^ -colors 256 -channel A -threshold '50%' $@
+
+qt/res/rendered_icons/bitcoin.icns: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 512 1024 32 16)
+	$(PNG2ICNS) $@ $^
+
+qt/res/rendered_icons/bitcoin.ico: qt/res/rendered_icons/bitcoin32d8.gif $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 64 48 32 20 16)
+	$(IMAGEMAGICK_CONVERT) $^ $@
+
+else
+
+qt/res/rendered_icons/%: qt/res/icons/%
+	@$(MKDIR_P) $(@D)
+	cp $< $@
+
+endif
