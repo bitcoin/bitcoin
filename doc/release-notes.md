@@ -450,315 +450,315 @@ git merge commit are mentioned.
 
 ### RPC and REST
 
-- #6121 `466f0ea` Convert entire source tree from json_spirit to UniValue
-- #6234 `d38cd47` fix rpcmining/getblocktemplate univalue transition logic error
-- #6239 `643114f` Don't go through double in AmountFromValue and ValueFromAmount
-- #6266 `ebab5d3` Fix univalue handling of \u0000 characters.
-- #6276 `f3d4dbb` Fix getbalance * 0
-- #6257 `5ebe7db` Add `paytxfee` and `errors` JSON fields where appropriate
-- #6271 `754aae5` New RPC command disconnectnode
-- #6158 `0abfa8a` Add setban/listbanned RPC commands
-- #6307 `7ecdcd9` rpcban fixes
-- #6290 `5753988` rpc: make `gettxoutsettinfo` run lock-free
-- #6262 `247b914` Return all available information via RPC call "validateaddress"
-- #6339 `c3f0490` UniValue: don't escape solidus, keep espacing of reverse solidus
-- #6353 `6bcb0a2` Show softfork status in getblockchaininfo
-- #6247 `726e286` Add getblockheader RPC call
-- #6362 `d6db115` Fix null id in RPC response during startup
-- #5486 `943b322` [REST] JSON support for /rest/headers
-- #6379 `c52e8b3` rpc: Accept scientific notation for monetary amounts in JSON
-- #6388 `fd5dfda` rpc: Implement random-cookie based authentication
-- #6457 `3c923e8` Include pruned state in chaininfo.json
-- #6456 `bfd807f` rpc: Avoid unnecessary parsing roundtrip in number formatting, fix locale issue
-- #6380 `240b30e` rpc: Accept strings in AmountFromValue
-- #6346 `6bb2805` Add OP_RETURN support in createrawtransaction RPC call, add tests.
-- #6013 `6feeec1` [REST] Add memory pool API
-- #6576 `da9beb2` Stop parsing JSON after first finished construct.
-- #5677 `9aa9099` libevent-based http server
-- #6633 `bbc2b39` Report minimum ping time in getpeerinfo
-- #6648 `cd381d7` Simplify logic of REST request suffix parsing.
-- #6695 `5e21388` libevent http fixes
-- #5264 `48efbdb` show scriptSig signature hash types in transaction decodes. fixes #3166
-- #6719 `1a9f19a` Make HTTP server shutdown more graceful
-- #6859 `0fbfc51` http: Restrict maximum size of http + headers
-- #5936 `bf7c195` [RPC] Add optional locktime to createrawtransaction
-- #6877 `26f5b34` rpc: Add maxmempool and effective min fee to getmempoolinfo
-- #6970 `92701b3` Fix crash in validateaddress with -disablewallet
-- #5574 `755b4ba` Expose GUI labels in RPC as comments
-- #6990 `dbd2c13` http: speed up shutdown
-- #7013 `36baa9f` Remove LOCK(cs_main) from decodescript
-- #6999 `972bf9c` add (max)uploadtarget infos to getnettotals RPC help
-- #7011 `31de241` Add mediantime to getblockchaininfo
-- #7065 `f91e29f` http: add Boost 1.49 compatibility
-- #7087 `be281d8` [Net]Add -enforcenodebloom option
-- #7044 `438ee59` RPC: Added additional config option for multiple RPC users.
-- #7072 `c143c49` [RPC] Add transaction size to JSON output
-- #7022 `9afbd96` Change default block priority size to 0
-- #7141 `c0c08c7` rpc: Don't translate warning messages
-- #7312 `fd4bd50` Add RPC call abandontransaction
-- #7222 `e25b158` RPC: indicate which transactions are replaceable
+- #6121 `466f0ea` Convert entire source tree from json_spirit to UniValue (Jonas Schnelli)
+- #6234 `d38cd47` fix rpcmining/getblocktemplate univalue transition logic error (Jonas Schnelli)
+- #6239 `643114f` Don't go through double in AmountFromValue and ValueFromAmount (Wladimir J. van der Laan)
+- #6266 `ebab5d3` Fix univalue handling of \u0000 characters. (Daniel Kraft)
+- #6276 `f3d4dbb` Fix getbalance * 0 (Tom Harding)
+- #6257 `5ebe7db` Add `paytxfee` and `errors` JSON fields where appropriate (Stephen)
+- #6271 `754aae5` New RPC command disconnectnode (Alex van der Peet)
+- #6158 `0abfa8a` Add setban/listbanned RPC commands (Jonas Schnelli)
+- #6307 `7ecdcd9` rpcban fixes (Jonas Schnelli)
+- #6290 `5753988` rpc: make `gettxoutsettinfo` run lock-free (Wladimir J. van der Laan)
+- #6262 `247b914` Return all available information via RPC call "validateaddress" (dexX7)
+- #6339 `c3f0490` UniValue: don't escape solidus, keep espacing of reverse solidus (Jonas Schnelli)
+- #6353 `6bcb0a2` Show softfork status in getblockchaininfo (Wladimir J. van der Laan)
+- #6247 `726e286` Add getblockheader RPC call (Peter Todd)
+- #6362 `d6db115` Fix null id in RPC response during startup (Forrest Voight)
+- #5486 `943b322` [REST] JSON support for /rest/headers (Jonas Schnelli)
+- #6379 `c52e8b3` rpc: Accept scientific notation for monetary amounts in JSON (Wladimir J. van der Laan)
+- #6388 `fd5dfda` rpc: Implement random-cookie based authentication (Wladimir J. van der Laan)
+- #6457 `3c923e8` Include pruned state in chaininfo.json (Simon Males)
+- #6456 `bfd807f` rpc: Avoid unnecessary parsing roundtrip in number formatting, fix locale issue (Wladimir J. van der Laan)
+- #6380 `240b30e` rpc: Accept strings in AmountFromValue (Wladimir J. van der Laan)
+- #6346 `6bb2805` Add OP_RETURN support in createrawtransaction RPC call, add tests. (paveljanik)
+- #6013 `6feeec1` [REST] Add memory pool API (paveljanik)
+- #6576 `da9beb2` Stop parsing JSON after first finished construct. (Daniel Kraft)
+- #5677 `9aa9099` libevent-based http server (Wladimir J. van der Laan)
+- #6633 `bbc2b39` Report minimum ping time in getpeerinfo (Matt Corallo)
+- #6648 `cd381d7` Simplify logic of REST request suffix parsing. (Daniel Kraft)
+- #6695 `5e21388` libevent http fixes (Wladimir J. van der Laan)
+- #5264 `48efbdb` show scriptSig signature hash types in transaction decodes. fixes #3166 (mruddy)
+- #6719 `1a9f19a` Make HTTP server shutdown more graceful (Wladimir J. van der Laan)
+- #6859 `0fbfc51` http: Restrict maximum size of http + headers (Wladimir J. van der Laan)
+- #5936 `bf7c195` [RPC] Add optional locktime to createrawtransaction (Tom Harding)
+- #6877 `26f5b34` rpc: Add maxmempool and effective min fee to getmempoolinfo (Wladimir J. van der Laan)
+- #6970 `92701b3` Fix crash in validateaddress with -disablewallet (Wladimir J. van der Laan)
+- #5574 `755b4ba` Expose GUI labels in RPC as comments (Luke-Jr)
+- #6990 `dbd2c13` http: speed up shutdown (Wladimir J. van der Laan)
+- #7013 `36baa9f` Remove LOCK(cs_main) from decodescript (Peter Todd)
+- #6999 `972bf9c` add (max)uploadtarget infos to getnettotals RPC help (Jonas Schnelli)
+- #7011 `31de241` Add mediantime to getblockchaininfo (Peter Todd)
+- #7065 `f91e29f` http: add Boost 1.49 compatibility (Wladimir J. van der Laan)
+- #7087 `be281d8` [Net]Add -enforcenodebloom option (Patrick Strateman)
+- #7044 `438ee59` RPC: Added additional config option for multiple RPC users. (Gregory Sanders)
+- #7072 `c143c49` [RPC] Add transaction size to JSON output (Nikita Zhavoronkov)
+- #7022 `9afbd96` Change default block priority size to 0 (Alex Morcos)
+- #7141 `c0c08c7` rpc: Don't translate warning messages (Wladimir J. van der Laan)
+- #7312 `fd4bd50` Add RPC call abandontransaction (Alex Morcos)
+- #7222 `e25b158` RPC: indicate which transactions are replaceable (Suhas Daftuar)
 
 ### Configuration and command-line options
 
-- #6164 `8d05ec7` Allow user to use -debug=1 to enable all debugging
-- #5288 `4452205` Added -whiteconnections=<n> option
-- #6284 `10ac38e` Fix argument parsing oddity with -noX
-- #6489 `c9c017a` Give a better error message if system clock is bad
-- #6462 `c384800` implement uacomment config parameter which can add comments to user agent as per BIP-0014
-- #6647 `a3babc8` Sanitize uacomment
-- #6742 `3b2d37c` Changed logging to make -logtimestamps to work also for -printtoconsole #6742
-- #6846 `2cd020d` alias -h for -help
-- #6622 `7939164` Introduce -maxuploadtarget
-- #6881 `2b62551` Debug: Add option for microsecond precision in debug.log
-- #6776 `e06c14f` Support -checkmempool=N, which runs checks once every N transactions
-- #6896 `d482c0a` Make -checkmempool=1 not fail through int32 overflow
-- #6993 `b632145` Add -blocksonly option
-- #7323 `a344880` 0.12: Backport -bytespersigop option
-- #7386 `da83ecd` Add option `-permitrbf` to set transaction replacement policy
-- #7290 `b16b5bc` Add missing options help
-- #7440 `c76bfff` Rename permitrbf to mempoolreplacement and provide minimal string-list forward compatibility
+- #6164 `8d05ec7` Allow user to use -debug=1 to enable all debugging (lpescher)
+- #5288 `4452205` Added -whiteconnections=<n> option (Josh Lehan)
+- #6284 `10ac38e` Fix argument parsing oddity with -noX (Wladimir J. van der Laan)
+- #6489 `c9c017a` Give a better error message if system clock is bad (Casey Rodarmor)
+- #6462 `c384800` implement uacomment config parameter which can add comments to user agent as per BIP-0014 (Pavol Rusnak)
+- #6647 `a3babc8` Sanitize uacomment (MarcoFalke)
+- #6742 `3b2d37c` Changed logging to make -logtimestamps to work also for -printtoconsole (arnuschky)
+- #6846 `2cd020d` alias -h for -help (Daniel Cousens)
+- #6622 `7939164` Introduce -maxuploadtarget (Jonas Schnelli)
+- #6881 `2b62551` Debug: Add option for microsecond precision in debug.log (Suhas Daftuar)
+- #6776 `e06c14f` Support -checkmempool=N, which runs checks once every N transactions (Pieter Wuille)
+- #6896 `d482c0a` Make -checkmempool=1 not fail through int32 overflow (Pieter Wuille)
+- #6993 `b632145` Add -blocksonly option (Patrick Strateman)
+- #7323 `a344880` 0.12: Backport -bytespersigop option (Luke-Jr)
+- #7386 `da83ecd` Add option `-permitrbf` to set transaction replacement policy (Wladimir J. van der Laan)
+- #7290 `b16b5bc` Add missing options help (MarcoFalke)
+- #7440 `c76bfff` Rename permitrbf to mempoolreplacement and provide minimal string-list forward compatibility (Luke-Jr)
 
 ### Block and transaction handling
 
-- #6203 `f00b623` Remove P2SH coinbase flag, no longer interesting
-- #6222 `9c93ee5` Explicitly set tx.nVersion for the genesis block and mining tests
-- #5985 `3a1d3e8` Fix removing of orphan transactions
-- #6221 `dd8fe82` Prune: Support noncontiguous block files
-- #6124 `41076aa` Mempool only CHECKLOCKTIMEVERIFY (BIP65) verification, unparameterized version
-- #6329 `d0a10c1` acceptnonstdtxn option to skip (most) "non-standard transaction" checks, for testnet/regtest only
-- #6410 `7cdefb9` Implement accurate memory accounting for mempool
-- #6444 `24ce77d` Exempt unspendable transaction outputs from dust checks
-- #5913 `a0625b8` Add absurdly high fee message to validation state
-- #6177 `2f746c6` Prevent block.nTime from decreasing
-- #6377 `e545371` Handle no chain tip available in InvalidChainFound()
-- #6551 `39ddaeb` Handle leveldb::DestroyDB() errors on wipe failure
-- #6654 `b0ce450` Mempool package tracking
-- #6715 `82d2aef` Fix mempool packages
-- #6680 `4f44530` use CBlockIndex instead of uint256 for UpdatedBlockTip signal
-- #6650 `4fac576` Obfuscate chainstate
-- #6777 `9caaf6e` Unobfuscate chainstate data in CCoinsViewDB::GetStats
-- #6722 `3b20e23` Limit mempool by throwing away the cheapest txn and setting min relay fee to it
-- #6889 `38369dd` fix locking issue with new mempool limiting
-- #6464 `8f3b3cd` Always clean up manual transaction prioritization
-- #6865 `d0badb9` Fix chainstate serialized_size computation
-- #6566 `ff057f4` BIP-113: Mempool-only median time-past as endpoint for lock-time calculations
-- #6934 `3038eb6` Restores mempool only BIP113 enforcement
-- #6965 `de7d459` Benchmark sanity checks and fork checks in ConnectBlock
-- #6918 `eb6172a` Make sigcache faster, more efficient, larger
-- #6771 `38ed190` Policy: Lower default limits for tx chains
-- #6932 `73fa5e6` ModifyNewCoins saves database lookups
-- #5967 `05d5918` Alter assumptions in CCoinsViewCache::BatchWrite
-- #6871 `0e93586` nSequence-based Full-RBF opt-in
-- #7008 `eb77416` Lower bound priority
-- #6915 `2ef5ffa` [Mempool] Improve removal of invalid transactions after reorgs
-- #6898 `4077ad2` Rewrite CreateNewBlock
-- #6872 `bdda4d5` Remove UTXO cache entries when the tx they were added for is removed/does not enter mempool
-- #7062 `12c469b` [Mempool] Fix mempool limiting and replace-by-fee for PrioritiseTransaction
-- #7276 `76de36f` Report non-mandatory script failures correctly
-- #7217 `e08b7cb` Mark blocks with too many sigops as failed
-- #7387 `f4b2ce8` Get rid of inaccurate ScriptSigArgsExpected
+- #6203 `f00b623` Remove P2SH coinbase flag, no longer interesting (Luke-Jr)
+- #6222 `9c93ee5` Explicitly set tx.nVersion for the genesis block and mining tests (Mark Friedenbach)
+- #5985 `3a1d3e8` Fix removing of orphan transactions (Alex Morcos)
+- #6221 `dd8fe82` Prune: Support noncontiguous block files (Adam Weiss)
+- #6124 `41076aa` Mempool only CHECKLOCKTIMEVERIFY (BIP65) verification, unparameterized version (Peter Todd)
+- #6329 `d0a10c1` acceptnonstdtxn option to skip (most) "non-standard transaction" checks, for testnet/regtest only (Luke-Jr)
+- #6410 `7cdefb9` Implement accurate memory accounting for mempool (Pieter Wuille)
+- #6444 `24ce77d` Exempt unspendable transaction outputs from dust checks (dexX7)
+- #5913 `a0625b8` Add absurdly high fee message to validation state (Shaul Kfir)
+- #6177 `2f746c6` Prevent block.nTime from decreasing (Mark Friedenbach)
+- #6377 `e545371` Handle no chain tip available in InvalidChainFound() (Ross Nicoll)
+- #6551 `39ddaeb` Handle leveldb::DestroyDB() errors on wipe failure (Adam Weiss)
+- #6654 `b0ce450` Mempool package tracking (Suhas Daftuar)
+- #6715 `82d2aef` Fix mempool packages (Suhas Daftuar)
+- #6680 `4f44530` use CBlockIndex instead of uint256 for UpdatedBlockTip signal (Jonas Schnelli)
+- #6650 `4fac576` Obfuscate chainstate (James O'Beirne)
+- #6777 `9caaf6e` Unobfuscate chainstate data in CCoinsViewDB::GetStats (James O'Beirne)
+- #6722 `3b20e23` Limit mempool by throwing away the cheapest txn and setting min relay fee to it (Matt Corallo)
+- #6889 `38369dd` fix locking issue with new mempool limiting (Jonas Schnelli)
+- #6464 `8f3b3cd` Always clean up manual transaction prioritization (Casey Rodarmor)
+- #6865 `d0badb9` Fix chainstate serialized_size computation (Pieter Wuille)
+- #6566 `ff057f4` BIP-113: Mempool-only median time-past as endpoint for lock-time calculations (Mark Friedenbach)
+- #6934 `3038eb6` Restores mempool only BIP113 enforcement (Gregory Maxwell)
+- #6965 `de7d459` Benchmark sanity checks and fork checks in ConnectBlock (Matt Corallo)
+- #6918 `eb6172a` Make sigcache faster, more efficient, larger (Pieter Wuille)
+- #6771 `38ed190` Policy: Lower default limits for tx chains (Alex Morcos)
+- #6932 `73fa5e6` ModifyNewCoins saves database lookups (Alex Morcos)
+- #5967 `05d5918` Alter assumptions in CCoinsViewCache::BatchWrite (Alex Morcos)
+- #6871 `0e93586` nSequence-based Full-RBF opt-in (Peter Todd)
+- #7008 `eb77416` Lower bound priority (Alex Morcos)
+- #6915 `2ef5ffa` [Mempool] Improve removal of invalid transactions after reorgs (Suhas Daftuar)
+- #6898 `4077ad2` Rewrite CreateNewBlock (Alex Morcos)
+- #6872 `bdda4d5` Remove UTXO cache entries when the tx they were added for is removed/does not enter mempool (Matt Corallo)
+- #7062 `12c469b` [Mempool] Fix mempool limiting and replace-by-fee for PrioritiseTransaction (Suhas Daftuar)
+- #7276 `76de36f` Report non-mandatory script failures correctly (Pieter Wuille)
+- #7217 `e08b7cb` Mark blocks with too many sigops as failed (Suhas Daftuar)
+- #7387 `f4b2ce8` Get rid of inaccurate ScriptSigArgsExpected (Pieter Wuille)
 
 ### P2P protocol and network code
 
-- #6172 `88a7ead` Ignore getheaders requests when not synced
-- #5875 `9d60602` Be stricter in processing unrequested blocks
-- #6256 `8ccc07c` Use best header chain timestamps to detect partitioning
-- #6283 `a903ad7` make CAddrMan::size() return the correct type of size_t
-- #6272 `40400d5` Improve proxy initialization (continues #4871)
-- #6310 `66e5465` banlist.dat: store banlist on disk
-- #6412 `1a2de32` Test whether created sockets are select()able
-- #6498 `219b916` Keep track of recently rejected transactions with a rolling bloom filter (cont'd)
-- #6556 `70ec975` Fix masking of irrelevant bits in address groups.
-- #6530 `ea19c2b` Improve addrman Select() performance when buckets are nearly empty
-- #6583 `af9305a` add support for miniupnpc api version 14
-- #6374 `69dc5b5` Connection slot exhaustion DoS mitigation
-- #6636 `536207f` net: correctly initialize nMinPingUsecTime
-- #6579 `0c27795` Add NODE_BLOOM service bit and bump protocol version
-- #6148 `999c8be` Relay blocks when pruning
-- #6588 `cf9bb11` In (strCommand == "tx"), return if AlreadyHave()
-- #6974 `2f71b07` Always allow getheaders from whitelisted peers
-- #6639 `bd629d7` net: Automatically create hidden service, listen on Tor
-- #6984 `9ffc687` don't enforce maxuploadtarget's disconnect for whitelisted peers
-- #7046 `c322652` Net: Improve blocks only mode.
-- #7090 `d6454f6` Connect to Tor hidden services by default (when listening on Tor)
-- #7106 `c894fbb` Fix and improve relay from whitelisted peers
-- #7129 `5d5ef3a` Direct headers announcement (rebase of #6494)
-- #7079 `1b5118b` Prevent peer flooding inv request queue (redux) (redux)
-- #7166 `6ba25d2` Disconnect on mempool requests from peers when over the upload limit.
-- #7133 `f31955d` Replace setInventoryKnown with a rolling bloom filter (rebase of #7100)
-- #7174 `82aff88` Don't do mempool lookups for "mempool" command without a filter
-- #7179 `44fef99` net: Fix sent reject messages for blocks and transactions
-- #7181 `8fc174a` net: Add and document network messages in protocol.h
-- #7125 `10b88be` Replace global trickle node with random delays
-- #7415 `cb83beb` net: Hardcoded seeds update January 2016
-- #7438 `e2d9a58` Do not absolutely protect local peers; decide group ties based on time
-- #7439 `86755bc` Add whitelistforcerelay to control forced relaying. [#7099 redux]
+- #6172 `88a7ead` Ignore getheaders requests when not synced (Suhas Daftuar)
+- #5875 `9d60602` Be stricter in processing unrequested blocks (Suhas Daftuar)
+- #6256 `8ccc07c` Use best header chain timestamps to detect partitioning (Gavin Andresen)
+- #6283 `a903ad7` make CAddrMan::size() return the correct type of size_t (Diapolo)
+- #6272 `40400d5` Improve proxy initialization (continues #4871) (Wladimir J. van der Laan, Diapolo)
+- #6310 `66e5465` banlist.dat: store banlist on disk (Jonas Schnelli)
+- #6412 `1a2de32` Test whether created sockets are select()able (Pieter Wuille)
+- #6498 `219b916` Keep track of recently rejected transactions with a rolling bloom filter (cont'd) (Peter Todd)
+- #6556 `70ec975` Fix masking of irrelevant bits in address groups. (Alex Morcos)
+- #6530 `ea19c2b` Improve addrman Select() performance when buckets are nearly empty (Pieter Wuille)
+- #6583 `af9305a` add support for miniupnpc api version 14 (Pavel Vasin)
+- #6374 `69dc5b5` Connection slot exhaustion DoS mitigation (Patrick Strateman)
+- #6636 `536207f` net: correctly initialize nMinPingUsecTime (Wladimir J. van der Laan)
+- #6579 `0c27795` Add NODE_BLOOM service bit and bump protocol version (Matt Corallo)
+- #6148 `999c8be` Relay blocks when pruning (Suhas Daftuar)
+- #6588 `cf9bb11` In (strCommand == "tx"), return if AlreadyHave() (Tom Harding)
+- #6974 `2f71b07` Always allow getheaders from whitelisted peers (Wladimir J. van der Laan)
+- #6639 `bd629d7` net: Automatically create hidden service, listen on Tor (Wladimir J. van der Laan)
+- #6984 `9ffc687` don't enforce maxuploadtarget's disconnect for whitelisted peers (Jonas Schnelli)
+- #7046 `c322652` Net: Improve blocks only mode. (Patrick Strateman)
+- #7090 `d6454f6` Connect to Tor hidden services by default (when listening on Tor) (Peter Todd)
+- #7106 `c894fbb` Fix and improve relay from whitelisted peers (Pieter Wuille)
+- #7129 `5d5ef3a` Direct headers announcement (rebase of #6494) (Pieter Wuille)
+- #7079 `1b5118b` Prevent peer flooding inv request queue (redux) (redux) (Gregory Maxwell)
+- #7166 `6ba25d2` Disconnect on mempool requests from peers when over the upload limit. (Gregory Maxwell)
+- #7133 `f31955d` Replace setInventoryKnown with a rolling bloom filter (rebase of #7100) (Pieter Wuille)
+- #7174 `82aff88` Don't do mempool lookups for "mempool" command without a filter (Matt Corallo)
+- #7179 `44fef99` net: Fix sent reject messages for blocks and transactions (Wladimir J. van der Laan)
+- #7181 `8fc174a` net: Add and document network messages in protocol.h (Wladimir J. van der Laan)
+- #7125 `10b88be` Replace global trickle node with random delays (Pieter Wuille)
+- #7415 `cb83beb` net: Hardcoded seeds update January 2016 (Wladimir J. van der Laan)
+- #7438 `e2d9a58` Do not absolutely protect local peers; decide group ties based on time (Gregory Maxwell)
+- #7439 `86755bc` Add whitelistforcerelay to control forced relaying. [#7099 redux] (Gregory Maxwell)
 
 ### Validation
 
-- #5927 `8d9f0a6` Reduce checkpoints' effect on consensus.
-- #6299 `24f2489` Bugfix: Don't check the genesis block header before accepting it
-- #6361 `d7ada03` Use real number of cores for default -par, ignore virtual cores
-- #6519 `87f37e2` Make logging for validation optional
-- #6351 `2a1090d` CHECKLOCKTIMEVERIFY (BIP65) IsSuperMajority() soft-fork
-- #6931 `54e8bfe` Skip BIP 30 verification where not necessary
-- #6954 `e54ebbf` Switch to libsecp256k1-based ECDSA validation
-- #6508 `61457c2` Switch to a constant-space Merkle root/branch algorithm.
-- #6914 `327291a` Add pre-allocated vector type and use it for CScript
+- #5927 `8d9f0a6` Reduce checkpoints' effect on consensus. (Pieter Wuille)
+- #6299 `24f2489` Bugfix: Don't check the genesis block header before accepting it (Jorge Timón)
+- #6361 `d7ada03` Use real number of cores for default -par, ignore virtual cores (Wladimir J. van der Laan)
+- #6519 `87f37e2` Make logging for validation optional (Wladimir J. van der Laan)
+- #6351 `2a1090d` CHECKLOCKTIMEVERIFY (BIP65) IsSuperMajority() soft-fork (Peter Todd)
+- #6931 `54e8bfe` Skip BIP 30 verification where not necessary (Alex Morcos)
+- #6954 `e54ebbf` Switch to libsecp256k1-based ECDSA validation (Pieter Wuille)
+- #6508 `61457c2` Switch to a constant-space Merkle root/branch algorithm. (Pieter Wuille)
+- #6914 `327291a` Add pre-allocated vector type and use it for CScript (Pieter Wuille)
 
 ### Build system
 
-- #6210 `0e4f2a0` build: disable optional use of gmp in internal secp256k1 build
-- #6214 `87406aa` [OSX] revert renaming of Bitcoin-Qt.app and use CFBundleDisplayName (partial revert of #6116)
-- #6218 `9d67b10` build/gitian misc updates
-- #6269 `d4565b6` gitian: Use the new bitcoin-detached-sigs git repo for OSX signatures
-- #6418 `d4a910c` Add autogen.sh to source tarball.
-- #6373 `1ae3196` depends: non-qt bumps for 0.12
-- #6434 `059b352` Preserve user-passed CXXFLAGS with --enable-debug
-- #6501 `fee6554` Misc build fixes
-- #6600 `ef4945f` Include bitcoin-tx binary on Debian/Ubuntu
-- #6619 `4862708` depends: bump miniupnpc and ccache
-- #6801 `ae69a75` [depends] Latest config.guess and config.sub
-- #6938 `193f7b5` build: If both Qt4 and Qt5 are installed, use Qt5
-- #7092 `348b281` build: Set osx permissions in the dmg to make Gatekeeper happy
-- #6980 `eccd671` [Depends] Bump Boost, miniupnpc, ccache & zeromq
-- #7424 `aa26ee0` Add security/export checks to gitian and fix current failures
+- #6210 `0e4f2a0` build: disable optional use of gmp in internal secp256k1 build (Wladimir J. van der Laan)
+- #6214 `87406aa` [OSX] revert renaming of Bitcoin-Qt.app and use CFBundleDisplayName (partial revert of #6116) (Jonas Schnelli)
+- #6218 `9d67b10` build/gitian misc updates (Cory Fields)
+- #6269 `d4565b6` gitian: Use the new bitcoin-detached-sigs git repo for OSX signatures (Cory Fields)
+- #6418 `d4a910c` Add autogen.sh to source tarball. (randy-waterhouse)
+- #6373 `1ae3196` depends: non-qt bumps for 0.12 (Cory Fields)
+- #6434 `059b352` Preserve user-passed CXXFLAGS with --enable-debug (Gavin Andresen)
+- #6501 `fee6554` Misc build fixes (Cory Fields)
+- #6600 `ef4945f` Include bitcoin-tx binary on Debian/Ubuntu (Zak Wilcox)
+- #6619 `4862708` depends: bump miniupnpc and ccache (Michael Ford)
+- #6801 `ae69a75` [depends] Latest config.guess and config.sub (Michael Ford)
+- #6938 `193f7b5` build: If both Qt4 and Qt5 are installed, use Qt5 (Wladimir J. van der Laan)
+- #7092 `348b281` build: Set osx permissions in the dmg to make Gatekeeper happy (Cory Fields)
+- #6980 `eccd671` [Depends] Bump Boost, miniupnpc, ccache & zeromq (Michael Ford)
+- #7424 `aa26ee0` Add security/export checks to gitian and fix current failures (Cory Fields)
 
 ### Wallet
 
-- #6183 `87550ee` Fix off-by-one error w/ nLockTime in the wallet
-- #6057 `ac5476e` re-enable wallet in autoprune
-- #6356 `9e6c33b` Delay initial pruning until after wallet init
-- #6088 `91389e5` fundrawtransaction
-- #6415 `ddd8d80` Implement watchonly support in fundrawtransaction
-- #6567 `0f0f323` Fix crash when mining with empty keypool.
-- #6688 `4939eab` Fix locking in GetTransaction.
-- #6645 `4dbd43e` Enable wallet key imports without rescan in pruned mode.
-- #6550 `5b77244` Do not store Merkle branches in the wallet.
-- #5924 `12a7712` Clean up change computation in CreateTransaction.
-- #6906 `48b5b84` Reject invalid pubkeys when reading ckey items from the wallet.
-- #7010 `e0a5ef8` Fix fundrawtransaction handling of includeWatching
-- #6851 `616d61b` Optimisation: Store transaction list order in memory rather than compute it every need
-- #6134 `e92377f` Improve usage of fee estimation code
-- #7103 `a775182` [wallet, rpc tests] Fix settxfee, paytxfee
-- #7105 `30c2d8c` Keep track of explicit wallet conflicts instead of using mempool
-- #7096 `9490bd7` [Wallet] Improve minimum absolute fee GUI options
-- #6216 `83f06ca` Take the training wheels off anti-fee-sniping
-- #4906 `96e8d12` Issue#1643: Coinselection prunes extraneous inputs from ApproximateBestSubset
-- #7200 `06c6a58` Checks for null data transaction before issuing error to debug.log
-- #7296 `a36d79b` Add sane fallback for fee estimation
-- #7293 `ff9b610` Add regression test for vValue sort order 
-- #7306 `4707797` Make sure conflicted wallet tx's update balances
-- #7381 `621bbd8` [walletdb] Fix syntax error in key parser
+- #6183 `87550ee` Fix off-by-one error w/ nLockTime in the wallet (Peter Todd)
+- #6057 `ac5476e` re-enable wallet in autoprune (Jonas Schnelli)
+- #6356 `9e6c33b` Delay initial pruning until after wallet init (Adam Weiss)
+- #6088 `91389e5` fundrawtransaction (Matt Corallo)
+- #6415 `ddd8d80` Implement watchonly support in fundrawtransaction (Matt Corallo)
+- #6567 `0f0f323` Fix crash when mining with empty keypool. (Daniel Kraft)
+- #6688 `4939eab` Fix locking in GetTransaction. (Alex Morcos)
+- #6645 `4dbd43e` Enable wallet key imports without rescan in pruned mode. (Gregory Maxwell)
+- #6550 `5b77244` Do not store Merkle branches in the wallet. (Pieter Wuille)
+- #5924 `12a7712` Clean up change computation in CreateTransaction. (Daniel Kraft)
+- #6906 `48b5b84` Reject invalid pubkeys when reading ckey items from the wallet. (Gregory Maxwell)
+- #7010 `e0a5ef8` Fix fundrawtransaction handling of includeWatching (Peter Todd)
+- #6851 `616d61b` Optimisation: Store transaction list order in memory rather than compute it every need (Luke-Jr)
+- #6134 `e92377f` Improve usage of fee estimation code (Alex Morcos)
+- #7103 `a775182` [wallet, rpc tests] Fix settxfee, paytxfee (MarcoFalke)
+- #7105 `30c2d8c` Keep track of explicit wallet conflicts instead of using mempool (Pieter Wuille)
+- #7096 `9490bd7` [Wallet] Improve minimum absolute fee GUI options (Jonas Schnelli)
+- #6216 `83f06ca` Take the training wheels off anti-fee-sniping (Peter Todd)
+- #4906 `96e8d12` Issue#1643: Coinselection prunes extraneous inputs from ApproximateBestSubset (Murch)
+- #7200 `06c6a58` Checks for null data transaction before issuing error to debug.log (Andy Craze)
+- #7296 `a36d79b` Add sane fallback for fee estimation (Alex Morcos)
+- #7293 `ff9b610` Add regression test for vValue sort order (MarcoFalke)
+- #7306 `4707797` Make sure conflicted wallet tx's update balances (Alex Morcos)
+- #7381 `621bbd8` [walletdb] Fix syntax error in key parser (MarcoFalke)
 
 ### GUI
 
-- #6217 `c57e12a` disconnect peers from peers tab via context menu
-- #6209 `ab0ec67` extend rpc console peers tab
-- #6484 `1369d69` use CHashWriter also in SignVerifyMessageDialog
-- #6487 `9848d42` Introduce PlatformStyle
-- #6505 `100c9d3` cleanup icons
-- #4587 `0c465f5` allow users to set -onion via GUI
-- #6529 `c0f66ce` show client user agent in debug window
-- #6594 `878ea69` Disallow duplicate windows.
-- #5665 `6f55cdd` add verifySize() function to PaymentServer
-- #6317 `ca5e2a1` minor optimisations in peertablemodel
-- #6315 `e59d2a8` allow banning and unbanning over UI->peers table
-- #6653 `e04b2fa` Pop debug window in foreground when opened twice
-- #6864 `c702521` Use monospace font
-- #6887 `3694b74` Update coin control and smartfee labels
-- #7000 `814697c` add shortcurts for debug-/console-window
-- #6951 `03403d8` Use maxTxFee instead of 10000000
-- #7051 `a190777` ui: Add "Copy raw transaction data" to transaction list context menu
-- #6979 `776848a` simple mempool info in debug window
-- #7006 `26af1ac` add startup option to reset Qt settings
-- #6780 `2a94cd6` Call init's parameter interaction before we create the UI options model
-- #7112 `96b8025` reduce cs_main locks during tip update, more fluently update UI
-- #7206 `f43c2f9` Add "NODE_BLOOM" to guiutil so that peers don't get UNKNOWN[4]
-- #7282 `5cadf3e` fix coincontrol update issue when deleting a send coins entry
-- #7319 `1320300` Intro: Display required space
-- #7318 `9265e89` quickfix for RPC timer interface problem
-- #7327 `b16b5bc` [Wallet] Transaction View: LastMonth calculation fixed
-- #7364 `7726c48` [qt] Windows: Make rpcconsole monospace font larger
-- #7384 `294f432` [qt] Peertable: Increase SUBVERSION_COLUMN_WIDTH
+- #6217 `c57e12a` disconnect peers from peers tab via context menu (Diapolo)
+- #6209 `ab0ec67` extend rpc console peers tab (Diapolo)
+- #6484 `1369d69` use CHashWriter also in SignVerifyMessageDialog (Pavel Vasin)
+- #6487 `9848d42` Introduce PlatformStyle (Wladimir J. van der Laan)
+- #6505 `100c9d3` cleanup icons (MarcoFalke)
+- #4587 `0c465f5` allow users to set -onion via GUI (Diapolo)
+- #6529 `c0f66ce` show client user agent in debug window (Diapolo)
+- #6594 `878ea69` Disallow duplicate windows. (Casey Rodarmor)
+- #5665 `6f55cdd` add verifySize() function to PaymentServer (Diapolo)
+- #6317 `ca5e2a1` minor optimisations in peertablemodel (Diapolo)
+- #6315 `e59d2a8` allow banning and unbanning over UI->peers table (Jonas Schnelli)
+- #6653 `e04b2fa` Pop debug window in foreground when opened twice (MarcoFalke)
+- #6864 `c702521` Use monospace font (MarcoFalke)
+- #6887 `3694b74` Update coin control and smartfee labels (MarcoFalke)
+- #7000 `814697c` add shortcurts for debug-/console-window (Jonas Schnelli)
+- #6951 `03403d8` Use maxTxFee instead of 10000000 (MarcoFalke)
+- #7051 `a190777` ui: Add "Copy raw transaction data" to transaction list context menu (Wladimir J. van der Laan)
+- #6979 `776848a` simple mempool info in debug window (Jonas Schnelli)
+- #7006 `26af1ac` add startup option to reset Qt settings (Jonas Schnelli)
+- #6780 `2a94cd6` Call init's parameter interaction before we create the UI options model (Jonas Schnelli)
+- #7112 `96b8025` reduce cs_main locks during tip update, more fluently update UI (Jonas Schnelli)
+- #7206 `f43c2f9` Add "NODE_BLOOM" to guiutil so that peers don't get UNKNOWN[4] (Matt Corallo)
+- #7282 `5cadf3e` fix coincontrol update issue when deleting a send coins entry (Jonas Schnelli)
+- #7319 `1320300` Intro: Display required space (Jonas Schnelli)
+- #7318 `9265e89` quickfix for RPC timer interface problem (Jonas Schnelli)
+- #7327 `b16b5bc` [Wallet] Transaction View: LastMonth calculation fixed (crowning-)
+- #7364 `7726c48` [qt] Windows: Make rpcconsole monospace font larger (MarcoFalke)
+- #7384 `294f432` [qt] Peertable: Increase SUBVERSION_COLUMN_WIDTH (MarcoFalke)
 
 ### Tests and QA
 
-- #6305 `9005c91` build: comparison tool swap
-- #6318 `e307e13` build: comparison tool NPE fix
-- #6337 `0564c5b` Testing infrastructure: mocktime fixes
-- #6350 `60abba1` add unit tests for the decodescript rpc
-- #5881 `3203a08` Fix and improve txn_doublespend.py test
-- #6390 `6a73d66` tests: Fix bitcoin-tx signing test case
-- #6368 `7fc25c2` CLTV: Add more tests to improve coverage
-- #6414 `5121c68` Fix intermittent test failure, reduce test time
-- #6417 `44fa82d` [QA] fix possible reorg issue in (fund)rawtransaction(s).py RPC test
-- #6398 `3d9362d` rpc: Remove chain-specific RequireRPCPassword
-- #6428 `bb59e78` tests: Remove old sh-based test framework
-- #5515 `d946e9a` RFC: Assert on probable deadlocks if the second lock isnt try_lock
-- #6287 `d2464df` Clang lock debug
-- #6465 `410fd74` Don't share objects between TestInstances
-- #6534 `6c1c7fd` Fix test locking issues and un-revert the probable-deadlines assertions commit
-- #6509 `bb4faee` Fix race condition on test node shutdown
-- #6523 `561f8af` Add p2p-fullblocktest.py
-- #6590 `981fd92` Fix stale socket rebinding and re-enable python tests for Windows
-- #6730 `cb4d6d0` build: Remove dependency of bitcoin-cli on secp256k1
-- #6616 `5ab5dca` Regression Tests: Migrated rpc-tests.sh to all Python rpc-tests.py
-- #6720 `d479311` Creates unittests for addrman, makes addrman more testable.
-- #6853 `c834f56` Added fPowNoRetargeting field to Consensus::Params
-- #6827 `87e5539` [rpc-tests] Check return code
-- #6848 `f2c869a` Add DERSIG transaction test cases
-- #6813 `5242bb3` Support gathering code coverage data for RPC tests with lcov
-- #6888 `c8322ff` Clear strMiscWarning before running PartitionAlert
-- #6894 `2675276` [Tests] Fix BIP65 p2p test
-- #6863 `725539e` [Test Suite] Fix test for null tx input
-- #6926 `a6d0d62` tests: Initialize networking on windows
-- #6822 `9fa54a1` [tests] Be more strict checking dust
-- #6804 `5fcc14e` [tests] Add basic coverage reporting for RPC tests
-- #7045 `72dccfc` Bugfix: Use unique autostart filenames on Linux for testnet/regtest
-- #7095 `d8368a0` Replace scriptnum_test's normative ScriptNum implementation
-- #7063 `6abf6eb` [Tests] Add prioritisetransaction RPC test
-- #7137 `16f4a6e` Tests: Explicitly set chain limits in replace-by-fee test
-- #7216 `9572e49` Removed offline testnet DNSSeed 'alexykot.me'.
-- #7209 `f3ad812` test: don't override BITCOIND and BITCOINCLI if they're set
-- #7226 `301f16a` Tests: Add more tests to p2p-fullblocktest
-- #7153 `9ef7c54` [Tests] Add mempool_limit.py test
-- #7170 `453c567` tests: Disable Tor interaction
-- #7229 `1ed938b` [qa] wallet: Check if maintenance changes the balance
-- #7308 `d513405` [Tests] Eliminate intermittent failures in sendheaders.py
+- #6305 `9005c91` build: comparison tool swap (Cory Fields)
+- #6318 `e307e13` build: comparison tool NPE fix (Cory Fields)
+- #6337 `0564c5b` Testing infrastructure: mocktime fixes (Gavin Andresen)
+- #6350 `60abba1` add unit tests for the decodescript rpc (mruddy)
+- #5881 `3203a08` Fix and improve txn_doublespend.py test (Tom Harding)
+- #6390 `6a73d66` tests: Fix bitcoin-tx signing test case (Wladimir J. van der Laan)
+- #6368 `7fc25c2` CLTV: Add more tests to improve coverage (Esteban Ordano)
+- #6414 `5121c68` Fix intermittent test failure, reduce test time (Tom Harding)
+- #6417 `44fa82d` [QA] fix possible reorg issue in (fund)rawtransaction(s).py RPC test (Jonas Schnelli)
+- #6398 `3d9362d` rpc: Remove chain-specific RequireRPCPassword (Wladimir J. van der Laan)
+- #6428 `bb59e78` tests: Remove old sh-based test framework (Wladimir J. van der Laan)
+- #5515 `d946e9a` RFC: Assert on probable deadlocks if the second lock isnt try_lock (Matt Corallo)
+- #6287 `d2464df` Clang lock debug (Cory Fields)
+- #6465 `410fd74` Don't share objects between TestInstances (Casey Rodarmor)
+- #6534 `6c1c7fd` Fix test locking issues and un-revert the probable-deadlines assertions commit (Cory Fields)
+- #6509 `bb4faee` Fix race condition on test node shutdown (Casey Rodarmor)
+- #6523 `561f8af` Add p2p-fullblocktest.py (Casey Rodarmor)
+- #6590 `981fd92` Fix stale socket rebinding and re-enable python tests for Windows (Cory Fields)
+- #6730 `cb4d6d0` build: Remove dependency of bitcoin-cli on secp256k1 (Wladimir J. van der Laan)
+- #6616 `5ab5dca` Regression Tests: Migrated rpc-tests.sh to all Python rpc-tests.py (Peter Tschipper)
+- #6720 `d479311` Creates unittests for addrman, makes addrman more testable. (Ethan Heilman)
+- #6853 `c834f56` Added fPowNoRetargeting field to Consensus::Params (Eric Lombrozo)
+- #6827 `87e5539` [rpc-tests] Check return code (MarcoFalke)
+- #6848 `f2c869a` Add DERSIG transaction test cases (Ross Nicoll)
+- #6813 `5242bb3` Support gathering code coverage data for RPC tests with lcov (dexX7)
+- #6888 `c8322ff` Clear strMiscWarning before running PartitionAlert (Eric Lombrozo)
+- #6894 `2675276` [Tests] Fix BIP65 p2p test (Suhas Daftuar)
+- #6863 `725539e` [Test Suite] Fix test for null tx input (Daniel Kraft)
+- #6926 `a6d0d62` tests: Initialize networking on windows (Wladimir J. van der Laan)
+- #6822 `9fa54a1` [tests] Be more strict checking dust (MarcoFalke)
+- #6804 `5fcc14e` [tests] Add basic coverage reporting for RPC tests (James O'Beirne)
+- #7045 `72dccfc` Bugfix: Use unique autostart filenames on Linux for testnet/regtest (Luke-Jr)
+- #7095 `d8368a0` Replace scriptnum_test's normative ScriptNum implementation (Wladimir J. van der Laan)
+- #7063 `6abf6eb` [Tests] Add prioritisetransaction RPC test (Suhas Daftuar)
+- #7137 `16f4a6e` Tests: Explicitly set chain limits in replace-by-fee test (Suhas Daftuar)
+- #7216 `9572e49` Removed offline testnet DNSSeed 'alexykot.me'. (tnull)
+- #7209 `f3ad812` test: don't override BITCOIND and BITCOINCLI if they're set (Wladimir J. van der Laan)
+- #7226 `301f16a` Tests: Add more tests to p2p-fullblocktest (Suhas Daftuar)
+- #7153 `9ef7c54` [Tests] Add mempool_limit.py test (Jonas Schnelli)
+- #7170 `453c567` tests: Disable Tor interaction (Wladimir J. van der Laan)
+- #7229 `1ed938b` [qa] wallet: Check if maintenance changes the balance (MarcoFalke)
+- #7308 `d513405` [Tests] Eliminate intermittent failures in sendheaders.py (Suhas Daftuar)
 
 ### Miscellaneous
 
-- #6213 `e54ff2f` [init] add -blockversion help and extend -upnp help
-- #5975 `1fea667` Consensus: Decouple ContextualCheckBlockHeader from checkpoints
-- #6061 `eba2f06` Separate Consensus::CheckTxInputs and GetSpendHeight in CheckInputs
-- #5994 `786ed11` detach wallet from miner
-- #6387 `11576a5` [bitcoin-cli] improve error output
-- #6401 `6db53b4` Add BITCOIND_SIGTERM_TIMEOUT to OpenRC init scripts
-- #6430 `b01981e` doc: add documentation for shared library libbitcoinconsensus
-- #6372 `dcc495e` Update Linearize tool to support Windows paths; fix variable scope; update README and example configuration
-- #6453 `8fe5cce` Separate core memory usage computation in core_memusage.h
-- #6149 `633fe10` Buffer log messages and explicitly open logs
-- #6488 `7cbed7f` Avoid leaking file descriptors in RegisterLoad
-- #6497 `a2bf40d` Make sure LogPrintf strings are line-terminated
-- #6504 `b6fee6b` Rationalize currency unit to "BTC"
-- #6507 `9bb4dd8` Removed contrib/bitrpc
-- #6527 `41d650f` Use unique name for AlertNotify tempfile
-- #6561 `e08a7d9` limitedmap fixes and tests
-- #6565 `a6f2aff` Make sure we re-acquire lock if a task throws
-- #6599 `f4d88c4` Make sure LogPrint strings are line-terminated
-- #6630 `195942d` Replace boost::reverse_lock with our own
-- #6103 `13b8282` Add ZeroMQ notifications
-- #6692 `d5d1d2e` devtools: don't push if signing fails in github-merge
-- #6728 `2b0567b` timedata: Prevent warning overkill
-- #6713 `f6ce59c` SanitizeString: Allow hypen char
-- #5987 `4899a04` Bugfix: Fix testnet-in-a-box use case
-- #6733 `b7d78fd` Simple benchmarking framework
-- #6854 `a092970` devtools: Add security-check.py
-- #6790 `fa1d252` devtools: add clang-format.py
-- #7114 `f3d0fdd` util: Don't set strMiscWarning on every exception
-- #7078 `93e0514` uint256::GetCheapHash bigendian compatibility
-- #7094 `34e02e0` Assert now > 0 in GetTime GetTimeMillis GetTimeMicros
+- #6213 `e54ff2f` [init] add -blockversion help and extend -upnp help (Diapolo)
+- #5975 `1fea667` Consensus: Decouple ContextualCheckBlockHeader from checkpoints (Jorge Timón)
+- #6061 `eba2f06` Separate Consensus::CheckTxInputs and GetSpendHeight in CheckInputs (Jorge Timón)
+- #5994 `786ed11` detach wallet from miner (Jonas Schnelli)
+- #6387 `11576a5` [bitcoin-cli] improve error output (Jonas Schnelli)
+- #6401 `6db53b4` Add BITCOIND_SIGTERM_TIMEOUT to OpenRC init scripts (Florian Schmaus)
+- #6430 `b01981e` doc: add documentation for shared library libbitcoinconsensus (Braydon Fuller)
+- #6372 `dcc495e` Update Linearize tool to support Windows paths; fix variable scope; update README and example configuration (Paul Georgiou)
+- #6453 `8fe5cce` Separate core memory usage computation in core_memusage.h (Pieter Wuille)
+- #6149 `633fe10` Buffer log messages and explicitly open logs (Adam Weiss)
+- #6488 `7cbed7f` Avoid leaking file descriptors in RegisterLoad (Casey Rodarmor)
+- #6497 `a2bf40d` Make sure LogPrintf strings are line-terminated (Wladimir J. van der Laan)
+- #6504 `b6fee6b` Rationalize currency unit to "BTC" (Ross Nicoll)
+- #6507 `9bb4dd8` Removed contrib/bitrpc (Casey Rodarmor)
+- #6527 `41d650f` Use unique name for AlertNotify tempfile (Casey Rodarmor)
+- #6561 `e08a7d9` limitedmap fixes and tests (Casey Rodarmor)
+- #6565 `a6f2aff` Make sure we re-acquire lock if a task throws (Casey Rodarmor)
+- #6599 `f4d88c4` Make sure LogPrint strings are line-terminated (Ross Nicoll)
+- #6630 `195942d` Replace boost::reverse_lock with our own (Casey Rodarmor)
+- #6103 `13b8282` Add ZeroMQ notifications (João Barbosa)
+- #6692 `d5d1d2e` devtools: don't push if signing fails in github-merge (Wladimir J. van der Laan)
+- #6728 `2b0567b` timedata: Prevent warning overkill (Wladimir J. van der Laan)
+- #6713 `f6ce59c` SanitizeString: Allow hypen char (MarcoFalke)
+- #5987 `4899a04` Bugfix: Fix testnet-in-a-box use case (Luke-Jr)
+- #6733 `b7d78fd` Simple benchmarking framework (Gavin Andresen)
+- #6854 `a092970` devtools: Add security-check.py (Wladimir J. van der Laan)
+- #6790 `fa1d252` devtools: add clang-format.py (MarcoFalke)
+- #7114 `f3d0fdd` util: Don't set strMiscWarning on every exception (Wladimir J. van der Laan)
+- #7078 `93e0514` uint256::GetCheapHash bigendian compatibility (arowser)
+- #7094 `34e02e0` Assert now > 0 in GetTime GetTimeMillis GetTimeMicros (Patrick Strateman)
 
 Credits
 =======
