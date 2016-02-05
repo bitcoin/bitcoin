@@ -255,8 +255,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
                 //Special code to send term deposit
                 std::ostringstream ss;
-                if(termDepositLength<561*2){
-                    ss <<"!!!!!WARNING: There is no interest rate advantage of using a Term Deposit for a period of less than 1,122 blocks. It is recommended that you cancel this transaction. ";
+                if(termDepositLength<=561*2){
+                    ss <<"!!!!!WARNING: There is no interest rate advantage of using a Term Deposit for a period of less than 1,123 blocks. It is recommended that you cancel this transaction. ";
                 }
                 if(termDepositLength>561*365){
                     ss <<"!!!!!WARNING: There is no interest rate advantage of using a Term Deposit for a period of more than 204,765 blocks. It is recommended that you cancel this transaction. ";

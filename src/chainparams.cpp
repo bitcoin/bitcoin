@@ -120,6 +120,10 @@ public:
         //assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
 
+        vSeeds.push_back(CDNSSeedData("54.153.91.155", "54.153.91.155")); //West Coast
+        vSeeds.push_back(CDNSSeedData("54.173.236.170", "54.173.236.170"));//East Coast
+        vSeeds.push_back(CDNSSeedData("54.229.69.247", "54.229.69.247")); //Europe
+        vSeeds.push_back(CDNSSeedData("54.169.41.93", "54.169.41.93"));//Asia
         vSeeds.push_back(CDNSSeedData("54.201.171.55", "54.201.171.55"));
         vSeeds.push_back(CDNSSeedData("54.213.104.91", "54.213.104.91"));
         //vSeeds.push_back(CDNSSeedData("bitcoin.sipa.be", "seed.bitcoin.sipa.be")); // Pieter Wuille
