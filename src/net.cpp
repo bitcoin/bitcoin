@@ -54,7 +54,7 @@
 using namespace std;
 
 namespace {
-    const int MAX_OUTBOUND_CONNECTIONS = 8;
+    int MAX_OUTBOUND_CONNECTIONS = 8;
 
     struct ListenSocket {
         SOCKET socket;
@@ -101,6 +101,13 @@ NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
 static CSemaphore *semOutbound = NULL;
+
+bool churnNode=false;
+void setChurnMode(){
+    churnNode=true;
+    MAX_OUTBOUND_CONNECTIONS = 50;
+}
+
 boost::condition_variable messageHandlerCondition;
 
 // Signals for message handling
@@ -985,6 +992,11 @@ void ThreadSocketHandler()
                 {
                     LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
                     pnode->fDisconnect = true;
+                }
+                else if (churnNode && (pnode->fInbound==true && GetTime() - pnode->nTimeConnected > 600))
+                {
+                //If set to churn this is an inbound connection, and has been connected for more than 10 minutes, disconnect it to make room for other new nodes.
+                pnode->fDisconnect = true;
                 }
             }
         }

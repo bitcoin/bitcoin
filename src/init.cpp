@@ -750,6 +750,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 #endif
     }
 
+    int isChurn = GetArg("-churn", 0);
+    if(isChurn){
+        setChurnMode();
+    }
+
     // ********************************************************* Step 3: parameter-to-internal-flags
 
     fDebug = !mapMultiArgs["-debug"].empty();
