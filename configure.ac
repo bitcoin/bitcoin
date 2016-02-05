@@ -206,6 +206,17 @@ AC_ARG_WITH([daemon],
 
 AC_LANG_PUSH([C++])
 
+can_render_icons=yes
+AC_PATH_PROGS([RSVG_CONVERT],[rsvg-convert rsvg],no)
+AC_PATH_PROGS([IMAGEMAGICK_CONVERT],[convert],no)
+AC_PATH_PROGS([PNG2ICNS],[png2icns],no)
+
+if test x$RSVG_CONVERT = xno; then
+  can_render_icons='rsvg-convert'
+elif test x$IMAGEMAGICK_CONVERT = xno; then
+  can_render_icons='(ImageMagick) convert'
+fi
+
 use_pkgconfig=yes
 case $host in
   *mingw*)
@@ -270,6 +281,10 @@ case $host in
 
      ;;
   *darwin*)
+     if test x$PNG2ICNS = xno; then
+       can_render_icons='png2icns'
+     fi
+
      TARGET_OS=darwin
      LEVELDB_TARGET_FLAGS="TARGET_OS=Darwin"
      if  test x$cross_compiling != xyes; then
@@ -318,8 +333,6 @@ case $host in
            AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
            AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
-           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
-           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert],convert)
            AC_PATH_PROGS([TIFFCP], [tiffcp],tiffcp)
 
            dnl libtool will try to strip the static lib, which is a problem for
@@ -341,6 +354,11 @@ case $host in
    *)
      ;;
 esac
+
+AM_CONDITIONAL([CAN_RENDER_ICONS], [test x$can_render_icons = xyes])
+if test x$can_render_icons != xyes; then
+  AC_MSG_WARN([Couldn't find ${can_render_icons}; you won't get the Knots-branded Bitcoin icon])
+fi
 
 if test x$use_comparison_tool != xno; then
   AC_SUBST(JAVA_COMPARISON_TOOL, $use_comparison_tool)

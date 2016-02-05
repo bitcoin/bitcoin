@@ -212,13 +212,22 @@ BITCOIN_QT_H = \
   qt/walletview.h \
   qt/winshutdownmonitor.h
 
-RES_ICONS = \
+RES_RENDERED_ICON_SOURCES = qt/res/src/bitcoin.svg
+
+RES_RENDERED_ICONS = \
+  qt/res/rendered_icons/about.png \
+  qt/res/rendered_icons/bitcoin.ico \
+  qt/res/rendered_icons/bitcoin1024.png
+
+RES_ALL_RENDERED_ICONS = $(RES_RENDERED_ICONS) \
+  qt/res/rendered_icons/about.svg \
+  $(patsubst %,qt/res/rendered_icons/bitcoin%.png,16 32 48 256 512 1024) \
+  qt/res/rendered_icons/bitcoin.icns
+
+RES_ICONS = $(RES_RENDERED_ICONS) \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
-  qt/res/icons/about.png \
   qt/res/icons/about_qt.png \
-  qt/res/icons/bitcoin.ico \
-  qt/res/icons/bitcoin.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
   qt/res/icons/clock3.png \
@@ -399,7 +408,7 @@ $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) 
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
+CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno $(RES_ALL_RENDERED_ICONS)
 
 CLEANFILES += $(CLEAN_QT)
 
@@ -425,3 +434,32 @@ moc_%.cpp: %.h
 	@test -f $(LRELEASE)
 	@$(MKDIR_P) $(@D)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LRELEASE) -silent $< -qm $@
+
+EXTRA_DIST += $(RES_RENDERED_ICON_SOURCES)
+
+if CAN_RENDER_ICONS
+
+qt/res/rendered_icons/about.png: qt/res/rendered_icons/about.svg
+	$(RSVG_CONVERT) -f png -d 142 -p 142 < $< | $(IMAGEMAGICK_CONVERT) - -crop 128x128+7+7 -colorspace Gray -strip $@
+
+qt/res/rendered_icons/about.svg: qt/res/src/bitcoin.svg
+	@$(MKDIR_P) $(@D)
+	sed '/fill="white"/d;s/\(stop-color:\)#....../\1black/' < $< > $@
+
+qt/res/rendered_icons/bitcoin%.png: qt/res/src/bitcoin.svg
+	@$(MKDIR_P) $(@D)
+	$(RSVG_CONVERT) -f png -d $* -p $* < $< > $@
+
+qt/res/rendered_icons/bitcoin.icns: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 512 1024 32 16)
+	$(PNG2ICNS) $@ $^
+
+qt/res/rendered_icons/bitcoin.ico: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 48 32 16)
+	$(IMAGEMAGICK_CONVERT) $^ $@
+
+else
+
+qt/res/rendered_icons/%: qt/res/icons/%
+	@$(MKDIR_P) $(@D)
+	cp $< $@
+
+endif
