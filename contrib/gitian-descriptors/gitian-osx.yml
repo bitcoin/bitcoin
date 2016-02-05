@@ -8,6 +8,7 @@ architectures:
 packages: 
 - "g++"
 - "git-core"
+- "icnsutils"
 - "pkg-config"
 - "autoconf"
 - "librsvg2-bin"

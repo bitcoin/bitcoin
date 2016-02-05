@@ -8,12 +8,15 @@ architectures:
 packages: 
 - "g++-multilib"
 - "git-core"
+- "icnsutils"
 - "pkg-config"
 - "autoconf"
+- "librsvg2-bin"
 - "libtool"
 - "automake"
 - "faketime"
 - "bsdmainutils"
+- "imagemagick"
 - "binutils-gold"
 reference_datetime: "2015-06-01 00:00:00"
 remotes:
