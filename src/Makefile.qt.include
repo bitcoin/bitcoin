@@ -212,19 +212,6 @@ BITCOIN_QT_H = \
   qt/walletview.h \
   qt/winshutdownmonitor.h
 
-RES_RENDERED_ICON_SOURCES = qt/res/src/bitcoin.svg
-
-RES_RENDERED_ICONS = \
-  qt/res/rendered_icons/about.png \
-  qt/res/rendered_icons/bitcoin.ico \
-  qt/res/rendered_icons/bitcoin1024.png
-
-RES_ALL_RENDERED_ICONS = $(RES_RENDERED_ICONS) \
-  qt/res/rendered_icons/about.svg \
-  $(patsubst %,qt/res/rendered_icons/bitcoin%.png,16 32 48 256 290 512 1024) \
-  qt/res/rendered_icons/bitcoin.icns \
-  qt/res/rendered_icons/nsis-wizard.bmp
-
 RES_ICONS = $(RES_RENDERED_ICONS) \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
@@ -409,7 +396,7 @@ $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) 
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno $(RES_ALL_RENDERED_ICONS)
+CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
 
 CLEANFILES += $(CLEAN_QT)
 
@@ -435,35 +422,3 @@ moc_%.cpp: %.h
 	@test -f $(LRELEASE)
 	@$(MKDIR_P) $(@D)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LRELEASE) -silent $< -qm $@
-
-EXTRA_DIST += $(RES_RENDERED_ICON_SOURCES)
-
-if CAN_RENDER_ICONS
-
-qt/res/rendered_icons/about.png: qt/res/rendered_icons/about.svg
-	$(RSVG_CONVERT) -f png -d 142 -p 142 < $< | $(IMAGEMAGICK_CONVERT) - -crop 128x128+7+7 -colorspace Gray -strip $@
-
-qt/res/rendered_icons/about.svg: qt/res/src/bitcoin.svg
-	@$(MKDIR_P) $(@D)
-	sed '/fill="white"/d;s/\(stop-color:\)#....../\1black/' < $< > $@
-
-qt/res/rendered_icons/bitcoin%.png: qt/res/src/bitcoin.svg
-	@$(MKDIR_P) $(@D)
-	$(RSVG_CONVERT) -f png -d $* -p $* < $< > $@
-
-qt/res/rendered_icons/bitcoin.icns: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 512 1024 32 16)
-	$(PNG2ICNS) $@ $^
-
-qt/res/rendered_icons/bitcoin.ico: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 48 32 16)
-	$(IMAGEMAGICK_CONVERT) $^ $@
-
-qt/res/rendered_icons/nsis-wizard.bmp: qt/res/rendered_icons/bitcoin290.png
-	$(IMAGEMAGICK_CONVERT) $^ -crop 164x290+62+0 -border 0x12 -strip $@
-
-else
-
-qt/res/rendered_icons/%: qt/res/icons/%
-	@$(MKDIR_P) $(@D)
-	cp $< $@
-
-endif
