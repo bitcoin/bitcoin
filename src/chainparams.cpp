@@ -38,11 +38,8 @@ int64_t CChainParams::GetProofOfWorkReward(int nHeight, int64_t nFees) const
     if (nHeight <= 10)
         nSubsidy = 0 * COIN;
     else
-    if (nHeight <= 110)           // Business Solutions Inc "It’s not about ideas. It’s about making ideas happen."
-        nSubsidy = 83000 * COIN;  // GameUnits International Headquarters Funds
-    else
     if (nHeight <= nLastPOWBlock)
-        nSubsidy = 0 * COIN;
+        nSubsidy = 1000 * COIN;
     
     if (fDebug && GetBoolArg("-printcreation"))
         LogPrintf("GetProofOfWorkReward() : create=%s nSubsidy=%d\n", FormatMoney(nSubsidy).c_str(), nSubsidy);
@@ -221,7 +218,7 @@ public:
 		vSeeds.push_back(CDNSSeedData("5.196.70.166", "5.196.70.166"));
 
         
-        base58Prefixes[PUBKEY_ADDRESS] = list_of(51)                    .convert_to_container<std::vector<unsigned char> >();
+        base58Prefixes[PUBKEY_ADDRESS] = list_of(68)                    .convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[SCRIPT_ADDRESS] = list_of(115)                   .convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[SECRET_KEY]     = list_of(197)                   .convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_PUBLIC_KEY] = list_of(0xEA)(0x91)(0x10)(0x48).convert_to_container<std::vector<unsigned char> >();
@@ -230,12 +227,12 @@ public:
         //convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
         convertSeeds(vFixedSeeds, pnSeed, ARRAYLEN(pnSeed), nDefaultPort);
 
-        nFirstYearBlock = 529900; // 525600 blocks per year + 4300 blocks 
+        nFirstYearBlock = 529900; // 525600 blocks per year
         nSecondYearBlock = 1055500; // + 1 year blocks average 
         nThirdYearBlock = 1581100; // + 1 year blocks average 
         nFourthYearBlock = 2106700; // + 1 year blocks average 
         
-        nLastPOWBlock = 300;
+        nLastPOWBlock = 9000;
     }
 
     virtual const CBlock& GenesisBlock() const { return genesis; }
