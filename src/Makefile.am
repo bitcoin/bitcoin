@@ -866,6 +866,42 @@ nodist_libbitcoin_ipc_a_SOURCES = $(libbitcoin_ipc_mpgen_output)
 CLEANFILES += $(libbitcoin_ipc_mpgen_output)
 endif
 
+# Rendered icons must be here, not in Makefile.qt.include, since they are distributed with the source tarball
+
+RES_RENDERED_ICON_SRC = qt/res/src/bitcoin.svg
+
+RES_RENDERED_ICONS = \
+  qt/res/rendered_icons/bitcoin.ico \
+  qt/res/rendered_icons/bitcoin1024.png
+
+RES_ALL_RENDERED_ICONS = $(RES_RENDERED_ICONS) \
+  $(patsubst %,qt/res/rendered_icons/bitcoin%.png,16 32 48 256 290 512 1024) \
+  qt/res/rendered_icons/bitcoin.icns \
+  qt/res/rendered_icons/nsis-wizard.bmp
+
+EXTRA_DIST += $(RES_RENDERED_ICON_SRC) $(RES_ALL_RENDERED_ICONS)
+
+if CAN_RENDER_ICONS
+
+qt/res/rendered_icons/bitcoin%.png: qt/res/src/bitcoin.svg
+	@$(MKDIR_P) $(@D)
+	$(RSVG_CONVERT) -f png -d $* -p $* < $< > $@
+
+# NOTE: ImageMagick will never convert transparent PNGs to 8-bit ICOs, but GIF is fine
+qt/res/rendered_icons/bitcoin%d8.gif: qt/res/rendered_icons/bitcoin%.png
+	$(IMAGEMAGICK_CONVERT) $^ -colors 256 -channel A -threshold '50%' $@
+
+qt/res/rendered_icons/bitcoin.icns: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 512 1024 32 16)
+	$(PNG2ICNS) $@ $^
+
+qt/res/rendered_icons/bitcoin.ico: qt/res/rendered_icons/bitcoin32d8.gif $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 64 48 32 20 16)
+	$(IMAGEMAGICK_CONVERT) $^ $@
+
+qt/res/rendered_icons/nsis-wizard.bmp: qt/res/rendered_icons/bitcoin290.png
+	$(IMAGEMAGICK_CONVERT) $^ -crop 164x290+62+0 -border 0x12 -strip BMP3:$@
+
+endif
+
 if EMBEDDED_LEVELDB
 include Makefile.crc32c.include
 include Makefile.leveldb.include

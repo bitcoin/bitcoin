@@ -766,9 +766,6 @@ case $host in
 esac
 
 AM_CONDITIONAL([CAN_RENDER_ICONS], [test x$can_render_icons = xyes])
-if test x$can_render_icons != xyes; then
-  AC_MSG_WARN([Couldn't find ${can_render_icons}; you won't get the Knots-branded Bitcoin icon])
-fi
 
 if test x$use_extended_functional_tests != xno; then
   AC_SUBST(EXTENDED_FUNCTIONAL_TESTS, --extended)
