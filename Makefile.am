@@ -327,6 +327,9 @@ docs:
 	@echo "error: doxygen not found"
 endif
 
+src_files: $(DISTFILES)
+	@true
+
 clean-docs:
 	rm -rf doc/doxygen
 
