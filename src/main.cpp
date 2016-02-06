@@ -84,7 +84,7 @@ bool fCheckpointsEnabled = DEFAULT_CHECKPOINTS_ENABLED;
 size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
-bool fPermitReplacement = DEFAULT_PERMIT_REPLACEMENT;
+bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
 
 /** Fees smaller than this (in duffs) are considered zero fee (for relaying, mining and transaction creation)
  * We are ~100 times smaller then bitcoin now (2015-06-23), set minRelayTxFee only 10 times higher
@@ -939,7 +939,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
                 // unconfirmed ancestors anyway; doing otherwise is hopelessly
                 // insecure.
                 bool fReplacementOptOut = true;
-                if (fPermitReplacement)
+                if (fEnableReplacement)
                 {
                     BOOST_FOREACH(const CTxIn &txin, ptxConflicting->vin)
                     {
@@ -1251,6 +1251,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             }
         }
 
+        // If we aren't going to actually accept it but just were verifying it, we are fine already
+        if(fDryRun) return true;
+
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
@@ -1269,31 +1272,29 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
 
-        if(!fDryRun) {
-            // Remove conflicting transactions from the mempool
-            BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
-            {
-                LogPrint("mempool", "replacing tx %s with %s for %s BTC additional fees, %d delta bytes\n",
-                        it->GetTx().GetHash().ToString(),
-                        hash.ToString(),
-                        FormatMoney(nModifiedFees - nConflictingFees),
-                        (int)nSize - (int)nConflictingSize);
-            }
-            pool.RemoveStaged(allConflicting);
+        // Remove conflicting transactions from the mempool
+        BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
+        {
+            LogPrint("mempool", "replacing tx %s with %s for %s BTC additional fees, %d delta bytes\n",
+                    it->GetTx().GetHash().ToString(),
+                    hash.ToString(),
+                    FormatMoney(nModifiedFees - nConflictingFees),
+                    (int)nSize - (int)nConflictingSize);
+        }
+        pool.RemoveStaged(allConflicting);
 
-            // Store transaction in memory
-            pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+        // Store transaction in memory
+        pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
 
-            // trim mempool and check if tx was trimmed
-            if (!fOverrideMempoolLimit) {
-                LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
-                if (!pool.exists(hash))
-                    return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
-            }
+        // trim mempool and check if tx was trimmed
+        if (!fOverrideMempoolLimit) {
+            LimitMempoolSize(pool, GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+            if (!pool.exists(hash))
+                return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
         }
     }
 
-     if(!fDryRun) SyncWithWallets(tx, NULL);
+    if(!fDryRun) SyncWithWallets(tx, NULL);
 
     return true;
 }

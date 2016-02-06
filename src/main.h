@@ -109,8 +109,8 @@ static const bool DEFAULT_TXINDEX = true;
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 
 static const bool DEFAULT_TESTSAFEMODE = false;
-/** Default for -permitrbf */
-static const bool DEFAULT_PERMIT_REPLACEMENT = false;
+/** Default for -mempoolreplacement */
+static const bool DEFAULT_ENABLE_REPLACEMENT = false;
 
 /** Maximum number of headers to announce when relaying blocks with headers message.*/
 static const unsigned int MAX_BLOCKS_TO_ANNOUNCE = 8;
@@ -142,7 +142,7 @@ extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
-extern bool fPermitReplacement;
+extern bool fEnableReplacement;
 
 extern std::map<uint256, int64_t> mapRejectedBlocks;
 
@@ -282,10 +282,6 @@ void PruneAndFlush();
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
                         bool* pfMissingInputs, bool fOverrideMempoolLimit=false, bool fRejectAbsurdFee=false, bool fDryRun=false);
-// TODO:
-//                        bool* pfMissingInputs, bool fRejectInsaneFee=false, bool ignoreFees=false);
-//bool AcceptableInputs(CTxMemPool& pool, CValidationState &state, const CTransaction &tx, bool fLimitFree,
-//                        bool* pfMissingInputs, bool fRejectInsaneFee=false, bool isDSTX=false);
 
 int GetInputAge(CTxIn& vin);
 int GetInputAgeIX(uint256 nTXHash, CTxIn& vin);

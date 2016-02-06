@@ -980,7 +980,7 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
     {
         LOCK(cs_main);
         CValidationState state;
-        if(!AcceptToMemoryPool(mempool, state, txCollateral, true, NULL, false, true, true)){
+        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, NULL, false, true, true)){
             if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
             return false;
         }
