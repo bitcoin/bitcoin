@@ -17,7 +17,7 @@ packages:
 - "bsdmainutils"
 reference_datetime: "2013-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/KingCaper/gameunits.git"
+- "url": "https://github.com/gameunits/gameunits.git"
   "dir": "gameunits"
 files:
 - "qt-win32-5.5.0-gitian.tar.xz"
@@ -81,35 +81,22 @@ script: |
     #
     cd src
     make -f makefile.linux-mingw HOST="$HOST" DEPSDIR="$DEPSDIR" CURDIR="$BUILDDIR/gameunits/src" STATIC=1 $MAKEOPTS USE_UPNP=1 BOOST_LIB_SUFFIX="-mt-s" DEBUGFLAGS= 
-    cp gameunitsd.exe $BINDIR/
+    cp gameunits.exe $BINDIR/
     cd ..
     #
     #$DEPSDIR/qt/host/bin/qmake -spec unsupported/win32-g++-cross MINIUPNPC_LIB_PATH=$HOME/build/miniupnpc MINIUPNPC_INCLUDE_PATH=$HOME/build/ BDB_LIB_PATH=$HOME/build/db-4.8.30.NC/build_unix BDB_INCLUDE_PATH=$HOME/build/db-4.8.30.NC/build_unix BOOST_LIB_PATH=$HOME/build/lib BOOST_INCLUDE_PATH=$HOME/build/include BOOST_LIB_SUFFIX=-mt-s BOOST_THREAD_LIB_SUFFIX=_win32-mt-s OPENSSL_LIB_PATH=$HOME/build/openssl-1.0.1h OPENSSL_INCLUDE_PATH=$HOME/build/openssl-1.0.1h/include INCLUDEPATH=$HOME/build DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_LRELEASE=lrelease QMAKE_CXXFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
-    $STAGING/host/bin/qmake -xplatform win32-g++ RELEASE=1 QMAKE_LRELEASE="$STAGING/host/bin/lrelease" MINIUPNPC_LIB_PATH="$DEPSDIR/lib" MINIUPNPC_INCLUDE_PATH="$DEPSDIR/include" BDB_LIB_PATH="$DEPSDIR/lib" BDB_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_PATH="$DEPSDIR/lib" BOOST_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_SUFFIX="-mt-s" BOOST_THREAD_LIB_SUFFIX="_win32-mt-s" OPENSSL_LIB_PATH="$DEPSDIR/lib" OPENSSL_INCLUDE_PATH="$DEPSDIR/include" INCLUDEPATH="$DEPSDIR/include" DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_CXXFLAGS=-frandom-seed=bitcoin USE_BUILD_INFO=1
+    $STAGING/host/bin/qmake -xplatform win32-g++ RELEASE=1 QMAKE_LRELEASE="$STAGING/host/bin/lrelease" MINIUPNPC_LIB_PATH="$DEPSDIR/lib" MINIUPNPC_INCLUDE_PATH="$DEPSDIR/include" BDB_LIB_PATH="$DEPSDIR/lib" BDB_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_PATH="$DEPSDIR/lib" BOOST_INCLUDE_PATH="$DEPSDIR/include" BOOST_LIB_SUFFIX="-mt-s" BOOST_THREAD_LIB_SUFFIX="_win32-mt-s" OPENSSL_LIB_PATH="$DEPSDIR/lib" OPENSSL_INCLUDE_PATH="$DEPSDIR/include" INCLUDEPATH="$DEPSDIR/include" DEFINES=BOOST_THREAD_USE_LIB BITCOIN_NEED_QT_PLUGINS=1 QMAKE_CXXFLAGS=-frandom-seed=gameunits USE_BUILD_INFO=1
     make $MAKEOPTS
     cp release/gameunits.exe $BINDIR/
     #
-    # windeployqt !?
-    #
-    cp $STAGING/host/bin/*.dll $BINDIR/
-    if [ "$BITS" == "32" ]; then
-      cp /usr/lib/gcc/i686-w64-mingw32/4.8/*.dll $BINDIR/
-      cp /usr/i686-w64-mingw32/lib/*.dll $BINDIR/
-    else
-      cp /usr/lib/gcc/x86_64-w64-mingw32/4.8/*.dll $BINDIR/
-      cp /usr/x86_64-w64-mingw32/lib/*.dll $BINDIR/
-    fi
-    mkdir -p $BINDIR/platforms
-    cp $STAGING/plugins/platforms/*.dll $BINDIR/platforms/
-    #
     unset LD_PRELOAD
     unset FAKETIME
-  done # for BITS in
-  #
-  # sort distribution tar file and normalize user/group/mtime information for deterministic output
-  mkdir -p $OUTDIR/src
-  rm -rf $TEMPDIR
-  mkdir -p $TEMPDIR
-  cd $TEMPDIR
-  cd $BINDIR
-  #tar -xvf $HOME/build/gameunits/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
+    done # for BITS in
+    #
+    # sort distribution tar file and normalize user/group/mtime information for deterministic output
+    mkdir -p $OUTDIR/src
+    rm -rf $TEMPDIR
+    mkdir -p $TEMPDIR
+    cd $TEMPDIR
+    cd $BINDIR
+    #tar -xvf $HOME/build/gameunits/$DISTNAME | sort | tar --no-recursion -cT /dev/stdin --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 --mtime="$REFERENCE_DATETIME" | gzip -n > $OUTDIR/src/$DISTNAME
