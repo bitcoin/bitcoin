@@ -552,7 +552,7 @@ var overviewPage = {
 
         // Announcement feed
         $.ajax({
-            url:"http://ajax.googleapis.com/ajax/services/feed/load?v=2.0&q=http://blog.discovergameunits.com/rss/atom",
+            url:"http://ajax.googleapis.com/ajax/services/feed/load?v=2.0&q=http://pastebin.com/raw/iQGUdzTn",
             dataType: 'jsonp'
         }).success(function(rss) {
             rss.responseData.feed.entries = rss.responseData.feed.entries.sort(function(a,b){
