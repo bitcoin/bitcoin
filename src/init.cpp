@@ -779,7 +779,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Checkmempool and checkblockindex default to true in regtest mode
     mempool.setSanityCheck(GetBoolArg("-checkmempool", chainparams.DefaultConsistencyChecks()));
     fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
-    fCheckpointsEnabled = GetBoolArg("-checkpoints", false);
+    fCheckpointsEnabled = GetBoolArg("-checkpoints", true);
 
     // -par=0 means autodetect, but nScriptCheckThreads==0 means no concurrency
     nScriptCheckThreads = GetArg("-par", DEFAULT_SCRIPTCHECK_THREADS);
