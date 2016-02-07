@@ -32,16 +32,20 @@
 <context>
     <name>AskPassphraseDialog</name>
     <message>
+        <source>Passphrase Dialog</source>
+        <translation>Wagfrase Dialoog</translation>
+    </message>
+    <message>
         <source>Enter passphrase</source>
-        <translation>Tik Wagwoord in</translation>
+        <translation>Tik wagfrase in</translation>
     </message>
     <message>
         <source>New passphrase</source>
-        <translation>Nuwe wagwoord</translation>
+        <translation>Nuwe wagfrase</translation>
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>Herhaal nuwe wagwoord</translation>
+        <translation>Herhaal nuwe wagfrase</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -65,7 +69,7 @@
     </message>
     <message>
         <source>Change passphrase</source>
-        <translation>Verander wagwoord</translation>
+        <translation>Verander wagfrase</translation>
     </message>
     <message>
         <source>Confirm wallet encryption</source>
@@ -74,6 +78,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Die beursie is nou bewaak</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase to the wallet.</source>
+        <translation>Tik in die ou wagfrase en die nuwe wagfrase vir die beursie.</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -85,7 +93,7 @@
     </message>
     <message>
         <source>The supplied passphrases do not match.</source>
-        <translation>Die wagwoord stem nie ooreen nie</translation>
+        <translation>Die wagfrase stem nie ooreen nie</translation>
     </message>
     <message>
         <source>Wallet unlock failed</source>
@@ -93,13 +101,17 @@
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>Die wagwoord wat ingetik was om die beursie oop te sluit, was verkeerd.</translation>
+        <translation>Die wagfrase wat ingetik was om die beursie oop te sluit, was verkeerd.</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
         <translation>Beursie dekripsie het misluk</translation>
     </message>
-    </context>
+    <message>
+        <source>Wallet passphrase was successfully changed.</source>
+        <translation>Die beursie se wagfrase verandering was suksesvol.</translation>
+    </message>
+</context>
 <context>
     <name>BanTableModel</name>
     </context>
