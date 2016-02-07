@@ -491,10 +491,14 @@ qt/res/rendered_icons/bitcoin%.png: qt/res/src/bitcoin.svg
 	@$(MKDIR_P) $(@D)
 	$(RSVG_CONVERT) -f png -d $* -p $* < $< > $@
 
+# NOTE: ImageMagick will never convert transparent PNGs to 8-bit ICOs, but GIF is fine
+qt/res/rendered_icons/bitcoin%d8.gif: qt/res/rendered_icons/bitcoin%.png
+	$(IMAGEMAGICK_CONVERT) $^ -colors 256 -channel A -threshold '50%' $@
+
 qt/res/rendered_icons/bitcoin.icns: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 512 1024 32 16)
 	$(PNG2ICNS) $@ $^
 
-qt/res/rendered_icons/bitcoin.ico: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 48 32 16)
+qt/res/rendered_icons/bitcoin.ico: qt/res/rendered_icons/bitcoin32d8.gif $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 64 48 32 20 16)
 	$(IMAGEMAGICK_CONVERT) $^ $@
 
 qt/res/rendered_icons/nsis-wizard.bmp: qt/res/rendered_icons/bitcoin290.png
