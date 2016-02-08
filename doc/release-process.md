@@ -3,6 +3,7 @@ Release Process
 
 * Update translations (ping wumpus, Diapolo or tcatm on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#syncing-with-transifex)
 * Update [bips.md](bips.md) to account for changes since the last release.
+* Update hardcoded [seeds](/contrib/seeds)
 
 * * *
 
@@ -19,8 +20,10 @@ Check out the source code in the following directory hierarchy.
 
 	pushd ./bitcoin
 	contrib/verifysfbinaries/verify.sh
+	configure.ac
 	doc/README*
-	share/setup.nsi
+	doc/Doxyfile
+	contrib/gitian-descriptors/*.yml
 	src/clientversion.h (change CLIENT_VERSION_IS_RELEASE to true)
 
 	# tag version in git
@@ -84,16 +87,21 @@ NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from 
 ```
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
-###Build and Sign Bitcoin Core for Linux, Windows, and OS X:
+###Build and sign Bitcoin Core for Linux, Windows, and OS X:
 
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
+    mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../
 
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
+    mv build/out/bitcoin-*-win-unsigned.tar.gz inputs/bitcoin-win-unsigned.tar.gz
+    mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../
 
 	./bin/gbuild --commit bitcoin=v${VERSION} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+    mv build/out/bitcoin-*-osx-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
+    mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../
 
   Build output expected:
 
@@ -115,13 +123,6 @@ The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
 	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
 
-###Move the outputs to the correct directory
-
-	mv build/out/bitcoin-*.tar.gz build/out/src/bitcoin-*.tar.gz ../
-	mv build/out/bitcoin-*-win-unsigned.tar.gz inputs/bitcoin-win-unsigned.tar.gz
-	mv build/out/bitcoin-*.zip build/out/bitcoin-*.exe ../
-	mv build/out/bitcoin-*-osx-unsigned.tar.gz inputs/bitcoin-osx-unsigned.tar.gz
-	mv build/out/bitcoin-*.tar.gz build/out/bitcoin-*.dmg ../
 	popd
 
 ###Next steps:
@@ -137,7 +138,6 @@ Commit your signature to gitian.sigs:
 	popd
 
   Wait for Windows/OS X detached signatures:
-
 	Once the Windows/OS X builds each have 3 matching signatures, they will be signed with their respective release keys.
 	Detached signatures will then be committed to the [bitcoin-detached-sigs](https://github.com/bitcoin/bitcoin-detached-sigs) repository, which can be combined with the unsigned apps to create signed binaries.
 
