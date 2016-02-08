@@ -308,7 +308,7 @@ public:
         strDataDir = "testnet";
 
         genesis.nBits  = bnProofOfWorkLimit.GetCompact();
-        genesis.nNonce = 0;
+        genesis.nNonce = 31276;
 		
 		//gensis
 		
@@ -344,8 +344,8 @@ public:
 		
 
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x0000d5177414af65ec695613eb4fe6503985f5820a15399816b83b7202238f35"));
-        assert(genesis.hashMerkleRoot == uint256("0xa47bfea772615fb7de51e533b18fc94bf0fbb5230573b75e7599cf4a593a05a9"));
+        assert(hashGenesisBlock == uint256("0x0000fa6e0c0439c972dc814e38be9387b98ede13aabf091cce3a2a5958d6909e"));
+        assert(genesis.hashMerkleRoot == uint256("0x5fe523908bf29ec313671bbd4d0ebeb6ab481e24c7cd3a2731de5aae2e1346cc"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
