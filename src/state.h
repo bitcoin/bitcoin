@@ -46,7 +46,7 @@ enum
     SMSG_RELAY          = (1 << 4),
 };
 
-const int64_t GENESIS_BLOCK_TIME = 1454609666;
+const int64_t GENESIS_BLOCK_TIME = 1454927666;
 
 static const int64_t COIN = 100000000;
 static const int64_t CENT = 1000000;
@@ -54,12 +54,12 @@ static const int64_t CENT = 1000000;
 static const int64_t MIN_TX_FEE = 10000;
 static const int64_t MIN_TX_FEE_ANON = 1000000;
 static const int64_t MIN_RELAY_TX_FEE = MIN_TX_FEE;
-static const int64_t MAX_MONEY = 23000000 * COIN;
-static const int64_t COIN_YEAR_REWARD = 50 * CENT; // 50% first year
-static const int64_t MCOIN_YEAR_REWARD = 25 * CENT; // 25% second year
+static const int64_t MAX_MONEY = 23000000000 * COIN;
+static const int64_t COIN_YEAR_REWARD = 50 * COIN;  // Insane first Gamer Year
+static const int64_t MCOIN_YEAR_REWARD = 25 * CENT; // 25% second year (Public Bitcoin Talk Annouce)
 static const int64_t OCOIN_YEAR_REWARD = 10 * CENT; // 10% third year
-static const int64_t ICOIN_YEAR_REWARD = 5 * CENT; //  5% fourth year 
-static const int64_t NCOIN_YEAR_REWARD = 2 * CENT; //  2% fifth year
+static const int64_t ICOIN_YEAR_REWARD = 5 * CENT;  //  5% fourth year 
+static const int64_t NCOIN_YEAR_REWARD = 1 * COIN;  //  Long Term Project
 
 
 extern int nNodeMode;

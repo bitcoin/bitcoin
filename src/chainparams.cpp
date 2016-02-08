@@ -38,9 +38,12 @@ int64_t CChainParams::GetProofOfWorkReward(int nHeight, int64_t nFees) const
     if (nHeight <= 10)
         nSubsidy = 0 * COIN;
     else
+    if (nHeight <= 1337)
+        nSubsidy = 1337 * COIN; 
+    else
     if (nHeight <= nLastPOWBlock)
-        nSubsidy = 1000 * COIN;
-    
+        nSubsidy = 1 * COIN;
+	
     if (fDebug && GetBoolArg("-printcreation"))
         LogPrintf("GetProofOfWorkReward() : create=%s nSubsidy=%d\n", FormatMoney(nSubsidy).c_str(), nSubsidy);
     
@@ -52,9 +55,8 @@ int64_t CChainParams::GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees) con
 {
     // miner's coin stake reward based on coin age spent (coin-days)
     int64_t nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8);
-
 	
-        if(pindexBest->nHeight+1 >= 111 && pindexBest->nHeight+1 <= 300)   
+    if(pindexBest->nHeight+1 >= 111 && pindexBest->nHeight+1 <= 300)   
     {
         nSubsidy = 0 * COIN;   // no stake rewards till PoS v2
     }
@@ -116,7 +118,7 @@ int64_t CChainParams::GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees) con
     }
     else if(pindexBest->nHeight+1 > nFourthYearBlock)
     {
-        nSubsidy = nCoinAge * NCOIN_YEAR_REWARD * 33 / (365 * 33 +8);   // 2% till supply reaches 23m
+        nSubsidy = nCoinAge * NCOIN_YEAR_REWARD * 33 / (365 * 33 +8);   // 2% till supply reaches 21m
     }
     
     if (fDebug && GetBoolArg("-printcreation"))
@@ -192,7 +194,7 @@ public:
         bnProofOfStakeLimit = CBigNum(~uint256(0) >> 20);
         bnProofOfStakeLimitV2 = CBigNum(~uint256(0) >> 48);
         
-        const char* pszTimestamp = "-Price is what you pay.Value is what you get.- Oil impact wont crush Banks CNBC 04/02/16";
+        const char* pszTimestamp = "-Price is what you pay.Value is what you get.- Lady Gaga nails national anthem at Super Bowl 50";
         CTransaction txNew;
         txNew.nTime = GENESIS_BLOCK_TIME;
         txNew.vin.resize(1);
@@ -206,7 +208,37 @@ public:
         genesis.nVersion = 1;
         genesis.nTime    = GENESIS_BLOCK_TIME;
         genesis.nBits    = bnProofOfWorkLimit.GetCompact();
-        genesis.nNonce   = 1533561;
+        genesis.nNonce   = 0;
+		
+		        if (true && genesis.GetHash() != hashGenesisBlock)
+                       {
+                           printf("Searching for genesis block...\n");
+                           uint256 hashTarget = CBigNum().SetCompact(genesis.nBits).getuint256();
+                           uint256 thash;
+
+                           while (true)
+                           {
+                               thash = genesis.GetHash();
+                               if (thash <= hashTarget)
+                                   break;
+                               if ((genesis.nNonce & 0xFFF) == 0)
+                               {
+                                   printf("nonce %08X: hash = %s (target = %s)\n", genesis.nNonce, thash.ToString().c_str(), hashTarget.ToString().c_str());
+                               }
+                               ++genesis.nNonce;
+                               if (genesis.nNonce == 0)
+                               {
+                                   printf("NONCE WRAPPED, incrementing time\n");
+                                   ++genesis.nTime;
+                               }
+                           }
+                           printf("genesis.nTime = %u \n", genesis.nTime);
+                           printf("genesis.nNonce = %u \n", genesis.nNonce);
+                           printf("genesis.nVersion = %u \n", genesis.nVersion);
+                           printf("genesis.hashMerkleRoot = %s \n", genesis.hashMerkleRoot.ToString().c_str()); //improvised. worked for me, to find merkle root
+                           printf("genesis.GetHash = %s\n", genesis.GetHash().ToString().c_str()); //first this, then comment this line out and uncomment the one under.
+
+        }
 		
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x00000e73918c27d84bbc01e331c0764382c841f8b52bbcea16578d0ec0fe55e3"));
@@ -227,12 +259,12 @@ public:
         //convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
         convertSeeds(vFixedSeeds, pnSeed, ARRAYLEN(pnSeed), nDefaultPort);
 
-        nFirstYearBlock = 529900; // 525600 blocks per year
-        nSecondYearBlock = 1055500; // + 1 year blocks average 
-        nThirdYearBlock = 1581100; // + 1 year blocks average 
-        nFourthYearBlock = 2106700; // + 1 year blocks average 
+        nFirstYearBlock = 529900;
+        nSecondYearBlock = 1055500; 
+        nThirdYearBlock = 1581100;  
+        nFourthYearBlock = 2106700; 
         
-        nLastPOWBlock = 9000;
+        nLastPOWBlock = 2000000;
     }
 
     virtual const CBlock& GenesisBlock() const { return genesis; }
@@ -276,10 +308,10 @@ public:
         strDataDir = "testnet";
 
         genesis.nBits  = bnProofOfWorkLimit.GetCompact();
-        genesis.nNonce = 90555;
+        genesis.nNonce = 0;
 		
 		//gensis
-		/*
+		
         if (true && genesis.GetHash() != hashGenesisBlock)
                        {
                            printf("Searching for genesis block...\n");
@@ -309,7 +341,7 @@ public:
                            printf("genesis.GetHash = %s\n", genesis.GetHash().ToString().c_str()); //first this, then comment this line out and uncomment the one under.
 
         }
-		*/
+		
 
         hashGenesisBlock = genesis.GetHash();
         assert(hashGenesisBlock == uint256("0x0000d5177414af65ec695613eb4fe6503985f5820a15399816b83b7202238f35"));
