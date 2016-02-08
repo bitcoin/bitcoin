@@ -205,10 +205,10 @@ if test "x$use_asm" = xyes; then
 fi
 
 AC_ARG_WITH([system-univalue],
-  [AS_HELP_STRING([--with-system-univalue],
-  [Build with system UniValue (default is no)])],
+  [AS_HELP_STRING([--without-system-univalue],
+  [Build with system UniValue (default is auto)])],
   [system_univalue=$withval],
-  [system_univalue=no]
+  [system_univalue=auto]
 )
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
