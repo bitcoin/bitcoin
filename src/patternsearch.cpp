@@ -115,9 +115,9 @@ namespace patternsearch
 	}
 	
     std::vector< std::pair<uint32_t,uint32_t> > pattern_search( uint256 midHash, char *mainMemoryPsuedoRandomData, int totalThreads){
-		
-        //LogPrintf("Start Search\n");
-		
+
+            boost::this_thread::disable_interruption di;
+
 		std::vector< std::pair<uint32_t,uint32_t> > results;
 		
         //clock_t t1 = clock();
@@ -147,6 +147,7 @@ namespace patternsearch
 
 		delete aesThreads;
 		delete sha512Threads;
+            boost::this_thread::restore_interruption ri(di);
 		return results;
 	}
 	

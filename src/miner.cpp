@@ -605,9 +605,15 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
     }
 }
 
+static bool isInterrupting=false;
+static boost::thread_group* minerThreads = NULL;
+
 void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 {
-    static boost::thread_group* minerThreads = NULL;
+    if(isInterrupting){
+        return;
+    }
+
 
     if (nThreads < 0) {
         // In regtest threads defaults to 1
@@ -619,9 +625,12 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
 
     if (minerThreads != NULL)
     {
+        isInterrupting=true;
         minerThreads->interrupt_all();
+        minerThreads->join_all();
         delete minerThreads;
         minerThreads = NULL;
+        isInterrupting=false;
     }
 
     if (nThreads == 0 || !fGenerate)
