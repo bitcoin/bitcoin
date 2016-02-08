@@ -208,7 +208,7 @@ public:
         genesis.nVersion = 1;
         genesis.nTime    = GENESIS_BLOCK_TIME;
         genesis.nBits    = bnProofOfWorkLimit.GetCompact();
-        genesis.nNonce   = 0;
+        genesis.nNonce   = 113492;
 		
 		        if (true && genesis.GetHash() != hashGenesisBlock)
                        {
@@ -241,8 +241,8 @@ public:
         }
 		
         hashGenesisBlock = genesis.GetHash();
-        assert(hashGenesisBlock == uint256("0x00000e73918c27d84bbc01e331c0764382c841f8b52bbcea16578d0ec0fe55e3"));
-        assert(genesis.hashMerkleRoot == uint256("0xa47bfea772615fb7de51e533b18fc94bf0fbb5230573b75e7599cf4a593a05a9"));
+        assert(hashGenesisBlock == uint256("0x0000002bc49bd2069830809f05078b1dc660db172d2ce12c2fdeb752898dcc7d"));
+        assert(genesis.hashMerkleRoot == uint256("0x5fe523908bf29ec313671bbd4d0ebeb6ab481e24c7cd3a2731de5aae2e1346cc"));
         
         vSeeds.push_back(CDNSSeedData("gameunits.net", "gameunits.net"));
         vSeeds.push_back(CDNSSeedData("5.9.85.14", "5.9.85.14"));
