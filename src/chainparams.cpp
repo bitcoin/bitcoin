@@ -328,7 +328,7 @@ public:
                                    printf("nonce %08X: hash = %s (target = %s)\n", genesis.nNonce, thash.ToString().c_str(), hashTarget.ToString().c_str());
                                }
                                ++genesis.nNonce;
-                               if (genesiss.nNonce == 0)
+                               if (genesis.nNonce == 0)
                                {
                                    printf("NONCE WRAPPED, incrementing time\n");
                                    ++genesis.nTime;
