@@ -168,33 +168,38 @@ three bytes overhead)
 Relay and Mining: Priority transactions
 ---------------------------------------
 
-Bitcoin Core has a heuristic 'priority' based on coin value and age for
-transactions which do not meet pay the minimum relay fee. Bitcoin Core relays
-and mines these transactions depending on the setting of `-limitfreerelay=<r>`
-(default: `r=15` kB per minute) and `-blockprioritysize=<s>`.
+Bitcoin Core has a heuristic 'priority' based on coin value and age. This
+calculation is used for relaying of transactions which do not meet pay the
+minimum relay fee, and can be used as an alternative way of sorting
+transactions for mined blocks. Bitcoin Core will relay transactions with
+insufficient fees depending on the setting of `-limitfreerelay=<r>` (default:
+`r=15` kB per minute) and `-blockprioritysize=<s>`.
 
-In Bitcoin Core 0.12 when mempool limit has been reached a higher minimum relay
-fee takes effect to limit memory usage. Transactions which do not meet this
-higher effective minimum relay fee will not be relayed or mined even if they
-would rank highly according to the priority heuristic if they were accepted.
+In Bitcoin Core 0.12, when mempool limit has been reached a higher minimum
+relay fee takes effect to limit memory usage. Transactions which do not meet
+this higher effective minimum relay fee will not be relayed or mined even if
+they rank highly according to the priority heuristic.
 
-In Bitcoin Core 0.12 the reserved space for priority heuristic selected
-transactions is also set to zero.
-
-To re-enable it, simply set `-blockprioritysize=<n>` where is the size in bytes
-of your blocks to reserve for these transactions. The old default was 50k, so
-to retain the same policy, you would set `-blockprioritysize=50000`.
+The mining of transactions based on their priority is also now disabled by
+default. To re-enable it, simply set `-blockprioritysize=<n>` where is the size
+in bytes of your blocks to reserve for these transactions. The old default was
+50k, so to retain approximately the same policy, you would set
+`-blockprioritysize=50000`.
 
 Additionally, as a result of computational simplifications, the priority value
 used for transactions received with unconfirmed inputs is lower than in prior
-versions to due avoiding recomputing the amounts as transactions confirm.
+versions due to avoiding recomputing the amounts as input transactions confirm.
 
-External miner policy set via the prioritisetransaction RPC to rank
+External miner policy set via the `prioritisetransaction` RPC to rank
 transactions already in the mempool continues to work as it has previously.
+Note, however, that if mining priority transactions is left disabled, the
+priority delta will be ignored and only the fee metric will be effective.
 
 This internal automatic prioritization handling is being considered for removal
-entirely in Bitcoin Core 0.13. Community direction on this topic is
-particularly requested to help set project priorities.
+entirely in Bitcoin Core 0.13, and it is at this time undecided whether the
+more accurate priority calculation for chained unconfirmed transactions will be
+restored. Community direction on this topic is particularly requested to help
+set project priorities.
 
 Automatically use Tor hidden services
 -------------------------------------
