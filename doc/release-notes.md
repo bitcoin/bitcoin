@@ -182,9 +182,7 @@ blocks to reserve for priority transactions. The old default was 50k, so to
 retain the same policy, you must set `-blockprioritysize=50000`.
 
 Additionally, calculation of the priority for transactions received with
-unconfirmed inputs is no longer updated correctly when they are received with
-unconfirmed inputs, so miners must continue to use 0.11 if accurate priority
-accounting is important to them.
+unconfirmed inputs is no longer updated accurately based on those inputs.
 
 This internal automatic prioritization handling is being considered for removal
 entirely in Bitcoin Core 0.13, and it is at this time undecided whether the
