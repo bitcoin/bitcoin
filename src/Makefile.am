@@ -1,3 +1,5 @@
+#kate: space-indent: off
+
 DIST_SUBDIRS = secp256k1 univalue
 
 AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
@@ -478,6 +480,51 @@ endif
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
 	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)
+
+# Rendered icons must be here, not in Makefile.qt.include, since they are distributed with the source tarball
+
+RES_RENDERED_ICON_SOURCES = qt/res/src/bitcoin.svg
+
+RES_RENDERED_ICONS = \
+  qt/res/rendered_icons/about.png \
+  qt/res/rendered_icons/bitcoin.ico \
+  qt/res/rendered_icons/bitcoin1024.png
+
+RES_ALL_RENDERED_ICONS = $(RES_RENDERED_ICONS) \
+  qt/res/rendered_icons/about.svg \
+  $(patsubst %,qt/res/rendered_icons/bitcoin%.png,16 32 48 256 290 512 1024) \
+  qt/res/rendered_icons/bitcoin.icns \
+  qt/res/rendered_icons/nsis-wizard.bmp
+
+EXTRA_DIST += $(RES_RENDERED_ICON_SOURCES) $(RES_ALL_RENDERED_ICONS)
+
+if CAN_RENDER_ICONS
+
+qt/res/rendered_icons/about.png: qt/res/rendered_icons/about.svg
+	$(RSVG_CONVERT) -f png -d 142 -p 142 < $< | $(IMAGEMAGICK_CONVERT) - -crop 128x128+7+7 -colorspace Gray -strip $@
+
+qt/res/rendered_icons/about.svg: qt/res/src/bitcoin.svg
+	@$(MKDIR_P) $(@D)
+	sed '/fill="white"/d;s/\(stop-color:\)#....../\1black/' < $< > $@
+
+qt/res/rendered_icons/bitcoin%.png: qt/res/src/bitcoin.svg
+	@$(MKDIR_P) $(@D)
+	$(RSVG_CONVERT) -f png -d $* -p $* < $< > $@
+
+# NOTE: ImageMagick will never convert transparent PNGs to 8-bit ICOs, but GIF is fine
+qt/res/rendered_icons/bitcoin%d8.gif: qt/res/rendered_icons/bitcoin%.png
+	$(IMAGEMAGICK_CONVERT) $^ -colors 256 -channel A -threshold '50%' $@
+
+qt/res/rendered_icons/bitcoin.icns: $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 512 1024 32 16)
+	$(PNG2ICNS) $@ $^
+
+qt/res/rendered_icons/bitcoin.ico: qt/res/rendered_icons/bitcoin32d8.gif $(patsubst %,qt/res/rendered_icons/bitcoin%.png,256 64 48 32 20 16)
+	$(IMAGEMAGICK_CONVERT) $^ $@
+
+qt/res/rendered_icons/nsis-wizard.bmp: qt/res/rendered_icons/bitcoin290.png
+	$(IMAGEMAGICK_CONVERT) $^ -crop 164x290+62+0 -border 0x12 -strip $@
+
+endif
 
 if ENABLE_TESTS
 include Makefile.test.include
