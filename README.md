@@ -1,85 +1,82 @@
-Bitcoin Core integration/staging tree
-=====================================
+#**HODLcoin**
+![](https://mymostlyunfabulouslife.files.wordpress.com/2013/06/20130606-175924.jpg)
 
-[![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
+[http://www.HOdlcoin.com](http://www.HOdlcoin.com)
+###**What is it?**
 
-https://www.bitcoin.org
+**HOdlcoin** is a Cryptocurrency just like Bitcoin, but with one major difference. It pays interest on every balance. This is to recognize the importance of **HODLers** and properly reward them for **HODLing**.
 
-What is Bitcoin?
-----------------
+##**Compound Interest on all Balances**
 
-Bitcoin is an experimental new digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
-with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
-software which enables the use of this currency.
+Interest is paid on all outputs (**Balances**) and compounded on each block. This is to discourage rolling outputs into new blocks simply to compound interest.
 
-For more information, as well as an immediately useable, binary version of
-the Bitcoin Core software, see https://www.bitcoin.org/en/download.
+####**Benefits:**
+> -  Exciting for HOdlers to see their balances continually increase as each block is received.
+> -  Interest discourages users from leaving large balances on exchanges - expensive to maintain large sell walls.
+> -  Interest encourages users to keep their balances, reducing supply
+> -  30 day limit will dilute abandoned balances, reducing supply
+> -  30 day limit encourages term deposits, reducing supply
+> -  Encourages exchanges to trade in the coin, as they can earn interest on customer's deposits
+> -  Unconfirmed transactions become more valuable over time, as their inputs continue to earn interest. 
 
-License
--------
+##**Deposit Interest** 
+Paid on **Term Deposits** (aka Fixed deposit / time deposit)
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see http://opensource.org/licenses/MIT.
+This allows users to lock up funds for a specified amount of time up to a year, to earn a bonus rate of interest.  
 
-Development process
--------------------
+####**Why?**
 
-Developers work in their own trees, then submit pull requests when they think
-their feature or bug fix is ready.
+ - This encourages and reward HOdlers.
+ - Term deposits also constrain supply - term deposit coins cannot be moved until term ends.
 
-If it is a simple/trivial/non-controversial change, then one of the Bitcoin
-development team members simply pulls it.
+Interest is handled in the blockchain and protocol using **CHECKLOCKTIMEVERIFY**. There is no counterparty. 
 
-If it is a *more complicated or potentially controversial* change, then the patch
-submitter will be asked to start a discussion (if they haven't already) on the
-[mailing list](https://lists.linuxfoundation.org/mailman/listinfo/bitcoin-dev)
+##**Fixed Parameters**
+> The PoW Algorithm is considered a technical detail and is subject to change to favor CPU and consumer grade hardware with the intention of keeping mining participatory and distributed.
 
-The patch will be accepted if there is broad consensus that it is a good thing.
-Developers should expect to rework and resubmit patches if the code doesn't
-match the project's coding conventions (see [doc/developer-notes.md](doc/developer-notes.md)) or are
-controversial.
+#####**ALL OTHER PARAMETERS ARE SET IN STONE.**
 
-The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly to indicate new official, stable release versions of Bitcoin.
+> **Note:** No changes to mining subsidies, interest rates, distribution etc.
 
-Testing
--------
+ - 154 second blocks
+ - 50 HODL subsidy per block (Halving every 4 years)
+ - Total of 81,962,100 HODL will be mined
+ - Scrupulously fair launch. No Premine, Instamine, Ninja
+ - 1 HODL token subsidy for first 100 blocks
+ - Standard interest payment 5% on **all** outputs for up to 30 days
+ - Term deposit for 1 year 10% APR
 
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
+###**Term deposits**
 
-### Automated Testing
+Term     | % of Total APR
+-------- | ---
+1 week   | ~ 6.5%
+1 month  | ~ 25%
+3 month  | ~ 60%
+6 month  | ~ 87%
+1 year   | ~ 100% 
 
-Developers are strongly encouraged to write unit tests for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run (assuming they weren't disabled in configure) with: `make check`
 
-Every pull request is built for both Windows and Linux on a dedicated server,
-and unit and sanity tests are automatically run. The binaries produced may be
-used for manual QA testing — a link to them will appear in a comment on the
-pull request posted by [BitcoinPullTester](https://github.com/BitcoinPullTester). See https://github.com/TheBlueMatt/test-scripts
-for the build/test scripts.
+####**Bonus interest payment for early adopters, decreases over 24 months**
 
-### Manual Quality Assurance (QA) Testing
+Time     |  APR
+-------- | ---
+1st month | ~ 2143%
+2nd month | ~ 1833%
+3rd month | ~ 1540%
+...      | 
+...      |  
+22nd month | ~ 0.111255%
+23rd month | ~ 0.008%
+24th month | no bonus 
 
-Large changes should have a test plan, and should be tested by somebody other
-than the developer who wrote the code.
-See https://github.com/bitcoin/QA/ for how to create a test plan.
+> **Note:**
+> 
+> - When a Term Deposit matures, it stops earning interest - you need to move it to start earning interest again.
+> -  Bonus rates are paid on regular balances as well.
+> - The bonus rate is locked at the time of the transaction, the rate you can achieve reduces over time due to the multiplier, but once you're earning that bonus rate, it doesn't reduce.
 
-Translations
-------------
+###**Proof of Work**
 
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/projects/p/bitcoin/).
-
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
-
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
-
-Translators should also subscribe to the [mailing list](https://groups.google.com/forum/#!forum/bitcoin-translators).
+####**1GB AES Pattern Search PoW** 
+Pattern Search involves filling up RAM with pseudo-random data, and then conducting a search for the start location of an AES encrypted data pattern in that data. Pattern Search is an evolution of the ProtoShares Momentum PoW, first used in MemoryCoin and later modified for use in CryptoNight(Monero,Bytecoin), Ethash(Ethereum).  CPU/GPU friendly.
