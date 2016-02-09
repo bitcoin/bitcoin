@@ -22,11 +22,7 @@ struct SeedSpec6 {
 
 unsigned int pnSeed[] =
 {
-
-        0x047ffe33, 
-		0xa646c405, 
-		0x0e550905,
-
+    0x047ffe33, 0xa646c405, 0x0e550905,
 };
 
 
@@ -234,7 +230,7 @@ public:
         nThirdYearBlock = 1581100;  
         nFourthYearBlock = 2106700; 
         
-        nLastPOWBlock = 1000000;
+        nLastPOWBlock = 10000000;
     }
 
     virtual const CBlock& GenesisBlock() const { return genesis; }
