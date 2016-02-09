@@ -1121,6 +1121,27 @@ color: #fff;
     font-size: 0.6em;
 }
 
+#shopannouncements h4 {
+    margin: 0;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    font-size: 0.9em;
+    line-height:1.5em;
+}
+
+#shopannouncements h4 a {
+    color: #313131;
+    text-decoration: none;
+}
+
+
+#shopannouncements span {
+    color: #9e9f9f;
+    padding-bottom: 10px;
+    text-decoration: none;
+    font-size: 0.6em;
+}
+
 
 
 /****************************

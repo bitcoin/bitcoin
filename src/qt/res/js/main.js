@@ -565,6 +565,22 @@ var overviewPage = {
                                          + "</span>");
             }
         });
+		
+		// Shop Announcement feed
+        $.ajax({
+            url:"http://ajax.googleapis.com/ajax/services/feed/load?v=2.0&q=http://pastebin.com/raw/iQGUdzTn",
+            dataType: 'jsonp'
+        }).success(function(rss) {
+            rss.responseData.feed.entries = rss.responseData.feed.entries.sort(function(a,b){
+                return new Date(b.publishedDate) - new Date(a.publishedDate);
+            });
+            for(i=0;i<rss.responseData.feed.entries.length;i++) {
+                $('#shopannouncements').append("<h4><a href='" + rss.responseData.feed.entries[i].link  + "'>" + rss.responseData.feed.entries[i].title + "</a></h4>"
+                                         + "<span>"
+                                             +      new Date(rss.responseData.feed.entries[i].publishedDate).toDateString()
+                                         + "</span>");
+            }
+        });
 
         var menu = [{
                 name: 'Backup&nbsp;Wallet...',
