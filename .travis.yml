@@ -9,6 +9,7 @@ language: cpp
 compiler: gcc
 env:
   global:
+    - COMMON_PACKAGES="icnsutils librsvg2-bin imagemagick"
     - MAKEJOBS=-j3
     - RUN_TESTS=false
     - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
@@ -47,8 +48,11 @@ matrix:
 install:
     - if [ -n "$PACKAGES" ]; then sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list; fi
     - if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; fi
-    - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
-    - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
+    - travis_retry sudo apt-get update
+    - travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $COMMON_PACKAGES $PACKAGES
+    - travis_retry wget http://mirrors.kernel.org/ubuntu/pool/universe/libi/libicns/libicns1_0.8.1-1_amd64.deb
+    - travis_retry wget http://mirrors.kernel.org/ubuntu/pool/universe/libi/libicns/icnsutils_0.8.1-1_amd64.deb
+    - sudo dpkg -i libicns1_0.8.1-1_amd64.deb icnsutils_0.8.1-1_amd64.deb
 before_script:
     - unset CC; unset CXX
     - mkdir -p depends/SDKs depends/sdk-sources
