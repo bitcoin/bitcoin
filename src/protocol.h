@@ -19,7 +19,7 @@
 extern bool fTestNet;
 static inline unsigned short GetDefaultPort(const bool testnet = fTestNet)
 {
-    return testnet ? 17777 : 7777;
+    return static_cast<unsigned short>(testnet ? 17777 : 7777);
 }
 
 
@@ -77,8 +77,6 @@ class CAddress : public CService
     public:
         CAddress();
         explicit CAddress(CService ipIn, uint64_t nServicesIn=NODE_NETWORK);
-
-        void Init();
 
         IMPLEMENT_SERIALIZE
             (

@@ -18,21 +18,17 @@ static const char* ppszTypeName[] =
     "block",
 };
 
-CMessageHeader::CMessageHeader()
+CMessageHeader::CMessageHeader() : nMessageSize(std::numeric_limits<uint32_t>::max()), nChecksum(0)
 {
     memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
     memset(pchCommand, 0, sizeof(pchCommand));
     pchCommand[1] = 1;
-    nMessageSize = std::numeric_limits<uint32_t>::max();
-    nChecksum = 0;
 }
 
-CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn)
+CMessageHeader::CMessageHeader(const char* pszCommand, unsigned int nMessageSizeIn) : nMessageSize(nMessageSizeIn), nChecksum(0)
 {
     memcpy(pchMessageStart, ::pchMessageStart, sizeof(pchMessageStart));
     strncpy(pchCommand, pszCommand, COMMAND_SIZE);
-    nMessageSize = nMessageSizeIn;
-    nChecksum = 0;
 }
 
 std::string CMessageHeader::GetCommand() const
@@ -73,39 +69,11 @@ bool CMessageHeader::IsValid() const
     return true;
 }
 
-
-
-CAddress::CAddress() : CService()
-{
-    Init();
-}
-
-CAddress::CAddress(CService ipIn, uint64_t nServicesIn) : CService(ipIn)
-{
-    Init();
-    nServices = nServicesIn;
-}
-
-void CAddress::Init()
-{
-    nServices = NODE_NETWORK;
-    nTime = 100000000;
-    nLastTry = 0;
-}
-
-CInv::CInv()
-{
-    type = 0;
-    hash = 0;
-}
-
-CInv::CInv(int typeIn, const uint256& hashIn)
-{
-    type = typeIn;
-    hash = hashIn;
-}
-
-CInv::CInv(const std::string& strType, const uint256& hashIn)
+CAddress::CAddress() : CService(), nServices(NODE_NETWORK), nTime(100000000), nLastTry(0) { }
+CAddress::CAddress(CService ipIn, uint64_t nServicesIn) : CService(ipIn), nServices(nServicesIn), nTime(100000000), nLastTry(0) { }
+CInv::CInv() : type(0), hash(0) { }
+CInv::CInv(int typeIn, const uint256& hashIn) : type(typeIn), hash(hashIn) { }
+CInv::CInv(const std::string& strType, const uint256& hashIn) : hash(hashIn)
 {
     unsigned int i;
     for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
@@ -118,7 +86,6 @@ CInv::CInv(const std::string& strType, const uint256& hashIn)
     }
     if (i == ARRAYLEN(ppszTypeName))
         throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType.c_str()));
-    hash = hashIn;
 }
 
 bool operator<(const CInv& a, const CInv& b)
