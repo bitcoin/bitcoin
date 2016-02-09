@@ -423,7 +423,7 @@ boost::filesystem::path GetDefaultDataDir()
     return pathRet / "HOdlcoin";
 #else
     // Unix
-    return pathRet / ".bitcoin";
+    return pathRet / ".hodlcoin";
 #endif
 #endif
 }
