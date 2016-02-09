@@ -628,6 +628,20 @@ input.rounded:focus {
     -webkit-mask-position-x: -5px;
 }
 
+#navpanel [href='#gamedata']:before {
+    height: 21px;
+    width: 20px;
+    display: inline-block;
+    position: relative;
+    content: " ";
+    padding-left: 18px;
+    top: 5px;
+    background: #fff;
+    -webkit-mask-image: url('qrc:///icons/nav_icons');
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position-x: -5px;
+}
+
 #navpanel .selected [href='#overview']:before,
 #navpanel .selected [href='#send']:before,
 #navpanel .selected [href='#receive']:before,
