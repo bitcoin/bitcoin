@@ -186,6 +186,12 @@ unconfirmed inputs is no longer updated correctly when they are received with
 unconfirmed inputs, so miners must continue to use 0.11 if accurate priority
 accounting is important to them.
 
+This internal automatic prioritization handling is being considered for removal
+entirely in Bitcoin Core 0.13, and it is at this time undecided whether the
+inaccurate priority calculation will be fixed or left as-is in future releases.
+Community direction on this topic is particularly requested to help set project
+priorities.
+
 Automatically use Tor hidden services
 -------------------------------------
 
