@@ -665,7 +665,9 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
     if (fPruneMode)
     {
         CBlockIndex *block = chainActive.Tip();
-        while (block && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA))
+        assert(block);
+        
+        while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA))
             block = block->pprev;
 
         obj.push_back(Pair("pruneheight",        block->nHeight));
