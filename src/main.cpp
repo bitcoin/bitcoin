@@ -332,8 +332,10 @@ void FinalizeNode(NodeId nodeid) {
         AddressCurrentlyConnected(state->address);
     }
 
-    BOOST_FOREACH(const QueuedBlock& entry, state->vBlocksInFlight)
+    BOOST_FOREACH(const QueuedBlock& entry, state->vBlocksInFlight) {
+        nQueuedValidatedHeaders -= entry.fValidatedHeaders;
         mapBlocksInFlight.erase(entry.hash);
+    }
     EraseOrphansFor(nodeid);
     nPreferredDownload -= state->fPreferredDownload;
 
