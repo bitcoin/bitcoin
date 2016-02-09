@@ -508,7 +508,8 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         nQuantity++;
 
         // Amount
-        nAmount += out.tx->vout[out.i].nValue;
+        //nAmount += out.tx->vout[out.i].nValue;
+        nAmount += out.tx->vout[out.i].GetValueWithInterest((chainActive.Height()+1)-out.tx->GetDepthInMainChain(),chainActive.Height()+1);
 
         // Priority
         dPriorityInputs += (double)out.tx->vout[out.i].nValue * (out.nDepth+1);
@@ -764,8 +765,9 @@ void CoinControlDialog::updateView()
             }
 
             // amount
-            itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
-            itemOutput->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(out.tx->vout[out.i].nValue), 15, " ")); // padding so that sorting works correctly
+            CAmount withInterest=out.tx->vout[out.i].GetValueWithInterest((chainActive.Height()+1)-out.tx->GetDepthInMainChain(),chainActive.Height()+1);
+            itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, withInterest));
+            itemOutput->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(withInterest), 15, " ")); // padding so that sorting works correctly
 
             // date
             itemOutput->setText(COLUMN_DATE, GUIUtil::dateTimeStr(out.tx->GetTxTime()));
