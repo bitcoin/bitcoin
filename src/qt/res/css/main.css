@@ -639,6 +639,9 @@ input.rounded:focus {
 #navpanel .selected [href='#news']:before {
     background: #23e8f9;
 }
+#navpanel .selected [href='#shop']:before {
+    background: #23e8f9;
+}
 
 #navpanel [href='#overview']:before {
     -webkit-mask-position-y: -6px;
