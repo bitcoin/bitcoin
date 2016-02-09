@@ -2,22 +2,98 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Right-click to edit address or label</source>
+        <translation>คลิกขวาเพื่อแก้ไขที่อยู่ หรือป้ายชื่อ</translation>
+    </message>
+    <message>
         <source>Create a new address</source>
         <translation>สร้างที่อยู่ใหม่</translation>
+    </message>
+    <message>
+        <source>&amp;New</source>
+        <translation>&amp;สร้างใหม่</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
         <translation>คัดลอกที่อยู่ที่ถูกเลือกไปยัง คลิปบอร์ดของระบบ</translation>
     </message>
     <message>
+        <source>&amp;Copy</source>
+        <translation>&amp;คัดลอก</translation>
+    </message>
+    <message>
+        <source>C&amp;lose</source>
+        <translation>&amp;ปิด</translation>
+    </message>
+    <message>
+        <source>&amp;Copy Address</source>
+        <translation>&amp;คัดลอกที่อยู่</translation>
+    </message>
+    <message>
+        <source>Delete the currently selected address from the list</source>
+        <translation>ลบที่อยู่ที่เลือกไว้ในขณะนี้จากรายการ</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ส่งออกข้อมูลที่อยู่ในแท็บไปที่ไฟล์</translation>
+    </message>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;ส่งออก</translation>
+    </message>
+    <message>
         <source>&amp;Delete</source>
         <translation>&amp;ลบ</translation>
+    </message>
+    <message>
+        <source>Choose the address to send coins to</source>
+        <translation>เลือกที่อยู่เพื่อส่งเหรียญไปไว้</translation>
+    </message>
+    <message>
+        <source>Choose the address to receive coins with</source>
+        <translation>เลือกที่อยู่เพื่อรับเหรียญไว้</translation>
+    </message>
+    <message>
+        <source>C&amp;hoose</source>
+        <translation>&amp;เลือก</translation>
+    </message>
+    <message>
+        <source>Sending addresses</source>
+        <translation>ส่งที่อยู่</translation>
+    </message>
+    <message>
+        <source>Receiving addresses</source>
+        <translation>กำลังรับที่อยู่</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>ที่อยู่เหล่านี้เป็นที่อยู่ Bitcoin ของคุณ สำหรับใช้เพื่อส่งเงิน กรุณาตรวจสอบจำนวนเงินและที่อยู่สำหรับรับเงินก่อนส่งเหรียญไป</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Label</source>
+        <translation>คัดลอก &amp;ป้ายชื่อ</translation>
+    </message>
+    <message>
+        <source>&amp;Edit</source>
+        <translation>&amp;แก้ไข</translation>
+    </message>
+    <message>
+        <source>Export Address List</source>
+        <translation>ส่งออกรายการที่อยู่</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>คั่นไฟล์ด้วยเครื่องหมายจุลภาค (*.csv)</translation>
     </message>
-    </context>
+    <message>
+        <source>Exporting Failed</source>
+        <translation>ส่งออกข้อมูลล้มเหลว</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>พบข้อผิดพลาดบางกระการในการพยายามบันทึกรายชื่อที่อยู่ไปยัง %1. กรุณาลองใหม่อีกครั้ง</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -76,6 +152,10 @@
         <translation>ยืนยันการเข้ารหัสกระเป๋าสตางค์</translation>
     </message>
     <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>คุณแน่ใจแล้วหรือว่าต้องการเข้ารหัสกระเป๋าสตางค์ของคุณ?</translation>
+    </message>
+    <message>
         <source>Wallet encrypted</source>
         <translation>กระเป๋าสตางค์ถูกเข้ารหัสเรียบร้อยแล้ว</translation>
     </message>
@@ -130,8 +210,16 @@
         <translation>เรียกดูประวัติการทำธุรกรรม</translation>
     </message>
     <message>
+        <source>E&amp;xit</source>
+        <translation>E&amp;ออก</translation>
+    </message>
+    <message>
         <source>Quit application</source>
         <translation>ออกจากโปรแกรม</translation>
+    </message>
+    <message>
+        <source>About &amp;Qt</source>
+        <translation>เกี่ยวกับ &amp;Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
@@ -140,6 +228,30 @@
     <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>เปลี่ยนรหัสผ่านที่ใช้สำหรับการเข้ารหัสกระเป๋าเงิน</translation>
+    </message>
+    <message>
+        <source>&amp;Debug window</source>
+        <translation>&amp;หน้าต่างตรวจสอบข้อผิดพลาด</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;ยืนยันข้อความ...</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>กระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>&amp;ส่ง</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;รับ</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -191,6 +303,26 @@
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Amount</source>
+        <translation>จำนวน</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>วันที่</translation>
+    </message>
+    <message>
+        <source>Confirmations</source>
+        <translation>การยืนยัน</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>ยืนยันแล้ว</translation>
+    </message>
+    <message>
+        <source>Priority</source>
+        <translation>ระดับความสำคัญ</translation>
+    </message>
     <message>
         <source>(no label)</source>
         <translation>(ไม่มีชื่อ)</translation>
@@ -273,6 +405,10 @@
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation>จำนวน</translation>
+    </message>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -294,6 +430,10 @@
         <translation>ที่อยู่</translation>
     </message>
     <message>
+        <source>Amount</source>
+        <translation>จำนวน</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>ชื่อ</translation>
     </message>
@@ -301,8 +441,16 @@
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
+        <source>Date</source>
+        <translation>วันที่</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>ชื่อ</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>จำนวน</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -345,12 +493,24 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>วันที่</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>จำนวน</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>วันที่</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>ชื่อ</translation>
@@ -363,8 +523,20 @@
         <translation>วันนี้</translation>
     </message>
     <message>
+        <source>Exporting Failed</source>
+        <translation>ส่งออกข้อมูลล้มเหลว</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>คั่นไฟล์ด้วยเครื่องหมายจุลภาค (*.csv)</translation>
+    </message>
+    <message>
+        <source>Confirmed</source>
+        <translation>ยืนยันแล้ว</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>วันที่</translation>
     </message>
     <message>
         <source>Label</source>
@@ -390,6 +562,14 @@
 </context>
 <context>
     <name>WalletView</name>
+    <message>
+        <source>&amp;Export</source>
+        <translation>&amp;ส่งออก</translation>
+    </message>
+    <message>
+        <source>Export the data in the current tab to a file</source>
+        <translation>ส่งออกข้อมูลที่อยู่ในแท็บไปที่ไฟล์</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
