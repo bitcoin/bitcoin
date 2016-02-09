@@ -137,4 +137,19 @@ def addr_to_hex(addr):
         addr = sub[0] + ([0] * nullbytes) + sub[1]
     else:
         raise ValueError('Could not parse address %s' % addr)
-    return binascii.hexlify(bytearray(addr))
+    return hexlify(bytearray(addr)).decode('ascii')
+
+def test_ipv6_local():
+    '''
+    Check for (local) IPv6 support.
+    '''
+    import socket
+    # By using SOCK_DGRAM this will not actually make a connection, but it will
+    # fail if there is no route to IPv6 localhost.
+    have_ipv6 = True
+    try:
+        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        s.connect(('::1', 0))
+    except socket.error:
+        have_ipv6 = False
+    return have_ipv6
