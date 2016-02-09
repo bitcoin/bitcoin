@@ -7,6 +7,7 @@ import socket
 from test_framework.socks5 import Socks5Configuration, Socks5Command, Socks5Server, AddressType
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+from test_framework.netutil import test_ipv6_local
 '''
 Test plan:
 - Start bitcoind's with different proxy configurations
@@ -34,6 +35,7 @@ addnode connect to generic DNS name
 
 class ProxyTest(BitcoinTestFramework):
     def __init__(self):
+        self.have_ipv6 = test_ipv6_local()
         # Create two proxies on different ports
         # ... one unauthenticated
         self.conf1 = Socks5Configuration()
@@ -45,29 +47,36 @@ class ProxyTest(BitcoinTestFramework):
         self.conf2.addr = ('127.0.0.1', 14000 + (os.getpid() % 1000))
         self.conf2.unauth = True
         self.conf2.auth = True
-        # ... one on IPv6 with similar configuration
-        self.conf3 = Socks5Configuration()
-        self.conf3.af = socket.AF_INET6
-        self.conf3.addr = ('::1', 15000 + (os.getpid() % 1000))
-        self.conf3.unauth = True
-        self.conf3.auth = True
+        if self.have_ipv6:
+            # ... one on IPv6 with similar configuration
+            self.conf3 = Socks5Configuration()
+            self.conf3.af = socket.AF_INET6
+            self.conf3.addr = ('::1', 15000 + (os.getpid() % 1000))
+            self.conf3.unauth = True
+            self.conf3.auth = True
+        else:
+            print "Warning: testing without local IPv6 support"
 
         self.serv1 = Socks5Server(self.conf1)
         self.serv1.start()
         self.serv2 = Socks5Server(self.conf2)
         self.serv2.start()
-        self.serv3 = Socks5Server(self.conf3)
-        self.serv3.start()
+        if self.have_ipv6:
+            self.serv3 = Socks5Server(self.conf3)
+            self.serv3.start()
 
     def setup_nodes(self):
         # Note: proxies are not used to connect to local nodes
         # this is because the proxy to use is based on CService.GetNetwork(), which return NET_UNROUTABLE for localhost
-        return start_nodes(4, self.options.tmpdir, extra_args=[
+        args = [
             ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf1.addr),'-proxyrandomize=1'], 
             ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf1.addr),'-onion=%s:%i' % (self.conf2.addr),'-proxyrandomize=0'], 
             ['-listen', '-debug=net', '-debug=proxy', '-proxy=%s:%i' % (self.conf2.addr),'-proxyrandomize=1'], 
-            ['-listen', '-debug=net', '-debug=proxy', '-proxy=[%s]:%i' % (self.conf3.addr),'-proxyrandomize=0', '-noonion']
-            ])
+            []
+            ]
+        if self.have_ipv6:
+            args[3] = ['-listen', '-debug=net', '-debug=proxy', '-proxy=[%s]:%i' % (self.conf3.addr),'-proxyrandomize=0', '-noonion']
+        return start_nodes(4, self.options.tmpdir, extra_args=args)
 
     def node_test(self, node, proxies, auth, test_onion=True):
         rv = []
@@ -84,18 +93,19 @@ class ProxyTest(BitcoinTestFramework):
             assert_equal(cmd.password, None)
         rv.append(cmd)
 
-        # Test: outgoing IPv6 connection through node
-        node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
-        cmd = proxies[1].queue.get()
-        assert(isinstance(cmd, Socks5Command))
-        # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
-        assert_equal(cmd.atyp, AddressType.DOMAINNAME)
-        assert_equal(cmd.addr, "1233:3432:2434:2343:3234:2345:6546:4534")
-        assert_equal(cmd.port, 5443)
-        if not auth:
-            assert_equal(cmd.username, None)
-            assert_equal(cmd.password, None)
-        rv.append(cmd)
+        if self.have_ipv6:
+            # Test: outgoing IPv6 connection through node
+            node.addnode("[1233:3432:2434:2343:3234:2345:6546:4534]:5443", "onetry")
+            cmd = proxies[1].queue.get()
+            assert(isinstance(cmd, Socks5Command))
+            # Note: bitcoind's SOCKS5 implementation only sends atyp DOMAINNAME, even if connecting directly to IPv4/IPv6
+            assert_equal(cmd.atyp, AddressType.DOMAINNAME)
+            assert_equal(cmd.addr, "1233:3432:2434:2343:3234:2345:6546:4534")
+            assert_equal(cmd.port, 5443)
+            if not auth:
+                assert_equal(cmd.username, None)
+                assert_equal(cmd.password, None)
+            rv.append(cmd)
 
         if test_onion:
             # Test: outgoing onion connection through node
@@ -135,10 +145,11 @@ class ProxyTest(BitcoinTestFramework):
         rv = self.node_test(self.nodes[2], [self.serv2, self.serv2, self.serv2, self.serv2], True)
         # Check that credentials as used for -proxyrandomize connections are unique
         credentials = set((x.username,x.password) for x in rv)
-        assert_equal(len(credentials), 4)
+        assert_equal(len(credentials), len(rv))
 
-        # proxy on IPv6 localhost
-        self.node_test(self.nodes[3], [self.serv3, self.serv3, self.serv3, self.serv3], False, False)
+        if self.have_ipv6:
+            # proxy on IPv6 localhost
+            self.node_test(self.nodes[3], [self.serv3, self.serv3, self.serv3, self.serv3], False, False)
 
         def networks_dict(d):
             r = {}
@@ -167,11 +178,12 @@ class ProxyTest(BitcoinTestFramework):
             assert_equal(n2[net]['proxy_randomize_credentials'], True)
         assert_equal(n2['onion']['reachable'], True)
 
-        n3 = networks_dict(self.nodes[3].getnetworkinfo())
-        for net in ['ipv4','ipv6']:
-            assert_equal(n3[net]['proxy'], '[%s]:%i' % (self.conf3.addr))
-            assert_equal(n3[net]['proxy_randomize_credentials'], False)
-        assert_equal(n3['onion']['reachable'], False)
+        if self.have_ipv6:
+            n3 = networks_dict(self.nodes[3].getnetworkinfo())
+            for net in ['ipv4','ipv6']:
+                assert_equal(n3[net]['proxy'], '[%s]:%i' % (self.conf3.addr))
+                assert_equal(n3[net]['proxy_randomize_credentials'], False)
+            assert_equal(n3['onion']['reachable'], False)
 
 if __name__ == '__main__':
     ProxyTest().main()
