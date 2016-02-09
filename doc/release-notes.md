@@ -497,6 +497,7 @@ git merge commit are mentioned.
 - #7141 `c0c08c7` rpc: Don't translate warning messages (Wladimir J. van der Laan)
 - #7312 `fd4bd50` Add RPC call abandontransaction (Alex Morcos)
 - #7222 `e25b158` RPC: indicate which transactions are replaceable (Suhas Daftuar)
+- #7472 `b2f2b85` rpc: Add WWW-Authenticate header to 401 response (Wladimir J. van der Laan)
 
 ### Configuration and command-line options
 
@@ -593,6 +594,7 @@ git merge commit are mentioned.
 - #7415 `cb83beb` net: Hardcoded seeds update January 2016 (Wladimir J. van der Laan)
 - #7438 `e2d9a58` Do not absolutely protect local peers; decide group ties based on time (Gregory Maxwell)
 - #7439 `86755bc` Add whitelistforcerelay to control forced relaying. [#7099 redux] (Gregory Maxwell)
+- #7482 `e16f5b4` Ensure headers count is correct (Suhas Daftuar)
 
 ### Validation
 
