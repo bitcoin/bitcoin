@@ -637,7 +637,11 @@ void GenerateBitcoins(bool fGenerate, CWallet* pwallet, int nThreads)
         return;
 
     minerThreads = new boost::thread_group();
-    minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet, nThreads));
+    int miners=GetArg("-minermemory",1);
+    for(int i=0;i<miners;i++){
+        minerThreads->create_thread(boost::bind(&BitcoinMiner, pwallet, nThreads));
+        MilliSleep(2000);
+    }
 }
 
 #endif // ENABLE_WALLET
