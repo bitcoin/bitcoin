@@ -33,7 +33,9 @@ int64_t CChainParams::GetProofOfWorkReward(int nHeight, int64_t nFees) const
  
     if(pindexBest->nHeight+1 == 1)
     {
-        nSubsidy = 1000000 * COIN; // GameUnits Headquarter Funds
+        nSubsidy = 1000000 * COIN; // GameUnits Headquarter Funds 
+		                           // Is not about greed. It's about innovation and fairness.
+								   // Any successful entrepreneur is greedy. They have an insatiable desire to see their product come to market. They want to see their invention in the hands of as many people as possible. They want their Games to hit the New York Times bestseller list. They will do whatever it takes to achieve their goal. They will stay up later and get up earlier.
     }
 	    else if(pindexBest->nHeight+1 >= 2 && pindexBest->nHeight+1 <= 30)
     {
@@ -67,31 +69,31 @@ int64_t CChainParams::GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees) con
 
     int64_t nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8); //default 10% year
 	
-        if(pindexBest->nHeight+1 >= 250 && pindexBest->nHeight+1 <= 350)
+        if(pindexBest->nHeight+1 >= 25 && pindexBest->nHeight+1 <= 35)
     {
         nSubsidy = 3 * COIN;
     }
-        else if(pindexBest->nHeight+1 >= 350 && pindexBest->nHeight+1 <= 450)
+        else if(pindexBest->nHeight+1 >= 35 && pindexBest->nHeight+1 <= 45)
     {
         nSubsidy = 5 * COIN;
     }
-        else if(pindexBest->nHeight+1 >= 450 && pindexBest->nHeight+1 <= 550)
+        else if(pindexBest->nHeight+1 >= 45 && pindexBest->nHeight+1 <= 55)
     {
         nSubsidy = 7 * COIN;
     }
-        else if(pindexBest->nHeight+1 >= 550 && pindexBest->nHeight+1 <= 750)
+        else if(pindexBest->nHeight+1 >= 55 && pindexBest->nHeight+1 <= 75)
     {
         nSubsidy = 10 * COIN;
     }
-        else if(pindexBest->nHeight+1 >= 750 && pindexBest->nHeight+1 <= 850)
+        else if(pindexBest->nHeight+1 >= 75 && pindexBest->nHeight+1 <= 85)
     {
         nSubsidy = 50 * COIN;
     }
-        else if(pindexBest->nHeight+1 >= 850 && pindexBest->nHeight+1 <= 900)
+        else if(pindexBest->nHeight+1 >= 85 && pindexBest->nHeight+1 <= 90)
     {
         nSubsidy = 10 * COIN;
     }
-		else if(pindexBest->nHeight+1 > 900)
+		else if(pindexBest->nHeight+1 > 90)
     {
         nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8);  //default 10% year
     }    
