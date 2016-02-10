@@ -807,9 +807,8 @@ Thanks to everyone who directly contributed to this release:
 - Forrest Voight
 - Gavin Andresen
 - Gregory Maxwell
-- Gregory Sanders
+- Gregory Sanders / instagibbs
 - Ian T
-- instagibbs
 - Irving Ruan
 - Jacob Welsh
 - James O'Beirne
