@@ -123,12 +123,14 @@ CoinControlDialog::CoinControlDialog(QWidget *parent) :
     ui->treeWidget->headerItem()->setText(COLUMN_CHECKBOX, QString());
 
     ui->treeWidget->setColumnWidth(COLUMN_CHECKBOX, 84);
-    ui->treeWidget->setColumnWidth(COLUMN_AMOUNT, 100);
+    ui->treeWidget->setColumnWidth(COLUMN_AMOUNT, 80);
+    ui->treeWidget->setColumnWidth(COLUMN_INPUT, 80);
+    ui->treeWidget->setColumnWidth(COLUMN_INTEREST, 80);
     ui->treeWidget->setColumnWidth(COLUMN_LABEL, 170);
-    ui->treeWidget->setColumnWidth(COLUMN_ADDRESS, 290);
+    ui->treeWidget->setColumnWidth(COLUMN_ADDRESS, 190);
     ui->treeWidget->setColumnWidth(COLUMN_DATE, 110);
-    ui->treeWidget->setColumnWidth(COLUMN_CONFIRMATIONS, 100);
-    ui->treeWidget->setColumnWidth(COLUMN_PRIORITY, 100);
+    ui->treeWidget->setColumnWidth(COLUMN_CONFIRMATIONS, 80);
+    ui->treeWidget->setColumnWidth(COLUMN_PRIORITY, 80);
     ui->treeWidget->setColumnHidden(COLUMN_TXHASH, true);         // store transacton hash in this column, but don't show it
     ui->treeWidget->setColumnHidden(COLUMN_VOUT_INDEX, true);     // store vout index in this column, but don't show it
     ui->treeWidget->setColumnHidden(COLUMN_AMOUNT_INT64, true);   // store amount int64 in this column, but don't show it
@@ -717,13 +719,21 @@ void CoinControlDialog::updateView()
         }
 
         CAmount nSum = 0;
+        CAmount nSumInputs = 0;
+        CAmount nSumInterest = 0;
+
+
         double dPrioritySum = 0;
         int nChildren = 0;
         int nInputSum = 0;
         BOOST_FOREACH(const COutput& out, coins.second)
         {
             int nInputSize = 0;
-            nSum += out.tx->vout[out.i].nValue;
+            CAmount withInterest=out.tx->vout[out.i].GetValueWithInterest((chainActive.Height()+1)-out.tx->GetDepthInMainChain(),chainActive.Height()+1);
+            nSum += withInterest-out.tx->vout[out.i].nValue;
+            nSumInputs +=out.tx->vout[out.i].nValue;
+            nSumInterest += withInterest-out.tx->vout[out.i].nValue;
+
             nChildren++;
 
             QTreeWidgetItem *itemOutput;
@@ -765,8 +775,9 @@ void CoinControlDialog::updateView()
             }
 
             // amount
-            CAmount withInterest=out.tx->vout[out.i].GetValueWithInterest((chainActive.Height()+1)-out.tx->GetDepthInMainChain(),chainActive.Height()+1);
             itemOutput->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, withInterest));
+            itemOutput->setText(COLUMN_INTEREST, BitcoinUnits::format(nDisplayUnit, withInterest-out.tx->vout[out.i].nValue));
+            itemOutput->setText(COLUMN_INPUT, BitcoinUnits::format(nDisplayUnit, out.tx->vout[out.i].nValue));
             itemOutput->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(withInterest), 15, " ")); // padding so that sorting works correctly
 
             // date
@@ -809,6 +820,8 @@ void CoinControlDialog::updateView()
         {
             dPrioritySum = dPrioritySum / (nInputSum + 78);
             itemWalletAddress->setText(COLUMN_CHECKBOX, "(" + QString::number(nChildren) + ")");
+            itemWalletAddress->setText(COLUMN_INTEREST, BitcoinUnits::format(nDisplayUnit, nSumInterest));
+            itemWalletAddress->setText(COLUMN_INPUT, BitcoinUnits::format(nDisplayUnit, nSumInputs));
             itemWalletAddress->setText(COLUMN_AMOUNT, BitcoinUnits::format(nDisplayUnit, nSum));
             itemWalletAddress->setText(COLUMN_AMOUNT_INT64, strPad(QString::number(nSum), 15, " "));
             itemWalletAddress->setText(COLUMN_PRIORITY, CoinControlDialog::getPriorityLabel(dPrioritySum, mempoolEstimatePriority));

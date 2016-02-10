@@ -65,6 +65,8 @@ private:
     {
         COLUMN_CHECKBOX,
         COLUMN_AMOUNT,
+        COLUMN_INPUT,
+        COLUMN_INTEREST,
         COLUMN_LABEL,
         COLUMN_ADDRESS,
         COLUMN_DATE,
