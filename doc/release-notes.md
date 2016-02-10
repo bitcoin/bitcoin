@@ -498,6 +498,7 @@ git merge commit are mentioned.
 - #7312 `fd4bd50` Add RPC call abandontransaction (Alex Morcos)
 - #7222 `e25b158` RPC: indicate which transactions are replaceable (Suhas Daftuar)
 - #7472 `b2f2b85` rpc: Add WWW-Authenticate header to 401 response (Wladimir J. van der Laan)
+- #7469 `9cb31e6` net.h fix spelling: misbeha{b,v}ing (Matt)
 
 ### Configuration and command-line options
 
@@ -607,6 +608,8 @@ git merge commit are mentioned.
 - #6954 `e54ebbf` Switch to libsecp256k1-based ECDSA validation (Pieter Wuille)
 - #6508 `61457c2` Switch to a constant-space Merkle root/branch algorithm. (Pieter Wuille)
 - #6914 `327291a` Add pre-allocated vector type and use it for CScript (Pieter Wuille)
+- #7500 `889e5b3` Correctly report high-S violations (Pieter Wuille)
+
 
 ### Build system
 
@@ -652,6 +655,8 @@ git merge commit are mentioned.
 - #7293 `ff9b610` Add regression test for vValue sort order (MarcoFalke)
 - #7306 `4707797` Make sure conflicted wallet tx's update balances (Alex Morcos)
 - #7381 `621bbd8` [walletdb] Fix syntax error in key parser (MarcoFalke)
+- #7491 `00ec73e` wallet: Ignore MarkConflict if block hash is not known (Wladimir J. van der Laan)
+- #7502 `1329963` Update the wallet best block marker before pruning (Pieter Wuille)
 
 ### GUI
 
@@ -728,6 +733,7 @@ git merge commit are mentioned.
 - #7170 `453c567` tests: Disable Tor interaction (Wladimir J. van der Laan)
 - #7229 `1ed938b` [qa] wallet: Check if maintenance changes the balance (MarcoFalke)
 - #7308 `d513405` [Tests] Eliminate intermittent failures in sendheaders.py (Suhas Daftuar)
+- #7468 `947c4ff` [rpc-tests] Change solve() to use rehash (Brad Andrews)
 
 ### Miscellaneous
 
@@ -803,6 +809,7 @@ Thanks to everyone who directly contributed to this release:
 - Gregory Maxwell
 - Gregory Sanders
 - Ian T
+- instagibbs
 - Irving Ruan
 - Jacob Welsh
 - James O'Beirne
@@ -821,6 +828,7 @@ Thanks to everyone who directly contributed to this release:
 - Marco
 - MarcoFalke
 - Mark Friedenbach
+- Matt
 - Matt Bogosian
 - Matt Corallo
 - Matt Quinn
@@ -829,6 +837,7 @@ Thanks to everyone who directly contributed to this release:
 - Michael Ford
 - Midnight Magic
 - Mitchell Cash
+- mrbandrews
 - mruddy
 - Nick
 - Patick Strateman
