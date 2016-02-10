@@ -198,6 +198,7 @@ div.menu span a {
     display: block;
     text-decoration: none;
     color: #131218;
+	font-color: #ffffff;
 	font-weight:bold;
     text-transform: uppercase;
     font-size: 12px;
