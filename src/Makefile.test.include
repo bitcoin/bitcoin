@@ -44,7 +44,6 @@ BITCOIN_TESTS =\
   test/base64_tests.cpp \
   test/bip32_tests.cpp \
   test/bloom_tests.cpp \
-  test/checkblock_tests.cpp \
   test/Checkpoints_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
