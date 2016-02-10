@@ -6,6 +6,7 @@
 #include "amount.h"
 #include "base58.h"
 #include "chain.h"
+#include "coincontrol.h"
 #include "core_io.h"
 #include "init.h"
 #include "main.h"
@@ -395,6 +396,232 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
     }
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+}
+
+UniValue createtransaction(const UniValue& params, bool fHelp)
+{
+  if (!EnsureWalletIsAvailable(fHelp))
+      return NullUniValue;
+
+  if (fHelp || params.size() < 1 || params.size() > 2)
+      throw runtime_error(
+          "createtransaction {\"address\":amount,...} ({ \"option\": value,...})\n"
+          "\nCreate transaction. Amounts are double-precision floating point numbers."
+          + HelpRequiringPassphrase() + "\n"
+
+          "\nArguments:\n"
+          "1. \"amounts\"                  (string, required) A json object with addresses and amounts\n"
+          "    {\n"
+          "      \"address\":amount        (numeric or string) The bitcoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
+          "      ,...\n"
+          "    }\n"
+          "2. \"options\"                  (optional) A json object with options\n"
+          "    {\n"
+          "      \"allowWatchOnly\"        (boolean, optional, default=true) Includes watch only addresses.\n"
+          "      \"changeAddress\"         (string, optional) The bitcoin address to receive the change.\n"
+          "      \"comment\"               (string, optional, default=true) A comment.\n"
+          "      \"commit\"                (boolean, optional, default=true) The transaction will be commited.\n"
+          "      \"includeSpentOutputs\"   (boolean, optional, default=fales) Include scriptPubKey of spent outputs.\n"
+          "      \"sign\"                  (boolean, optional, default=true) The transaction will be signed.\n"
+          "      \"subtractfeefromamount\" (string, optional) A json array with addresses.\n"
+          "                                The fee will be equally deducted from the amount of each selected address.\n"
+          "                                Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
+          "                                If no addresses are specified here, the sender pays the fee.\n"
+          "    }\n"
+
+          "\nResult:\n"
+          "{\n"
+          "  \"hex\" : \"data\",                (string) The serialized, hex-encoded data for 'txid'\n"
+          "  \"txid\" : \"id\",                 (string) The transaction id (same as provided)\n"
+          "  \"size\" : n,                      (numeric) The transaction size\n"
+          "  \"version\" : n,                   (numeric) The version\n"
+          "  \"locktime\" : ttt,                (numeric) The lock time\n"
+          "  \"vin\" : [                        (array of json objects)\n"
+          "     {\n"
+          "       \"txid\": \"id\",             (string) The transaction id\n"
+          "       \"vout\": n,                  (numeric) \n"
+          "       \"scriptSig\": {              (json object) The script\n"
+          "         \"asm\": \"asm\",           (string) asm\n"
+          "         \"hex\": \"hex\"            (string) hex\n"
+          "       },\n"
+          "       \"sequence\": n               (numeric) The script sequence number\n"
+          "     }\n"
+          "     ,...\n"
+          "  ],\n"
+          "  \"vout\" : [                       (array of json objects)\n"
+          "     {\n"
+          "       \"value\" : x.xxx,            (numeric) The value in " + CURRENCY_UNIT + "\n"
+          "       \"n\" : n,                    (numeric) index\n"
+          "       \"scriptPubKey\" : {          (json object)\n"
+          "         \"asm\" : \"asm\",          (string) the asm\n"
+          "         \"hex\" : \"hex\",          (string) the hex\n"
+          "         \"reqSigs\" : n,            (numeric) The required sigs\n"
+          "         \"type\" : \"pubkeyhash\",  (string) The type, eg 'pubkeyhash'\n"
+          "         \"addresses\" : [           (json array of string)\n"
+          "           \"bitcoinaddress\"        (string) bitcoin address\n"
+          "           ,...\n"
+          "         ]\n"
+          "       }\n"
+          "     }\n"
+          "     ,...\n"
+          "  ],\n"
+          "  \"blockhash\" : \"hash\",          (string) the block hash\n"
+          "  \"confirmations\" : n,             (numeric) The confirmations\n"
+          "  \"time\" : ttt,                    (numeric) The transaction time in seconds since epoch (Jan 1 1970 GMT)\n"
+          "  \"blocktime\" : ttt                (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
+          "}\n"
+      );
+
+  LOCK2(cs_main, pwalletMain->cs_wallet);
+
+  // Default options
+  bool allowWatchOnly = false;
+  CBitcoinAddress changeAddress;
+  std::string comment;
+  bool commit = true;
+  bool includeSpentOutputs = false;
+  // int nMinDepth = 1;
+  bool sign = true;
+  std::set<std::string> subtractFeeFromAmount;
+
+  UniValue sendTo = params[0].get_obj();
+
+  if (params.size() > 1) {
+    UniValue options = params[1];
+
+    if (options.exists("allowWatchOnly"))
+      allowWatchOnly = options["allowWatchOnly"].get_bool();
+
+    if (options.exists("changeAddress"))
+      changeAddress = CBitcoinAddress(options["changeAddress"].get_str());
+
+    if (options.exists("comment"))
+      comment = options["comment"].get_str();
+
+    if (options.exists("commit"))
+      commit = options["commit"].get_bool();
+
+    if (options.exists("includeSpentOutputs"))
+      includeSpentOutputs = options["includeSpentOutputs"].get_bool();
+
+    if (options.exists("sign"))
+      sign = options["sign"].get_bool();
+
+    if (options.exists("subtractFeeFromAmount"))
+    {
+      UniValue addresses = options["subtractFeeFromAmount"].get_array();
+
+      for (unsigned int i = 0; i < addresses.size(); i++) {
+        subtractFeeFromAmount.insert(addresses[i].get_str());
+      }
+    }
+
+    if (commit && !sign)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Unable to commit unsigned transactions"));
+  }
+
+  CWalletTx wtx;
+  wtx.mapValue["comment"] = comment;
+
+  std::set<CBitcoinAddress> setAddress;
+  std::vector<CRecipient> vecSend;
+
+  vector<string> keys = sendTo.getKeys();
+  BOOST_FOREACH(const string& name, keys)
+  {
+      CBitcoinAddress address(name);
+      if (!address.IsValid())
+          throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Bitcoin address: ")+name);
+
+      if (setAddress.count(address))
+          throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ")+name);
+      setAddress.insert(address);
+
+      CScript scriptPubKey = GetScriptForDestination(address.Get());
+      CAmount nAmount = AmountFromValue(sendTo[name]);
+      if (nAmount <= 0)
+          throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+
+      CRecipient recipient = {scriptPubKey, nAmount, subtractFeeFromAmount.find(name) != subtractFeeFromAmount.end()};
+      vecSend.push_back(recipient);
+  }
+
+  EnsureWalletIsUnlocked();
+
+  // Send
+  CReserveKey keyChange(pwalletMain);
+  CAmount nFeeRequired = 0;
+  int nChangePosRet = -1;
+  string strFailReason;
+  std::set<pair<const CWalletTx*,unsigned int> > coins;
+
+  CCoinControl coinControl;
+  coinControl.fAllowWatchOnly = allowWatchOnly;
+  if (changeAddress.IsValid())
+    coinControl.destChange = changeAddress.Get();
+
+  if (!pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, coins, strFailReason, &coinControl, sign))
+      throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
+
+  if (commit && !pwalletMain->CommitTransaction(wtx, keyChange))
+      throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
+
+  string strHex = EncodeHexTx(wtx);
+
+  UniValue result(UniValue::VOBJ);
+  result.push_back(Pair("hex", strHex));
+
+  result.push_back(Pair("txid", wtx.GetHash().GetHex()));
+  result.push_back(Pair("size", (int)::GetSerializeSize(wtx, SER_NETWORK, PROTOCOL_VERSION)));
+  result.push_back(Pair("version", wtx.nVersion));
+  result.push_back(Pair("locktime", (int64_t)wtx.nLockTime));
+  UniValue vin(UniValue::VARR);
+  BOOST_FOREACH(const CTxIn& txin, wtx.vin) {
+      UniValue in(UniValue::VOBJ);
+      if (wtx.IsCoinBase())
+          in.push_back(Pair("coinbase", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+      else {
+          in.push_back(Pair("txid", txin.prevout.hash.GetHex()));
+          in.push_back(Pair("vout", (int64_t)txin.prevout.n));
+          UniValue o(UniValue::VOBJ);
+          o.push_back(Pair("asm", ScriptToAsmStr(txin.scriptSig, true)));
+          o.push_back(Pair("hex", HexStr(txin.scriptSig.begin(), txin.scriptSig.end())));
+          in.push_back(Pair("scriptSig", o));
+
+
+          if (includeSpentOutputs)
+          {
+              BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) coin, coins)
+              {
+                  if (txin.prevout.hash == coin.first->GetHash())
+                  {
+                      UniValue value(UniValue::VOBJ);
+                      const CScript& scriptPubKey = coin.first->vout[coin.second].scriptPubKey;
+                      ScriptPubKeyToUniv(scriptPubKey, value, true);
+                      in.push_back(Pair("scriptPubKey", value));
+                      break;
+                  }
+              }
+          }
+      }
+      in.push_back(Pair("sequence", (int64_t)txin.nSequence));
+      vin.push_back(in);
+  }
+  result.push_back(Pair("vin", vin));
+  UniValue vout(UniValue::VARR);
+  for (unsigned int i = 0; i < wtx.vout.size(); i++) {
+      const CTxOut& txout = wtx.vout[i];
+      UniValue out(UniValue::VOBJ);
+      out.push_back(Pair("value", ValueFromAmount(txout.nValue)));
+      out.push_back(Pair("n", (int64_t)i));
+      UniValue o(UniValue::VOBJ);
+      ScriptPubKeyToUniv(txout.scriptPubKey, o, true);
+      out.push_back(Pair("scriptPubKey", o));
+      vout.push_back(out);
+  }
+  result.push_back(Pair("vout", vout));
+
+  return result;
 }
 
 UniValue sendtoaddress(const UniValue& params, bool fHelp)
@@ -2512,6 +2739,7 @@ const CRPCCommand vWalletRPCCommands[] =
     { "wallet",             "abandontransaction",       &abandontransaction,       false },
     { "wallet",             "addmultisigaddress",       &addmultisigaddress,       true  },
     { "wallet",             "backupwallet",             &backupwallet,             true  },
+    { "wallet",             "createtransaction",        &createtransaction,        false },
     { "wallet",             "dumpprivkey",              &dumpprivkey,              true  },
     { "wallet",             "dumpwallet",               &dumpwallet,               true  },
     { "wallet",             "encryptwallet",            &encryptwallet,            true  },

@@ -1940,11 +1940,22 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nC
     return true;
 }
 
+bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
+                        string& strFailReason, const CCoinControl *coinControl, bool sign)
+{
+    set<pair<const CWalletTx*,unsigned int> > setCoins;
+
+    return CreateTransaction(vecSend, wtxNew, reservekey, nFeeRet, nChangePosRet, setCoins, strFailReason, coinControl, sign);
+}
+
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
+                                int& nChangePosRet, set<pair<const CWalletTx*,unsigned int> >& setCoinsRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign)
 {
     CAmount nValue = 0;
     unsigned int nSubtractFeeFromAmount = 0;
+
+    setCoinsRet.clear();
+
     BOOST_FOREACH (const CRecipient& recipient, vecSend)
     {
         if (nValue < 0 || recipient.nAmount < 0)
@@ -2216,7 +2227,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 
                 if (nFeeRet >= nFeeNeeded)
+                {
+                    setCoinsRet = setCoins;
                     break; // Done, enough fee included.
+                }
 
                 // Include more fee and try again.
                 nFeeRet = nFeeNeeded;
