@@ -202,8 +202,6 @@ class BIP68Test(BitcoinTestFramework):
         # Store height so we can easily reset the chain at the end of the test
         cur_height = self.nodes[0].getblockcount()
 
-        utxos = self.nodes[0].listunspent()
-
         # Create a mempool tx.
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 2)
         tx1 = FromHex(CTransaction(), self.nodes[0].getrawtransaction(txid))
@@ -286,6 +284,7 @@ class BIP68Test(BitcoinTestFramework):
         tx5 = test_nonzero_locks(tx4, self.nodes[0], self.relayfee, use_height_lock=True)
         assert(tx5.hash not in self.nodes[0].getrawmempool())
 
+        utxos = self.nodes[0].listunspent()
         tx5.vin.append(CTxIn(COutPoint(int(utxos[0]["txid"], 16), utxos[0]["vout"]), nSequence=1))
         tx5.vout[0].nValue += int(utxos[0]["amount"]*COIN)
         raw_tx5 = self.nodes[0].signrawtransaction(ToHex(tx5))["hex"]
