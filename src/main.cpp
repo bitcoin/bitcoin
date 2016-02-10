@@ -37,8 +37,8 @@ std::map<uint256, CBlockThinIndex*> mapBlockThinIndex;
 std::set<std::pair<COutPoint, unsigned int> > setStakeSeen;
 
 
-unsigned int nStakeMinAge       = 4 * 60 * 60;      // 4 hours 
-unsigned int nModifierInterval  = 10 * 60;          // time to elapse before new modifier is computed
+unsigned int nStakeMinAge       = 11 * 60;      // 10 mins 
+unsigned int nModifierInterval  = 10 * 60;      // time to elapse before new modifier is computed
 
 int nCoinbaseMaturity = 50;
 CBlockIndex* pindexGenesisBlock = NULL;
