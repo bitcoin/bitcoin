@@ -29,17 +29,30 @@ unsigned int pnSeed[] =
 int64_t CChainParams::GetProofOfWorkReward(int nHeight, int64_t nFees) const
 {
     // miner's coin base reward
-    int64_t nSubsidy = 0;
-    
-    if (nHeight <= 10)
+    int64_t nSubsidy = 0 * COIN;
+ 
+    if(pindexBest->nHeight+1 == 1)
+    {
+        nSubsidy = 1000000 * COIN; // GameUnits Headquarter Funds
+    }
+	    else if(pindexBest->nHeight+1 >= 2 && pindexBest->nHeight+1 <= 30)
+    {
         nSubsidy = 0 * COIN;
-    else
-    if (nHeight <= 1337)
-        nSubsidy = 1337 * COIN; 
-    else
-    if (nHeight <= nLastPOWBlock)
+		LogPrintf("We talk a lot about hope, helping, and teamwork. Our whole message is that we are more powerful together.");
+    }
+        else if(pindexBest->nHeight+1 >= 30 && pindexBest->nHeight+1 <= 144)
+    {
+        nSubsidy = 50 * COIN;
+    }
+        else if(pindexBest->nHeight+1 >= 144 && pindexBest->nHeight+1 <= 288)
+    {
+        nSubsidy = 25 * COIN;
+    }
+        else if(pindexBest->nHeight+1 >= 288 && pindexBest->nHeight+1 <= nLastPOWBlock)
+    {
         nSubsidy = 1 * COIN;
-	
+    }
+    
     if (fDebug && GetBoolArg("-printcreation"))
         LogPrintf("GetProofOfWorkReward() : create=%s nSubsidy=%d\n", FormatMoney(nSubsidy).c_str(), nSubsidy);
     
@@ -49,73 +62,42 @@ int64_t CChainParams::GetProofOfWorkReward(int nHeight, int64_t nFees) const
 
 int64_t CChainParams::GetProofOfStakeReward(int64_t nCoinAge, int64_t nFees) const
 {
-    // miner's coin stake reward based on coin age spent (coin-days)
-    int64_t nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8);
+   // miner's coin stake reward based on coin age spent (coin-days)
+   // proof of stake rewards. POS begins at block 2500
+
+    int64_t nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8); //default 10% year
 	
-    if(pindexBest->nHeight+1 >= 111 && pindexBest->nHeight+1 <= 300)   
+        if(pindexBest->nHeight+1 >= 250 && pindexBest->nHeight+1 <= 350)
     {
-        nSubsidy = 0 * COIN;   // no stake rewards till PoS v2
+        nSubsidy = 3 * COIN;
     }
-        else if(pindexBest->nHeight+1 >= 301 && pindexBest->nHeight+1 <= 24479)
+        else if(pindexBest->nHeight+1 >= 350 && pindexBest->nHeight+1 <= 450)
     {
-        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 +8);
+        nSubsidy = 5 * COIN;
     }
-        else if(pindexBest->nHeight+1 >= 24480 && pindexBest->nHeight+1 <= 24480)
+        else if(pindexBest->nHeight+1 >= 450 && pindexBest->nHeight+1 <= 550)
     {
-        nSubsidy = 10000 * COIN;  // Megablock 1
+        nSubsidy = 7 * COIN;
     }
-    else if(pindexBest->nHeight+1 >=24481 && pindexBest->nHeight+1 <= 44639)
-    { 
-        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 +8);   // 50% first year
-    }
-    else if(pindexBest->nHeight+1 >= 44640 && pindexBest->nHeight+1 <= 44640)
-    { 
-        nSubsidy = 10000 * COIN;  // Megablock 2 
-    }
-    else if(pindexBest->nHeight+1 >= 44641 && pindexBest->nHeight+1 <= 64799)
+        else if(pindexBest->nHeight+1 >= 550 && pindexBest->nHeight+1 <= 750)
     {
-        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 +8);
+        nSubsidy = 10 * COIN;
     }
-    else if(pindexBest->nHeight+1 >= 64800 && pindexBest->nHeight+1 <=64800)
-    { 
-        nSubsidy = 15000 * COIN;  // Megablock 3 
-    }
-    else if(pindexBest->nHeight+1 >= 64801 && pindexBest->nHeight+1 <= 84959)
+        else if(pindexBest->nHeight+1 >= 750 && pindexBest->nHeight+1 <= 850)
     {
-        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 +8);
+        nSubsidy = 50 * COIN;
     }
-    else if(pindexBest->nHeight+1 >= 84960 && pindexBest->nHeight+1 <= 84960)
-    { 
-        nSubsidy = 25000 * COIN;  // Megablock 4 
-    }
-    else if(pindexBest->nHeight+1 >= 84961 && pindexBest->nHeight+1 <= 105119)
+        else if(pindexBest->nHeight+1 >= 850 && pindexBest->nHeight+1 <= 900)
     {
-        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 +8);
+        nSubsidy = 10 * COIN;
     }
-    else if(pindexBest->nHeight+1 >= 105120 && pindexBest->nHeight+1 <= 105120)
-    { 
-        nSubsidy = 50000 * COIN;  // Megablock 5 
-    }
-    else if(pindexBest->nHeight+1 >= 105121 && pindexBest->nHeight+1 <= nFirstYearBlock)
+		else if(pindexBest->nHeight+1 > 900)
     {
-        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 +8);    // 50% first year
-    }
-    else if(pindexBest->nHeight+1 > nFirstYearBlock && pindexBest->nHeight+1 <= nSecondYearBlock)
-    {
-        nSubsidy = nCoinAge * MCOIN_YEAR_REWARD * 33 / (365 * 33 +8);   // 25% second year
-    }
-    else if(pindexBest->nHeight+1 > nSecondYearBlock && pindexBest->nHeight+1 <= nThirdYearBlock)
-    {
-        nSubsidy = nCoinAge * OCOIN_YEAR_REWARD * 33 / (365 * 33 +8);   // 10% third year
-    }
-    else if(pindexBest->nHeight+1 > nThirdYearBlock && pindexBest->nHeight+1 <= nFourthYearBlock)
-    {
-        nSubsidy = nCoinAge * ICOIN_YEAR_REWARD * 33 / (365 * 33 +8);   // 5% fourth year
-    }
-    else if(pindexBest->nHeight+1 > nFourthYearBlock)
-    {
-        nSubsidy = nCoinAge * NCOIN_YEAR_REWARD * 33 / (365 * 33 +8);   // 2% till supply reaches 21m
-    }
+        nSubsidy = nCoinAge * COIN_YEAR_REWARD * 33 / (365 * 33 + 8);  //default 10% year
+    }    
+    
+
+
     
     if (fDebug && GetBoolArg("-printcreation"))
         LogPrintf("GetProofOfStakeReward(): create=%s nCoinAge=%d\n", FormatMoney(nSubsidy).c_str(), nCoinAge);
