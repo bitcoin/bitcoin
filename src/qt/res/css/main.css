@@ -194,6 +194,12 @@ div.menu span {
     padding: 5px;
 }
 
+.customtxt {
+	font-family: Courier;
+	color: red;
+	font-size:20px;
+}
+
 div.menu span a {
     display: block;
     text-decoration: none;
