@@ -12,6 +12,8 @@
 #include "main.h"
 #include "net.h"
 #include "wallet.h"
+#include "script.h"
+#include "util.h"
 
 using namespace std;
 using namespace boost;
@@ -35,13 +37,20 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
         return;
     }
 
-    out.push_back(Pair("reqSigs", nRequired));
-    out.push_back(Pair("type", GetTxnOutputType(type)));
+    if (type != TX_NULL_DATA)
+    {
+        out.push_back(Pair("reqSigs", nRequired));
+        out.push_back(Pair("type", GetTxnOutputType(type)));
 
-    Array a;
-    BOOST_FOREACH(const CTxDestination& addr, addresses)
-        a.push_back(CBitcoinAddress(addr).ToString());
-    out.push_back(Pair("addresses", a));
+        Array a;
+        BOOST_FOREACH(const CTxDestination& addr, addresses)
+            a.push_back(CBitcoinAddress(addr).ToString());
+        out.push_back(Pair("addresses", a));
+    }
+    else
+    {
+        out.push_back(Pair("type", GetTxnOutputType(type)));
+    }
 }
 
 void TxToJSON(const CTransaction& tx, const uint256& hashBlock, Object& entry)
@@ -226,12 +235,13 @@ Value listunspent(const Array& params, bool fHelp)
 
 Value createrawtransaction(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() > 3 || params.size() < 2)
         throw runtime_error(
-            "createrawtransaction '[{\"txid\":txid,\"vout\":n},...]' '{address:amount,...}'\n"
+            "createrawtransaction <'[{\"txid\":txid,\"vout\":n},...]'> <'{address:amount,...}'> [hex data]\n"
             "Create a transaction spending given inputs\n"
             "(array of objects containing transaction id and output number),\n"
-            "sending to given address(es).\n"
+            "sending to given address(es),\n"
+            "optional data to add into data-carrying output.\n"
             "Returns hex-encoded raw transaction.\n"
             "Note that the transaction's inputs are not signed, and\n"
             "it is not stored in the wallet or transmitted to the network.");
@@ -281,6 +291,15 @@ Value createrawtransaction(const Array& params, bool fHelp)
         int64_t nAmount = AmountFromValue(s.value_);
 
         CTxOut out(nAmount, scriptPubKey);
+        rawTx.vout.push_back(out);
+    }
+
+    if (params.size() == 3)
+    {
+        // Data carrying output
+        CScript scriptPubKey;
+        scriptPubKey << OP_RETURN << ParseHex(params[2].get_str());
+        CTxOut out(0, scriptPubKey);
         rawTx.vout.push_back(out);
     }
 
