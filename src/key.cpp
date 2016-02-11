@@ -8,6 +8,7 @@
 #include <openssl/obj_mac.h>
 
 #include "key.h"
+#include "base58.h"
 
 // Generate a private key from just the secret parameter
 int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
@@ -532,3 +533,562 @@ bool CKey::IsValid()
     key2.SetSecret(secret, fCompr);
     return GetPubKey() == key2.GetPubKey();
 }
+
+CPoint::CPoint()
+{
+    std::string err;
+    group = NULL;
+    point = NULL;
+    ctx   = NULL;
+
+    group = EC_GROUP_new_by_curve_name(NID_secp256k1);
+    if (!group) {
+        err = "EC_KEY_new_by_curve_name failed.";
+        goto finish;
+    }
+
+    point = EC_POINT_new(group);
+    if (!point) {
+        err = "EC_POINT_new failed.";
+        goto finish;
+    }
+
+    ctx = BN_CTX_new();
+    if (!ctx) {
+        err = "BN_CTX_new failed.";
+        goto finish;
+    }
+
+    return;
+
+finish:
+    if (group) EC_GROUP_free(group);
+    if (point) EC_POINT_free(point);
+    throw std::runtime_error(std::string("CPoint::CPoint() :  - ") + err);
+}
+
+bool CPoint::operator!=(const CPoint &a)
+{
+    if (EC_POINT_cmp(group, point, a.point, ctx) != 0)
+        return true;
+    return false;
+}
+CPoint::~CPoint()
+{
+    if (point) EC_POINT_free(point);
+    if (group) EC_GROUP_free(group);
+    if (ctx)   BN_CTX_free(ctx);
+}
+
+// Initialize from octets stream
+bool CPoint::setBytes(const std::vector<unsigned char> &vchBytes)
+{
+    if (!EC_POINT_oct2point(group, point, &vchBytes[0], vchBytes.size(), ctx)) {
+        return false;
+    }
+    return true;
+}
+
+// Serialize to octets stream
+bool CPoint::getBytes(std::vector<unsigned char> &vchBytes)
+{
+    unsigned int nSize = EC_POINT_point2oct(group, point, POINT_CONVERSION_COMPRESSED, NULL, 0, ctx);
+    vchBytes.resize(nSize);
+    if (!(nSize == EC_POINT_point2oct(group, point, POINT_CONVERSION_COMPRESSED, &vchBytes[0], nSize, ctx))) {
+        return false;
+    }
+    return true;
+}
+
+// ECC multiplication by specified multiplier
+bool CPoint::ECMUL(const CBigNum &bnMultiplier)
+{
+    if (!EC_POINT_mul(group, point, NULL, point, &bnMultiplier, NULL)) {
+        printf("CPoint::ECMUL() : EC_POINT_mul failed");
+        return false;
+    }
+
+    return true;
+}
+
+// Calculate G*m + q
+bool CPoint::ECMULGEN(const CBigNum &bnMultiplier, const CPoint &qPoint)
+{
+    if (!EC_POINT_mul(group, point, &bnMultiplier, qPoint.point, BN_value_one(), NULL)) {
+        printf("CPoint::ECMULGEN() : EC_POINT_mul failed.");
+        return false;
+    }
+
+    return true;
+}
+
+// CMalleablePubKey
+
+void CMalleablePubKey::GetVariant(CPubKey &R, CPubKey &vchPubKeyVariant)
+{
+    EC_KEY *eckey = NULL;
+    eckey = EC_KEY_new_by_curve_name(NID_secp256k1);
+    if (eckey == NULL) {
+        throw key_error("CMalleablePubKey::GetVariant() : EC_KEY_new_by_curve_name failed");
+    }
+
+    // Use standard key generation function to get r and R values.
+    //
+    // r will be presented by private key;
+    // R is ECDSA public key which calculated as G*r
+    if (!EC_KEY_generate_key(eckey)) {
+        throw key_error("CMalleablePubKey::GetVariant() : EC_KEY_generate_key failed");
+    }
+
+    EC_KEY_set_conv_form(eckey, POINT_CONVERSION_COMPRESSED);
+
+    int nSize = i2o_ECPublicKey(eckey, NULL);
+    if (!nSize) {
+        throw key_error("CMalleablePubKey::GetVariant() : i2o_ECPublicKey failed");
+    }
+
+    std::vector<unsigned char> vchPubKey(nSize, 0);
+    unsigned char* pbegin_R = &vchPubKey[0];
+
+    if (i2o_ECPublicKey(eckey, &pbegin_R) != nSize) {
+        throw key_error("CMalleablePubKey::GetVariant() : i2o_ECPublicKey returned unexpected size");
+    }
+
+    // R = G*r
+    R = CPubKey(vchPubKey);
+
+    // OpenSSL BIGNUM representation of r value
+    CBigNum bnr;
+    bnr = *(CBigNum*) EC_KEY_get0_private_key(eckey);
+    EC_KEY_free(eckey);
+
+    CPoint point;
+    if (!point.setBytes(pubKeyL.Raw())) {
+        throw key_error("CMalleablePubKey::GetVariant() : Unable to decode L value");
+    }
+
+    // Calculate L*r
+    point.ECMUL(bnr);
+
+    std::vector<unsigned char> vchLr;
+    if (!point.getBytes(vchLr)) {
+        throw key_error("CMalleablePubKey::GetVariant() : Unable to convert Lr value");
+    }
+
+    // Calculate Hash(L*r) and then get a BIGNUM representation of hash value.
+    CBigNum bnHash;
+    bnHash.setuint160(Hash160(vchLr));
+
+    CPoint pointH;
+    pointH.setBytes(pubKeyH.Raw());
+
+    CPoint P;
+    // Calculate P = Hash(L*r)*G + H
+    P.ECMULGEN(bnHash, pointH);
+
+    if (P.IsInfinity()) {
+        throw key_error("CMalleablePubKey::GetVariant() : P is infinity");
+    }
+
+    std::vector<unsigned char> vchResult;
+    P.getBytes(vchResult);
+
+    vchPubKeyVariant = CPubKey(vchResult);
+}
+
+std::string CMalleablePubKey::ToString()
+{
+    CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
+    ssKey << *this;
+    std::vector<unsigned char> vch(ssKey.begin(), ssKey.end());
+
+    return EncodeBase58Check(vch);
+}
+
+bool CMalleablePubKey::SetString(const std::string& strMalleablePubKey)
+{
+    std::vector<unsigned char> vchTemp;
+    if (!DecodeBase58Check(strMalleablePubKey, vchTemp)) {
+        throw key_error("CMalleablePubKey::SetString() : Provided key data seems corrupted.");
+    }
+
+    CDataStream ssKey(vchTemp, SER_NETWORK, PROTOCOL_VERSION);
+    ssKey >> *this;
+
+    return IsValid();
+}
+
+bool CMalleablePubKey::operator==(const CMalleablePubKey &b)
+{
+    return (nVersion == b.nVersion &&
+            pubKeyL == b.pubKeyL &&
+            pubKeyH == b.pubKeyH);
+}
+
+
+// CMalleableKey
+
+void CMalleableKey::Reset()
+{
+    vchSecretL.clear();
+    vchSecretH.clear();
+
+    nVersion = 0;
+}
+
+void CMalleableKey::MakeNewKeys()
+{
+    CKey L, H;
+    bool fCompressed = true;
+
+    L.MakeNewKey(true);
+    H.MakeNewKey(true);
+
+    vchSecretL = L.GetSecret(fCompressed);
+    vchSecretH = H.GetSecret(fCompressed);
+
+    nVersion = CURRENT_VERSION;
+}
+
+CMalleableKey::CMalleableKey()
+{
+    Reset();
+}
+
+CMalleableKey::CMalleableKey(const CMalleableKey &b)
+{
+    SetSecrets(b.vchSecretL, b.vchSecretH);
+}
+
+CMalleableKey::CMalleableKey(const CSecret &L, const CSecret &H)
+{
+    SetSecrets(L, H);
+}
+
+CMalleableKey& CMalleableKey::operator=(const CMalleableKey &b)
+{
+    SetSecrets(b.vchSecretL, b.vchSecretH);
+
+    return (*this);
+}
+
+CMalleableKey::~CMalleableKey()
+{
+}
+
+bool CMalleableKey::IsNull() const
+{
+    return nVersion != CURRENT_VERSION;
+}
+
+bool CMalleableKey::SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSecretH)
+{
+    Reset();
+    CKey L, H;
+
+    if (!L.SetSecret(pvchSecretL, true) || !H.SetSecret(pvchSecretH, true))
+    {
+        nVersion = 0;
+        return false;
+    }
+
+    vchSecretL = pvchSecretL;
+    vchSecretH = pvchSecretH;
+    nVersion = CURRENT_VERSION;
+
+    return true;
+}
+
+void CMalleableKey::GetSecrets(CSecret &pvchSecretL, CSecret &pvchSecretH) const
+{
+    pvchSecretL = vchSecretL;
+    pvchSecretH = vchSecretH;
+}
+
+CMalleablePubKey CMalleableKey::GetMalleablePubKey() const
+{
+    CKey L, H;
+    L.SetSecret(vchSecretL, true);
+    H.SetSecret(vchSecretH, true);
+
+    std::vector<unsigned char> vchPubKeyL = L.GetPubKey().Raw();
+    std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
+
+    return CMalleablePubKey(vchPubKeyL, vchPubKeyH);
+}
+
+// Check ownership
+bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant)
+{
+    if (IsNull()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Attempting to run on NULL key object.");
+    }
+
+    if (!R.IsValid()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : R is invalid");
+    }
+
+    if (!vchPubKeyVariant.IsValid()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : public key variant is invalid");
+    }
+
+    CPoint point_R;
+    if (!point_R.setBytes(R.Raw())) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode R value");
+    }
+
+    CKey H;
+    H.SetSecret(vchSecretH, true);
+    std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
+
+    CPoint point_H;
+    if (!point_H.setBytes(vchPubKeyH)) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode H value");
+    }
+
+    CPoint point_P;
+    if (!point_P.setBytes(vchPubKeyVariant.Raw())) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode P value");
+    }
+
+    // Infinity points are senseless
+    if (point_P.IsInfinity()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : P is infinity");
+    }
+
+    CBigNum bnl;
+    bnl.setBytes(std::vector<unsigned char>(vchSecretL.begin(), vchSecretL.end()));
+
+    point_R.ECMUL(bnl);
+
+    std::vector<unsigned char> vchRl;
+    if (!point_R.getBytes(vchRl)) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Unable to convert Rl value");
+    }
+
+    // Calculate Hash(R*l)
+    CBigNum bnHash;
+    bnHash.setuint160(Hash160(vchRl));
+
+    CPoint point_Ps;
+    // Calculate Ps = Hash(L*r)*G + H
+    point_Ps.ECMULGEN(bnHash, point_H);
+
+    // Infinity points are senseless
+    if (point_Ps.IsInfinity()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Ps is infinity");
+    }
+
+    // Check ownership
+    if (point_Ps != point_P) {
+        return false;
+    }
+
+    return true;
+}
+
+// Check ownership and restore private key
+bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant, CKey &privKeyVariant)
+{
+    if (IsNull()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Attempting to run on NULL key object.");
+    }
+
+    if (!R.IsValid()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : R is invalid");
+    }
+
+    if (!vchPubKeyVariant.IsValid()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : public key variant is invalid");
+    }
+
+    CPoint point_R;
+    if (!point_R.setBytes(R.Raw())) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode R value");
+    }
+
+    CKey H;
+    H.SetSecret(vchSecretH, true);
+    std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
+
+    CPoint point_H;
+    if (!point_H.setBytes(vchPubKeyH)) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode H value");
+    }
+
+    CPoint point_P;
+    if (!point_P.setBytes(vchPubKeyVariant.Raw())) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode P value");
+    }
+
+    // Infinity points are senseless
+    if (point_P.IsInfinity()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : P is infinity");
+    }
+
+    CBigNum bnl;
+    bnl.setBytes(std::vector<unsigned char>(vchSecretL.begin(), vchSecretL.end()));
+
+    point_R.ECMUL(bnl);
+
+    std::vector<unsigned char> vchRl;
+    if (!point_R.getBytes(vchRl)) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Unable to convert Rl value");
+    }
+
+    // Calculate Hash(R*l)
+    CBigNum bnHash;
+    bnHash.setuint160(Hash160(vchRl));
+
+    CPoint point_Ps;
+    // Calculate Ps = Hash(L*r)*G + H
+    point_Ps.ECMULGEN(bnHash, point_H);
+
+    // Infinity points are senseless
+    if (point_Ps.IsInfinity()) {
+        throw key_error("CMalleableKey::CheckKeyVariant() : Ps is infinity");
+    }
+
+    // Check ownership
+    if (point_Ps != point_P) {
+        return false;
+    }
+
+    // OpenSSL BIGNUM representation of the second private key from (l, h) pair
+    CBigNum bnh;
+    bnh.setBytes(std::vector<unsigned char>(vchSecretH.begin(), vchSecretH.end()));
+
+    // Calculate p = Hash(R*l) + h
+    CBigNum bnp = bnHash + bnh;
+
+    std::vector<unsigned char> vchp = bnp.getBytes();
+    privKeyVariant.SetSecret(CSecret(vchp.begin(), vchp.end()), true);
+
+    return true;
+}
+
+std::string CMalleableKey::ToString()
+{
+    CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
+    ssKey << *this;
+    std::vector<unsigned char> vch(ssKey.begin(), ssKey.end());
+
+    return EncodeBase58Check(vch);
+}
+
+bool CMalleableKey::SetString(const std::string& strMutableKey)
+{
+    std::vector<unsigned char> vchTemp;
+    if (!DecodeBase58Check(strMutableKey, vchTemp)) {
+        throw key_error("CMalleableKey::SetString() : Provided key data seems corrupted.");
+    }
+
+    CDataStream ssKey(vchTemp, SER_NETWORK, PROTOCOL_VERSION);
+    ssKey >> *this;
+
+    return IsNull();
+}
+
+// CMalleableKeyView
+
+CMalleableKeyView::CMalleableKeyView(const CMalleableKey &b)
+{
+    assert(b.nVersion == CURRENT_VERSION);
+    vchSecretL = b.vchSecretL;
+
+    CKey H;
+    H.SetSecret(b.vchSecretH, true);
+    vchPubKeyH = H.GetPubKey().Raw();
+}
+
+CMalleableKeyView::CMalleableKeyView(const CSecret &L, const CPubKey &pvchPubKeyH)
+{
+    vchSecretL = L;
+    vchPubKeyH = pvchPubKeyH.Raw();
+}
+
+CMalleableKeyView& CMalleableKeyView::operator=(const CMalleableKey &b)
+{
+    assert(b.nVersion == CURRENT_VERSION);
+    vchSecretL = b.vchSecretL;
+
+    CKey H;
+    H.SetSecret(b.vchSecretH, true);
+    vchPubKeyH = H.GetPubKey().Raw();
+
+    return (*this);
+}
+
+CMalleableKeyView::~CMalleableKeyView()
+{
+}
+
+CMalleablePubKey CMalleableKeyView::GetMalleablePubKey() const
+{
+    CKey keyL;
+    keyL.SetSecret(vchSecretL, true);
+    return CMalleablePubKey(keyL.GetPubKey(), vchPubKeyH);
+}
+
+// Check ownership
+bool CMalleableKeyView::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant)
+{
+    if (!R.IsValid()) {
+        throw key_error("CMalleableKeyView::CheckKeyVariant() : R is invalid");
+    }
+
+    if (!vchPubKeyVariant.IsValid()) {
+        throw key_error("CMalleableKeyView::CheckKeyVariant() : public key variant is invalid");
+    }
+
+    CPoint point_R;
+    if (!point_R.setBytes(R.Raw())) {
+        throw key_error("CMalleableKeyView::CheckKeyVariant() : Unable to decode R value");
+    }
+
+    CPoint point_H;
+    if (!point_H.setBytes(vchPubKeyH)) {
+        throw key_error("CMalleableKeyView::CheckKeyVariant() : Unable to decode H value");
+    }
+
+    CPoint point_P;
+    if (!point_P.setBytes(vchPubKeyVariant.Raw())) {
+        throw key_error("CMalleableKeyView::CheckKeyVariant() : Unable to decode P value");
+    }
+
+    // Infinity points are senseless
+    if (point_P.IsInfinity()) {
+        throw key_error("CMalleableKeyView::CheckKeyVariant() : P is infinity");
+    }
+
+    CBigNum bnl;
+    bnl.setBytes(std::vector<unsigned char>(vchSecretL.begin(), vchSecretL.end()));
+
+    point_R.ECMUL(bnl);
+
+    std::vector<unsigned char> vchRl;
+    if (!point_R.getBytes(vchRl)) {
+        throw key_error("CMalleableKeyView::CheckKeyVariant() : Unable to convert Rl value");
+    }
+
+    // Calculate Hash(R*l)
+    CBigNum bnHash;
+    bnHash.setuint160(Hash160(vchRl));
+
+    CPoint point_Ps;
+    // Calculate Ps = Hash(L*r)*G + H
+    point_Ps.ECMULGEN(bnHash, point_H);
+
+    // Infinity points are senseless
+    if (point_Ps.IsInfinity()) {
+        throw key_error("CMalleableKeyView::CheckKeyVariant() : Ps is infinity");
+    }
+
+    // Check ownership
+    if (point_Ps != point_P) {
+        return false;
+    }
+
+    return true;
+}
+

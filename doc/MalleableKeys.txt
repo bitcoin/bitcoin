@@ -1,0 +1,34 @@
+> newmalleablekey
+{
+"PrivatePair" : "DfAmbLTs7VDvUor5YF1gU5K5CGsHWezFh9htgiJBbmd3Z48H2Cu3NpYjSDQ1qaKvMGctkCgyqLCiEJFNCEBNxhhwLpquXDAa",
+"PublicPair" : "5GRSi9q1XUVBYxifTr5D5bQUKFvyfWc8GFH8eLUqsE9fMYRtn2WhnNjNFpbaZBrypP3E9jMUYGwya7UM3Vfs8UqkqWTxiut4rKU"
+}
+
+> adjustmalleablepubkey 5GRSi9q1XUVBYxifTr5D5bQUKFvyfWc8GFH8eLUqsE9fMYRtn2WhnNjNFpbaZBrypP3E9jMUYGwya7UM3Vfs8UqkqWTxiut4rKU
+{
+"R" : "022f010598ec5687f719edce97f6ba7e32fc34c7d7b45ba49de115bb670210f59f",
+"PubkeyVariant" : "03105ec5214ce118828cfb08a349b04f336ed4eae50995dbe5268112748008fdf7",
+"KeyVariantID" : "4UcaTGRRNWiH2xs6tTFHwtVzjS1BZrMLrB"
+}
+
+> adjustmalleablekey DfAmbLTs7VDvUor5YF1gU5K5CGsHWezFh9htgiJBbmd3Z48H2Cu3NpYjSDQ1qaKvMGctkCgyqLCiEJFNCEBNxhhwLpquXDAa 03105ec5214ce118828cfb08a349b04f336ed4eae50995dbe5268112748008fdf7 022f010598ec5687f719edce97f6ba7e32fc34c7d7b45ba49de115bb670210f59f
+{
+"PrivateKey" : "MDhzYBXJHrkaoDVSnJjaxzHVYURyAgVzqEhft2oeMhyfww1pDW6K"
+}
+
+> importprivkey MDhzYBXJHrkaoDVSnJjaxzHVYURyAgVzqEhft2oeMhyfww1pDW6K "test"
+
+> validateaddress 4UcaTGRRNWiH2xs6tTFHwtVzjS1BZrMLrB
+{
+"isvalid" : true,
+"address" : "4UcaTGRRNWiH2xs6tTFHwtVzjS1BZrMLrB",
+"ismine" : true,
+"watchonly" : false,
+"isscript" : false,
+"pubkey" : "03105ec5214ce118828cfb08a349b04f336ed4eae50995dbe5268112748008fdf7",
+"iscompressed" : true,
+"account" : "test"
+}
+
+> dumpprivkey 4UcaTGRRNWiH2xs6tTFHwtVzjS1BZrMLrB
+MDhzYBXJHrkaoDVSnJjaxzHVYURyAgVzqEhft2oeMhyfww1pDW6K

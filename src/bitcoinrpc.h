@@ -206,6 +206,9 @@ extern json_spirit::Value repairwallet(const json_spirit::Array& params, bool fH
 extern json_spirit::Value resendtx(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value makekeypair(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value mergecoins(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value newmalleablekey(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value adjustmalleablekey(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value adjustmalleablepubkey(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
 extern json_spirit::Value listunspent(const json_spirit::Array& params, bool fHelp);

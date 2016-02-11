@@ -1833,25 +1833,94 @@ Value resendtx(const Array& params, bool fHelp)
     return Value::null;
 }
 
-// ppcoin: make a public-private key pair
+// Make a public-private key pair
 Value makekeypair(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 0)
         throw runtime_error(
-            "makekeypair [prefix]\n"
-            "Make a public/private key pair.\n"
-            "[prefix] is optional preferred prefix for the public key.\n");
+            "makekeypair\n"
+            "Make a public/private key pair.\n");
 
     string strPrefix = "";
     if (params.size() > 0)
         strPrefix = params[0].get_str();
- 
+
     CKey key;
-    key.MakeNewKey(false);
+    key.MakeNewKey(true);
 
     CPrivKey vchPrivKey = key.GetPrivKey();
     Object result;
     result.push_back(Pair("PrivateKey", HexStr<CPrivKey::iterator>(vchPrivKey.begin(), vchPrivKey.end())));
+
+    bool fCompressed;
+    CSecret vchSecret = key.GetSecret(fCompressed);
+    result.push_back(Pair("Secret", HexStr<CSecret::iterator>(vchSecret.begin(), vchSecret.end())));
     result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
+    return result;
+}
+
+Value newmalleablekey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 0)
+        throw runtime_error(
+            "newmalleablekey\n"
+            "Make a malleable public/private key pair.\n");
+
+    CMalleableKey malleableKey;
+    malleableKey.MakeNewKeys();
+    CMalleablePubKey malleablePubKey = malleableKey.GetMalleablePubKey();
+
+    Object result;
+    result.push_back(Pair("PrivatePair", malleableKey.ToString()));
+    result.push_back(Pair("PublicPair", malleablePubKey.ToString()));
+
+    return result;
+}
+
+Value adjustmalleablekey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 3)
+        throw runtime_error(
+            "adjustmalleablekey <Malleable key data> <Public key variant data> <R data>\n"
+            "Calculate new private key using provided malleable key, public key and R data.\n");
+
+    CMalleableKey malleableKey;
+    malleableKey.SetString(params[0].get_str());
+
+    CKey privKeyVariant;
+    CPubKey vchPubKeyVariant = CPubKey(ParseHex(params[1].get_str()));
+    CPubKey vchR = CPubKey(ParseHex(params[2].get_str()));
+
+    if (!malleableKey.CheckKeyVariant(vchR,vchPubKeyVariant, privKeyVariant)) {
+        throw runtime_error("Unable to calculate the private key");
+    }
+
+    Object result;
+    bool fCompressed;
+    CSecret vchPrivKeyVariant = privKeyVariant.GetSecret(fCompressed);
+
+    result.push_back(Pair("PrivateKey", CBitcoinSecret(vchPrivKeyVariant, fCompressed).ToString()));
+
+    return result;
+}
+
+Value adjustmalleablepubkey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2 || params.size() == 0)
+        throw runtime_error(
+            "adjustmalleablepubkey <Malleable public key data>\n"
+            "Calculate new public key using provided malleable public key data.\n");
+
+    CMalleablePubKey malleablePubKey;
+    malleablePubKey.SetString(params[0].get_str());
+
+    CPubKey R, vchPubKeyVariant;
+    malleablePubKey.GetVariant(R, vchPubKeyVariant);
+
+    Object result;
+    result.push_back(Pair("R", HexStr(R.Raw())));
+    result.push_back(Pair("PubkeyVariant", HexStr(vchPubKeyVariant.Raw())));
+    result.push_back(Pair("KeyVariantID", CBitcoinAddress(vchPubKeyVariant.GetID()).ToString()));
+
     return result;
 }

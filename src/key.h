@@ -166,4 +166,134 @@ public:
     static bool ReserealizeSignature(std::vector<unsigned char>& vchSig);
 };
 
+class CPoint
+{
+private:
+    EC_POINT *point;
+    EC_GROUP* group;
+    BN_CTX* ctx;
+
+public:
+    CPoint();
+    bool operator!=(const CPoint &a);
+    ~CPoint();
+
+    // Initialize from octets stream
+    bool setBytes(const std::vector<unsigned char> &vchBytes);
+
+    // Serialize to octets stream
+    bool getBytes(std::vector<unsigned char> &vchBytes);
+
+    // ECC multiplication by specified multiplier
+    bool ECMUL(const CBigNum &bnMultiplier);
+
+    // Calculate G*m + q
+    bool ECMULGEN(const CBigNum &bnMultiplier, const CPoint &qPoint);
+
+    bool IsInfinity() { return EC_POINT_is_at_infinity(group, point); }
+};
+
+class CMalleablePubKey
+{
+private:
+    unsigned char nVersion;
+    CPubKey pubKeyL;
+    CPubKey pubKeyH;
+    friend class CMalleableKey;
+
+    static const unsigned char CURRENT_VERSION = 1;
+
+public:
+    CMalleablePubKey() { nVersion = CMalleablePubKey::CURRENT_VERSION; }
+    CMalleablePubKey(const std::string& strMalleablePubKey) { SetString(strMalleablePubKey); }
+    CMalleablePubKey(const CPubKey &pubKeyInL, const CPubKey &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { nVersion = CMalleablePubKey::CURRENT_VERSION; }
+    CMalleablePubKey(const std::vector<unsigned char> &pubKeyInL, const std::vector<unsigned char> &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { nVersion = CMalleablePubKey::CURRENT_VERSION; }
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(pubKeyL);
+        READWRITE(pubKeyH);
+    )
+
+    bool IsValid() const {
+        return pubKeyL.IsValid() && pubKeyH.IsValid();
+    }
+
+    bool operator==(const CMalleablePubKey &b);
+    bool operator!=(const CMalleablePubKey &b) { return !(*this == b); }
+
+    std::string ToString();
+    bool SetString(const std::string& strMalleablePubKey);
+    uint256 GetID() const;
+
+    CPubKey& GetL() { return pubKeyL; }
+    CPubKey& GetH() { return pubKeyH; }
+    void GetVariant(CPubKey &R, CPubKey &vchPubKeyVariant);
+};
+
+class CMalleableKey
+{
+private:
+    unsigned char nVersion;
+    CSecret vchSecretL;
+    CSecret vchSecretH;
+
+    friend class CMalleableKeyView;
+
+    static const unsigned char CURRENT_VERSION = 1;
+
+public:
+    CMalleableKey();
+    CMalleableKey(const CMalleableKey &b);
+    CMalleableKey(const CSecret &L, const CSecret &H);
+    CMalleableKey& operator=(const CMalleableKey &b);
+    ~CMalleableKey();
+
+    IMPLEMENT_SERIALIZE(
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(vchSecretL);
+        READWRITE(vchSecretH);
+    )
+
+    std::string ToString();
+    bool SetString(const std::string& strMalleablePubKey);
+
+    void Reset();
+    void MakeNewKeys();
+    bool IsNull() const;
+    bool SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSecretH);
+    void GetSecrets(CSecret &pvchSecretL, CSecret &pvchSecretH) const;
+
+    CMalleablePubKey GetMalleablePubKey() const;
+
+    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant);
+    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant, CKey &privKeyVariant);
+};
+
+class CMalleableKeyView
+{
+private:
+    CSecret vchSecretL;
+    std::vector<unsigned char> vchPubKeyH;
+
+    // disabled constructor
+    CMalleableKeyView() { };
+
+    static const unsigned char CURRENT_VERSION = 1;
+
+public:
+    CMalleableKeyView(const CMalleableKey &b);
+    CMalleableKeyView(const CSecret &L, const CPubKey &pvchPubKeyH);
+
+    CMalleableKeyView(const CMalleableKeyView &b);
+    CMalleableKeyView& operator=(const CMalleableKey &b);
+    ~CMalleableKeyView();
+
+    CMalleablePubKey GetMalleablePubKey() const;
+
+    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant);
+};
+
 #endif
