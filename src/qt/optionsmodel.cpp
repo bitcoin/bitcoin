@@ -15,6 +15,7 @@
 #include <interfaces/node.h>
 #include <mapport.h>
 #include <net.h>
+#include <net_processing.h>
 #include <netbase.h>
 #include <node/caches.h>
 #include <node/chainstatemanager_args.h>
@@ -251,6 +252,9 @@ bool OptionsModel::Init(bilingual_str& error)
         settings.setValue("nNetworkPort", (quint16)Params().GetDefaultPort());
     if (!gArgs.SoftSetArg("-port", settings.value("nNetworkPort").toString().toStdString()))
         addOverriddenOption("-port");
+
+    // rwconf settings that require a restart
+    f_peerbloomfilters = gArgs.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS);
 
     // Display
     if (settings.contains("FontForMoney")) {
@@ -516,6 +520,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return m_mask_values;
     case maxuploadtarget:
         return qlonglong(node().context()->connman->GetMaxOutboundTarget() / 1024 / 1024);
+    case peerbloomfilters:
+        return f_peerbloomfilters;
     default:
         return QVariant();
     }
@@ -764,6 +770,13 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         }
         break;
     }
+    case peerbloomfilters:
+        if (changed()) {
+            gArgs.ModifyRWConfigFile("peerbloomfilters", strprintf("%d", value.toBool()));
+            f_peerbloomfilters = value.toBool();
+            setRestartRequired(true);
+        }
+        break;
     default:
         break;
     }
