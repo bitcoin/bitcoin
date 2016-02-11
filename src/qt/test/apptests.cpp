@@ -5,6 +5,7 @@
 #include <qt/test/apptests.h>
 
 #include <chainparams.h>
+#include <interfaces/node.h>
 #include <key.h>
 #include <qt/bitcoin.h>
 #include <qt/bitcoingui.h>
@@ -65,6 +66,15 @@ void AppTests::appTests()
     BasicTestingSetup test{CBaseChainParams::REGTEST}; // Create a temp data directory to backup the gui settings to
     ECC_Stop(); // Already started by the common test setup, so stop it to avoid interference
     LogInstance().DisconnectTestLogger();
+
+    {
+        // Need to ensure datadir is setup so resetting settings can delete the non-existent bitcoin_rw.conf
+        auto node = interfaces::MakeNode();
+        std::string error;
+        if (!node->readConfigFiles(error)) {
+            QWARN("Error in readConfigFiles");
+        }
+    }
 
     m_app.parameterSetup();
     m_app.createOptionsModel(true /* reset settings */);

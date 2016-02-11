@@ -39,6 +39,7 @@
 int64_t GetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
+extern const char * const BITCOIN_RW_CONF_FILENAME;
 
 void SetupEnvironment();
 bool SetupNetworking();
@@ -76,6 +77,7 @@ bool CheckDataDirOption();
 /** Tests only */
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
+fs::path GetRWConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
@@ -127,6 +129,8 @@ struct SectionInfo
     int m_line;
 };
 
+void ModifyRWConfigStream(std::istream& stream_in, std::ostream& stream_out, const std::map<std::string, std::string>& settings_to_change);
+
 class ArgsManager
 {
 public:
@@ -166,6 +170,9 @@ protected:
 
     NODISCARD bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false, bool prepend = false, bool make_net_specific = false);
 
+private:
+    fs::path rwconf_path GUARDED_BY(cs_args);
+
 public:
     ArgsManager();
 
@@ -176,6 +183,10 @@ public:
 
     NODISCARD bool ParseParameters(int argc, const char* const argv[], std::string& error);
     NODISCARD bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
+
+    void ModifyRWConfigFile(const std::map<std::string, std::string>& settings_to_change);
+    void ModifyRWConfigFile(const std::string& setting_to_change, const std::string& new_value);
+    void EraseRWConfigFile();
 
     /**
      * Log warnings for options in m_section_only_args when
