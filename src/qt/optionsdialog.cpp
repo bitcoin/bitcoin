@@ -167,6 +167,7 @@ void OptionsDialog::setModel(OptionsModel *model)
     connect(ui->allowIncoming, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocks, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     connect(ui->connectSocksTor, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
+    connect(ui->peerbloomfilters, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
     /* Display */
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
@@ -208,6 +209,8 @@ void OptionsDialog::setMapper()
         ui->maxuploadtarget->setEnabled(true);
         ui->maxuploadtarget->setValue(current_maxuploadtarget);
     }
+
+    mapper->addMapping(ui->peerbloomfilters, OptionsModel::peerbloomfilters);
 
     /* Window */
 #ifndef Q_OS_MAC
