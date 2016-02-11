@@ -72,6 +72,7 @@ public:
         Listen,                 // bool
         Server,                 // bool
         maxuploadtarget,
+        peerbloomfilters,       // bool
         OptionIDRowCount,
     };
 
@@ -120,6 +121,9 @@ private:
     bool m_sub_fee_from_amount;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
+
+    /* rwconf settings that require a restart */
+    bool f_peerbloomfilters;
 
     // Add option to list of GUI options overridden through command line/config file
     void addOverriddenOption(const std::string &option);
