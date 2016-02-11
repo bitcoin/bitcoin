@@ -20,7 +20,7 @@ installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
 bitcoind/bitcoin-qt (on Linux).
 
 Downgrade warning
-------------------
+-----------------
 
 ### Downgrade to a version < 0.10.0
 
@@ -164,7 +164,7 @@ creating transactions that would be replaceable under BIP 125.
 
 
 RPC: Random-cookie RPC authentication
----------------------------------------
+-------------------------------------
 
 When no `-rpcpassword` is specified, the daemon now uses a special 'cookie'
 file for authentication. This file is generated with random content when the
@@ -191,20 +191,38 @@ three bytes overhead)
 Relay and Mining: Priority transactions
 ---------------------------------------
 
-Transactions that do not pay the minimum relay fee, are called "free
-transactions" or priority transactions. Previous versions of Bitcoin
-Core would relay and mine priority transactions depending on their
-setting of `-limitfreerelay=<r>` (default: `r=15` kB per minute) and
-`-blockprioritysize=<s>` (default: `50000` bytes of a block's
-priority space).
+Bitcoin Core has a heuristic 'priority' based on coin value and age. This
+calculation is used for relaying of transactions which do not meet pay the
+minimum relay fee, and can be used as an alternative way of sorting
+transactions for mined blocks. Bitcoin Core will relay transactions with
+insufficient fees depending on the setting of `-limitfreerelay=<r>` (default:
+`r=15` kB per minute) and `-blockprioritysize=<s>`.
 
-Priority code is scheduled for removal in Bitcoin Core 0.13. In
-Bitcoin Core 0.12, the default block priority size has been set to `0`
-and the priority calculation has been simplified to only include the
-coin age of inputs that were in the blockchain at the time the transaction
-was accepted into the mempool.  In addition priority transactions are not
-accepted to the mempool if mempool limiting has triggered a higher effective
-minimum relay fee.
+In Bitcoin Core 0.12, when mempool limit has been reached a higher minimum
+relay fee takes effect to limit memory usage. Transactions which do not meet
+this higher effective minimum relay fee will not be relayed or mined even if
+they rank highly according to the priority heuristic.
+
+The mining of transactions based on their priority is also now disabled by
+default. To re-enable it, simply set `-blockprioritysize=<n>` where is the size
+in bytes of your blocks to reserve for these transactions. The old default was
+50k, so to retain approximately the same policy, you would set
+`-blockprioritysize=50000`.
+
+Additionally, as a result of computational simplifications, the priority value
+used for transactions received with unconfirmed inputs is lower than in prior
+versions due to avoiding recomputing the amounts as input transactions confirm.
+
+External miner policy set via the `prioritisetransaction` RPC to rank
+transactions already in the mempool continues to work as it has previously.
+Note, however, that if mining priority transactions is left disabled, the
+priority delta will be ignored and only the fee metric will be effective.
+
+This internal automatic prioritization handling is being considered for removal
+entirely in Bitcoin Core 0.13, and it is at this time undecided whether the
+more accurate priority calculation for chained unconfirmed transactions will be
+restored. Community direction on this topic is particularly requested to help
+set project priorities.
 
 Automatically use Tor hidden services
 -------------------------------------
@@ -371,7 +389,7 @@ Note that the output of the RPC `decodescript` did not change because it is
 configured specifically to process scriptPubKey and not scriptSig scripts.
 
 RPC: SSL support dropped
-----------------------------
+------------------------
 
 SSL support for RPC, previously enabled by the option `rpcssl` has been dropped
 from both the client and the server. This was done in preparation for removing
