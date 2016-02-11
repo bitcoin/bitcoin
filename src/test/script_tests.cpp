@@ -585,11 +585,11 @@ BOOST_AUTO_TEST_CASE(script_build)
 
         for (unsigned int idx = 0; idx < json_good.size(); idx++) {
             const UniValue& tv = json_good[idx];
-            tests_good.insert(tv.get_array().write());
+            tests_good.insert(tv.get_array().write(1,4));
         }
         for (unsigned int idx = 0; idx < json_bad.size(); idx++) {
             const UniValue& tv = json_bad[idx];
-            tests_bad.insert(tv.get_array().write());
+            tests_bad.insert(tv.get_array().write(1,4));
         }
     }
 
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     }
     BOOST_FOREACH(TestBuilder& test, bad) {
         test.Test(false);
-        std::string str = test.GetJSON().write();
+        std::string str = test.GetJSON().write(1,4);
 #ifndef UPDATE_JSON_TESTS
         if (tests_bad.count(str) == 0) {
             BOOST_CHECK_MESSAGE(false, "Missing auto script_invalid test: " + test.GetComment());
