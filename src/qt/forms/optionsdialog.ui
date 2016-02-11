@@ -673,6 +673,46 @@
         </layout>
        </item>
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_maxuploadtarget">
+         <item>
+          <widget class="QCheckBox" name="maxuploadtargetCheckbox">
+           <property name="text">
+            <string>Try to keep upload traffic under</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="maxuploadtarget"/>
+         </item>
+         <item>
+          <widget class="QLabel" name="maxuploadtargetUnitLabel">
+           <property name="text">
+            <string>MB per day</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>maxuploadtargetCheckbox</cstring>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_maxuploadtarget">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
         <spacer name="verticalSpacer_Network">
          <property name="orientation">
           <enum>Qt::Vertical</enum>

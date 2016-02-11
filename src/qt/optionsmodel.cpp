@@ -17,6 +17,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <node/chainstatemanager_args.h>
+#include <node/context.h>
 #include <txdb.h> // for -dbcache defaults
 #include <util/string.h>
 #include <validation.h>    // For DEFAULT_SCRIPTCHECK_THREADS
@@ -512,6 +513,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return SettingToBool(setting(), false);
     case MaskValues:
         return m_mask_values;
+    case maxuploadtarget:
+        return qlonglong(node().context()->connman->GetMaxOutboundTarget() / 1024 / 1024);
     default:
         return QVariant();
     }
@@ -752,6 +755,14 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
         m_mask_values = value.toBool();
         settings.setValue("mask_values", m_mask_values);
         break;
+    case maxuploadtarget:
+    {
+        if (changed()) {
+            gArgs.ModifyRWConfigFile("maxuploadtarget", value.toString().toStdString());
+            node().context()->connman->SetMaxOutboundTarget(value.toLongLong() * 1024 * 1024);
+        }
+        break;
+    }
     default:
         break;
     }
