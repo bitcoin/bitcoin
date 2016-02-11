@@ -128,6 +128,10 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     connect(ui->connectSocksTor, &QPushButton::toggled, ui->proxyPortTor, &QWidget::setEnabled);
     connect(ui->connectSocksTor, &QPushButton::toggled, this, &OptionsDialog::updateProxyValidationState);
 
+    ui->maxuploadtarget->setMinimum(144 /* MB/day */);
+    ui->maxuploadtarget->setMaximum(std::numeric_limits<int>::max());
+    connect(ui->maxuploadtargetCheckbox, SIGNAL(toggled(bool)), ui->maxuploadtarget, SLOT(setEnabled(bool)));
+
     /* Window elements init */
 #ifdef Q_OS_MACOS
     /* remove Window tab on Mac */
@@ -328,6 +332,20 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->proxyIpTor, OptionsModel::ProxyIPTor);
     mapper->addMapping(ui->proxyPortTor, OptionsModel::ProxyPortTor);
 
+    int current_maxuploadtarget = model->data(model->index(OptionsModel::maxuploadtarget, 0), Qt::EditRole).toInt();
+    if (current_maxuploadtarget == 0) {
+        ui->maxuploadtargetCheckbox->setChecked(false);
+        ui->maxuploadtarget->setEnabled(false);
+        ui->maxuploadtarget->setValue(ui->maxuploadtarget->minimum());
+    } else {
+        if (current_maxuploadtarget < ui->maxuploadtarget->minimum()) {
+            ui->maxuploadtarget->setMinimum(current_maxuploadtarget);
+        }
+        ui->maxuploadtargetCheckbox->setChecked(true);
+        ui->maxuploadtarget->setEnabled(true);
+        ui->maxuploadtarget->setValue(current_maxuploadtarget);
+    }
+
     /* Window */
 #ifndef Q_OS_MACOS
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
@@ -437,6 +455,12 @@ void OptionsDialog::on_okButton_clicked()
 
     model->setData(model->index(OptionsModel::FontForMoney, 0), ui->moneyFont->itemData(ui->moneyFont->currentIndex()));
     model->setData(model->index(OptionsModel::FontForQRCodes, 0), ui->qrFont->itemData(ui->qrFont->currentIndex()));
+
+    if (ui->maxuploadtargetCheckbox->isChecked()) {
+        model->setData(model->index(OptionsModel::maxuploadtarget, 0), ui->maxuploadtarget->value());
+    } else {
+        model->setData(model->index(OptionsModel::maxuploadtarget, 0), 0);
+    }
 
     mapper->submit();
     accept();
