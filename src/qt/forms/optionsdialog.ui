@@ -713,6 +713,16 @@
         </layout>
        </item>
        <item>
+        <widget class="QCheckBox" name="peerbloomfilters">
+         <property name="toolTip">
+          <string>Support filtering of blocks and transaction with bloom filters</string>
+         </property>
+         <property name="text">
+          <string>Provide search services for light clients</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="verticalSpacer_Network">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
