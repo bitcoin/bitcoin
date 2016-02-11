@@ -71,6 +71,7 @@ public:
         SpendZeroConfChange,    // bool
         Listen,                 // bool
         Server,                 // bool
+        maxuploadtarget,
         OptionIDRowCount,
     };
 
