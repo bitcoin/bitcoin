@@ -226,6 +226,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
+        case maxuploadtarget:
+            return qlonglong(CNode::GetMaxOutboundTarget() / 1024 / 1024);
         default:
             return QVariant();
         }
@@ -369,6 +371,15 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case maxuploadtarget:
+        {
+            qlonglong nv = value.toLongLong() * 1024 * 1024;
+            if (CNode::GetMaxOutboundTarget() != nv) {
+                ModifyRWConfigFile("maxuploadtarget", value.toString().toStdString());
+                CNode::SetMaxOutboundTarget(nv);
+            }
+            break;
+        }
         default:
             break;
         }

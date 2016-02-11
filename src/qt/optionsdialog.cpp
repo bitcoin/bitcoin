@@ -65,6 +65,10 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), ui->proxyPortTor, SLOT(setEnabled(bool)));
     connect(ui->connectSocksTor, SIGNAL(toggled(bool)), this, SLOT(updateProxyValidationState()));
 
+    ui->maxuploadtarget->setMinimum(CNode::GetMaxOutboundTargetRecommendedMinimum() / 1024 / 1024);
+    ui->maxuploadtarget->setMaximum(std::numeric_limits<int>::max());
+    connect(ui->maxuploadtargetCheckbox, SIGNAL(stateChanged(int)), this, SLOT(maxuploadtargetCheckboxStateChanged(int)));
+
     /* Window elements init */
 #ifdef Q_OS_MAC
     /* remove Window tab on Mac */
@@ -191,6 +195,20 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->proxyIpTor, OptionsModel::ProxyIPTor);
     mapper->addMapping(ui->proxyPortTor, OptionsModel::ProxyPortTor);
 
+    int current_maxuploadtarget = model->data(model->index(OptionsModel::maxuploadtarget, 0), Qt::EditRole).toInt();
+    if (current_maxuploadtarget == 0) {
+        ui->maxuploadtargetCheckbox->setChecked(false);
+        ui->maxuploadtarget->setEnabled(false);
+        ui->maxuploadtarget->setValue(ui->maxuploadtarget->minimum());
+    } else {
+        if (current_maxuploadtarget < ui->maxuploadtarget->minimum()) {
+            ui->maxuploadtarget->setMinimum(current_maxuploadtarget);
+        }
+        ui->maxuploadtargetCheckbox->setChecked(true);
+        ui->maxuploadtarget->setEnabled(true);
+        ui->maxuploadtarget->setValue(current_maxuploadtarget);
+    }
+
     /* Window */
 #ifndef Q_OS_MAC
     mapper->addMapping(ui->minimizeToTray, OptionsModel::MinimizeToTray);
@@ -206,6 +224,11 @@ void OptionsDialog::setMapper()
 void OptionsDialog::setOkButtonState(bool fState)
 {
     ui->okButton->setEnabled(fState);
+}
+
+void OptionsDialog::maxuploadtargetCheckboxStateChanged(const int state)
+{
+    ui->maxuploadtarget->setEnabled(state);
 }
 
 void OptionsDialog::on_resetButton_clicked()
@@ -228,6 +251,12 @@ void OptionsDialog::on_resetButton_clicked()
 
 void OptionsDialog::on_okButton_clicked()
 {
+    if (ui->maxuploadtargetCheckbox->isChecked()) {
+        model->setData(model->index(OptionsModel::maxuploadtarget, 0), ui->maxuploadtarget->value());
+    } else {
+        model->setData(model->index(OptionsModel::maxuploadtarget, 0), 0);
+    }
+
     mapper->submit();
     accept();
     updateDefaultProxyNets();
