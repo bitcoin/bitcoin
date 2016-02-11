@@ -259,7 +259,8 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/multisiginputentry.h \
     src/qt/multisigdialog.h \
     src/qt/secondauthdialog.h \
-    src/qt/qrcodedialog.h
+    src/qt/qrcodedialog.h \
+    src/ies.h
 
 SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/intro.cpp \
@@ -338,7 +339,9 @@ SOURCES += src/qt/bitcoin.cpp src/qt/bitcoingui.cpp \
     src/qt/multisigdialog.cpp \
     src/qt/secondauthdialog.cpp \
     src/qt/qrcodedialog.cpp \
-    src/base58.cpp
+    src/base58.cpp \
+    src/cryptogram.cpp \
+    src/ecies.cpp
 
 RESOURCES += \
     src/qt/bitcoin.qrc

@@ -13,6 +13,7 @@
 #include "uint256.h"
 #include "hash.h"
 #include "bignum.h"
+#include "ies.h"
 
 #include <openssl/ec.h> // for EC_KEY definition
 
@@ -99,7 +100,7 @@ public:
     }
 
     // Encrypt data
-    bool EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted);
+    void EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted);
 };
 
 
@@ -168,8 +169,11 @@ public:
     // Reserialize to DER
     static bool ReserealizeSignature(std::vector<unsigned char>& vchSig);
 
+    // Encrypt data
+    void EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted);
+
     // Decrypt data
-    bool DecryptData(const std::vector<unsigned char>& encrypted, std::vector<unsigned char>& data);
+    void DecryptData(const std::vector<unsigned char>& encrypted, std::vector<unsigned char>& data);
 };
 
 class CPoint

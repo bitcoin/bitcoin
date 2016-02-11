@@ -88,7 +88,9 @@ OBJS= \
     obj/walletdb.o \
     obj/noui.o \
     obj/kernel.o \
-    obj/kernel_worker.o
+    obj/kernel_worker.o \
+    obj/ecies.o \
+    obj/cryptogram.o
 
 all: novacoind.exe
 
