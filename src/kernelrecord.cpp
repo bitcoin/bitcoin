@@ -47,7 +47,7 @@ vector<KernelRecord> KernelRecord::decomposeOutput(const CWallet *wallet, const 
                 CTxDestination address;
                 std::string addrStr;
 
-                uint64_t coinAge = max( (txOut.nValue * nDayWeight) / (COIN * nOneDay), 0LL);
+                uint64_t coinAge = max( (txOut.nValue * nDayWeight) / (COIN * nOneDay), (int64_t)0);
 
                 if (ExtractDestination(txOut.scriptPubKey, address))
                 {
@@ -107,7 +107,7 @@ double KernelRecord::getProbToMintStake(double difficulty, int timeOffset) const
     //uint64_t coinAge = max(nValue * dayWeight / COIN, (int64_t)0);
     //return target * coinAge / pow(static_cast<double>(2), 256);
     int64_t Weight = (min((GetAdjustedTime() - nTime) + timeOffset, (int64_t)(nStakeMinAge+nStakeMaxAge)) - nStakeMinAge);
-    uint64_t coinAge = max(nValue * Weight / (COIN * nOneDay), 0LL);
+    uint64_t coinAge = max(nValue * Weight / (COIN * nOneDay), (int64_t)0);
     return coinAge / (pow(static_cast<double>(2),32) * difficulty);
 }
 
