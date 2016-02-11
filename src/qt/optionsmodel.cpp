@@ -143,6 +143,9 @@ void OptionsModel::Reset()
 {
     QSettings settings;
 
+    // Remove rw config file
+    EraseRWConfigFile();
+
     // Remove all entries from our QSettings object
     settings.clear();
 
