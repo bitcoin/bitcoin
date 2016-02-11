@@ -97,6 +97,9 @@ public:
     std::vector<unsigned char> Raw() const {
         return vchPubKey;
     }
+
+    // Encrypt data
+    bool EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted);
 };
 
 
@@ -164,6 +167,9 @@ public:
 
     // Reserialize to DER
     static bool ReserealizeSignature(std::vector<unsigned char>& vchSig);
+
+    // Decrypt data
+    bool DecryptData(const std::vector<unsigned char>& encrypted, std::vector<unsigned char>& data);
 };
 
 class CPoint

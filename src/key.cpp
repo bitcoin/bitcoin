@@ -6,6 +6,7 @@
 
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
+#include <openssl/ssl.h>
 
 #include "key.h"
 #include "base58.h"
@@ -1092,3 +1093,18 @@ bool CMalleableKeyView::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubK
     return true;
 }
 
+//// Asymmetric encryption
+
+bool CPubKey::EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted)
+{
+    // TODO
+
+    return true;
+}
+
+bool CKey::DecryptData(const std::vector<unsigned char>& encrypted, std::vector<unsigned char>& data)
+{
+    // TODO
+
+    return true;
+}
