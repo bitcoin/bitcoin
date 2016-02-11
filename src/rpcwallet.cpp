@@ -1870,9 +1870,13 @@ Value newmalleablekey(const Array& params, bool fHelp)
     malleableKey.MakeNewKeys();
     CMalleablePubKey malleablePubKey = malleableKey.GetMalleablePubKey();
 
+    CDataStream ssPublicBytes(SER_NETWORK, PROTOCOL_VERSION);
+    ssPublicBytes << malleablePubKey;
+
     Object result;
     result.push_back(Pair("PrivatePair", malleableKey.ToString()));
     result.push_back(Pair("PublicPair", malleablePubKey.ToString()));
+    result.push_back(Pair("PublicBytes", HexStr(ssPublicBytes.begin(), ssPublicBytes.end())));
 
     return result;
 }
@@ -1911,8 +1915,14 @@ Value adjustmalleablepubkey(const Array& params, bool fHelp)
             "adjustmalleablepubkey <Malleable public key data>\n"
             "Calculate new public key using provided malleable public key data.\n");
 
+    string pubKeyPair = params[0].get_str();
     CMalleablePubKey malleablePubKey;
-    malleablePubKey.SetString(params[0].get_str());
+
+    if (pubKeyPair.size() == 138) {
+        CDataStream ssPublicBytes(ParseHex(pubKeyPair), SER_NETWORK, PROTOCOL_VERSION);
+        ssPublicBytes >> malleablePubKey;
+    } else
+        malleablePubKey.SetString(pubKeyPair);
 
     CPubKey R, vchPubKeyVariant;
     malleablePubKey.GetVariant(R, vchPubKeyVariant);
