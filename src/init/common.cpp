@@ -134,6 +134,15 @@ bool StartLogging(const ArgsManager& args)
         LogPrintf("Config file: %s (not found, skipping)\n", fs::PathToString(config_file_path));
     }
 
+    fs::path rwconfig_file_path = args.GetRWConfigFilePath();
+    if (fs::exists(rwconfig_file_path)) {
+        LogPrintf("R/W Config file: %s\n", fs::PathToString(rwconfig_file_path));
+    } else if (gArgs.IsArgSet("-confrw")) {
+        InitWarning(strprintf(_("The specified R/W config file %s does not exist"), fs::PathToString(rwconfig_file_path)));
+    } else {
+        LogPrintf("R/W Config file: %s (not found, skipping)\n", fs::PathToString(rwconfig_file_path));
+    }
+
     // Log the config arguments to debug.log
     args.LogArgs();
 

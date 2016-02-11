@@ -29,15 +29,18 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <map>
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_SETTINGS_FILENAME = "settings.json";
+const char * const BITCOIN_RW_CONF_FILENAME = "bitcoin_rw.conf";
 
 ArgsManager gArgs;
 
@@ -771,6 +774,12 @@ void ArgsManager::SetConfigFilePath(fs::path path)
     m_config_path = path;
 }
 
+fs::path ArgsManager::GetRWConfigFilePath() const
+{
+    LOCK(cs_args);
+    return *Assert(m_rwconf_path);
+}
+
 ChainType ArgsManager::GetChainType() const
 {
     std::variant<ChainType, std::string> arg = GetChainArg();
@@ -864,6 +873,217 @@ void ArgsManager::LogArgs() const
     }
     logArgsPrefix("R/W config file arg:", "", m_settings.rw_config);
     logArgsPrefix("Command-line arg:", "", m_settings.command_line_options);
+}
+
+namespace {
+
+    // Like std::getline, but includes the EOL character in the result
+    bool getline_with_eol(std::istream& stream, std::string& result)
+    {
+        int current_char;
+        current_char = stream.get();
+        if (current_char == std::char_traits<char>::eof()) {
+            return false;
+        }
+        result.clear();
+        result.push_back(char(current_char));
+        while (current_char != '\n') {
+            current_char = stream.get();
+            if (current_char == std::char_traits<char>::eof()) {
+                break;
+            }
+            result.push_back(char(current_char));
+        }
+        return true;
+    }
+
+    const char * const ModifyRWConfigFile_ws_chars = " \t\r\n";
+
+    void ModifyRWConfigFile_SanityCheck(const std::string& s)
+    {
+        if (s.empty()) {
+            // Dereferencing .begin or .rbegin below is invalid unless the string has at least one character.
+            return;
+        }
+
+        static const char * const newline_chars = "\r\n";
+        static std::string ws_chars(ModifyRWConfigFile_ws_chars);
+        if (s.find_first_of(newline_chars) != std::string::npos) {
+            throw std::invalid_argument("New-line in config name/value");
+        }
+        if (ws_chars.find(*s.begin()) != std::string::npos || ws_chars.find(*s.rbegin()) != std::string::npos) {
+            throw std::invalid_argument("Config name/value has leading/trailing whitespace");
+        }
+    }
+
+    void ModifyRWConfigFile_WriteRemaining(std::ostream& stream_out, const std::map<std::string, std::string>& settings_to_change, std::set<std::string>& setFound)
+    {
+        for (const auto& setting_pair : settings_to_change) {
+            const std::string& key = setting_pair.first;
+            const std::string& val = setting_pair.second;
+            if (setFound.find(key) != setFound.end()) {
+                continue;
+            }
+            setFound.insert(key);
+            ModifyRWConfigFile_SanityCheck(key);
+            ModifyRWConfigFile_SanityCheck(val);
+            stream_out << key << "=" << val << "\n";
+        }
+    }
+} // namespace
+
+void ModifyRWConfigStream(std::istream& stream_in, std::ostream& stream_out, const std::map<std::string, std::string>& settings_to_change)
+{
+    static const char * const ws_chars = ModifyRWConfigFile_ws_chars;
+    std::set<std::string> setFound;
+    std::string s, lineend, linebegin, key;
+    std::string::size_type n, n2;
+    bool inside_group = false, have_eof_nl = true;
+    std::map<std::string, std::string>::const_iterator iterCS;
+    size_t lineno = 0;
+    while (getline_with_eol(stream_in, s)) {
+        ++lineno;
+
+        have_eof_nl = (!s.empty()) && (*s.rbegin() == '\n');
+        n = s.find('#');
+        const bool has_comment = (n != std::string::npos);
+        if (!has_comment) {
+            n = s.size();
+        }
+        if (n > 0) {
+            n2 = s.find_last_not_of(ws_chars, n - 1);
+            if (n2 != std::string::npos) {
+                n = n2 + 1;
+            }
+        }
+        n2 = s.find_first_not_of(ws_chars);
+        if (n2 == std::string::npos || n2 >= n) {
+            // Blank or comment-only line
+            stream_out << s;
+            continue;
+        }
+        lineend = s.substr(n);
+        linebegin = s.substr(0, n2);
+        s = s.substr(n2, n - n2);
+
+        // It is impossible for s to be empty here, due to the blank line check above
+        if (*s.begin() == '[' && *s.rbegin() == ']') {
+            // We don't use sections, so we could possibly just write out the rest of the file - but we need to check for unparsable lines, so we just set a flag to ignore settings from here on
+            ModifyRWConfigFile_WriteRemaining(stream_out, settings_to_change, setFound);
+            inside_group = true;
+            key.clear();
+
+            stream_out << linebegin << s << lineend;
+            continue;
+        }
+
+        n = s.find('=');
+        if (n == std::string::npos) {
+            // Bad line; this causes boost to throw an exception when parsing, so we comment out the entire file
+            stream_in.seekg(0, std::ios_base::beg);
+            stream_out.seekp(0, std::ios_base::beg);
+            if (!(stream_in.good() && stream_out.good())) {
+                throw std::ios_base::failure("Failed to rewind (to comment out existing file)");
+            }
+            // First, write out all the settings we intend to set
+            setFound.clear();
+            ModifyRWConfigFile_WriteRemaining(stream_out, settings_to_change, setFound);
+            // We then define a category to ensure new settings get added before the invalid stuff
+            stream_out << "[INVALID]\n";
+            // Then, describe the problem in a comment
+            stream_out << "# Error parsing line " << lineno << ": " << s << "\n";
+            // Finally, dump the rest of the file commented out
+            while (getline_with_eol(stream_in, s)) {
+                stream_out << "#" << s;
+            }
+            return;
+        }
+
+        if (!inside_group) {
+            // We don't support/use groups, so once we're inside key is always null to avoid setting anything
+            n2 = s.find_last_not_of(ws_chars, n - 1);
+            if (n2 == std::string::npos) {
+                n2 = n - 1;
+            } else {
+                ++n2;
+            }
+            key = s.substr(0, n2);
+        }
+        if ((!key.empty()) && (iterCS = settings_to_change.find(key)) != settings_to_change.end() && setFound.find(key) == setFound.end()) {
+            // This is the key we want to change
+            const std::string& val = iterCS->second;
+            setFound.insert(key);
+            ModifyRWConfigFile_SanityCheck(val);
+            if (has_comment) {
+                // Rather than change a commented line, comment it out entirely (the existing comment may relate to the value) and replace it
+                stream_out << key << "=" << val << "\n";
+                linebegin.insert(linebegin.begin(), '#');
+            } else {
+                // Just modify the value in-line otherwise
+                n2 = s.find_first_not_of(ws_chars, n + 1);
+                if (n2 == std::string::npos) {
+                    n2 = n + 1;
+                }
+                s = s.substr(0, n2) + val;
+            }
+        }
+        stream_out << linebegin << s << lineend;
+    }
+    if (setFound.size() < settings_to_change.size()) {
+        if (!have_eof_nl) {
+            stream_out << "\n";
+        }
+        ModifyRWConfigFile_WriteRemaining(stream_out, settings_to_change, setFound);
+    }
+}
+
+void ArgsManager::ModifyRWConfigFile(const std::map<std::string, std::string>& settings_to_change)
+{
+    LOCK(cs_args);
+    fs::path rwconf_path{GetRWConfigFilePath()};
+    fs::path rwconf_new_path{rwconf_path};
+    rwconf_new_path += ".new";
+    try {
+        fs::remove(rwconf_new_path);
+        std::ofstream streamRWConfigOut(rwconf_new_path, std::ios_base::out | std::ios_base::trunc);
+        if (fs::exists(rwconf_path)) {
+            std::ifstream streamRWConfig(rwconf_path);
+            ::ModifyRWConfigStream(streamRWConfig, streamRWConfigOut, settings_to_change);
+        } else {
+            std::istringstream streamIn;
+            ::ModifyRWConfigStream(streamIn, streamRWConfigOut, settings_to_change);
+        }
+    } catch (...) {
+        fs::remove(rwconf_new_path);
+        throw;
+    }
+    if (!RenameOver(rwconf_new_path, rwconf_path)) {
+        fs::remove(rwconf_new_path);
+        throw std::ios_base::failure(strprintf("Failed to replace %s", fs::PathToString(rwconf_new_path)));
+    }
+}
+
+void ArgsManager::ModifyRWConfigFile(const std::string& setting_to_change, const std::string& new_value)
+{
+    std::map<std::string, std::string> settings_to_change;
+    settings_to_change[setting_to_change] = new_value;
+    ModifyRWConfigFile(settings_to_change);
+}
+
+void ArgsManager::EraseRWConfigFile()
+{
+    LOCK(cs_args);
+    fs::path rwconf_path{GetRWConfigFilePath()};
+    if (!fs::exists(rwconf_path)) {
+        return;
+    }
+    fs::path rwconf_reset_path = rwconf_path;
+    rwconf_reset_path += ".reset";
+    if (!RenameOver(rwconf_path, rwconf_reset_path)) {
+        if (fs::remove(rwconf_path)) {
+            throw std::ios_base::failure(strprintf("Failed to remove %s", fs::PathToString(rwconf_path)));
+        }
+    }
 }
 
 namespace common {
