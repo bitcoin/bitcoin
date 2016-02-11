@@ -316,8 +316,6 @@ static const CRPCCommand vRPCCommands[] =
     { "mining",             "setblockversion",        &setblockversion,        true  },  // BU
 
     /* Coin generation */
-    { "generating",         "getgenerate",            &getgenerate,            true  },
-    { "generating",         "setgenerate",            &setgenerate,            true  },
     { "generating",         "generate",               &generate,               true  },
 
     /* Raw transactions */
