@@ -6,6 +6,7 @@
 #ifndef BITCOIN_NET_H
 #define BITCOIN_NET_H
 
+#include "amount.h"
 #include "bloom.h"
 #include "compat.h"
 #include "limitedmap.h"
@@ -415,6 +416,11 @@ public:
     int64_t nMinPingUsecTime;
     // Whether a ping is requested.
     bool fPingQueued;
+    // Minimum fee rate with which to filter inv's to this node
+    CAmount minFeeFilter;
+    CCriticalSection cs_feeFilter;
+    CAmount lastSentFeeFilter;
+    int64_t nextSendTimeFeeFilter;
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
@@ -766,8 +772,8 @@ public:
 
 
 class CTransaction;
-void RelayTransaction(const CTransaction& tx);
-void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
+void RelayTransaction(const CTransaction& tx, CFeeRate feerate);
+void RelayTransaction(const CTransaction& tx, CFeeRate feerate, const CDataStream& ss);
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB
