@@ -1894,23 +1894,7 @@ Value adjustmalleablekey(const Array& params, bool fHelp)
     CKey privKeyVariant;
     CPubKey vchPubKeyVariant = CPubKey(ParseHex(params[1].get_str()));
 
-    std::vector<unsigned char> vchR = ParseHex(params[2].get_str());
-
-    CPubKey R;
-    if (vchR.size() == 33)
-        R = CPubKey(vchR);
-    else {
-        // R is encrypted
-        CSecret pvchSecretL, pvchSecretH;
-
-        malleableKey.GetSecrets(pvchSecretL, pvchSecretH);
-        CKey key;
-        key.SetSecret(pvchSecretL);
-
-        std::vector<unsigned char> vchDecryptedR;
-        key.DecryptData(vchR, vchDecryptedR);
-        R = CPubKey(vchDecryptedR);
-    }
+    CPubKey R(ParseHex(params[2].get_str()));
 
     if (!malleableKey.CheckKeyVariant(R,vchPubKeyVariant, privKeyVariant)) {
         throw runtime_error("Unable to calculate the private key");
@@ -1944,12 +1928,8 @@ Value adjustmalleablepubkey(const Array& params, bool fHelp)
     CPubKey R, vchPubKeyVariant;
     malleablePubKey.GetVariant(R, vchPubKeyVariant);
 
-    std::vector<unsigned char> encryptedR;
-    malleablePubKey.GetL().EncryptData(R.Raw(), encryptedR);
-
     Object result;
     result.push_back(Pair("R", HexStr(R.Raw())));
-    result.push_back(Pair("Rcrypted", HexStr(encryptedR)));
     result.push_back(Pair("PubkeyVariant", HexStr(vchPubKeyVariant.Raw())));
     result.push_back(Pair("KeyVariantID", CBitcoinAddress(vchPubKeyVariant.GetID()).ToString()));
 
