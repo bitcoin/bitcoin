@@ -1157,33 +1157,27 @@ bool TransactionSignatureChecker::CheckSig(const vector<unsigned char>& vchSigIn
     return true;
 }
 
-static bool VerifyLockTime(int64_t txToLockTime, int64_t nThreshold, const CScriptNum& nLockTime)
+bool TransactionSignatureChecker::CheckLockTime(const CScriptNum& nLockTime) const
 {
     // There are two kinds of nLockTime: lock-by-blockheight
     // and lock-by-blocktime, distinguished by whether
-    // nLockTime < nThreshold (either LOCKTIME_THRESHOLD or
-    // CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG).
+    // nLockTime < LOCKTIME_THRESHOLD.
     //
     // We want to compare apples to apples, so fail the script
     // unless the type of nLockTime being tested is the same as
     // the nLockTime in the transaction.
     if (!(
-        (txToLockTime <  nThreshold && nLockTime <  nThreshold) ||
-        (txToLockTime >= nThreshold && nLockTime >= nThreshold)
+        (txTo->nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
+        (txTo->nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
     ))
         return false;
 
     // Now that we know we're comparing apples-to-apples, the
     // comparison is a simple numeric one.
-    if (nLockTime > txToLockTime)
+    if (nLockTime > (int64_t)txTo->nLockTime)
         return false;
 
-    return true;
-}
-
-bool TransactionSignatureChecker::CheckLockTime(const CScriptNum& nLockTime) const
-{
-    // The nLockTime feature can be disabled and thus
+    // Finally the nLockTime feature can be disabled and thus
     // CHECKLOCKTIMEVERIFY bypassed if every txin has been
     // finalized by setting nSequence to maxint. The
     // transaction would be allowed into the blockchain, making
@@ -1194,9 +1188,6 @@ bool TransactionSignatureChecker::CheckLockTime(const CScriptNum& nLockTime) con
     // inputs, but testing just this input minimizes the data
     // required to prove correct CHECKLOCKTIMEVERIFY execution.
     if (CTxIn::SEQUENCE_FINAL == txTo->vin[nIn].nSequence)
-        return false;
-
-    if (!::VerifyLockTime((int64_t)txTo->nLockTime, LOCKTIME_THRESHOLD, nLockTime))
         return false;
 
     return true;
@@ -1221,16 +1212,31 @@ bool TransactionSignatureChecker::CheckSequence(const CScriptNum& nSequence) con
         return false;
 
     // Mask off any bits that do not have consensus-enforced meaning
-    // before doing the integer comparisons of ::VerifyLockTime.
-    const uint32_t nLockTimeMask = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG
-                                 | CTxIn::SEQUENCE_LOCKTIME_MASK;
+    // before doing the integer comparisons
+    const uint32_t nLockTimeMask = CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG | CTxIn::SEQUENCE_LOCKTIME_MASK;
+    const int64_t txToSequenceMasked = txToSequence & nLockTimeMask;
+    const CScriptNum nSequenceMasked = nSequence & nLockTimeMask;
 
-    if (!::VerifyLockTime(txToSequence & nLockTimeMask, CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG, nSequence & nLockTimeMask))
+    // There are two kinds of nSequence: lock-by-blockheight
+    // and lock-by-blocktime, distinguished by whether
+    // nSequenceMasked < CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG.
+    //
+    // We want to compare apples to apples, so fail the script
+    // unless the type of nSequenceMasked being tested is the same as
+    // the nSequenceMasked in the transaction.
+    if (!(
+        (txToSequenceMasked <  CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG && nSequenceMasked <  CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG) ||
+        (txToSequenceMasked >= CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG && nSequenceMasked >= CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG)
+    ))
+        return false;
+
+    // Now that we know we're comparing apples-to-apples, the
+    // comparison is a simple numeric one.
+    if (nSequenceMasked > txToSequenceMasked)
         return false;
 
     return true;
 }
-
 
 bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, unsigned int flags, const BaseSignatureChecker& checker, ScriptError* serror)
 {
