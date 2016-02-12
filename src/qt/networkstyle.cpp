@@ -10,14 +10,14 @@
 
 static const struct {
     const char *networkId;
-    const char *appName;
+    const char *appNameSuffix;
     const int iconColorHueShift;
     const int iconColorSaturationReduction;
     const char *titleAddText;
 } network_styles[] = {
-    {"main", QAPP_APP_NAME_DEFAULT, 0, 0, ""},
-    {"test", QAPP_APP_NAME_TESTNET, 70, 30, QT_TRANSLATE_NOOP("SplashScreen", "[testnet]")},
-    {"regtest", QAPP_APP_NAME_TESTNET, 160, 30, "[regtest]"}
+    {"main", "", 0, 0, ""},
+    {"test", "-testnet", 70, 30, QT_TRANSLATE_NOOP("SplashScreen", "[testnet]")},
+    {"regtest", NULL, 160, 30, "[regtest]"}
 };
 static const unsigned network_styles_count = sizeof(network_styles)/sizeof(*network_styles);
 
@@ -85,8 +85,14 @@ const NetworkStyle *NetworkStyle::instantiate(const QString &networkId)
     {
         if (networkId == network_styles[x].networkId)
         {
+            QString appName = QAPP_APP_NAME_DEFAULT;
+            if (network_styles[x].appNameSuffix) {
+                appName += network_styles[x].appNameSuffix;
+            } else {
+                appName += QString("-") + networkId;
+            }
             return new NetworkStyle(
-                    network_styles[x].appName,
+                    appName,
                     network_styles[x].iconColorHueShift,
                     network_styles[x].iconColorSaturationReduction,
                     network_styles[x].titleAddText);
