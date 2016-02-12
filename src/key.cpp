@@ -1004,6 +1004,14 @@ CMalleableKeyView::CMalleableKeyView(const CMalleableKey &b)
     vchPubKeyH = H.GetPubKey().Raw();
 }
 
+CMalleableKeyView::CMalleableKeyView(const CMalleableKeyView &b)
+{
+    assert(b.nVersion == CURRENT_VERSION);
+    vchSecretL = b.vchSecretL;
+    vchPubKeyH = b.vchPubKeyH;
+    nVersion = CURRENT_VERSION;
+}
+
 CMalleableKeyView::CMalleableKeyView(const CSecret &L, const CPubKey &pvchPubKeyH)
 {
     vchSecretL = L;
@@ -1093,6 +1101,33 @@ bool CMalleableKeyView::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubK
     }
 
     return true;
+}
+
+std::string CMalleableKeyView::ToString()
+{
+    CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
+    ssKey << *this;
+    std::vector<unsigned char> vch(ssKey.begin(), ssKey.end());
+
+    return EncodeBase58Check(vch);
+}
+
+bool CMalleableKeyView::SetString(const std::string& strMutableKey)
+{
+    std::vector<unsigned char> vchTemp;
+    if (!DecodeBase58Check(strMutableKey, vchTemp)) {
+        throw key_error("CMalleableKeyView::SetString() : Provided key data seems corrupted.");
+    }
+
+    CDataStream ssKey(vchTemp, SER_NETWORK, PROTOCOL_VERSION);
+    ssKey >> *this;
+
+    return IsNull();
+}
+
+bool CMalleableKeyView::IsNull() const
+{
+    return nVersion != CURRENT_VERSION;
 }
 
 //// Asymmetric encryption

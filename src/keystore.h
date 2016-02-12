@@ -64,11 +64,15 @@ public:
         vchSecret = key.GetSecret(fCompressed);
         return true;
     }
+
+    virtual bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R) const =0;
+    virtual bool CreatePrivKey(const CPubKey &pubKeyVariant, const CPubKey &R, CKey &privKey) const =0;
 };
 
 typedef std::map<CKeyID, std::pair<CSecret, bool> > KeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
+typedef std::pair<CMalleableKeyView, CMalleableKey> MalleableKeyPair;
 
 /** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
@@ -77,6 +81,7 @@ protected:
     KeyMap mapKeys;
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
+    MalleableKeyPair malleableKeyPair;
 
 public:
     bool AddKey(const CKey& key);
@@ -124,6 +129,26 @@ public:
     virtual bool RemoveWatchOnly(const CScript &dest);
     virtual bool HaveWatchOnly(const CScript &dest) const;
     virtual bool HaveWatchOnly() const;
+
+    bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R) const
+    {
+        bool result;
+        {
+            LOCK(cs_KeyStore);
+            result = const_cast<CBasicKeyStore*>(this)->malleableKeyPair.first.CheckKeyVariant(R, pubKeyVariant);
+        }
+        return result;
+    }
+
+    bool CreatePrivKey(const CPubKey &pubKeyVariant, const CPubKey &R, CKey &privKey) const
+    {
+        bool result;
+        {
+            LOCK(cs_KeyStore);
+            result = const_cast<CBasicKeyStore*>(this)->malleableKeyPair.second.CheckKeyVariant(R, pubKeyVariant, privKey);
+        }
+        return result;
+    }
 };
 
 typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
@@ -152,9 +177,7 @@ protected:
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
 public:
-    CCryptoKeyStore() : fUseCrypto(false)
-    {
-    }
+    CCryptoKeyStore();
 
     bool IsCrypted() const
     {

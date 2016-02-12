@@ -102,6 +102,20 @@ bool CBasicKeyStore::HaveWatchOnly() const
     return (!setWatchOnly.empty());
 }
 
+CCryptoKeyStore::CCryptoKeyStore() : fUseCrypto(false)
+{
+    std::string strMalleableKey = GetArg("-masterkey", "");
+    CMalleableKey malleableKey;
+    if (strMalleableKey != "")
+        malleableKey.SetString(strMalleableKey);
+    else
+        malleableKey.MakeNewKeys();
+
+    CMalleableKeyView keyView(malleableKey);
+
+    malleableKeyPair = std::pair<CMalleableKeyView, CMalleableKey>(keyView, malleableKey);
+}
+
 bool CCryptoKeyStore::SetCrypted()
 {
     {
@@ -154,6 +168,7 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
                 break;
             return false;
         }
+
         vMasterKey = vMasterKeyIn;
     }
     NotifyStatusChanged(this);

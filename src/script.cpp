@@ -1328,6 +1328,21 @@ bool Sign1(const CKeyID& address, const CKeyStore& keystore, const uint256& hash
     return true;
 }
 
+bool SignR(const CPubKey& pubKey, const CPubKey& R, const CKeyStore& keystore, const uint256& hash, int nHashType, CScript& scriptSigRet)
+{
+    CKey key;
+    if (!keystore.CreatePrivKey(pubKey, R, key))
+        return false;
+
+    vector<unsigned char> vchSig;
+    if (!key.Sign(hash, vchSig))
+        return false;
+    vchSig.push_back((unsigned char)nHashType);
+    scriptSigRet << vchSig;
+
+    return true;
+}
+
 bool SignN(const vector<valtype>& multisigdata, const CKeyStore& keystore, const uint256& hash, int nHashType, CScript& scriptSigRet)
 {
     int nSigned = 0;
@@ -1364,9 +1379,14 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, const uint25
     case TX_NULL_DATA:
         return false;
     case TX_PUBKEY:
-    case TX_PUBKEY_DROP:
         keyID = CPubKey(vSolutions[0]).GetID();
         return Sign1(keyID, keystore, hash, nHashType, scriptSigRet);
+    case TX_PUBKEY_DROP:
+        {
+            CPubKey key = CPubKey(vSolutions[0]);
+            CPubKey R = CPubKey(vSolutions[1]);
+            return SignR(key, R, keystore, hash, nHashType, scriptSigRet);
+        }
     case TX_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
         if (!Sign1(keyID, keystore, hash, nHashType, scriptSigRet))
@@ -1480,10 +1500,22 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     case TX_NULL_DATA:
         break;
     case TX_PUBKEY:
-    case TX_PUBKEY_DROP:
         keyID = CPubKey(vSolutions[0]).GetID();
         if (keystore.HaveKey(keyID))
             return MINE_SPENDABLE;
+        break;
+    case TX_PUBKEY_DROP:
+        {
+            CPubKey key = CPubKey(vSolutions[0]);
+            if (keystore.HaveKey(key.GetID()))
+                return MINE_SPENDABLE;
+            else
+            {
+                CPubKey R = CPubKey(vSolutions[1]);
+                if (keystore.CheckOwnership(key, R))
+                    return MINE_SPENDABLE;
+            }
+        }
         break;
     case TX_PUBKEYHASH:
         keyID = CKeyID(uint160(vSolutions[0]));
@@ -1527,7 +1559,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
-    if (whichType == TX_PUBKEY)
+    if (whichType == TX_PUBKEY || whichType == TX_PUBKEY_DROP)
     {
         addressRet = CPubKey(vSolutions[0]).GetID();
         return true;

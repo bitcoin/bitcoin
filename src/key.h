@@ -277,7 +277,6 @@ public:
     void GetSecrets(CSecret &pvchSecretL, CSecret &pvchSecretH) const;
 
     CMalleablePubKey GetMalleablePubKey() const;
-
     bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant);
     bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant, CKey &privKeyVariant);
 };
@@ -285,15 +284,14 @@ public:
 class CMalleableKeyView
 {
 private:
+    unsigned char nVersion;
     CSecret vchSecretL;
     std::vector<unsigned char> vchPubKeyH;
-
-    // disabled constructor
-    CMalleableKeyView() { };
 
     static const unsigned char CURRENT_VERSION = 1;
 
 public:
+    CMalleableKeyView() { nVersion = 0; };
     CMalleableKeyView(const CMalleableKey &b);
     CMalleableKeyView(const CSecret &L, const CPubKey &pvchPubKeyH);
 
@@ -301,8 +299,19 @@ public:
     CMalleableKeyView& operator=(const CMalleableKey &b);
     ~CMalleableKeyView();
 
-    CMalleablePubKey GetMalleablePubKey() const;
 
+    IMPLEMENT_SERIALIZE(
+        READWRITE(this->nVersion);
+        nVersion = this->nVersion;
+        READWRITE(vchSecretL);
+        READWRITE(vchPubKeyH);
+    )
+
+    bool IsNull() const;
+    std::string ToString();
+    bool SetString(const std::string& strMalleablePubKey);
+
+    CMalleablePubKey GetMalleablePubKey() const;
     bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant);
 };
 
