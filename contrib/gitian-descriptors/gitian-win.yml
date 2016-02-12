@@ -73,6 +73,7 @@ script: |
   done
 
   # Create the release tarball using (arbitrarily) the first host
+  export GIT_DIR="$PWD/.git"
   ./autogen.sh
   ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
   make dist
