@@ -192,7 +192,7 @@ Relay and Mining: Priority transactions
 ---------------------------------------
 
 Bitcoin Core has a heuristic 'priority' based on coin value and age. This
-calculation is used for relaying of transactions which do not meet pay the
+calculation is used for relaying of transactions which do not pay the
 minimum relay fee, and can be used as an alternative way of sorting
 transactions for mined blocks. Bitcoin Core will relay transactions with
 insufficient fees depending on the setting of `-limitfreerelay=<r>` (default:
