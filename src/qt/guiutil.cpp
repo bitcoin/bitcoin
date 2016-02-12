@@ -107,7 +107,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 #if QT_VERSION >= 0x040700
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg("1NS17iag9jJgTHD1VXjvLCEnZuQ3rJDE9L"));
+    widget->setPlaceholderText(QObject::tr("Enter a HOdlcoin address (e.g. %1)").arg("HMtDP17aq8X35d6gXy7RDQLuGVSdwtqHrq"));
 #endif
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
@@ -569,11 +569,11 @@ TableViewLastColumnResizingFixer::TableViewLastColumnResizingFixer(QTableView* t
 boost::filesystem::path static StartupShortcutPath()
 {
     if (GetBoolArg("-testnet", false))
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "H DLCoin (testnet).lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "HOdlcoin (testnet).lnk";
     else if (GetBoolArg("-regtest", false))
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "H DLCoin (regtest).lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "HOdlcoin (regtest).lnk";
 
-    return GetSpecialFolderPath(CSIDL_STARTUP) / "H DLCoin.lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / "HOdlcoin.lnk";
 }
 
 bool GetStartOnSystemStartup()
@@ -710,11 +710,11 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (GetBoolArg("-testnet", false))
-            optionFile << "Name=H DLCoin (testnet)\n";
+            optionFile << "Name=HOdlcoin (testnet)\n";
         else if (GetBoolArg("-regtest", false))
-            optionFile << "Name=H DLCoin (regtest)\n";
+            optionFile << "Name=HOdlcoin (regtest)\n";
         else
-            optionFile << "Name=H DLCoin\n";
+            optionFile << "Name=HOdlcoin\n";
         optionFile << "Exec=" << pszExePath << strprintf(" -min -testnet=%d -regtest=%d\n", GetBoolArg("-testnet", false), GetBoolArg("-regtest", false));
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";

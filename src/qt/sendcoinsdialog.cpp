@@ -115,6 +115,12 @@ SendCoinsDialog::SendCoinsDialog(QWidget *parent) :
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
     ui->checkBoxFreeTx->setChecked(settings.value("fSendFreeTransactions").toBool());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
+
+    ui->addButton->hide();
+    ui->clearButton->hide();
+    ui->label->hide();
+    ui->labelBalance->hide();
+
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *clientModel)
@@ -235,9 +241,9 @@ void SendCoinsDialog::on_sendButton_clicked()
     WalletModel::SendCoinsReturn prepareStatus;
     std::string termDepositConfirmQuestion="";
     if (model->getOptionsModel()->getCoinControlFeatures()) // coin control enabled
-        prepareStatus = model->prepareTransaction(currentTransaction, termDepositConfirmQuestion, CoinControlDialog::coinControl);
+        prepareStatus = model->prepareTransaction(currentTransaction, termDepositConfirmQuestion,0, CoinControlDialog::coinControl);
     else
-        prepareStatus = model->prepareTransaction(currentTransaction, termDepositConfirmQuestion);
+        prepareStatus = model->prepareTransaction(currentTransaction, termDepositConfirmQuestion,0);
 
     if(termDepositConfirmQuestion!=""){
         QString questionString = QString::fromStdString(termDepositConfirmQuestion);
@@ -763,7 +769,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid H DLCoin address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid HOdlcoin address"));
         }
         else // Valid address
         {

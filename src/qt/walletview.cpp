@@ -14,6 +14,8 @@
 #include "receivecoinsdialog.h"
 #include "scicon.h"
 #include "sendcoinsdialog.h"
+#include "depositcoinsdialog.h"
+
 #include "signverifymessagedialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
@@ -54,11 +56,15 @@ WalletView::WalletView(QWidget *parent):
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
+    depositCoinsPage = new DepositCoinsDialog();
+
 
     addWidget(overviewPage);
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
+    addWidget(depositCoinsPage);
+
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), transactionView, SLOT(focusTransaction(QModelIndex)));
@@ -114,6 +120,8 @@ void WalletView::setWalletModel(WalletModel *walletModel)
     overviewPage->setWalletModel(walletModel);
     receiveCoinsPage->setModel(walletModel);
     sendCoinsPage->setModel(walletModel);
+    depositCoinsPage->setModel(walletModel);
+
 
     if (walletModel)
     {
@@ -177,6 +185,14 @@ void WalletView::gotoSendCoinsPage(QString addr)
 
     if (!addr.isEmpty())
         sendCoinsPage->setAddress(addr);
+}
+
+void WalletView::gotoDepositCoinsPage(QString addr)
+{
+    setCurrentWidget(depositCoinsPage);
+
+    if (!addr.isEmpty())
+        depositCoinsPage->setAddress(addr);
 }
 
 void WalletView::gotoSignMessageTab(QString addr)

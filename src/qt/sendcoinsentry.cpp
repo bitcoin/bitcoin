@@ -108,8 +108,52 @@ void SendCoinsEntry::clear()
     ui->memoTextLabel_s->clear();
     ui->payAmount_s->clear();
 
+
+    ui->lockperiod->setText("12");
+
+    if(!isTermDeposit){
+        ui->locklabel->hide();
+        ui->lockperiod->hide();
+        ui->locklength->hide();
+    }else{
+        ui->payToLabel->setText("Deposit Address:");
+    }
     // update the display unit, to not use the default ("HODL")
     updateDisplayUnit();
+
+}
+
+void SendCoinsEntry::setAsTermDeposit(){
+    isTermDeposit=true;
+    ui->locklabel->setVisible(true);
+    ui->lockperiod->setVisible(true);
+    ui->locklength->setVisible(true);
+}
+
+int SendCoinsEntry::getTermDepositLength(){
+    if(!isTermDeposit){
+        return 0;
+    }
+    const int thePeriod=ui->locklength->currentIndex();
+
+    QString theSt=ui->lockperiod->text();
+    int theLength=theSt.toInt();
+
+    if(thePeriod==3){
+        return theLength;
+    }else if(thePeriod==2){
+        return theLength*561;
+    }else if(thePeriod==1){
+        return theLength*561*7;
+    }else if(thePeriod==0){
+        if(theLength==12){
+            //One year
+            return 561*365;
+        }
+        //Otherwise assume a month to equal 30 days
+        return theLength*561*30;
+    }
+    return 0;
 }
 
 void SendCoinsEntry::deleteClicked()

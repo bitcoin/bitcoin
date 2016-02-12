@@ -44,6 +44,9 @@ public:
     QWidget *setupTabChain(QWidget *prev);
 
     void setFocus();
+    void setAsTermDeposit();
+    bool isTermDeposit=false;
+    int getTermDepositLength();
 
 public Q_SLOTS:
     void clear();
