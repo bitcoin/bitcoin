@@ -273,15 +273,15 @@ static int store_mac_tag(const ies_ctx_t *ctx, const unsigned char *envelope_key
 
 cryptogram_t * ecies_encrypt(const ies_ctx_t *ctx, const unsigned char *data, size_t length, char *error) {
 
-    const size_t block_length = EVP_CIPHER_block_size(ctx->cipher);
-    const size_t mac_length = EVP_MD_size(ctx->md);
-    cryptogram_t *cryptogram = NULL;
-    unsigned char *envelope_key = NULL;
-
     if (!ctx || !data || !length) {
         SET_ERROR("Invalid arguments");
         return NULL;
     }
+
+    const size_t block_length = EVP_CIPHER_block_size(ctx->cipher);
+    const size_t mac_length = EVP_MD_size(ctx->md);
+    cryptogram_t *cryptogram = NULL;
+    unsigned char *envelope_key = NULL;
 
     if (block_length == 0 || block_length > EVP_MAX_BLOCK_LENGTH) {
         SET_ERROR("Derived block size is incorrect");
