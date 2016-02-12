@@ -187,7 +187,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Network">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_1_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_Network_Port">
          <item>
           <widget class="QLabel" name="networkPortLabel">
            <property name="text">
@@ -221,7 +221,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_1_Network">
+          <spacer name="horizontalSpacer_Network_Port">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -266,7 +266,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_2_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_1_Network">
          <item>
           <widget class="QLabel" name="proxyIpLabel">
            <property name="text">
@@ -332,7 +332,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_2_Network">
+          <spacer name="horizontalSpacer_1_Network">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -347,7 +347,7 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_2_Network">
          <item>
           <widget class="QLabel" name="proxyActiveNets">
            <property name="text">
@@ -428,7 +428,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_3_Network">
+          <spacer name="horizontalSpacer_2_Network">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -453,7 +453,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_3_Network">
          <item>
           <widget class="QLabel" name="proxyIpTorLabel">
            <property name="text">
