@@ -418,6 +418,11 @@ void OptionsDialog::on_okButton_clicked()
         Q_FOREACH(QObject* o, tab->children()) {
             QLineEdit * const lineedit = qobject_cast<QLineEdit*>(o);
             if (lineedit && !lineedit->hasAcceptableInput()) {
+                int row = mapper->mappedSection(lineedit);
+                if (model->data(model->index(row, 0), Qt::EditRole) == lineedit->text()) {
+                    // Allow unchanged fields through
+                    continue;
+                }
                 ui->tabWidget->setCurrentWidget(tab);
                 lineedit->setFocus(Qt::OtherFocusReason);
                 lineedit->selectAll();
