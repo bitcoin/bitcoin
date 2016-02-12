@@ -99,6 +99,7 @@ const char* GetTxnOutputType(txnouttype t)
     {
     case TX_NONSTANDARD: return "nonstandard";
     case TX_PUBKEY: return "pubkey";
+    case TX_PUBKEY_DROP: return "pubkeydrop";
     case TX_PUBKEYHASH: return "pubkeyhash";
     case TX_SCRIPTHASH: return "scripthash";
     case TX_MULTISIG: return "multisig";
@@ -1194,6 +1195,12 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Standard tx, sender provides pubkey, receiver adds signature
         mTemplates.insert(make_pair(TX_PUBKEY, CScript() << OP_PUBKEY << OP_CHECKSIG));
 
+        if (GetTime() > SMALLDATA_SWITCH_TIME)
+        {
+            // Malleable pubkey tx hack, sender provides generated pubkey combined with R parameter. The R parameter is dropped before checking a signature.
+            mTemplates.insert(make_pair(TX_PUBKEY_DROP, CScript() << OP_PUBKEY << OP_PUBKEY << OP_DROP << OP_CHECKSIG));
+        }
+
         // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
         mTemplates.insert(make_pair(TX_PUBKEYHASH, CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG));
 
@@ -1357,6 +1364,7 @@ bool Solver(const CKeyStore& keystore, const CScript& scriptPubKey, const uint25
     case TX_NULL_DATA:
         return false;
     case TX_PUBKEY:
+    case TX_PUBKEY_DROP:
         keyID = CPubKey(vSolutions[0]).GetID();
         return Sign1(keyID, keystore, hash, nHashType, scriptSigRet);
     case TX_PUBKEYHASH:
@@ -1389,6 +1397,7 @@ int ScriptSigArgsExpected(txnouttype t, const std::vector<std::vector<unsigned c
     case TX_NULL_DATA:
         return 1;
     case TX_PUBKEY:
+    case TX_PUBKEY_DROP:
         return 1;
     case TX_PUBKEYHASH:
         return 2;
@@ -1471,6 +1480,7 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     case TX_NULL_DATA:
         break;
     case TX_PUBKEY:
+    case TX_PUBKEY_DROP:
         keyID = CPubKey(vSolutions[0]).GetID();
         if (keystore.HaveKey(keyID))
             return MINE_SPENDABLE;
@@ -1768,6 +1778,7 @@ static CScript CombineSignatures(const CScript& scriptPubKey, const CTransaction
             return PushAll(sigs1);
         return PushAll(sigs2);
     case TX_PUBKEY:
+    case TX_PUBKEY_DROP:
     case TX_PUBKEYHASH:
         // Signatures are bigger than placeholders or empty scripts:
         if (sigs1.empty() || sigs1[0].empty())
