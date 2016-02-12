@@ -82,10 +82,13 @@ private:
     QLabel *labelConnectionsIcon;
     QLabel *labelBlocksIcon;
     QLabel *progressBarLabel;
+    QLabel *labelMiningIcon;
     QProgressBar *progressBar;
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
+    QAction *miningOffAction;
+    QAction *miningOnAction;
     QAction *overviewAction;
     QAction *historyAction;
     QAction *quitAction;
@@ -167,6 +170,9 @@ public Q_SLOTS:
 
     /** Show incoming transaction notification for new transactions. */
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
+
+    /** set mining status */
+    void setMining(double hashrate, int threads);
 #endif // ENABLE_WALLET
 
 private Q_SLOTS:
@@ -189,6 +195,10 @@ private Q_SLOTS:
 
     /** Show open dialog */
     void openClicked();
+
+    void miningOff();
+    void miningOn();
+
 #endif // ENABLE_WALLET
     /** Show configuration dialog */
     void optionsClicked();

@@ -269,6 +269,14 @@ void DepositCoinsDialog::on_sendButton_clicked()
             fNewRecipientAllowed = true;
             return;
         }
+    }else{
+        QString questionString = QString::fromStdString("Something went wrong! No term deposit instruction was detected. Instruction will be cancelled.");
+        QMessageBox::StandardButton retval = QMessageBox::question(this, tr("No Term Deposit Detected"),
+            questionString,
+            QMessageBox::Yes | QMessageBox::Cancel,
+            QMessageBox::Cancel);
+        fNewRecipientAllowed = true;
+        return;
     }
 
 
