@@ -6,12 +6,9 @@
 
 #include <openssl/ecdsa.h>
 #include <openssl/obj_mac.h>
-#include <openssl/ssl.h>
-#include <openssl/ecdh.h>
 
 #include "key.h"
 #include "base58.h"
-#include "ies.h"
 
 // Generate a private key from just the secret parameter
 int EC_KEY_regenerate_key(EC_KEY *eckey, BIGNUM *priv_key)
