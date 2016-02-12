@@ -18,9 +18,14 @@ else
     exit 1
 fi
 
+# This checks that we are actually part of the intended git repository, and not just getting info about some unrelated git repository that the code happens to be in a directory under
+git_check_in_repo() {
+    ! { git status --porcelain -uall --ignored "$@" 2>/dev/null || echo '??'; } | grep -q '?'
+}
+
 GIT_TAG=""
 GIT_COMMIT=""
-if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ] && git_check_in_repo share/genbuild.sh; then
     # clean 'dirty' status of touched files that haven't been modified
     git diff >/dev/null 2>/dev/null
 
