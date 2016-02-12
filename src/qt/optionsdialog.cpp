@@ -44,7 +44,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     ui->threadsScriptVerif->setMinimum(-GetNumCores());
     ui->threadsScriptVerif->setMaximum(MAX_SCRIPTCHECK_THREADS);
 
-    ui->networkPort->setValidator(new QIntValidator(1, 65535, this));
+    ui->networkPort->setValidator(new QIntValidator(1024, 65535, this));
 
     /* Network elements init */
 #ifndef USE_UPNP
