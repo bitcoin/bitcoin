@@ -191,6 +191,9 @@ public:
     // Initialize from octets stream
     bool setBytes(const std::vector<unsigned char> &vchBytes);
 
+    // Initialize from pubkey
+    bool setPubKey(const CPubKey &vchPubKey);
+
     // Serialize to octets stream
     bool getBytes(std::vector<unsigned char> &vchBytes);
 
@@ -233,7 +236,7 @@ public:
     bool operator==(const CMalleablePubKey &b);
     bool operator!=(const CMalleablePubKey &b) { return !(*this == b); }
 
-    std::string ToString();
+    std::string ToString() const;
     bool SetString(const std::string& strMalleablePubKey);
     uint256 GetID() const;
 
@@ -267,7 +270,7 @@ public:
         READWRITE(vchSecretH);
     )
 
-    std::string ToString();
+    std::string ToString() const;
     bool SetString(const std::string& strMalleablePubKey);
 
     void Reset();
@@ -277,8 +280,8 @@ public:
     void GetSecrets(CSecret &pvchSecretL, CSecret &pvchSecretH) const;
 
     CMalleablePubKey GetMalleablePubKey() const;
-    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant);
-    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant, CKey &privKeyVariant);
+    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant) const;
+    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant, CKey &privKeyVariant) const;
 };
 
 class CMalleableKeyView
@@ -286,7 +289,7 @@ class CMalleableKeyView
 private:
     unsigned char nVersion;
     CSecret vchSecretL;
-    std::vector<unsigned char> vchPubKeyH;
+    CPubKey vchPubKeyH;
 
     static const unsigned char CURRENT_VERSION = 1;
 
@@ -308,11 +311,13 @@ public:
     )
 
     bool IsNull() const;
-    std::string ToString();
+    std::string ToString() const;
     bool SetString(const std::string& strMalleablePubKey);
 
     CMalleablePubKey GetMalleablePubKey() const;
-    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant);
+    bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant) const;
+
+    bool operator <(const CMalleableKeyView& kv) const { return vchPubKeyH.GetID() < kv.vchPubKeyH.GetID(); }
 };
 
 #endif

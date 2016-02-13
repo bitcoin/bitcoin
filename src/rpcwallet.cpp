@@ -1936,3 +1936,22 @@ Value adjustmalleablepubkey(const Array& params, bool fHelp)
 
     return result;
 }
+
+Value listmalleablepubkeys(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "listmalleablepubkeys\n"
+            "Get list of malleable public keys.\n");
+
+    std::list<CMalleablePubKey> keyList;
+    pwalletMain->ListMalleablePubKeys(keyList);
+
+    Array result;
+    BOOST_FOREACH(const CMalleablePubKey &key, keyList)
+    {
+        result.push_back(key.ToString());
+    }
+
+    return result;
+}

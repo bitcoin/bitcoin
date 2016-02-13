@@ -592,6 +592,12 @@ bool CPoint::setBytes(const std::vector<unsigned char> &vchBytes)
     return true;
 }
 
+// Initialize from octets stream
+bool CPoint::setPubKey(const CPubKey &vchPubKey)
+{
+    return setBytes(vchPubKey.Raw());
+}
+
 // Serialize to octets stream
 bool CPoint::getBytes(std::vector<unsigned char> &vchBytes)
 {
@@ -666,7 +672,7 @@ void CMalleablePubKey::GetVariant(CPubKey &R, CPubKey &vchPubKeyVariant)
     EC_KEY_free(eckey);
 
     CPoint point;
-    if (!point.setBytes(pubKeyL.Raw())) {
+    if (!point.setPubKey(pubKeyL)) {
         throw key_error("CMalleablePubKey::GetVariant() : Unable to decode L value");
     }
 
@@ -683,7 +689,7 @@ void CMalleablePubKey::GetVariant(CPubKey &R, CPubKey &vchPubKeyVariant)
     bnHash.setuint160(Hash160(vchLr));
 
     CPoint pointH;
-    pointH.setBytes(pubKeyH.Raw());
+    pointH.setPubKey(pubKeyH);
 
     CPoint P;
     // Calculate P = Hash(L*r)*G + H
@@ -699,7 +705,7 @@ void CMalleablePubKey::GetVariant(CPubKey &R, CPubKey &vchPubKeyVariant)
     vchPubKeyVariant = CPubKey(vchResult);
 }
 
-std::string CMalleablePubKey::ToString()
+std::string CMalleablePubKey::ToString() const
 {
     CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
     ssKey << *this;
@@ -789,7 +795,7 @@ bool CMalleableKey::SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSe
     Reset();
     CKey L, H;
 
-    if (!L.SetSecret(pvchSecretL, true) || !H.SetSecret(pvchSecretH, true))
+    if (pvchSecretL.size() != 32 || !pvchSecretH.size() != 32 || !L.SetSecret(pvchSecretL, true) || !H.SetSecret(pvchSecretH, true))
     {
         nVersion = 0;
         return false;
@@ -821,7 +827,7 @@ CMalleablePubKey CMalleableKey::GetMalleablePubKey() const
 }
 
 // Check ownership
-bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant)
+bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant) const
 {
     if (IsNull()) {
         throw key_error("CMalleableKey::CheckKeyVariant() : Attempting to run on NULL key object.");
@@ -836,7 +842,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
     }
 
     CPoint point_R;
-    if (!point_R.setBytes(R.Raw())) {
+    if (!point_R.setPubKey(R)) {
         throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode R value");
     }
 
@@ -845,12 +851,12 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
     std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
 
     CPoint point_H;
-    if (!point_H.setBytes(vchPubKeyH)) {
+    if (!point_H.setPubKey(vchPubKeyH)) {
         throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode H value");
     }
 
     CPoint point_P;
-    if (!point_P.setBytes(vchPubKeyVariant.Raw())) {
+    if (!point_P.setPubKey(vchPubKeyVariant)) {
         throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode P value");
     }
 
@@ -891,7 +897,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
 }
 
 // Check ownership and restore private key
-bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant, CKey &privKeyVariant)
+bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant, CKey &privKeyVariant) const
 {
     if (IsNull()) {
         throw key_error("CMalleableKey::CheckKeyVariant() : Attempting to run on NULL key object.");
@@ -906,7 +912,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
     }
 
     CPoint point_R;
-    if (!point_R.setBytes(R.Raw())) {
+    if (!point_R.setPubKey(R)) {
         throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode R value");
     }
 
@@ -915,12 +921,12 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
     std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
 
     CPoint point_H;
-    if (!point_H.setBytes(vchPubKeyH)) {
+    if (!point_H.setPubKey(vchPubKeyH)) {
         throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode H value");
     }
 
     CPoint point_P;
-    if (!point_P.setBytes(vchPubKeyVariant.Raw())) {
+    if (!point_P.setPubKey(vchPubKeyVariant)) {
         throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode P value");
     }
 
@@ -970,7 +976,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
     return true;
 }
 
-std::string CMalleableKey::ToString()
+std::string CMalleableKey::ToString() const
 {
     CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
     ssKey << *this;
@@ -996,10 +1002,17 @@ bool CMalleableKey::SetString(const std::string& strMutableKey)
 
 CMalleableKeyView::CMalleableKeyView(const CMalleableKey &b)
 {
+    if (b.vchSecretL.size() != 32)
+        throw key_error("CMalleableKeyView::CMalleableKeyView() : L size must be 32 bytes");
+
+    if (b.vchSecretH.size() != 32)
+        throw key_error("CMalleableKeyView::CMalleableKeyView() : L size must be 32 bytes");
+
     vchSecretL = b.vchSecretL;
 
     CKey H;
     H.SetSecret(b.vchSecretH, true);
+
     vchPubKeyH = H.GetPubKey().Raw();
     nVersion = b.nVersion;
 }
@@ -1042,7 +1055,7 @@ CMalleablePubKey CMalleableKeyView::GetMalleablePubKey() const
 }
 
 // Check ownership
-bool CMalleableKeyView::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant)
+bool CMalleableKeyView::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant) const
 {
     if (!R.IsValid()) {
         throw key_error("CMalleableKeyView::CheckKeyVariant() : R is invalid");
@@ -1053,17 +1066,17 @@ bool CMalleableKeyView::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubK
     }
 
     CPoint point_R;
-    if (!point_R.setBytes(R.Raw())) {
+    if (!point_R.setPubKey(R)) {
         throw key_error("CMalleableKeyView::CheckKeyVariant() : Unable to decode R value");
     }
 
     CPoint point_H;
-    if (!point_H.setBytes(vchPubKeyH)) {
+    if (!point_H.setPubKey(vchPubKeyH)) {
         throw key_error("CMalleableKeyView::CheckKeyVariant() : Unable to decode H value");
     }
 
     CPoint point_P;
-    if (!point_P.setBytes(vchPubKeyVariant.Raw())) {
+    if (!point_P.setPubKey(vchPubKeyVariant)) {
         throw key_error("CMalleableKeyView::CheckKeyVariant() : Unable to decode P value");
     }
 
@@ -1103,7 +1116,7 @@ bool CMalleableKeyView::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubK
     return true;
 }
 
-std::string CMalleableKeyView::ToString()
+std::string CMalleableKeyView::ToString() const
 {
     CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
     ssKey << *this;

@@ -111,9 +111,8 @@ CCryptoKeyStore::CCryptoKeyStore() : fUseCrypto(false)
     else
         malleableKey.MakeNewKeys();
 
-    CMalleableKeyView keyView(malleableKey);
-
-    malleableKeyPair = std::pair<CMalleableKeyView, CMalleableKey>(keyView, malleableKey);
+    const CMalleableKeyView& keyView(malleableKey);
+    mapMalleableKeys[keyView] = malleableKey;
 }
 
 bool CCryptoKeyStore::SetCrypted()

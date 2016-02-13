@@ -67,21 +67,23 @@ public:
 
     virtual bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R) const =0;
     virtual bool CreatePrivKey(const CPubKey &pubKeyVariant, const CPubKey &R, CKey &privKey) const =0;
+    virtual void ListMalleablePubKeys(std::list<CMalleablePubKey> &malleablePubKeyList) const =0;
 };
 
 typedef std::map<CKeyID, std::pair<CSecret, bool> > KeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
-typedef std::pair<CMalleableKeyView, CMalleableKey> MalleableKeyPair;
+typedef std::map<CMalleableKeyView, CMalleableKey> MalleableKeyMap;
 
 /** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
 {
 protected:
     KeyMap mapKeys;
+    MalleableKeyMap mapMalleableKeys;
+
     ScriptMap mapScripts;
     WatchOnlySet setWatchOnly;
-    MalleableKeyPair malleableKeyPair;
 
 public:
     bool AddKey(const CKey& key);
@@ -132,22 +134,39 @@ public:
 
     bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R) const
     {
-        bool result;
         {
             LOCK(cs_KeyStore);
-            result = const_cast<CBasicKeyStore*>(this)->malleableKeyPair.first.CheckKeyVariant(R, pubKeyVariant);
+            for (MalleableKeyMap::const_iterator mi = mapMalleableKeys.begin(); mi != mapMalleableKeys.end(); mi++)
+            {
+                if (mi->first.CheckKeyVariant(R, pubKeyVariant))
+                    return true;
+            }
         }
-        return result;
+        return false;
     }
 
     bool CreatePrivKey(const CPubKey &pubKeyVariant, const CPubKey &R, CKey &privKey) const
     {
-        bool result;
         {
             LOCK(cs_KeyStore);
-            result = const_cast<CBasicKeyStore*>(this)->malleableKeyPair.second.CheckKeyVariant(R, pubKeyVariant, privKey);
+            for (MalleableKeyMap::const_iterator mi = mapMalleableKeys.begin(); mi != mapMalleableKeys.end(); mi++)
+            {
+                if (mi->second.CheckKeyVariant(R, pubKeyVariant, privKey))
+                    return true;
+            }
         }
-        return result;
+        return false;
+    }
+
+    void ListMalleablePubKeys(std::list<CMalleablePubKey> &malleablePubKeyList) const
+    {
+        malleablePubKeyList.clear();
+
+        {
+            LOCK(cs_KeyStore);
+            for (MalleableKeyMap::const_iterator mi = mapMalleableKeys.begin(); mi != mapMalleableKeys.end(); mi++)
+                malleablePubKeyList.push_back(mi->first.GetMalleablePubKey());
+        }
     }
 };
 
