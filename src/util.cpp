@@ -578,21 +578,32 @@ void ReadConfigFile(map<string, string>& mapSettingsRet,
 // Like std::getline, but includes the EOL character in the result
 static bool getline_with_eol(std::istream& streamIn, std::string& s)
 {
-    std::stringbuf sbuf;
-    const bool rv = streamIn.get(sbuf);
-    s = sbuf.str();
-    const int i = streamIn.get();
-    if (i != char_traits<char>::eof()) {
-        // Can only be newline
+    int i;
+    i = streamIn.get();
+    if (i == char_traits<char>::eof()) {
+        return false;
+    }
+    s.clear();
+    s.push_back(char(i));
+    while (i != '\n') {
+        i = streamIn.get();
+        if (i == char_traits<char>::eof()) {
+            break;
+        }
         s.push_back(char(i));
     }
-    return rv;
+    return true;
 }
 
 static const char * const ModifyRWConfigFile_ws_chars = " \t\r\n";
 
 static void ModifyRWConfigFile_SanityCheck(const std::string& s)
 {
+    if (s.empty()) {
+        // Dereferencing .begin or .rbegin below is invalid unless the string has at least one character.
+        return;
+    }
+
     static const char * const newline_chars = "\r\n";
     static std::string ws_chars(ModifyRWConfigFile_ws_chars);
     if (s.find_first_of(newline_chars) != std::string::npos) {
@@ -631,7 +642,7 @@ void ModifyRWConfigFile(std::istream& streamIn, std::ostream& streamOut, const s
     while (getline_with_eol(streamIn, s)) {
         ++lineno;
 
-        have_eof_nl = (*s.rbegin() == '\n');
+        have_eof_nl = (!s.empty()) && (*s.rbegin() == '\n');
         n = s.find('#');
         has_comment = (n != std::string::npos);
         if (!has_comment) {
@@ -651,6 +662,7 @@ void ModifyRWConfigFile(std::istream& streamIn, std::ostream& streamOut, const s
         linebegin = s.substr(0, n2);
         s = s.substr(n2, n - n2);
 
+        // It is impossible for s to be empty here, due to the blank line check above
         if (*s.begin() == '[' && *s.rbegin() == ']') {
             // We don't use sections, so we could possibly just write out the rest of the file - but we need to check for unparsable lines, so we just set a flag to ignore settings from here on
             ModifyRWConfigFile_WriteRemaining(streamOut, mapChangeSettings, setFound);

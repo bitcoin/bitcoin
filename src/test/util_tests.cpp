@@ -567,6 +567,22 @@ BOOST_AUTO_TEST_CASE(test_ModifyRWConfigFile)
     cs["ab"] = "x";
     BOOST_CHECK_EQUAL(CheckModifyRWConfigFile(cs, "a=b\nab=bc\nd=e"), "a=b\nab=x\nd=e");
 
+    // Blank key/value
+    cs["ab"] = "";
+    BOOST_CHECK_EQUAL(CheckModifyRWConfigFile(cs, "a=b\nab=bc\nd=e"), "a=b\nab=\nd=e");
+    cs[""] = "x";
+    BOOST_CHECK_EQUAL(CheckModifyRWConfigFile(cs, "a=b\nab=bc\nd=e"), "a=b\nab=bc\nd=e\n=x\n");
+
+    // Blank line in source
+    BOOST_CHECK_EQUAL(CheckModifyRWConfigFile(cs, "a=b\n\nab=bc\n\nd=e"), "a=b\n\nab=bc\n\nd=e");
+    cs["ab"] = "x";
+    BOOST_CHECK_EQUAL(CheckModifyRWConfigFile(cs, "a=b\n\nab=bc\n\nd=e"), "a=b\n\nab=x\n\nd=e");
+
+    // Duplicate keys in the source
+    BOOST_CHECK_EQUAL(CheckModifyRWConfigFile(cs, "a=b\nab=bc\nf=x\nab=zx\nd=e"), "a=b\nab=bc\nf=x\nab=zx\nd=e");
+    cs["ab"] = "x";
+    BOOST_CHECK_EQUAL(CheckModifyRWConfigFile(cs, "a=b\nab=bc\nf=x\nab=zx\nd=e"), "a=b\nab=x\nf=x\nab=zx\nd=e");
+
     // Comment out entire file if invalid input line
     BOOST_CHECK_EQUAL(CheckModifyRWConfigFile(cs, "a=b\nab=bc\nGARBAGE\nd=e"), "[INVALID]\n# Error parsing line 3: GARBAGE\n#a=b\n#ab=bc\n#GARBAGE\n#d=e");
     cs["ab"] = "x";
