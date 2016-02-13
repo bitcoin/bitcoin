@@ -996,17 +996,16 @@ bool CMalleableKey::SetString(const std::string& strMutableKey)
 
 CMalleableKeyView::CMalleableKeyView(const CMalleableKey &b)
 {
-    assert(b.nVersion == CURRENT_VERSION);
     vchSecretL = b.vchSecretL;
 
     CKey H;
     H.SetSecret(b.vchSecretH, true);
     vchPubKeyH = H.GetPubKey().Raw();
+    nVersion = b.nVersion;
 }
 
 CMalleableKeyView::CMalleableKeyView(const CMalleableKeyView &b)
 {
-    assert(b.nVersion == CURRENT_VERSION);
     vchSecretL = b.vchSecretL;
     vchPubKeyH = b.vchPubKeyH;
     nVersion = CURRENT_VERSION;
@@ -1016,16 +1015,17 @@ CMalleableKeyView::CMalleableKeyView(const CSecret &L, const CPubKey &pvchPubKey
 {
     vchSecretL = L;
     vchPubKeyH = pvchPubKeyH.Raw();
+    nVersion = CURRENT_VERSION;
 }
 
 CMalleableKeyView& CMalleableKeyView::operator=(const CMalleableKey &b)
 {
-    assert(b.nVersion == CURRENT_VERSION);
     vchSecretL = b.vchSecretL;
 
     CKey H;
     H.SetSecret(b.vchSecretH, true);
     vchPubKeyH = H.GetPubKey().Raw();
+    nVersion = b.nVersion;
 
     return (*this);
 }
