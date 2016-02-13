@@ -743,8 +743,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 bool allow_replacement;
                 if (!gEnableReplacement) {
                     allow_replacement = false;
-                } else {
+                } else if (gReplacementHonourOptOut) {
                     allow_replacement = SignalsOptInRBF(*ptxConflicting);
+                } else {
+                    allow_replacement = true;
                 }
                 if (!allow_replacement) {
                     return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "txn-mempool-conflict");
