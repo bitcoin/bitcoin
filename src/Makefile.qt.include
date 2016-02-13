@@ -1,7 +1,7 @@
-bin_PROGRAMS += qt/bitcoin-qt
+bin_PROGRAMS += qt/hodlcoin-qt
 EXTRA_LIBRARIES += qt/libbitcoinqt.a
 
-# bitcoin qt core #
+# hodlcoin qt core #
 QT_TS = \
   qt/locale/bitcoin_ach.ts \
   qt/locale/bitcoin_af_ZA.ts \
@@ -126,7 +126,7 @@ QT_MOC_CPP = \
   qt/moc_rpcconsole.cpp \
   qt/moc_sendcoinsdialog.cpp \
   qt/moc_depositcoinsdialog.cpp \
-  qt/moc_sendcoinsentry.cpp \  
+  qt/moc_sendcoinsentry.cpp \
   qt/moc_signverifymessagedialog.cpp \
   qt/moc_splashscreen.cpp \
   qt/moc_trafficgraphwidget.cpp \
@@ -344,32 +344,32 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) : | $(QT_MOC)
+$(qt_libbitcoinqt_a_OBJECTS) $(qt_hodlcoin_qt_OBJECTS) : | $(QT_MOC)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
 $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
-# bitcoin-qt binary #
-qt_bitcoin_qt_CPPFLAGS = $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+# hodlcoin-qt binary #
+qt_hodlcoin_qt_CPPFLAGS = $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
 
-qt_bitcoin_qt_SOURCES = qt/bitcoin.cpp
+qt_hodlcoin_qt_SOURCES = qt/bitcoin.cpp
 if TARGET_DARWIN
-  qt_bitcoin_qt_SOURCES += $(BITCOIN_MM)
+  qt_hodlcoin_qt_SOURCES += $(BITCOIN_MM)
 endif
 if TARGET_WINDOWS
-  qt_bitcoin_qt_SOURCES += $(BITCOIN_RC)
+  qt_hodlcoin_qt_SOURCES += $(BITCOIN_RC)
 endif
-qt_bitcoin_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
+qt_hodlcoin_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
-qt_bitcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+qt_hodlcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
 endif
-qt_bitcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBBITCOIN_UNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+qt_hodlcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBBITCOIN_UNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1)
-qt_bitcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-qt_bitcoin_qt_LIBTOOLFLAGS = --tag CXX
+qt_hodlcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qt_hodlcoin_qt_LIBTOOLFLAGS = --tag CXX
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
@@ -392,17 +392,17 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
 	@test -f $(RCC)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name hodlcoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
 CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
 
 CLEANFILES += $(CLEAN_QT)
 
-bitcoin_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) qt/bitcoin-qt$(EXEEXT) $(LIBBITCOINQT)
+hodlcoin_qt_clean: FORCE
+	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_hodlcoin_qt_OBJECTS) qt/hodlcoin-qt$(EXEEXT) $(LIBBITCOINQT)
 
-bitcoin_qt : qt/bitcoin-qt$(EXEEXT)
+hodlcoin_qt : qt/hodlcoin-qt$(EXEEXT)
 
 ui_%.h: %.ui
 	@test -f $(UIC)
