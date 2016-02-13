@@ -103,6 +103,11 @@ CAmount WalletModel::getWatchImmatureBalance() const
     return wallet->GetImmatureWatchOnlyBalance();
 }
 
+std::vector<COutput> WalletModel::GetTermDepositInfo() const
+{
+    return wallet->GetTermDepositInfo();
+}
+
 void WalletModel::updateStatus()
 {
     EncryptionStatus newEncryptionStatus = getEncryptionStatus();
@@ -160,9 +165,10 @@ void WalletModel::checkBalanceChanged()
         cachedWatchOnlyBalance = newWatchOnlyBalance;
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
-        Q_EMIT balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance,
-                            newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance);
     }
+    std::vector<COutput> theTD=GetTermDepositInfo();
+    Q_EMIT balanceChanged(newBalance, newUnconfirmedBalance, newImmatureBalance, newWatchOnlyBalance, newWatchUnconfBalance, newWatchImmatureBalance,theTD);
+
 }
 
 void WalletModel::updateTransaction()

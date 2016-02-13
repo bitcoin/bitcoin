@@ -9,6 +9,8 @@
 #include "walletmodeltransaction.h"
 
 #include "support/allocators/secure.h"
+#include "wallet/wallet.h"
+
 
 #include <map>
 #include <vector>
@@ -136,6 +138,8 @@ public:
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
     CAmount getWatchImmatureBalance() const;
+    std::vector<COutput> GetTermDepositInfo() const;
+
     EncryptionStatus getEncryptionStatus() const;
 
     // Check address for validity
@@ -230,7 +234,7 @@ private:
 Q_SIGNALS:
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+                        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, std::vector<COutput> termDepositInfo);
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);

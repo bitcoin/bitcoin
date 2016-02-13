@@ -45,7 +45,7 @@ public:
 
     void setFocus();
     void setAsTermDeposit();
-    bool isTermDeposit=false;
+    bool isTermDeposit;
     int getTermDepositLength();
 
 public Q_SLOTS:

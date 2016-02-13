@@ -20,6 +20,7 @@ SendCoinsEntry::SendCoinsEntry(QWidget *parent) :
     ui(new Ui::SendCoinsEntry),
     model(0)
 {
+    isTermDeposit=false;
     ui->setupUi(this);
 
     ui->addressBookButton->setIcon(SingleColorIcon(":/icons/address-book"));

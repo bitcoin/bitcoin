@@ -528,6 +528,8 @@ public:
         fBroadcastTransactions = false;
     }
 
+    std::vector<COutput> GetTermDepositInfo();
+
     std::map<uint256, CWalletTx> mapWallet;
 
     int64_t nOrderPosNext;
