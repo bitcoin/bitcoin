@@ -331,7 +331,7 @@ string vstrprintf(const char *format, va_list ap)
         if (p != buffer)
             delete[] p;
         limit *= 2;
-        p = new char[limit];
+        p = new(nothrow) char[limit];
         if (p == NULL)
             throw std::bad_alloc();
     }
