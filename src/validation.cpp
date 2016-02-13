@@ -621,13 +621,17 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 // might be replaced, causing removal of this descendant.
                 bool fReplacementOptOut = true;
                 if (fEnableReplacement) {
-                    for (const CTxIn &_txin : ptxConflicting->vin)
-                    {
-                        if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
+                    if (fReplacementHonourOptOut) {
+                        for (const CTxIn &_txin : ptxConflicting->vin)
                         {
-                            fReplacementOptOut = false;
-                            break;
+                            if (_txin.nSequence <= MAX_BIP125_RBF_SEQUENCE)
+                            {
+                                fReplacementOptOut = false;
+                                break;
+                            }
                         }
+                    } else {
+                        fReplacementOptOut = false;
                     }
                 }
                 if (fReplacementOptOut) {

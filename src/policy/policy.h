@@ -36,6 +36,7 @@ static const unsigned int DEFAULT_INCREMENTAL_RELAY_FEE = 1000;
 static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 /** Default for -mempoolreplacement */
 static const bool DEFAULT_ENABLE_REPLACEMENT = true;
+static const bool DEFAULT_REPLACEMENT_HONOUR_OPTOUT = true;
 /** Default for -permitbaremultisig */
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 /** The maximum number of witness stack items in a standard P2WSH script */
