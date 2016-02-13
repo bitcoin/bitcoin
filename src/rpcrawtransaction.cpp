@@ -12,8 +12,6 @@
 #include "main.h"
 #include "net.h"
 #include "wallet.h"
-#include "script.h"
-#include "util.h"
 
 using namespace std;
 using namespace boost;

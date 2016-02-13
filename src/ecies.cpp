@@ -11,7 +11,6 @@
 #include "ies.h"
 #include <iostream>
 #include <vector>
-#include <openssl/ecdh.h>
 
 #define SET_ERROR(string) \
     sprintf(error, "%s %s:%d", (string), __FILE__, __LINE__)
