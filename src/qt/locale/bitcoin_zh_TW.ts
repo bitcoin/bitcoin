@@ -882,6 +882,34 @@
         <source>command-line options</source>
         <translation>命令列選項</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>使用介面選項:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>啓動時選擇資料目錄(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>設定語言，比如說 de_DE (預設值: 系統語系)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>啓動時縮到最小</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>設定付款請求時所使用的 SSL 根憑證(預設值: 系統憑證庫)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>顯示啓動畫面(預設值: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>重置所有在使用界面更改的設定</translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -1476,6 +1504,18 @@
     <message>
         <source>Current number of blocks</source>
         <translation>目前區塊數</translation>
+    </message>
+    <message>
+        <source>Memory Pool</source>
+        <translation>記憶體暫存池</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>目前交易數目</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>記憶體使用量</translation>
     </message>
     <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2100,6 +2140,10 @@
     <message>
         <source>Pay only the required fee of %1</source>
         <translation>只付必要的手續費 %1</translation>
+    </message>
+    <message numerus="yes">
+        <source>Estimated to begin confirmation within %n block(s).</source>
+        <translation><numerusform>預計可在 %n 個區塊內開始確認。</numerusform></translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -3129,6 +3173,10 @@
         <translation>找到不再支援的 -tor 參數，請改用 -onion 參數。</translation>
     </message>
     <message>
+        <source>Use UPnP to map the listening port (default: %u)</source>
+        <translation>使用通用隨插即用 (UPnP) 協定來設定對應的服務連接埠(預設值: %u)</translation>
+    </message>
+    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>使用者代理註解(%s)中含有不安全的字元。</translation>
     </message>
@@ -3230,7 +3278,7 @@
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>在白名單中的節點不會因為偵測到阻斷服務攻擊而被停用。來自這些節點的交易也一定會被轉發，即使說交易本來就在記憶池裡了也一樣。適用於像是閘道伺服器。</translation>
+        <translation>在白名單中的節點不會因為偵測到阻斷服務攻擊(DoS)而被停用。來自這些節點的交易也一定會被轉發，即使說交易本來就在記憶池裡了也一樣。適用於像是閘道伺服器。</translation>
     </message>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
@@ -3470,11 +3518,15 @@
     </message>
     <message>
         <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>不要讓交易留在記憶體暫存池中超過 &lt;n&gt; 個小時(預設值: %u)</translation>
+        <translation>不要讓交易留在記憶池中超過 &lt;n&gt; 個小時(預設值: %u)</translation>
     </message>
     <message>
         <source>Error reading wallet.dat! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>讀取錢包檔 wallet.dat 時發生錯誤！所有的密鑰都正確讀取了，但是交易資料或位址簿資料可能會缺少或不正確。</translation>
+    </message>
+    <message>
+        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
+        <translation>當製造交易時，如果每千位元組(kB)的手續費比這個值(單位是 %s)低，就視為沒付手續費(預設值: %s)</translation>
     </message>
     <message>
         <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
@@ -3493,6 +3545,10 @@
         <translation>輸出除錯資訊(預設值: %u, 不一定要指定 &lt;category&gt;)</translation>
     </message>
     <message>
+        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
+        <translation>支援用布倫過濾器來過濾區塊和交易(預設值: %u)</translation>
+    </message>
+    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>網路版本字串的總長度(%i)超過最大長度(%i)了。請減少 uacomment 參數的數目或長度。</translation>
     </message>
@@ -3507,6 +3563,10 @@
     <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>使用另外的 SOCK5 代理伺服器，來透過 Tor 隱藏服務跟其他節點聯絡(預設值: %s)</translation>
+    </message>
+    <message>
+        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcuser. This option can be specified multiple times</source>
+        <translation>JSON-RPC 連線要用的使用者名稱和雜湊密碼。&lt;userpw&gt; 的格式是：&lt;使用者名稱&gt;:&lt;調味值&gt;$&lt;雜湊值&gt;。在 share/rpcuser 目錄下有一個示範的 python 程式。這個選項可以給很多次。</translation>
     </message>
     <message>
         <source>(default: %s)</source>

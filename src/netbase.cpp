@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -140,7 +140,7 @@ bool static LookupIntern(const char *pszName, std::vector<CNetAddr>& vIP, unsign
         return false;
 
     do {
-        // Should set the timeout limit to a resonable value to avoid
+        // Should set the timeout limit to a reasonable value to avoid
         // generating unnecessary checking call during the polling loop,
         // while it can still response to stop request quick enough.
         // 2 seconds looks fine in our situation.

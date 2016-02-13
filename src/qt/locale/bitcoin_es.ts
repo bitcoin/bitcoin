@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>&amp;Cerrar</translation>
+        <translation>C&amp;errar</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -55,7 +55,7 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>&amp;Escoger</translation>
+        <translation>E&amp;scoger</translation>
     </message>
     <message>
         <source>Sending addresses</source>
@@ -93,7 +93,11 @@
         <source>Exporting Failed</source>
         <translation>Fallo al exportar</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Hubo un error al tratar de guardar en la lista de direcciones a %1 . Por favor, vuelve a intentarlo .</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -259,7 +263,7 @@
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation>&amp;Salir</translation>
+        <translation>S&amp;alir</translation>
     </message>
     <message>
         <source>Quit application</source>
@@ -878,7 +882,23 @@
         <source>command-line options</source>
         <translation>opciones de la consola de comandos</translation>
     </message>
-</context>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Elegir directorio de datos al iniciar (predeterminado: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Establecer el idioma, por ejemplo, "es_ES" (predeterminado: configuración regional del sistema)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Arrancar minimizado</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Establecer los certificados raíz SSL para solicitudes de pago (predeterminado: -system-)</translation>
+    </message>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1086,6 +1106,10 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Usar distintos proxys SOCKS5 para comunicarse vía Tor de forma anónima:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -2022,6 +2046,10 @@
         <translation>Copiar Cambio</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Monto Total %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>o</translation>
     </message>
@@ -2044,6 +2072,10 @@
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>¡La transacción fue rechazada! Esto puede haber ocurrido si alguno de los bitcoins de su monedero ya estaba gastado o si ha usado una copia de wallet.dat y los bitcoins estaban gastados en la copia pero no se habían marcado como gastados aqui.</translation>
+    </message>
+    <message>
+        <source>A fee higher than %1 is considered an absurdly high fee.</source>
+        <translation>Una comisión mayor al %1 se considera demasiado alta.</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -2855,6 +2887,10 @@
 </translation>
     </message>
     <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>No se ha podido comenzar el servidor HTTP. Ver debug log para detalles.</translation>
+    </message>
+    <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
         <translation>Aceptar conexiones desde el exterior (predeterminado: 1 si no -proxy o -connect)</translation>
     </message>
@@ -3073,6 +3109,10 @@
     <message>
         <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
         <translation>Si el pago de comisión no está establecido, incluir la cuota suficiente para que las transacciones comiencen la confirmación en una media de n bloques ( por defecto :%u)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Cantidad no válida para -maxtxfee=&lt;amount&gt;: '%s' (debe ser por lo menos la cuota de comisión mínima de %s para prevenir transacciones atascadas)</translation>
     </message>
     <message>
         <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>

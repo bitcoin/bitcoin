@@ -1,7 +1,7 @@
 #!/usr/bin/python2
 '''
 Perform basic ELF security checks on a series of executables.
-Exit status will be 0 if succesful, and the program will be silent.
+Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
 Needs `readelf` (for ELF) and `objdump` (for PE).
 '''
@@ -94,7 +94,7 @@ def check_ELF_RELRO(executable):
         raise IOError('Error opening file')
     for line in stdout.split('\n'):
         tokens = line.split()
-        if len(tokens)>1 and tokens[1] == '(BIND_NOW)':
+        if len(tokens)>1 and tokens[1] == '(BIND_NOW)' or (len(tokens)>2 and tokens[1] == '(FLAGS)' and 'BIND_NOW' in tokens[2]):
             have_bindnow = True
     return have_gnu_relro and have_bindnow
 

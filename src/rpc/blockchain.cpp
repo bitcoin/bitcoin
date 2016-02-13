@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 #include "main.h"
 #include "policy/policy.h"
 #include "primitives/transaction.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "streams.h"
 #include "sync.h"
 #include "txmempool.h"
@@ -323,7 +323,8 @@ UniValue getblockheader(const UniValue& params, bool fHelp)
             "  \"bits\" : \"1d00ffff\", (string) The bits\n"
             "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
-            "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
+            "  \"nextblockhash\" : \"hash\",      (string) The hash of the next block\n"
+            "  \"chainwork\" : \"0000...1f3\"     (string) Expected number of hashes required to produce the current chain (in hex)\n"
             "}\n"
             "\nResult (for verbose=false):\n"
             "\"data\"             (string) A string that is serialized, hex-encoded data for block 'hash'.\n"
@@ -384,6 +385,7 @@ UniValue getblock(const UniValue& params, bool fHelp)
             "  \"nonce\" : n,           (numeric) The nonce\n"
             "  \"bits\" : \"1d00ffff\", (string) The bits\n"
             "  \"difficulty\" : x.xxx,  (numeric) The difficulty\n"
+            "  \"chainwork\" : \"xxxx\",  (string) Expected number of hashes required to produce the chain up to this block (in hex)\n"
             "  \"previousblockhash\" : \"hash\",  (string) The hash of the previous block\n"
             "  \"nextblockhash\" : \"hash\"       (string) The hash of the next block\n"
             "}\n"
@@ -472,8 +474,8 @@ UniValue gettxout(const UniValue& params, bool fHelp)
             "\nReturns details about an unspent transaction output.\n"
             "\nArguments:\n"
             "1. \"txid\"       (string, required) The transaction id\n"
-            "2. n              (numeric, required) vout value\n"
-            "3. includemempool  (boolean, optional) Whether to included the mem pool\n"
+            "2. n              (numeric, required) vout number\n"
+            "3. includemempool  (boolean, optional) Whether to include the mem pool\n"
             "\nResult:\n"
             "{\n"
             "  \"bestblock\" : \"hash\",    (string) the block hash\n"

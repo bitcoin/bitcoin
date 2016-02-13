@@ -10,9 +10,6 @@
     <height>400</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string notr="true">Bitcoin Core - Command-line options</string>
-  </property>
   <layout class="QHBoxLayout" name="horizontalLayout_2">
    <property name="spacing">
     <number>0</number>

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -112,7 +112,7 @@ double ClientModel::getVerificationProgress(const CBlockIndex *tipIn) const
 void ClientModel::updateTimer()
 {
     // no locking required at this point
-    // the following calls will aquire the required lock
+    // the following calls will acquire the required lock
     Q_EMIT mempoolSizeChanged(getMempoolSize(), getMempoolDynamicUsage());
     Q_EMIT bytesChanged(getTotalBytesRecv(), getTotalBytesSent());
 }
