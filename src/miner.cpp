@@ -277,7 +277,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         FillBlockPayee(txNew, nFees);
 
         // Make payee
-	    if(txNew.vout.size() > 1){
+        if(txNew.vout.size() > 1){
             pblock->payee = txNew.vout[1].scriptPubKey;
         }
 

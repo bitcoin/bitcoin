@@ -1010,6 +1010,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         unsigned int nSigOps = GetLegacySigOpCount(tx);
         nSigOps += GetP2SHSigOpCount(tx, view);
 
+        if(mapDarksendBroadcastTxes.count(hash))
+           mempool.PrioritiseTransaction(hash, hash.ToString(), 1000, 0.1*COIN);
+
         CAmount nValueOut = tx.GetValueOut();
         CAmount nFees = nValueIn-nValueOut;
         // nModifiedFees includes any fee deltas from PrioritiseTransaction
@@ -1042,13 +1045,6 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         if ((nSigOps > MAX_STANDARD_TX_SIGOPS) || (nBytesPerSigOp && nSigOps > nSize / nBytesPerSigOp))
             return state.DoS(0, false, REJECT_NONSTANDARD, "bad-txns-too-many-sigops", false,
                 strprintf("%d", nSigOps));
-
-        // TODO: dstx
-        // Don't accept it if it can't get into a block
-        // but prioritise dstx and don't check fees for it
-        //if(mapDarksendBroadcastTxes.count(hash)) {
-        //    mempool.PrioritiseTransaction(hash, hash.ToString(), 1000, 0.1*COIN);
-        //} else if(!ignoreFees){
 
         CAmount mempoolRejectFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFee(nSize);
         if (mempoolRejectFee > 0 && nModifiedFees < mempoolRejectFee) {
@@ -1269,8 +1265,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // invalid blocks, however allowing such transactions into the mempool
         // can be exploited as a DoS attack.
         if (!CheckInputs(tx, state, view, true, MANDATORY_SCRIPT_VERIFY_FLAGS, true))
+        {
             return error("%s: BUG! PLEASE REPORT THIS! ConnectInputs failed against MANDATORY but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
+        }
 
         // Remove conflicting transactions from the mempool
         BOOST_FOREACH(const CTxMemPool::txiter it, allConflicting)
@@ -1310,8 +1308,6 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
     }
     return res;
 }
-
-// TODO: AcceptableInputs
 
 /** Return transaction in tx, and if it was found inside a block, its hash is placed in hashBlock */
 bool GetTransaction(const uint256 &hash, CTransaction &txOut, const Consensus::Params& consensusParams, uint256 &hashBlock, bool fAllowSlow)
@@ -5125,7 +5121,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CTransaction tx;
 
         //masternode signed transaction
-        bool ignoreFees = false;
         CTxIn vin;
         vector<unsigned char> vchSig;
         int64_t sigTime;
@@ -5156,7 +5151,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 LogPrintf("dstx: Got Masternode transaction %s\n", tx.GetHash().ToString());
 
-                ignoreFees = true;
                 pmn->allowFreeTx = false;
 
                 if(!mapDarksendBroadcastTxes.count(tx.GetHash())){
@@ -5182,7 +5176,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->setAskFor.erase(inv.hash);
         mapAlreadyAskedFor.erase(inv);
 
-        // TODO: if (AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs, false, ignoreFees))
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, tx, true, &fMissingInputs))
         {
             mempool.check(pcoinsTip);
@@ -5672,8 +5665,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         ProcessSpork(pfrom, strCommand, vRecv);
         masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
     }
-
-
+    // TODO: check extensions explicitly and log unknown
+    // else
+    // {
+    //     // Ignore unknown commands for extensibility
+    //     LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);
+    // }
 
     return true;
 }

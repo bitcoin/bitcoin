@@ -128,20 +128,6 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* blockindex, bool tx
     return result;
 }
 
-
-// UniValue blockHeaderToJSON(const CBlock& block, const CBlockIndex* blockindex)
-// {
-//     UniValue result;
-//     result.push_back(Pair("version", block.nVersion));
-//     if (blockindex->pprev)
-//         result.push_back(Pair("previousblockhash", blockindex->pprev->GetBlockHash().GetHex()));
-//     result.push_back(Pair("merkleroot", block.hashMerkleRoot.GetHex()));
-//     result.push_back(Pair("time", block.GetBlockTime()));
-//     result.push_back(Pair("bits", strprintf("%08x", block.nBits)));
-//     result.push_back(Pair("nonce", (uint64_t)block.nNonce));
-//     return result;
-// }
-
 UniValue getblockcount(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)

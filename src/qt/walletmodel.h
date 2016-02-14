@@ -118,7 +118,7 @@ public:
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
-	    AnonymizeOnlyUnlocked,
+        AnonymizeOnlyUnlocked,
         AbsurdFee,
         PaymentRequestExpired
     };

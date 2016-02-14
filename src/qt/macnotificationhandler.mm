@@ -13,7 +13,7 @@
 - (NSString *)__bundleIdentifier
 {
     if (self == [NSBundle mainBundle]) {
-        return @"io.dashpay.Dash-Qt";
+        return @"org.dash.Dash-Qt";
     } else {
         return [self __bundleIdentifier];
     }
