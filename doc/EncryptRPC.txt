@@ -1,0 +1,32 @@
+Encryption RPC api allows you to encrypt an arbitrary data bytes with some public key. Only owner of corresponding private key will be able to recover the original data stream.
+
+Example
+
+1. Let's generate new novacoin address first.
+
+> getnewaddress
+4NZFZZS9b8iawVA8sYtHsqNbpq57envuBz
+
+2. Then run validateaddress to dump its public key
+
+> validateaddress 4NZFZZS9b8iawVA8sYtHsqNbpq57envuBz
+{
+"isvalid" : true,
+"address" : "4NZFZZS9b8iawVA8sYtHsqNbpq57envuBz",
+"ismine" : true,
+"watchonly" : false,
+"isscript" : false,
+"pubkey" : "023ca82f71f40d18f5cf6a696367a4172b87d7b3db5f45086bdb4bd4a3e3e9bde9",
+"iscompressed" : true,
+"account" : ""
+}
+
+3. Trying to encrypt hex representation of "Hello world!" string using this public key.
+
+> encryptdata 023ca82f71f40d18f5cf6a696367a4172b87d7b3db5f45086bdb4bd4a3e3e9bde9 48656c6c6f20776f726c6421
+02a2fe5afb10c40fc64552e1b81d8b4e991838d50c6a7129bd9f466eee29a5ab9def7cc5a3b1b526d59d06178fa4471b778e80bf8f72ae34889e58a4568f8ad2a3ecc9004a
+
+4. Now we should be able to decrypt that cryptogram into original byte stream.
+
+> decryptdata 4NZFZZS9b8iawVA8sYtHsqNbpq57envuBz 02a2fe5afb10c40fc64552e1b81d8b4e991838d50c6a7129bd9f466eee29a5ab9def7cc5a3b1b526d59d06178fa4471b778e80bf8f72ae34889e58a4568f8ad2a3ecc9004a
+48656c6c6f20776f726c6421
