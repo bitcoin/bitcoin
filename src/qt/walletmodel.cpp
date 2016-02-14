@@ -63,7 +63,7 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl) const
         std::vector<COutput> vCoins;
         wallet->AvailableCoins(vCoins, true, coinControl);
         BOOST_FOREACH(const COutput& out, vCoins)
-            if(out.fSpendable)
+            if(out.IsSpendableAfter(*chainActive.Tip()))
                 nBalance += out.tx->vout[out.i].nValue;
 
         return nBalance;
@@ -600,8 +600,9 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         int nDepth = wallet->mapWallet[outpoint.hash].GetDepthInMainChain();
         if (nDepth < 0) continue;
         COutput out(&wallet->mapWallet[outpoint.hash], outpoint.n, nDepth, true, true);
-        if (outpoint.n < out.tx->vout.size() && wallet->IsMine(out.tx->vout[outpoint.n]) == ISMINE_SPENDABLE)
+        if (outpoint.n < out.tx->vout.size() && wallet->IsMine(out.tx->vout[outpoint.n]) == ISMINE_SPENDABLE && out.IsSpendableAfter(*chainActive.Tip())) {
             vCoins.push_back(out);
+        }
     }
 
     BOOST_FOREACH(const COutput& out, vCoins)
@@ -615,8 +616,9 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
         }
 
         CTxDestination address;
-        if(!out.fSpendable || !ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address))
+        if(!out.IsSpendableAfter(*chainActive.Tip()) || !ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address)) {
             continue;
+        }
         mapCoins[QString::fromStdString(CBitcoinAddress(address).ToString())].push_back(out);
     }
 }

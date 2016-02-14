@@ -2423,8 +2423,8 @@ UniValue listunspent(const UniValue& params, bool fHelp)
         entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
         entry.push_back(Pair("amount", ValueFromAmount(out.tx->vout[out.i].nValue)));
         entry.push_back(Pair("confirmations", out.nDepth));
-        entry.push_back(Pair("spendable", out.fSpendable));
-        entry.push_back(Pair("solvable", out.fSolvable));
+        entry.push_back(Pair("spendable", out.IsSpendableAfter(*chainActive.Tip())));
+        entry.push_back(Pair("solvable", out.IsSolvableAfter(*chainActive.Tip())));
         results.push_back(entry);
     }
 
