@@ -167,9 +167,10 @@ public:
         CPubKey vchPubKey;
         obj.push_back(Pair("isscript", false));
         if (mine == ISMINE_SPENDABLE) {
-            pwalletMain->GetPubKey(keyID, vchPubKey);
-            obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
-            obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+            if (pwalletMain && pwalletMain->GetPubKey(keyID, vchPubKey)) {
+                obj.push_back(Pair("pubkey", HexStr(vchPubKey)));
+                obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
+            }
         }
         return obj;
     }
@@ -179,19 +180,20 @@ public:
         obj.push_back(Pair("isscript", true));
         if (mine != ISMINE_NO) {
             CScript subscript;
-            pwalletMain->GetCScript(scriptID, subscript);
-            std::vector<CTxDestination> addresses;
-            txnouttype whichType;
-            int nRequired;
-            ExtractDestinations(subscript, whichType, addresses, nRequired);
-            obj.push_back(Pair("script", GetTxnOutputType(whichType)));
-            obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
-            Array a;
-            BOOST_FOREACH(const CTxDestination& addr, addresses)
-                a.push_back(CBitcoinAddress(addr).ToString());
-            obj.push_back(Pair("addresses", a));
-            if (whichType == TX_MULTISIG)
-                obj.push_back(Pair("sigsrequired", nRequired));
+            if (pwalletMain && pwalletMain->GetCScript(scriptID, subscript)){
+                std::vector<CTxDestination> addresses;
+                txnouttype whichType;
+                int nRequired;
+                ExtractDestinations(subscript, whichType, addresses, nRequired);
+                obj.push_back(Pair("script", GetTxnOutputType(whichType)));
+                obj.push_back(Pair("hex", HexStr(subscript.begin(), subscript.end())));
+                Array a;
+                BOOST_FOREACH(const CTxDestination& addr, addresses)
+                    a.push_back(CBitcoinAddress(addr).ToString());
+                obj.push_back(Pair("addresses", a));
+                if (whichType == TX_MULTISIG)
+                    obj.push_back(Pair("sigsrequired", nRequired));
+            }
         }
         return obj;
     }
