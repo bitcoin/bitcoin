@@ -120,12 +120,8 @@ public:
         setAddress.clear();
         {
             LOCK(cs_KeyStore);
-            KeyMap::const_iterator mi = mapKeys.begin();
-            while (mi != mapKeys.end())
-            {
-                setAddress.insert((*mi).first);
-                mi++;
-            }
+            KeyMap::const_iterator mi;
+            for (mi = mapKeys.begin(); mi != mapKeys.end(); ++mi) setAddress.insert((*mi).first);
         }
     }
     bool GetKey(const CKeyID &address, CKey &keyOut) const
