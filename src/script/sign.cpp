@@ -101,6 +101,7 @@ static bool SignStep(const BaseSignatureCreator& creator, const CScript& scriptP
         return false;
 
     case TX_MULTISIG:
+    case TX_MULTISIG_CLTV:
         ret.push_back(valtype()); // workaround CHECKMULTISIG bug
         return (SignN(vSolutions, creator, scriptPubKey, ret, sigversion));
 

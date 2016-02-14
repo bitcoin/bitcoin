@@ -961,7 +961,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
 }
 
 // Defined in rpc/misc.cpp
-extern CScript _createmultisig_redeemScript(const UniValue& params);
+extern CScript _createmultisig_redeemScript(const UniValue& params, const UniValue& options);
 
 UniValue addmultisigaddress(const UniValue& params, bool fHelp)
 {
@@ -970,7 +970,7 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 2 || params.size() > 3)
     {
-        string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
+        string msg = "addmultisigaddress nrequired [\"key\",...] ( { options } )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
             "Each key is a Bitcoin address or hex-encoded public key.\n"
             "If 'account' is specified (DEPRECATED), assign address to that account.\n"
@@ -982,7 +982,10 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
             "       \"address\"  (string) bitcoin address or hex-encoded public key\n"
             "       ...,\n"
             "     ]\n"
-            "3. \"account\"      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
+            "3. options        (object, optional)\n"
+            "   {\n"
+            "     \"cltv_height\"  (numeric, optional) Minimum block height before received funds can be spent\n"
+            "   }\n"
 
             "\nResult:\n"
             "\"bitcoinaddress\"  (string) A bitcoin address associated with the keys.\n"
@@ -999,11 +1002,30 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     string strAccount;
-    if (params.size() > 2)
-        strAccount = AccountFromValue(params[2]);
+    UniValue options(UniValue::VOBJ);
+    if (params.size() > 2 && !params[2].isNull()) {
+        if (params.type() == UniValue::VSTR) {
+            // Deprecated account parameter
+            strAccount = AccountFromValue(params[2].get_str());
+        } else {
+            const UniValue& optionsIn = params[2].get_obj();
+            std::vector<std::string> keys = optionsIn.getKeys();
+            BOOST_FOREACH(const std::string& key, keys) {
+                const UniValue& val = optionsIn[key];
+                if (key == "account") {
+                    strAccount = AccountFromValue(val.get_str());
+                    continue;
+                }
+                if (key == "cltv_time") {
+                    throw runtime_error("cltv_time not supported");
+                }
+                options.pushKV(key, val);
+            }
+        }
+    }
 
     // Construct using pay-to-script-hash:
-    CScript inner = _createmultisig_redeemScript(params);
+    CScript inner = _createmultisig_redeemScript(params, options);
     CScriptID innerID(inner);
     pwalletMain->AddCScript(inner);
 
@@ -2423,8 +2445,8 @@ UniValue listunspent(const UniValue& params, bool fHelp)
         entry.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
         entry.push_back(Pair("amount", ValueFromAmount(out.tx->vout[out.i].nValue)));
         entry.push_back(Pair("confirmations", out.nDepth));
-        entry.push_back(Pair("spendable", out.IsSpendableAfter(*chainActive.Tip())));
-        entry.push_back(Pair("solvable", out.IsSolvableAfter(*chainActive.Tip())));
+        entry.push_back(Pair("spendable", out.IsSpendableAfter(*chainActive.Tip(), *pwalletMain)));
+        entry.push_back(Pair("solvable", out.IsSolvableAfter(*chainActive.Tip(), *pwalletMain)));
         results.push_back(entry);
     }
 

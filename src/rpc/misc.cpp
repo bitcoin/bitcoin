@@ -216,10 +216,26 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 /**
  * Used by addmultisigaddress / createmultisig:
  */
-CScript _createmultisig_redeemScript(const UniValue& params)
+CScript _createmultisig_redeemScript(const UniValue& params, const UniValue& options)
 {
     int nRequired = params[0].get_int();
     const UniValue& keys = params[1].get_array();
+
+    int64_t cltv_height = 0, cltv_time = 0;
+    if (!options.isNull()) {
+        std::vector<std::string> keys = options.getKeys();
+        BOOST_FOREACH(const std::string& key, keys) {
+            const UniValue& val = options[key];
+            if (key == "cltv_height" && val.isNum()) {
+                cltv_height = val.get_int64();
+            } else
+            if (key == "cltv_time" && val.isNum()) {
+                cltv_time = val.get_int64();
+            } else {
+                throw runtime_error(strprintf("unknown key/type for option '%s'", key));
+            }
+        }
+    }
 
     // Gather public keys
     if (nRequired < 1)
@@ -268,7 +284,7 @@ CScript _createmultisig_redeemScript(const UniValue& params)
             throw runtime_error(" Invalid public key: "+ks);
         }
     }
-    CScript result = GetScriptForMultisig(nRequired, pubkeys);
+    CScript result = GetScriptForMultisig(nRequired, pubkeys, cltv_height, cltv_time);
 
     if (result.size() > MAX_SCRIPT_ELEMENT_SIZE)
         throw runtime_error(
@@ -279,9 +295,9 @@ CScript _createmultisig_redeemScript(const UniValue& params)
 
 UniValue createmultisig(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() < 2 || params.size() > 2)
+    if (fHelp || params.size() < 2 || params.size() > 3)
     {
-        string msg = "createmultisig nrequired [\"key\",...]\n"
+        string msg = "createmultisig nrequired [\"key\",...] ( { options } )\n"
             "\nCreates a multi-signature address with n signature of m keys required.\n"
             "It returns a json object with the address and redeemScript.\n"
 
@@ -292,6 +308,11 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
             "       \"key\"    (string) bitcoin address or hex-encoded public key\n"
             "       ,...\n"
             "     ]\n"
+            "3. options        (object, optional)\n"
+            "   {\n"
+            "     \"cltv_height\"  (numeric, optional) Minimum block height before received funds can be spent\n"
+            "     \"cltv_time\"    (numeric, optional) Minimum approximate time before received funds can be spent (WARNING: This version of " PACKAGE_NAME " does not support spending time-locked coins)\n"
+            "   }\n"
 
             "\nResult:\n"
             "{\n"
@@ -309,7 +330,11 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
     }
 
     // Construct using pay-to-script-hash:
-    CScript inner = _createmultisig_redeemScript(params);
+    UniValue options;
+    if (params.size() > 2) {
+        options = params[2];
+    }
+    CScript inner = _createmultisig_redeemScript(params, options);
     CScriptID innerID(inner);
     CBitcoinAddress address(innerID);
 

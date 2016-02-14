@@ -424,10 +424,11 @@ public:
 
     std::string ToString() const;
 
-    bool IsSpendableAt(int nBlockHeight, int64_t nBlockTime) const;
-    bool IsSpendableAfter(const CBlockIndex& blockindex) const;
-    bool IsSolvableAt(int nBlockHeight, int64_t nBlockTime) const;
-    bool IsSolvableAfter(const CBlockIndex& blockindex) const;
+    bool IsMature(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const;
+    bool IsSpendableAt(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const;
+    bool IsSpendableAfter(const CBlockIndex& blockindex, const CKeyStore& keystore) const;
+    bool IsSolvableAt(int nBlockHeight, int64_t nBlockTime, const CKeyStore& keystore) const;
+    bool IsSolvableAfter(const CBlockIndex& blockindex, const CKeyStore& keystore) const;
 };
 
 
