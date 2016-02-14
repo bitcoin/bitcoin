@@ -350,6 +350,7 @@ static Stacks CombineSignatures(const CScript& scriptPubKey, const BaseSignature
             return result;
         }
     case TX_MULTISIG:
+    case TX_MULTISIG_CLTV:
         return Stacks(CombineMultisig(scriptPubKey, checker, vSolutions, sigs1.script, sigs2.script, sigversion));
     case TX_WITNESS_V0_SCRIPTHASH:
         if (sigs1.witness.empty() || sigs1.witness.back().empty())

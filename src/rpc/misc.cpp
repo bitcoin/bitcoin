@@ -139,7 +139,7 @@ public:
             BOOST_FOREACH(const CTxDestination& addr, addresses)
                 a.push_back(CBitcoinAddress(addr).ToString());
             obj.push_back(Pair("addresses", a));
-            if (whichType == TX_MULTISIG)
+            if (whichType == TX_MULTISIG || whichType == TX_MULTISIG_CLTV)
                 obj.push_back(Pair("sigsrequired", nRequired));
         }
         return obj;
