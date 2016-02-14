@@ -1190,7 +1190,7 @@ const CBlockIndex* GetLastBlockIndex(const CBlockIndex* pindex, bool fProofOfSta
 unsigned int GetNextTargetRequired(const CBlockIndex* pindexLast, bool fProofOfStake)
 {
     if (pindexLast == NULL)
-        return bnTargetLimit.GetCompact(); // genesis block
+        return bnProofOfWorkLimit.GetCompact(); // genesis block
 
     CBigNum bnTargetLimit = !fProofOfStake ? bnProofOfWorkLimit : GetProofOfStakeLimit(pindexLast->nHeight, pindexLast->nTime);
 
