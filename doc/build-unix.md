@@ -34,7 +34,7 @@ These dependencies are required:
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  libssl      | Crypto           | Random Number Generation, Elliptic Curve Cryptography
- libboost    | Utility          | Library for threading, data structures, etc
+ libboost    | Utility          | Library for threading, data structures, etc (require boost version >= 1.55)
  libevent    | Networking       | OS independent asynchronous networking
 
 Optional dependencies:
@@ -63,7 +63,7 @@ Build requirements:
 
     sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils
 
-On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
+On at least Ubuntu 14.04+ and Debian 8+ there are generic names for the
 individual boost development packages, so the following can be used to only
 install necessary parts of boost:
 
