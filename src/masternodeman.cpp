@@ -778,7 +778,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         int nInvCount = 0;
 
         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-            if(mn.addr.IsRFC1918()) continue; //local network
+            if(mn.addr.IsRFC1918() || mn.addr.IsLocal()) continue; //local network
 
             if(mn.IsEnabled()) {
                 LogPrint("masternode", "dseg - Sending Masternode entry - %s \n", mn.addr.ToString());
