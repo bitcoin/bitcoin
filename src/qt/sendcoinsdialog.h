@@ -6,6 +6,7 @@
 #define BITCOIN_QT_SENDCOINSDIALOG_H
 
 #include "walletmodel.h"
+#include "wallet/wallet.h"
 
 #include <QDialog>
 #include <QString>
@@ -52,7 +53,7 @@ public Q_SLOTS:
     SendCoinsEntry *addEntry();
     void updateTabsAndLabels();
     void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance, std::vector<COutput> termDepositInfo);
 
 private:
     Ui::SendCoinsDialog *ui;

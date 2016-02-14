@@ -457,16 +457,20 @@ static bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& rese
     return true;
 }
 
-vector<string> split(string str, string sep){
-    char* cstr=const_cast<char*>(str.c_str());
-    char* current;
-    vector<std::string> arr;
-    current=strtok(cstr,sep.c_str());
-    while(current != NULL){
-        arr.push_back(current);
-        current=strtok(NULL, sep.c_str());
+std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
+    std::stringstream ss(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        elems.push_back(item);
     }
-    return arr;
+    return elems;
+}
+
+
+std::vector<std::string> split(const std::string &s, char delim) {
+    std::vector<std::string> elems;
+    split(s, delim, elems);
+    return elems;
 }
 
 void static BitcoinMiner(CWallet *pwallet, int nThreads)
@@ -474,8 +478,8 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
     LogPrintf("HOdlcoinMiner started\n");
     srand(clock());
     string ma=GetArg("-miningaddress", "");
-    std::vector<std::string> arr=split(ma+"",";");
-
+    std::vector<std::string> arr=split(ma+"",';');
+    int arraySize=arr.size();
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcoin-miner");
     const CChainParams& chainparams = Params();
@@ -517,7 +521,7 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
 
             if(ma!=""){
                 long theClock=clock()+rand();
-                long theRemainder=theClock%arr.size();
+                long theRemainder=theClock%arraySize;
                 pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(arr[theRemainder]));
             }else{
                 pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));

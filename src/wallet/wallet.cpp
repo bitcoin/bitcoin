@@ -1230,7 +1230,8 @@ CAmount CWalletTx::GetImmatureTermDepositCredit() const
 
         //Check if coin is locked in a term deposit
         if(pwallet->IsMine(vout[i])==ISMINE_SPENDABLE && isOutputTermDeposit(i) && GetTermDepositReleaseBlock(i)>chainActive.Height()){
-            sum=sum+vout[i].GetValueWithInterest((chainActive.Height()+1)-this->GetDepthInMainChain(),chainActive.Height()+1);
+            //sum=sum+vout[i].GetValueWithInterest((chainActive.Height()+1)-this->GetDepthInMainChain(),chainActive.Height()+1);
+            sum=sum+vout[i].GetValueWithInterest((chainActive.Height()+1)-this->GetDepthInMainChain(),this->GetTermDepositReleaseBlock(i)+1);
         }
     }
     return sum;
@@ -1370,7 +1371,7 @@ int CWalletTx::GetTermDepositReleaseBlock(int i) const{
     if(whichType==TX_CHECKLOCKTIMEVERIFY){
         //return CScriptNum nLockTime(vSolutions[0], fRequireMinimal, 5);
         //return CScriptNum(vSolutions.front(), false).getint();
-        LogPrintf("releaseBlockNum:%d\n",releaseBlockNum);
+        //LogPrintf("releaseBlockNum:%d\n",releaseBlockNum);
         return releaseBlockNum;//uint256(vSolutions[0]);
     }
     return 0;
@@ -1532,6 +1533,43 @@ CAmount CWallet::GetImmatureWatchOnlyBalance() const
         }
     }
     return nTotal;
+}
+
+std::vector<COutput> CWallet::GetTermDepositInfo()
+{
+    vector<COutput> termDeposits;
+    {
+        LOCK2(cs_main, cs_wallet);
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const uint256& wtxid = it->first;
+            const CWalletTx* pcoin = &(*it).second;
+
+
+            for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
+               // termDeposits.push_back(pcoin->vout[i]);
+                //Check if coin is locked in a term deposit
+                //if(pcoin->isOutputTermDeposit(i) && pcoin->GetTermDepositReleaseBlock(i)>chainActive.Height()){
+                if(pcoin->isOutputTermDeposit(i)){
+                    if (!IsSpent(pcoin->GetHash(),i)){
+                        isminetype mine = IsMine(pcoin->vout[i]);
+                        if(mine != ISMINE_NO){
+                            //termDeposits.push_back(pcoin->vout[i]);
+                            int nDepth = pcoin->GetDepthInMainChain();
+                            termDeposits.push_back(COutput(pcoin, i, nDepth, (mine & ISMINE_SPENDABLE) != ISMINE_NO));
+                        }
+                    }
+                }
+                /*
+                if (!(IsSpent(wtxid, i)) &&  &&
+                    !IsLockedCoin((*it).first, i) && (pcoin->vout[i].nValue > 0 || fIncludeZeroValue) &&
+                    (!coinControl || !coinControl->HasSelected() || coinControl->IsSelected((*it).first, i)))
+                        vCoins.push_back(COutput(pcoin, i, nDepth, (mine & ISMINE_SPENDABLE) != ISMINE_NO));
+                        */
+            }
+        }
+    }
+    return termDeposits;
 }
 
 /**
