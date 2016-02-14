@@ -1866,17 +1866,39 @@ Value newmalleablekey(const Array& params, bool fHelp)
             "newmalleablekey\n"
             "Make a malleable public/private key pair.\n");
 
-    CMalleableKey malleableKey;
-    malleableKey.MakeNewKeys();
-    CMalleablePubKey malleablePubKey = malleableKey.GetMalleablePubKey();
+    if (!fTestNet)
+        throw runtime_error("This feature has been disabled for mainNet clients");
 
-    CDataStream ssPublicBytes(SER_NETWORK, PROTOCOL_VERSION);
-    ssPublicBytes << malleablePubKey;
+    CMalleableKeyView keyView = pwalletMain->GenerateNewMalleableKey();
+
+    CMalleableKey mKey;
+    if (!pwalletMain->GetMalleableKey(keyView, mKey))
+        throw runtime_error("Unable to generate new malleable key");
 
     Object result;
-    result.push_back(Pair("PrivatePair", malleableKey.ToString()));
-    result.push_back(Pair("PublicPair", malleablePubKey.ToString()));
-    result.push_back(Pair("PublicBytes", HexStr(ssPublicBytes.begin(), ssPublicBytes.end())));
+    result.push_back(Pair("PublicPair", mKey.GetMalleablePubKey().ToString()));
+    result.push_back(Pair("KeyView", keyView.ToString()));
+
+    return result;
+}
+
+Value dumpmalleablekey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error (
+            "dumpmalleablekey <Key view>\n"
+            "Dump the private and public key pairs, which correspond to provided key view.\n");
+
+    CMalleableKey mKey;
+    CMalleableKeyView keyView;
+    keyView.SetString(params[0].get_str());
+
+    if (!pwalletMain->GetMalleableKey(keyView, mKey))
+        throw runtime_error("There is no such item in the wallet");
+
+    Object result;
+    result.push_back(Pair("PrivatePair", mKey.ToString()));
+    result.push_back(Pair("PublicPair", mKey.GetMalleablePubKey().ToString()));
 
     return result;
 }
@@ -1933,25 +1955,25 @@ Value adjustmalleablepubkey(const Array& params, bool fHelp)
     result.push_back(Pair("PubkeyVariant", HexStr(vchPubKeyVariant.Raw())));
     result.push_back(Pair("KeyVariantID", CBitcoinAddress(vchPubKeyVariant.GetID()).ToString()));
 
-
     return result;
 }
 
-Value listmalleablepubkeys(const Array& params, bool fHelp)
+Value listmalleableviews(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
-            "listmalleablepubkeys\n"
-            "Get list of malleable public keys.\n");
+            "listmalleableviews\n"
+            "Get list of views for generated malleable keys.\n");
 
-    std::list<CMalleablePubKey> keyList;
-    pwalletMain->ListMalleablePubKeys(keyList);
+    std::list<CMalleableKeyView> keyViewList;
+    pwalletMain->ListMalleableViews(keyViewList);
 
     Array result;
-    BOOST_FOREACH(const CMalleablePubKey &key, keyList)
+    BOOST_FOREACH(const CMalleableKeyView &keyView, keyViewList)
     {
-        result.push_back(key.ToString());
+        result.push_back(keyView.ToString());
     }
 
     return result;
 }
+

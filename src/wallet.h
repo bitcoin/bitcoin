@@ -37,7 +37,8 @@ enum WalletFeature
 
     FEATURE_WALLETCRYPT = 40000, // wallet encryption
     FEATURE_COMPRPUBKEY = 60000, // compressed public keys
-    FEATURE_LATEST = 60000
+    FEATURE_MALLKEY = 60017,
+    FEATURE_LATEST = 60017
 };
 
 /** A key pool entry */
@@ -95,6 +96,7 @@ public:
 
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
+    std::map<CMalleableKeyView, CKeyMetadata> mapMalleableKeyMetadata;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
@@ -148,12 +150,18 @@ public:
     // keystore implementation
     // Generate a new key
     CPubKey GenerateNewKey();
+    CMalleableKeyView GenerateNewMalleableKey();
     // Adds a key to the store, and saves it to disk.
     bool AddKey(const CKey& key);
+    bool AddMalleableKey(const CMalleableKey& mKey);
     // Adds a key to the store, without saving it to disk (used by LoadWallet)
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
     // Load metadata (used by LoadWallet)
     bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
+    bool LoadMalleableKeyMetadata(const CMalleableKeyView &keyView, const CKeyMetadata &metadata);
+
+    // Load malleable key without saving it to disk (used by LoadWallet)
+    bool LoadMalleableKey(const CMalleableKey &mKey) { return CCryptoKeyStore::AddMalleableKey(mKey); }
 
     bool LoadMinVersion(int nVersion) { nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
 

@@ -95,6 +95,19 @@ public:
         return true;
     }
 
+    bool WriteMalleableKey(const CMalleableKeyView& keyView, const CMalleableKey& malleableKey, const CKeyMetadata &keyMeta)
+    {
+        nWalletDBUpdated++;
+        if(!Write(std::make_pair(std::string("malmeta"), keyView.ToString()), keyMeta))
+            return false;
+
+        if(!Write(std::make_pair(std::string("malpair"), keyView.ToString()), malleableKey.ToString(), false))
+            return false;
+
+        return true;
+    }
+
+
     bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta)
     {
         nWalletDBUpdated++;

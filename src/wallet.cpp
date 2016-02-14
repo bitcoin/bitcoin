@@ -57,6 +57,28 @@ CPubKey CWallet::GenerateNewKey()
     return key.GetPubKey();
 }
 
+CMalleableKeyView CWallet::GenerateNewMalleableKey()
+{
+    RandAddSeedPerfmon();
+
+    // Compressed public keys were introduced in version 0.6.0
+    SetMinVersion(FEATURE_MALLKEY);
+
+    CMalleableKey mKey;
+    mKey.MakeNewKeys();
+    const CMalleableKeyView &keyView(mKey);
+
+    // Create new metadata
+    int64_t nCreationTime = GetTime();
+    mapMalleableKeyMetadata[keyView] = CKeyMetadata(nCreationTime);
+    if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
+        nTimeFirstKey = nCreationTime;
+
+    if (!AddMalleableKey(mKey))
+        throw std::runtime_error("CWallet::GenerateNewMalleableKey() : AddMalleableKey failed");
+    return CMalleableKeyView(mKey);
+}
+
 bool CWallet::AddKey(const CKey& key)
 {
     CPubKey pubkey = key.GetPubKey();
@@ -66,6 +88,18 @@ bool CWallet::AddKey(const CKey& key)
         return true;
     if (!IsCrypted())
         return CWalletDB(strWalletFile).WriteKey(pubkey, key.GetPrivKey(), mapKeyMetadata[pubkey.GetID()]);
+    return true;
+}
+
+bool CWallet::AddMalleableKey(const CMalleableKey& mKey)
+{
+    CMalleableKeyView keyView = CMalleableKeyView(mKey);
+    if (!CCryptoKeyStore::AddMalleableKey(mKey))
+        return false;
+    if (!fFileBacked)
+        return true;
+    if (!IsCrypted())
+        return CWalletDB(strWalletFile).WriteMalleableKey(keyView, mKey, mapMalleableKeyMetadata[keyView]);
     return true;
 }
 
@@ -98,6 +132,15 @@ bool CWallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta)
         nTimeFirstKey = meta.nCreateTime;
 
     mapKeyMetadata[pubkey.GetID()] = meta;
+    return true;
+}
+
+bool CWallet::LoadMalleableKeyMetadata(const CMalleableKeyView &keyView, const CKeyMetadata &metadata)
+{
+    if (metadata.nCreateTime && (!nTimeFirstKey || metadata.nCreateTime < nTimeFirstKey))
+        nTimeFirstKey = metadata.nCreateTime;
+
+    mapMalleableKeyMetadata[keyView] = metadata;
     return true;
 }
 

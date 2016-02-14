@@ -235,10 +235,21 @@ public:
 
     bool operator==(const CMalleablePubKey &b);
     bool operator!=(const CMalleablePubKey &b) { return !(*this == b); }
+    CMalleablePubKey& operator=(const CMalleablePubKey& mpk) {
+        nVersion = mpk.nVersion;
+        pubKeyL = mpk.pubKeyL;
+        pubKeyH = mpk.pubKeyH;
+        return *this;
+    }
 
     std::string ToString() const;
     bool SetString(const std::string& strMalleablePubKey);
-    uint256 GetID() const;
+
+    CKeyID GetID() const {
+        return pubKeyL.GetID();
+    }
+
+    std::vector<unsigned char> Raw() const;
 
     CPubKey& GetL() { return pubKeyL; }
     CPubKey& GetH() { return pubKeyH; }
@@ -260,7 +271,6 @@ public:
     CMalleableKey();
     CMalleableKey(const CMalleableKey &b);
     CMalleableKey(const CSecret &L, const CSecret &H);
-    CMalleableKey& operator=(const CMalleableKey &b);
     ~CMalleableKey();
 
     IMPLEMENT_SERIALIZE(
@@ -272,6 +282,13 @@ public:
 
     std::string ToString() const;
     bool SetString(const std::string& strMalleablePubKey);
+    std::vector<unsigned char> Raw() const;
+    CMalleableKey& operator=(const CMalleableKey& mk) {
+        nVersion = mk.nVersion;
+        vchSecretL = mk.vchSecretL;
+        vchSecretH = mk.vchSecretH;
+        return *this;
+    }
 
     void Reset();
     void MakeNewKeys();
@@ -279,6 +296,9 @@ public:
     bool SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSecretH);
     void GetSecrets(CSecret &pvchSecretL, CSecret &pvchSecretH) const;
 
+    CKeyID GetID() const {
+        return GetMalleablePubKey().GetID();
+    }
     CMalleablePubKey GetMalleablePubKey() const;
     bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant) const;
     bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant, CKey &privKeyVariant) const;
@@ -313,7 +333,17 @@ public:
     bool IsNull() const;
     std::string ToString() const;
     bool SetString(const std::string& strMalleablePubKey);
+    std::vector<unsigned char> Raw() const;
+    CMalleableKeyView& operator=(const CMalleableKeyView& mkv) {
+        nVersion = mkv.nVersion;
+        vchSecretL = mkv.vchSecretL;
+        vchPubKeyH = mkv.vchPubKeyH;
+        return *this;
+    }
 
+    CKeyID GetID() const {
+        return GetMalleablePubKey().GetID();
+    }
     CMalleablePubKey GetMalleablePubKey() const;
     bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant) const;
 

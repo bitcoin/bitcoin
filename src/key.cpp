@@ -714,6 +714,15 @@ std::string CMalleablePubKey::ToString() const
     return EncodeBase58Check(vch);
 }
 
+std::vector<unsigned char> CMalleablePubKey::Raw() const
+{
+    CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
+    ssKey << *this;
+    std::vector<unsigned char> vch(ssKey.begin(), ssKey.end());
+
+    return vch;
+}
+
 bool CMalleablePubKey::SetString(const std::string& strMalleablePubKey)
 {
     std::vector<unsigned char> vchTemp;
@@ -774,12 +783,14 @@ CMalleableKey::CMalleableKey(const CSecret &L, const CSecret &H)
     SetSecrets(L, H);
 }
 
+/*
 CMalleableKey& CMalleableKey::operator=(const CMalleableKey &b)
 {
     SetSecrets(b.vchSecretL, b.vchSecretH);
 
     return (*this);
 }
+*/
 
 CMalleableKey::~CMalleableKey()
 {
@@ -985,6 +996,15 @@ std::string CMalleableKey::ToString() const
     return EncodeBase58Check(vch);
 }
 
+std::vector<unsigned char> CMalleableKey::Raw() const
+{
+    CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
+    ssKey << *this;
+    std::vector<unsigned char> vch(ssKey.begin(), ssKey.end());
+
+    return vch;
+}
+
 bool CMalleableKey::SetString(const std::string& strMutableKey)
 {
     std::vector<unsigned char> vchTemp;
@@ -1137,6 +1157,16 @@ bool CMalleableKeyView::SetString(const std::string& strMutableKey)
 
     return IsNull();
 }
+
+std::vector<unsigned char> CMalleableKeyView::Raw() const
+{
+    CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);
+    ssKey << *this;
+    std::vector<unsigned char> vch(ssKey.begin(), ssKey.end());
+
+    return vch;
+}
+
 
 bool CMalleableKeyView::IsNull() const
 {

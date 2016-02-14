@@ -220,6 +220,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         // Taking advantage of the fact that pair serialization
         // is just the two items serialized one after the other
         ssKey >> strType;
+
         if (strType == "name")
         {
             string strAddress;
@@ -300,6 +301,36 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             // Watch-only addresses have no birthday information for now,
             // so set the wallet birthday to the beginning of time.
             pwallet->nTimeFirstKey = 1;
+        }
+        else if (strType == "malpair")
+        {
+            string strKey, strKeyView;
+
+            CMalleableKey mKey;
+            CMalleableKeyView keyView;
+
+            ssKey >> strKeyView;
+            ssValue >> strKey;
+
+            keyView.SetString(strKeyView);
+            mKey.SetString(strKey);
+
+            if (mKey.IsNull())
+            {
+                strErr = "Error reading wallet database: CMalleableKey is corrupt";
+                return false;
+            }
+            if (mKey.GetID() != keyView.GetID())
+            {
+                strErr = "Error reading wallet database: CMalleableKey view inconsistency";
+                return false;
+            }
+
+            if (!pwallet->LoadMalleableKey(mKey))
+            {
+                strErr = "Error reading wallet database: LoadMalleableKey failed";
+                return false;
+            }
         }
         else if (strType == "key" || strType == "wkey")
         {
@@ -385,6 +416,20 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             }
             wss.fIsEncrypted = true;
         }
+        else if (strType == "malmeta")
+        {
+            string strKeyView;
+            ssKey >> strKeyView;
+
+            CMalleableKeyView keyView;
+            keyView.SetString(strKeyView);
+
+            CKeyMetadata keyMeta;
+            ssValue >> keyMeta;
+            wss.nKeyMeta++;
+
+            pwallet->LoadMalleableKeyMetadata(keyView, keyMeta);
+        }
         else if (strType == "keymeta")
         {
             CPubKey vchPubKey;
@@ -452,7 +497,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 static bool IsKeyType(string strType)
 {
     return (strType== "key" || strType == "wkey" ||
-            strType == "mkey" || strType == "ckey");
+            strType == "mkey" || strType == "ckey" || strType == "malpair");
 }
 
 DBErrors CWalletDB::LoadWallet(CWallet* pwallet)

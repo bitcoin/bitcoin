@@ -29,6 +29,15 @@ bool CBasicKeyStore::AddKey(const CKey& key)
     return true;
 }
 
+bool CBasicKeyStore::AddMalleableKey(const CMalleableKey& mKey)
+{
+    {
+        LOCK(cs_KeyStore);
+        mapMalleableKeys[CMalleableKeyView(mKey)] = mKey;
+    }
+    return true;
+}
+
 bool CBasicKeyStore::AddCScript(const CScript& redeemScript)
 {
     if (redeemScript.size() > MAX_SCRIPT_ELEMENT_SIZE)
@@ -100,19 +109,6 @@ bool CBasicKeyStore::HaveWatchOnly() const
 {
     LOCK(cs_KeyStore);
     return (!setWatchOnly.empty());
-}
-
-CCryptoKeyStore::CCryptoKeyStore() : fUseCrypto(false)
-{
-    std::string strMalleableKey = GetArg("-masterkey", "");
-    CMalleableKey malleableKey;
-    if (strMalleableKey != "")
-        malleableKey.SetString(strMalleableKey);
-    else
-        malleableKey.MakeNewKeys();
-
-    const CMalleableKeyView& keyView(malleableKey);
-    mapMalleableKeys[keyView] = malleableKey;
 }
 
 bool CCryptoKeyStore::SetCrypted()

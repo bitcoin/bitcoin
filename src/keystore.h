@@ -39,6 +39,10 @@ public:
     // Add a key to the store.
     virtual bool AddKey(const CKey& key) =0;
 
+    // Add a malleable key to store.
+    virtual bool AddMalleableKey(const CMalleableKey& mKey) =0;
+    virtual bool GetMalleableKey(const CMalleableKeyView &keyView, CMalleableKey &mKey) const =0;
+
     // Check whether a key corresponding to a given address is present in the store.
     virtual bool HaveKey(const CKeyID &address) const =0;
     virtual bool GetKey(const CKeyID &address, CKey& keyOut) const =0;
@@ -67,7 +71,7 @@ public:
 
     virtual bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R) const =0;
     virtual bool CreatePrivKey(const CPubKey &pubKeyVariant, const CPubKey &R, CKey &privKey) const =0;
-    virtual void ListMalleablePubKeys(std::list<CMalleablePubKey> &malleablePubKeyList) const =0;
+    virtual void ListMalleableViews(std::list<CMalleableKeyView> &malleableViewList) const =0;
 };
 
 typedef std::map<CKeyID, std::pair<CSecret, bool> > KeyMap;
@@ -87,6 +91,21 @@ protected:
 
 public:
     bool AddKey(const CKey& key);
+    bool AddMalleableKey(const CMalleableKey& mKey);
+    bool GetMalleableKey(const CMalleableKeyView &keyView, CMalleableKey &mKey) const
+    {
+        {
+            LOCK(cs_KeyStore);
+            MalleableKeyMap::const_iterator mi = mapMalleableKeys.find(keyView);
+            if (mi != mapMalleableKeys.end())
+            {
+                mKey = mi->second;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool HaveKey(const CKeyID &address) const
     {
         bool result;
@@ -158,14 +177,14 @@ public:
         return false;
     }
 
-    void ListMalleablePubKeys(std::list<CMalleablePubKey> &malleablePubKeyList) const
+    void ListMalleableViews(std::list<CMalleableKeyView> &malleableViewList) const
     {
-        malleablePubKeyList.clear();
+        malleableViewList.clear();
 
         {
             LOCK(cs_KeyStore);
             for (MalleableKeyMap::const_iterator mi = mapMalleableKeys.begin(); mi != mapMalleableKeys.end(); mi++)
-                malleablePubKeyList.push_back(mi->first.GetMalleablePubKey());
+                malleableViewList.push_back(CMalleableKeyView(mi->first));
         }
     }
 };
@@ -196,7 +215,7 @@ protected:
     bool Unlock(const CKeyingMaterial& vMasterKeyIn);
 
 public:
-    CCryptoKeyStore();
+    CCryptoKeyStore() : fUseCrypto(false) { }
 
     bool IsCrypted() const
     {
