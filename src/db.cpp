@@ -42,11 +42,7 @@ void CDBEnv::EnvShutdown()
         DbEnv(0).remove(strPath.c_str(), 0);
 }
 
-CDBEnv::CDBEnv() : dbenv(DB_CXX_NO_EXCEPTIONS)
-{
-    fDbEnvInit = false;
-    fMockDb = false;
-}
+CDBEnv::CDBEnv() : dbenv(DB_CXX_NO_EXCEPTIONS), fDetachDB(false), fDbEnvInit(false), fMockDb(false) { }
 
 CDBEnv::~CDBEnv()
 {
