@@ -100,6 +100,11 @@ static bool AppInitRPC(int argc, char* argv[])
         fprintf(stderr, "Error: %s\n", e.what());
         return false;
     }
+    try {
+        ReadRWConfigFile(mapArgs, mapMultiArgs);
+    } catch (const std::exception& e) {
+        // Ignore problems here, since we are responsible for this file
+    }
     if (GetBoolArg("-rpcssl", false))
     {
         fprintf(stderr, "Error: SSL mode for RPC (-rpcssl) is no longer supported.\n");

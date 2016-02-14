@@ -535,12 +535,12 @@ boost::filesystem::path GetRWConfigFile()
 {
     boost::filesystem::path pathConfigFile(GetArg("-confrw", BITCOIN_RW_CONF_FILENAME));
     if (!pathConfigFile.is_complete())
-        pathConfigFile = GetDataDir(false) / pathConfigFile;
+        pathConfigFile = GetDataDir() / pathConfigFile;
 
     return pathConfigFile;
 }
 
-static void ReadConfigFile(boost::filesystem::ifstream& streamConfig, std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet)
+static void ReadConfigFile(boost::filesystem::ifstream& streamConfig, std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet, std::set<std::string>* setAllowOverride, std::set<std::string>* setInitiallyAssigned)
 {
     if (!streamConfig.good())
         return; // No bitcoin.conf file is OK
@@ -554,25 +554,35 @@ static void ReadConfigFile(boost::filesystem::ifstream& streamConfig, std::map<s
         string strKey = string("-") + it->string_key;
         string strValue = it->value[0];
         InterpretNegativeSetting(strKey, strValue);
-        if (mapSettingsRet.count(strKey) == 0)
+        if (mapSettingsRet.count(strKey) == 0 || (setAllowOverride && setAllowOverride->find(strKey) != setAllowOverride->end())) {
             mapSettingsRet[strKey] = strValue;
+            if (setAllowOverride) {
+                setAllowOverride->erase(strKey);
+            }
+            if (setInitiallyAssigned) {
+                setInitiallyAssigned->insert(strKey);
+            }
+        }
         mapMultiSettingsRet[strKey].push_back(strValue);
     }
     // If datadir is changed in .conf file:
     ClearDatadirCache();
 }
 
+static std::set<std::string> setConfigAssigned;
+
 void ReadConfigFile(map<string, string>& mapSettingsRet,
                     map<string, vector<string> >& mapMultiSettingsRet)
 {
-    {
-        boost::filesystem::ifstream streamRWConfig(GetRWConfigFile());
-        ReadConfigFile(streamRWConfig, mapSettingsRet, mapMultiSettingsRet);
-    }
-    {
-        boost::filesystem::ifstream streamConfig(GetConfigFile());
-        ReadConfigFile(streamConfig, mapSettingsRet, mapMultiSettingsRet);
-    }
+    boost::filesystem::ifstream streamConfig(GetConfigFile());
+    ReadConfigFile(streamConfig, mapSettingsRet, mapMultiSettingsRet, NULL, &setConfigAssigned);
+}
+
+void ReadRWConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map<std::string, std::vector<std::string> >& mapMultiSettingsRet)
+{
+    boost::filesystem::ifstream streamRWConfig(GetRWConfigFile());
+    ReadConfigFile(streamRWConfig, mapSettingsRet, mapMultiSettingsRet, &setConfigAssigned, NULL);
+    setConfigAssigned.clear();
 }
 
 // Like std::getline, but includes the EOL character in the result
