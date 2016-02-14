@@ -1,78 +1,59 @@
-Bitcoin Core 0.11.2
-=====================
+#**HOdlcoin - Windows Wallet**
+<img src="http://i.imgur.com/P1956So.png" width="500">
+## **Mining**
+To start mining using the wallets built-in mininer simply follow these steps
+> **Click the "Mining" menu**
 
-Setup
----------------------
-[Bitcoin Core](http://bitcoin.org/en/download) is the original Bitcoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Bitcoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+<img src="http://i.imgur.com/SS7JY6E.png" width="320">
 
-Running
----------------------
-The following are some helpful notes on how to run Bitcoin on your native platform.
+> **Select "Solo Mining On"**
 
-### Unix
+Once you have done this in the lower right corner, you will see the <img src="http://i.imgur.com/9KpvXMe.png" width="25"> switch to the Pickaxe <img src="http://i.imgur.com/5pOgxXK.png" width="30">
 
-You need the Qt4 run-time libraries to run Bitcoin-Qt. On Debian or Ubuntu:
+#####**From this**
+<img src="http://i.imgur.com/EPlUflR.png" width="90">
 
-	sudo apt-get install libqtgui4
+#####**To this**
+<img src="http://i.imgur.com/NIgOssp.png" width="90">
 
-Unpack the files into a directory and run:
+>***Note** This will use 1GB of Ram and well put your CPU to 100%
 
-- bin/32/bitcoin-qt (GUI, 32-bit) or bin/32/bitcoind (headless, 32-bit)
-- bin/64/bitcoin-qt (GUI, 64-bit) or bin/64/bitcoind (headless, 64-bit)
+## **Term Deposits** 
+
+To make a Term Deposit simply follow these steps
+
+>**Go to the "Deposit" Tab**
+
+<img src="http://i.imgur.com/co6GOQQ.png" width="550">
+
+You must first decide where you want your deposit to go, Send it to someone as a Tip or to Your own address. If your sending it to someone you only need their HOldcoin address, If you want it to go back in to your own wallet you can copy one of your own address from the **Transactions** tab. 
+
+>**Paste it in the address box**
+
+<img src="http://i.imgur.com/KZAUupd.png" width="350">
+
+>***Optional Step* - Enter a Label** 
+
+Next you will enter the **Amount** you want to earn interest on, also how long you would like to earn interest for.
+
+ <img src="http://i.imgur.com/PFrvdRJ.png" width="350">
+
+>***Note** 1 Block is 154 seconds
+
+Next
+>**Click the "HODL" button**
+
+<img src="http://i.imgur.com/tSMl1QZ.png" width="170">
 
 
+You will then get a pop-up box confirming the Terms of your deposit.
 
-### Windows
+<img src="http://i.imgur.com/qKJcPuL.png " width="470">
 
-Unpack the files into a directory, and then run bitcoin-qt.exe.
+If all looks right
+>**Click "Yes"** 
 
-### OS X
 
-Drag Bitcoin-Qt to your applications folder, and then run Bitcoin-Qt.
+At this point your new deposit can be tracked from the **Overview** Tab
 
-### Need Help?
-
-* See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
-for help and more information.
-* Ask for help on [#bitcoin](http://webchat.freenode.net?channels=bitcoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=bitcoin).
-* Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
-
-Building
----------------------
-The following are developer notes on how to build Bitcoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
-
-- [OS X Build Notes](build-osx.md)
-- [Unix Build Notes](build-unix.md)
-- [Gitian Building Guide](gitian-building.md)
-
-Development
----------------------
-The Bitcoin repo's [root README](https://github.com/bitcoin/bitcoin/blob/master/README.md) contains relevant information on the development process and automated testing.
-
-- [Developer Notes](developer-notes.md)
-- [Multiwallet Qt Development](multiwallet-qt.md)
-- [Release Notes](release-notes.md)
-- [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://dev.visucore.com/bitcoin/doxygen/)
-- [Translation Process](translation_process.md)
-- [Translation Strings Policy](translation_strings_policy.md)
-- [Unit Tests](unit-tests.md)
-- [Unauthenticated REST Interface](REST-interface.md)
-- [BIPS](bips.md)
-- [Dnsseed Policy](dnsseed-policy.md)
-
-### Resources
-* Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
-* Discuss on [#bitcoin-dev](http://webchat.freenode.net/?channels=bitcoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=bitcoin-dev).
-
-### Miscellaneous
-- [Assets Attribution](assets-attribution.md)
-- [Files](files.md)
-- [Tor Support](tor.md)
-- [Init Scripts (systemd/upstart/openrc)](init.md)
-
-License
----------------------
-Distributed under the [MIT software license](http://www.opensource.org/licenses/mit-license.php).
-This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes
-cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
+<img src="http://i.imgur.com/2RgS7t3.png " width="800">
