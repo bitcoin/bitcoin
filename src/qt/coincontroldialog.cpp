@@ -730,7 +730,7 @@ void CoinControlDialog::updateView()
         {
             int nInputSize = 0;
             CAmount withInterest=out.tx->vout[out.i].GetValueWithInterest((chainActive.Height()+1)-out.tx->GetDepthInMainChain(),chainActive.Height()+1);
-            nSum += withInterest-out.tx->vout[out.i].nValue;
+            nSum += withInterest;
             nSumInputs +=out.tx->vout[out.i].nValue;
             nSumInterest += withInterest-out.tx->vout[out.i].nValue;
 
