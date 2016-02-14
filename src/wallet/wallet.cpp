@@ -1230,7 +1230,8 @@ CAmount CWalletTx::GetImmatureTermDepositCredit() const
 
         //Check if coin is locked in a term deposit
         if(pwallet->IsMine(vout[i])==ISMINE_SPENDABLE && isOutputTermDeposit(i) && GetTermDepositReleaseBlock(i)>chainActive.Height()){
-            sum=sum+vout[i].GetValueWithInterest((chainActive.Height()+1)-this->GetDepthInMainChain(),chainActive.Height()+1);
+            //sum=sum+vout[i].GetValueWithInterest((chainActive.Height()+1)-this->GetDepthInMainChain(),chainActive.Height()+1);
+            sum=sum+vout[i].GetValueWithInterest((chainActive.Height()+1)-this->GetDepthInMainChain(),this->GetTermDepositReleaseBlock(i)+1);
         }
     }
     return sum;
