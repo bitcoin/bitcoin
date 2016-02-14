@@ -21,7 +21,7 @@ installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
 bitcoind/bitcoin-qt (on Linux).
 
 Downgrade warning
-------------------
+-----------------
 
 ### Downgrade to a version < 0.10.0
 
@@ -165,7 +165,7 @@ creating transactions that would be replaceable under BIP 125.
 
 
 RPC: Random-cookie RPC authentication
----------------------------------------
+-------------------------------------
 
 When no `-rpcpassword` is specified, the daemon now uses a special 'cookie'
 file for authentication. This file is generated with random content when the
@@ -192,20 +192,38 @@ three bytes overhead)
 Relay and Mining: Priority transactions
 ---------------------------------------
 
-Transactions that do not pay the minimum relay fee, are called "free
-transactions" or priority transactions. Previous versions of Bitcoin
-Core would relay and mine priority transactions depending on their
-setting of `-limitfreerelay=<r>` (default: `r=15` kB per minute) and
-`-blockprioritysize=<s>` (default: `50000` bytes of a block's
-priority space).
+Bitcoin Core has a heuristic 'priority' based on coin value and age. This
+calculation is used for relaying of transactions which do not pay the
+minimum relay fee, and can be used as an alternative way of sorting
+transactions for mined blocks. Bitcoin Core will relay transactions with
+insufficient fees depending on the setting of `-limitfreerelay=<r>` (default:
+`r=15` kB per minute) and `-blockprioritysize=<s>`.
 
-Priority code is scheduled for removal in Bitcoin Core 0.13. In
-Bitcoin Core 0.12, the default block priority size has been set to `0`
-and the priority calculation has been simplified to only include the
-coin age of inputs that were in the blockchain at the time the transaction
-was accepted into the mempool.  In addition priority transactions are not
-accepted to the mempool if mempool limiting has triggered a higher effective
-minimum relay fee.
+In Bitcoin Core 0.12, when mempool limit has been reached a higher minimum
+relay fee takes effect to limit memory usage. Transactions which do not meet
+this higher effective minimum relay fee will not be relayed or mined even if
+they rank highly according to the priority heuristic.
+
+The mining of transactions based on their priority is also now disabled by
+default. To re-enable it, simply set `-blockprioritysize=<n>` where is the size
+in bytes of your blocks to reserve for these transactions. The old default was
+50k, so to retain approximately the same policy, you would set
+`-blockprioritysize=50000`.
+
+Additionally, as a result of computational simplifications, the priority value
+used for transactions received with unconfirmed inputs is lower than in prior
+versions due to avoiding recomputing the amounts as input transactions confirm.
+
+External miner policy set via the `prioritisetransaction` RPC to rank
+transactions already in the mempool continues to work as it has previously.
+Note, however, that if mining priority transactions is left disabled, the
+priority delta will be ignored and only the fee metric will be effective.
+
+This internal automatic prioritization handling is being considered for removal
+entirely in Bitcoin Core 0.13, and it is at this time undecided whether the
+more accurate priority calculation for chained unconfirmed transactions will be
+restored. Community direction on this topic is particularly requested to help
+set project priorities.
 
 Automatically use Tor hidden services
 -------------------------------------
@@ -372,7 +390,7 @@ Note that the output of the RPC `decodescript` did not change because it is
 configured specifically to process scriptPubKey and not scriptSig scripts.
 
 RPC: SSL support dropped
-----------------------------
+------------------------
 
 SSL support for RPC, previously enabled by the option `rpcssl` has been dropped
 from both the client and the server. This was done in preparation for removing
@@ -498,6 +516,8 @@ git merge commit are mentioned.
 - #7141 `c0c08c7` rpc: Don't translate warning messages (Wladimir J. van der Laan)
 - #7312 `fd4bd50` Add RPC call abandontransaction (Alex Morcos)
 - #7222 `e25b158` RPC: indicate which transactions are replaceable (Suhas Daftuar)
+- #7472 `b2f2b85` rpc: Add WWW-Authenticate header to 401 response (Wladimir J. van der Laan)
+- #7469 `9cb31e6` net.h fix spelling: misbeha{b,v}ing (Matt)
 
 ### Configuration and command-line options
 
@@ -594,6 +614,7 @@ git merge commit are mentioned.
 - #7415 `cb83beb` net: Hardcoded seeds update January 2016 (Wladimir J. van der Laan)
 - #7438 `e2d9a58` Do not absolutely protect local peers; decide group ties based on time (Gregory Maxwell)
 - #7439 `86755bc` Add whitelistforcerelay to control forced relaying. [#7099 redux] (Gregory Maxwell)
+- #7482 `e16f5b4` Ensure headers count is correct (Suhas Daftuar)
 
 ### Validation
 
@@ -606,6 +627,8 @@ git merge commit are mentioned.
 - #6954 `e54ebbf` Switch to libsecp256k1-based ECDSA validation (Pieter Wuille)
 - #6508 `61457c2` Switch to a constant-space Merkle root/branch algorithm. (Pieter Wuille)
 - #6914 `327291a` Add pre-allocated vector type and use it for CScript (Pieter Wuille)
+- #7500 `889e5b3` Correctly report high-S violations (Pieter Wuille)
+
 
 ### Build system
 
@@ -651,6 +674,8 @@ git merge commit are mentioned.
 - #7293 `ff9b610` Add regression test for vValue sort order (MarcoFalke)
 - #7306 `4707797` Make sure conflicted wallet tx's update balances (Alex Morcos)
 - #7381 `621bbd8` [walletdb] Fix syntax error in key parser (MarcoFalke)
+- #7491 `00ec73e` wallet: Ignore MarkConflict if block hash is not known (Wladimir J. van der Laan)
+- #7502 `1329963` Update the wallet best block marker before pruning (Pieter Wuille)
 
 ### GUI
 
@@ -727,6 +752,7 @@ git merge commit are mentioned.
 - #7170 `453c567` tests: Disable Tor interaction (Wladimir J. van der Laan)
 - #7229 `1ed938b` [qa] wallet: Check if maintenance changes the balance (MarcoFalke)
 - #7308 `d513405` [Tests] Eliminate intermittent failures in sendheaders.py (Suhas Daftuar)
+- #7468 `947c4ff` [rpc-tests] Change solve() to use rehash (Brad Andrews)
 
 ### Miscellaneous
 
@@ -800,7 +826,7 @@ Thanks to everyone who directly contributed to this release:
 - Forrest Voight
 - Gavin Andresen
 - Gregory Maxwell
-- Gregory Sanders
+- Gregory Sanders / instagibbs
 - Ian T
 - Irving Ruan
 - Jacob Welsh
@@ -820,6 +846,7 @@ Thanks to everyone who directly contributed to this release:
 - Marco
 - MarcoFalke
 - Mark Friedenbach
+- Matt
 - Matt Bogosian
 - Matt Corallo
 - Matt Quinn
@@ -828,6 +855,7 @@ Thanks to everyone who directly contributed to this release:
 - Michael Ford
 - Midnight Magic
 - Mitchell Cash
+- mrbandrews
 - mruddy
 - Nick
 - Patick Strateman
