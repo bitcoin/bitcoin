@@ -321,6 +321,8 @@ static const CRPCCommand vRPCCommands[] =
     { "adjustmalleablepubkey",  &adjustmalleablepubkey,  false,  false},
     { "listmalleableviews",     &listmalleableviews,     false,  false},
     { "dumpmalleablekey",       &dumpmalleablekey,       false,  false},
+    { "encryptdata",            &encryptdata,            false,  false },
+    { "decryptdata",            &decryptdata,            false,  false },
     { "sendalert",              &sendalert,              false,  false},
 };
 

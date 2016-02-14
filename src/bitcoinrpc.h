@@ -212,6 +212,9 @@ extern json_spirit::Value adjustmalleablepubkey(const json_spirit::Array& params
 extern json_spirit::Value listmalleableviews(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value dumpmalleablekey(const json_spirit::Array& params, bool fHelp);
 
+extern json_spirit::Value encryptdata(const json_spirit::Array& params, bool fHelp); // in rpccrypt.cpp
+extern json_spirit::Value decryptdata(const json_spirit::Array& params, bool fHelp);
+
 extern json_spirit::Value getrawtransaction(const json_spirit::Array& params, bool fHelp); // in rcprawtransaction.cpp
 extern json_spirit::Value listunspent(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value createrawtransaction(const json_spirit::Array& params, bool fHelp);
