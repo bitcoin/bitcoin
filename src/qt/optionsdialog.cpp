@@ -214,6 +214,11 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     maxmempool->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Mempool, maxmempool, tr("Keep the transaction memory pool below %s MB"));
 
+    mempoolexpiry = new QSpinBox(tabMempool);
+    mempoolexpiry->setMinimum(1);
+    mempoolexpiry->setMaximum(std::numeric_limits<int>::max());
+    CreateOptionUI(verticalLayout_Mempool, mempoolexpiry, tr("Do not keep transactions in memory more than %s hours"));
+
     QGroupBox * const groupBox_Spamfiltering = new QGroupBox(tabMempool);
     groupBox_Spamfiltering->setTitle(tr("Spam filtering"));
     QVBoxLayout * const verticalLayout_Spamfiltering = new QVBoxLayout(groupBox_Spamfiltering);
@@ -476,6 +481,7 @@ void OptionsDialog::setMapper()
 
     mapper->addMapping(maxorphantx, OptionsModel::maxorphantx);
     mapper->addMapping(maxmempool, OptionsModel::maxmempool);
+    mapper->addMapping(mempoolexpiry, OptionsModel::mempoolexpiry);
 
     /* Window */
 #ifndef Q_OS_MACOS

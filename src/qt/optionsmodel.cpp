@@ -15,7 +15,7 @@
 #include <common/args.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/node.h>
-#include <kernel/mempool_options.h> // for DEFAULT_MAX_MEMPOOL_SIZE_MB
+#include <kernel/mempool_options.h> // for DEFAULT_MAX_MEMPOOL_SIZE_MB, DEFAULT_MEMPOOL_EXPIRY_HOURS
 #include <mapport.h>
 #include <net.h>
 #include <net_processing.h>
@@ -33,6 +33,7 @@
 #include <interfaces/wallet.h>
 #endif
 
+#include <chrono>
 #include <string>
 #include <unordered_set>
 
@@ -642,6 +643,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return qlonglong(gArgs.GetIntArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
     case maxmempool:
         return qlonglong(node().mempool().m_opts.max_size_bytes / 1'000'000);
+    case mempoolexpiry:
+        return qlonglong(std::chrono::duration_cast<std::chrono::hours>(node().mempool().m_opts.expiry).count());
     default:
         return QVariant();
     }
@@ -989,6 +992,25 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             gArgs.ForceSetArg("-maxmempool", strNv);
             gArgs.ModifyRWConfigFile("maxmempool", strNv);
             if (nNv < nOldValue) {
+                LOCK(cs_main);
+                auto node_ctx = node().context();
+                assert(node_ctx && node_ctx->mempool && node_ctx->chainman);
+                auto& active_chainstate = node_ctx->chainman->ActiveChainstate();
+                LimitMempoolSize(*node_ctx->mempool, active_chainstate.CoinsTip());
+            }
+        }
+        break;
+    }
+    case mempoolexpiry:
+    {
+        if (changed()) {
+            const auto old_value = node().mempool().m_opts.expiry;
+            const std::chrono::hours new_value{value.toLongLong()};
+            std::string strNv = value.toString().toStdString();
+            node().mempool().m_opts.expiry = new_value;
+            gArgs.ForceSetArg("-mempoolexpiry", strNv);
+            gArgs.ModifyRWConfigFile("mempoolexpiry", strNv);
+            if (new_value < old_value) {
                 LOCK(cs_main);
                 auto node_ctx = node().context();
                 assert(node_ctx && node_ctx->mempool && node_ctx->chainman);
