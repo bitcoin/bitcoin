@@ -35,7 +35,6 @@ public:
     void setClientModel(ClientModel *clientModel);
     void setWalletModel(WalletModel *walletModel);
     void showOutOfSyncWarning(bool fShow);
-    void updateDarksendProgress();
 
 public Q_SLOTS:
     void darkSendStatus();
@@ -67,6 +66,7 @@ private Q_SLOTS:
     void darksendAuto();
     void darksendReset();
     void updateDisplayUnit();
+    void updateDarksendProgress();
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
     void updateWatchOnlyLabels(bool showWatchOnly);

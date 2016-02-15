@@ -284,6 +284,8 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
+        connect(model->getOptionsModel(), SIGNAL(darksendRoundsChanged()), this, SLOT(updateDarksendProgress()));
+        connect(model->getOptionsModel(), SIGNAL(anonymizeDashAmountChanged()), this, SLOT(updateDarksendProgress()));
 
         connect(ui->darksendAuto, SIGNAL(clicked()), this, SLOT(darksendAuto()));
         connect(ui->darksendReset, SIGNAL(clicked()), this, SLOT(darksendReset()));

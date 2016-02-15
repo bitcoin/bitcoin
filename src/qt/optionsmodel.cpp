@@ -366,7 +366,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             {
                 nDarksendRounds = value.toInt();
                 settings.setValue("nDarksendRounds", nDarksendRounds);
-                Q_EMIT darksendRoundsChanged(nDarksendRounds);
+                Q_EMIT darksendRoundsChanged();
             }
             break;
         case AnonymizeDashAmount:
@@ -374,7 +374,7 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             {
                 nAnonymizeDashAmount = value.toInt();
                 settings.setValue("nAnonymizeDashAmount", nAnonymizeDashAmount);
-                Q_EMIT anonymizeDashAmountChanged(nAnonymizeDashAmount);
+                Q_EMIT anonymizeDashAmountChanged();
             }
             break;
 #endif

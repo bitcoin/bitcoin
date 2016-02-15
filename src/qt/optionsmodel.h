@@ -91,8 +91,8 @@ private:
 
 Q_SIGNALS:
     void displayUnitChanged(int unit);
-    void darksendRoundsChanged(int);
-    void anonymizeDashAmountChanged(int);
+    void darksendRoundsChanged();
+    void anonymizeDashAmountChanged();
     void coinControlFeaturesChanged(bool);
 };
 
