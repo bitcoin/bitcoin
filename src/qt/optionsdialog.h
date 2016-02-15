@@ -86,6 +86,7 @@ private:
 
     QValueComboBox *mempoolreplacement;
     QSpinBox *maxorphantx;
+    QSpinBox *maxmempool;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H
