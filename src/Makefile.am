@@ -430,6 +430,7 @@ endif
 #
 
 CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a
+CLEANFILES += $(EXTRA_LIBRARIES)
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
 CLEANFILES += consensus/*.gcda consensus/*.gcno
