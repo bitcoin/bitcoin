@@ -15,6 +15,7 @@ class QValidatedLineEdit;
 QT_BEGIN_NAMESPACE
 class QBoxLayout;
 class QDataWidgetMapper;
+class QSpinBox;
 class QString;
 class QValueComboBox;
 class QWidget;
@@ -88,6 +89,7 @@ private:
     void CreateOptionUI(QBoxLayout *, QWidget *, const QString& text);
 
     QValueComboBox *mempoolreplacement;
+    QSpinBox *maxorphantx;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H
