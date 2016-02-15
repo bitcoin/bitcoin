@@ -779,11 +779,13 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
     //get min block value and calculate from that
     CAmount nSubsidy = 5 * COIN;
 
+    const Consensus::Params consensusParams = Params().GetConsensus();
+
     if(Params().NetworkIDString() == CBaseChainParams::TESTNET){
-        for(int i = 46200; i <= nHeight; i += 210240) nSubsidy -= nSubsidy/14;
+        for(int i = 46200; i <= nHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
     } else {
         // yearly decline of production by 7.1% per year, projected 21.3M coins max by year 2050.
-        for(int i = 210240; i <= nHeight; i += 210240) nSubsidy -= nSubsidy/14;
+        for(int i = consensusParams.nSubsidyHalvingInterval; i <= nHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
     }
 
     // Amount of blocks in a months period of time (using 2.6 minutes per) = (60*24*30)/2.6
