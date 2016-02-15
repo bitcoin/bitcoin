@@ -69,6 +69,8 @@ void AddPendingActivation(uint16_t featureId, int activationBlock, uint32_t minC
     featureActivation.minClientVersion = minClientVersion;
 
     vecPendingActivations.push_back(featureActivation);
+
+    uiInterface.OmniStateChanged();
 }
 
 /**
