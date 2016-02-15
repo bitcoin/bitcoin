@@ -13,6 +13,7 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
+#include <common/args.h>
 #include <common/system.h>
 #include <index/blockfilterindex.h>
 #include <interfaces/node.h>
@@ -20,8 +21,8 @@
 #include <node/caches.h>
 #include <node/chainstatemanager_args.h>
 #include <outputtype.h>
+#include <txmempool.h> // for maxmempoolMinimum
 #include <util/strencodings.h>
-
 #include <chrono>
 
 #include <QApplication>
@@ -206,6 +207,12 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     maxorphantx->setMinimum(0);
     maxorphantx->setMaximum(std::numeric_limits<int>::max());
     CreateOptionUI(verticalLayout_Mempool, maxorphantx, tr("Keep at most %s unconnected transactions in memory"));
+
+    maxmempool = new QSpinBox(tabMempool);
+    const int64_t nMempoolSizeMinMB = maxmempoolMinimumBytes(gArgs.GetIntArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT_KVB) * 1'000) / 1'000'000;
+    maxmempool->setMinimum(nMempoolSizeMinMB);
+    maxmempool->setMaximum(std::numeric_limits<int>::max());
+    CreateOptionUI(verticalLayout_Mempool, maxmempool, tr("Keep the transaction memory pool below %s MB"));
 
     QGroupBox * const groupBox_Spamfiltering = new QGroupBox(tabMempool);
     groupBox_Spamfiltering->setTitle(tr("Spam filtering"));
@@ -468,6 +475,7 @@ void OptionsDialog::setMapper()
     mempoolreplacement->setCurrentIndex(current_mempoolreplacement_index);
 
     mapper->addMapping(maxorphantx, OptionsModel::maxorphantx);
+    mapper->addMapping(maxmempool, OptionsModel::maxmempool);
 
     /* Window */
 #ifndef Q_OS_MACOS
