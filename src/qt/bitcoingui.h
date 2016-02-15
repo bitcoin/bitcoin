@@ -112,7 +112,7 @@ private:
     QAction *aboutQtAction;
     QAction *openInfoAction;
     QAction *openRPCConsoleAction;
-    QAction *openNetworkAction;
+    QAction *openGraphAction;
     QAction *openPeersAction;
     QAction *openRepairAction;
     QAction *openConfEditorAction;
@@ -213,8 +213,21 @@ private Q_SLOTS:
     void aboutClicked();
     /** Show debug window */
     void showDebugWindow();
-    /** Show debug window and set focus to the console */
-    void showDebugWindowActivateConsole();
+
+    /** Show debug window and set focus to the appropriate tab */
+    void showInfo();
+    void showConsole();
+    void showGraph();
+    void showPeers();
+    void showRepair();
+
+    /** Open external (default) editor with dash.conf */
+    void showConfEditor();
+    /** Open external (default) editor with masternode.conf */
+    void showMNConfEditor();
+    /** Show folder with wallet backups in default file browser */
+    void showBackups();
+
     /** Show help message dialog */
     void showHelpMessageClicked();
 #ifndef Q_OS_MAC

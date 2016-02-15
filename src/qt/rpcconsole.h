@@ -48,7 +48,8 @@ public:
         TAB_INFO = 0,
         TAB_CONSOLE = 1,
         TAB_GRAPH = 2,
-        TAB_PEERS = 3
+        TAB_PEERS = 3,
+        TAB_REPAIR = 4
     };
 
 protected:
@@ -101,26 +102,10 @@ public Q_SLOTS:
     void browseHistory(int offset);
     /** Scroll console view to end */
     void scrollToEnd();
-    /** Switch to info tab and show */
-    void showInfo();
-    /** Switch to console tab and show */
-    void showConsole();
-    /** Switch to network tab and show */
-    void showNetwork();
-    /** Switch to peers tab and show */
-    void showPeers();
-    /** Switch to wallet-repair tab and show */
-    void showRepair();
-    /** Open external (default) editor with dash.conf */
-    void showConfEditor();
-    /** Open external (default) editor with masternode.conf */
-    void showMNConfEditor();
     /** Handle selection of peer in peers list */
     void peerSelected(const QItemSelection &selected, const QItemSelection &deselected);
     /** Handle updated peer information */
     void peerLayoutChanged();
-    /** Show folder with wallet backups in default browser */
-    void showBackups();
     /** Disconnect a selected node on the Peers tab */
     void disconnectSelectedNode();
     /** Ban a selected node on the Peers tab */
