@@ -21,6 +21,7 @@
 #include <node/chainstatemanager_args.h>
 #include <node/context.h>
 #include <outputtype.h>
+#include <policy/settings.h>
 #include <txdb.h> // for -dbcache defaults
 #include <util/string.h>
 #include <validation.h>    // For DEFAULT_SCRIPTCHECK_THREADS
@@ -201,6 +202,16 @@ OptionsModel::FontChoice OptionsModel::FontChoiceFromString(const QString& s)
     } else {
         return FontChoiceAbstract::EmbeddedFont;  // default
     }
+}
+
+static QString CanonicalMempoolReplacement(const OptionsModel& model)
+{
+    switch (model.node().mempool().m_opts.rbf_policy) {
+    case RBFPolicy::Never:  return "never";
+    case RBFPolicy::OptIn:  return "fee,optin";
+    case RBFPolicy::Always: return "fee,-optin";
+    }
+    assert(0);
 }
 
 OptionsModel::OptionsModel(interfaces::Node& node, QObject *parent) :
@@ -622,6 +633,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return f_peerbloomfilters;
     case peerblockfilters:
         return gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS);
+    case mempoolreplacement:
+        return CanonicalMempoolReplacement(*this);
     default:
         return QVariant();
     }
@@ -922,6 +935,21 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
                 gArgs.ForceSetArg("blockfilterindex", "basic");
             }
             setRestartRequired(true);
+        }
+        break;
+    }
+    case mempoolreplacement:
+    {
+        if (changed()) {
+            QString nv = value.toString();
+            if (nv == "never") {
+                node().mempool().m_opts.rbf_policy = RBFPolicy::Never;
+            } else if (nv == "fee,optin") {
+                node().mempool().m_opts.rbf_policy = RBFPolicy::OptIn;
+            } else {  // "fee,-optin"
+                node().mempool().m_opts.rbf_policy = RBFPolicy::Always;
+            }
+            gArgs.ModifyRWConfigFile("mempoolreplacement", nv.toStdString());
         }
         break;
     }
