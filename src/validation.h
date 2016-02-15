@@ -292,6 +292,8 @@ bool CheckSequenceLocks(CBlockIndex* tip,
                         LockPoints* lp = nullptr,
                         bool useExistingLockPoints = false);
 
+void LimitMempoolSize(CTxMemPool&, CCoinsViewCache&);
+
 /**
  * Closure representing one script verification
  * Note that this stores references to the spending transaction
