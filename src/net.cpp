@@ -1511,8 +1511,8 @@ void static ProcessOneShot()
 void ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0 ||
-        mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0) // BUIP010 Xtreme Thinblocks
+  if ((mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) ||
+      (mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0)) // BUIP010 Xtreme Thinblocks
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
