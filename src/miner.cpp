@@ -80,8 +80,12 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
+    // BU vote for 2mb by default
+    if (pblock->nTime <= chainparams.GetConsensus().SizeForkExpiration())
+            pblock->nVersion |= FORK_BIT_2MB;
+
     // -regtest only: allow overriding block.nVersion with
-    // -blockversion=N to test forking scenarios
+    // -blockversion=N to test forking scenarios    
     if (chainparams.MineBlocksOnDemand())
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
 
