@@ -110,6 +110,7 @@ testScripts = [
 testScriptsExt = [
     'bip65-cltv.py',
     'bip65-cltv-p2p.py',
+    'bip68-sequence.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_longpoll.py',
