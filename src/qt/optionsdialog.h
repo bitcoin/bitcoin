@@ -91,6 +91,7 @@ private:
     QSpinBox *mempoolexpiry;
 
     QCheckBox *rejectunknownscripts;
+    QSpinBox *bytespersigop, *bytespersigopstrict;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H
