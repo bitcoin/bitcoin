@@ -218,6 +218,12 @@ private:
 
 public:
     CMalleablePubKey() { nVersion = CMalleablePubKey::CURRENT_VERSION; }
+    CMalleablePubKey(const CMalleablePubKey& mpk)
+    {
+        nVersion = mpk.nVersion;
+        pubKeyL = mpk.pubKeyL;
+        pubKeyH = mpk.pubKeyH;
+    }
     CMalleablePubKey(const std::string& strMalleablePubKey) { SetString(strMalleablePubKey); }
     CMalleablePubKey(const CPubKey &pubKeyInL, const CPubKey &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { nVersion = CMalleablePubKey::CURRENT_VERSION; }
     CMalleablePubKey(const std::vector<unsigned char> &pubKeyInL, const std::vector<unsigned char> &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { nVersion = CMalleablePubKey::CURRENT_VERSION; }
