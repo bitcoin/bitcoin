@@ -156,6 +156,10 @@ QT_MOC = \
   qt/overviewpage.moc \
   qt/rpcconsole.moc
 
+if ENABLE_WALLET
+MOC_DEFS += -DENABLE_WALLET=1
+endif
+
 QT_QRC_CPP = qt/qrc_bitcoin.cpp
 QT_QRC = qt/bitcoin.qrc
 QT_QRC_LOCALE_CPP = qt/qrc_bitcoin_locale.cpp
