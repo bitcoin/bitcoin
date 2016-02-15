@@ -247,13 +247,40 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // subsidy changing
     int nHeight = chainActive.Height();
-    chainActive.Tip()->nHeight = 209999;
+    // Create an actual 209999-long block chain (without valid blocks).
+    while (chainActive.Tip()->nHeight < 209999) {
+        CBlockIndex* prev = chainActive.Tip();
+        CBlockIndex* next = new CBlockIndex();
+        next->phashBlock = new uint256(GetRandHash());
+        pcoinsTip->SetBestBlock(next->GetBlockHash());
+        next->pprev = prev;
+        next->nHeight = prev->nHeight + 1;
+        next->BuildSkip();
+        chainActive.SetTip(next);
+    }
     BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
     delete pblocktemplate;
-    chainActive.Tip()->nHeight = 210000;
+    // Extend to a 210000-long block chain.
+    while (chainActive.Tip()->nHeight < 210000) {
+        CBlockIndex* prev = chainActive.Tip();
+        CBlockIndex* next = new CBlockIndex();
+        next->phashBlock = new uint256(GetRandHash());
+        pcoinsTip->SetBestBlock(next->GetBlockHash());
+        next->pprev = prev;
+        next->nHeight = prev->nHeight + 1;
+        next->BuildSkip();
+        chainActive.SetTip(next);
+    }
     BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
     delete pblocktemplate;
-    chainActive.Tip()->nHeight = nHeight;
+    // Delete the dummy blocks again.
+    while (chainActive.Tip()->nHeight > nHeight) {
+        CBlockIndex* del = chainActive.Tip();
+        chainActive.SetTip(del->pprev);
+        pcoinsTip->SetBestBlock(del->pprev->GetBlockHash());
+        delete del->phashBlock;
+        delete del;
+    }
 
     // non-final txs in mempool
     SetMockTime(chainActive.Tip()->GetMedianTimePast()+1);
