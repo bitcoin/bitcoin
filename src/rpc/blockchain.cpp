@@ -599,7 +599,7 @@ static RPCHelpMan maxmempool()
 {
     int nSize = request.params[0].get_int();
     int64_t nMempoolSizeMax = nSize * 1000000;
-    int64_t nMempoolSizeMin = gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT) * 1000 * 40;
+    int64_t nMempoolSizeMin = maxmempoolMinimum(gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT)) * 1000000;
     if (nMempoolSizeMax < 0 || nMempoolSizeMax < nMempoolSizeMin)
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("MaxMempool size %d is too small", nSize));
     gArgs.ForceSetArg("-maxmempool", strprintf("%d", nSize));
