@@ -7,6 +7,7 @@
 #define BITCOIN_NET_PROCESSING_H
 
 #include <net.h>
+#include <threadsafety.h>
 #include <txorphanage.h>
 #include <validationinterface.h>
 
@@ -105,6 +106,7 @@ public:
 
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
+    virtual void LimitOrphanTxSize(uint32_t nMaxOrphans) = 0;
 
     virtual std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() = 0;
 

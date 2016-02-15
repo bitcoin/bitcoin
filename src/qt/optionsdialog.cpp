@@ -202,6 +202,11 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     mempoolreplacement->addItem(QString("with a higher mining fee (no opt-out)"), QVariant("fee,-optin"));
     CreateOptionUI(verticalLayout_Mempool, mempoolreplacement, tr("Transaction &replacement: %s"));
 
+    maxorphantx = new QSpinBox(tabMempool);
+    maxorphantx->setMinimum(0);
+    maxorphantx->setMaximum(std::numeric_limits<int>::max());
+    CreateOptionUI(verticalLayout_Mempool, maxorphantx, tr("Keep at most %s unconnected transactions in memory"));
+
     QGroupBox * const groupBox_Spamfiltering = new QGroupBox(tabMempool);
     groupBox_Spamfiltering->setTitle(tr("Spam filtering"));
     QVBoxLayout * const verticalLayout_Spamfiltering = new QVBoxLayout(groupBox_Spamfiltering);
@@ -461,6 +466,8 @@ void OptionsDialog::setMapper()
         current_mempoolreplacement_index = mempoolreplacement->count() - 1;
     }
     mempoolreplacement->setCurrentIndex(current_mempoolreplacement_index);
+
+    mapper->addMapping(maxorphantx, OptionsModel::maxorphantx);
 
     /* Window */
 #ifndef Q_OS_MACOS

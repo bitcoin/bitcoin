@@ -637,6 +637,8 @@ QVariant OptionsModel::getOption(OptionID option, const std::string& suffix) con
         return gArgs.GetBoolArg("-peerblockfilters", DEFAULT_PEERBLOCKFILTERS);
     case mempoolreplacement:
         return CanonicalMempoolReplacement(*this);
+    case maxorphantx:
+        return qlonglong(gArgs.GetIntArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
     default:
         return QVariant();
     }
@@ -956,6 +958,21 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
                 node().mempool().m_opts.rbf_policy = RBFPolicy::Always;
             }
             gArgs.ModifyRWConfigFile("mempoolreplacement", nv.toStdString());
+        }
+        break;
+    }
+    case maxorphantx:
+    {
+        if (changed()) {
+            unsigned int nMaxOrphanTx = gArgs.GetIntArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS);
+            unsigned int nNv = value.toLongLong();
+            std::string strNv = value.toString().toStdString();
+            gArgs.ForceSetArg("-maxorphantx", strNv);
+            gArgs.ModifyRWConfigFile("maxorphantx", strNv);
+            if (nNv < nMaxOrphanTx) {
+                assert(node().context() && node().context()->peerman);
+                node().context()->peerman->LimitOrphanTxSize(nNv);
+            }
         }
         break;
     }

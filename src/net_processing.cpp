@@ -506,6 +506,7 @@ public:
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     std::vector<TxOrphanage::OrphanTxBase> GetOrphanTransactions() override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     PeerManagerInfo GetInfo() const override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
+    void LimitOrphanTxSize(uint32_t nMaxOrphans) override EXCLUSIVE_LOCKS_REQUIRED(!m_tx_download_mutex);
     void SendPings() override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(!m_peer_mutex);
     void SetBestBlock(int height, std::chrono::seconds time) override
@@ -1761,6 +1762,13 @@ PeerManagerInfo PeerManagerImpl::GetInfo() const
         .median_outbound_time_offset = m_outbound_time_offsets.Median(),
         .ignores_incoming_txs = m_opts.ignore_incoming_txs,
     };
+}
+
+void PeerManagerImpl::LimitOrphanTxSize(uint32_t nMaxOrphans)
+{
+    LOCK(g_msgproc_mutex);
+    LOCK2(cs_main, m_tx_download_mutex);
+    m_txdownloadman.SetMaxOrphanTxs(nMaxOrphans);
 }
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx, const size_t tx_dynamic_usage)
