@@ -138,7 +138,11 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QVBoxLayout * const verticalLayout_Mempool = new QVBoxLayout(tabMempool);
     ui->tabWidget->insertTab(ui->tabWidget->indexOf(ui->tabWindow), tabMempool, tr("Mem&pool"));
 
-    // TODO
+    mempoolreplacement = new QValueComboBox(tabMempool);
+    mempoolreplacement->addItem(QString("never"), QVariant("never"));
+    mempoolreplacement->addItem(QString("with a higher mining fee, and opt-in"), QVariant("fee,optin"));
+    mempoolreplacement->addItem(QString("with a higher mining fee (no opt-out)"), QVariant("fee,-optin"));
+    CreateOptionUI(verticalLayout_Mempool, mempoolreplacement, tr("Transaction &replacement: %s"));
 
     QGroupBox * const groupBox_Spamfiltering = new QGroupBox(tabMempool);
     groupBox_Spamfiltering->setTitle(tr("Spam filtering"));
@@ -378,6 +382,16 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->peerbloomfilters, OptionsModel::peerbloomfilters);
     mapper->addMapping(ui->peerblockfilters, OptionsModel::peerblockfilters);
 
+    /* Mempool tab */
+
+    QVariant current_mempoolreplacement = model->data(model->index(OptionsModel::mempoolreplacement, 0), Qt::EditRole);
+    int current_mempoolreplacement_index = mempoolreplacement->findData(current_mempoolreplacement);
+    if (current_mempoolreplacement_index == -1) {
+        mempoolreplacement->addItem(current_mempoolreplacement.toString(), current_mempoolreplacement);
+        current_mempoolreplacement_index = mempoolreplacement->count() - 1;
+    }
+    mempoolreplacement->setCurrentIndex(current_mempoolreplacement_index);
+
     /* Window */
 #ifndef Q_OS_MAC
     if (QSystemTrayIcon::isSystemTrayAvailable()) {
@@ -505,6 +519,8 @@ void OptionsDialog::on_okButton_clicked()
     } else {
         model->setData(model->index(OptionsModel::maxuploadtarget, 0), 0);
     }
+
+    model->setData(model->index(OptionsModel::mempoolreplacement, 0), mempoolreplacement->itemData(mempoolreplacement->currentIndex()));
 
     mapper->submit();
     accept();
