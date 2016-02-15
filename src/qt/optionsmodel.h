@@ -83,6 +83,7 @@ public:
         mempoolreplacement,
         maxorphantx,
         maxmempool,
+        mempoolexpiry,
         OptionIDRowCount,
     };
 
