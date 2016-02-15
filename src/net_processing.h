@@ -7,6 +7,7 @@
 #define BITCOIN_NET_PROCESSING_H
 
 #include <net.h>
+#include <threadsafety.h>
 #include <validationinterface.h>
 
 class CAddrMan;
@@ -46,6 +47,7 @@ public:
 
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
+    virtual unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) = 0;
 
     /** Get number of peers from which we're downloading blocks */
     virtual int GetNumberOfPeersWithValidatedDownloads() EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
