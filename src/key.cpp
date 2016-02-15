@@ -803,7 +803,7 @@ bool CMalleableKey::SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSe
     Reset();
     CKey L, H;
 
-    if (pvchSecretL.size() != 32 || !pvchSecretH.size() != 32 || !L.SetSecret(pvchSecretL, true) || !H.SetSecret(pvchSecretH, true))
+    if (pvchSecretL.size() != 32 || pvchSecretH.size() != 32 || !L.SetSecret(pvchSecretL, true) || !H.SetSecret(pvchSecretH, true))
     {
         nVersion = 0;
         return false;
