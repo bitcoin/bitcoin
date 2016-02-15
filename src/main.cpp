@@ -4235,11 +4235,18 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 // Send stream from relay memory
                 bool pushed = false;
                 {
-                    LOCK(cs_mapRelay);
-                    map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
-                    if (mi != mapRelay.end()) {
-                        pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                  CDataStream cd(0,0);
+                  if (1)
+                    {
+                      LOCK(cs_mapRelay);  // BU: We need to release this lock before push message or there is a potential deadlock because cs_vSend is often taken before cs_mapRelay
+                      map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
+                      if (mi != mapRelay.end()) {
+                        cd = (*mi).second; // I have to copy, because .second may be deleted once lock is released
                         pushed = true;
+                      }
+                    }
+                    if (pushed) {
+                        pfrom->PushMessage(inv.GetCommand(), cd);                       
                     }
                 }
                 if (!pushed && inv.type == MSG_TX) {
@@ -4459,7 +4466,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // nodes)
 
             // BUIP010 Extreme Thinblocks: We only do inv/getdata for xthinblocks and so we must have headersfirst turned off
-            if (!IsThinBlocksEnabled)
+            if (!IsThinBlocksEnabled())
                 pfrom->PushMessage(NetMsgType::SENDHEADERS);
         }
     }
@@ -4535,7 +4542,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         LOCK(cs_main);
         // BUIP010 Xtreme Thinblocks: We only do inv/getdata for xthinblocks and so we must have headersfirst turned off
-        if (IsThinBlocksEnabled)
+        if (IsThinBlocksEnabled())
             State(pfrom->GetId())->fPreferHeaders = false;
         else
             State(pfrom->GetId())->fPreferHeaders = true;
@@ -4976,7 +4983,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         pindexLast->GetBlockHash().ToString(),
                         pindexLast->nHeight);
             //} else {   BU: We don't support headers first for XThinblocks.
-            } else if (!IsThinBlocksEnabled) {
+            } else if (!IsThinBlocksEnabled()) {
                 vector<CInv> vGetData;
                 // Download as much as possible, from earliest to latest.
                 BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch) {
