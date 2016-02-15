@@ -193,9 +193,9 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     // Format of bdb dump is ascii lines:
     // header lines...
     // HEADER=END
-    // hexadecimal key
-    // hexadecimal value
-    // ... repeated
+    //  hexadecimal key
+    //  hexadecimal value
+    //  ... repeated
     // DATA=END
 
     string strLine;
