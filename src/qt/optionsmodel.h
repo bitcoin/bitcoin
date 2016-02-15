@@ -46,8 +46,8 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
-        DarksendRounds,    // int
-        AnonymizeDashAmount, //int
+        DarksendRounds,         // int
+        AnonymizeDashAmount,    // int
         Listen,                 // bool
         OptionIDRowCount,
     };

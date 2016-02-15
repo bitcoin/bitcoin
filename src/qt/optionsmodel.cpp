@@ -44,7 +44,7 @@ void OptionsModel::Init(bool resetSettings)
     if (resetSettings)
         Reset();
 
-    resetSettings = false;
+    this->resetSettings = resetSettings;
 
     QSettings settings;
 
@@ -75,19 +75,10 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("fCoinControlFeatures", false);
     fCoinControlFeatures = settings.value("fCoinControlFeatures", false).toBool();
 
-    if (!settings.contains("nDarksendRounds"))
-        settings.setValue("nDarksendRounds", 2);
-
-    if (!settings.contains("nAnonymizeDashAmount")) {
-        // for migration from old settings
-        if (!settings.contains("nAnonymizeDarkcoinAmount"))
-            settings.setValue("nAnonymizeDashAmount", 1000);
-        else
-            settings.setValue("nAnonymizeDashAmount", settings.value("nAnonymizeDarkcoinAmount"));
-    }
-
-    nDarksendRounds = settings.value("nDarksendRounds").toLongLong();
-    nAnonymizeDashAmount = settings.value("nAnonymizeDashAmount").toLongLong();
+    if (!settings.contains("digits"))
+        settings.setValue("digits", "2");
+    if (!settings.contains("theme"))
+        settings.setValue("theme", "");
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
@@ -114,6 +105,24 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("bSpendZeroConfChange", true);
     if (!SoftSetBoolArg("-spendzeroconfchange", settings.value("bSpendZeroConfChange").toBool()))
         addOverriddenOption("-spendzeroconfchange");
+
+    // Darksend
+    if (!settings.contains("nDarksendRounds"))
+        settings.setValue("nDarksendRounds", 2);
+    if (!SoftSetArg("-darksendrounds", settings.value("nDarksendRounds").toString().toStdString()))
+        addOverriddenOption("-darksendrounds");
+    nDarksendRounds = settings.value("nDarksendRounds").toInt();
+
+    if (!settings.contains("nAnonymizeDashAmount")) {
+        // for migration from old settings
+        if (!settings.contains("nAnonymizeDarkcoinAmount"))
+            settings.setValue("nAnonymizeDashAmount", 1000);
+        else
+            settings.setValue("nAnonymizeDashAmount", settings.value("nAnonymizeDarkcoinAmount").toInt());
+    }
+    if (!SoftSetArg("-anonymizedashamount", settings.value("nAnonymizeDashAmount").toString().toStdString()))
+        addOverriddenOption("-anonymizedashamount");
+    nAnonymizeDashAmount = settings.value("nAnonymizeDashAmount").toInt();
 #endif
 
     // Network
@@ -148,19 +157,10 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-onion");
 
     // Display
-    if (!settings.contains("digits"))
-        settings.setValue("digits", "2");
-    if (!settings.contains("theme"))
-        settings.setValue("theme", "");
     if (!settings.contains("language"))
         settings.setValue("language", "");
     if (!SoftSetArg("-lang", settings.value("language").toString().toStdString()))
         addOverriddenOption("-lang");
-
-    if (settings.contains("nDarksendRounds"))
-        SoftSetArg("-darksendrounds", settings.value("nDarksendRounds").toString().toStdString());
-    if (settings.contains("nAnonymizeDashAmount"))
-        SoftSetArg("-anonymizedashamount", settings.value("nAnonymizeDashAmount").toString().toStdString());
 
     language = settings.value("language").toString();
 }
@@ -235,6 +235,10 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
+        case DarksendRounds:
+            return settings.value("nDarksendRounds");
+        case AnonymizeDashAmount:
+            return settings.value("nAnonymizeDashAmount");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -252,10 +256,6 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nDatabaseCache");
         case ThreadsScriptVerif:
             return settings.value("nThreadsScriptVerif");
-        case DarksendRounds:
-            return QVariant(nDarksendRounds);
-        case AnonymizeDashAmount:
-            return QVariant(nAnonymizeDashAmount);
         case Listen:
             return settings.value("fListen");
         default:
@@ -361,6 +361,22 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
+        case DarksendRounds:
+            if (settings.value("nDarksendRounds") != value)
+            {
+                nDarksendRounds = value.toInt();
+                settings.setValue("nDarksendRounds", nDarksendRounds);
+                Q_EMIT darksendRoundsChanged(nDarksendRounds);
+            }
+            break;
+        case AnonymizeDashAmount:
+            if (settings.value("nAnonymizeDashAmount") != value)
+            {
+                nAnonymizeDashAmount = value.toInt();
+                settings.setValue("nAnonymizeDashAmount", nAnonymizeDashAmount);
+                Q_EMIT anonymizeDashAmountChanged(nAnonymizeDashAmount);
+            }
+            break;
 #endif
         case DisplayUnit:
             setDisplayUnit(value);
@@ -389,16 +405,6 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 settings.setValue("language", value);
                 setRestartRequired(true);
             }
-            break;
-        case DarksendRounds:
-            nDarksendRounds = value.toInt();
-            settings.setValue("nDarksendRounds", nDarksendRounds);
-            Q_EMIT darksendRoundsChanged(nDarksendRounds);
-            break;
-        case AnonymizeDashAmount:
-            nAnonymizeDashAmount = value.toInt();
-            settings.setValue("nAnonymizeDashAmount", nAnonymizeDashAmount);
-            Q_EMIT anonymizeDashAmountChanged(nAnonymizeDashAmount);
             break;
         case CoinControlFeatures:
             fCoinControlFeatures = value.toBool();
