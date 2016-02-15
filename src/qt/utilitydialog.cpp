@@ -129,10 +129,10 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->aboutLogo->setVisible(false);
     }
     // TODO: fix theme dependent Gfx in About popup
-    // // Theme dependent Gfx in About popup
-    // QString helpMessageGfx = ":/images/" + GUIUtil::getThemeName() + "/about";
-    // QPixmap pixmap = QPixmap(helpMessageGfx);
-    // ui->graphic->setPixmap(pixmap);
+    // Theme dependent Gfx in About popup
+    QString helpMessageGfx = ":/images/" + GUIUtil::getThemeName() + "/about";
+    QPixmap pixmap = QPixmap(helpMessageGfx);
+    ui->aboutLogo->setPixmap(pixmap);
 }
 
 HelpMessageDialog::~HelpMessageDialog()

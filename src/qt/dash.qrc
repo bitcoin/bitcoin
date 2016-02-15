@@ -50,8 +50,7 @@
         <file alias="about">res/icons/drkblue/about.png</file>
         <file alias="about_qt">res/icons/drkblue/about_qt.png</file>
         <file alias="verify">res/icons/drkblue/verify.png</file>
-        <file alias="warning">res/icons/drkblue/warning.png</file>
-</qresource>
+    </qresource>
     <qresource prefix="/icons/crownium">
         <file alias="bitcoin">res/icons/crownium/bitcoin.png</file>
         <file alias="address-book">res/icons/crownium/address-book.png</file>
@@ -103,7 +102,6 @@
         <file alias="about">res/icons/crownium/about.png</file>
         <file alias="about_qt">res/icons/crownium/about_qt.png</file>
         <file alias="verify">res/icons/crownium/verify.png</file>
-        <file alias="warning">res/icons/crownium/warning.png</file>
     </qresource>
     <qresource prefix="/icons/light">
         <file alias="bitcoin">res/icons/light/bitcoin.png</file>
@@ -156,7 +154,6 @@
         <file alias="about">res/icons/light/about.png</file>
         <file alias="about_qt">res/icons/light/about_qt.png</file>
         <file alias="verify">res/icons/light/verify.png</file>
-        <file alias="warning">res/icons/light/warning.png</file>
     </qresource>
     <qresource prefix="/icons/trad">
         <file alias="bitcoin">res/icons/trad/bitcoin.png</file>
@@ -209,7 +206,6 @@
         <file alias="about">res/icons/trad/about.png</file>
         <file alias="about_qt">res/icons/trad/about_qt.png</file>
         <file alias="verify">res/icons/trad/verify.png</file>
-        <file alias="warning">res/icons/trad/warning.png</file>
     </qresource>
     <qresource prefix="/css">
         <file alias="drkblue">res/css/drkblue.css</file>

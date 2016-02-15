@@ -134,12 +134,6 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui->setupUi(this);
     QString theme = GUIUtil::getThemeName();
 
-    // use a SingleColorIcon for the "out of sync warning" icon
-    QIcon icon = QIcon(":/icons/" + theme + "/warning");
-    icon.addPixmap(icon.pixmap(QSize(64,64), QIcon::Normal), QIcon::Disabled); // also set the disabled icon because we are using a disabled QPushButton to work around missing HiDPI support of QLabel (https://bugreports.qt.io/browse/QTBUG-42503)
-    ui->labelTransactionsStatus->setIcon(icon);
-    ui->labelWalletStatus->setIcon(icon);
-
     // Recent transactions
     ui->listTransactions->setItemDelegate(txdelegate);
     ui->listTransactions->setIconSize(QSize(DECORATION_SIZE, DECORATION_SIZE));
@@ -150,9 +144,9 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 
 
     // init "out of sync" warning labels
-//    ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
-//    ui->labelDarksendSyncStatus->setText("(" + tr("out of sync") + ")");
-//    ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
+   ui->labelWalletStatus->setText("(" + tr("out of sync") + ")");
+   ui->labelDarksendSyncStatus->setText("(" + tr("out of sync") + ")");
+   ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
     if(fLiteMode){
         ui->frameDarksend->setVisible(false);

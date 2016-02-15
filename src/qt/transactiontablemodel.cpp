@@ -554,8 +554,7 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         break;
     case Qt::DecorationRole:
     {
-        QIcon icon = qvariant_cast<QIcon>(index.data(RawDecorationRole));
-        return platformStyle->TextColorIcon(icon);
+        return qvariant_cast<QIcon>(index.data(RawDecorationRole));
     }
     case Qt::DisplayRole:
         switch(index.column())

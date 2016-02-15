@@ -65,35 +65,18 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="labelWalletStatus">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>30</width>
-                <height>16777215</height>
-               </size>
-              </property>
+             <widget class="QLabel" name="labelWalletStatus">
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel { color: red; }</string>
+              </property>
               <property name="text">
-               <string/>
+               <string notr="true">(out of sync)</string>
               </property>
-              <property name="icon">
-               <iconset resource="../dash.qrc">
-                <normaloff>:/icons/drkblue/warning</normaloff>
-                <disabledoff>:/icons/drkblue/warning</disabledoff>:/icons/drkblue/warning</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
@@ -1171,35 +1154,18 @@
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="labelTransactionsStatus">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>30</width>
-                <height>16777215</height>
-               </size>
-              </property>
+             <widget class="QLabel" name="labelTransactionsStatus">
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel { color: red; }</string>
+              </property>
               <property name="text">
-               <string/>
+               <string notr="true">(out of sync)</string>
               </property>
-              <property name="icon">
-               <iconset resource="../dash.qrc">
-                <normaloff>:/icons/drkblue/warning</normaloff>
-                <disabledoff>:/icons/drkblue/warning</disabledoff>:/icons/drkblue/warning</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
               </property>
              </widget>
             </item>
