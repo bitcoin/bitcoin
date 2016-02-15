@@ -68,7 +68,7 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     arith_uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
 
-    return (int64_t)(workDiff.getdouble() / timeDiff);
+    return workDiff.getdouble() / timeDiff;
 }
 
 UniValue getnetworkhashps(const UniValue& params, bool fHelp)

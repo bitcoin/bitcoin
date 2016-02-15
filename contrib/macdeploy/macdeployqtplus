@@ -495,6 +495,7 @@ ap.add_argument("-fancy", nargs=1, metavar="plist", default=[], help="make a fan
 ap.add_argument("-add-qt-tr", nargs=1, metavar="languages", default=[], help="add Qt translation files to the bundle's ressources; the language list must be separated with commas, not with whitespace")
 ap.add_argument("-translations-dir", nargs=1, metavar="path", default=None, help="Path to Qt's translation files")
 ap.add_argument("-add-resources", nargs="+", metavar="path", default=[], help="list of additional files or folders to be copied into the bundle's resources; must be the last argument")
+ap.add_argument("-volname", nargs=1, metavar="volname", default=[], help="custom volume name for dmg")
 
 config = ap.parse_args()
 
@@ -593,6 +594,13 @@ if os.path.exists("dist"):
         print "+ Removing old dist folder +"
     
     shutil.rmtree("dist")
+
+# ------------------------------------------------
+
+if len(config.volname) == 1:
+    volname = config.volname[0]
+else:
+    volname = app_bundle_name
 
 # ------------------------------------------------
 
@@ -757,7 +765,7 @@ if config.dmg is not None:
     
     if fancy is None:
         try:
-            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname="Bitcoin-Core", ov=True)
+            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname=volname, ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
     else:
@@ -772,7 +780,7 @@ if config.dmg is not None:
         if verbose >= 3:
             print "Creating temp image for modification..."
         try:
-            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname="Bitcoin-Core", ov=True)
+            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname=volname, ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
         
@@ -837,7 +845,7 @@ if config.dmg is not None:
                 items_positions.append(itemscript.substitute(params))
 
         params = {
-            "disk" : "Bitcoin-Core",
+            "disk" : volname,
             "window_bounds" : "300,300,800,620",
             "icon_size" : "96",
             "background_commands" : "",

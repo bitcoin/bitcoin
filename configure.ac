@@ -6,7 +6,9 @@ define(_CLIENT_VERSION_REVISION, 99)
 define(_CLIENT_VERSION_BUILD, 0)
 define(_CLIENT_VERSION_IS_RELEASE, false)
 define(_COPYRIGHT_YEAR, 2016)
-AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/bitcoin/bitcoin/issues],[bitcoin])
+define(_COPYRIGHT_HOLDERS,[The %s developers])
+define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[Bitcoin Core])
+AC_INIT([Bitcoin Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/bitcoin/bitcoin/issues],[bitcoin],[https://bitcoincore.org/])
 AC_CONFIG_SRCDIR([src/main.cpp])
 AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -66,6 +68,8 @@ AC_PATH_PROG(XGETTEXT,xgettext)
 AC_PATH_PROG(HEXDUMP,hexdump)
 AC_PATH_TOOL(READELF, readelf)
 AC_PATH_TOOL(CPPFILT, c++filt)
+
+AC_ARG_VAR(PYTHONPATH, Augments the default search path for python module files)
 
 dnl pkg-config check.
 PKG_PROG_PKG_CONFIG
@@ -150,6 +154,12 @@ AC_ARG_ENABLE([glibc-back-compat],
   [use_glibc_compat=$enableval],
   [use_glibc_compat=no])
 
+AC_ARG_WITH([system-univalue],
+  [AS_HELP_STRING([--with-system-univalue],
+  [Build with system UniValue (default is no)])],
+  [system_univalue=$withval],
+  [system_univalue=no]
+)
 AC_ARG_ENABLE([zmq],
   [AS_HELP_STRING([--disable-zmq],
   [disable ZMQ notifications])],
@@ -316,6 +326,9 @@ case $host in
            AC_PATH_TOOL([INSTALLNAMETOOL], [install_name_tool], install_name_tool)
            AC_PATH_TOOL([OTOOL], [otool], otool)
            AC_PATH_PROGS([GENISOIMAGE], [genisoimage mkisofs],genisoimage)
+           AC_PATH_PROGS([RSVG_CONVERT], [rsvg-convert rsvg],rsvg-convert)
+           AC_PATH_PROGS([IMAGEMAGICK_CONVERT], [convert],convert)
+           AC_PATH_PROGS([TIFFCP], [tiffcp],tiffcp)
 
            dnl libtool will try to strip the static lib, which is a problem for
            dnl cross-builds because strip attempts to call a hard-coded ld,
@@ -783,6 +796,44 @@ else
   fi
 fi
 
+dnl univalue check
+
+if test x$system_univalue != xno ; then
+  found_univalue=no
+  if test x$use_pkgconfig = xyes; then
+    : #NOP
+    m4_ifdef(
+      [PKG_CHECK_MODULES],
+      [
+        PKG_CHECK_MODULES([UNIVALUE],[libunivalue],[found_univalue=yes],[true])
+      ]
+    )
+  else
+    AC_CHECK_HEADER([univalue.h],[
+      AC_CHECK_LIB([univalue],  [main],[
+        UNIVALUE_LIBS=-lunivalue
+        found_univalue=yes
+      ],[true])
+    ],[true])
+  fi
+
+  if test x$found_univalue = xyes ; then
+    system_univalue=yes
+  elif test x$system_univalue = xyes ; then
+    AC_MSG_ERROR([univalue not found])
+  else
+    system_univalue=no
+  fi
+fi
+
+if test x$system_univalue = xno ; then
+  UNIVALUE_CFLAGS='-I$(srcdir)/univalue/include'
+  UNIVALUE_LIBS='univalue/libunivalue.la'
+fi
+AM_CONDITIONAL([EMBEDDED_UNIVALUE],[test x$system_univalue = xno])
+AC_SUBST(UNIVALUE_CFLAGS)
+AC_SUBST(UNIVALUE_LIBS)
+
 CXXFLAGS_TEMP="$CXXFLAGS"
 LIBS_TEMP="$LIBS"
 CXXFLAGS="$CXXFLAGS $SSL_CFLAGS $CRYPTO_CFLAGS"
@@ -949,12 +1000,19 @@ AC_DEFINE(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION, [Build revision])
 AC_DEFINE(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD, [Version Build])
 AC_DEFINE(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE, [Version is release])
 AC_DEFINE(COPYRIGHT_YEAR, _COPYRIGHT_YEAR, [Version is release])
+AC_DEFINE(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS", [Copyright holder(s) before %s replacement])
+AC_DEFINE(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION", [Replacement for %s in copyright holders string])
+define(_COPYRIGHT_HOLDERS_FINAL, patsubst(_COPYRIGHT_HOLDERS, [%s], [_COPYRIGHT_HOLDERS_SUBSTITUTION]))
+AC_DEFINE(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL", [Copyright holder(s)])
 AC_SUBST(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR)
 AC_SUBST(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR)
 AC_SUBST(CLIENT_VERSION_REVISION, _CLIENT_VERSION_REVISION)
 AC_SUBST(CLIENT_VERSION_BUILD, _CLIENT_VERSION_BUILD)
 AC_SUBST(CLIENT_VERSION_IS_RELEASE, _CLIENT_VERSION_IS_RELEASE)
 AC_SUBST(COPYRIGHT_YEAR, _COPYRIGHT_YEAR)
+AC_SUBST(COPYRIGHT_HOLDERS, "_COPYRIGHT_HOLDERS")
+AC_SUBST(COPYRIGHT_HOLDERS_SUBSTITUTION, "_COPYRIGHT_HOLDERS_SUBSTITUTION")
+AC_SUBST(COPYRIGHT_HOLDERS_FINAL, "_COPYRIGHT_HOLDERS_FINAL")
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(HARDENED_CXXFLAGS)
@@ -1000,8 +1058,12 @@ PKGCONFIG_LIBDIR_TEMP="$PKG_CONFIG_LIBDIR"
 unset PKG_CONFIG_LIBDIR
 PKG_CONFIG_LIBDIR="$PKGCONFIG_LIBDIR_TEMP"
 
+if test x$system_univalue = xno; then
+  AC_CONFIG_SUBDIRS([src/univalue])
+fi
+
 ac_configure_args="${ac_configure_args} --disable-shared --with-pic --with-bignum=no --enable-module-recovery"
-AC_CONFIG_SUBDIRS([src/secp256k1 src/univalue])
+AC_CONFIG_SUBDIRS([src/secp256k1])
 
 AC_OUTPUT
 

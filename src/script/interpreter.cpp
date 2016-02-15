@@ -165,7 +165,10 @@ bool static IsLowDERSignature(const valtype &vchSig, ScriptError* serror) {
         return set_error(serror, SCRIPT_ERR_SIG_DER);
     }
     std::vector<unsigned char> vchSigCopy(vchSig.begin(), vchSig.begin() + vchSig.size() - 1);
-    return CPubKey::CheckLowS(vchSigCopy);
+    if (!CPubKey::CheckLowS(vchSigCopy)) {
+        return set_error(serror, SCRIPT_ERR_SIG_HIGH_S);
+    }
+    return true;
 }
 
 bool static IsDefinedHashtypeSignature(const valtype &vchSig) {
@@ -1147,7 +1150,7 @@ bool TransactionSignatureChecker::CheckLockTime(const CScriptNum& nLockTime) con
     // prevent this condition. Alternatively we could test all
     // inputs, but testing just this input minimizes the data
     // required to prove correct CHECKLOCKTIMEVERIFY execution.
-    if (txTo->vin[nIn].IsFinal())
+    if (CTxIn::SEQUENCE_FINAL == txTo->vin[nIn].nSequence)
         return false;
 
     return true;

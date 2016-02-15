@@ -204,8 +204,8 @@ public:
     int GetDepthInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { const CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet) > 0; }
     int GetBlocksToMaturity() const;
-    /** Pass this transaction to the mempool. Fails if absolute fee exceeds maxTxFee. */
-    bool AcceptToMemoryPool(bool fLimitFree=true, bool fRejectAbsurdFee=true);
+    /** Pass this transaction to the mempool. Fails if absolute fee exceeds absurd fee. */
+    bool AcceptToMemoryPool(bool fLimitFree, const CAmount nAbsurdFee);
     bool hashUnset() const { return (hashBlock.IsNull() || hashBlock == ABANDON_HASH); }
     bool isAbandoned() const { return (hashBlock == ABANDON_HASH); }
     void setAbandoned() { hashBlock = ABANDON_HASH; }
@@ -718,7 +718,7 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletDB* pwalletdb);
-    void SyncTransaction(const CTransaction& tx, const CBlock* pblock);
+    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, const CBlock* pblock);
     bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate);
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     void ReacceptWalletTransactions();

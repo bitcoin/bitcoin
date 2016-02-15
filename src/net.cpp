@@ -1857,7 +1857,7 @@ bool BindListenPort(const CService &addrBind, string& strError, bool fWhiteliste
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
-            strError = strprintf(_("Unable to bind to %s on this computer. Bitcoin Core is probably already running."), addrBind.ToString());
+            strError = strprintf(_("Unable to bind to %s on this computer. %s is probably already running."), addrBind.ToString(), _(PACKAGE_NAME));
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError);
@@ -1943,8 +1943,10 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
         CAddrDB adb;
         if (adb.Read(addrman))
             LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman.size(), GetTimeMillis() - nStart);
-        else
+        else {
             LogPrintf("Invalid or missing peers.dat; recreating\n");
+            DumpAddresses();
+        }
     }
 
     uiInterface.InitMessage(_("Loading banlist..."));
@@ -1959,8 +1961,11 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
 
         LogPrint("net", "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
             banmap.size(), GetTimeMillis() - nStart);
-    } else
+    } else {
         LogPrintf("Invalid or missing banlist.dat; recreating\n");
+        CNode::SetBannedSetDirty(true); // force write
+        DumpBanlist();
+    }
 
     fAddressesInitialized = true;
 
