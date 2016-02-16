@@ -275,6 +275,18 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
 
     verticalLayout_Mempool->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
+    /* Mining tab */
+
+    QWidget * const tabMining = new QWidget();
+    QVBoxLayout * const verticalLayout_Mining = new QVBoxLayout(tabMining);
+    ui->tabWidget->insertTab(ui->tabWidget->indexOf(ui->tabWindow), tabMining, tr("M&ining"));
+
+    verticalLayout_Mining->addWidget(new QLabel(tr("<strong>Note that mining is heavily influenced by the settings on the Mempool tab.</strong>")));
+
+    // TODO
+
+    verticalLayout_Mining->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
+
     /* Window elements init */
 #ifdef Q_OS_MACOS
     /* remove Window tab on Mac */
