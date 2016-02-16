@@ -600,21 +600,56 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             Misbehaving(pfrom->GetId(), nDoS);
         }
     }
-    LogPrint("thin", "Processed block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
-
+    LogPrint("thin", "Processed thinblock %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
+    
     // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
-    // Therefore we have to remove thinblock in flight if it exists and we also need to check that 
-    // the block didn't arrive from some other peer.
+    // Therefore we have to remove the thinblock in flight if it exists and we also need to check that 
+    // the block didn't arrive from some other peer.  This code ALSO cleans up the thin block that
+    // was passed to us (&block), so do not use it after this.
     {
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes) {
             if (pnode->mapThinBlocksInFlight.count(inv.hash)) {
                 pnode->mapThinBlocksInFlight.erase(inv.hash); 
                 pnode->thinBlockWaitingForTxns = -1;
-                LogPrintf("Removing Thinblock in flight %s  peer=%d\n",inv.hash.ToString(), pnode->id);
+                pnode->thinBlock.SetNull();
+                if (pnode != pfrom) LogPrintf("Removing thinblock in flight %s from %s (%d)\n",inv.hash.ToString(), pnode->addrName.c_str(), pnode->id);
             }
         }
     }
+}
+
+bool ThinBlockMessageHandler(vector<CNode*>& vNodesCopy)
+{
+  bool sleep = true;
+  CNodeSignals& signals = GetNodeSignals();
+  BOOST_FOREACH (CNode* pnode, vNodesCopy)
+    {
+      if ((pnode->fDisconnect)||(!pnode->ThinBlockCapable()))
+        continue;
+
+      // Receive messages
+      {
+        TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
+        if (lockRecv)
+          {
+            if (!signals.ProcessMessages(pnode))
+              pnode->CloseSocketDisconnect();
+
+            if (pnode->nSendSize < SendBufferSize())
+              {
+                if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
+                  {
+                    sleep = false;
+                  }
+              }
+          }
+      }
+      boost::this_thread::interruption_point();
+      signals.SendMessages(pnode);
+      boost::this_thread::interruption_point();
+    }
+  return sleep;
 }
 
 void ConnectToThinBlockNodes()
