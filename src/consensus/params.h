@@ -13,7 +13,7 @@ namespace Consensus {
 /** Order matters, see case LOCKED_IN in CalculateNextState() */
 enum DeploymentPos
 {
-    BIP113,
+    BIP68_BIP112,
     MAX_VERSION_BITS_DEPLOYMENTS
 };
 

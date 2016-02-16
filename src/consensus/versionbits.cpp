@@ -172,6 +172,9 @@ unsigned int Consensus::GetFlags(const CBlockIndex* pindexPrev, const Params& co
     if (!pVersionBitsState)
         return flags;
 
+    if (pVersionBitsState->vStates[BIP68_BIP112] == ACTIVATED)
+        flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY | LOCKTIME_VERIFY_SEQUENCE;
+
     return flags;
 }
 
