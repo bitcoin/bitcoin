@@ -4,8 +4,6 @@
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#define SECP256K1_BUILD (1)
-
 #include "include/secp256k1.h"
 
 #include "util.h"
