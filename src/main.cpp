@@ -5162,7 +5162,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             vector<CInv> vGetData;
             vGetData.push_back(CInv(MSG_BLOCK, thinBlock.header.GetHash())); 
             pfrom->PushMessage("getdata", vGetData);
-            LogPrintf("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
+            LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
                        pfrom->thinBlockWaitingForTxns);
         }
     }
