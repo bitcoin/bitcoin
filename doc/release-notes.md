@@ -879,7 +879,6 @@ Thanks to everyone who directly contributed to this release:
 - Stephen
 - Suhas Daftuar
 - tailsjoin
-- ฿tcDrak
 - Thomas Kerin
 - Tom Harding
 - tulip
