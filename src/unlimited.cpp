@@ -27,11 +27,13 @@
 
 using namespace std;
 
+// BUIP010 Xtreme Thinblocks Variables
+std::map<uint256, uint64_t> mapThinBlockTimer;
 
 /**
  *  BUIP010 Xtreme Thinblocks Section 
  */
-bool HaveThinblockNodeConnections()
+bool HaveConnectThinblockNodes()
 {
     // Strip the port from then list of all the current in and outbound ip addresses
     std::vector<std::string> vNodesIP;
@@ -78,6 +80,44 @@ bool HaveThinblockNodeConnections()
         LogPrint("thin", "You have a cross connected thinblock node - we may download regular blocks until you resolve the issue\n");
     return false; // Connections are either not open or they are cross connected.
 } 
+
+bool HaveThinblockNodes()
+{
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH (CNode* pnode, vNodes)
+            if (pnode->nVersion >= THINBLOCKS_VERSION)
+                return true;
+    }
+    return false;
+}
+
+bool CheckThinblockTimer(uint256 hash)
+{
+    if (!mapThinBlockTimer.count(hash)) {
+        mapThinBlockTimer[hash] = GetTimeMillis();
+        LogPrint("thin", "Starting Preferential Thinblock timer\n");
+    }
+    else {
+        // Check that we have not exceeded the 10 second limit.
+        // If we have then we want to return false so that we can
+        // proceed to download a regular block instead.
+        uint64_t elapsed = GetTimeMillis() - mapThinBlockTimer[hash];
+        if (elapsed > 10000) {
+            LogPrint("thin", "Preferential Thinblock timer exceeded - downloading regular block instead\n");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ClearThinBlockTimer(uint256 hash)
+{
+    if (mapThinBlockTimer.count(hash)) {
+        mapThinBlockTimer.erase(hash);
+        LogPrint("thin", "Clearing Preferential Thinblock timer\n");
+    }
+}
 
 bool IsThinBlocksEnabled() 
 {
@@ -156,6 +196,9 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             }
         }
     }
+
+    // Clear the thinblock timer used for preferential download
+    ClearThinBlockTimer(inv.hash);
 }
 
 bool ThinBlockMessageHandler(vector<CNode*>& vNodesCopy)

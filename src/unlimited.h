@@ -16,8 +16,11 @@ class CDiskBlockPos;
 class CNode;
 
 // BUIP010 Xtreme Thinblocks:
-extern bool HaveThinblockNodeConnections();
-extern bool IsThinBlocksEnabled();  // has the user enabled thin blocks for this node (command line option)
+extern bool HaveConnectThinblockNodes();
+extern bool HaveThinblockNodes();
+extern bool CheckThinblockTimer(uint256 hash);
+extern bool ClearThinblockTimer(uint256 hash);
+extern bool IsThinBlocksEnabled();
 extern bool IsChainNearlySyncd();
 extern void SendSeededBloomFilter(CNode *pto);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
@@ -27,5 +30,6 @@ extern void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
 
 // Handle receiving and sending messages from thin block capable nodes only (so that thin block nodes capable nodes are preferred)
 extern bool ThinBlockMessageHandler(std::vector<CNode*>& vNodesCopy);
+extern std::map<uint256, uint64_t> mapThinBlockTimer;
 
 #endif
