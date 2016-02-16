@@ -4462,7 +4462,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                     vToFetch.push_back(inv2);
                                     SendSeededBloomFilter(pfrom);
                                     MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                                    LogPrint("thin", "Requesting Thinblock %s peer=%d\n", inv2.hash.ToString(), pfrom->id);
+                                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                                 }
                             }
                             else {
@@ -4471,10 +4471,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
                                     inv2.type = MSG_XTHINBLOCK;
                                     SendSeededBloomFilter(pfrom);
-                                    LogPrint("thin", "Requesting Thinblock %s peer=%d\n", inv2.hash.ToString(), pfrom->id);
+                                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                                 }
                                 else
-                                    LogPrint("thin", "Requesting Regular Block %s peer=%d\n", inv2.hash.ToString(), pfrom->id);
+                                    LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                                 MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
                                 vToFetch.push_back(inv2);
                             }
@@ -4482,7 +4482,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         else {
                             vToFetch.push_back(inv2);
                             MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                            LogPrint("thin", "Requesting Regular Block %s peer=%d\n", inv2.hash.ToString(), pfrom->id);
+                            LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                         }
                         // BUIP010 Xtreme Thinblocks: end section
                     }
@@ -4873,13 +4873,13 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
-        LogPrint("thin", "received thinblock %s peer=%d (%d bytes)\n", inv.hash.ToString(), pfrom->id, nSizeThinBlock);
+        LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
-            LogPrint("thin", "Thinblock received but not requested %s  peer=%d\n",inv.hash.ToString(), pfrom->id);
+            LogPrint("thin", "Thinblock received but not requested %s from peer %s (%d)\n",inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->addrName.c_str(), pfrom->id);
             Misbehaving(pfrom->GetId(), 20);
         }
 
-        pfrom->thinBlock = CBlock();
+        pfrom->thinBlock.SetNull();
         pfrom->thinBlock.nVersion = thinBlock.header.nVersion;
         pfrom->thinBlock.nBits = thinBlock.header.nBits;
         pfrom->thinBlock.nNonce = thinBlock.header.nNonce;
@@ -4971,14 +4971,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
-        LogPrint("thin", "received thinblock %s peer=%d (%d bytes)\n", inv.hash.ToString(), pfrom->id, nSizeThinBlock);
+        LogPrint("thin", "received thinblock %s from peer %s (%d) of %d bytes\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
             LogPrint("thin", "Thinblock received but not requested %s  peer=%d\n",inv.hash.ToString(), pfrom->id);
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20);
         }
 
-        pfrom->thinBlock = CBlock();
+        pfrom->thinBlock.SetNull();
         pfrom->thinBlock.nVersion = thinBlock.header.nVersion;
         pfrom->thinBlock.nBits = thinBlock.header.nBits;
         pfrom->thinBlock.nNonce = thinBlock.header.nNonce;
@@ -5010,7 +5010,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->AddInventoryKnown(inv); 
             LogPrint("thin", "Reassembled thin block for %s (%d bytes)\n", pfrom->thinBlock.GetHash().ToString(),
                        pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION));
-            HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
+            HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);  // clears the thin block
         }
         else if (pfrom->thinBlockWaitingForTxns > 0) {
             // This marks the end of the transactions we've received. If we get this and we have NOT been able to
@@ -5524,6 +5524,9 @@ bool SendMessages(CNode* pto)
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
         if (!lockMain)
             return true;
+        TRY_LOCK(pto->cs_vSend, lockSend);
+        if (!lockSend)
+          return true;
 
         // Address refresh broadcast
         int64_t nNow = GetTimeMicros();
@@ -5805,8 +5808,8 @@ bool SendMessages(CNode* pto)
                             vGetData.push_back(CInv(MSG_XTHINBLOCK, pindex->GetBlockHash())); 
                             SendSeededBloomFilter(pto);
                             MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
-                            LogPrint("thin", "Requesting Thinblock %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                                             pindex->nHeight, pto->id);
+                            LogPrint("thin", "Requesting thinblock %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
+                                     pindex->nHeight, pto->addrName.c_str(), pto->id);
                         }
                     }
                     else {
@@ -5815,13 +5818,13 @@ bool SendMessages(CNode* pto)
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
                             vGetData.push_back(CInv(MSG_XTHINBLOCK, pindex->GetBlockHash())); 
                             SendSeededBloomFilter(pto);
-                            LogPrint("thin", "Requesting Thinblock %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                                             pindex->nHeight, pto->id);
+                            LogPrint("thin", "Requesting Thinblock %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
+                                     pindex->nHeight, pto->addrName.c_str(), pto->id);
                         }
                         else {
                             vGetData.push_back(CInv(MSG_BLOCK, pindex->GetBlockHash())); 
-                            LogPrint("net", "Requesting block %s (%d) peer=%d\n", pindex->GetBlockHash().ToString(),
-                                             pindex->nHeight, pto->id);
+                            LogPrint("net", "Requesting block %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
+                                     pindex->nHeight, pto->addrName.c_str(), pto->id);
                         }
                         MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
                     }

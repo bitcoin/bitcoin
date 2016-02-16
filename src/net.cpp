@@ -219,7 +219,7 @@ void AdvertizeLocal(CNode *pnode)
         }
         if (addrLocal.IsRoutable())
         {
-            LogPrintf("AdvertizeLocal: advertizing address %s\n", addrLocal.ToString());
+          // BU logs too often: LogPrintf("AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
             pnode->PushAddress(addrLocal);
         }
     }
@@ -1730,7 +1730,7 @@ void ThreadMessageHandler()
             }
         }
 
-        bool fSleep = true;
+        bool fSleep = ThinBlockMessageHandler(vNodesCopy);
 
         BOOST_FOREACH(CNode* pnode, vNodesCopy)
         {
@@ -1758,9 +1758,9 @@ void ThreadMessageHandler()
 
             // Send messages
             {
-                TRY_LOCK(pnode->cs_vSend, lockSend);
-                if (lockSend)
-                    g_signals.SendMessages(pnode);
+              //TRY_LOCK(pnode->cs_vSend, lockSend);
+              //  if (lockSend)
+              g_signals.SendMessages(pnode);
             }
             boost::this_thread::interruption_point();
         }
@@ -1772,7 +1772,7 @@ void ThreadMessageHandler()
         }
 
         if (fSleep)
-            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(100));
+            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(50));
     }
 }
 

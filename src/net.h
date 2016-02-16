@@ -485,6 +485,13 @@ public:
         nRefCount--;
     }
 
+    // BUIP010:
+    bool ThinBlockCapable()
+    {
+        if(nVersion >= THINBLOCKS_VERSION) return true;
+        return false;
+    }
+    
 
 
     void AddAddressKnown(const CAddress& addr)

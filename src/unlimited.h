@@ -8,6 +8,7 @@
 //#include "leakybucket.h"
 #include "net.h"
 #include <univalue.h>
+#include <vector>
 
 enum {
     DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,
@@ -58,12 +59,15 @@ extern unsigned int maxMessageSizeMultiplier;
 
 // BUIP010 Xtreme Thinblocks:
 extern bool HaveThinblockNodeConnections();
-extern bool IsThinBlocksEnabled();
+extern bool IsThinBlocksEnabled();  // has the user enabled thin blocks for this node (command line option)
 extern bool IsChainNearlySyncd();
 extern void SendSeededBloomFilter(CNode *pto);
 extern void HandleBlockMessage(CNode *pfrom, const std::string &strCommand, CBlock &block, const CInv &inv);
 extern void ConnectToThinBlockNodes();
 extern void CheckNodeSupportForThinBlocks();
 extern void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv);
+
+// Handle receiving and sending messages from thin block capable nodes only (so that thin block nodes capable nodes are preferred)
+extern bool ThinBlockMessageHandler(std::vector<CNode*>& vNodesCopy);
 
 #endif
