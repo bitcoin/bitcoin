@@ -2176,6 +2176,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         flags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
     }
 
+    // Start enforcing CHECKSEQUENCEVERIFY (BIP112) for block.nVersion=5
+    // blocks, when 75% of the network has upgraded:
+    if (block.nVersion >= 5 && IsSuperMajority(5, pindex->pprev, chainparams.GetConsensus().nMajorityEnforceBlockUpgrade, chainparams.GetConsensus())) {
+        flags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+     }
+
     int64_t nTime2 = GetTimeMicros(); nTimeForks += nTime2 - nTime1;
     LogPrint("bench", "    - Fork checks: %.2fms [%.2fs]\n", 0.001 * (nTime2 - nTime1), nTimeForks * 0.000001);
 
@@ -3154,7 +3160,7 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
-    for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
+    for (int32_t version = 2; version < 6; ++version) // check for version 2, 3, 4 and 5 upgrades
         if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(v%d)", version - 1),
                                  strprintf("rejected nVersion=%d block", version - 1));
