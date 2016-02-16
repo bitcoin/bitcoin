@@ -461,6 +461,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return qlonglong(gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT));
         case limitdescendantsize:
             return qlonglong(gArgs.GetArg("-limitdescendantsize", DEFAULT_DESCENDANT_SIZE_LIMIT));
+        case rejectbaremultisig:
+            return !fIsBareMultisigStd;
         default:
             return QVariant();
         }
@@ -844,6 +846,16 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 std::string strNv = value.toString().toStdString();
                 gArgs.ForceSetArg("-limitdescendantsize", strNv);
                 gArgs.ModifyRWConfigFile("limitdescendantsize", strNv);
+            }
+            break;
+        }
+        case rejectbaremultisig:
+        {
+            // The config and internal option is inverted
+            const bool fNewValue = ! value.toBool();
+            if (fNewValue != fIsBareMultisigStd) {
+                fIsBareMultisigStd = fNewValue;
+                gArgs.ModifyRWConfigFile("permitbaremultisig", strprintf("%d", fNewValue));
             }
             break;
         }
