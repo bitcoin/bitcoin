@@ -1833,8 +1833,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     uiInterface.InitMessage(_("Loading masternode payment cache..."));
 
-    CMasternodePaymentDB mnpayments;
-    CMasternodePaymentDB::ReadResult readResult3 = mnpayments.Read(masternodePayments);
+    CMasternodePaymentDB mnpaymentsDB;
+    CMasternodePaymentDB::ReadResult readResult3 = mnpaymentsDB.Read(mnpayments);
     
     if (readResult3 == CMasternodePaymentDB::FileError)
         LogPrintf("Missing masternode payment cache - mnpayments.dat, will try to recreate\n");

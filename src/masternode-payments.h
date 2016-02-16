@@ -24,7 +24,7 @@ class CMasternodePayments;
 class CMasternodePaymentWinner;
 class CMasternodeBlockPayees;
 
-extern CMasternodePayments masternodePayments;
+extern CMasternodePayments mnpayments;
 
 #define MNPAYMENTS_SIGNATURES_REQUIRED           6
 #define MNPAYMENTS_SIGNATURES_TOTAL              10
@@ -273,8 +273,18 @@ public:
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
     std::string ToString() const;
+
     int GetOldestBlock();
     int GetNewestBlock();
+
+    int GetBlockCount()
+    {
+        return mapMasternodeBlocks.size();
+    }
+    int GetVoteCount()
+    {
+        return mapMasternodePayeeVotes.size();
+    }
 
     ADD_SERIALIZE_METHODS;
 

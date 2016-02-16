@@ -15,7 +15,7 @@
 #include <boost/filesystem.hpp>
 
 /** Object for who's going to get paid on which blocks */
-CMasternodePayments masternodePayments;
+CMasternodePayments mnpayments;
 
 CCriticalSection cs_vecPayments;
 CCriticalSection cs_mapMasternodeBlocks;
@@ -177,7 +177,7 @@ void DumpMasternodePayments()
         }
     }
     LogPrintf("Writting info to mnpayments.dat...\n");
-    paymentdb.Write(masternodePayments);
+    paymentdb.Write(mnpayments);
 
     LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 }
@@ -250,7 +250,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
     }
 
     //check for masternode payee
-    if(masternodePayments.IsTransactionValid(txNew, nBlockHeight))
+    if(mnpayments.IsTransactionValid(txNew, nBlockHeight))
     {
         return true;
     } else {
@@ -275,7 +275,7 @@ void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
     if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
         budget.FillBlockPayee(txNew, nFees);
     } else {
-        masternodePayments.FillBlockPayee(txNew, nFees);
+        mnpayments.FillBlockPayee(txNew, nFees);
     }
 }
 
@@ -284,7 +284,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
     if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(nBlockHeight)){
         return budget.GetRequiredPaymentsString(nBlockHeight);
     } else {
-        return masternodePayments.GetRequiredPaymentsString(nBlockHeight);
+        return mnpayments.GetRequiredPaymentsString(nBlockHeight);
     }
 }
 
@@ -297,7 +297,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, CAmount nFe
     CScript payee;
 
     //spork
-    if(!masternodePayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
+    if(!mnpayments.GetBlockPayee(pindexPrev->nHeight+1, payee)){
         //no masternode detected
         CMasternode* winningNode = mnodeman.GetCurrentMasterNode();
         if(winningNode){
@@ -357,7 +357,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
         }
 
         pfrom->FulfilledRequest("mnget");
-        masternodePayments.Sync(pfrom, nCountNeeded);
+        mnpayments.Sync(pfrom, nCountNeeded);
         LogPrintf("mnget - Sent Masternode winners to %s\n", pfrom->addr.ToString().c_str());
     }
     else if (strCommand == "mnw") { //Masternode Payments Declare Winner
@@ -369,7 +369,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         if(chainActive.Tip() == NULL) return;
 
-        if(masternodePayments.mapMasternodePayeeVotes.count(winner.GetHash())){
+        if(mnpayments.mapMasternodePayeeVotes.count(winner.GetHash())){
             LogPrint("mnpayments", "mnw - Already seen - %s bestHeight %d\n", winner.GetHash().ToString().c_str(), chainActive.Tip()->nHeight);
             masternodeSync.AddedMasternodeWinner(winner.GetHash());
             return;
@@ -387,7 +387,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
             return;
         }
 
-        if(!masternodePayments.CanVote(winner.vinMasternode.prevout, winner.nBlockHeight)){
+        if(!mnpayments.CanVote(winner.vinMasternode.prevout, winner.nBlockHeight)){
             LogPrintf("mnw - masternode already voted - %s\n", winner.vinMasternode.prevout.ToStringShort());
             return;
         }
@@ -406,7 +406,7 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
 
         LogPrint("mnpayments", "mnw - winning vote - Addr %s Height %d bestHeight %d - %s\n", address2.ToString().c_str(), winner.nBlockHeight, chainActive.Tip()->nHeight, winner.vinMasternode.prevout.ToStringShort());
 
-        if(masternodePayments.AddWinningMasternode(winner)){
+        if(mnpayments.AddWinningMasternode(winner)){
             winner.Relay();
             masternodeSync.AddedMasternodeWinner(winner.GetHash());
         }

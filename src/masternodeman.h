@@ -141,6 +141,8 @@ public:
 
     void Remove(CTxIn vin);
 
+    int GetEstimatedMasternodes(int nBlock);
+
 };
 
 #endif

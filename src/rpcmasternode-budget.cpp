@@ -17,6 +17,8 @@
 
 #include <fstream>
 #include <univalue.h>
+#include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -27,7 +29,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-many" && strCommand != "prepare" && strCommand != "submit" &&
+        (strCommand != "vote-many" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" &&
          strCommand != "vote" && strCommand != "getvotes" && strCommand != "getproposal" && strCommand != "getproposalhash" &&
          strCommand != "list" && strCommand != "projection" && strCommand != "check" && strCommand != "nextblock" && strCommand != "nextsuperblocksize"))
         throw runtime_error(
@@ -46,6 +48,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
                 "  projection         - Show the projection of which proposals will be paid the next cycle\n"
                 "  vote               - Vote on a proposal by single masternode (using dash.conf setup)\n"
                 "  vote-many          - Vote on a proposal by all masternodes (using masternode.conf setup)\n"
+                "  vote-alias         - Vote on a proposal by alias\n"
                 );
 
     if(strCommand == "nextblock")
@@ -209,6 +212,95 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         UniValue resultsObj(UniValue::VOBJ);
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+            std::string errorMessage;
+            std::vector<unsigned char> vchMasterNodeSignature;
+            std::string strMasterNodeSignMessage;
+
+            CPubKey pubKeyCollateralAddress;
+            CKey keyCollateralAddress;
+            CPubKey pubKeyMasternode;
+            CKey keyMasternode;
+
+            UniValue statusObj(UniValue::VOBJ);
+
+            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
+                failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+                continue;
+            }
+
+            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
+            if(pmn == NULL)
+            {
+                failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Can't find masternode by pubkey"));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+                continue;
+            }
+
+            CBudgetVote vote(pmn->vin, hash, nVote);
+            if(!vote.Sign(keyMasternode, pubKeyMasternode)){
+                failed++;
+                statusObj.push_back(Pair("result", "failed"));
+                statusObj.push_back(Pair("errorMessage", "Failure to sign."));
+                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+                continue;
+            }
+
+
+            std::string strError = "";
+            if(budget.UpdateProposal(vote, NULL, strError)) {
+                budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+                vote.Relay();
+                success++;
+                statusObj.push_back(Pair("result", "success"));
+            } else {
+                failed++;
+                statusObj.push_back(Pair("result", strError.c_str()));
+            }
+
+            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
+        }
+
+        UniValue returnObj(UniValue::VOBJ);
+        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
+        returnObj.push_back(Pair("detail", resultsObj));
+
+        return returnObj;
+    }
+
+    if(strCommand == "vote-alias")
+    {
+        if(params.size() != 4)
+            throw runtime_error("Correct usage is 'mnbudget vote-alias <proposal-hash> <yes|no> <alias-name>'");
+
+        uint256 hash;
+        std::string strVote;
+
+        hash = ParseHashV(params[1], "Proposal hash");
+        strVote = params[2].get_str();
+        std::string strAlias = params[3].get_str();
+
+        if(strVote != "yes" && strVote != "no") return "You can only vote 'yes' or 'no'";
+        int nVote = VOTE_ABSTAIN;
+        if(strVote == "yes") nVote = VOTE_YES;
+        if(strVote == "no") nVote = VOTE_NO;
+
+        int success = 0;
+        int failed = 0;
+
+        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
+        mnEntries = masternodeConfig.getEntries();
+
+        UniValue resultsObj(UniValue::VOBJ);
+
+        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
+
+            if( strAlias != mne.getAlias()) continue;
+
             std::string errorMessage;
             std::vector<unsigned char> vchMasterNodeSignature;
             std::string strMasterNodeSignMessage;
@@ -579,15 +671,17 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "list" && strCommand != "getvotes"))
+        (strCommand != "vote-many" && strCommand != "vote" && strCommand != "show" && strCommand != "getvotes" && strCommand != "prepare" && strCommand != "submit"))
         throw runtime_error(
                 "mnfinalbudget \"command\"...\n"
                 "Manage current budgets\n"
                 "\nAvailable commands:\n"
-                "  list        - List existing finalized budgets\n"
-                "  vote        - Vote on a finalized budget by single masternode (using dash.conf setup)\n"
-                "  vote-many   - Vote on a finalized budget by all masternodes (using masternode.conf setup)\n"
+                "  vote-many   - Vote on a finalized budget\n"
+                "  vote        - Vote on a finalized budget\n"
+                "  show        - Show existing finalized budgets\n"
                 "  getvotes    - Get vote information for each finalized budget\n"
+                "  prepare     - Manually prepare a finalized budget\n"
+                "  submit      - Manually submit a finalized budget\n"
                 );
 
     if(strCommand == "vote-many")
@@ -734,7 +828,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
     if(strCommand == "getvotes")
     {
         if (params.size() != 2)
-            throw runtime_error("Correct usage is 'mnbudget getvotes <budget-hash>'");
+            throw runtime_error("Correct usage is 'mnfinalbudget getvotes budget-hash'");
 
         std::string strHash = params[1].get_str();
         uint256 hash = uint256S(strHash);
@@ -762,6 +856,125 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         return obj;
     }
 
+    /* TODO 
+        Switch the preparation to a public key which the core team has
+        The budget should be able to be created by any high up core team member then voted on by the network separately. 
+    */
+
+    if(strCommand == "prepare")
+    {
+        if (params.size() != 2)
+            throw runtime_error("Correct usage is 'mnfinalbudget prepare comma-separated-hashes'");
+
+        std::string strHashes = params[1].get_str();
+        std::istringstream ss(strHashes);
+        std::string token;
+
+        std::vector<CTxBudgetPayment> vecTxBudgetPayments;
+
+        while(std::getline(ss, token, ',')) {
+            uint256 nHash = uint256S(token);
+            CBudgetProposal* prop = budget.FindProposal(nHash);
+
+            CTxBudgetPayment txBudgetPayment;
+            txBudgetPayment.nProposalHash = prop->GetHash();
+            txBudgetPayment.payee = prop->GetPayee();
+            txBudgetPayment.nAmount = prop->GetAllotted();
+            vecTxBudgetPayments.push_back(txBudgetPayment);
+        }
+
+        if(vecTxBudgetPayments.size() < 1) {
+            return "Invalid finalized proposal";
+        }
+
+
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(!pindexPrev) return "invalid chaintip";
+
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+
+        CFinalizedBudgetBroadcast tempBudget("main", nBlockStart, vecTxBudgetPayments, uint256());
+        // if(mapSeenFinalizedBudgets.count(tempBudget.GetHash())) {
+        //     return "already exists"; //already exists
+        // }
+
+        //create fee tx
+        CTransaction tx;
+        
+        CWalletTx wtx;
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, tempBudget.GetHash(), false)){
+            printf("Can't make collateral transaction\n");
+            return "can't make colateral tx";
+        }
+        
+        // make our change address
+        CReserveKey reservekey(pwalletMain);
+        //send the tx to the network
+        pwalletMain->CommitTransaction(wtx, reservekey, "ix");
+
+        return wtx.GetHash().ToString();
+    }
+
+    if(strCommand == "submit")
+    {
+        if (params.size() != 3)
+            throw runtime_error("Correct usage is 'mnfinalbudget submit comma-separated-hashes collateralhash'");
+
+        std::string strHashes = params[1].get_str();
+        std::istringstream ss(strHashes);
+        std::string token;
+
+        std::vector<CTxBudgetPayment> vecTxBudgetPayments;
+
+        uint256 nColHash = uint256S(params[2].get_str());
+
+        while(std::getline(ss, token, ',')) {
+            uint256 nHash = uint256S(token);
+            CBudgetProposal* prop = budget.FindProposal(nHash);
+
+            CTxBudgetPayment txBudgetPayment;
+            txBudgetPayment.nProposalHash = prop->GetHash();
+            txBudgetPayment.payee = prop->GetPayee();
+            txBudgetPayment.nAmount = prop->GetAllotted();
+            vecTxBudgetPayments.push_back(txBudgetPayment);
+
+            printf("%lld\n", txBudgetPayment.nAmount);
+        }
+
+        if(vecTxBudgetPayments.size() < 1) {
+            return "Invalid finalized proposal";
+        }
+
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(!pindexPrev) return "invalid chaintip";
+
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+      
+        // CTxIn in(COutPoint(nColHash, 0));
+        // int conf = GetInputAgeIX(nColHash, in);
+        
+        //     Wait will we have 1 extra confirmation, otherwise some clients might reject this feeTX
+        //     -- This function is tied to NewBlock, so we will propagate this budget while the block is also propagating
+        
+        // if(conf < BUDGET_FEE_CONFIRMATIONS+1){
+        //     printf ("Collateral requires at least %d confirmations - %s - %d confirmations\n", BUDGET_FEE_CONFIRMATIONS, nColHash.ToString().c_str(), conf);
+        //     return "invalid collateral";
+        // }
+
+        //create the proposal incase we're the first to make it
+        CFinalizedBudgetBroadcast finalizedBudgetBroadcast("main", nBlockStart, vecTxBudgetPayments, nColHash);
+
+        std::string strError = "";
+        if(!finalizedBudgetBroadcast.IsValid(strError)){
+            printf("CBudgetManager::SubmitFinalBudget - Invalid finalized budget - %s \n", strError.c_str());
+            return "invalid finalized budget";
+        }
+
+        finalizedBudgetBroadcast.Relay();
+        budget.AddFinalizedBudget(finalizedBudgetBroadcast);
+
+        return finalizedBudgetBroadcast.GetHash().ToString();
+    }
 
     return NullUniValue;
 }

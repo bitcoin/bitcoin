@@ -267,12 +267,12 @@ int64_t CMasternode::GetLastPaid() {
         }
         n++;
 
-        if(masternodePayments.mapMasternodeBlocks.count(BlockReading->nHeight)){
+        if(mnpayments.mapMasternodeBlocks.count(BlockReading->nHeight)){
             /*
                 Search for this payee, with at least 2 votes. This will aid in consensus allowing the network 
                 to converge on the same payees quickly, then keep the same schedule.
             */
-            if(masternodePayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
+            if(mnpayments.mapMasternodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)){
                 return BlockReading->nTime + nOffset;
             }
         }
@@ -357,7 +357,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     std::string vchPubKey2(pubkey2.begin(), pubkey2.end());
     std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-    if(protocolVersion < masternodePayments.GetMinMasternodePaymentsProto()) {
+    if(protocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
         LogPrintf("mnb - ignoring outdated Masternode %s protocol version %d\n", vin.ToString(), protocolVersion);
         return false;
     }
@@ -588,7 +588,7 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
 
     // see if we have this Masternode
     CMasternode* pmn = mnodeman.Find(vin);
-    if(pmn != NULL && pmn->protocolVersion >= masternodePayments.GetMinMasternodePaymentsProto())
+    if(pmn != NULL && pmn->protocolVersion >= mnpayments.GetMinMasternodePaymentsProto())
     {
         if (fRequireEnabled && !pmn->IsEnabled() && !pmn->IsPreEnabled()) return false;
 
