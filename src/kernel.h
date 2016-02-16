@@ -7,8 +7,6 @@
 #include "main.h"
 #include "wallet.h"
 
-using namespace std;
-
 // ChainDB upgrade time
 extern unsigned int nModifierUpgradeTime;
 
@@ -55,8 +53,7 @@ inline int64_t GetWeight(int64_t nIntervalBeginning, int64_t nIntervalEnd)
     //
     // Maximum TimeWeight is 90 days.
 
-    return min(nIntervalEnd - nIntervalBeginning - nStakeMinAge, (int64_t)nStakeMaxAge);
+    return std::min(nIntervalEnd - nIntervalBeginning - nStakeMinAge, (int64_t)nStakeMaxAge);
 }
-
 
 #endif // PPCOIN_KERNEL_H
