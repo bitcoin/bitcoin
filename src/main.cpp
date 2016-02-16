@@ -4597,7 +4597,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         // BUIP010 Xtreme Thinblocks: begin section
                         CInv inv2(inv);
                         if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
-                            if (HaveThinblockNodeConnections()) {
+                            if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(inv.hash))) {
                                 // Must download a block from a ThinBlock peer
                                 if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
@@ -5162,7 +5162,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             vector<CInv> vGetData;
             vGetData.push_back(CInv(MSG_BLOCK, thinBlock.header.GetHash())); 
             pfrom->PushMessage("getdata", vGetData);
-            LogPrintf("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
+            LogPrint("thin", "Missing %d Thinblock transactions, re-requesting a regular block\n",  
                        pfrom->thinBlockWaitingForTxns);
         }
     }
@@ -5947,7 +5947,7 @@ bool SendMessages(CNode* pto)
             BOOST_FOREACH(CBlockIndex *pindex, vToDownload) {
                 // BUIP010 Xtreme Thinblocks: begin section
                 if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
-                    if (HaveThinblockNodeConnections()) {
+                    if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(pindex->GetBlockHash()))) {
                         // Must download a block from a ThinBlock peer
                         if (pto->mapThinBlocksInFlight.size() < 1 && pto->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();

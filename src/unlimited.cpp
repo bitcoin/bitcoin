@@ -24,6 +24,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
 #include <inttypes.h>
 
 using namespace std;
@@ -41,6 +42,9 @@ CLeakyBucket sendShaper(DEFAULT_MAX_SEND_BURST, DEFAULT_AVE_SEND);
 boost::chrono::steady_clock CLeakyBucket::clock;
 
 void UnlimitedPushTxns(CNode* dest);
+
+// BUIP010 Xtreme Thinblocks Variables
+std::map<uint256, uint64_t> mapThinBlockTimer;
 
 std::string UnlimitedCmdLineHelp()
 {
@@ -492,7 +496,7 @@ UniValue settrafficshaping(const UniValue& params, bool fHelp)
 /**
  *  BUIP010 Xtreme Thinblocks Section 
  */
-bool HaveThinblockNodeConnections()
+bool HaveConnectThinblockNodes()
 {
     // Strip the port from then list of all the current in and outbound ip addresses
     std::vector<std::string> vNodesIP;
@@ -539,6 +543,44 @@ bool HaveThinblockNodeConnections()
         LogPrint("thin", "You have a cross connected thinblock node - we may download regular blocks until you resolve the issue\n");
     return false; // Connections are either not open or they are cross connected.
 } 
+
+bool HaveThinblockNodes()
+{
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH (CNode* pnode, vNodes)
+            if (pnode->nVersion >= THINBLOCKS_VERSION)
+                return true;
+    }
+    return false;
+}
+
+bool CheckThinblockTimer(uint256 hash)
+{
+    if (!mapThinBlockTimer.count(hash)) {
+        mapThinBlockTimer[hash] = GetTimeMillis();
+        LogPrint("thin", "Starting Preferential Thinblock timer\n");
+    }
+    else {
+        // Check that we have not exceeded the 10 second limit.
+        // If we have then we want to return false so that we can
+        // proceed to download a regular block instead.
+        uint64_t elapsed = GetTimeMillis() - mapThinBlockTimer[hash];
+        if (elapsed > 10000) {
+            LogPrint("thin", "Preferential Thinblock timer exceeded - downloading regular block instead\n");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ClearThinBlockTimer(uint256 hash)
+{
+    if (mapThinBlockTimer.count(hash)) {
+        mapThinBlockTimer.erase(hash);
+        LogPrint("thin", "Clearing Preferential Thinblock timer\n");
+    }
+}
 
 bool IsThinBlocksEnabled() 
 {
@@ -617,39 +659,40 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             }
         }
     }
+
+    // Clear the thinblock timer used for preferential download
+    ClearThinBlockTimer(inv.hash);
 }
 
 bool ThinBlockMessageHandler(vector<CNode*>& vNodesCopy)
 {
-  bool sleep = true;
-  CNodeSignals& signals = GetNodeSignals();
-  BOOST_FOREACH (CNode* pnode, vNodesCopy)
+    bool sleep = true;
+    CNodeSignals& signals = GetNodeSignals();
+    BOOST_FOREACH (CNode* pnode, vNodesCopy)
     {
-      if ((pnode->fDisconnect)||(!pnode->ThinBlockCapable()))
-        continue;
+        if ((pnode->fDisconnect) || (!pnode->ThinBlockCapable()))
+            continue;
 
-      // Receive messages
-      {
-        TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-        if (lockRecv)
-          {
-            if (!signals.ProcessMessages(pnode))
-              pnode->CloseSocketDisconnect();
+        // Receive messages
+        {
+            TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
+            if (lockRecv)
+            {
+                if (!signals.ProcessMessages(pnode))
+                    pnode->CloseSocketDisconnect();
 
-            if (pnode->nSendSize < SendBufferSize())
-              {
-                if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
-                  {
-                    sleep = false;
-                  }
-              }
-          }
-      }
-      boost::this_thread::interruption_point();
-      signals.SendMessages(pnode);
-      boost::this_thread::interruption_point();
+                if (pnode->nSendSize < SendBufferSize())
+                {
+                    if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
+                        sleep = false;
+                }
+            }
+        }
+        boost::this_thread::interruption_point();
+        signals.SendMessages(pnode);
+        boost::this_thread::interruption_point();
     }
-  return sleep;
+    return sleep;
 }
 
 void ConnectToThinBlockNodes()
