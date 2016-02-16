@@ -24,6 +24,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
 #include <inttypes.h>
 
 using namespace std;
@@ -665,35 +666,33 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
 
 bool ThinBlockMessageHandler(vector<CNode*>& vNodesCopy)
 {
-  bool sleep = true;
-  CNodeSignals& signals = GetNodeSignals();
-  BOOST_FOREACH (CNode* pnode, vNodesCopy)
+    bool sleep = true;
+    CNodeSignals& signals = GetNodeSignals();
+    BOOST_FOREACH (CNode* pnode, vNodesCopy)
     {
-      if ((pnode->fDisconnect)||(!pnode->ThinBlockCapable()))
-        continue;
+        if ((pnode->fDisconnect) || (!pnode->ThinBlockCapable()))
+            continue;
 
-      // Receive messages
-      {
-        TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
-        if (lockRecv)
-          {
-            if (!signals.ProcessMessages(pnode))
-              pnode->CloseSocketDisconnect();
+        // Receive messages
+        {
+            TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
+            if (lockRecv)
+            {
+                if (!signals.ProcessMessages(pnode))
+                    pnode->CloseSocketDisconnect();
 
-            if (pnode->nSendSize < SendBufferSize())
-              {
-                if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
-                  {
-                    sleep = false;
-                  }
-              }
-          }
-      }
-      boost::this_thread::interruption_point();
-      signals.SendMessages(pnode);
-      boost::this_thread::interruption_point();
+                if (pnode->nSendSize < SendBufferSize())
+                {
+                    if (!pnode->vRecvGetData.empty() || (!pnode->vRecvMsg.empty() && pnode->vRecvMsg[0].complete()))
+                        sleep = false;
+                }
+            }
+        }
+        boost::this_thread::interruption_point();
+        signals.SendMessages(pnode);
+        boost::this_thread::interruption_point();
     }
-  return sleep;
+    return sleep;
 }
 
 void ConnectToThinBlockNodes()
