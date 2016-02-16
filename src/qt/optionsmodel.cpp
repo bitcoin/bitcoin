@@ -465,6 +465,12 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return !fIsBareMultisigStd;
         case datacarriersize:
             return fAcceptDatacarrier ? qlonglong(nMaxDatacarrierBytes) : qlonglong(0);
+        case blockmaxsize:
+            return qlonglong(gArgs.GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE) / 1000);
+        case blockprioritysize:
+            return qlonglong(gArgs.GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE) / 1000);
+        case blockmaxweight:
+            return qlonglong(gArgs.GetArg("-blockmaxweight", DEFAULT_BLOCK_MAX_WEIGHT) / 1000);
         default:
             return QVariant();
         }
@@ -872,6 +878,31 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             if (fNewEn != fAcceptDatacarrier) {
                 gArgs.ModifyRWConfigFile("datacarrier", strprintf("%d", fNewEn));
                 fAcceptDatacarrier = fNewEn;
+            }
+            break;
+        }
+        case blockmaxsize:
+        case blockprioritysize:
+        case blockmaxweight:
+        {
+            const int nNewValue_kB = value.toInt();
+            const int nOldValue_kB = data(index, role).toInt();
+            if (nNewValue_kB != nOldValue_kB) {
+                std::string strNv = strprintf("%d000", nNewValue_kB);
+                std::string strKey;
+                switch(index.row()) {
+                    case blockmaxsize:
+                        strKey = "blockmaxsize";
+                        break;
+                    case blockprioritysize:
+                        strKey = "blockprioritysize";
+                        break;
+                    case blockmaxweight:
+                        strKey = "blockmaxweight";
+                        break;
+                }
+                gArgs.ForceSetArg("-" + strKey, strNv);
+                gArgs.ModifyRWConfigFile(strKey, strNv);
             }
             break;
         }

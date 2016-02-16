@@ -73,6 +73,10 @@ private Q_SLOTS:
     void updateDefaultProxyNets();
     void checkLineEdit();
 
+    void blockmaxsize_changed(int);
+    void blockmaxsize_increase(int);
+    void blockmaxweight_changed(int);
+
 Q_SIGNALS:
     void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, uint16_t nProxyPort);
 
@@ -98,6 +102,8 @@ private:
     QSpinBox *limitdescendantsize;
     QCheckBox *rejectbaremultisig;
     QSpinBox *datacarriersize;
+
+    QSpinBox *blockmaxsize, *blockprioritysize, *blockmaxweight;
 };
 
 #endif // BITCOIN_QT_OPTIONSDIALOG_H
