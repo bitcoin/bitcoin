@@ -574,7 +574,7 @@ bool CheckThinblockTimer(uint256 hash)
     return true;
 }
 
-bool ClearThinBlockTimer(uint256 hash)
+void ClearThinBlockTimer(uint256 hash)
 {
     if (mapThinBlockTimer.count(hash)) {
         mapThinBlockTimer.erase(hash);
@@ -610,8 +610,8 @@ void SendSeededBloomFilter(CNode *pto)
     memPoolFilter = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
     LogPrint("thin", "Bloom multiplier: %f FPrate: %f Num elements in bloom filter: %d num mempool entries: %d\n", nBloomDecay, nFPRate, nElements, (int)mempool.mapTx.size());
 
-    // Seed the filter with the transactions in the memory pool, orphan pool and relay pool
-    LOCK2(cs_main, pto->cs_filter);
+    // Seed the filter with the transactions in the memory pool
+    LOCK(cs_main);
     std::vector<uint256> memPoolHashes;
     mempool.queryHashes(memPoolHashes);
     for (uint64_t i = 0; i < memPoolHashes.size(); i++)
