@@ -4959,7 +4959,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // Re-request transactions that we are still missing
             CXThinBlockTx thinBlockTx(thinBlock.header.GetHash(), vHashesToRequest);
             pfrom->PushMessage(NetMsgType::GET_XBLOCKTX, thinBlockTx);
-            LogPrint("thin", "Missing %d transactions for xthinblock, re-requesting (consider adjusting relay policies)\n", 
+            LogPrint("thin", "Missing %d transactions for xthinblock, re-requesting\n", 
                       pfrom->thinBlockWaitingForTxns);
         }
     }

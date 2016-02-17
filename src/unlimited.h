@@ -19,7 +19,7 @@ class CNode;
 extern bool HaveConnectThinblockNodes();
 extern bool HaveThinblockNodes();
 extern bool CheckThinblockTimer(uint256 hash);
-extern bool ClearThinblockTimer(uint256 hash);
+extern void ClearThinblockTimer(uint256 hash);
 extern bool IsThinBlocksEnabled();
 extern bool IsChainNearlySyncd();
 extern void SendSeededBloomFilter(CNode *pto);
