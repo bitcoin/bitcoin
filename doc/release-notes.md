@@ -72,40 +72,29 @@ Libsecp256k1 has undergone very extensive testing and validation.
 
 A side effect of this change is that libconsensus no longer depends on OpenSSL.
 
-Reduce upload traffic
----------------------
+Wallet: Pruning
+---------------
 
-A major part of the outbound traffic is caused by serving historic blocks to
-other nodes in initial block download state.
+With 0.12 it is possible to use wallet functionality in pruned mode.
+This can reduce the disk usage from currently around 60 GB to
+around 2 GB.
 
-It is now possible to reduce the total upload traffic via the `-maxuploadtarget`
-parameter. This is *not* a hard limit but a threshold to minimize the outbound
-traffic. When the limit is about to be reached, the uploaded data is cut by not
-serving historic blocks (blocks older than one week).
-Moreover, any SPV peer is disconnected when they request a filtered block.
+However, rescans as well as the RPCs `importwallet`, `importaddress`,
+`importprivkey` are disabled.
 
-This option can be specified in MiB per day and is turned off by default
-(`-maxuploadtarget=0`).
-The recommended minimum is 144 * MAX_BLOCK_SIZE (currently 144MB) per day.
+To enable block pruning set `prune=<N>` on the command line or in
+`bitcoin.conf`, where `N` is the number of MiB to allot for
+raw block & undo data.
 
-Whitelisted peers will never be disconnected, although their traffic counts for
-calculating the target.
+A value of 0 disables pruning. The minimal value above 0 is 550. Your
+wallet is as secure with high values as it is with low ones. Higher
+values merely ensure that your node will not shut down upon blockchain
+reorganizations of more than 2 days - which are unlikely to happen in
+practice. In future releases, a higher value may also help the network
+as a whole: stored blocks could be served to other nodes.
 
-A more detailed documentation about keeping traffic low can be found in
-[/doc/reduce-traffic.md](/doc/reduce-traffic.md).
-
-Direct headers announcement (BIP 130)
--------------------------------------
-
-Between compatible peers, [BIP 130]
-(https://github.com/bitcoin/bips/blob/master/bip-0130.mediawiki)
-direct headers announcement is used. This means that blocks are advertized by
-announcing their headers directly, instead of just announcing the hash. In a
-reorganization, all new headers are sent, instead of just the new tip. This
-can often prevent an extra roundtrip before the actual block is downloaded.
-
-With this change, pruning nodes are now able to relay new blocks to compatible
-peers.
+For further information about pruning, you may also consult the [release
+notes of v0.11.0](https://github.com/bitcoin/bitcoin/blob/v0.11.0/doc/release-notes.md#block-file-pruning).
 
 Memory pool limiting
 --------------------
@@ -132,6 +121,77 @@ size of unconfirmed transaction chains that are allowed in the mempool
 (generally limiting the length of unconfirmed chains to 25 transactions, with a
 total size of 101 KB).  These limits can be overriden using command line
 arguments; see the extended help (`--help -help-debug`) for more information.
+
+Reduce upload traffic
+---------------------
+
+A major part of the outbound traffic is caused by serving historic blocks to
+other nodes in initial block download state.
+
+It is now possible to reduce the total upload traffic via the `-maxuploadtarget`
+parameter. This is *not* a hard limit but a threshold to minimize the outbound
+traffic. When the limit is about to be reached, the uploaded data is cut by not
+serving historic blocks (blocks older than one week).
+Moreover, any SPV peer is disconnected when they request a filtered block.
+
+This option can be specified in MiB per day and is turned off by default
+(`-maxuploadtarget=0`).
+The recommended minimum is 144 * MAX_BLOCK_SIZE (currently 144MB) per day.
+
+Whitelisted peers will never be disconnected, although their traffic counts for
+calculating the target.
+
+A more detailed documentation about keeping traffic low can be found in
+[/doc/reduce-traffic.md](/doc/reduce-traffic.md).
+
+Wallet: Negative confirmations and conflict detection
+-----------------------------------------------------
+
+The wallet will now report a negative number for confirmations that indicates
+how deep in the block chain the conflict is found. For example, if a transaction
+A has 5 confirmations and spends the same input as a wallet transaction B, B
+will be reported as having -5 confirmations. If another wallet transaction C
+spends an output from B, it will also be reported as having -5 confirmations.
+To detect conflicts with historical transactions in the chain a one-time
+`-rescan` may be needed.
+
+Unlike earlier versions, unconfirmed but non-conflicting transactions will never
+get a negative confirmation count. They are not treated as spendable unless
+they're coming from ourself (change) and accepted into our local mempool,
+however. The new "trusted" field in the `listtransactions` RPC output
+indicates whether outputs of an unconfirmed transaction are considered
+spendable.
+
+Automatically use Tor hidden services
+-------------------------------------
+
+Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
+API, to create and destroy 'ephemeral' hidden services programmatically.
+Bitcoin Core has been updated to make use of this.
+
+This means that if Tor is running (and proper authorization is available),
+Bitcoin Core automatically creates a hidden service to listen on, without
+manual configuration. Bitcoin Core will also use Tor automatically to connect
+to other .onion nodes if the control socket can be successfully opened. This
+will positively affect the number of available .onion nodes and their usage.
+
+This new feature is enabled by default if Bitcoin Core is listening, and
+a connection to Tor can be made. It can be configured with the `-listenonion`,
+`-torcontrol` and `-torpassword` settings. To show verbose debugging
+information, pass `-debug=tor`.
+
+Direct headers announcement (BIP 130)
+-------------------------------------
+
+Between compatible peers, [BIP 130]
+(https://github.com/bitcoin/bips/blob/master/bip-0130.mediawiki)
+direct headers announcement is used. This means that blocks are advertized by
+announcing their headers directly, instead of just announcing the hash. In a
+reorganization, all new headers are sent, instead of just the new tip. This
+can often prevent an extra roundtrip before the actual block is downloaded.
+
+With this change, pruning nodes are now able to relay new blocks to compatible
+peers.
 
 Opt-in Replace-by-fee transactions
 ----------------------------------
@@ -161,7 +221,6 @@ BIP125 ("bip125-replaceable").
 
 Note that the wallet in Bitcoin Core 0.12 does not yet have support for
 creating transactions that would be replaceable under BIP 125.
-
 
 RPC: Random-cookie RPC authentication
 -------------------------------------
@@ -224,24 +283,6 @@ more accurate priority calculation for chained unconfirmed transactions will be
 restored. Community direction on this topic is particularly requested to help
 set project priorities.
 
-Automatically use Tor hidden services
--------------------------------------
-
-Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
-API, to create and destroy 'ephemeral' hidden services programmatically.
-Bitcoin Core has been updated to make use of this.
-
-This means that if Tor is running (and proper authorization is available),
-Bitcoin Core automatically creates a hidden service to listen on, without
-manual configuration. Bitcoin Core will also use Tor automatically to connect
-to other .onion nodes if the control socket can be successfully opened. This
-will positively affect the number of available .onion nodes and their usage.
-
-This new feature is enabled by default if Bitcoin Core is listening, and
-a connection to Tor can be made. It can be configured with the `-listenonion`,
-`-torcontrol` and `-torpassword` settings. To show verbose debugging
-information, pass `-debug=tor`.
-
 Notifications through ZMQ
 -------------------------
 
@@ -277,24 +318,6 @@ the current minimum relay fee.
 Finally, a user can set the minimum fee rate for all transactions with
 `-mintxfee=<i>`, which defaults to 1000 satoshis per kB.
 
-Wallet: Negative confirmations and conflict detection
------------------------------------------------------
-
-The wallet will now report a negative number for confirmations that indicates
-how deep in the block chain the conflict is found. For example, if a transaction
-A has 5 confirmations and spends the same input as a wallet transaction B, B
-will be reported as having -5 confirmations. If another wallet transaction C
-spends an output from B, it will also be reported as having -5 confirmations.
-To detect conflicts with historical transactions in the chain a one-time
-`-rescan` may be needed.
-
-Unlike earlier versions, unconfirmed but non-conflicting transactions will never
-get a negative confirmation count. They are not treated as spendable unless
-they're coming from ourself (change) and accepted into our local mempool,
-however. The new "trusted" field in the `listtransactions` RPC output
-indicates whether outputs of an unconfirmed transaction are considered
-spendable.
-
 Wallet: Merkle branches removed
 -------------------------------
 
@@ -303,30 +326,6 @@ presence in blocks. This wasn't being used for more than an expensive
 sanity check. Since 0.12, these are no longer stored. When loading a
 0.12 wallet into an older version, it will automatically rescan to avoid
 failed checks.
-
-Wallet: Pruning
----------------
-
-With 0.12 it is possible to use wallet functionality in pruned mode.
-This can reduce the disk usage from currently around 60 GB to
-around 2 GB.
-
-However, rescans as well as the RPCs `importwallet`, `importaddress`,
-`importprivkey` are disabled.
-
-To enable block pruning set `prune=<N>` on the command line or in
-`bitcoin.conf`, where `N` is the number of MiB to allot for
-raw block & undo data.
-
-A value of 0 disables pruning. The minimal value above 0 is 550. Your
-wallet is as secure with high values as it is with low ones. Higher
-values merely ensure that your node will not shut down upon blockchain
-reorganizations of more than 2 days - which are unlikely to happen in
-practice. In future releases, a higher value may also help the network
-as a whole: stored blocks could be served to other nodes.
-
-For further information about pruning, you may also consult the [release
-notes of v0.11.0](https://github.com/bitcoin/bitcoin/blob/v0.11.0/doc/release-notes.md#block-file-pruning).
 
 `NODE_BLOOM` service bit
 ------------------------
