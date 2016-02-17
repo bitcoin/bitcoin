@@ -820,7 +820,6 @@ Thanks to everyone who directly contributed to this release:
 - Erik Mossberg
 - Esteban Ordano
 - EthanHeilman
-- fanquake
 - Florian Schmaus
 - Forrest Voight
 - Gavin Andresen
@@ -851,18 +850,16 @@ Thanks to everyone who directly contributed to this release:
 - Matt Quinn
 - Micha
 - Michael
-- Michael Ford
+- Michael Ford / fanquake
 - Midnight Magic
 - Mitchell Cash
 - mrbandrews
 - mruddy
 - Nick
-- Patick Strateman
 - Patrick Strateman
 - Paul Georgiou
 - Paul Rabahy
-- paveljanik
-- Pavel Janík
+- Pavel Janík / paveljanik
 - Pavel Vasin
 - Pavol Rusnak
 - Peter Josling
