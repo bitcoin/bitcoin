@@ -41,7 +41,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
     if(!IsSporkActive(SPORK_2_INSTANTX)) return;
     if(!masternodeSync.IsBlockchainSynced()) return;
 
-    if (strCommand == "ix")
+    if (strCommand == NetMsgType::IX)
     {
         //LogPrintf("ProcessMessageInstantX::ix\n");
         CDataStream vMsg(vRecv);
@@ -127,7 +127,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             return;
         }
     }
-    else if (strCommand == "txlvote") //InstantX Lock Consensus Votes
+    else if (strCommand == NetMsgType::IXLOCKVOTE) //InstantX Lock Consensus Votes
     {
         CConsensusVote ctx;
         vRecv >> ctx;

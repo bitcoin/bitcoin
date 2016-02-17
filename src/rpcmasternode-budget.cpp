@@ -125,7 +125,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? "ix" : "tx");
+        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? NetMsgType::IX : NetMsgType::TX);
 
         return wtx.GetHash().ToString();
     }
@@ -910,7 +910,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, "ix");
+        pwalletMain->CommitTransaction(wtx, reservekey, NetMsgType::IX);
 
         return wtx.GetHash().ToString();
     }

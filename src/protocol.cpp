@@ -35,28 +35,54 @@ const char *FILTERADD="filteradd";
 const char *FILTERCLEAR="filterclear";
 const char *REJECT="reject";
 const char *SENDHEADERS="sendheaders";
+// Dash message types
+const char *IX="ix";
+const char *IXLOCKVOTE="txlvote";
+const char *SPORK="spork";
+const char *GETSPORKS="getsporks";
+const char *MNWINNER="mnw";
+const char *MNWINNERSSYNC="mnget";
+const char *MNSCANERROR="mn scan error"; // TODO ???
+const char *MNBUDGETVOTESYNC="mnvs";
+const char *MNBUDGETVOTE="mvote";
+const char *MNBUDGETPROPOSAL="mprop";
+const char *MNBUDGETFINAL="fbs";
+const char *MNBUDGETFINALVOTE="fbvote";
+const char *MNQUORUM="mn quorum"; // TODO ???
+const char *MNANNOUNCE="mnb";
+const char *MNPING="mnp";
+const char *DSACCEPT="dsa";
+const char *DSVIN="dsi";
+const char *DSFINALTX="dsf";
+const char *DSSIGNFINALTX="dss";
+const char *DSCOMPLETE="dsc";
+const char *DSSTATUSUPDATE="dssu";
+const char *DSTX="dstx";
+const char *DSQUEUE="dsq";
+const char *DSEG="dseg";
+const char *SYNCSTATUSCOUNT="ssc";
 };
 
-// TODO: NetMsgType::, allNetMessageTypes[]
 static const char* ppszTypeName[] =
 {
     "ERROR", // Should never occur
     NetMsgType::TX,
     NetMsgType::BLOCK,
-    "filtered block" // Should never occur
-    "tx lock request",
-    "tx lock vote",
-    "spork",
-    "mn winner",
-    "mn scan error",
-    "mn budget vote",
-    "mn budget proposal",
-    "mn budget finalized",
-    "mn budget finalized vote",
-    "mn quorum",
-    "mn announce",
-    "mn ping",
-    "dstx"
+    "filtered block", // Should never occur
+// Dash message types
+    NetMsgType::IX,
+    NetMsgType::IXLOCKVOTE,
+    NetMsgType::SPORK,
+    NetMsgType::MNWINNER,
+    NetMsgType::MNSCANERROR,
+    NetMsgType::MNBUDGETVOTE,
+    NetMsgType::MNBUDGETPROPOSAL,
+    NetMsgType::MNBUDGETFINAL,
+    NetMsgType::MNBUDGETFINALVOTE,
+    NetMsgType::MNQUORUM,
+    NetMsgType::MNANNOUNCE,
+    NetMsgType::MNPING,
+    NetMsgType::DSTX
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -84,7 +110,33 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::FILTERADD,
     NetMsgType::FILTERCLEAR,
     NetMsgType::REJECT,
-    NetMsgType::SENDHEADERS
+    NetMsgType::SENDHEADERS,
+// Dash message types
+    NetMsgType::IX,
+    NetMsgType::IXLOCKVOTE,
+    NetMsgType::SPORK,
+    NetMsgType::GETSPORKS,
+    NetMsgType::MNWINNER,
+    NetMsgType::MNWINNERSSYNC,
+    NetMsgType::MNSCANERROR,
+    NetMsgType::MNBUDGETVOTESYNC,
+    NetMsgType::MNBUDGETVOTE,
+    NetMsgType::MNBUDGETPROPOSAL,
+    NetMsgType::MNBUDGETFINAL,
+    NetMsgType::MNBUDGETFINALVOTE,
+    NetMsgType::MNQUORUM,
+    NetMsgType::MNANNOUNCE,
+    NetMsgType::MNPING,
+    NetMsgType::DSACCEPT,
+    NetMsgType::DSVIN,
+    NetMsgType::DSFINALTX,
+    NetMsgType::DSSIGNFINALTX,
+    NetMsgType::DSCOMPLETE,
+    NetMsgType::DSSTATUSUPDATE,
+    NetMsgType::DSTX,
+    NetMsgType::DSQUEUE,
+    NetMsgType::DSEG,
+    NetMsgType::SYNCSTATUSCOUNT
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

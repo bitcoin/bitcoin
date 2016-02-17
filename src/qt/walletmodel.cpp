@@ -371,7 +371,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
 
         CReserveKey *keyChange = transaction.getPossibleKeyChange();
 
-        if(!wallet->CommitTransaction(*newTx, *keyChange, recipients[0].useInstantX ? "ix" : "tx"))
+        if(!wallet->CommitTransaction(*newTx, *keyChange, recipients[0].useInstantX ? NetMsgType::IX : NetMsgType::TX))
             return TransactionCommitFailed;
 
         CTransaction* t = (CTransaction*)newTx;

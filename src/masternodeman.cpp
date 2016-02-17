@@ -238,7 +238,7 @@ void CMasternodeMan::AskForMN(CNode* pnode, CTxIn &vin)
     // ask for the mnb info once from the node that sent mnp
 
     LogPrintf("CMasternodeMan::AskForMN - Asking node for missing entry, vin: %s\n", vin.ToString());
-    pnode->PushMessage("dseg", vin);
+    pnode->PushMessage(NetMsgType::DSEG, vin);
     int64_t askAgain = GetTime() + MASTERNODE_MIN_MNP_SECONDS;
     mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
 }
@@ -392,7 +392,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
         }
     }
     
-    pnode->PushMessage("dseg", CTxIn());
+    pnode->PushMessage(NetMsgType::DSEG, CTxIn());
     int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
     mWeAskedForMasternodeList[pnode->addr] = askAgain;
 }
@@ -682,7 +682,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     LOCK(cs_process_message);
 
-    if (strCommand == "mnb") { //Masternode Broadcast
+    if (strCommand == NetMsgType::MNANNOUNCE) { //Masternode Broadcast
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
@@ -730,7 +730,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
     }
 
-    else if (strCommand == "mnp") { //Masternode Ping
+    else if (strCommand == NetMsgType::MNPING) { //Masternode Ping
         CMasternodePing mnp;
         vRecv >> mnp;
 
@@ -758,7 +758,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         // we might have to ask for a masternode entry once
         AskForMN(pfrom, mnp.vin);
 
-    } else if (strCommand == "dseg") { //Get Masternode list or specific entry
+    } else if (strCommand == NetMsgType::DSEG) { //Get Masternode list or specific entry
 
         CTxIn vin;
         vRecv >> vin;
@@ -809,7 +809,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         if(vin == CTxIn()) {
-            pfrom->PushMessage("ssc", MASTERNODE_SYNC_LIST, nInvCount);
+            pfrom->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_LIST, nInvCount);
             LogPrintf("dseg - Sent %d Masternode entries to %s\n", nInvCount, pfrom->addr.ToString());
         }
     }

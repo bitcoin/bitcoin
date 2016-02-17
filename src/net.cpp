@@ -2115,7 +2115,7 @@ void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll)
         if(!relayToAll && !pnode->fRelayTxes)
             continue;
 
-        pnode->PushMessage("ix", tx);
+        pnode->PushMessage(NetMsgType::IX, tx);
     }
 }
 

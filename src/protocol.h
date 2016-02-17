@@ -219,6 +219,33 @@ extern const char *REJECT;
  */
 extern const char *SENDHEADERS;
 
+// Dash message types
+// TODO: add description
+extern const char *IX;
+extern const char *IXLOCKVOTE;
+extern const char *SPORK;
+extern const char *GETSPORKS;
+extern const char *MNWINNER;
+extern const char *MNWINNERSSYNC;
+extern const char *MNSCANERROR;
+extern const char *MNBUDGETVOTESYNC;
+extern const char *MNBUDGETVOTE;
+extern const char *MNBUDGETPROPOSAL;
+extern const char *MNBUDGETFINAL;
+extern const char *MNBUDGETFINALVOTE;
+extern const char *MNQUORUM;
+extern const char *MNANNOUNCE;
+extern const char *MNPING;
+extern const char *DSACCEPT;
+extern const char *DSVIN;
+extern const char *DSFINALTX;
+extern const char *DSSIGNFINALTX;
+extern const char *DSDSCOMPLETE;
+extern const char *DSSTATUSUPDATE;
+extern const char *DSTX;
+extern const char *DSQUEUE;
+extern const char *DSEG;
+extern const char *SYNCSTATUSCOUNT;
 };
 
 /* Get a vector of all valid message types (see above) */

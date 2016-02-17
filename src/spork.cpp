@@ -32,7 +32,7 @@ void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     if(fLiteMode) return; //disable all darksend/masternode related functionality
 
-    if (strCommand == "spork")
+    if (strCommand == NetMsgType::SPORK)
     {
         //LogPrintf("ProcessSpork::spork\n");
         CDataStream vMsg(vRecv);
@@ -66,12 +66,12 @@ void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
         //does a task if needed
         ExecuteSpork(spork.nSporkID, spork.nValue);
     }
-    if (strCommand == "getsporks")
+    if (strCommand == NetMsgType::GETSPORKS)
     {
         std::map<int, CSporkMessage>::iterator it = mapSporksActive.begin();
 
         while(it != mapSporksActive.end()) {
-            pfrom->PushMessage("spork", it->second);
+            pfrom->PushMessage(NetMsgType::SPORK, it->second);
             it++;
         }
     }
