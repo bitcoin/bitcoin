@@ -81,7 +81,6 @@ public:
     std::string SporkKey() const { return strSporkKey; }
     std::string DarksendPoolDummyAddress() const { return strDarksendPoolDummyAddress; }
     std::string MasternodePaymentPubKey() const { return strMasternodePaymentsPubKey; }
-    int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
 protected:
     CChainParams() {}
 
@@ -107,7 +106,6 @@ protected:
     std::string strSporkKey;
     std::string strMasternodePaymentsPubKey;
     std::string strDarksendPoolDummyAddress;
-    int64_t nStartMasternodePayments;
 };
 
 /**

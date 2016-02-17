@@ -18,6 +18,7 @@
 #include "net.h"
 #include "pow.h"
 #include "rpcserver.h"
+#include "spork.h"
 #include "txmempool.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
@@ -608,8 +609,8 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         result.push_back(Pair("payee_amount", ""));
     }
 
-    result.push_back(Pair("masternode_payments", pblock->nTime > Params().StartMasternodePayments()));
-    result.push_back(Pair("enforce_masternode_payments", true));
+    result.push_back(Pair("masternode_payments", (int64_t)(pindexPrev->nHeight+1) > Params().GetConsensus().nMasternodePaymentsStartBlock));
+    result.push_back(Pair("enforce_masternode_payments", IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
 
     return result;
 }

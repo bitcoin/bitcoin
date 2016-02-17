@@ -42,9 +42,6 @@ extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 extern CBudgetManager budget;
 void DumpBudgets();
 
-// Define amount of blocks in budget payment cycle
-int GetBudgetPaymentCycleBlocks();
-
 //Check the collateral transaction for the budget proposal/finalized budget
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf);
 
@@ -431,14 +428,7 @@ public:
     std::pair<std::string, std::string> GetVotes();
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true);
-
-    bool IsEstablished() {
-        //Proposals must be at least a day old to make it into a budget
-        if(Params().NetworkIDString() == CBaseChainParams::MAIN) return (nTime < GetTime() - (60*60*24));
-
-        //for testing purposes - 20 minutes
-        return (nTime < GetTime() - (60*20));
-    }
+    bool IsEstablished();
 
     std::string GetName() {return strProposalName; }
     std::string GetURL() {return strURL; }

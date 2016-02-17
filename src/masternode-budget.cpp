@@ -25,14 +25,6 @@ std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 int nSubmittedFinalBudget;
 
-int GetBudgetPaymentCycleBlocks(){
-    // Amount of blocks in a months period of time (using 2.6 minutes per) = (60*24*30)/2.6
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN) return 16616;
-    //for testing purposes
-
-    return 50; //ten times per day
-}
-
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
 {
     CTransaction txCollateral;
@@ -120,7 +112,7 @@ void CBudgetManager::SubmitFinalBudget()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(!pindexPrev) return;
 
-    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
     if(nSubmittedFinalBudget >= nBlockStart) return;
     if(nBlockStart - pindexPrev->nHeight > 576*2) return; //submit final budget 2 days before payment
 
@@ -410,7 +402,7 @@ void CBudgetManager::CheckAndRemove()
             ++it;
         
         // if it's too old, remove it
-        } else if(pfinalizedBudget->nBlockStart != 0 && pfinalizedBudget->nBlockStart < pindexPrev->nHeight - GetBudgetPaymentCycleBlocks()) {
+        } else if(pfinalizedBudget->nBlockStart != 0 && pfinalizedBudget->nBlockStart < pindexPrev->nHeight - Params().GetConsensus().nBudgetPaymentsCycleBlocks) {
             mapFinalizedBudgets.erase(it++);
             LogPrintf("CBudgetManager::CheckAndRemove - removing budget %s\n", pfinalizedBudget->GetHash().ToString());
         }
@@ -544,7 +536,7 @@ bool CBudgetManager::HasNextFinalizedBudget()
 
     if(masternodeSync.IsBudgetFinEmpty()) return true;
 
-    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
     if(nBlockStart - pindexPrev->nHeight > 576*2) return true; //we wouldn't have the budget yet
 
     if(budget.IsBudgetPaymentBlock(nBlockStart)) return true;
@@ -660,8 +652,8 @@ std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return vBudgetProposalsRet;
 
-    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
-    int nBlockEnd  =  nBlockStart + 100;
+    int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
+    int nBlockEnd  =  nBlockStart + Params().GetConsensus().nBudgetPaymentsWindowBlocks;
     CAmount nTotalBudget = GetTotalBudget(nBlockStart);
 
 
@@ -780,6 +772,11 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
 
     const Consensus::Params consensusParams = Params().GetConsensus();
 
+    // TODO: Remove this to further unify logic among mainnet/testnet/whatevernet,
+    //       use single formula instead (the one that is for current mainnet).
+    //       Probably a good idea to use a significally lower consensusParams.nSubsidyHalvingInterval
+    //       for testnet (like 10 times for example) to see the effect of halving there faster.
+    //       Will require testnet restart.
     if(Params().NetworkIDString() == CBaseChainParams::TESTNET){
         for(int i = 46200; i <= nHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
     } else {
@@ -787,11 +784,8 @@ CAmount CBudgetManager::GetTotalBudget(int nHeight)
         for(int i = consensusParams.nSubsidyHalvingInterval; i <= nHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
     }
 
-    // Amount of blocks in a months period of time (using 2.6 minutes per) = (60*24*30)/2.6
-    if(Params().NetworkIDString() == CBaseChainParams::MAIN) return ((nSubsidy/100)*10)*576*30;
-
-    //for testing purposes
-    return ((nSubsidy/100)*10)*50;
+    // 10%
+    return ((nSubsidy/100)*10)*consensusParams.nBudgetPaymentsCycleBlocks;
 }
 
 void CBudgetManager::NewBlock()
@@ -1316,9 +1310,9 @@ CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strU
 
     nBlockStart = nBlockStartIn;
 
-    int nPaymentsStart = nBlockStart - nBlockStart % GetBudgetPaymentCycleBlocks();
+    int nPaymentsStart = nBlockStart - nBlockStart % Params().GetConsensus().nBudgetPaymentsCycleBlocks;
     //calculate the end of the cycle for this vote, add half a cycle (vote will be deleted after that block)
-    nBlockEnd = nPaymentsStart + GetBudgetPaymentCycleBlocks() * nPaymentCount;
+    nBlockEnd = nPaymentsStart + Params().GetConsensus().nBudgetPaymentsCycleBlocks * nPaymentCount;
 
     address = addressIn;
     nAmount = nAmountIn;
@@ -1341,13 +1335,13 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) {strError = "Tip is NULL"; return true;}
 
-    if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0){
-        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+    if(nBlockStart % Params().GetConsensus().nBudgetPaymentsCycleBlocks != 0){
+        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
         strError = strprintf("Invalid block start - must be a budget cycle block. Next valid block: %d", nNext);
         return false;
     }
 
-    if(nBlockEnd % GetBudgetPaymentCycleBlocks() != GetBudgetPaymentCycleBlocks()/2){
+    if(nBlockEnd % Params().GetConsensus().nBudgetPaymentsCycleBlocks != Params().GetConsensus().nBudgetPaymentsCycleBlocks/2){
         strError = "Invalid block end";
         return false;
     }
@@ -1414,10 +1408,15 @@ bool CBudgetProposal::IsValid(std::string& strError, bool fCheckCollateral)
         return false;
     }
 
-    if(GetBlockEnd()+100 < pindexPrev->nHeight) return false;
+    if(GetBlockEnd() + Params().GetConsensus().nBudgetPaymentsWindowBlocks < pindexPrev->nHeight) return false;
 
 
     return true;
+}
+
+bool CBudgetProposal::IsEstablished() {
+    //Proposals must be established to make it into a budget
+    return (nTime < GetTime() - Params().GetConsensus().nBudgetProposalEstablishingTime);
 }
 
 bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
@@ -1526,7 +1525,7 @@ int CBudgetProposal::GetBlockStartCycle()
 {
     //end block is half way through the next cycle (so the proposal will be removed much after the payment is sent)
 
-    return nBlockStart - nBlockStart % GetBudgetPaymentCycleBlocks();
+    return nBlockStart - nBlockStart % Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 }
 
 int CBudgetProposal::GetBlockCurrentCycle()
@@ -1536,19 +1535,19 @@ int CBudgetProposal::GetBlockCurrentCycle()
 
     if(pindexPrev->nHeight >= GetBlockEndCycle()) return -1;
 
-    return pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks();
+    return pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 }
 
 int CBudgetProposal::GetBlockEndCycle()
 {
     //end block is half way through the next cycle (so the proposal will be removed much after the payment is sent)
 
-    return nBlockEnd - GetBudgetPaymentCycleBlocks()/2;
+    return nBlockEnd - Params().GetConsensus().nBudgetPaymentsCycleBlocks/2;
 }
 
 int CBudgetProposal::GetTotalPaymentCount()
 {
-    return (GetBlockEndCycle() - GetBlockStartCycle()) / GetBudgetPaymentCycleBlocks();
+    return (GetBlockEndCycle() - GetBlockStartCycle()) / Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 }
 
 int CBudgetProposal::GetRemainingPaymentCount()
@@ -1558,10 +1557,10 @@ int CBudgetProposal::GetRemainingPaymentCount()
     // printf("-> Budget Name : %s\n", strProposalName.c_str());
     // printf("------- nBlockStart : %d\n", nBlockStart);
     // printf("------- nBlockEnd : %d\n", nBlockEnd);
-    while(nBlockHeight + GetBudgetPaymentCycleBlocks() < nBlockEnd)
+    while(nBlockHeight + Params().GetConsensus().nBudgetPaymentsCycleBlocks < nBlockEnd)
     {
-        // printf("------- P : %d %d - %d < %d - %d\n", nBlockHeight, nPayments, nBlockHeight + GetBudgetPaymentCycleBlocks(), nBlockEnd, nBlockHeight + GetBudgetPaymentCycleBlocks() < nBlockEnd);
-        nBlockHeight += GetBudgetPaymentCycleBlocks();
+        // printf("------- P : %d %d - %d < %d - %d\n", nBlockHeight, nPayments, nBlockHeight + Params().GetConsensus().nBudgetPaymentsCycleBlocks, nBlockEnd, nBlockHeight + Params().GetConsensus().nBudgetPaymentsCycleBlocks < nBlockEnd);
+        nBlockHeight += Params().GetConsensus().nBudgetPaymentsCycleBlocks;
         nPayments++;
     }
     return nPayments;
@@ -1854,9 +1853,9 @@ std::string CFinalizedBudget::GetStatus()
 bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral)
 {
     //must be the correct block for payment to happen (once a month)
-    if(nBlockStart % GetBudgetPaymentCycleBlocks() != 0) {strError = "Invalid BlockStart"; return false;}
-    if(GetBlockEnd() - nBlockStart > 100) {strError = "Invalid BlockEnd"; return false;}
-    if((int)vecBudgetPayments.size() > 100) {strError = "Invalid budget payments count (too many)"; return false;}
+    if(nBlockStart % Params().GetConsensus().nBudgetPaymentsCycleBlocks != 0) {strError = "Invalid BlockStart"; return false;}
+    if(GetBlockEnd() - nBlockStart > Params().GetConsensus().nBudgetPaymentsWindowBlocks) {strError = "Invalid BlockEnd"; return false;}
+    if((int)vecBudgetPayments.size() > Params().GetConsensus().nBudgetPaymentsWindowBlocks) {strError = "Invalid budget payments count (too many)"; return false;}
     if(strBudgetName == "") {strError = "Invalid Budget Name"; return false;}
     if(nBlockStart == 0) {strError = "Invalid BlockStart == 0"; return false;}
     if(nFeeTXHash == uint256()) {strError = "Invalid FeeTx == 0"; return false;}
@@ -1877,7 +1876,7 @@ bool CFinalizedBudget::IsValid(std::string& strError, bool fCheckCollateral)
     CBlockIndex* pindexPrev = chainActive.Tip();
     if(pindexPrev == NULL) return true;
 
-    if(nBlockStart < pindexPrev->nHeight-100) {strError = "Older than current blockHeight"; return false;}
+    if(nBlockStart < pindexPrev->nHeight - Params().GetConsensus().nBudgetPaymentsWindowBlocks) {strError = "Older than current blockHeight"; return false;}
 
     return true;
 }

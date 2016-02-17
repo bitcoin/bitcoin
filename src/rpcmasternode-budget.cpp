@@ -56,7 +56,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "unknown";
 
-        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
         return nNext;
     }
 
@@ -65,7 +65,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "unknown";
 
-        int nHeight = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nHeight = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 
         CAmount nTotal = budget.GetTotalBudget(nHeight);
         return nTotal;
@@ -891,7 +891,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "invalid chaintip";
 
-        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 
         CFinalizedBudgetBroadcast tempBudget("main", nBlockStart, vecTxBudgetPayments, uint256());
         // if(mapSeenFinalizedBudgets.count(tempBudget.GetHash())) {
@@ -948,7 +948,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "invalid chaintip";
 
-        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
       
         // CTxIn in(COutPoint(nColHash, 0));
         // int conf = GetInputAgeIX(nColHash, in);

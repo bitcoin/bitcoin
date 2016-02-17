@@ -1527,6 +1527,11 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
     // LogPrintf("height %u diff %4.2f reward %i \n", nPrevHeight, dDiff, nSubsidy);
     nSubsidy *= COIN;
 
+    // TODO: Remove this to further unify logic among mainnet/testnet/whatevernet,
+    //       use single formula instead (the one that is for current mainnet).
+    //       Probably a good idea to use a significally lower consensusParams.nSubsidyHalvingInterval
+    //       for testnet (like 10 times for example) to see the effect of halving there faster.
+    //       Will require testnet restart.
     if(Params().NetworkIDString() == CBaseChainParams::TESTNET){
         for(int i = 46200; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
     } else {
@@ -1534,18 +1539,9 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
         for(int i = consensusParams.nSubsidyHalvingInterval; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
     }
 
-    /*
-        
-        Hard fork will activate on block 328008, reducing the block reward by 10 extra percent (allowing budget super-blocks)
-    
-    */
+    // Hard fork to reduce the block reward by 10 extra percent (allowing budget super-blocks)
+    if(nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) nSubsidy -= nSubsidy/10;
 
-    if(Params().NetworkIDString() == CBaseChainParams::TESTNET){
-        if(nPrevHeight > 77900+576) nSubsidy -= nSubsidy/10;
-    } else {
-        if(nPrevHeight > 309759+(553*33)) nSubsidy -= nSubsidy/10; // 328008 - 10.0% - 2015-08-30
-    }
-    
     return nSubsidy;
 }
 
@@ -1553,35 +1549,33 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 {
     CAmount ret = blockValue/5; // start at 20%
 
+    int nMNPIBlock = Params().GetConsensus().nMasternodePaymentsIncreaseBlock;
+    int nMNPIPeriod = Params().GetConsensus().nMasternodePaymentsIncreasePeriod;
+
+    // TODO: Remove this to further unify logic among mainnet/testnet/whatevernet,
+    //       use single formula instead (the one that is for current mainnet).
+    //       Will require testnet restart.
     if(Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-        if(nHeight > 46000)             ret += blockValue / 20; //25% - 2014-10-07
-        if(nHeight > 46000+((576*1)*1)) ret += blockValue / 20; //30% - 2014-10-08
-        if(nHeight > 46000+((576*1)*2)) ret += blockValue / 20; //35% - 2014-10-09
-        if(nHeight > 46000+((576*1)*3)) ret += blockValue / 20; //40% - 2014-10-10
-        if(nHeight > 46000+((576*1)*4)) ret += blockValue / 20; //45% - 2014-10-11
-        if(nHeight > 46000+((576*1)*5)) ret += blockValue / 20; //50% - 2014-10-12
-        if(nHeight > 46000+((576*1)*6)) ret += blockValue / 20; //55% - 2014-10-13
-        if(nHeight > 46000+((576*1)*7)) ret += blockValue / 20; //60% - 2014-10-14
+        if(nHeight > nMNPIBlock)             ret += blockValue / 20; //25% - 2014-10-07
+        if(nHeight > nMNPIBlock+(nMNPIPeriod*1)) ret += blockValue / 20; //30% - 2014-10-08
+        if(nHeight > nMNPIBlock+(nMNPIPeriod*2)) ret += blockValue / 20; //35% - 2014-10-09
+        if(nHeight > nMNPIBlock+(nMNPIPeriod*3)) ret += blockValue / 20; //40% - 2014-10-10
+        if(nHeight > nMNPIBlock+(nMNPIPeriod*4)) ret += blockValue / 20; //45% - 2014-10-11
+        if(nHeight > nMNPIBlock+(nMNPIPeriod*5)) ret += blockValue / 20; //50% - 2014-10-12
+        if(nHeight > nMNPIBlock+(nMNPIPeriod*6)) ret += blockValue / 20; //55% - 2014-10-13
+        if(nHeight > nMNPIBlock+(nMNPIPeriod*7)) ret += blockValue / 20; //60% - 2014-10-14
     }
 
-    if(nHeight > 158000)               ret += blockValue / 20; // 158000 - 25.0% - 2014-10-24
-    if(nHeight > 158000+((576*30)* 1)) ret += blockValue / 20; // 175280 - 30.0% - 2014-11-25
-    if(nHeight > 158000+((576*30)* 2)) ret += blockValue / 20; // 192560 - 35.0% - 2014-12-26
-    if(nHeight > 158000+((576*30)* 3)) ret += blockValue / 40; // 209840 - 37.5% - 2015-01-26
-    if(nHeight > 158000+((576*30)* 4)) ret += blockValue / 40; // 227120 - 40.0% - 2015-02-27
-    if(nHeight > 158000+((576*30)* 5)) ret += blockValue / 40; // 244400 - 42.5% - 2015-03-30
-    if(nHeight > 158000+((576*30)* 6)) ret += blockValue / 40; // 261680 - 45.0% - 2015-05-01
-    if(nHeight > 158000+((576*30)* 7)) ret += blockValue / 40; // 278960 - 47.5% - 2015-06-01
-    if(nHeight > 158000+((576*30)* 9)) ret += blockValue / 40; // 313520 - 50.0% - 2015-08-03
-
-    /* 
-        Hard for will activate on block 348080 separating the two networks (v11 and earier and v12)
-
-        if(nHeight > 158000+((576*30)*11)) ret += blockValue / 40; // 348080 - 52.5% - 2015-10-05
-        if(nHeight > 158000+((576*30)*13)) ret += blockValue / 40; // 382640 - 55.0% - 2015-12-07
-        if(nHeight > 158000+((576*30)*15)) ret += blockValue / 40; // 417200 - 57.5% - 2016-02-08
-        if(nHeight > 158000+((576*30)*17)) ret += blockValue / 40; // 451760 - 60.0% - 2016-04-11
-    */
+                                                                      // mainnet:
+    if(nHeight > nMNPIBlock)                  ret += blockValue / 20; // 158000 - 25.0% - 2014-10-24
+    if(nHeight > nMNPIBlock+(nMNPIPeriod* 1)) ret += blockValue / 20; // 175280 - 30.0% - 2014-11-25
+    if(nHeight > nMNPIBlock+(nMNPIPeriod* 2)) ret += blockValue / 20; // 192560 - 35.0% - 2014-12-26
+    if(nHeight > nMNPIBlock+(nMNPIPeriod* 3)) ret += blockValue / 40; // 209840 - 37.5% - 2015-01-26
+    if(nHeight > nMNPIBlock+(nMNPIPeriod* 4)) ret += blockValue / 40; // 227120 - 40.0% - 2015-02-27
+    if(nHeight > nMNPIBlock+(nMNPIPeriod* 5)) ret += blockValue / 40; // 244400 - 42.5% - 2015-03-30
+    if(nHeight > nMNPIBlock+(nMNPIPeriod* 6)) ret += blockValue / 40; // 261680 - 45.0% - 2015-05-01
+    if(nHeight > nMNPIBlock+(nMNPIPeriod* 7)) ret += blockValue / 40; // 278960 - 47.5% - 2015-06-01
+    if(nHeight > nMNPIBlock+(nMNPIPeriod* 9)) ret += blockValue / 40; // 313520 - 50.0% - 2015-08-03
 
     return ret;
 }
@@ -3298,25 +3292,19 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     const Consensus::Params& consensusParams = Params().GetConsensus();
     int nHeight = pindexPrev->nHeight + 1;
     // Check proof of work
-    if(Params().NetworkIDString() == CBaseChainParams::TESTNET) {
+    if(Params().NetworkIDString() == CBaseChainParams::MAIN && nHeight <= 68589){
+        // architecture issues with DGW v1 and v2)
+        unsigned int nBitsNext = GetNextWorkRequired(pindexPrev, &block, consensusParams);
+        double n1 = ConvertBitsToDouble(block.nBits);
+        double n2 = ConvertBitsToDouble(nBitsNext);
+
+        if (abs(n1-n2) > n1*0.5)
+            return state.DoS(100, error("%s : incorrect proof of work (DGW pre-fork) - %f %f %f at %d", __func__, abs(n1-n2), n1, n2, nHeight),
+                            REJECT_INVALID, "bad-diffbits");
+    } else {
         if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
             return state.DoS(100, error("%s : incorrect proof of work at %d", __func__, nHeight),
-                             REJECT_INVALID, "bad-diffbits");
-    } else {
-        // Check proof of work (Here for the architecture issues with DGW v1 and v2)
-        if(nHeight <= 68589){
-            unsigned int nBitsNext = GetNextWorkRequired(pindexPrev, &block, consensusParams);
-            double n1 = ConvertBitsToDouble(block.nBits);
-            double n2 = ConvertBitsToDouble(nBitsNext);
-
-            if (abs(n1-n2) > n1*0.5)
-                return state.DoS(100, error("%s : incorrect proof of work (DGW pre-fork) - %f %f %f at %d", __func__, abs(n1-n2), n1, n2, nHeight),
-                                REJECT_INVALID, "bad-diffbits");
-        } else {
-            if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
-                return state.DoS(100, error("%s : incorrect proof of work at %d", __func__, nHeight),
-                                REJECT_INVALID, "bad-diffbits");
-        }
+                            REJECT_INVALID, "bad-diffbits");
     }
 
     // Check timestamp against prev
