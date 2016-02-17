@@ -686,17 +686,23 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
+        LogPrint("masternode", "mnb - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
+
         if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
             masternodeSync.AddedMasternodeList(mnb.GetHash());
             return;
         }
         mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
+        LogPrint("masternode", "mnb - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
+
         int nDoS = 0;
         if(!mnb.CheckAndUpdate(nDoS)){
 
             if(nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
+
+            LogPrint("masternode", "mnb - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
 
             //failed
             return;
@@ -733,6 +739,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
         mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
 
+        LogPrint("masternode", "mnp - Masternode ping, vin: %s\n new", mnp.vin.ToString());
+
         int nDoS = 0;
         if(mnp.CheckAndUpdate(nDoS)) return;
 
@@ -754,6 +762,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         CTxIn vin;
         vRecv >> vin;
+
+        LogPrint("masternode", "dseg - Masternode list, vin: %s\n", vin.ToString());
 
         if(vin == CTxIn()) { //only should ask for this once
             //local network
