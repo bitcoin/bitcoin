@@ -22,6 +22,7 @@
 #include "main.h"
 #include "miner.h"
 #include "net.h"
+#include "policy/mempool.h"
 #include "policy/policy.h"
 #include "rpc/server.h"
 #include "script/standard.h"
@@ -484,6 +485,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
 
     AppendParamsHelpMessages(strUsage, showDebug);
+
+    mempoolPolicy.AppendHelpMessages(strUsage, showDebug);
 
     strUsage += HelpMessageGroup(_("Node relay options:"));
     if (showDebug)
@@ -971,6 +974,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         else
             return InitError(AmountErrMsg("minrelaytxfee", mapArgs["-minrelaytxfee"]));
     }
+    try {
+        mempoolPolicy.InitFromArgs();
+    } catch(const std::exception& e) {
+        return InitError(strprintf(_("Error while initializing mempool policy: %s"), e.what()));
+    }
+
 
     fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !Params().RequireStandard());
     if (Params().RequireStandard() && !fRequireStandard)
