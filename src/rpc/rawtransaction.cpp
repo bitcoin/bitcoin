@@ -839,3 +839,118 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
 
     return hashTx.GetHex();
 }
+
+UniValue verifyrawtransactions(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 1 || params.size() > 2)
+        throw runtime_error(
+            "verifyrawtransactions [\"hexstring\",...] ( options )\n"
+            "\nVerifies one or more raw transactions (serialized, hex-encoded). If transactions depend on each other, they must be provided in order.\n"
+            "\nArguments:\n"
+            "1. [\"hexstring\",...] (array of strings, required) The hex string of the raw transactions)\n"
+            "2. options   (json object, optional)\n"
+            "     {\n"
+            "       \"include_mempool\"          (boolean, optional, default=true) Whether to include the mem pool\n"
+            "       \"check_final\"              (boolean, optional, default=true) Check that the transactions will be final by next block\n"
+            "       \"check_standard\"           (boolean, optional, default=true) Perform transaction standard checks\n"
+            "     }\n"
+            "\nResult:\n"
+            "null if the verification was successful, otherwise an error object:\n"
+            "{\n"
+            "  \"index\":n,                (numeric) Index in transactions array of failed transaction\n"
+            "  \"hash\":\"hex\",             (string) Transaction hash of failed transaction\n"
+            "  \"code\": n,                (numeric) Reject code\n"
+            "  \"reason\": \"text\"          (string) Reject reason\n"
+            "  \"debug_message\": \"text\"   (string) Reject debug message\n"
+            "}\n"
+            "\nExamples:\n"
+            "\nCreate a transaction\n"
+            + HelpExampleCli("createrawtransaction", "\"[{\\\"txid\\\" : \\\"mytxid\\\",\\\"vout\\\":0}]\" \"{\\\"myaddress\\\":0.01}\"") +
+            "Sign the transaction, and get back the hex\n"
+            + HelpExampleCli("signrawtransaction", "\"myhex\"") +
+            "\nVerify the transaction (signed hex)\n"
+            + HelpExampleCli("verifyrawtransactions", "'[\"signedhex\"]'") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("verifyrawtransactions", "[\"signedhex\"]")
+        );
+
+    LOCK2(cs_main,mempool.cs);
+
+    // Parse parameters
+    std::vector<std::string> hexes;
+    bool includeMempool = true;
+    bool checkFinal = true;
+    bool checkStandard = true;
+    if (params.size() < 1)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Missing transactions argument");
+    if (params[0].isArray()) {
+        for (size_t i=0; i<params[0].size(); ++i)
+            hexes.push_back(params[0][i].get_str());
+    } else {
+        throw JSONRPCError(RPC_TYPE_ERROR, "First argument must be an array of strings");
+    }
+    if (params.size() > 1) {
+        const UniValue &options = params[1];
+        if (!options.isObject())
+            throw JSONRPCError(RPC_TYPE_ERROR, "Second argument must be an object specifying options");
+        UniValue o;
+        o = find_value(options, "include_mempool");
+        if (o.isBool())
+            includeMempool = o.get_bool();
+        o = find_value(options, "check_final");
+        if (o.isBool())
+            checkFinal = o.get_bool();
+        o = find_value(options, "check_standard");
+        if (o.isBool())
+            checkStandard = o.get_bool();
+    }
+
+    // Parse hex strings as transactions
+    std::vector<CTransaction> txes;
+    for (size_t i=0; i<hexes.size(); ++i) {
+        CTransaction tx;
+        if (!DecodeHexTx(tx, hexes[i]))
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed (index %i)", i));
+        txes.push_back(tx);
+    }
+
+    // Check transactions, one by one, inserting them into a temporary cache
+    CCoinsViewMemPool coinsTipMempool(pcoinsTip, mempool);
+    CCoinsViewCache view(includeMempool ? (CCoinsView*)&coinsTipMempool : pcoinsTip);
+    int height = chainActive.Height() + 1;
+    for (size_t i=0; i<txes.size(); ++i) {
+        const CTransaction &tx = txes[i];
+        bool ok = true;
+        CValidationState state;
+        if (ok)
+            ok = CheckTransaction(tx, state);
+        if (ok && checkStandard) {
+            std::string reason;
+            if (!IsStandardTx(tx, reason)) {
+                ok = false;
+                state.DoS(0, false, REJECT_NONSTANDARD, reason);
+            }
+        }
+        if (ok && checkFinal && !CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
+            ok = false;
+            state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
+        }
+        if (ok) {
+            ok = CheckInputs(tx, state, view, true,
+                checkStandard ? STANDARD_SCRIPT_VERIFY_FLAGS : MANDATORY_SCRIPT_VERIFY_FLAGS,
+                true);
+        }
+        if (ok) {
+            UpdateCoins(tx, state, view, height);
+        } else {
+            UniValue rv(UniValue::VOBJ);
+            rv.push_back(Pair("index", (int)i));
+            rv.push_back(Pair("hash", tx.GetHash().ToString()));
+            rv.push_back(Pair("code", (int)state.GetRejectCode()));
+            rv.push_back(Pair("reason", state.GetRejectReason()));
+            rv.push_back(Pair("debug_message", state.GetDebugMessage()));
+            return rv;
+        }
+    }
+    return NullUniValue;
+}
