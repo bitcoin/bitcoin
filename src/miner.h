@@ -34,4 +34,8 @@ CBlockTemplate* CreateNewBlockWithAddress(std::string address);
 void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 void UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
+extern double dHashesPerSec;
+extern int64_t nHPSTimerStart;
+extern bool fGenerate;
+
 #endif // BITCOIN_MINER_H

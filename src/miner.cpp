@@ -377,6 +377,9 @@ void IncrementExtraNonce(CBlock* pblock, CBlockIndex* pindexPrev, unsigned int& 
 //
 // Internal miner
 //
+double dHashesPerSec = 0.0;
+int64_t nHPSTimerStart = 0;
+bool fGenerate = false;
 
 //
 // ScanHash scans nonces looking for a hash with at least some zero bits.
@@ -474,7 +477,8 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 void static BitcoinMiner(CWallet *pwallet, int nThreads)
-{    
+{
+	fGenerate = true;
     LogPrintf("HOdlcoinMiner started\n");
     srand(clock());
     string ma=GetArg("-miningaddress", "");
@@ -541,6 +545,7 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
             // Search
             //
             int64_t nStart = GetTime();
+            nHPSTimerStart = GetTimeMillis();
             arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
             uint256 hash;
             uint32_t nNonce = 0;
@@ -554,9 +559,10 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
                     int collisions=0;
                     hash=pblock->FindBestPatternHash(collisions,scratchpad,nThreads);
                     totalHashes=totalHashes+collisions;
+                    dHashesPerSec = totalHashes/((time(NULL)-startTime));
                     LogPrintf("HOdlcoinMiner:\n");
                     LogPrintf("search finished - best hash  \n  hash: %s collisions:%d gethash:%s ba:%d bb:%d nonce:%d \ntarget: %s\n", hash.GetHex(), collisions, pblock->GetHash().GetHex(), pblock->nStartLocation, pblock->nFinalCalculation, pblock->nNonce, hashTarget.GetHex());
-                    LogPrintf("Hashes Per Second=%d (total seconds=%d hashes=%d)\n",totalHashes/((time(NULL)-startTime)),((time(NULL)-startTime)),totalHashes);
+                    LogPrintf("Hashes Per Second=%d (total seconds=%d hashes=%d)\n",dHashesPerSec,((time(NULL)-startTime)),totalHashes);
                     if (UintToArith256(hash) <= hashTarget){
                         assert(hash == pblock->GetHash());
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
@@ -599,12 +605,14 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
     {
         LogPrintf("HOdlcoinMiner terminated\n");
         delete [] scratchpad;
+        fGenerate = false;
         return;
     }
     catch (const std::runtime_error &e)
     {
         LogPrintf("HOdlcoinMiner runtime error: %s\n", e.what());
         delete [] scratchpad;
+        fGenerate = false;
         return;
     }
 }
