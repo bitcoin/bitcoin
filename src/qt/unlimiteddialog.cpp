@@ -51,7 +51,6 @@ UnlimitedDialog::UnlimitedDialog(QWidget* parent,UnlimitedModel* mdl):
   setMapper();
 
   connect(ui.okButton, SIGNAL(clicked(bool)), this, SLOT(on_okButton_clicked()));
-  connect(ui.miningMaxBlock, SIGNAL(valueChanged(int)), this, SLOT(showRestartWarning()));
 
   //ui.miningMaxBlock->setText(QString(boost::lexical_cast<std::string>(model->getMaxGeneratedBlock).c_str()));
   //ui.miningMaxBlock->setText(QString::number(model->getMaxGeneratedBlock()));
