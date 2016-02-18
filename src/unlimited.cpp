@@ -264,7 +264,8 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
 {
     if (inv.type == MSG_XTHINBLOCK)
     {
-        CXThinBlock xThinBlock(block, *pfrom->pfilter);
+      CXThinBlock xThinBlock(block, pfrom->pfilter);
+      //CXThinBlock xThinBlock(block);
         int nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
         if (xThinBlock.collision == true) // If there is a cheapHash collision in this block then send a normal thinblock
         {
