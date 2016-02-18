@@ -179,6 +179,7 @@ libbitcoin_server_a_SOURCES = \
   bloom.cpp \
   chain.cpp \
   checkpoints.cpp \
+  consensus/versionbits.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
@@ -263,6 +264,7 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/merkle.h \
   consensus/params.h \
   consensus/validation.h \
+  consensus/versionbits.h \
   hash.cpp \
   hash.h \
   prevector.h \
