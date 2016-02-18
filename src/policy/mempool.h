@@ -8,6 +8,11 @@
 #include <string>
 #include <vector>
 
+#include "amount.h"
+
+//Mempool policy defaults
+static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
+
 /**
  * \class MempoolPolicy
  * Encapsulate parameters needed for mempool policy
@@ -15,6 +20,7 @@
 class MempoolPolicy
 {
 public:
+    MempoolPolicy();
     void InitFromArgs();
     /**
      * @return a formatted HelpMessage string with the mempool policy options
@@ -26,6 +32,13 @@ public:
      * options appended to the string
      */
     void AppendHelpMessages(std::string& strUsage, bool showDebug);
+
+    /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
+    CFeeRate GetMinRelayFeeRate();
+    /** Setter for testing */
+    void SetMinRelayFeeRate(CFeeRate newFeeRate);
+private:
+    CFeeRate minRelayFeeRate;
 };
 
 extern MempoolPolicy mempoolPolicy;

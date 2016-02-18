@@ -7,6 +7,7 @@
 #include "clientversion.h"
 #include "init.h"
 #include "main.h"
+#include "policy/mempool.h"
 #include "net.h"
 #include "netbase.h"
 #include "rpc/server.h"
@@ -102,7 +103,7 @@ UniValue getinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("unlocked_until", nWalletUnlockTime));
     obj.push_back(Pair("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK())));
 #endif
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(mempoolPolicy.GetMinRelayFeeRate().GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
 }

@@ -8,6 +8,7 @@
 #include "policy/policy.h"
 
 #include "main.h"
+#include "policy/mempool.h"
 #include "tinyformat.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -102,7 +103,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (txout.IsDust(::minRelayTxFee)) {
+        } else if (txout.IsDust(mempoolPolicy.GetMinRelayFeeRate())) {
             reason = "dust";
             return false;
         }

@@ -215,6 +215,8 @@ std::string HelpMessageOpt(const std::string& option, const std::string& message
  */
 void AppendMessagesOpt(std::string& strUsage, const std::vector<std::pair<std::string, std::string> >& optionsHelp);
 
+std::string AmountErrMsg(const char * const optname, const std::string& strValue);
+
 /**
  * Return the number of physical cores available on the current system.
  * @note This does not count virtual cores, such as those provided by HyperThreading

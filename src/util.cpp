@@ -435,6 +435,11 @@ void AppendMessagesOpt(std::string& strUsage, const std::vector<std::pair<std::s
         strUsage += HelpMessageOpt(optionsHelp[i].first, optionsHelp[i].second);
 }
 
+std::string AmountErrMsg(const char * const optname, const std::string& strValue)
+{
+    return strprintf(_("Invalid amount for -%s=<amount>: '%s'"), optname, strValue);
+}
+
 static std::string FormatException(const std::exception* pex, const char* pszThread)
 {
 #ifdef WIN32
