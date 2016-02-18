@@ -50,3 +50,44 @@ Value decryptdata(const Array& params, bool fHelp)
 
     return HexStr(vchDecrypted);
 }
+
+Value encryptmessage(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "encryptmessage <public key> <message string>\n"
+            "Encrypt message with provided public key.\n");
+
+    CPubKey pubKey(ParseHex(params[0].get_str()));
+
+    vector<unsigned char> vchEncrypted;
+    string strData = params[1].get_str();
+    pubKey.EncryptData(vector<unsigned char>(strData.begin(), strData.end()), vchEncrypted);
+
+    return EncodeBase58Check(vchEncrypted);
+}
+
+Value decryptmessage(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2)
+        throw runtime_error(
+            "decryptdata <novacoin address> <encrypted message>\n"
+            "Decrypt message string.\n");
+
+    EnsureWalletIsUnlocked();
+    CBitcoinAddress addr(params[0].get_str());
+
+    CKeyID keyID;
+    addr.GetKeyID(keyID);
+
+    CKey key;
+    pwalletMain->GetKey(keyID, key);
+
+    vector<unsigned char> vchEncrypted;
+    if (!DecodeBase58Check(params[1].get_str(), vchEncrypted))
+        throw runtime_error("Incorrect string");
+    vector<unsigned char> vchDecrypted;
+    key.DecryptData(vchEncrypted, vchDecrypted);
+
+    return std::string((const char*)&vchDecrypted[0], vchDecrypted.size());
+}

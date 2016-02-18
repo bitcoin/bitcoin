@@ -1,0 +1,19 @@
+> getnewaddress
+4GELig4Rh4VZVnEnvp4v9cN29SH8F3JEeT
+> validateaddress 4GELig4Rh4VZVnEnvp4v9cN29SH8F3JEeT
+{
+"isvalid" : true,
+"address" : "4GELig4Rh4VZVnEnvp4v9cN29SH8F3JEeT",
+"ismine" : true,
+"watchonly" : false,
+"isscript" : false,
+"pubkey" : "027742dfa3fd23b86f4fd6bfa4707da5dfe433db609d7d458f6576b7c84f20dcef",
+"iscompressed" : true,
+"account" : ""
+}
+
+> encryptmessage 027742dfa3fd23b86f4fd6bfa4707da5dfe433db609d7d458f6576b7c84f20dcef "Hello world!"
+BHzjL9u1h8K1f5pqEZ4KLzmYXLD4qdZWWPnQPJdRgttWJ8QU4LbZLu4KxZpYcNNrgePkxVv2Ps8XV1AC34VCt3oBMdMW7HuaSB6
+
+> decryptmessage 4GELig4Rh4VZVnEnvp4v9cN29SH8F3JEeT BHzjL9u1h8K1f5pqEZ4KLzmYXLD4qdZWWPnQPJdRgttWJ8QU4LbZLu4KxZpYcNNrgePkxVv2Ps8XV1AC34VCt3oBMdMW7HuaSB6
+Hello world!

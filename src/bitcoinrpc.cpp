@@ -323,6 +323,8 @@ static const CRPCCommand vRPCCommands[] =
     { "dumpmalleablekey",       &dumpmalleablekey,       false,  false},
     { "encryptdata",            &encryptdata,            false,  false },
     { "decryptdata",            &decryptdata,            false,  false },
+    { "encryptmessage",         &encryptmessage,         false,  false },
+    { "decryptmessage",         &decryptmessage,         false,  false },
     { "sendalert",              &sendalert,              false,  false},
 };
 
