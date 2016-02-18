@@ -4193,7 +4193,12 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
 
                     // BUIP010 Xtreme Thinblocks: begin section
                     else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK)
+                      {                 
                         SendXThinBlock(block, pfrom, inv);
+                        //LOCK(pfrom->cs_filter);  // PROPOSED: clean up this filter; it will no longer be relevant to the next block
+                        //if (pfrom->pfilter) delete pfrom->pfilter;
+                        //pfrom->pfilter=NULL;
+                      }
                     // BUIP010 Xtreme Thinblocks: end section
 
                     else // MSG_FILTERED_BLOCK)
@@ -5023,6 +5028,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             Misbehaving(pfrom->GetId(), 20);
         }
 
+        pfrom->nSizeThinBlock = nSizeThinBlock;
         pfrom->thinBlock.SetNull();
         pfrom->thinBlock.nVersion = thinBlock.header.nVersion;
         pfrom->thinBlock.nBits = thinBlock.header.nBits;
@@ -5062,32 +5068,45 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         int missingCount = 0;
+        int unnecessaryCount = 0;
         // Look for each transaction in our various pools and buffers.
         // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
         BOOST_FOREACH(uint64_t &cheapHash, thinBlock.vTxHashes) 
         {
             // Replace the truncated hash with the full hash value if it exists
             const uint256 hash = mapPartialTxHash[cheapHash];
-
             CTransaction tx;
-            if (!hash.IsNull() && !mempool.lookup(hash, tx)) {
-                if (thinBlock.mapMissingTx.count(hash))
+            if (!hash.IsNull())
+              {
+                bool inMemPool = mempool.lookup(hash, tx);
+                bool inMissingTx = thinBlock.mapMissingTx.count(hash) > 0;
+                if (inMemPool && inMissingTx) {
+                  unnecessaryCount++;
+                }
+                if (!inMemPool) {
+                  if (inMissingTx)
                     tx = thinBlock.mapMissingTx[hash];
-            }
+                }
+              }
             if (tx.IsNull())
-                missingCount++;
+                missingCount++;             
             // This will push an empty/invalid transaction if we don't have it yet
             pfrom->thinBlock.vtx.push_back(tx);
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
-        LogPrint("thin", "waiting for: %d block txs: %d\n", pfrom->thinBlockWaitingForTxns, pfrom->thinBlock.vtx.size());
+        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), thinBlock.mapMissingTx.size());
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
-            pfrom->AddInventoryKnown(inv); 
-            LogPrint("thin", "Reassembled thin block for %s (%d bytes)\n", pfrom->thinBlock.GetHash().ToString(),
-                       pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION));
+            pfrom->AddInventoryKnown(inv);
+            int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
+            LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
+                     pfrom->thinBlock.GetHash().ToString(),
+                     blockSize,
+                     nSizeThinBlock,
+                     ((float) blockSize) / ((float) nSizeThinBlock)
+                     );
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);  // clears the thin block
         }
         else if (pfrom->thinBlockWaitingForTxns > 0) {
@@ -5122,6 +5141,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             Misbehaving(pfrom->GetId(), 20);
         }
 
+        pfrom->nSizeThinBlock = nSizeThinBlock;
         pfrom->thinBlock.SetNull();
         pfrom->thinBlock.nVersion = thinBlock.header.nVersion;
         pfrom->thinBlock.nBits = thinBlock.header.nBits;
@@ -5151,9 +5171,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
-            pfrom->AddInventoryKnown(inv); 
-            LogPrint("thin", "Reassembled thin block for %s (%d bytes)\n", pfrom->thinBlock.GetHash().ToString(),
-                       pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION));
+            pfrom->AddInventoryKnown(inv);
+            int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
+            LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
+                     pfrom->thinBlock.GetHash().ToString(),
+                     blockSize,
+                     nSizeThinBlock,
+                     ((float) blockSize) / ((float) nSizeThinBlock)
+                     );
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
         }
         else if (pfrom->thinBlockWaitingForTxns > 0) {
@@ -5192,8 +5217,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
             pfrom->AddInventoryKnown(inv); 
-            LogPrint("thin", "Reassembled thin block for %s (%d bytes)\n", pfrom->thinBlock.GetHash().ToString(),
-                      pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION));
+
+            int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
+            LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
+                     pfrom->thinBlock.GetHash().ToString(),
+                     blockSize,
+                     pfrom->nSizeThinBlock,
+                     ((float) blockSize) / ((float) pfrom->nSizeThinBlock)
+                     );
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
         }
         else {

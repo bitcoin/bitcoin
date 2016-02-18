@@ -372,6 +372,7 @@ public:
     CBlock thinBlock;
     std::vector<uint256> thinBlockHashes;
     std::vector<uint64_t> xThinBlockHashes;
+    int nSizeThinBlock;   // Original on-wire size of the block. Just used for reporting
     int thinBlockWaitingForTxns;   // if -1 then not currently waiting
     std::map<uint256, uint64_t> mapThinBlocksInFlight; // map of the hashes of thin blocks in flight with the time they were requested.
     double nGetXBlockTxCount; // Count how many get_xblocktx requests are made
