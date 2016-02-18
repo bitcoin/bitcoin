@@ -59,6 +59,8 @@
 #include <QUrlQuery>
 #endif
 
+#include <boost/thread.hpp>
+
 const QString BitcoinGUI::DEFAULT_WALLET = "~Default";
 
 BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
@@ -199,6 +201,15 @@ BitcoinGUI::BitcoinGUI(const NetworkStyle *networkStyle, QWidget *parent) :
     frameBlocksLayout->addStretch();
     frameBlocksLayout->addWidget(labelBlocksIcon);
     frameBlocksLayout->addStretch();
+    
+    // Set mining pixmap
+    labelMiningIcon->setPixmap(QIcon(":/icons/transaction_conflicted").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+    QTimer *timerMiningIcon = new QTimer(labelMiningIcon);
+    timerMiningIcon->start(MODEL_UPDATE_DELAY);
+    connect(timerMiningIcon, SIGNAL(timeout()), this, SLOT(updateMiningIcon()));
+    // Set initial values for mining icon
+    fGenerate = false;
+    dHashesPerSec = 0;
 
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
@@ -474,7 +485,7 @@ void BitcoinGUI::setClientModel(ClientModel *clientModel)
         setNumBlocks(clientModel->getNumBlocks(), clientModel->getLastBlockDate());
         connect(clientModel, SIGNAL(numBlocksChanged(int,QDateTime)), this, SLOT(setNumBlocks(int,QDateTime)));
 
-        setMining(0, 0);
+        //setMining(0, 0);
         //connect(clientModel, SIGNAL(miningChanged(double,int)), this, SLOT(setMining(double,int)));
 
         // Receive and report messages from client model
@@ -816,16 +827,20 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate)
     progressBar->setToolTip(tooltip);
 }
 
-void BitcoinGUI::setMining(double hashrate, int threads)
+void BitcoinGUI::setMining(bool mining, double hashrate, int miners, int threads)
 {
-    if (threads>0){
-        labelMiningIcon->setPixmap(QIcon(":/icons/tx_mined").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        /*if(hashrate>0){
-            labelMiningIcon->setToolTip(tr("Mining. %2 thread(s) at %1 hashes per minute").arg(hashrate).arg(threads));
-        }else{
-            labelMiningIcon->setToolTip(tr("Mining. %1 thread(s). Still calculating hash rate.").arg(threads));
-        }*/
-        labelMiningIcon->setToolTip(tr("Mining. Check the debug.log to see the mining rate"));
+    if (mining)
+    {
+        if (hashrate > 0)
+        {
+            labelMiningIcon->setPixmap(QIcon(":/icons/tx_mined").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+            labelMiningIcon->setToolTip(tr("Mining.<br>HPS (Total): %1h/s<br>Miners: %2<br>Threads: %3").arg(hashrate).arg(miners).arg(threads));
+        }
+        else
+        {
+            labelMiningIcon->setPixmap(QIcon(":/icons/tx_mined").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+            labelMiningIcon->setToolTip(tr("Mining.<br>HPS (Total): Calculating...<br>Miners: %1<br>Threads: %2").arg(miners).arg(threads));
+        }
     }
     else
     {
@@ -1050,18 +1065,33 @@ void BitcoinGUI::toggleHidden()
     showNormalIfMinimized(true);
 }
 
+void BitcoinGUI::updateMiningIcon()
+{
+    if (fGenerate)
+    {
+        int nInstances = GetArg("-minermemory",1);
+        int nCores = GetArg("-genproclimit",-1);
+        if (nCores < 0)
+            nCores = boost::thread::hardware_concurrency();
+
+        setMining(true, dHashesPerSec, nInstances, nCores);
+    }
+    else
+        setMining(false, 0, 0, 0);
+}
+
 void BitcoinGUI::miningOff()
 {
 //mapArgs["-genproclimit"] = "0";
 GenerateBitcoins(false, pwalletMain,0);
-setMining(0,0);
+setMining(false,0, 0, 0);
 }
 
 void BitcoinGUI::miningOn()
 {
 //mapArgs["-genproclimit"] = itostr(processes);
 GenerateBitcoins(true, pwalletMain,-1);
-setMining(0,1);
+setMining(true,0, 1, -1);
 }
 
 void BitcoinGUI::detectShutdown()
