@@ -557,6 +557,7 @@ public:
     bool HasCanonicalPushes() const;
 
     void SetDestination(const CTxDestination& address);
+    void SetDestination(const CPubKey& R, CPubKey& pubKeyVariant);
     void SetMultisig(int nRequired, const std::vector<CKey>& keys);
 
 

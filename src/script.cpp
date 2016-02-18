@@ -1972,6 +1972,13 @@ void CScript::SetDestination(const CTxDestination& dest)
     boost::apply_visitor(CScriptVisitor(this), dest);
 }
 
+void CScript::SetDestination(const CPubKey& R, CPubKey& pubKeyVariant)
+{
+    this->clear();
+    *this << pubKeyVariant << R << OP_DROP << OP_CHECKSIG;
+}
+
+
 void CScript::SetMultisig(int nRequired, const std::vector<CKey>& keys)
 {
     this->clear();

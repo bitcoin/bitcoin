@@ -323,9 +323,23 @@ Value sendtoaddress(const Array& params, bool fHelp)
             "<amount> is a real and is rounded to the nearest " + FormatMoney(nMinimumInputValue)
             + HelpRequiringPassphrase());
 
-    CBitcoinAddress address(params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
+    // Parse address
+    CScript scriptPubKey;
+    string strAddress = params[0].get_str();
+
+    CBitcoinAddress address(strAddress);
+    if (address.IsValid())
+        scriptPubKey.SetDestination(address.Get());
+    else
+    {
+        CMalleablePubKey mpk(strAddress);
+        if (!mpk.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
+
+        CPubKey R, pubKeyVariant;
+        mpk.GetVariant(R, pubKeyVariant);
+        scriptPubKey.SetDestination(R, pubKeyVariant);
+    }
 
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
@@ -342,10 +356,6 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     if (pwalletMain->IsLocked())
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
-
-    // Parse Bitcoin address
-    CScript scriptPubKey;
-    scriptPubKey.SetDestination(address.Get());
 
     string strError = pwalletMain->SendMoney(scriptPubKey, nAmount, wtx);
     if (strError != "")
@@ -699,9 +709,25 @@ Value sendfrom(const Array& params, bool fHelp)
             + HelpRequiringPassphrase());
 
     string strAccount = AccountFromValue(params[0]);
-    CBitcoinAddress address(params[1].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
+
+    // Parse address
+    CScript scriptPubKey;
+    string strAddress = params[0].get_str();
+
+    CBitcoinAddress address(strAddress);
+    if (address.IsValid())
+        scriptPubKey.SetDestination(address.Get());
+    else
+    {
+        CMalleablePubKey mpk(strAddress);
+        if (!mpk.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
+
+        CPubKey R, pubKeyVariant;
+        mpk.GetVariant(R, pubKeyVariant);
+        scriptPubKey.SetDestination(R, pubKeyVariant);
+    }
+
     int64_t nAmount = AmountFromValue(params[2]);
 
     if (nAmount < nMinimumInputValue)
@@ -724,10 +750,6 @@ Value sendfrom(const Array& params, bool fHelp)
     int64_t nBalance = GetAccountBalance(strAccount, nMinDepth, MINE_SPENDABLE);
     if (nAmount > nBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
-
-    // Parse Bitcoin address
-    CScript scriptPubKey;
-    scriptPubKey.SetDestination(address.Get());
 
     // Send
     string strError = pwalletMain->SendMoney(scriptPubKey, nAmount, wtx);
