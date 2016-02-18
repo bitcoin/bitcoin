@@ -42,9 +42,12 @@ MAX_VERSIONS = {
 'GLIBCXX': (3,4,13),
 'GLIBC':   (2,11)
 }
+# See here for a description of _IO_stdin_used:
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=634261#109
+
 # Ignore symbols that are exported as part of every executable
 IGNORE_EXPORTS = {
-'_edata', '_end', '_init', '__bss_start', '_fini'
+'_edata', '_end', '_init', '__bss_start', '_fini', '_IO_stdin_used'
 }
 READELF_CMD = os.getenv('READELF', '/usr/bin/readelf')
 CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
