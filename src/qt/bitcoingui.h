@@ -172,7 +172,7 @@ public Q_SLOTS:
     void incomingTransaction(const QString& date, int unit, const CAmount& amount, const QString& type, const QString& address, const QString& label);
 
     /** set mining status */
-    void setMining(double hashrate, int threads);
+    void setMining(bool mining, double hashrate, int threads, int cores);
 #endif // ENABLE_WALLET
 
 private Q_SLOTS:
@@ -223,6 +223,9 @@ private Q_SLOTS:
 
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
+    
+    /** Update info about mining */
+    void updateMiningIcon();
 };
 
 class UnitDisplayStatusBarControl : public QLabel
