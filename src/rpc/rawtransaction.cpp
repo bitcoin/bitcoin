@@ -920,27 +920,31 @@ UniValue verifyrawtransactions(const UniValue& params, bool fHelp)
     int height = chainActive.Height() + 1;
     for (size_t i=0; i<txes.size(); ++i) {
         const CTransaction &tx = txes[i];
-        bool ok = true;
         CValidationState state;
-        if (ok)
-            ok = CheckTransaction(tx, state);
-        if (ok && checkStandard) {
+        if (state.IsValid())
+            CheckTransaction(tx, state);
+        if (state.IsValid() && checkStandard) {
             std::string reason;
             if (!IsStandardTx(tx, reason)) {
-                ok = false;
-                state.DoS(0, false, REJECT_NONSTANDARD, reason);
+                state.Invalid(false, REJECT_NONSTANDARD, reason);
             }
         }
-        if (ok && checkFinal && !CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
-            ok = false;
-            state.DoS(0, false, REJECT_NONSTANDARD, "non-final");
+        if (state.IsValid() && tx.IsCoinBase()) {
+            state.Invalid(false, REJECT_INVALID, "coinbase");
         }
-        if (ok) {
-            ok = CheckInputs(tx, state, view, true,
+        if (state.IsValid() && checkFinal && !CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
+            state.Invalid(false, REJECT_NONSTANDARD, "non-final");
+        }
+        // Do this check separately because CheckInputs will set code 0 and no reason for missing inputs
+        if (state.IsValid() && !view.HaveInputs(tx)) {
+            state.Invalid(false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
+        }
+        if (state.IsValid()) {
+            CheckInputs(tx, state, view, true,
                 checkStandard ? STANDARD_SCRIPT_VERIFY_FLAGS : MANDATORY_SCRIPT_VERIFY_FLAGS,
                 true);
         }
-        if (ok) {
+        if (state.IsValid()) {
             UpdateCoins(tx, state, view, height);
         } else {
             UniValue rv(UniValue::VOBJ);
