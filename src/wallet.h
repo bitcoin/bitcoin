@@ -229,7 +229,6 @@ public:
     bool MergeCoins(const int64_t& nAmount, const int64_t& nMinValue, const int64_t& nMaxValue, std::list<uint256>& listMerged);
 
     std::string SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
-    std::string SendMoneyToDestination(const CTxDestination &address, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
 
     bool NewKeyPool(unsigned int nSize = 0);
     bool TopUpKeyPool(unsigned int nSize = 0);
