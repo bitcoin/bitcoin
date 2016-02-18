@@ -42,7 +42,7 @@ void CDBEnv::EnvShutdown()
         DbEnv(0).remove(strPath.c_str(), 0);
 }
 
-CDBEnv::CDBEnv() : dbenv(DB_CXX_NO_EXCEPTIONS), fDetachDB(false), fDbEnvInit(false), fMockDb(false) { }
+CDBEnv::CDBEnv() : fDetachDB(false), fDbEnvInit(false), fMockDb(false), dbenv(DB_CXX_NO_EXCEPTIONS) { }
 
 CDBEnv::~CDBEnv()
 {
@@ -396,7 +396,8 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                     }
 
                     Dbc* pcursor = db.GetCursor();
-                    if (pcursor)
+                    if (pcursor) {
+                        size_t pszSkipLen = strlen(pszSkip);
                         while (fSuccess)
                         {
                             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -414,7 +415,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                                 break;
                             }
                             if (pszSkip &&
-                                strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
+                                strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), pszSkipLen)) == 0)
                                 continue;
                             if (strncmp(&ssKey[0], "\x07version", 8) == 0)
                             {
@@ -428,6 +429,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                             if (ret2 > 0)
                                 fSuccess = false;
                         }
+                    }
                     if (fSuccess)
                     {
                         db.Close();
