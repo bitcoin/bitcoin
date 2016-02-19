@@ -1556,14 +1556,10 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
     //       use single formula instead (the one that is for current mainnet).
     //       Will require testnet restart.
     if(Params().NetworkIDString() == CBaseChainParams::TESTNET) {
-        if(nHeight > nMNPIBlock)             ret += blockValue / 20; //25% - 2014-10-07
-        if(nHeight > nMNPIBlock+(nMNPIPeriod*1)) ret += blockValue / 20; //30% - 2014-10-08
-        if(nHeight > nMNPIBlock+(nMNPIPeriod*2)) ret += blockValue / 20; //35% - 2014-10-09
-        if(nHeight > nMNPIBlock+(nMNPIPeriod*3)) ret += blockValue / 20; //40% - 2014-10-10
-        if(nHeight > nMNPIBlock+(nMNPIPeriod*4)) ret += blockValue / 20; //45% - 2014-10-11
-        if(nHeight > nMNPIBlock+(nMNPIPeriod*5)) ret += blockValue / 20; //50% - 2014-10-12
-        if(nHeight > nMNPIBlock+(nMNPIPeriod*6)) ret += blockValue / 20; //55% - 2014-10-13
-        if(nHeight > nMNPIBlock+(nMNPIPeriod*7)) ret += blockValue / 20; //60% - 2014-10-14
+        // BUG: there had to be `return` at the end of this `if` but we continued to add mainnet %s,
+        // TODO: RESTART TESTNET and remove this quick fix
+        ret += blockValue * 10 / 20;
+        return ret;
     }
 
                                                                       // mainnet:
