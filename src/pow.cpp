@@ -159,7 +159,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
             return nProofOfWorkLimit;
 
         // Only change once per interval
-        if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0 != 0)
+        if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
         {
             if (params.fPowAllowMinDifficultyBlocks)
             {
