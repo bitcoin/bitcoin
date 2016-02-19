@@ -82,6 +82,9 @@ public:
     /** Number of network connections changed. */
     boost::signals2::signal<void (int newNumConnections)> NotifyNumConnectionsChanged;
 
+    /** Number of masternodes changed. */
+    boost::signals2::signal<void (int newNumMasternodes)> NotifyStrMasternodeCountChanged;
+
     /**
      * New, updated or cancelled alert.
      * @note called with lock cs_mapAlerts held.
@@ -96,6 +99,9 @@ public:
 
     /** New block has been accepted */
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyBlockTip;
+
+    /** Additional data sync progress changed */
+    boost::signals2::signal<void (double nSyncProgress)> NotifyAdditionalDataSyncProgressChanged;
 
     /** Banlist did change. */
     boost::signals2::signal<void (void)> BannedListChanged;
