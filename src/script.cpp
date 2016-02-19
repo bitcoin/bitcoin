@@ -1618,8 +1618,11 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    if (typeRet == TX_NULL_DATA || typeRet == TX_PUBKEY_DROP)
+    if (typeRet == TX_NULL_DATA)
+    {
+        nRequiredRet = 0;
         return true;
+    }
 
     if (typeRet == TX_MULTISIG)
     {
@@ -1633,6 +1636,8 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     else
     {
         nRequiredRet = 1;
+        if (typeRet == TX_PUBKEY_DROP)
+            return true;
         CTxDestination address;
         if (!ExtractDestination(scriptPubKey, address))
            return false;
