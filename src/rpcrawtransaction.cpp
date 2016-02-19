@@ -286,16 +286,27 @@ Value createrawtransaction(const Array& params, bool fHelp)
     set<CBitcoinAddress> setAddress;
     BOOST_FOREACH(const Pair& s, sendTo)
     {
+        // Create output destination script
+        CScript scriptPubKey;
         CBitcoinAddress address(s.name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid NovaCoin address: ")+s.name_);
+        {
+            CMalleablePubKey mpk(s.name_);
+            if (!mpk.IsValid())
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid output destination: ")+s.name_);
 
-        if (setAddress.count(address))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
-        setAddress.insert(address);
+            CPubKey keyVariant, R;
+            mpk.GetVariant(R, keyVariant);
+            scriptPubKey.SetDestination(R, keyVariant);
+        }
+        else
+        {
+            scriptPubKey.SetDestination(address.Get());
+            if (setAddress.count(address))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
+            setAddress.insert(address);
+        }
 
-        CScript scriptPubKey;
-        scriptPubKey.SetDestination(address.Get());
         int64_t nAmount = AmountFromValue(s.value_);
 
         CTxOut out(nAmount, scriptPubKey);
