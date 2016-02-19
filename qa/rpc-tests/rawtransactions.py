@@ -208,7 +208,25 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTxSigned = self.nodes[2].signrawtransaction(rawTx, inputs)
         assert_equal(rawTxSigned['complete'], True) #node2 can sign the tx compl., own two of three keys
 
-        self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
+        newTxId = self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
+
+        # after syncing up mempools, check that verifyrawtransactions against
+        # mempool and against chain will now diverge when an output from the
+        # previously constructed transaction is used
+        self.sync_all()
+        inputs = [{ "txid" : newTxId, "vout" : 0 }]
+        outputs = { self.nodes[0].getnewaddress() : 2.19 }
+        rawTx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+        rawTx2 = self.nodes[0].signrawtransaction(rawTx2)
+        rawTx2 = rawTx2['hex']
+        err   = self.nodes[0].verifyrawtransactions([rawTx2],{'include_mempool':True})
+        assert(err is None)
+        err   = self.nodes[0].verifyrawtransactions([rawTx2],{'include_mempool':False})
+        assert(err is not None)
+        assert(err['code'] == 16)
+        assert(err['reason'].startswith('bad-txns-inputs-missingorspent'))
+
+        # mine the transaction into a block and check end result
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
         self.sync_all()
         self.nodes[0].generate(1)
