@@ -46,12 +46,18 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
             Solver(scriptPubKey, type, vSolutions);
             out.push_back(Pair("keyVariant", HexStr(vSolutions[0])));
             out.push_back(Pair("R", HexStr(vSolutions[1])));
-        }
 
-        Array a;
-        BOOST_FOREACH(const CTxDestination& addr, addresses)
-            a.push_back(CBitcoinAddress(addr).ToString());
-        out.push_back(Pair("addresses", a));
+            CMalleableKeyView view;
+            if (pwalletMain->CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view))
+                out.push_back(Pair("keyView", view.ToString()));
+        }
+        else
+        {
+            Array a;
+            BOOST_FOREACH(const CTxDestination& addr, addresses)
+                a.push_back(CBitcoinAddress(addr).ToString());
+            out.push_back(Pair("addresses", a));
+        }
     }
     else
     {

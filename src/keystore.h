@@ -70,6 +70,7 @@ public:
     }
 
     virtual bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R) const =0;
+    virtual bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R, CMalleableKeyView &view) const =0;
     virtual bool CreatePrivKey(const CPubKey &pubKeyVariant, const CPubKey &R, CKey &privKey) const =0;
     virtual void ListMalleableViews(std::list<CMalleableKeyView> &malleableViewList) const =0;
 };
@@ -155,6 +156,22 @@ public:
             {
                 if (mi->first.CheckKeyVariant(R, pubKeyVariant))
                     return true;
+            }
+        }
+        return false;
+    }
+
+    bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R, CMalleableKeyView &view) const
+    {
+        {
+            LOCK(cs_KeyStore);
+            for (MalleableKeyMap::const_iterator mi = mapMalleableKeys.begin(); mi != mapMalleableKeys.end(); mi++)
+            {
+                if (mi->first.CheckKeyVariant(R, pubKeyVariant))
+                {
+                    view = mi->first;
+                    return true;
+                }
             }
         }
         return false;
