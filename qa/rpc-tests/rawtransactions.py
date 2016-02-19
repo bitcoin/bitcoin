@@ -128,6 +128,17 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert(err['code'] == 16)
         assert(err['reason'].startswith('coinbase'))
 
+        # passing no transactions at all is always successful, albeit boring
+        err   = self.nodes[2].verifyrawtransactions([])
+        assert(err is None)
+
+        # invalid option name
+        try:
+            err   = self.nodes[2].verifyrawtransactions([],{'check_transaction_color':False})
+            assert(false) # invalid option must cause exception
+        except JSONRPCException,e:
+            assert(e.error['code'] == -8) # RPC_INVALID_PARAMETER
+
         #########################
         # RAW TX MULTISIG TESTS #
         #########################

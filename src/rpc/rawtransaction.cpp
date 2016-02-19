@@ -893,16 +893,18 @@ UniValue verifyrawtransactions(const UniValue& params, bool fHelp)
         const UniValue &options = params[1];
         if (!options.isObject())
             throw JSONRPCError(RPC_TYPE_ERROR, "Second argument must be an object specifying options");
-        UniValue o;
-        o = find_value(options, "include_mempool");
-        if (o.isBool())
-            includeMempool = o.get_bool();
-        o = find_value(options, "check_final");
-        if (o.isBool())
-            checkFinal = o.get_bool();
-        o = find_value(options, "check_standard");
-        if (o.isBool())
-            checkStandard = o.get_bool();
+        std::vector<std::string> keys = options.getKeys();
+        const std::vector<UniValue> &values = options.getValues();
+        for (unsigned int i=0; i<keys.size(); ++i) {
+            if (keys[i] == "include_mempool")
+                includeMempool = values[i].get_bool();
+            else if (keys[i] == "check_final")
+                checkFinal = values[i].get_bool();
+            else if (keys[i] == "check_standard")
+                checkStandard = values[i].get_bool();
+            else
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown option " + keys[i]);
+        }
     }
 
     // Parse hex strings as transactions
