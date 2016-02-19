@@ -1195,7 +1195,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Standard tx, sender provides pubkey, receiver adds signature
         mTemplates.insert(make_pair(TX_PUBKEY, CScript() << OP_PUBKEY << OP_CHECKSIG));
 
-        if (GetTime() > SMALLDATA_SWITCH_TIME)
+        if (fTestNet || GetTime() > SMALLDATA_SWITCH_TIME)
         {
             // Malleable pubkey tx hack, sender provides generated pubkey combined with R parameter. The R parameter is dropped before checking a signature.
             mTemplates.insert(make_pair(TX_PUBKEY_DROP, CScript() << OP_PUBKEY << OP_PUBKEY << OP_DROP << OP_CHECKSIG));
@@ -1618,8 +1618,11 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    if (typeRet == TX_NULL_DATA || typeRet == TX_PUBKEY_DROP)
+    if (typeRet == TX_NULL_DATA)
+    {
+        nRequiredRet = 0;
         return true;
+    }
 
     if (typeRet == TX_MULTISIG)
     {
@@ -1633,6 +1636,8 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     else
     {
         nRequiredRet = 1;
+        if (typeRet == TX_PUBKEY_DROP)
+            return true;
         CTxDestination address;
         if (!ExtractDestination(scriptPubKey, address))
            return false;
