@@ -1507,14 +1507,9 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
     case TX_PUBKEY_DROP:
         {
             CPubKey key = CPubKey(vSolutions[0]);
-            if (keystore.HaveKey(key.GetID()))
+            CPubKey R = CPubKey(vSolutions[1]);
+            if (keystore.CheckOwnership(key, R))
                 return MINE_SPENDABLE;
-            else
-            {
-                CPubKey R = CPubKey(vSolutions[1]);
-                if (keystore.CheckOwnership(key, R))
-                    return MINE_SPENDABLE;
-            }
         }
         break;
     case TX_PUBKEYHASH:
@@ -1559,7 +1554,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     if (!Solver(scriptPubKey, whichType, vSolutions))
         return false;
 
-    if (whichType == TX_PUBKEY || whichType == TX_PUBKEY_DROP)
+    if (whichType == TX_PUBKEY)
     {
         addressRet = CPubKey(vSolutions[0]).GetID();
         return true;
@@ -1623,7 +1618,7 @@ bool ExtractDestinations(const CScript& scriptPubKey, txnouttype& typeRet, vecto
     vector<valtype> vSolutions;
     if (!Solver(scriptPubKey, typeRet, vSolutions))
         return false;
-    if (typeRet == TX_NULL_DATA)
+    if (typeRet == TX_NULL_DATA || typeRet == TX_PUBKEY_DROP)
         return true;
 
     if (typeRet == TX_MULTISIG)

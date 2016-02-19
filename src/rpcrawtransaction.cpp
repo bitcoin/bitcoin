@@ -40,6 +40,16 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
         out.push_back(Pair("reqSigs", nRequired));
         out.push_back(Pair("type", GetTxnOutputType(type)));
 
+        if (type == TX_PUBKEY_DROP)
+        {
+            vector<valtype> vSolutions;
+            if (!Solver(scriptPubKey, type, vSolutions))
+            {
+                out.push_back(Pair("keyVariant", HexStr(vSolutions[0])));
+                out.push_back(Pair("R", HexStr(vSolutions[1])));
+            }
+        }
+
         Array a;
         BOOST_FOREACH(const CTxDestination& addr, addresses)
             a.push_back(CBitcoinAddress(addr).ToString());
