@@ -29,6 +29,7 @@
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QFontDialog>
+#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QIntValidator>
 #include <QLabel>
@@ -39,6 +40,7 @@
 #include <QStringList>
 #include <QSystemTrayIcon>
 #include <QTimer>
+#include <QVBoxLayout>
 #include <QWidget>
 
 void OptionsDialog::FixTabOrder(QWidget * const o)
@@ -187,6 +189,24 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     connect(ui->maxuploadtargetCheckbox, SIGNAL(toggled(bool)), ui->maxuploadtarget, SLOT(setEnabled(bool)));
 
     prevwidget = ui->peerbloomfilters;
+
+    /* Mempool tab */
+
+    QWidget * const tabMempool = new QWidget();
+    QVBoxLayout * const verticalLayout_Mempool = new QVBoxLayout(tabMempool);
+    ui->tabWidget->insertTab(ui->tabWidget->indexOf(ui->tabWindow), tabMempool, tr("Mem&pool"));
+
+    // TODO
+
+    QGroupBox * const groupBox_Spamfiltering = new QGroupBox(tabMempool);
+    groupBox_Spamfiltering->setTitle(tr("Spam filtering"));
+    QVBoxLayout * const verticalLayout_Spamfiltering = new QVBoxLayout(groupBox_Spamfiltering);
+
+    // TODO
+
+    verticalLayout_Mempool->addWidget(groupBox_Spamfiltering);
+
+    verticalLayout_Mempool->addItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     /* Window elements init */
 #ifdef Q_OS_MACOS
