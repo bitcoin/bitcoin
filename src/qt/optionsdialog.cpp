@@ -25,14 +25,60 @@
 #include <chrono>
 
 #include <QApplication>
+#include <QBoxLayout>
 #include <QDataWidgetMapper>
 #include <QDir>
 #include <QFontDialog>
+#include <QHBoxLayout>
 #include <QIntValidator>
+#include <QLabel>
 #include <QLocale>
 #include <QMessageBox>
+#include <QSpacerItem>
+#include <QString>
+#include <QStringList>
 #include <QSystemTrayIcon>
 #include <QTimer>
+#include <QWidget>
+
+void OptionsDialog::FixTabOrder(QWidget * const o)
+{
+    setTabOrder(prevwidget, o);
+    prevwidget = o;
+}
+
+void OptionsDialog::CreateOptionUI(QBoxLayout * const layout, QWidget * const o, const QString& text)
+{
+    QWidget * const parent = o->parentWidget();
+    const QStringList text_parts = text.split("%s");
+
+    QHBoxLayout * const horizontalLayout = new QHBoxLayout();
+
+    QLabel * const labelBefore = new QLabel(parent);
+    labelBefore->setText(text_parts[0]);
+    labelBefore->setTextFormat(Qt::PlainText);
+    labelBefore->setBuddy(o);
+    labelBefore->setToolTip(o->toolTip());
+
+    horizontalLayout->addWidget(labelBefore);
+    horizontalLayout->addWidget(o);
+
+    QLabel * const labelAfter = new QLabel(parent);
+    labelAfter->setText(text_parts[1]);
+    labelAfter->setTextFormat(Qt::PlainText);
+    labelAfter->setBuddy(o);
+    labelAfter->setToolTip(o->toolTip());
+
+    horizontalLayout->addWidget(labelAfter);
+
+    QSpacerItem * const horizontalSpacer = new QSpacerItem(40, 20, QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    horizontalLayout->addItem(horizontalSpacer);
+
+    layout->addLayout(horizontalLayout);
+
+    FixTabOrder(o);
+}
 
 int setFontChoice(QComboBox* cb, const OptionsModel::FontChoice& fc)
 {
@@ -139,6 +185,8 @@ OptionsDialog::OptionsDialog(QWidget* parent, bool enableWallet)
     ui->maxuploadtarget->setMinimum(144 /* MiB/day */);
     ui->maxuploadtarget->setMaximum(std::numeric_limits<int>::max());
     connect(ui->maxuploadtargetCheckbox, SIGNAL(toggled(bool)), ui->maxuploadtarget, SLOT(setEnabled(bool)));
+
+    prevwidget = ui->peerbloomfilters;
 
     /* Window elements init */
 #ifdef Q_OS_MACOS
