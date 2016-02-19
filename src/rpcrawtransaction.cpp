@@ -43,11 +43,9 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
         if (type == TX_PUBKEY_DROP)
         {
             vector<valtype> vSolutions;
-            if (!Solver(scriptPubKey, type, vSolutions))
-            {
-                out.push_back(Pair("keyVariant", HexStr(vSolutions[0])));
-                out.push_back(Pair("R", HexStr(vSolutions[1])));
-            }
+            Solver(scriptPubKey, type, vSolutions);
+            out.push_back(Pair("keyVariant", HexStr(vSolutions[0])));
+            out.push_back(Pair("R", HexStr(vSolutions[1])));
         }
 
         Array a;
