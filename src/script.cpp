@@ -1195,7 +1195,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Standard tx, sender provides pubkey, receiver adds signature
         mTemplates.insert(make_pair(TX_PUBKEY, CScript() << OP_PUBKEY << OP_CHECKSIG));
 
-        if (GetTime() > SMALLDATA_SWITCH_TIME)
+        if (fTestNet || GetTime() > SMALLDATA_SWITCH_TIME)
         {
             // Malleable pubkey tx hack, sender provides generated pubkey combined with R parameter. The R parameter is dropped before checking a signature.
             mTemplates.insert(make_pair(TX_PUBKEY_DROP, CScript() << OP_PUBKEY << OP_PUBKEY << OP_DROP << OP_CHECKSIG));
