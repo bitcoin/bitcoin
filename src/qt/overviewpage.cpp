@@ -434,6 +434,9 @@ void OverviewPage::updateDarksendProgress()
 
 void OverviewPage::darkSendStatus()
 {
+    if (!chainActive.Tip()) return;
+    if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
+
     static int64_t nLastDSProgressBlockTime = 0;
 
     int nBestHeight = chainActive.Tip()->nHeight;
