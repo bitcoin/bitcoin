@@ -644,7 +644,6 @@ Value createmultisig(const Array& params, bool fHelp)
 
     int nRequired = params[0].get_int();
     const Array& keys = params[1].get_array();
-    string strAccount;
 
     // Gather public keys
     if (nRequired < 1)
