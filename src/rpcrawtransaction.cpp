@@ -49,7 +49,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
 
             CMalleableKeyView view;
             if (pwalletMain->CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view))
-                out.push_back(Pair("keyView", view.ToString()));
+                out.push_back(Pair("pubkeyPair", view.GetMalleablePubKey().ToString()));
         }
         else
         {
