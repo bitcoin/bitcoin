@@ -14,6 +14,7 @@
 #include "script.h"
 #include "scrypt.h"
 
+#include <limits>
 #include <list>
 #include <map>
 
@@ -42,7 +43,7 @@ static const unsigned int MAX_INV_SZ = 50000;
 static const int64_t MIN_TX_FEE = CENT/10;
 static const int64_t MIN_RELAY_TX_FEE = CENT/50;
 
-static const int64_t MAX_MONEY = 2000000000 * COIN;
+static const int64_t MAX_MONEY = std::numeric_limits<int64_t>::max();
 static const int64_t MAX_MINT_PROOF_OF_WORK = 100 * COIN;
 static const int64_t MAX_MINT_PROOF_OF_STAKE = 1 * COIN;
 static const int64_t MIN_TXOUT_AMOUNT = CENT/100;
