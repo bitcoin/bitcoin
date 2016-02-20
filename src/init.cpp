@@ -1672,7 +1672,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     int64_t nPowTargetSpacing = Params().GetConsensus().nPowTargetSpacing;
     CScheduler::Function f = boost::bind(&PartitionCheck, &IsInitialBlockDownload,
                                          boost::ref(cs_main), boost::cref(pindexBestHeader), nPowTargetSpacing);
-    scheduler.scheduleEvery(f, nPowTargetSpacing);
+    CBlockIndex *pdummy = NULL;
+    scheduler.scheduleEvery(f, PartitionCheck(&IsInitialBlockDownload, boost::ref(cs_main), boost::cref(pdummy), nPowTargetSpacing));
 
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), chainparams);
