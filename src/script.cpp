@@ -294,7 +294,7 @@ bool IsDERSignature(const valtype &vchSig, bool fWithHashType, bool fCheckLow) {
     if (5 + nLenR >= vchSig.size())
         return error("Non-canonical signature: S length misplaced");
     unsigned int nLenS = vchSig[5+nLenR];
-    if ((unsigned long)(nLenR + nLenS + (fWithHashType ? 7 : 6)) != vchSig.size())
+    if ((nLenR + nLenS + (fWithHashType ? 7 : 6)) != vchSig.size())
         return error("Non-canonical signature: R+S length mismatch");
 
     const unsigned char *R = &vchSig[4];
