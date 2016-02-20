@@ -7,10 +7,7 @@
 #include "base58.h"
 #include "net.h"
 
-#include <boost/algorithm/string/predicate.hpp> // for startswith() and endswith()
-
 using namespace std;
-using namespace boost;
 
 int nGotIRCAddresses = 0;
 
@@ -347,7 +344,7 @@ void ThreadIRCSeed2(void* parg)
                 printf("IRC got join\n");
             }
 
-            if (boost::algorithm::starts_with(strName, "u"))
+            if (strName.compare(0,1, "u") == 0)
             {
                 CAddress addr;
                 if (DecodeAddress(strName, addr))
