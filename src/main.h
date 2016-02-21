@@ -962,7 +962,7 @@ public:
         if (nHeight >= 9689 || fTestNet)
         {
             // Take last bit of block hash as entropy bit
-            unsigned int nEntropyBit = ((GetHash().Get64()) & 1ULL);
+            unsigned int nEntropyBit = (GetHash().Get64()) & (uint64_t)1;
             if (fDebug && GetBoolArg("-printstakemodifier"))
                 printf("GetStakeEntropyBit: nTime=%u hashBlock=%s nEntropyBit=%u\n", nTime, GetHash().ToString().c_str(), nEntropyBit);
             return nEntropyBit;
