@@ -19,6 +19,10 @@ class CTransaction;
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 
+// Threshold for inverted nSequence: below this value it is interpreted
+// as a relative lock-time, otherwise ignored.
+static const uint32_t SEQUENCE_THRESHOLD = (1 << 31);
+
 /** IsMine() return codes */
 enum isminetype
 {
@@ -48,7 +52,8 @@ enum
     SCRIPT_VERIFY_LOW_S     = (1U << 2), // enforce low S values in signatures (depends on STRICTENC)
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4),  // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
-    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9)
+    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
+    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 9)
 
 };
 
@@ -128,6 +133,7 @@ enum opcodetype
     OP_VERIFY = 0x69,
     OP_RETURN = 0x6a,
     OP_CHECKLOCKTIMEVERIFY = 0xb1,
+    OP_CHECKSEQUENCEVERIFY = 0xb2,
 
     // stack ops
     OP_TOALTSTACK = 0x6b,
@@ -213,7 +219,6 @@ enum opcodetype
 
     // expansion
     OP_NOP1 = 0xb0,
-    OP_NOP3 = 0xb2,
     OP_NOP4 = 0xb3,
     OP_NOP5 = 0xb4,
     OP_NOP6 = 0xb5,

@@ -149,6 +149,7 @@ const char* GetOpName(opcodetype opcode)
     case OP_VERIFY                 : return "OP_VERIFY";
     case OP_RETURN                 : return "OP_RETURN";
     case OP_CHECKLOCKTIMEVERIFY    : return "OP_CHECKLOCKTIMEVERIFY";
+    case OP_CHECKSEQUENCEVERIFY    : return "OP_CHECKSEQUENCEVERIFY";
 
     // stack ops
     case OP_TOALTSTACK             : return "OP_TOALTSTACK";
@@ -231,7 +232,6 @@ const char* GetOpName(opcodetype opcode)
 
     // expanson
     case OP_NOP1                   : return "OP_NOP1";
-    case OP_NOP3                   : return "OP_NOP3";
     case OP_NOP4                   : return "OP_NOP4";
     case OP_NOP5                   : return "OP_NOP5";
     case OP_NOP6                   : return "OP_NOP6";
@@ -422,7 +422,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 // Control
                 //
                 case OP_NOP:
-                case OP_NOP1: case OP_NOP3: case OP_NOP4: case OP_NOP5:
+                case OP_NOP1: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 break;
 
@@ -516,6 +516,43 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // required to prove correct CHECKLOCKTIMEVERIFY execution.
                     if (txTo.vin[nIn].IsFinal())
                         return false;
+                    break;
+                }
+
+                case OP_CHECKSEQUENCEVERIFY:
+                {
+                    if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY))
+                        // treat as a NOP if not enabled
+                        break;
+                    if (stack.size() < 1)
+                        return false;
+                    const CBigNum nInvSequence = CastToBigNum(stacktop(-1));
+
+                    // In the rare event that the argument may be < 0 due to
+                    // some arithmetic being done first, you can always use
+                    // 0 MAX CHECKSEQUENCEVERIFY.
+                    if (nInvSequence < 0)
+                        return false; // negative nSequence is senseless
+
+                    // Relative lock times are supported by comparing the passed
+                    // in lock time to the sequence number of the input. All other
+                    // logic is the same, all that differs is what we are comparing
+                    // the lock time to.
+                    int64_t txToLockTime = (int64_t)~txTo.vin[nIn].nSequence;
+                        if (txToLockTime >= SEQUENCE_THRESHOLD)
+                            return false;
+
+                    if (!(
+                        (txToLockTime <  LOCKTIME_THRESHOLD && nInvSequence <  LOCKTIME_THRESHOLD) || 
+                        (txToLockTime >= LOCKTIME_THRESHOLD && nInvSequence >= LOCKTIME_THRESHOLD)
+                    ))
+                        return false;
+
+                    // Now that we know we're comparing apples-to-apples, the
+                    // comparison is a simple numeric one.
+                    if (nInvSequence > txToLockTime)
+                        return false;
+
                     break;
                 }
 
