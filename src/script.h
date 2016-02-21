@@ -47,7 +47,9 @@ enum
     SCRIPT_VERIFY_STRICTENC = (1U << 1), // enforce strict conformance to DER and SEC2 for signatures and pubkeys
     SCRIPT_VERIFY_LOW_S     = (1U << 2), // enforce low S values in signatures (depends on STRICTENC)
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
-    SCRIPT_VERIFY_NULLDUMMY = (1U << 4)  // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
+    SCRIPT_VERIFY_NULLDUMMY = (1U << 4),  // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
+    SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9)
+
 };
 
 // Strict verification:
@@ -125,6 +127,7 @@ enum opcodetype
     OP_ENDIF = 0x68,
     OP_VERIFY = 0x69,
     OP_RETURN = 0x6a,
+    OP_CHECKLOCKTIMEVERIFY = 0xb1,
 
     // stack ops
     OP_TOALTSTACK = 0x6b,
@@ -210,7 +213,6 @@ enum opcodetype
 
     // expansion
     OP_NOP1 = 0xb0,
-    OP_NOP2 = 0xb1,
     OP_NOP3 = 0xb2,
     OP_NOP4 = 0xb3,
     OP_NOP5 = 0xb4,

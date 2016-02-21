@@ -148,6 +148,7 @@ const char* GetOpName(opcodetype opcode)
     case OP_ENDIF                  : return "OP_ENDIF";
     case OP_VERIFY                 : return "OP_VERIFY";
     case OP_RETURN                 : return "OP_RETURN";
+    case OP_CHECKLOCKTIMEVERIFY    : return "OP_CHECKLOCKTIMEVERIFY";
 
     // stack ops
     case OP_TOALTSTACK             : return "OP_TOALTSTACK";
@@ -230,7 +231,6 @@ const char* GetOpName(opcodetype opcode)
 
     // expanson
     case OP_NOP1                   : return "OP_NOP1";
-    case OP_NOP2                   : return "OP_NOP2";
     case OP_NOP3                   : return "OP_NOP3";
     case OP_NOP4                   : return "OP_NOP4";
     case OP_NOP5                   : return "OP_NOP5";
@@ -422,7 +422,7 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 // Control
                 //
                 case OP_NOP:
-                case OP_NOP1: case OP_NOP2: case OP_NOP3: case OP_NOP4: case OP_NOP5:
+                case OP_NOP1: case OP_NOP3: case OP_NOP4: case OP_NOP5:
                 case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
                 break;
 
@@ -481,6 +481,43 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                 }
                 break;
 
+                case OP_CHECKLOCKTIMEVERIFY:
+                {
+                    // CHECKLOCKTIMEVERIFY
+                    //
+                    // (nLockTime -- nLockTime)
+                    if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY))
+                        break; // treat as a NOP is not enabled
+                    if (stack.size() < 1)
+                        return false;
+                    const CBigNum nLockTime = CastToBigNum(stacktop(-1));
+                    if (nLockTime < 0)
+                        return false; // Negative argument is senseless.
+
+                    if (!( // We can have either lock-by-blockheight or lock-by-blocktime.
+                          (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) || 
+                          (txTo.nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
+                    ))
+                        return false;
+
+                    // Now we can perform a simple numerical comparison
+                    if (nLockTime > (int64_t)txTo.nLockTime)
+                        return false;
+
+                    // Finally the nLockTime feature can be disabled and thus
+                    // CHECKLOCKTIMEVERIFY bypassed if every txin has been
+                    // finalized by setting nSequence to maxint. The
+                    // transaction would be allowed into the blockchain, making
+                    // the opcode ineffective.
+                    //
+                    // Testing if this vin is not final is sufficient to
+                    // prevent this condition. Alternatively we could test all
+                    // inputs, but testing just this input minimizes the data
+                    // required to prove correct CHECKLOCKTIMEVERIFY execution.
+                    if (txTo.vin[nIn].IsFinal())
+                        return false;
+                    break;
+                }
 
                 //
                 // Stack ops
