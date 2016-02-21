@@ -1248,6 +1248,8 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         mTemplates.insert(make_pair(TX_NULL_DATA, CScript() << OP_RETURN << OP_SMALLDATA));
     }
 
+    vSolutionsRet.clear();
+
     // Shortcut for pay-to-script-hash, which are more constrained than the other types:
     // it is always OP_HASH160 20 [20 byte hash] OP_EQUAL
     if (scriptPubKey.IsPayToScriptHash())
@@ -1255,6 +1257,16 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         typeRet = TX_SCRIPTHASH;
         vector<unsigned char> hashBytes(scriptPubKey.begin()+2, scriptPubKey.begin()+22);
         vSolutionsRet.push_back(hashBytes);
+        return true;
+    }
+
+    // Provably prunable, data-carrying output
+    //
+    // So long as script passes the IsUnspendable() test and all but the first
+    // byte passes the IsPushOnly() test we don't care what exactly is in the
+    // script.
+    if (scriptPubKey.size() >= 1 && scriptPubKey[0] == OP_RETURN && scriptPubKey.IsPushOnly(scriptPubKey.begin()+1)) {
+        typeRet = TX_NULL_DATA;
         return true;
     }
 
