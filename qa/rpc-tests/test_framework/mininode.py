@@ -536,7 +536,7 @@ class CBlock(CBlockHeader):
         return True
 
     def solve(self):
-        self.calc_sha256()
+        self.rehash()
         target = uint256_from_compact(self.nBits)
         while self.sha256 > target:
             self.nNonce += 1
