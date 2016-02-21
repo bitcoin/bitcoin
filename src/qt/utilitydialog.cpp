@@ -128,7 +128,6 @@ HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
         ui->scrollArea->setVisible(false);
         ui->aboutLogo->setVisible(false);
     }
-    // TODO: fix theme dependent Gfx in About popup
     // Theme dependent Gfx in About popup
     QString helpMessageGfx = ":/images/" + GUIUtil::getThemeName() + "/about";
     QPixmap pixmap = QPixmap(helpMessageGfx);

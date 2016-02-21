@@ -619,7 +619,6 @@ public:
     /**
      * populate vCoins with vector of available COutputs.
      */
-     // TODO: check all usage
     void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true, const CCoinControl *coinControl = NULL, bool fIncludeZeroValue=false, AvailableCoinsType coin_type=ALL_COINS, bool useIX = false) const;
 
     /**
