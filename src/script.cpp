@@ -539,8 +539,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // logic is the same, all that differs is what we are comparing
                     // the lock time to.
                     int64_t txToLockTime = (int64_t)~txTo.vin[nIn].nSequence;
-                        if (txToLockTime >= SEQUENCE_THRESHOLD)
-                            return false;
+                    if (txToLockTime >= SEQUENCE_THRESHOLD)
+                        return false;
 
                     if (!(
                         (txToLockTime <  LOCKTIME_THRESHOLD && nInvSequence <  LOCKTIME_THRESHOLD) || 
