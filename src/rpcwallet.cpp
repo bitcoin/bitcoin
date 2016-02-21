@@ -1896,7 +1896,7 @@ Value newmalleablekey(const Array& params, bool fHelp)
             "newmalleablekey\n"
             "Make a malleable public/private key pair.\n");
 
-    if (!fTestNet)
+    if (!fTestNet && GetTime() < SMALLDATA_SWITCH_TIME)
         throw runtime_error("This feature has been disabled for mainNet clients");
 
     CMalleableKeyView keyView = pwalletMain->GenerateNewMalleableKey();
