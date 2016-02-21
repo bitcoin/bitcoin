@@ -76,7 +76,8 @@ public:
         SendToOther,
         RecvWithAddress,
         RecvFromOther,
-        SendToSelf
+        SendToSelf,
+        CoinJoin
     };
 
     /** Number of confirmation recommended for accepting a transaction */
