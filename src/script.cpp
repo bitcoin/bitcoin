@@ -1342,6 +1342,20 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
                 else
                     break;
             }
+            else if (opcode2 == OP_INTEGER)
+            {   // Up to four-byte integer pushed onto vSolutions
+                try
+                {
+                    CBigNum bnVal = CastToBigNum(vch1);
+                    if (bnVal <= 16)
+                        break; // It's better to use OP_0 ... OP_16 for small integers.
+                    vSolutionsRet.push_back(vch1);
+                }
+                catch(...)
+                {
+                    break;
+                }
+            }
             else if (opcode2 == OP_SMALLDATA)
             {
                 // small pushdata, <= 1024 bytes
