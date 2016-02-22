@@ -429,7 +429,7 @@ unsigned int
 CTransaction::GetLegacySigOpCount() const
 {
     unsigned int nSigOps = 0;
-    if (!IsCoinBase() || nTime < COINBASE_SIGOPS_SWITCH_TIME)
+    if (!IsCoinBase())
     {
         // Coinbase scriptsigs are never executed, so there is 
         //    no sense in calculation of sigops.
