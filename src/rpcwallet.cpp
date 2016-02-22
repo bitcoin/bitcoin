@@ -1785,7 +1785,7 @@ Value reservebalance(const Array& params, bool fHelp)
             nAmount = (nAmount / CENT) * CENT;  // round to cent
             if (nAmount < 0)
                 throw runtime_error("amount cannot be negative.\n");
-            mapArgs["-reservebalance"] = FormatMoney(nAmount).c_str();
+            mapArgs["-reservebalance"] = FormatMoney(nAmount);
         }
         else
         {

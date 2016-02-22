@@ -333,7 +333,7 @@ void ThreadIRCSeed2(void* parg)
             {
                 // index 7 is limited to 16 characters
                 // could get full length name at index 10, but would be different from join messages
-                strName = vWords[7].c_str();
+                strName = vWords[7];
                 printf("IRC got who\n");
             }
 
