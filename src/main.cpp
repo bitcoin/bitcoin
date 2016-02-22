@@ -1981,6 +1981,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
         strMiscWarning = strWarning;
         CAlert::Notify(strWarning, true);
         lastAlertTime = now;
+        uiInterface.NotifyAlertChanged(uint256(), CT_NEW);
     }
 }
 
@@ -2000,6 +2001,7 @@ static bool DidBlockTriggerSizeFork(const CBlock &block, const CBlockIndex *pind
         // 2MB vote failed: this code is obsolete
         strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
         CAlert::Notify(strMiscWarning, true);
+        uiInterface.NotifyAlertChanged(uint256(), CT_NEW);
         return false;
     }
     if ((block.nVersion & FORK_BIT_2MB) != FORK_BIT_2MB)
@@ -2385,6 +2387,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
             CAlert::Notify(strMiscWarning, true);
+            uiInterface.NotifyAlertChanged(uint256(), CT_NEW);
             fWarned = true;
         }
     }
