@@ -543,8 +543,8 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                         return false;
 
                     if (!(
-                        (txToLockTime <  LOCKTIME_THRESHOLD && nInvSequence <  LOCKTIME_THRESHOLD) || 
-                        (txToLockTime >= LOCKTIME_THRESHOLD && nInvSequence >= LOCKTIME_THRESHOLD)
+                        (txToLockTime <  SEQUENCE_THRESHOLD && nInvSequence <  SEQUENCE_THRESHOLD) || 
+                        (txToLockTime >= SEQUENCE_THRESHOLD && nInvSequence >= SEQUENCE_THRESHOLD)
                     ))
                         return false;
 
