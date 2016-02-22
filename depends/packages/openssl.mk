@@ -1,8 +1,8 @@
 package=openssl
-$(package)_version=1.0.1q
+$(package)_version=1.0.1k
 $(package)_download_path=https://www.openssl.org/source
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=b3658b84e9ea606a5ded3c972a5517cd785282e7ea86b20c78aa4b773a047fb7
+$(package)_sha256_hash=8f9faeaebad088e772f4ef5e38252d472be4d878c6b3a2718c10a4fcebe7a41c
 
 define $(package)_set_vars
 $(package)_config_env=AR="$($(package)_ar)" RANLIB="$($(package)_ranlib)" CC="$($(package)_cc)"
@@ -10,7 +10,7 @@ $(package)_config_opts=--prefix=$(host_prefix) --openssldir=$(host_prefix)/etc/o
 $(package)_config_opts+=no-krb5 no-capieng no-dtls1 no-gost no-gmp no-heartbeats no-jpake no-md2
 $(package)_config_opts+=no-rc5 no-rdrand no-rfc3779 no-rsax no-sctp no-sha0 no-static_engine no-ssl2 no-ssl3
 $(package)_config_opts+=$($(package)_cflags) $($(package)_cppflags)
-$(package)_config_opts_linux=-fPIC
+$(package)_config_opts_linux=-fPIC -Wa,--noexecstack
 $(package)_config_opts_x86_64_linux=linux-x86_64
 $(package)_config_opts_i686_linux=linux-generic32
 $(package)_config_opts_arm_linux=linux-generic32

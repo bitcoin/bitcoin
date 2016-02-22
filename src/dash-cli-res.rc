@@ -17,13 +17,13 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Dash"
-            VALUE "FileDescription",    "Dash-cli (OSS RPC client for Dash)"
+            VALUE "FileDescription",    "dash-cli (JSON-RPC client for Dash Core)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "dash-cli"
             VALUE "LegalCopyright",     COPYRIGHT_STR
-            VALUE "LegalTrademarks1",   "Distributed under the MIT/X11 software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
+            VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
             VALUE "OriginalFilename",   "dash-cli.exe"
-            VALUE "ProductName",        "Dash-cli"
+            VALUE "ProductName",        "dash-cli"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END

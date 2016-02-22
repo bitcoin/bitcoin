@@ -7,7 +7,7 @@ https://github.com/dashpay/dash_hash
 
 ## Step 1: Download hash list
 
-   $ ./linearize-hashes.py linearize.cfg > hashlist.txt
+    $ ./linearize-hashes.py linearize.cfg > hashlist.txt
 
 Required configuration file settings for linearize-hashes:
 * RPC: rpcuser, rpcpassword
@@ -18,7 +18,7 @@ Optional config file setting for linearize-hashes:
 
 ## Step 2: Copy local block data
 
-   $ ./linearize-data.py linearize.cfg
+    $ ./linearize-data.py linearize.cfg
 
 Required configuration file settings:
 * "input": bitcoind blocks/ directory containing blkNNNNN.dat

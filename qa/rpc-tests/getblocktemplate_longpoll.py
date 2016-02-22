@@ -1,11 +1,10 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 
 def check_array_result(object_array, to_match, expected):
@@ -39,7 +38,7 @@ class LongpollThread(threading.Thread):
         self.longpollid = templat['longpollid']
         # create a new connection to the node, we can't use the same
         # connection from two threads
-        self.node = AuthServiceProxy(node.url, timeout=600)
+        self.node = get_rpc_proxy(node.url, 1, timeout=600)
 
     def run(self):
         self.node.getblocktemplate({'longpollid':self.longpollid})
@@ -51,7 +50,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
 
     def run_test(self):
         print "Warning: this test will take about 70 seconds in the best case. Be patient."
-        self.nodes[0].setgenerate(True, 10)
+        self.nodes[0].generate(10)
         templat = self.nodes[0].getblocktemplate()
         longpollid = templat['longpollid']
         # longpollid should not change between successive invocations if nothing else happens
@@ -66,7 +65,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         assert(thr.is_alive())
 
         # Test 2: test that longpoll will terminate if another node generates a block
-        self.nodes[1].setgenerate(True, 1)  # generate a block on another node
+        self.nodes[1].generate(1)  # generate a block on another node
         # check that thread will exit now that new transaction entered mempool
         thr.join(5)  # wait 5 seconds or until thread exits
         assert(not thr.is_alive())
@@ -74,7 +73,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
         # Test 3: test that longpoll will terminate if we generate a block ourselves
         thr = LongpollThread(self.nodes[0])
         thr.start()
-        self.nodes[0].setgenerate(True, 1)  # generate a block on another node
+        self.nodes[0].generate(1)  # generate a block on another node
         thr.join(5)  # wait 5 seconds or until thread exits
         assert(not thr.is_alive())
 

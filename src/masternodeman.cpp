@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -238,7 +238,7 @@ void CMasternodeMan::AskForMN(CNode* pnode, CTxIn &vin)
     // ask for the mnb info once from the node that sent mnp
 
     LogPrintf("CMasternodeMan::AskForMN - Asking node for missing entry, vin: %s\n", vin.ToString());
-    pnode->PushMessage("dseg", vin);
+    pnode->PushMessage(NetMsgType::DSEG, vin);
     int64_t askAgain = GetTime() + MASTERNODE_MIN_MNP_SECONDS;
     mWeAskedForMasternodeListEntry[vin.prevout] = askAgain;
 }
@@ -379,7 +379,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
 {
     LOCK(cs);
 
-    if(Params().NetworkID() == CBaseChainParams::MAIN) {
+    if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if(!(pnode->addr.IsRFC1918() || pnode->addr.IsLocal())){
             std::map<CNetAddr, int64_t>::iterator it = mWeAskedForMasternodeList.find(pnode->addr);
             if (it != mWeAskedForMasternodeList.end())
@@ -392,7 +392,7 @@ void CMasternodeMan::DsegUpdate(CNode* pnode)
         }
     }
     
-    pnode->PushMessage("dseg", CTxIn());
+    pnode->PushMessage(NetMsgType::DSEG, CTxIn());
     int64_t askAgain = GetTime() + MASTERNODES_DSEG_SECONDS;
     mWeAskedForMasternodeList[pnode->addr] = askAgain;
 }
@@ -485,12 +485,12 @@ CMasternode* CMasternodeMan::GetNextMasternodeInQueueForPayment(int nBlockHeight
     //  -- (chance per block * chances before IsScheduled will fire)
     int nTenthNetwork = CountEnabled()/10;
     int nCountTenth = 0; 
-    uint256 nHigh = 0;
+    arith_uint256 nHigh = 0;
     BOOST_FOREACH (PAIRTYPE(int64_t, CTxIn)& s, vecMasternodeLastPaid){
         CMasternode* pmn = Find(s.second);
         if(!pmn) break;
 
-        uint256 n = pmn->CalculateScore(1, nBlockHeight-100);
+        arith_uint256 n = UintToArith256(pmn->CalculateScore(1, nBlockHeight-100));
         if(n > nHigh){
             nHigh = n;
             pBestMasternode = pmn;
@@ -545,7 +545,7 @@ CMasternode* CMasternodeMan::GetCurrentMasterNode(int mod, int64_t nBlockHeight,
 
         // calculate the score for each Masternode
         uint256 n = mn.CalculateScore(mod, nBlockHeight);
-        int64_t n2 = n.GetCompact(false);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         // determine the winner
         if(n2 > score){
@@ -562,7 +562,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
     std::vector<pair<int64_t, CTxIn> > vecMasternodeScores;
 
     //make sure we know about this block
-    uint256 hash = 0;
+    uint256 hash = uint256();
     if(!GetBlockHash(hash, nBlockHeight)) return -1;
 
     // scan for winner
@@ -573,7 +573,7 @@ int CMasternodeMan::GetMasternodeRank(const CTxIn& vin, int64_t nBlockHeight, in
             if(!mn.IsEnabled()) continue;
         }
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = n.GetCompact(false);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn.vin));
     }
@@ -597,7 +597,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
     std::vector<pair<int, CMasternode> > vecMasternodeRanks;
 
     //make sure we know about this block
-    uint256 hash = 0;
+    uint256 hash = uint256();
     if(!GetBlockHash(hash, nBlockHeight)) return vecMasternodeRanks;
 
     // scan for winner
@@ -611,7 +611,7 @@ std::vector<pair<int, CMasternode> > CMasternodeMan::GetMasternodeRanks(int64_t 
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = n.GetCompact(false);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn));
     }
@@ -641,7 +641,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
         }
 
         uint256 n = mn.CalculateScore(1, nBlockHeight);
-        int64_t n2 = n.GetCompact(false);
+        int64_t n2 = UintToArith256(n).GetCompact(false);
 
         vecMasternodeScores.push_back(make_pair(n2, mn.vin));
     }
@@ -662,7 +662,7 @@ CMasternode* CMasternodeMan::GetMasternodeByRank(int nRank, int64_t nBlockHeight
 void CMasternodeMan::ProcessMasternodeConnections()
 {
     //we don't care about this for regtest
-    if(Params().NetworkID() == CBaseChainParams::REGTEST) return;
+    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) return;
 
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes) {
@@ -682,9 +682,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
     LOCK(cs_process_message);
 
-    if (strCommand == "mnb") { //Masternode Broadcast
+    if (strCommand == NetMsgType::MNANNOUNCE) { //Masternode Broadcast
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
+
+        LogPrint("masternode", "mnb - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
 
         if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
             masternodeSync.AddedMasternodeList(mnb.GetHash());
@@ -692,11 +694,15 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
         mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
 
+        LogPrint("masternode", "mnb - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
+
         int nDoS = 0;
         if(!mnb.CheckAndUpdate(nDoS)){
 
             if(nDoS > 0)
                 Misbehaving(pfrom->GetId(), nDoS);
+
+            LogPrint("masternode", "mnb - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
 
             //failed
             return;
@@ -724,7 +730,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
     }
 
-    else if (strCommand == "mnp") { //Masternode Ping
+    else if (strCommand == NetMsgType::MNPING) { //Masternode Ping
         CMasternodePing mnp;
         vRecv >> mnp;
 
@@ -732,6 +738,8 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
         mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
+
+        LogPrint("masternode", "mnp - Masternode ping, vin: %s\n new", mnp.vin.ToString());
 
         int nDoS = 0;
         if(mnp.CheckAndUpdate(nDoS)) return;
@@ -750,16 +758,18 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         // we might have to ask for a masternode entry once
         AskForMN(pfrom, mnp.vin);
 
-    } else if (strCommand == "dseg") { //Get Masternode list or specific entry
+    } else if (strCommand == NetMsgType::DSEG) { //Get Masternode list or specific entry
 
         CTxIn vin;
         vRecv >> vin;
+
+        LogPrint("masternode", "dseg - Masternode list, vin: %s\n", vin.ToString());
 
         if(vin == CTxIn()) { //only should ask for this once
             //local network
             bool isLocal = (pfrom->addr.IsRFC1918() || pfrom->addr.IsLocal());
 
-            if(!isLocal && Params().NetworkID() == CBaseChainParams::MAIN) {
+            if(!isLocal && Params().NetworkIDString() == CBaseChainParams::MAIN) {
                 std::map<CNetAddr, int64_t>::iterator i = mAskedUsForMasternodeList.find(pfrom->addr);
                 if (i != mAskedUsForMasternodeList.end()){
                     int64_t t = (*i).second;
@@ -799,7 +809,7 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         }
 
         if(vin == CTxIn()) {
-            pfrom->PushMessage("ssc", MASTERNODE_SYNC_LIST, nInvCount);
+            pfrom->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_LIST, nInvCount);
             LogPrintf("dseg - Sent %d Masternode entries to %s\n", nInvCount, pfrom->addr.ToString());
         }
     }

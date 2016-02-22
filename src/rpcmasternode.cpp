@@ -16,9 +16,10 @@
 #include "utilmoneystr.h"
 
 #include <fstream>
-using namespace json_spirit;
+#include <iomanip>
+#include <univalue.h>
 
-Value darksend(const Array& params, bool fHelp)
+UniValue darksend(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
@@ -62,14 +63,14 @@ Value darksend(const Array& params, bool fHelp)
     return "Unknown command, please see \"help darksend\"";
 }
 
-Value getpoolinfo(const Array& params, bool fHelp)
+UniValue getpoolinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw runtime_error(
             "getpoolinfo\n"
             "Returns an object containing anonymous pool-related information.");
 
-    Object obj;
+    UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("current_masternode",        mnodeman.GetCurrentMasterNode()->addr.ToString()));
     obj.push_back(Pair("state",        darkSendPool.GetState()));
     obj.push_back(Pair("entries",      darkSendPool.GetEntriesCount()));
@@ -78,7 +79,7 @@ Value getpoolinfo(const Array& params, bool fHelp)
 }
 
 
-Value masternode(const Array& params, bool fHelp)
+UniValue masternode(const UniValue& params, bool fHelp)
 {
     string strCommand;
     if (params.size() >= 1)
@@ -113,8 +114,10 @@ Value masternode(const Array& params, bool fHelp)
 
     if (strCommand == "list")
     {
-        Array newParams(params.size() - 1);
-        std::copy(params.begin() + 1, params.end(), newParams.begin());
+        UniValue newParams(UniValue::VARR);
+        // forward params but skip "list"
+        for (unsigned int i = 1; i < params.size(); i++)
+            newParams.push_back(params[i]);
         return masternodelist(newParams, fHelp);
     }
 
@@ -153,10 +156,10 @@ Value masternode(const Array& params, bool fHelp)
             if(chainActive.Tip())
                 mnodeman.GetNextMasternodeInQueueForPayment(chainActive.Tip()->nHeight, true, nCount);
 
-            if(params[1] == "ds") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
-            if(params[1] == "enabled") return mnodeman.CountEnabled();
-            if(params[1] == "qualify") return nCount;
-            if(params[1] == "all") return strprintf("Total: %d (DS Compatible: %d / Enabled: %d / Qualify: %d)",
+            if(params[1].get_str() == "ds") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
+            if(params[1].get_str() == "enabled") return mnodeman.CountEnabled();
+            if(params[1].get_str() == "qualify") return nCount;
+            if(params[1].get_str() == "all") return strprintf("Total: %d (DS Compatible: %d / Enabled: %d / Qualify: %d)",
                                                     mnodeman.size(),
                                                     mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION),
                                                     mnodeman.CountEnabled(),
@@ -169,7 +172,7 @@ Value masternode(const Array& params, bool fHelp)
     {
         CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
         if(winner) {
-            Object obj;
+            UniValue obj(UniValue::VOBJ);
 
             obj.push_back(Pair("IP:port",       winner->addr.ToString()));
             obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
@@ -191,7 +194,7 @@ Value masternode(const Array& params, bool fHelp)
             return activeMasternode.GetStatus();
 
         CTxIn vin = CTxIn();
-        CPubKey pubkey = CScript();
+        CPubKey pubkey = CPubKey();
         CKey key;
         bool found = activeMasternode.GetMasterNodeVin(vin, pubkey, key);
         if(!found){
@@ -259,7 +262,7 @@ Value masternode(const Array& params, bool fHelp)
 
         bool found = false;
 
-        Object statusObj;
+        UniValue statusObj(UniValue::VOBJ);
         statusObj.push_back(Pair("alias", alias));
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
@@ -316,12 +319,12 @@ Value masternode(const Array& params, bool fHelp)
         int successful = 0;
         int failed = 0;
 
-        Object resultsObj;
+        UniValue resultsObj(UniValue::VOBJ);
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
 
-            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CMasternode *pmn = mnodeman.Find(vin);
 
             if(strCommand == "start-missing" && pmn) continue;
@@ -329,7 +332,7 @@ Value masternode(const Array& params, bool fHelp)
 
             bool result = activeMasternode.Register(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), errorMessage);
 
-            Object statusObj;
+            UniValue statusObj(UniValue::VOBJ);
             statusObj.push_back(Pair("alias", mne.getAlias()));
             statusObj.push_back(Pair("result", result ? "successful" : "failed"));
 
@@ -344,7 +347,7 @@ Value masternode(const Array& params, bool fHelp)
         }
         pwalletMain->Lock();
 
-        Object returnObj;
+        UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Successfully started %d masternodes, failed to start %d, total %d", successful, failed, successful + failed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
@@ -370,15 +373,15 @@ Value masternode(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        Object resultObj;
+        UniValue resultObj(UniValue::VOBJ);
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CMasternode *pmn = mnodeman.Find(vin);
 
             std::string strStatus = pmn ? pmn->Status() : "MISSING";
 
-            Object mnObj;
+            UniValue mnObj(UniValue::VOBJ);
             mnObj.push_back(Pair("alias", mne.getAlias()));
             mnObj.push_back(Pair("address", mne.getIp()));
             mnObj.push_back(Pair("privateKey", mne.getPrivKey()));
@@ -395,7 +398,7 @@ Value masternode(const Array& params, bool fHelp)
         // Find possible candidates
         vector<COutput> possibleCoins = activeMasternode.SelectCoinsMasternode();
 
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
         BOOST_FOREACH(COutput& out, possibleCoins) {
             obj.push_back(Pair(out.tx->GetHash().ToString(), strprintf("%d", out.i)));
         }
@@ -408,7 +411,7 @@ Value masternode(const Array& params, bool fHelp)
     {
         if(!fMasterNode) throw runtime_error("This is not a masternode\n");
 
-        Object mnObj;
+        UniValue mnObj(UniValue::VOBJ);
         CMasternode *pmn = mnodeman.Find(activeMasternode.vin);
 
         mnObj.push_back(Pair("vin", activeMasternode.vin.ToString()));
@@ -426,7 +429,7 @@ Value masternode(const Array& params, bool fHelp)
             nLast = atoi(params[1].get_str());
         }
 
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
 
         for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
         {
@@ -447,14 +450,14 @@ Value masternode(const Array& params, bool fHelp)
         if (params.size() >= 2){
             nLast = atoi(params[1].get_str());
         }
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
 
         std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
         for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++){
-            uint256 nHigh = 0;
+            arith_uint256 nHigh = 0;
             CMasternode *pBestMasternode = NULL;
             BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-                uint256 n = mn.CalculateScore(1, nHeight-100);
+                arith_uint256 n = UintToArith256(mn.CalculateScore(1, nHeight-100));
                 if(n > nHigh){
                     nHigh = n;
                     pBestMasternode = &mn;
@@ -467,10 +470,10 @@ Value masternode(const Array& params, bool fHelp)
         return obj;
     }
 
-    return Value::null;
+    return NullUniValue;
 }
 
-Value masternodelist(const Array& params, bool fHelp)
+UniValue masternodelist(const UniValue& params, bool fHelp)
 {
     std::string strMode = "status";
     std::string strFilter = "";
@@ -506,7 +509,7 @@ Value masternodelist(const Array& params, bool fHelp)
                 );
     }
 
-    Object obj;
+    UniValue obj(UniValue::VOBJ);
     if (strMode == "rank") {
         std::vector<pair<int, CMasternode> > vMasternodeRanks = mnodeman.GetMasternodeRanks(chainActive.Tip()->nHeight);
         BOOST_FOREACH(PAIRTYPE(int, CMasternode)& s, vMasternodeRanks) {

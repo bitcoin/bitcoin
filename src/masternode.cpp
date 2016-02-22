@@ -1,7 +1,8 @@
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "consensus/validation.h"
 #include "darksend.h"
 #include "masternode.h"
 #include "masternode-payments.h"
@@ -150,28 +151,28 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
 //
 uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 {
-    if(chainActive.Tip() == NULL) return 0;
+    if(chainActive.Tip() == NULL) return uint256();
 
-    uint256 hash = 0;
-    uint256 aux = vin.prevout.hash + vin.prevout.n;
+    uint256 hash = uint256();
+    uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
 
     if(!GetBlockHash(hash, nBlockHeight)) {
         LogPrintf("CalculateScore ERROR - nHeight %d - Returned 0\n", nBlockHeight);
-        return 0;
+        return uint256();
     }
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     ss << hash;
-    uint256 hash2 = ss.GetHash();
+    arith_uint256 hash2 = UintToArith256(ss.GetHash());
 
     CHashWriter ss2(SER_GETHASH, PROTOCOL_VERSION);
     ss2 << hash;
     ss2 << aux;
-    uint256 hash3 = ss2.GetHash();
+    arith_uint256 hash3 = UintToArith256(ss2.GetHash());
 
-    uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
+    arith_uint256 r = (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
 
-    return r;
+    return ArithToUint256(r);
 }
 
 void CMasternode::Check(bool forceCheck)
@@ -211,7 +212,7 @@ void CMasternode::Check(bool forceCheck)
             TRY_LOCK(cs_main, lockMain);
             if(!lockMain) return;
 
-            if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)){
+            if(!AcceptToMemoryPool(mempool, state, CTransaction(tx), false, NULL, false, true, true)){
                 activeState = MASTERNODE_VIN_SPENT;
                 return;
 
@@ -236,7 +237,7 @@ int64_t CMasternode::SecondsSincePayment() {
     uint256 hash =  ss.GetHash();
 
     // return some deterministic value for unknown/unpaid but force it to be more than 30 days old
-    return month + hash.GetCompact(false);
+    return month + UintToArith256(hash).GetCompact(false);
 }
 
 int64_t CMasternode::GetLastPaid() {
@@ -252,7 +253,7 @@ int64_t CMasternode::GetLastPaid() {
     uint256 hash =  ss.GetHash();
 
     // use a deterministic offset to break a tie -- 2.5 minutes
-    int64_t nOffset = hash.GetCompact(false) % 150; 
+    int64_t nOffset = UintToArith256(hash).GetCompact(false) % 150;
 
     if (chainActive.Tip() == NULL) return false;
 
@@ -391,9 +392,10 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
         return false;
     }
 
-    if(Params().NetworkID() == CBaseChainParams::MAIN) {
-        if(addr.GetPort() != 9999) return false;
-    } else if(addr.GetPort() == 9999) return false;
+    int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
+    if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
+        if(addr.GetPort() != mainnetDefaultPort) return false;
+    } else if(addr.GetPort() == mainnetDefaultPort) return false;
 
     //search existing Masternode list, this is where we update existing Masternodes with new mnb broadcasts
     CMasternode* pmn = mnodeman.Find(vin);
@@ -448,8 +450,9 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
             return false;
         }
 
-        if(!AcceptableInputs(mempool, state, CTransaction(tx), false, NULL)) {
+        if(!AcceptToMemoryPool(mempool, state, CTransaction(tx), false, NULL, false, true, true)) {
             //set nDos
+            LogPrint("masternode", "mnb - Failed to accepted Masternode entry tx to mempool - %s\n", tx.ToString());
             state.IsInvalid(nDoS);
             return false;
         }
@@ -467,9 +470,9 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
     // verify that sig time is legit in past
     // should be at least not earlier than block when 1000 DASH tx got MASTERNODE_MIN_CONFIRMATIONS
-    uint256 hashBlock = 0;
+    uint256 hashBlock = uint256();
     CTransaction tx2;
-    GetTransaction(vin.prevout.hash, tx2, hashBlock, true);
+    GetTransaction(vin.prevout.hash, tx2, Params().GetConsensus(), hashBlock, true);
     BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
     if (mi != mapBlockIndex.end() && (*mi).second)
     {
@@ -493,7 +496,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
     }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
-    if(Params().NetworkID() == CBaseChainParams::REGTEST) isLocal = false;
+    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) isLocal = false;
 
     if(!isLocal) Relay();
 
@@ -533,7 +536,7 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
 CMasternodePing::CMasternodePing()
 {
     vin = CTxIn();
-    blockHash = uint256(0);
+    blockHash = uint256();
     sigTime = 0;
     vchSig = std::vector<unsigned char>();
 }

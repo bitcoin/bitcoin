@@ -155,7 +155,7 @@ class FrameworkInfo(object):
 class ApplicationBundleInfo(object):
     def __init__(self, path):
         self.path = path
-        appName = os.path.splitext(os.path.basename(path))[0]
+        appName = "Dash-Qt"
         self.binaryPath = os.path.join(path, "Contents", "MacOS", appName)
         if not os.path.exists(self.binaryPath):
             raise RuntimeError("Could not find bundle binary for " + path)
@@ -596,7 +596,7 @@ if os.path.exists("dist"):
 
 # ------------------------------------------------
 
-target = os.path.join("dist", app_bundle)
+target = os.path.join("dist", "Dash-Qt.app")
 
 if verbose >= 2:
     print "+ Copying source bundle +"
@@ -757,7 +757,7 @@ if config.dmg is not None:
 
     if fancy is None:
         try:
-            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname=app_bundle_name, ov=True)
+            runHDIUtil("create", dmg_name, srcfolder="dist", format="UDBZ", volname="Dash-Core", ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
     else:
@@ -767,12 +767,12 @@ if config.dmg is not None:
         for path, dirs, files in os.walk("dist"):
             for file in files:
                 size += os.path.getsize(os.path.join(path, file))
-        size += int(size * 0.1)
+        size += int(size * 0.15)
 
         if verbose >= 3:
             print "Creating temp image for modification..."
         try:
-            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname=app_bundle_name, ov=True)
+            runHDIUtil("create", dmg_name + ".temp", srcfolder="dist", format="UDRW", size=size, volname="Dash-Core", ov=True)
         except subprocess.CalledProcessError as e:
             sys.exit(e.returncode)
 
@@ -791,7 +791,8 @@ if config.dmg is not None:
             print "+ Applying fancy settings +"
 
         if fancy.has_key("background_picture"):
-            bg_path = os.path.join(disk_root, os.path.basename(fancy["background_picture"]))
+            bg_path = os.path.join(disk_root, ".background", os.path.basename(fancy["background_picture"]))
+            os.mkdir(os.path.dirname(bg_path))
             if verbose >= 3:
                 print fancy["background_picture"], "->", bg_path
             shutil.copy2(fancy["background_picture"], bg_path)
@@ -836,7 +837,7 @@ if config.dmg is not None:
                 items_positions.append(itemscript.substitute(params))
 
         params = {
-            "disk" : "Dash-Qt",
+            "disk" : "Dash-Core",
             "window_bounds" : "300,300,800,620",
             "icon_size" : "96",
             "background_commands" : "",
@@ -849,8 +850,8 @@ if config.dmg is not None:
         if bg_path is not None:
             # Set background file, then call SetFile to make it invisible.
             # (note: making it invisible first makes set background picture fail)
-            bgscript = Template("""set background picture of theViewOptions to file "$bgpic"
-                   do shell script "SetFile -a V /Volumes/$disk/$bgpic" """)
+            bgscript = Template("""set background picture of theViewOptions to file ".background:$bgpic"
+                   do shell script "SetFile -a V /Volumes/$disk/.background/$bgpic" """)
             params["background_commands"] = bgscript.substitute({"bgpic" : os.path.basename(bg_path), "disk" : params["disk"]})
 
         s = appscript.substitute(params)

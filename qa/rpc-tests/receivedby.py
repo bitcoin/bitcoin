@@ -1,13 +1,12 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Exercise the listreceivedbyaddress API
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 
 def get_sub_array_from_array(object_array, to_match):
@@ -69,7 +68,7 @@ class ReceivedByTest(BitcoinTestFramework):
                            { },
                            True)
         #Bury Tx under 10 block so it will be returned by listreceivedbyaddress
-        self.nodes[1].setgenerate(True, 10)
+        self.nodes[1].generate(10)
         self.sync_all()
         check_array_result(self.nodes[1].listreceivedbyaddress(),
                            {"address":addr},
@@ -106,7 +105,7 @@ class ReceivedByTest(BitcoinTestFramework):
             raise AssertionError("Wrong balance returned by getreceivedbyaddress, %0.2f"%(balance))
 
         #Bury Tx under 10 block so it will be returned by the default getreceivedbyaddress
-        self.nodes[1].setgenerate(True, 10)
+        self.nodes[1].generate(10)
         self.sync_all()
         balance = self.nodes[1].getreceivedbyaddress(addr)
         if balance != Decimal("0.1"):
@@ -136,7 +135,7 @@ class ReceivedByTest(BitcoinTestFramework):
         if balance != balance_by_account:
             raise AssertionError("Wrong balance returned by getreceivedbyaccount, %0.2f"%(balance))
 
-        self.nodes[1].setgenerate(True, 10)
+        self.nodes[1].generate(10)
         self.sync_all()
         # listreceivedbyaccount should return updated account balance
         check_array_result(self.nodes[1].listreceivedbyaccount(),

@@ -1,24 +1,17 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Test for -rpcbind, as well as -rpcallowip and -rpcconnect
 
-# Add python-bitcoinrpc to module search path:
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "python-bitcoinrpc"))
+# TODO extend this test from the test framework (like all other tests)
 
-import json
-import shutil
-import subprocess
 import tempfile
 import traceback
 
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
-from netutil import *
+from test_framework.util import *
+from test_framework.netutil import *
 
 def run_bind_test(tmpdir, allow_ips, connect_to, addresses, expected):
     '''
@@ -49,7 +42,7 @@ def run_allowip_test(tmpdir, allow_ips, rpchost, rpcport):
     try:
         # connect to node through non-loopback interface
         url = "http://rt:rt@%s:%d" % (rpchost, rpcport,)
-        node = AuthServiceProxy(url)
+        node = get_rpc_proxy(url, 1)
         node.getinfo()
     finally:
         node = None # make sure connection will be garbage collected and closed

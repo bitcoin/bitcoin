@@ -1,9 +1,10 @@
-// Copyright (c) 2012-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2015 The Dash Core developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2012-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Dash Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "netbase.h"
+#include "test/test_bitcoin.h"
 
 #include <string>
 
@@ -12,7 +13,7 @@
 
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(netbase_tests)
+BOOST_FIXTURE_TEST_SUITE(netbase_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(netbase_networks)
 {
@@ -144,6 +145,95 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(CSubNet("1:2:3:4:5:6:7:8/128").IsValid());
     BOOST_CHECK(!CSubNet("1:2:3:4:5:6:7:8/129").IsValid());
     BOOST_CHECK(!CSubNet("fuzzy").IsValid());
+
+    //CNetAddr constructor test
+    BOOST_CHECK(CSubNet(CNetAddr("127.0.0.1")).IsValid());
+    BOOST_CHECK(CSubNet(CNetAddr("127.0.0.1")).Match(CNetAddr("127.0.0.1")));
+    BOOST_CHECK(!CSubNet(CNetAddr("127.0.0.1")).Match(CNetAddr("127.0.0.2")));
+    BOOST_CHECK(CSubNet(CNetAddr("127.0.0.1")).ToString() == "127.0.0.1/32");
+
+    BOOST_CHECK(CSubNet(CNetAddr("1:2:3:4:5:6:7:8")).IsValid());
+    BOOST_CHECK(CSubNet(CNetAddr("1:2:3:4:5:6:7:8")).Match(CNetAddr("1:2:3:4:5:6:7:8")));
+    BOOST_CHECK(!CSubNet(CNetAddr("1:2:3:4:5:6:7:8")).Match(CNetAddr("1:2:3:4:5:6:7:9")));
+    BOOST_CHECK(CSubNet(CNetAddr("1:2:3:4:5:6:7:8")).ToString() == "1:2:3:4:5:6:7:8/128");
+
+    CSubNet subnet = CSubNet("1.2.3.4/255.255.255.255");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.4/32");
+    subnet = CSubNet("1.2.3.4/255.255.255.254");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.4/31");
+    subnet = CSubNet("1.2.3.4/255.255.255.252");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.4/30");
+    subnet = CSubNet("1.2.3.4/255.255.255.248");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.0/29");
+    subnet = CSubNet("1.2.3.4/255.255.255.240");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.0/28");
+    subnet = CSubNet("1.2.3.4/255.255.255.224");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.0/27");
+    subnet = CSubNet("1.2.3.4/255.255.255.192");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.0/26");
+    subnet = CSubNet("1.2.3.4/255.255.255.128");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.0/25");
+    subnet = CSubNet("1.2.3.4/255.255.255.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.3.0/24");
+    subnet = CSubNet("1.2.3.4/255.255.254.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.2.0/23");
+    subnet = CSubNet("1.2.3.4/255.255.252.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/22");
+    subnet = CSubNet("1.2.3.4/255.255.248.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/21");
+    subnet = CSubNet("1.2.3.4/255.255.240.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/20");
+    subnet = CSubNet("1.2.3.4/255.255.224.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/19");
+    subnet = CSubNet("1.2.3.4/255.255.192.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/18");
+    subnet = CSubNet("1.2.3.4/255.255.128.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/17");
+    subnet = CSubNet("1.2.3.4/255.255.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/16");
+    subnet = CSubNet("1.2.3.4/255.254.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/15");
+    subnet = CSubNet("1.2.3.4/255.252.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/14");
+    subnet = CSubNet("1.2.3.4/255.248.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/13");
+    subnet = CSubNet("1.2.3.4/255.240.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/12");
+    subnet = CSubNet("1.2.3.4/255.224.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/11");
+    subnet = CSubNet("1.2.3.4/255.192.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/10");
+    subnet = CSubNet("1.2.3.4/255.128.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/9");
+    subnet = CSubNet("1.2.3.4/255.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.0.0.0/8");
+    subnet = CSubNet("1.2.3.4/254.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/7");
+    subnet = CSubNet("1.2.3.4/252.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/6");
+    subnet = CSubNet("1.2.3.4/248.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/5");
+    subnet = CSubNet("1.2.3.4/240.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/4");
+    subnet = CSubNet("1.2.3.4/224.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/3");
+    subnet = CSubNet("1.2.3.4/192.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/2");
+    subnet = CSubNet("1.2.3.4/128.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/1");
+    subnet = CSubNet("1.2.3.4/0.0.0.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "0.0.0.0/0");
+
+    subnet = CSubNet("1:2:3:4:5:6:7:8/ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1:2:3:4:5:6:7:8/128");
+    subnet = CSubNet("1:2:3:4:5:6:7:8/ffff:0000:0000:0000:0000:0000:0000:0000");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1::/16");
+    subnet = CSubNet("1:2:3:4:5:6:7:8/0000:0000:0000:0000:0000:0000:0000:0000");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "::/0");
+    subnet = CSubNet("1.2.3.4/255.255.232.0");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1.2.0.0/255.255.232.0");
+    subnet = CSubNet("1:2:3:4:5:6:7:8/ffff:ffff:ffff:fffe:ffff:ffff:ffff:ff0f");
+    BOOST_CHECK_EQUAL(subnet.ToString(), "1:2:3:4:5:6:7:8/ffff:ffff:ffff:fffe:ffff:ffff:ffff:ff0f");
 }
 
 BOOST_AUTO_TEST_CASE(netbase_getgroup)

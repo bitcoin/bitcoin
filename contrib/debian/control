@@ -12,7 +12,7 @@ Build-Depends: debhelper,
  libdb4.8++-dev,
  libssl-dev,
  pkg-config,
- libminiupnpc8-dev,
+ libminiupnpc8-dev | libminiupnpc-dev (>> 1.6),
  libboost-filesystem-dev (>> 1.35) | libboost-filesystem1.35-dev,
  libboost-program-options-dev (>> 1.35) | libboost-program-options1.35-dev,
  libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
@@ -20,24 +20,22 @@ Build-Depends: debhelper,
  qt4-qmake,
  libqt4-dev,
  libqrencode-dev,
- libprotobuf-dev, protobuf-compiler
+ libprotobuf-dev, protobuf-compiler,
+ python
 Standards-Version: 3.9.2
-Homepage: http://www.dash.org/
+Homepage: https://www.dash.org/
 Vcs-Git: git://github.com/dashpay/dash.git
-Vcs-Browser: http://github.com/dashpay/dash
+Vcs-Browser: https://github.com/dashpay/dash
 
 Package: dashd
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - daemon
- Dash is a free open source peer-to-peer electronic cash system that
- is completely decentralized, without the need for a central server or
- trusted parties.  Users hold the crypto keys to their own money and
- transact directly with each other, with the help of a P2P network to
- check for double-spending.
- .
- Full transaction history is stored locally at each client.  This
- requires 1+ GB of space, slowly growing.
+ Dash is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Dash uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Dash Core
+ is the name of the open source software which enables the use of this currency.
  .
  This package provides the daemon, dashd, and the CLI tool
  dash-cli to interact with the daemon.
@@ -46,13 +44,24 @@ Package: dash-qt
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: peer-to-peer network based digital currency - Qt GUI
- Dash is a free open source peer-to-peer electronic cash system that
- is completely decentralized, without the need for a central server or
- trusted parties.  Users hold the crypto keys to their own money and
- transact directly with each other, with the help of a P2P network to
- check for double-spending.
- .
- Full transaction history is stored locally at each client.  This
- requires 1+ GB of space, slowly growing.
+ Dash is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Dash uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Dash Core
+ is the name of the open source software which enables the use of this currency.
  .
  This package provides Dash-Qt, a GUI for Dash based on Qt.
+
+Package: dash-tx
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: peer-to-peer digital currency - standalone transaction tool
+ Dash is an experimental new digital currency that enables instant
+ payments to anyone, anywhere in the world. Dash uses peer-to-peer
+ technology to operate with no central authority: managing transactions
+ and issuing money are carried out collectively by the network. Dash Core
+ is the name of the open source software which enables the use of this currency.
+ .
+ This package provides dash-tx, a command-line transaction creation
+ tool which can be used without a bitcoin daemon.  Some means of
+ exchanging minimal transaction data with peers is still required.

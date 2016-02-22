@@ -1,6 +1,8 @@
+// Copyright (c) 2014-2016 The Dash Core developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-
-
+#include "consensus/validation.h"
 #include "sync.h"
 #include "net.h"
 #include "key.h"
@@ -39,7 +41,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
     if(!IsSporkActive(SPORK_2_INSTANTX)) return;
     if(!masternodeSync.IsBlockchainSynced()) return;
 
-    if (strCommand == "ix")
+    if (strCommand == NetMsgType::IX)
     {
         //LogPrintf("ProcessMessageInstantX::ix\n");
         CDataStream vMsg(vRecv);
@@ -125,7 +127,7 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             return;
         }
     }
-    else if (strCommand == "txlvote") //InstantX Lock Consensus Votes
+    else if (strCommand == NetMsgType::IXLOCKVOTE) //InstantX Lock Consensus Votes
     {
         CConsensusVote ctx;
         vRecv >> ctx;
@@ -183,7 +185,7 @@ bool IsIXTXValid(const CTransaction& txCollateral){
     BOOST_FOREACH(const CTxIn i, txCollateral.vin){
         CTransaction tx2;
         uint256 hash;
-        if(GetTransaction(i.prevout.hash, tx2, hash, true)){
+        if(GetTransaction(i.prevout.hash, tx2, Params().GetConsensus(), hash, true)){
             if(tx2.vout.size() > i.prevout.n) {
                 nValueIn += tx2.vout[i.prevout.n].nValue;
             }
@@ -463,7 +465,7 @@ void CleanTransactionLocksList()
 
 uint256 CConsensusVote::GetHash() const
 {
-    return vinMasternode.prevout.hash + vinMasternode.prevout.n + txHash;
+    return ArithToUint256(UintToArith256(vinMasternode.prevout.hash) + vinMasternode.prevout.n + UintToArith256(txHash));
 }
 
 

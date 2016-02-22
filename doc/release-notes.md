@@ -1,10 +1,10 @@
 Dash Core 0.12
 ==================
 
-Dash Core tree 0.12.x release notes can be found here:
-- [v0.12.0](release-notes/dash/release-notes-0.12.0.md)
+Dash Core tree 0.12.1.x release notes can be found here:
+- [v0.12.1](release-notes/dash/release-notes-0.12.1.md)
 
-Dash Core tree 0.12.x is a fork of Bitcoin Core tree 0.10.2
+Dash Core tree 0.12.1.x is a fork of Bitcoin Core tree 0.12
 
 
 
@@ -25,8 +25,11 @@ which was released open source on Sep/25/2014.
 Dash Core tree 0.11.x was a fork of Bitcoin Core tree 0.9, Darkcoin was rebranded
 to Dash.
 
+Dash Core tree 0.12.0.x was a fork of Bitcoin Core tree 0.10.
+
 These release are considered obsolete. Old changelogs can be found here:
 
+- [v0.12.0](release-notes/dash/release-notes-0.12.0.md) released ???/??/2015
 - [v0.11.2](release-notes/dash/release-notes-0.11.2.md) released Mar/25/2015
 - [v0.11.1](release-notes/dash/release-notes-0.11.1.md) released Feb/10/2015
 - [v0.11.0](release-notes/dash/release-notes-0.11.0.md) released Jan/15/2015

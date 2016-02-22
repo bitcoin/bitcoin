@@ -19,5 +19,5 @@ depending on the speed of your computer and network connection, the synchronizat
 process can take anywhere from a few hours to a day or more.
 
 See the dash wiki at:
-  https://en.bitcoin.it/wiki/Main_Page ***TODO***
+  https://dashpay.atlassian.net/wiki/
 for more help and information.
