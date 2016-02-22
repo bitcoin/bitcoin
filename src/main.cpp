@@ -4936,6 +4936,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         int missingCount = 0;
         int unnecessaryCount = 0;
+        // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
+        bool fXVal = (thinBlock.header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
+
         // Look for each transaction in our various pools and buffers.
         // With xThinBlocks the vTxHashes contains only the first 8 bytes of the tx hash.
         BOOST_FOREACH(uint64_t &cheapHash, thinBlock.vTxHashes) 
@@ -4950,7 +4953,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 if (inMemPool && inMissingTx)
                     unnecessaryCount++;
 
-                if (inMemPool)
+                if (inMemPool && fXVal)
                     setPreVerifiedTxHash.insert(hash);
                 else if (inMissingTx)
                     tx = thinBlock.mapMissingTx[hash];
@@ -5018,9 +5021,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->thinBlock.hashPrevBlock = thinBlock.header.hashPrevBlock;
         pfrom->thinBlockHashes = thinBlock.vTxHashes;
 
+        LOCK(cs_main);
         int missingCount = 0;
         int unnecessaryCount = 0;
-        LOCK(cs_main);
+        // Xpress Validation - only perform xval if the chaintip matches the last blockhash in the thinblock
+        bool fXVal = (thinBlock.header.hashPrevBlock == chainActive.Tip()->GetBlockHash()) ? true : false;
+
         // Look for each transaction in our various pools and buffers.
         BOOST_FOREACH(const uint256 &hash, thinBlock.vTxHashes) 
         {
@@ -5032,7 +5038,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 if (inMemPool && inMissingTx)
                     unnecessaryCount++;
 
-                if (inMemPool)
+                if (inMemPool && fXVal)
                     setPreVerifiedTxHash.insert(hash);
                 else if (inMissingTx)
                     tx = thinBlock.mapMissingTx[hash];
