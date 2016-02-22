@@ -874,6 +874,9 @@ public:
 
     /* Returns the wallets help message */
     static std::string GetWalletHelpString(bool showDebug);
+
+    /* initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
+    static CWallet* InitLoadWallet(bool fDisableWallet, const std::string& strWalletFile, std::string& warningString, std::string& errorString);
 };
 
 /** A key allocated from the key pool. */
