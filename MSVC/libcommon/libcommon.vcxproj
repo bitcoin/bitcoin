@@ -20,8 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\alert.cpp" />
+    <ClCompile Include="..\..\src\cryptogram.cpp" />
+    <ClCompile Include="..\..\src\ecies.cpp" />
     <ClCompile Include="..\..\src\kernel.cpp" />
     <ClCompile Include="..\..\src\kernel_worker.cpp" />
+    <ClCompile Include="..\..\src\rpccrypt.cpp" />
     <ClCompile Include="..\..\src\stun.cpp" />
     <ClCompile Include="..\..\src\base58.cpp" />
     <ClCompile Include="..\..\src\txdb-leveldb.cpp" />
@@ -73,6 +76,7 @@
     <ClInclude Include="..\..\src\crypter.h" />
     <ClInclude Include="..\..\src\db.h" />
     <ClInclude Include="..\..\src\hash.h" />
+    <ClInclude Include="..\..\src\ies.h" />
     <ClInclude Include="..\..\src\init.h" />
     <ClInclude Include="..\..\src\inttypes.h" />
     <ClInclude Include="..\..\src\irc.h" />
@@ -86,7 +90,7 @@
     <ClInclude Include="..\..\src\mruset.h" />
     <ClInclude Include="..\..\src\net.h" />
     <ClInclude Include="..\..\src\netbase.h" />
-    <ClInclude Include="..\..\src\ntp.h "/>
+    <ClInclude Include="..\..\src\ntp.h " />
     <ClInclude Include="..\..\src\protocol.h" />
     <ClInclude Include="..\..\src\script.h" />
     <ClInclude Include="..\..\src\scrypt.h" />
