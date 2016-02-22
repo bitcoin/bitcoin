@@ -1938,7 +1938,7 @@ bool CWallet::CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nGenerati
     if (setCoins.empty())
         return false;
 
-    bool fMaxTimeWeight = false;
+    bool fDontSplitCoins = false;
     if (GetWeight((int64_t)wtx.nTime, (int64_t)nGenerationTime) == nStakeMaxAge)
     {
         // Only one output for old kernel inputs
@@ -1981,16 +1981,29 @@ bool CWallet::CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nGenerati
             vwtxPrev.push_back(pcoin->first);
         }
 
-        fMaxTimeWeight = true;
+        fDontSplitCoins = true;
     }
     else
     {
-        // Split stake input if maximum weight isn't reached yet
-        txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
-        txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+        int64_t nSplitThreshold = GetArg("-splitthreshold", nCombineThreshold);
 
         if (fDebug && GetBoolArg("-printcoinstake"))
-            printf("CreateCoinStake : maximum time weight isn't reached, splitting coinstake\n");
+            printf("CreateCoinStake : nSplitThreshold=%" PRId64 "\n", nSplitThreshold);
+
+        if (nCredit > nSplitThreshold)
+        {
+            // Split stake input if credit is lower than combine threshold and maximum weight isn't reached yet
+            txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+            txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+
+            if (fDebug && GetBoolArg("-printcoinstake"))
+                printf("CreateCoinStake : splitting coinstake\n");
+        }
+        else
+        {
+            txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
+            fDontSplitCoins = true;
+        }
     }
 
     // Calculate coin age reward
@@ -2004,7 +2017,7 @@ bool CWallet::CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nGenerati
     while (true)
     {
         // Set output amount
-        if (fMaxTimeWeight)
+        if (fDontSplitCoins)
             txNew.vout[1].nValue = nCredit - nMinFee;
         else
         {
