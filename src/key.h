@@ -226,7 +226,6 @@ public:
     }
     CMalleablePubKey(const std::string& strMalleablePubKey) { SetString(strMalleablePubKey); }
     CMalleablePubKey(const CPubKey &pubKeyInL, const CPubKey &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { nVersion = CMalleablePubKey::CURRENT_VERSION; }
-    CMalleablePubKey(const std::vector<unsigned char> &pubKeyInL, const std::vector<unsigned char> &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { nVersion = CMalleablePubKey::CURRENT_VERSION; }
 
     IMPLEMENT_SERIALIZE(
         READWRITE(this->nVersion);
@@ -299,8 +298,11 @@ public:
     void Reset();
     void MakeNewKeys();
     bool IsNull() const;
+    bool IsValid() const { return !IsNull() && GetMalleablePubKey().IsValid(); }
     bool SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSecretH);
-    void GetSecrets(CSecret &pvchSecretL, CSecret &pvchSecretH) const;
+
+    CSecret GetSecretL() const { return vchSecretL; }
+    CSecret GetSecretH() const { return vchSecretH; }
 
     CKeyID GetID() const {
         return GetMalleablePubKey().GetID();
@@ -322,12 +324,10 @@ private:
 public:
     CMalleableKeyView() { nVersion = 0; };
     CMalleableKeyView(const CMalleableKey &b);
-    CMalleableKeyView(const CSecret &L, const CPubKey &pvchPubKeyH);
 
     CMalleableKeyView(const CMalleableKeyView &b);
     CMalleableKeyView& operator=(const CMalleableKey &b);
     ~CMalleableKeyView();
-
 
     IMPLEMENT_SERIALIZE(
         READWRITE(this->nVersion);
@@ -337,6 +337,7 @@ public:
     )
 
     bool IsNull() const;
+    bool IsValid() const { return !IsNull() && GetMalleablePubKey().IsValid(); }
     std::string ToString() const;
     bool SetString(const std::string& strMalleablePubKey);
     std::vector<unsigned char> Raw() const;
@@ -351,6 +352,7 @@ public:
         return GetMalleablePubKey().GetID();
     }
     CMalleablePubKey GetMalleablePubKey() const;
+    CMalleableKey GetMalleableKey(const CSecret &vchSecretH) const { return CMalleableKey(vchSecretL, vchSecretH); }
     bool CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVariant) const;
 
     bool operator <(const CMalleableKeyView& kv) const { return vchPubKeyH.GetID() < kv.vchPubKeyH.GetID(); }

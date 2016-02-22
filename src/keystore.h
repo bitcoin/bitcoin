@@ -200,6 +200,22 @@ public:
                 malleableViewList.push_back(CMalleableKeyView(mi->first));
         }
     }
+
+    bool GetMalleableView(const CMalleablePubKey &mpk, CMalleableKeyView &view)
+    {
+        const CKeyID &mpkID = mpk.GetID();
+        {
+            LOCK(cs_KeyStore);
+            for (MalleableKeyMap::const_iterator mi = mapMalleableKeys.begin(); mi != mapMalleableKeys.end(); mi++)
+                if (mi->first.GetID() == mpkID)
+                {
+                    view = CMalleableKeyView(mi->first);
+                    return true;
+                }
+        }
+
+        return false;
+    }
 };
 
 typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;

@@ -1912,23 +1912,28 @@ Value newmalleablekey(const Array& params, bool fHelp)
     return result;
 }
 
-Value dumpmalleablekey(const Array& params, bool fHelp)
+Value validatemalleablepubkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
-        throw runtime_error (
-            "dumpmalleablekey <Key view>\n"
-            "Dump the private and public key pairs, which correspond to provided key view.\n");
+        throw runtime_error(
+            "validatemalleablekey <Malleable public key data>\n"
+            "Check the validity and ownership for priovided malleable public key.\n");
 
-    CMalleableKey mKey;
-    CMalleableKeyView keyView;
-    keyView.SetString(params[0].get_str());
-
-    if (!pwalletMain->GetMalleableKey(keyView, mKey))
-        throw runtime_error("There is no such item in the wallet");
+    CMalleablePubKey mpk;
+    bool isValid = mpk.SetString(params[0].get_str());
 
     Object result;
-    result.push_back(Pair("PrivatePair", mKey.ToString()));
-    result.push_back(Pair("PublicPair", mKey.GetMalleablePubKey().ToString()));
+    result.push_back(Pair("isvalid", isValid));
+
+    if (isValid)
+    {
+        CMalleableKeyView view;
+        bool isMine = pwalletMain->GetMalleableView(mpk, view);
+        result.push_back(Pair("ismine", isMine));
+
+        if (isMine)
+            result.push_back(Pair("KeyView", view.ToString()));
+    }
 
     return result;
 }

@@ -239,3 +239,49 @@ Value dumpwallet(const Array& params, bool fHelp)
 
     return Value::null;
 }
+
+Value dumpmalleablekey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error (
+            "dumpmalleablekey <Key view>\n"
+            "Dump the private and public key pairs, which correspond to provided key view.\n");
+
+    CMalleableKey mKey;
+    CMalleableKeyView keyView;
+    keyView.SetString(params[0].get_str());
+
+    if (!pwalletMain->GetMalleableKey(keyView, mKey))
+        throw runtime_error("There is no such item in the wallet");
+
+    Object result;
+    result.push_back(Pair("PrivatePair", mKey.ToString()));
+    result.push_back(Pair("PublicPair", mKey.GetMalleablePubKey().ToString()));
+
+    return result;
+}
+
+Value importmalleablekey(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error (
+            "importmalleablekey <Key data>\n"
+            "Imports the private key pair into your wallet.\n");
+
+    CMalleableKey mKey;
+    bool fSuccess = mKey.SetString(params[0].get_str());
+
+    Object result;
+
+    if (fSuccess)
+    {
+        fSuccess = pwalletMain->AddMalleableKey(mKey);
+        result.push_back(Pair("Successful", fSuccess));
+        result.push_back(Pair("PublicPair", mKey.GetMalleablePubKey().ToString()));
+        result.push_back(Pair("KeyView", CMalleableKeyView(mKey).ToString()));
+    }
+    else
+        result.push_back(Pair("Successful", false));
+
+    return result;
+}
