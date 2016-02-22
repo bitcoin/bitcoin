@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Dash Developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,13 +16,13 @@
 #include <boost/lexical_cast.hpp>
 
 #include <fstream>
+#include <univalue.h>
 #include <iostream>
 #include <sstream>
 
-using namespace json_spirit;
 using namespace std;
 
-Value mnbudget(const Array& params, bool fHelp)
+UniValue mnbudget(const UniValue& params, bool fHelp)
 {
     string strCommand;
     if (params.size() >= 1)
@@ -56,7 +56,7 @@ Value mnbudget(const Array& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "unknown";
 
-        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
         return nNext;
     }
 
@@ -65,7 +65,7 @@ Value mnbudget(const Array& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "unknown";
 
-        int nHeight = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nHeight = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 
         CAmount nTotal = budget.GetTotalBudget(nHeight);
         return nTotal;
@@ -104,7 +104,7 @@ Value mnbudget(const Array& params, bool fHelp)
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, 0);
+        CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(strError, false))
@@ -125,7 +125,7 @@ Value mnbudget(const Array& params, bool fHelp)
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? "ix" : "tx");
+        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? NetMsgType::IX : NetMsgType::TX);
 
         return wtx.GetHash().ToString();
     }
@@ -209,7 +209,7 @@ Value mnbudget(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        Object resultsObj;
+        UniValue resultsObj(UniValue::VOBJ);
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
@@ -221,7 +221,7 @@ Value mnbudget(const Array& params, bool fHelp)
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
-            Object statusObj;
+            UniValue statusObj(UniValue::VOBJ);
 
             if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
                 failed++;
@@ -265,7 +265,7 @@ Value mnbudget(const Array& params, bool fHelp)
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
         }
 
-        Object returnObj;
+        UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
@@ -295,7 +295,7 @@ Value mnbudget(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        Object resultsObj;
+        UniValue resultsObj(UniValue::VOBJ);
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
 
@@ -310,7 +310,7 @@ Value mnbudget(const Array& params, bool fHelp)
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
-            Object statusObj;
+            UniValue statusObj(UniValue::VOBJ);
 
             if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
                 failed++;
@@ -354,7 +354,7 @@ Value mnbudget(const Array& params, bool fHelp)
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
         }
 
-        Object returnObj;
+        UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
@@ -404,7 +404,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
     if(strCommand == "projection")
     {
-        Object resultObj;
+        UniValue resultObj(UniValue::VOBJ);
         CAmount nTotalAllotted = 0;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetBudget();
@@ -416,7 +416,7 @@ Value mnbudget(const Array& params, bool fHelp)
             ExtractDestination(pbudgetProposal->GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
-            Object bObj;
+            UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
             bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
@@ -453,7 +453,7 @@ Value mnbudget(const Array& params, bool fHelp)
         std::string strShow = "valid";
         if (params.size() == 2) strShow = params[1].get_str();
 
-        Object resultObj;
+        UniValue resultObj(UniValue::VOBJ);
         int64_t nTotalAllotted = 0;
 
         std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
@@ -467,7 +467,7 @@ Value mnbudget(const Array& params, bool fHelp)
             ExtractDestination(pbudgetProposal->GetPayee(), address1);
             CBitcoinAddress address2(address1);
 
-            Object bObj;
+            UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("Name",  pbudgetProposal->GetName()));
             bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
             bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
@@ -509,7 +509,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         if(pbudgetProposal == NULL) return "Unknown proposal";
 
-        Object resultObj;
+        UniValue resultObj(UniValue::VOBJ);
 
         std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
@@ -544,7 +544,7 @@ Value mnbudget(const Array& params, bool fHelp)
         ExtractDestination(pbudgetProposal->GetPayee(), address1);
         CBitcoinAddress address2(address1);
 
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
         obj.push_back(Pair("Name",  pbudgetProposal->GetName()));
         obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
         obj.push_back(Pair("FeeHash",  pbudgetProposal->nFeeTXHash.ToString()));
@@ -578,7 +578,7 @@ Value mnbudget(const Array& params, bool fHelp)
 
         uint256 hash = ParseHashV(params[1], "Proposal hash");
 
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
 
         CBudgetProposal* pbudgetProposal = budget.FindProposal(hash);
 
@@ -587,7 +587,7 @@ Value mnbudget(const Array& params, bool fHelp)
         std::map<uint256, CBudgetVote>::iterator it = pbudgetProposal->mapVotes.begin();
         while(it != pbudgetProposal->mapVotes.end()){
 
-            Object bObj;
+            UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("nHash",  (*it).first.ToString().c_str()));
             bObj.push_back(Pair("Vote",  (*it).second.GetVoteString()));
             bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
@@ -609,10 +609,10 @@ Value mnbudget(const Array& params, bool fHelp)
         return "Success";
     }
 
-    return Value::null;
+    return NullUniValue;
 }
 
-Value mnbudgetvoteraw(const Array& params, bool fHelp)
+UniValue mnbudgetvoteraw(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 6)
         throw runtime_error(
@@ -664,7 +664,7 @@ Value mnbudgetvoteraw(const Array& params, bool fHelp)
     }
 }
 
-Value mnfinalbudget(const Array& params, bool fHelp)
+UniValue mnfinalbudget(const UniValue& params, bool fHelp)
 {
     string strCommand;
     if (params.size() >= 1)
@@ -690,7 +690,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             throw runtime_error("Correct usage is 'mnfinalbudget vote-many <budget-hash>'");
 
         std::string strHash = params[1].get_str();
-        uint256 hash(strHash);
+        uint256 hash = uint256S(strHash);
 
         int success = 0;
         int failed = 0;
@@ -698,7 +698,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        Object resultsObj;
+        UniValue resultsObj(UniValue::VOBJ);
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
@@ -710,7 +710,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             CPubKey pubKeyMasternode;
             CKey keyMasternode;
 
-            Object statusObj;
+            UniValue statusObj(UniValue::VOBJ);
 
             if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
                 failed++;
@@ -754,7 +754,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             resultsObj.push_back(Pair(mne.getAlias(), statusObj));
         }
 
-        Object returnObj;
+        UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
         returnObj.push_back(Pair("detail", resultsObj));
 
@@ -767,7 +767,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             throw runtime_error("Correct usage is 'mnfinalbudget vote <budget-hash>'");
 
         std::string strHash = params[1].get_str();
-        uint256 hash(strHash);
+        uint256 hash = uint256S(strHash);
 
         CPubKey pubKeyMasternode;
         CKey keyMasternode;
@@ -800,12 +800,12 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
     if(strCommand == "list")
     {
-        Object resultObj;
+        UniValue resultObj(UniValue::VOBJ);
 
         std::vector<CFinalizedBudget*> winningFbs = budget.GetFinalizedBudgets();
         BOOST_FOREACH(CFinalizedBudget* finalizedBudget, winningFbs)
         {
-            Object bObj;
+            UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("FeeTX",  finalizedBudget->nFeeTXHash.ToString()));
             bObj.push_back(Pair("Hash",  finalizedBudget->GetHash().ToString()));
             bObj.push_back(Pair("BlockStart",  (int64_t)finalizedBudget->GetBlockStart()));
@@ -831,9 +831,9 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             throw runtime_error("Correct usage is 'mnfinalbudget getvotes budget-hash'");
 
         std::string strHash = params[1].get_str();
-        uint256 hash(strHash);
+        uint256 hash = uint256S(strHash);
 
-        Object obj;
+        UniValue obj(UniValue::VOBJ);
 
         CFinalizedBudget* pfinalBudget = budget.FindFinalizedBudget(hash);
 
@@ -842,7 +842,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         std::map<uint256, CFinalizedBudgetVote>::iterator it = pfinalBudget->mapVotes.begin();
         while(it != pfinalBudget->mapVotes.end()){
 
-            Object bObj;
+            UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("nHash",  (*it).first.ToString().c_str()));
             bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
             bObj.push_back(Pair("fValid",  (*it).second.fValid));
@@ -873,7 +873,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         std::vector<CTxBudgetPayment> vecTxBudgetPayments;
 
         while(std::getline(ss, token, ',')) {
-            uint256 nHash(token);
+            uint256 nHash = uint256S(token);
             CBudgetProposal* prop = budget.FindProposal(nHash);
 
             CTxBudgetPayment txBudgetPayment;
@@ -891,9 +891,9 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "invalid chaintip";
 
-        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 
-        CFinalizedBudgetBroadcast tempBudget("main", nBlockStart, vecTxBudgetPayments, 0);
+        CFinalizedBudgetBroadcast tempBudget("main", nBlockStart, vecTxBudgetPayments, uint256());
         // if(mapSeenFinalizedBudgets.count(tempBudget.GetHash())) {
         //     return "already exists"; //already exists
         // }
@@ -910,7 +910,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, "ix");
+        pwalletMain->CommitTransaction(wtx, reservekey, NetMsgType::IX);
 
         return wtx.GetHash().ToString();
     }
@@ -926,10 +926,10 @@ Value mnfinalbudget(const Array& params, bool fHelp)
 
         std::vector<CTxBudgetPayment> vecTxBudgetPayments;
 
-        uint256 nColHash(params[2].get_str());
+        uint256 nColHash = uint256S(params[2].get_str());
 
         while(std::getline(ss, token, ',')) {
-            uint256 nHash(token);
+            uint256 nHash = uint256S(token);
             CBudgetProposal* prop = budget.FindProposal(nHash);
 
             CTxBudgetPayment txBudgetPayment;
@@ -938,7 +938,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
             txBudgetPayment.nAmount = prop->GetAllotted();
             vecTxBudgetPayments.push_back(txBudgetPayment);
 
-            printf("%d\n", txBudgetPayment.nAmount);
+            printf("%lld\n", txBudgetPayment.nAmount);
         }
 
         if(vecTxBudgetPayments.size() < 1) {
@@ -948,7 +948,7 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "invalid chaintip";
 
-        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % GetBudgetPaymentCycleBlocks() + GetBudgetPaymentCycleBlocks();
+        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
       
         // CTxIn in(COutPoint(nColHash, 0));
         // int conf = GetInputAgeIX(nColHash, in);
@@ -976,5 +976,5 @@ Value mnfinalbudget(const Array& params, bool fHelp)
         return finalizedBudgetBroadcast.GetHash().ToString();
     }
 
-    return Value::null;
+    return NullUniValue;
 }

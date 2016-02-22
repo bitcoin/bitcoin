@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,6 +27,7 @@
 #include <vector>
 
 #include <boost/filesystem/path.hpp>
+#include <boost/signals2/signal.hpp>
 #include <boost/thread/exceptions.hpp>
 
 //Dash only features
@@ -47,6 +48,18 @@ extern bool fSucessfullyLoaded;
 extern std::vector<CAmount> darkSendDenominations;
 extern std::string strBudgetMode;
 
+static const bool DEFAULT_LOGTIMEMICROS = false;
+static const bool DEFAULT_LOGIPS        = false;
+static const bool DEFAULT_LOGTIMESTAMPS = true;
+
+/** Signals for translation. */
+class CTranslationInterface
+{
+public:
+    /** Translate a message to the native language of the user. */
+    boost::signals2::signal<std::string (const char* psz)> Translate;
+};
+
 extern std::map<std::string, std::string> mapArgs;
 extern std::map<std::string, std::vector<std::string> > mapMultiArgs;
 extern bool fDebug;
@@ -55,10 +68,26 @@ extern bool fPrintToDebugLog;
 extern bool fServer;
 extern std::string strMiscWarning;
 extern bool fLogTimestamps;
+extern bool fLogTimeMicros;
 extern bool fLogIPs;
 extern volatile bool fReopenDebugLog;
+extern CTranslationInterface translationInterface;
+
+extern const char * const BITCOIN_CONF_FILENAME;
+extern const char * const BITCOIN_PID_FILENAME;
+
+/**
+ * Translation function: Call Translate signal on UI interface, which returns a boost::optional result.
+ * If no translation slot is registered, nothing is returned, and simply return the input.
+ */
+inline std::string _(const char* psz)
+{
+    boost::optional<std::string> rv = translationInterface.Translate(psz);
+    return rv ? (*rv) : psz;
+}
 
 void SetupEnvironment();
+bool SetupNetworking();
 
 /** Return true if log accepts specified category */
 bool LogAcceptCategory(const char* category);
@@ -104,7 +133,7 @@ static inline bool error(const char* format)
     return false;
 }
 
-void PrintExceptionContinue(std::exception* pex, const char* pszThread);
+void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
 void ParseParameters(int argc, const char*const argv[]);
 void FileCommit(FILE *fileout);
 bool TruncateFile(FILE *file, unsigned int length);
@@ -114,6 +143,7 @@ bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 bool TryCreateDirectory(const boost::filesystem::path& p);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
+void ClearDatadirCache();
 boost::filesystem::path GetConfigFile();
 boost::filesystem::path GetMasternodeConfigFile();
 #ifndef WIN32
@@ -125,8 +155,9 @@ void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
 boost::filesystem::path GetTempPath();
+void OpenDebugLog();
 void ShrinkDebugFile();
-void runCommand(std::string strCommand);
+void runCommand(const std::string& strCommand);
 
 inline bool IsSwitchChar(char c)
 {
@@ -182,45 +213,32 @@ bool SoftSetArg(const std::string& strArg, const std::string& strValue);
  */
 bool SoftSetBoolArg(const std::string& strArg, bool fValue);
 
-void SetThreadPriority(int nPriority);
-void RenameThread(const char* name);
+/**
+ * Format a string to be used as group of options in help messages
+ *
+ * @param message Group name (e.g. "RPC server options:")
+ * @return the formatted string
+ */
+std::string HelpMessageGroup(const std::string& message);
 
 /**
- * Standard wrapper for do-something-forever thread functions.
- * "Forever" really means until the thread is interrupted.
- * Use it like:
- *   new boost::thread(boost::bind(&LoopForever<void (*)()>, "dumpaddr", &DumpAddresses, 900000));
- * or maybe:
- *    boost::function<void()> f = boost::bind(&FunctionWithArg, argument);
- *    threadGroup.create_thread(boost::bind(&LoopForever<boost::function<void()> >, "nothing", f, milliseconds));
+ * Format a string to be used as option description in help messages
+ *
+ * @param option Option message (e.g. "-rpcuser=<user>")
+ * @param message Option description (e.g. "Username for JSON-RPC connections")
+ * @return the formatted string
  */
-template <typename Callable> void LoopForever(const char* name,  Callable func, int64_t msecs)
-{
-    std::string s = strprintf("dash-%s", name);
-    RenameThread(s.c_str());
-    LogPrintf("%s thread start\n", name);
-    try
-    {
-        while (1)
-        {
-            MilliSleep(msecs);
-            func();
-        }
-    }
-    catch (boost::thread_interrupted)
-    {
-        LogPrintf("%s thread stop\n", name);
-        throw;
-    }
-    catch (std::exception& e) {
-        PrintExceptionContinue(&e, name);
-        throw;
-    }
-    catch (...) {
-        PrintExceptionContinue(NULL, name);
-        throw;
-    }
-}
+std::string HelpMessageOpt(const std::string& option, const std::string& message);
+
+/**
+ * Return the number of physical cores available on the current system.
+ * @note This does not count virtual cores, such as those provided by HyperThreading
+ * when boost is newer than 1.56.
+ */
+int GetNumCores();
+
+void SetThreadPriority(int nPriority);
+void RenameThread(const char* name);
 
 /**
  * .. and a wrapper that just calls func once
@@ -235,12 +253,12 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         func();
         LogPrintf("%s thread exit\n", name);
     }
-    catch (boost::thread_interrupted)
+    catch (const boost::thread_interrupted&)
     {
         LogPrintf("%s thread interrupt\n", name);
         throw;
     }
-    catch (std::exception& e) {
+    catch (const std::exception& e) {
         PrintExceptionContinue(&e, name);
         throw;
     }

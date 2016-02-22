@@ -2,14 +2,14 @@
 name: "dash-win-0.12"
 enable_cache: true
 suites:
-- "precise"
+- "trusty"
 architectures:
 - "amd64"
 packages: 
 - "g++"
 - "git-core"
 - "pkg-config"
-- "autoconf2.13"
+- "autoconf"
 - "libtool"
 - "automake"
 - "faketime"
@@ -18,7 +18,9 @@ packages:
 - "g++-mingw-w64"
 - "nsis"
 - "zip"
-reference_datetime: "2014-01-10 00:00:00"
+- "ca-certificates"
+- "python"
+reference_datetime: "2016-01-01 00:00:00"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
@@ -26,7 +28,7 @@ files: []
 script: |
   WRAP_DIR=$HOME/wrapped
   HOSTS="x86_64-w64-mingw32 i686-w64-mingw32"
-  CONFIGFLAGS="--enable-upnp-default"
+  CONFIGFLAGS="--enable-reduce-exports"
   FAKETIME_HOST_PROGS="g++ ar ranlib nm windres strip"
   FAKETIME_PROGS="date makensis zip"
 
@@ -46,7 +48,7 @@ script: |
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
@@ -57,12 +59,36 @@ script: |
     for prog in ${FAKETIME_HOST_PROGS}; do
         echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-        echo 'export LD_PRELOAD=/usr/lib/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
         echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
   done
+
+  # Create per-host linker wrapper
+  # This is only needed for trusty, as the mingw linker leaks a few bytes of
+  # heap, causing non-determinism. See discussion in https://github.com/bitcoin/bitcoin/pull/6900
+  for i in $HOSTS; do
+    mkdir -p ${WRAP_DIR}/${i}
+    for prog in collect2; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}/${prog}
+        REAL=$(${i}-gcc -print-prog-name=${prog})
+        echo "export MALLOC_PERTURB_=255" >> ${WRAP_DIR}/${i}/${prog}
+        echo "${REAL} \$@" >> $WRAP_DIR/${i}/${prog}
+        chmod +x ${WRAP_DIR}/${i}/${prog}
+    done
+    for prog in gcc g++; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "export COMPILER_PATH=${WRAP_DIR}/${i}" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+  done
+
   export PATH=${WRAP_DIR}:${PATH}
 
   cd dash
@@ -84,6 +110,8 @@ script: |
   pushd temp
   tar xf ../$SOURCEDIST
   find dash-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  mkdir -p $OUTDIR/src
+  cp ../$SOURCEDIST $OUTDIR/src
   popd
 
   ORIGPATH="$PATH"
@@ -98,6 +126,7 @@ script: |
 
     ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
     make ${MAKEOPTS}
+    make ${MAKEOPTS} -C src check-security
     make deploy
     make install-strip
     cp -f dash-*setup*.exe $OUTDIR/
@@ -109,7 +138,8 @@ script: |
     find ${DISTNAME} -type f | sort | zip -X@ ${OUTDIR}/${DISTNAME}-${i}.zip
     cd ../..
   done
-  mkdir -p $OUTDIR/src
-  mv $SOURCEDIST $OUTDIR/src
+  cd $OUTDIR
+  rename 's/-setup\.exe$/-setup-unsigned.exe/' *-setup.exe
+  find . -name "*-setup-unsigned.exe" | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz
   mv ${OUTDIR}/${DISTNAME}-x86_64-*.zip ${OUTDIR}/${DISTNAME}-win64.zip
   mv ${OUTDIR}/${DISTNAME}-i686-*.zip ${OUTDIR}/${DISTNAME}-win32.zip

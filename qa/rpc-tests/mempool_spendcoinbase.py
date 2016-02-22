@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,11 +13,8 @@
 # but less mature coinbase spends are NOT.
 #
 
-from test_framework import BitcoinTestFramework
-from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-from util import *
-import os
-import shutil
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 
 # Create one-input, one-output, no-fee transaction:
 class MempoolSpendCoinbaseTest(BitcoinTestFramework):
@@ -58,7 +55,7 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         assert_equal(self.nodes[0].getrawmempool(), [ spend_101_id ])
 
         # mine a block, spend_101 should get confirmed
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         assert_equal(set(self.nodes[0].getrawmempool()), set())
 
         # ... and now height 102 can be spent:

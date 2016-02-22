@@ -1,4 +1,4 @@
-ckage=boost
+package=boost
 $(package)_version=1_59_0
 $(package)_download_path=http://sourceforge.net/projects/boost/files/boost/1.59.0
 $(package)_file_name=$(package)_$($(package)_version).tar.bz2

@@ -1,9 +1,6 @@
 Wallet Tools
 ---------------------
 
-### [BitRPC](/contrib/bitrpc) ###
-Allows for sending of all standard Bitcoin commands via RPC rather than as command line args.
-
 ### [SpendFrom](/contrib/spendfrom) ###
 
 Use the raw transactions API to send coins received on a particular
@@ -15,6 +12,9 @@ Repository Tools
 ### [Developer tools](/contrib/devtools) ###
 Specific tools for developers working on this repository.
 Contains the script `github-merge.sh` for merging github pull requests securely and signing them using GPG.
+
+### [Verify-Commits](/contrib/verify-commits) ###
+Tool to verify that every merge commit was signed by a developer using the above `github-merge.sh` script.
 
 ### [Linearize](/contrib/linearize) ###
 Construct a linear, no-fork, best version of the blockchain.

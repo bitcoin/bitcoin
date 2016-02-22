@@ -27,7 +27,7 @@ private:
     WalletModel *model;
     void configure(bool enabled, int coins, int rounds);
 
-private slots:
+private Q_SLOTS:
 
     void clickBasic();
     void clickHigh();

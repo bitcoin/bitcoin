@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2016 The Dash Core developers
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -41,9 +41,6 @@ extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 extern CBudgetManager budget;
 void DumpBudgets();
-
-// Define amount of blocks in budget payment cycle
-int GetBudgetPaymentCycleBlocks();
 
 //Check the collateral transaction for the budget proposal/finalized budget
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf);
@@ -195,7 +192,7 @@ public:
     CTxBudgetPayment() {
         payee = CScript();
         nAmount = 0;
-        nProposalHash = 0;
+        nProposalHash = uint256();
     }
 
     ADD_SERIALIZE_METHODS;
@@ -203,7 +200,7 @@ public:
     //for saving to the serialized db
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(payee);
+        READWRITE(*(CScriptBase*)(&payee));
         READWRITE(nAmount);
         READWRITE(nProposalHash);
     }
@@ -431,14 +428,7 @@ public:
     std::pair<std::string, std::string> GetVotes();
 
     bool IsValid(std::string& strError, bool fCheckCollateral=true);
-
-    bool IsEstablished() {
-        //Proposals must be at least a day old to make it into a budget
-        if(Params().NetworkID() == CBaseChainParams::MAIN) return (nTime < GetTime() - (60*60*24));
-
-        //for testing purposes - 20 minutes
-        return (nTime < GetTime() - (60*20));
-    }
+    bool IsEstablished();
 
     std::string GetName() {return strProposalName; }
     std::string GetURL() {return strURL; }
@@ -468,7 +458,7 @@ public:
         ss << nBlockStart;
         ss << nBlockEnd;
         ss << nAmount;
-        ss << address;
+        ss << *(CScriptBase*)(&address);
         uint256 h1 = ss.GetHash();
 
         return h1;
@@ -486,7 +476,7 @@ public:
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
 
-        READWRITE(address);
+        READWRITE(*(CScriptBase*)(&address));
         READWRITE(nTime);
         READWRITE(nFeeTXHash);
 
@@ -542,7 +532,7 @@ public:
         READWRITE(nBlockStart);
         READWRITE(nBlockEnd);
         READWRITE(nAmount);
-        READWRITE(address);
+        READWRITE(*(CScriptBase*)(&address));
         READWRITE(nFeeTXHash);
     }
 };

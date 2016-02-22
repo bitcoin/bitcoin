@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -149,6 +149,7 @@ void CMasternodeSync::GetNextAsset()
         case(MASTERNODE_SYNC_BUDGET):
             LogPrintf("CMasternodeSync::GetNextAsset - Sync has finished\n");
             RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
+            uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
             break;
     }
     RequestedMasternodeAttempt = 0;
@@ -171,7 +172,7 @@ std::string CMasternodeSync::GetSyncStatus()
 
 void CMasternodeSync::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-    if (strCommand == "ssc") { //Sync status count
+    if (strCommand == NetMsgType::SYNCSTATUSCOUNT) { //Sync status count
         int nItemID;
         int nCount;
         vRecv >> nItemID >> nCount;
@@ -251,12 +252,14 @@ void CMasternodeSync::Process()
         if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
     }
 
-    //printf("CMasternodeSync::Process() TICK - %d %d \n", tick, RequestedMasternodeAssets);
+    double nSyncProgress = double(RequestedMasternodeAttempt + (RequestedMasternodeAssets - 1) * 8) / (8*4);
+    LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAttempt %d RequestedMasternodeAssets %d nSyncProgress %f\n", tick, RequestedMasternodeAttempt, RequestedMasternodeAssets, nSyncProgress);
+    uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
     if(RequestedMasternodeAssets == MASTERNODE_SYNC_INITIAL) GetNextAsset();
 
     // sporks synced but blockchain is not, wait until we're almost at a recent block to continue
-    if(Params().NetworkID() != CBaseChainParams::REGTEST &&
+    if(Params().NetworkIDString() != CBaseChainParams::REGTEST &&
             !IsBlockchainSynced() && RequestedMasternodeAssets > MASTERNODE_SYNC_SPORKS) return;
 
 
@@ -272,16 +275,16 @@ void CMasternodeSync::Process()
         /* 
             REGTEST QUICK MODE
         */ 
-        if(Params().NetworkID() == CBaseChainParams::REGTEST){
+        if(Params().NetworkIDString() == CBaseChainParams::REGTEST){
             if(RequestedMasternodeAttempt <= 2) {
-                pnode->PushMessage("getsporks"); //get current network sporks
+                pnode->PushMessage(NetMsgType::GETSPORKS); //get current network sporks
             } else if(RequestedMasternodeAttempt < 4) {
                 mnodeman.DsegUpdate(pnode); 
             } else if(RequestedMasternodeAttempt < 6) {
                 int nMnCount = mnodeman.CountEnabled();
-                pnode->PushMessage("mnget", nMnCount); //sync payees
-                uint256 n = 0;
-                pnode->PushMessage("mnvs", n); //sync masternode votes
+                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
+                uint256 n = uint256();
+                pnode->PushMessage(NetMsgType::MNBUDGETVOTESYNC, n); //sync masternode votes
             } else {
                 RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
@@ -298,7 +301,7 @@ void CMasternodeSync::Process()
             if(!pnode->HasFulfilledRequest("getspork"))
             {
                 pnode->FulfilledRequest("getspork");
-                pnode->PushMessage("getsporks"); //get current network sporks
+                pnode->PushMessage(NetMsgType::GETSPORKS); //get current network sporks
             }
 
             //we always ask for sporks, so just skip this
@@ -342,11 +345,19 @@ void CMasternodeSync::Process()
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
+<<<<<<< HEAD
 
             // MODE : MASTERNODE_SYNC_MNW
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
                 //printf("MASTERNODE_SYNC_MNW Timeout at %d\n", lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
+=======
+
+            // MODE : MASTERNODE_SYNC_MNW
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
+                //printf("MASTERNODE_SYNC_MNW Timeout at %d\n", lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT);
+
+>>>>>>> e1616160952f25d26a88002dd9448b1ad5d48202
                 // Shall we move onto the next asset?
                 // --
                 // This might take a lot longer than 2 minutes due to new blocks, but that's OK. It will eventually time out if needed
@@ -379,7 +390,11 @@ void CMasternodeSync::Process()
                 if(pindexPrev == NULL) return;
 
                 int nMnCount = mnodeman.CountEnabled();
+<<<<<<< HEAD
                 pnode->PushMessage("mnget", nMnCount); //sync payees
+=======
+                pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
+>>>>>>> e1616160952f25d26a88002dd9448b1ad5d48202
                 RequestedMasternodeAttempt++;
 
 
@@ -422,8 +437,13 @@ void CMasternodeSync::Process()
                 if(pnode->HasFulfilledRequest("busync")) continue;
                 pnode->FulfilledRequest("busync");
 
+<<<<<<< HEAD
                 uint256 n = 0;
                 pnode->PushMessage("mnvs", n); //sync masternode votes
+=======
+                uint256 n = uint256();
+                pnode->PushMessage(NetMsgType::MNBUDGETVOTESYNC, n); //sync masternode votes
+>>>>>>> e1616160952f25d26a88002dd9448b1ad5d48202
                 RequestedMasternodeAttempt++;
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need

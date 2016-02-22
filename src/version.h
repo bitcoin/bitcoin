@@ -1,5 +1,5 @@
-// Copyright (c) 2012-2014 The Bitcoin developers
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2012-2014 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,5 +49,11 @@ static const int BIP0031_VERSION = 60000;
 
 //! "mempool" command, enhanced "getdata" behavior starts with this version
 static const int MEMPOOL_GD_VERSION = 60002;
+
+//! "filter*" commands are disabled without NODE_BLOOM after and including this version
+static const int NO_BLOOM_VERSION = 70011;
+
+//! "sendheaders" command and announcing blocks with headers starts with this version
+static const int SENDHEADERS_VERSION = 70012;
 
 #endif // BITCOIN_VERSION_H

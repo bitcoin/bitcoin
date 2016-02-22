@@ -1,11 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_CHAIN_H
 #define BITCOIN_CHAIN_H
 
+#include "arith_uint256.h"
 #include "primitives/block.h"
 #include "pow.h"
 #include "tinyformat.h"
@@ -47,6 +48,12 @@ struct CDiskBlockPos
 
     void SetNull() { nFile = -1; nPos = 0; }
     bool IsNull() const { return (nFile == -1); }
+
+    std::string ToString() const
+    {
+        return strprintf("CBlockDiskPos(nFile=%i, nPos=%i)", nFile, nPos);
+    }
+
 };
 
 enum BlockStatus {
@@ -67,7 +74,7 @@ enum BlockStatus {
      */
     BLOCK_VALID_TRANSACTIONS =    3,
 
-    //! Outputs do not overspend inputs, no double spends, coinbase output ok, immature coinbase spends, BIP30.
+    //! Outputs do not overspend inputs, no double spends, coinbase output ok, no immature coinbase spends, BIP30.
     //! Implies all parents are also at least CHAIN.
     BLOCK_VALID_CHAIN        =    4,
 
@@ -95,7 +102,7 @@ enum BlockStatus {
 class CBlockIndex
 {
 public:
-    //! pointer to the hash of the block, if any. memory is owned by this CBlockIndex
+    //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
     const uint256* phashBlock;
 
     //! pointer to the index of the predecessor of this block
@@ -117,7 +124,7 @@ public:
     unsigned int nUndoPos;
 
     //! (memory only) Total amount of work (expected number of hashes) in the chain up to and including this block
-    uint256 nChainWork;
+    arith_uint256 nChainWork;
 
     //! Number of transactions in this block.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
@@ -150,14 +157,14 @@ public:
         nFile = 0;
         nDataPos = 0;
         nUndoPos = 0;
-        nChainWork = 0;
+        nChainWork = arith_uint256();
         nTx = 0;
         nChainTx = 0;
         nStatus = 0;
         nSequenceId = 0;
 
         nVersion       = 0;
-        hashMerkleRoot = 0;
+        hashMerkleRoot = uint256();
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
@@ -236,14 +243,6 @@ public:
         return pbegin[(pend - pbegin)/2];
     }
 
-    /**
-     * Returns true if there are nRequired or more blocks of minVersion or above
-     * in the last Params().ToCheckBlockUpgradeMajority() blocks, starting at pstart 
-     * and going backwards.
-     */
-    static bool IsSuperMajority(int minVersion, const CBlockIndex* pstart,
-                                unsigned int nRequired);
-
     std::string ToString() const
     {
         return strprintf("CBlockIndex(pprev=%p, nHeight=%d, merkle=%s, hashBlock=%s)",
@@ -290,11 +289,11 @@ public:
     uint256 hashPrev;
 
     CDiskBlockIndex() {
-        hashPrev = 0;
+        hashPrev = uint256();
     }
 
-    explicit CDiskBlockIndex(CBlockIndex* pindex) : CBlockIndex(*pindex) {
-        hashPrev = (pprev ? pprev->GetBlockHash() : 0);
+    explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+        hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
     }
 
     ADD_SERIALIZE_METHODS;

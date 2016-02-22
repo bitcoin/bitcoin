@@ -9,7 +9,7 @@
 #include "net.h"
 #include "key.h"
 #include "init.h"
-#include "wallet.h"
+#include "wallet/wallet.h"
 #include "darksend.h"
 #include "masternode.h"
 

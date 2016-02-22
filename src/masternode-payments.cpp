@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2015 The Dash developers
+// Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -201,8 +201,8 @@ bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue){
     }
 
     if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything
-        //super blocks will always be on these blocks, max 100 per budgeting
-        if(nHeight % GetBudgetPaymentCycleBlocks() < 100){
+        //super blocks will always be on these blocks, max Params().GetConsensus().nBudgetPaymentsWindowBlocks per budgeting
+        if(nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks < Params().GetConsensus().nBudgetPaymentsWindowBlocks){
             return true;
         } else {
             if(block.vtx[0].GetValueOut() > nExpectedValue) return false;
@@ -308,7 +308,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, CAmount nFe
         }
     }
 
-    CAmount blockValue = GetBlockValue(pindexPrev->nBits, pindexPrev->nHeight, nFees);
+    CAmount blockValue = nFees + GetBlockSubsidy(pindexPrev->nBits, pindexPrev->nHeight, Params().GetConsensus());
     CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight+1, blockValue);
 
     txNew.vout[0].nValue = blockValue;
@@ -342,25 +342,25 @@ void CMasternodePayments::ProcessMessageMasternodePayments(CNode* pfrom, std::st
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
 
-    if (strCommand == "mnget") { //Masternode Payments Request Sync
+    if (strCommand == NetMsgType::MNWINNERSSYNC) { //Masternode Payments Request Sync
         if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
         int nCountNeeded;
         vRecv >> nCountNeeded;
 
-        if(Params().NetworkID() == CBaseChainParams::MAIN){
-            if(pfrom->HasFulfilledRequest("mnget")) {
+        if(Params().NetworkIDString() == CBaseChainParams::MAIN){
+            if(pfrom->HasFulfilledRequest(NetMsgType::MNWINNERSSYNC)) {
                 LogPrintf("mnget - peer already asked me for the list\n");
                 Misbehaving(pfrom->GetId(), 20);
                 return;
             }
         }
 
-        pfrom->FulfilledRequest("mnget");
+        pfrom->FulfilledRequest(NetMsgType::MNWINNERSSYNC);
         mnpayments.Sync(pfrom, nCountNeeded);
         LogPrintf("mnget - Sent Masternode winners to %s\n", pfrom->addr.ToString().c_str());
     }
-    else if (strCommand == "mnw") { //Masternode Payments Declare Winner
+    else if (strCommand == NetMsgType::MNWINNER) { //Masternode Payments Declare Winner
         //this is required in litemodef
         CMasternodePaymentWinner winner;
         vRecv >> winner;
@@ -420,7 +420,7 @@ bool CMasternodePaymentWinner::Sign(CKey& keyMasternode, CPubKey& pubKeyMasterno
 
     std::string strMessage =  vinMasternode.prevout.ToStringShort() +
                 boost::lexical_cast<std::string>(nBlockHeight) +
-                payee.ToString();
+                ScriptToAsmStr(payee);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
         LogPrintf("CMasternodePing::Sign() - Error: %s\n", errorMessage.c_str());
@@ -473,7 +473,7 @@ bool CMasternodePayments::IsScheduled(CMasternode& mn, int nNotBlockHeight)
 
 bool CMasternodePayments::AddWinningMasternode(CMasternodePaymentWinner& winnerIn)
 {
-    uint256 blockHash = 0;
+    uint256 blockHash = uint256();
     if(!GetBlockHash(blockHash, winnerIn.nBlockHeight-100)) {
         return false;
     }
@@ -543,7 +543,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
     }
 
 
-    LogPrintf("CMasternodePayments::IsTransactionValid - Missing required payment - %s\n", strPayeesPossible.c_str());
+    LogPrintf("CMasternodePayments::IsTransactionValid - Missing required payment - %s %d\n", strPayeesPossible, masternodePayment);
     return false;
 }
 
@@ -760,7 +760,7 @@ bool CMasternodePaymentWinner::SignatureValid()
     {
         std::string strMessage =  vinMasternode.prevout.ToStringShort() +
                     boost::lexical_cast<std::string>(nBlockHeight) +
-                    payee.ToString();
+                    ScriptToAsmStr(payee);
 
         std::string errorMessage = "";
         if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
@@ -792,7 +792,7 @@ void CMasternodePayments::Sync(CNode* node, int nCountNeeded)
         }
         ++it;
     }
-    node->PushMessage("ssc", MASTERNODE_SYNC_MNW, nInvCount);
+    node->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_MNW, nInvCount);
 }
 
 std::string CMasternodePayments::ToString() const
