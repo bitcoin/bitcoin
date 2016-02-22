@@ -12,6 +12,8 @@
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
+#include "consensus/versionbits.h"
+#include "global/server.h"
 #include "hash.h"
 #include "main.h"
 #include "net.h"
@@ -79,11 +81,6 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
 
-    // -regtest only: allow overriding block.nVersion with
-    // -blockversion=N to test forking scenarios
-    if (chainparams.MineBlocksOnDemand())
-        pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
-
     // Create coinbase tx
     CMutableTransaction txNew;
     txNew.vin.resize(1);
@@ -136,6 +133,12 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         const int nHeight = pindexPrev->nHeight + 1;
         pblock->nTime = GetAdjustedTime();
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
+
+        pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus(), Global::versionBitsStateCache);
+        // -regtest only: allow overriding block.nVersion with
+        // -blockversion=N to test forking scenarios
+        if (chainparams.MineBlocksOnDemand())
+            pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
 
         int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
                                 ? nMedianTimePast
