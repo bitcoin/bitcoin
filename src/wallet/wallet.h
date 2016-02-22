@@ -55,6 +55,8 @@ static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 2;
 static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 static const bool DEFAULT_WALLETBROADCAST = true;
 
+extern const char * DEFAULT_WALLET_DAT;
+
 class CBlockIndex;
 class CCoinControl;
 class COutput;
@@ -869,6 +871,9 @@ public:
 
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
+
+    /* Returns the wallets help message */
+    static std::string GetWalletHelpString(bool showDebug);
 };
 
 /** A key allocated from the key pool. */
