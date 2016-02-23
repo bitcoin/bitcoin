@@ -103,44 +103,6 @@ void OptionsModel::Init(bool resetSettings)
 
     // Network
 
-    if (!settings.contains("fUseReceiveShaping"))
-        settings.setValue("fUseReceiveShaping", DEFAULT_AVE_RECV != LONG_LONG_MAX);
-    if (!settings.contains("fUseSendShaping"))
-        settings.setValue("fUseSendShaping", DEFAULT_AVE_SEND != LONG_LONG_MAX);
-
-    if (!settings.contains("nReceiveBurst"))
-        settings.setValue("nReceiveBurst", (qint64)DEFAULT_MAX_RECV_BURST / 1024);
-    if (!settings.contains("nReceiveAve"))
-        settings.setValue("nReceiveAve", DEFAULT_AVE_RECV == LONG_LONG_MAX ? 200 : static_cast<int>(DEFAULT_AVE_RECV / 1024));
-    if (!settings.contains("nSendBurst"))
-        settings.setValue("nSendBurst", (qint64)DEFAULT_MAX_SEND_BURST / 1024);
-    if (!settings.contains("nSendAve"))
-        settings.setValue("nSendAve", DEFAULT_AVE_SEND == LONG_LONG_MAX ? 200 : static_cast<int>(DEFAULT_AVE_SEND / 1024));
-
-    bool inUse = settings.value("fUseReceiveShaping").toBool();
-    int64_t burstKB = settings.value("nReceiveBurst").toLongLong();
-    int64_t aveKB = settings.value("nReceiveAve").toLongLong();
-
-    std::string avg = QString::number(inUse ? aveKB : LONG_LONG_MAX).toStdString();
-    std::string burst = QString::number(inUse ? burstKB : LONG_LONG_MAX).toStdString();
-
-    if (!SoftSetArg("-receiveavg", avg))
-        addOverriddenOption("-receiveavg");
-    if (!SoftSetArg("-receiveburst", burst))
-        addOverriddenOption("-receiveburst");
-
-    inUse = settings.value("fUseSendShaping").toBool();
-    burstKB = settings.value("nSendBurst").toLongLong();
-    aveKB = settings.value("nSendAve").toLongLong();
-
-    avg = boost::lexical_cast<std::string>(inUse ? aveKB : LONG_LONG_MAX);
-    burst = boost::lexical_cast<std::string>(inUse ? burstKB : LONG_LONG_MAX);
-
-    if (!SoftSetArg("-sendavg", avg))
-        addOverriddenOption("-sendavg");
-    if (!SoftSetArg("-sendburst", burst))
-        addOverriddenOption("-sendburst");
-
     if (!settings.contains("fUseUPnP"))
         settings.setValue("fUseUPnP", DEFAULT_UPNP);
     if (!SoftSetBoolArg("-upnp", settings.value("fUseUPnP").toBool()))
@@ -262,18 +224,6 @@ QVariant OptionsModel::data(const QModelIndex& index, int role) const
             return settings.value("nThreadsScriptVerif");
         case Listen:
             return settings.value("fListen");
-        case UseReceiveShaping:
-            return settings.value("fUseReceiveShaping");
-        case UseSendShaping:
-            return settings.value("fUseSendShaping");
-        case ReceiveBurst:
-            return settings.value("nReceiveBurst");
-        case ReceiveAve:
-            return settings.value("nReceiveAve");
-        case SendBurst:
-            return settings.value("nSendBurst");
-        case SendAve:
-            return settings.value("nSendAve");
         default:
             return QVariant();
         }
@@ -416,66 +366,12 @@ bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int 
                 setRestartRequired(true);
             }
             break;
-        case UseReceiveShaping:
-            if (settings.value("fUseReceiveShaping") != value) {
-                settings.setValue("fUseReceiveShaping", value);
-                changeReceiveShaper = true;
-            }
-            break;
-        case UseSendShaping:
-            if (settings.value("fUseSendShaping") != value) {
-                settings.setValue("fUseSendShaping", value);
-                changeSendShaper = true;
-            }
-            break;
-        case ReceiveBurst:
-            if (settings.value("nReceiveBurst") != value) {
-                settings.setValue("nReceiveBurst", value);
-                changeReceiveShaper = true;
-            }
-            break;
-        case ReceiveAve:
-            if (settings.value("nReceiveAve") != value) {
-                settings.setValue("nReceiveAve", value);
-                changeReceiveShaper = true;
-            }
-            break;
-        case SendBurst:
-            if (settings.value("nSendBurst") != value) {
-                settings.setValue("nSendBurst", value);
-                changeSendShaper = true;
-            }
-            break;
-        case SendAve:
-            if (settings.value("nSendAve") != value) {
-                settings.setValue("nSendAve", value);
-                changeSendShaper = true;
-            }
-            break;
         default:
             break;
         }
 
-
-        if (changeReceiveShaper) {
-            if (settings.value("fUseReceiveShaping").toBool()) {
-                int64_t burst = 1024 * settings.value("nReceiveBurst").toLongLong();
-                int64_t ave = 1024 * settings.value("nReceiveAve").toLongLong();
-                receiveShaper.set(burst, ave);
-            } else
-                receiveShaper.disable();
-        }
-
-        if (changeSendShaper) {
-            if (settings.value("fUseSendShaping").toBool()) {
-                int64_t burst = 1024 * settings.value("nSendBurst").toLongLong();
-                int64_t ave = 1024 * settings.value("nSendAve").toLongLong();
-                sendShaper.set(burst, ave);
-            } else
-                sendShaper.disable();
-        }
     }
-
+    
     Q_EMIT dataChanged(index, index);
 
     return successful;

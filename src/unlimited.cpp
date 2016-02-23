@@ -137,9 +137,9 @@ void settingsToUserAgentString()
 
 void UnlimitedSetup(void)
 {
-    maxGeneratedBlock = GetArg("-blockmaxsize", DEFAULT_MAX_GENERATED_BLOCK_SIZE);
-    excessiveBlockSize = GetArg("-excessiveblocksize", DEFAULT_EXCESSIVE_BLOCK_SIZE);
-    excessiveAcceptDepth = GetArg("-excessiveacceptdepth", DEFAULT_EXCESSIVE_ACCEPT_DEPTH);
+    maxGeneratedBlock = GetArg("-blockmaxsize", maxGeneratedBlock);
+    excessiveBlockSize = GetArg("-excessiveblocksize", excessiveBlockSize);
+    excessiveAcceptDepth = GetArg("-excessiveacceptdepth", excessiveAcceptDepth);
     settingsToUserAgentString();
     //  Init network shapers
     int64_t rb = GetArg("-receiveburst", DEFAULT_MAX_RECV_BURST);
