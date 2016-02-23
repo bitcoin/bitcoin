@@ -120,20 +120,20 @@ static void push_lock(void* c, const CLockLocation& locklocation, bool fTry)
     dd_mutex.lock();
 
     (*lockstack).push_back(std::make_pair(c, locklocation));
-
+    // If this is a blocking lock operation, we want to make sure that the locking order between 2 mutexes is consistent across the program
     if (!fTry) {
         BOOST_FOREACH (const PAIRTYPE(void*, CLockLocation) & i, (*lockstack)) {
             if (i.first == c)
                 break;
 
             std::pair<void*, void*> p1 = std::make_pair(i.first, c);
-            if (lockorders.count(p1))
+            if (lockorders.count(p1))  // If this order has already been placed into the order map, we've already tested it
                 continue;
             lockorders[p1] = (*lockstack);
-
+            // check to see if the opposite order has ever occurred, if so flag a possible deadlock
             std::pair<void*, void*> p2 = std::make_pair(c, i.first);
             if (lockorders.count(p2))
-                potential_deadlock_detected(p1, lockorders[p2], lockorders[p1]);
+                potential_deadlock_detected(p1, lockorders[p1], lockorders[p2]);
         }
     }
     dd_mutex.unlock();

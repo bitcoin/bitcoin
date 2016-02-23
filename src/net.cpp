@@ -218,7 +218,7 @@ void AdvertizeLocal(CNode *pnode)
         }
         if (addrLocal.IsRoutable())
         {
-            LogPrintf("AdvertizeLocal: advertizing address %s\n", addrLocal.ToString());
+          // BU logs too often: LogPrintf("AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
             pnode->PushAddress(addrLocal);
         }
     }
@@ -1473,7 +1473,8 @@ void static ProcessOneShot()
 void ThreadOpenConnections()
 {
     // Connect to specific addresses
-    if (mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0)
+    if ((mapArgs.count("-connect") && mapMultiArgs["-connect"].size() > 0) ||
+        (mapArgs.count("-connect-thinblock") && mapMultiArgs["-connect-thinblock"].size() > 0)) // BUIP010 Xtreme Thinblocks
     {
         for (int64_t nLoop = 0;; nLoop++)
         {
@@ -1488,6 +1489,10 @@ void ThreadOpenConnections()
                 }
             }
             MilliSleep(500);
+
+           // BUIP010 Xtreme Thinblocks: begin section
+           ConnectToThinBlockNodes();
+           // BUIP010 Xtreme Thinblocks: end section
         }
     }
 
@@ -1684,7 +1689,7 @@ void ThreadMessageHandler()
             }
         }
 
-        bool fSleep = true;
+        bool fSleep = ThinBlockMessageHandler(vNodesCopy);
 
         BOOST_FOREACH (CNode* pnode, vNodesCopy) {
             if (pnode->fDisconnect)
@@ -1708,9 +1713,9 @@ void ThreadMessageHandler()
 
             // Send messages
             {
-                TRY_LOCK(pnode->cs_vSend, lockSend);
-                if (lockSend)
-                    g_signals.SendMessages(pnode);
+              //TRY_LOCK(pnode->cs_vSend, lockSend);
+              //  if (lockSend)
+              g_signals.SendMessages(pnode);
             }
             boost::this_thread::interruption_point();
         }
@@ -1722,7 +1727,7 @@ void ThreadMessageHandler()
         }
 
         if (fSleep)
-            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(100));
+            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(50));
     }
 }
 
@@ -2315,6 +2320,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nPingUsecTime = 0;
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
+    thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
 
     {
         LOCK(cs_nLastNodeId);

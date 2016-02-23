@@ -10,6 +10,7 @@
 #include "compat.h"
 #include "limitedmap.h"
 #include "netbase.h"
+#include "primitives/block.h"
 #include "protocol.h"
 #include "random.h"
 #include "streams.h"
@@ -367,6 +368,17 @@ public:
     int nRefCount;
     NodeId id;
 
+    // BUIP010 Xtreme Thinblocks: begin section
+    CBlock thinBlock;
+    std::vector<uint256> thinBlockHashes;
+    std::vector<uint64_t> xThinBlockHashes;
+    int nSizeThinBlock;   // Original on-wire size of the block. Just used for reporting
+    int thinBlockWaitingForTxns;   // if -1 then not currently waiting
+    std::map<uint256, uint64_t> mapThinBlocksInFlight; // map of the hashes of thin blocks in flight with the time they were requested.
+    double nGetXBlockTxCount; // Count how many get_xblocktx requests are made
+    uint64_t nGetXBlockTxLastTime;  // The last time a get_xblocktx request was made
+    // BUIP010 Xtreme Thinblocks: end section
+
 protected:
     // Denial-of-service detection/prevention
     // Key is IP address, value is banned-until-time
@@ -478,6 +490,13 @@ public:
         nRefCount--;
     }
 
+    // BUIP010:
+    bool ThinBlockCapable()
+    {
+        if(nVersion >= THINBLOCKS_VERSION) return true;
+        return false;
+    }
+    
 
     void AddAddressKnown(const CAddress& addr)
     {
