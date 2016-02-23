@@ -3,6 +3,8 @@
 #include "wallet.h"
 #include "base58.h"
 
+extern CWallet* pwalletMain;
+
 /* Return positive answer if transaction should be shown in list.
  */
 bool TransactionRecord::showTransaction(const CWalletTx &wtx)
@@ -41,20 +43,69 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
             if(wallet->IsMine(txout))
             {
                 TransactionRecord sub(hash, nTime);
-                CTxDestination address;
                 sub.idx = parts.size(); // sequence number
                 sub.credit = txout.nValue;
-                if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
+
+                if (!fTestNet)
                 {
-                    // Received by Bitcoin Address
-                    sub.type = TransactionRecord::RecvWithAddress;
-                    sub.address = CBitcoinAddress(address).ToString();
-                }
-                else
-                {
-                    // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
-                    sub.type = TransactionRecord::RecvFromOther;
-                    sub.address = mapValue["from"];
+                    CTxDestination address;
+                    if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*wallet, address))
+                    {
+                        // Received by Bitcoin Address
+                        sub.type = TransactionRecord::RecvWithAddress;
+                        sub.address = CBitcoinAddress(address).ToString();
+                    }
+                    else
+                    {
+                        // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
+                        sub.type = TransactionRecord::RecvFromOther;
+                        sub.address = mapValue["from"];
+                    }
+                    }
+                    else
+                    {
+                    txnouttype whichType;
+                    std::vector<valtype> vSolutions;
+                    if (Solver(txout.scriptPubKey, whichType, vSolutions))
+                    {
+                        CTxDestination address;
+                        if (whichType == TX_PUBKEY)
+                        {
+                            // Pay-to-Pubkey
+                            address = CPubKey(vSolutions[0]).GetID();
+                            sub.type = TransactionRecord::RecvWithAddress;
+                            sub.address = CBitcoinAddress(address).ToString();
+                        }
+                        else if (whichType == TX_PUBKEYHASH)
+                        {
+                            // Pay-to-PubkeyHash
+                            address = CKeyID(uint160(vSolutions[0]));
+                            sub.type = TransactionRecord::RecvWithAddress;
+                            sub.address = CBitcoinAddress(address).ToString();
+                        }
+                        else if (whichType == TX_SCRIPTHASH)
+                        {
+                            // Pay-to-ScriptHash
+                            address = CScriptID(uint160(vSolutions[0]));
+                            sub.type = TransactionRecord::RecvWithAddress;
+                            sub.address = CBitcoinAddress(address).ToString();
+                        }
+                        else if (whichType == TX_PUBKEY_DROP)
+                        {
+                            // Pay-to-Pubkey-R
+                            sub.type = TransactionRecord::RecvWithAddress;
+
+                            CMalleableKeyView view;
+                            pwalletMain->CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view);
+                            sub.address = view.GetMalleablePubKey().ToString();
+                        }
+                        else
+                        {
+                            // Received by IP connection (deprecated features), or a multisignature or other non-simple transaction
+                            sub.type = TransactionRecord::RecvFromOther;
+                            sub.address = mapValue["from"];
+                        }
+                    }
                 }
                 if (wtx.IsCoinBase())
                 {
