@@ -203,7 +203,7 @@ public:
     // Calculate G*m + q
     bool ECMULGEN(const CBigNum &bnMultiplier, const CPoint &qPoint);
 
-    bool IsInfinity() { return EC_POINT_is_at_infinity(group, point); }
+    bool IsInfinity() { return EC_POINT_is_at_infinity(group, point) != 0; }
 };
 
 class CMalleablePubKey
