@@ -19,9 +19,26 @@ class CTransaction;
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 
-// Threshold for inverted nSequence: below this value it is interpreted
-// as a relative lock-time, otherwise ignored.
+/* Setting nSequence to this value for every input in a transaction
+ * disables nLockTime. */
+static const uint32_t SEQUENCE_FINAL = 0xffffffff;
+
+/* Threshold for inverted nSequence: below this value it is interpreted
+ * as a relative lock-time, otherwise ignored. */
 static const uint32_t SEQUENCE_THRESHOLD = (1 << 31);
+
+/* If this flag set, CTxIn::nSequence is NOT interpreted as a
+ * relative lock-time. */
+static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = (1 << 31);
+
+/* If CTxIn::nSequence encodes a relative lock-time and this flag
+ * is set, the relative lock-time has units of 512 seconds,
+ * otherwise it specifies blocks with a granularity of 1. */
+static const uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = (1 << 22);
+
+/* If CTxIn::nSequence encodes a relative lock-time, this mask is
+ * applied to extract that lock-time from the sequence field. */
+static const uint32_t SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
 
 /** IsMine() return codes */
 enum isminetype
@@ -53,8 +70,7 @@ enum
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
     SCRIPT_VERIFY_NULLDUMMY = (1U << 4),  // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
     SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
-    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 9)
-
+    SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10)
 };
 
 // Strict verification:

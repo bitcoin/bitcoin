@@ -338,6 +338,83 @@ bool IsCanonicalSignature(const valtype &vchSig, unsigned int flags) {
     return IsDERSignature(vchSig, true, (flags & SCRIPT_VERIFY_LOW_S) != 0);
 }
 
+bool CheckLockTime(const int64_t& nLockTime, const CTransaction &txTo, unsigned int nIn)
+{
+    // There are two kinds of nLockTime: lock-by-blockheight
+    // and lock-by-blocktime, distinguished by whether
+    // nLockTime < LOCKTIME_THRESHOLD.
+    //
+    // We want to compare apples to apples, so fail the script
+    // unless the type of nLockTime being tested is the same as
+    // the nLockTime in the transaction.
+    if (!(
+        (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) ||
+        (txTo.nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
+    ))
+        return false;
+
+    // Now that we know we're comparing apples-to-apples, the
+    // comparison is a simple numeric one.
+    if (nLockTime > (int64_t)txTo.nLockTime)
+        return false;
+
+    // Finally the nLockTime feature can be disabled and thus
+    // CHECKLOCKTIMEVERIFY bypassed if every txin has been
+    // finalized by setting nSequence to maxint. The
+    // transaction would be allowed into the blockchain, making
+    // the opcode ineffective.
+    //
+    // Testing if this vin is not final is sufficient to
+    // prevent this condition. Alternatively we could test all
+    // inputs, but testing just this input minimizes the data
+    // required to prove correct CHECKLOCKTIMEVERIFY execution.
+    if (SEQUENCE_FINAL == txTo.vin[nIn].nSequence)
+        return false;
+
+    return true;
+}
+
+bool CheckSequence(const int64_t& nSequence, const CTransaction &txTo, unsigned int nIn)
+{
+    // Relative lock times are supported by comparing the passed
+    // in operand to the sequence number of the input.
+    const int64_t txToSequence = (int64_t)txTo.vin[nIn].nSequence;
+
+    // Sequence numbers with their most significant bit set are not
+    // consensus constrained. Testing that the transaction's sequence
+    // number do not have this bit set prevents using this property
+    // to get around a CHECKSEQUENCEVERIFY check.
+    if (txToSequence & SEQUENCE_LOCKTIME_DISABLE_FLAG)
+        return false;
+
+    // Mask off any bits that do not have consensus-enforced meaning
+    // before doing the integer comparisons
+    const uint32_t nLockTimeMask = SEQUENCE_LOCKTIME_TYPE_FLAG | SEQUENCE_LOCKTIME_MASK;
+    const int64_t txToSequenceMasked = txToSequence & nLockTimeMask;
+    const int64_t nSequenceMasked = nSequence & nLockTimeMask;
+
+    // There are two kinds of nSequence: lock-by-blockheight
+    // and lock-by-blocktime, distinguished by whether
+    // nSequenceMasked < CTxIn::SEQUENCE_LOCKTIME_TYPE_FLAG.
+    //
+    // We want to compare apples to apples, so fail the script
+    // unless the type of nSequenceMasked being tested is the same as
+    // the nSequenceMasked in the transaction.
+    if (!(
+        (txToSequenceMasked <  SEQUENCE_LOCKTIME_TYPE_FLAG && nSequenceMasked <  SEQUENCE_LOCKTIME_TYPE_FLAG) ||
+        (txToSequenceMasked >= SEQUENCE_LOCKTIME_TYPE_FLAG && nSequenceMasked >= SEQUENCE_LOCKTIME_TYPE_FLAG)
+    )) {
+        return false;
+    }
+
+    // Now that we know we're comparing apples-to-apples, the
+    // comparison is a simple numeric one.
+    if (nSequenceMasked > txToSequenceMasked)
+        return false;
+
+    return true;
+}
+
 bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, const CTransaction& txTo, unsigned int nIn, unsigned int flags, int nHashType)
 {
     CAutoBN_CTX pctx;
@@ -486,71 +563,58 @@ bool EvalScript(vector<vector<unsigned char> >& stack, const CScript& script, co
                     // CHECKLOCKTIMEVERIFY
                     //
                     // (nLockTime -- nLockTime)
-                    if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY))
-                        break; // treat as a NOP is not enabled
+                    if (!(flags & SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)) {
+                        // treat as a NOP2 if not enabled
+                        break;
+                    }
+
                     if (stack.size() < 1)
                         return false;
-                    const CBigNum nLockTime = CastToBigNum(stacktop(-1));
+
+                    CBigNum nLockTime = CastToBigNum(stacktop(-1));
+
+                    // In the rare event that the argument may be < 0 due to
+                    // some arithmetic being done first, you can always use
+                    // 0 MAX CHECKLOCKTIMEVERIFY.
                     if (nLockTime < 0)
-                        return false; // Negative argument is senseless.
-
-                    if (!( // We can have either lock-by-blockheight or lock-by-blocktime.
-                          (txTo.nLockTime <  LOCKTIME_THRESHOLD && nLockTime <  LOCKTIME_THRESHOLD) || 
-                          (txTo.nLockTime >= LOCKTIME_THRESHOLD && nLockTime >= LOCKTIME_THRESHOLD)
-                    ))
                         return false;
 
-                    // Now we can perform a simple numerical comparison
-                    if (nLockTime > (int64_t)txTo.nLockTime)
+                    // Actually compare the specified lock time with the transaction.
+                    if (!CheckLockTime(nLockTime.getuint64(), txTo, nIn))
                         return false;
 
-                    // Finally the nLockTime feature can be disabled and thus
-                    // CHECKLOCKTIMEVERIFY bypassed if every txin has been
-                    // finalized by setting nSequence to maxint. The
-                    // transaction would be allowed into the blockchain, making
-                    // the opcode ineffective.
-                    //
-                    // Testing if this vin is not final is sufficient to
-                    // prevent this condition. Alternatively we could test all
-                    // inputs, but testing just this input minimizes the data
-                    // required to prove correct CHECKLOCKTIMEVERIFY execution.
-                    if (txTo.vin[nIn].IsFinal())
-                        return false;
                     break;
                 }
 
                 case OP_CHECKSEQUENCEVERIFY:
                 {
-                    if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY))
-                        // treat as a NOP if not enabled
+                    if (!(flags & SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)) {
+                        // treat as a NOP3 not enabled
                         break;
+                    }
+
                     if (stack.size() < 1)
                         return false;
-                    const CBigNum nInvSequence = CastToBigNum(stacktop(-1));
+
+                    // nSequence, like nLockTime, is a 32-bit unsigned integer
+                    // field. See the comment in CHECKLOCKTIMEVERIFY regarding
+                    // 5-byte numeric operands.
+                    CBigNum nSequence = CastToBigNum(stacktop(-1));
 
                     // In the rare event that the argument may be < 0 due to
                     // some arithmetic being done first, you can always use
                     // 0 MAX CHECKSEQUENCEVERIFY.
-                    if (nInvSequence < 0)
-                        return false; // negative nSequence is senseless
-
-                    // Relative lock times are supported by comparing the passed
-                    // in lock time to the sequence number of the input. All other
-                    // logic is the same, all that differs is what we are comparing
-                    // the lock time to.
-                    int64_t txToLockTime = (int64_t)~txTo.vin[nIn].nSequence;
-                    if (txToLockTime >= SEQUENCE_THRESHOLD)
+                    if (nSequence < 0)
                         return false;
 
-                    if (!(
-                        (txToLockTime <  SEQUENCE_THRESHOLD && nInvSequence <  SEQUENCE_THRESHOLD) || 
-                        (txToLockTime >= SEQUENCE_THRESHOLD && nInvSequence >= SEQUENCE_THRESHOLD)
-                    ))
-                        return false;
+                    // To provide for future soft-fork extensibility, if the
+                    // operand has the disabled lock-time flag set,
+                    // CHECKSEQUENCEVERIFY behaves as a NOP.
+                    if ((nSequence.getint32() & SEQUENCE_LOCKTIME_DISABLE_FLAG) != 0)
+                        break;
 
-                    // Now that we know we're comparing apples-to-apples, the
-                    // comparison is a simple numeric one.
-                    if (nInvSequence > txToLockTime)
+                    // Compare the specified sequence number with the input.
+                    if (!CheckSequence(nSequence.getuint64(), txTo, nIn))
                         return false;
 
                     break;
