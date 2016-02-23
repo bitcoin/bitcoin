@@ -61,7 +61,7 @@ Signature validation using libsecp256k1
 ---------------------------------------
 
 ECDSA signatures inside Bitcoin transactions now use validation using
-[https://github.com/bitcoin/secp256k1](libsecp256k1) instead of OpenSSL.
+[libsecp256k1](https://github.com/bitcoin/secp256k1) instead of OpenSSL.
 
 Depending on the platform, this means a significant speedup for raw signature
 validation speed. The advantage is largest on x86_64, where validation is over
@@ -521,7 +521,7 @@ git merge commit are mentioned.
 ### Configuration and command-line options
 
 - #6164 `8d05ec7` Allow user to use -debug=1 to enable all debugging (lpescher)
-- #5288 `4452205` Added -whiteconnections=<n> option (Josh Lehan)
+- #5288 `4452205` Added `-whiteconnections=<n>` option (Josh Lehan)
 - #6284 `10ac38e` Fix argument parsing oddity with -noX (Wladimir J. van der Laan)
 - #6489 `c9c017a` Give a better error message if system clock is bad (Casey Rodarmor)
 - #6462 `c384800` implement uacomment config parameter which can add comments to user agent as per BIP-0014 (Pavol Rusnak)
