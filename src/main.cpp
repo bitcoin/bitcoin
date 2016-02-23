@@ -1762,7 +1762,8 @@ bool CBlock::ConnectBlock(CTxDB& txdb, CBlockIndex* pindex, bool fJustCheck)
 
             if (tx.nTime >= CHECKLOCKTIMEVERIFY_SWITCH_TIME) {
                 nFlags |= SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY;
-                nFlags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
+                // OP_CHECKSEQUENCEVERIFY is senseless without BIP68, so we're going disable it for now.
+                // nFlags |= SCRIPT_VERIFY_CHECKSEQUENCEVERIFY;
             }
 
             std::vector<CScriptCheck> vChecks;
