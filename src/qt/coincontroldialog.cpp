@@ -631,6 +631,7 @@ void CoinControlDialog::updateView()
             itemOutput->setCheckState(COLUMN_CHECKBOX,Qt::Unchecked);
 
             // address
+/*
             CTxDestination outputAddress;
             QString sAddress = "";
             if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, outputAddress))
@@ -645,6 +646,52 @@ void CoinControlDialog::updateView()
                 CKeyID *keyid = boost::get< CKeyID >(&outputAddress);
                 if (keyid && model->getPubKey(*keyid, pubkey) && !pubkey.IsCompressed())
                     nInputSize = 180;
+            }
+*/
+            QString sAddress = "";
+            txnouttype whichType;
+            std::vector<valtype> vSolutions;
+            if (Solver(out.tx->vout[out.i].scriptPubKey, whichType, vSolutions))
+            {
+                CTxDestination address;
+                if (whichType == TX_PUBKEY)
+                {
+                    // Pay-to-Pubkey
+                    CPubKey pubKey = CPubKey(vSolutions[0]);
+                    address = pubKey.GetID();
+                    sAddress = CBitcoinAddress(address).ToString().c_str();
+
+                    if (!pubKey.IsCompressed())
+                        nInputSize = 180;
+                }
+                else if (whichType == TX_PUBKEYHASH)
+                {
+                    // Pay-to-PubkeyHash
+                    address = CKeyID(uint160(vSolutions[0]));
+                    sAddress = CBitcoinAddress(address).ToString().c_str();
+
+                    CPubKey pubkey;
+                    CKeyID *keyid = boost::get< CKeyID >(&address);
+                    if (keyid && model->getPubKey(*keyid, pubkey) && !pubkey.IsCompressed())
+                        nInputSize = 180;
+                }
+                else if (whichType == TX_SCRIPTHASH)
+                {
+                    // Pay-to-ScriptHash
+                    address = CScriptID(uint160(vSolutions[0]));
+                    sAddress = CBitcoinAddress(address).ToString().c_str();
+                }
+                else if (whichType == TX_PUBKEY_DROP)
+                {
+                    // Pay-to-Pubkey-R
+                    CMalleableKeyView view;
+                    pwalletMain->CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view);
+                    sAddress = view.GetMalleablePubKey().ToString().c_str();
+                }
+
+                // if listMode or change => show bitcoin address. In tree mode, address is not shown again for direct wallet address outputs
+                if (!treeMode || (!(sAddress == sWalletAddress)))
+                    itemOutput->setText(COLUMN_ADDRESS, sAddress);
             }
 
             // label

@@ -2780,3 +2780,39 @@ void CWallet::ClearOrphans()
     for(list<uint256>::const_iterator it = orphans.begin(); it != orphans.end(); ++it)
         EraseFromWallet(*it);
 }
+
+bool CWallet::ExtractAddress(const CScript& scriptPubKey, std::string& addressRet)
+{
+    vector<valtype> vSolutions;
+    txnouttype whichType;
+    if (!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
+
+    if (whichType == TX_PUBKEY)
+    {
+        addressRet = CBitcoinAddress(CPubKey(vSolutions[0]).GetID()).ToString();
+        return true;
+    }
+    if (whichType == TX_PUBKEY_DROP)
+    {
+        // Pay-to-Pubkey-R
+        CMalleableKeyView view;
+        if (!CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view))
+            return false;
+
+        addressRet = view.GetMalleablePubKey().ToString();
+        return true;
+    }
+    else if (whichType == TX_PUBKEYHASH)
+    {
+        addressRet = CBitcoinAddress(CKeyID(uint160(vSolutions[0]))).ToString();
+        return true;
+    }
+    else if (whichType == TX_SCRIPTHASH)
+    {
+        addressRet = CBitcoinAddress(CScriptID(uint160(vSolutions[0]))).ToString();
+        return true;
+    }
+    // Multisig txns have more than one address...
+    return false;
+}

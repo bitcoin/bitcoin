@@ -495,10 +495,11 @@ void WalletModel::listCoins(std::map<QString, std::vector<COutput> >& mapCoins) 
             cout = COutput(&wallet->mapWallet[cout.tx->vin[0].prevout.hash], cout.tx->vin[0].prevout.n, 0, true);
         }
 
-        CTxDestination address;
-        if(!out.fSpendable || !ExtractDestination(cout.tx->vout[cout.i].scriptPubKey, address))
+        std::string address;
+        if(!out.fSpendable || !wallet->ExtractAddress(cout.tx->vout[cout.i].scriptPubKey, address))
             continue;
-        mapCoins[CBitcoinAddress(address).ToString().c_str()].push_back(out);
+
+        mapCoins[address.c_str()].push_back(out);
     }
 }
 
