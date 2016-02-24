@@ -7,7 +7,7 @@ Some notes on how to build Dash Core in Unix.
 Note
 ---------------------
 Always use absolute paths to configure and compile Dash Core and the dependencies,
-for example, when specifying the the path of the dependency:
+for example, when specifying the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 

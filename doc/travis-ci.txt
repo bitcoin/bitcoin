@@ -27,7 +27,7 @@ In order to avoid rebuilding all dependencies for each build, the binaries are
 cached and re-used when possible. Changes in the dependency-generator will
 trigger cache-invalidation and rebuilds as necessary.
 
-These caches can be manually removed if necessary. This is one of the the very few
+These caches can be manually removed if necessary. This is one of the very few
 manual operations that is possible with Travis, and it can be done by the
 Dash Core committer via the Travis web interface.
 
