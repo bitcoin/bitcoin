@@ -153,20 +153,42 @@ bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, in
       switch (index.row())
         {
         case MaxGeneratedBlock:
-          maxGeneratedBlock = value.toULongLong();
-          settings.setValue("maxGeneratedBlock", (unsigned int) maxGeneratedBlock);
-          break;
+          {
+            uint64_t mgb = value.toULongLong(&successful);
+            if (successful)
+              {
+                maxGeneratedBlock = mgb;
+                settings.setValue("maxGeneratedBlock", (unsigned int) maxGeneratedBlock);
+              }
+          } break;
         case ExcessiveBlockSize:
-          excessiveBlockSize = value.toUInt();
-          if (excessiveBlockSize < 1000) excessiveBlockSize *= 1000000;  // If the user put in a size in MB then just auto fix
-          settingsToUserAgentString();
-          settings.setValue("excessiveBlockSize", excessiveBlockSize);
-          break;
+          {
+          unsigned int ebs = excessiveBlockSize;
+          ebs = value.toUInt();
+          if (ebs == 0)
+            {
+              float tmp = value.toFloat();
+              if (tmp<1000.0) ebs = (int) (tmp*1000000); // If the user put in a size in MB then just auto fix -- handle float separately to not round
+            }
+          if (ebs == 0) successful = false;
+          else
+            { 
+            if (ebs < 1000) ebs *= 1000000;  // If the user put in a size in MB then just auto fix
+            excessiveBlockSize = ebs;
+            settingsToUserAgentString();
+            settings.setValue("excessiveBlockSize", excessiveBlockSize);
+            }
+          } break;
         case ExcessiveAcceptDepth:
-          excessiveAcceptDepth = value.toUInt();
-          settingsToUserAgentString();
-          settings.setValue("excessiveAcceptDepth",excessiveAcceptDepth);
-          break;
+          {
+          unsigned int ead = value.toUInt(&successful);
+          if (successful)
+            {
+              excessiveAcceptDepth = ead;
+              settingsToUserAgentString();
+              settings.setValue("excessiveAcceptDepth",excessiveAcceptDepth);
+            }
+          } break;
         case UseReceiveShaping:
           if (settings.value("fUseReceiveShaping") != value)
             {

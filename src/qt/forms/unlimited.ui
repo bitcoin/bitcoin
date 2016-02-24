@@ -35,7 +35,7 @@
             <string extracomment="The largest block that will be mined"/>
            </property>
            <property name="text">
-            <string>Maximum Generated Block Size </string>
+            <string>Maximum Generated Block Size (bytes) </string>
            </property>
           </widget>
          </item>
@@ -223,7 +223,7 @@
          <item>
           <widget class="QLabel" name="label_3">
            <property name="text">
-            <string>Excessive Block Size </string>
+            <string>Excessive Block Size (in bytes)</string>
            </property>
           </widget>
          </item>
@@ -244,7 +244,7 @@
             <string extracomment="An excessive block normally blocks a chain from being accepted.  However, if the chain grows deeper than this accept the excessive block (and the chain)."/>
            </property>
            <property name="text">
-            <string>Excessive Acceptance Depth</string>
+            <string>Excessive Acceptance Depth (in blocks)</string>
            </property>
           </widget>
          </item>
