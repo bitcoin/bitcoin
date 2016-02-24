@@ -744,9 +744,10 @@ int CNetMessage::readData(const char* pch, unsigned int nBytes)
 }
 
 
-// requires LOCK(cs_vSend)
-void SocketSendData(CNode* pnode)
+// requires LOCK(cs_vSend), BU: returns > 0 if any data was sent, 0 if nothing accomplished.
+int SocketSendData(CNode* pnode)
 {
+    int progress=0; // BU This variable is incremented if something happens.  If it is zero at the bottom of the loop, we delay.  This solves spin loop issues where the select does not block but no bytes can be transferred (traffic shaping limited, for example).
     std::deque<CSerializeData>::iterator it = pnode->vSendMsg.begin();
 
     while (it != pnode->vSendMsg.end()) {
@@ -758,6 +759,7 @@ void SocketSendData(CNode* pnode)
             break;
         int nBytes = send(pnode->hSocket, &data[pnode->nSendOffset], amt2Send, MSG_NOSIGNAL | MSG_DONTWAIT);
         if (nBytes > 0) {
+            progress++;  // BU
             pnode->nLastSend = GetTime();
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
@@ -792,6 +794,7 @@ void SocketSendData(CNode* pnode)
         assert(pnode->nSendSize == 0);
     }
     pnode->vSendMsg.erase(pnode->vSendMsg.begin(), it);
+    return progress;
 }
 
 static list<CNode*> vNodesDisconnected;
@@ -1239,8 +1242,7 @@ void ThreadSocketHandler()
             if (FD_ISSET(pnode->hSocket, &fdsetSend)) {
                 TRY_LOCK(pnode->cs_vSend, lockSend);
                 if (lockSend && sendShaper.try_leak(0)) {
-                    progress++;
-                    SocketSendData(pnode);
+                    progress += SocketSendData(pnode);
                 }
             }
 
@@ -1270,7 +1272,7 @@ void ThreadSocketHandler()
                 pnode->Release();
         }
 
-        if (progress == 0) // Nothing happened even though select did not block.  So slow us down.
+        if (progress == 0) // BU: Nothing happened even though select did not block.  So slow us down.
             MilliSleep(50);
     }
 }
