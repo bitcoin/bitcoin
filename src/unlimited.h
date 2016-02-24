@@ -22,6 +22,7 @@ class CBlockIndex;
 class CValidationState;
 class CDiskBlockPos;
 class CNode;
+class CChainParams;
 
 extern uint64_t maxGeneratedBlock;
 extern unsigned int excessiveBlockSize;
@@ -38,6 +39,9 @@ extern std::string UnlimitedCmdLineHelp();
 extern void UnlimitedAcceptBlock(const CBlock& block, CValidationState& state, CBlockIndex* ppindex, CDiskBlockPos* dbp);
 
 extern void UnlimitedLogBlock(const CBlock& block, const std::string& hash, uint64_t receiptTime);
+
+// used during mining
+extern bool TestConservativeBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW, bool fCheckMerkleRoot);
 
 // Check whether this block is bigger in some metric than we really want to accept
 extern bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, uint64_t nTx);
