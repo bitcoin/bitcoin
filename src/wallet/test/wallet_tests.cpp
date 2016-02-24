@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2014 The Bitcoin Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -326,6 +326,39 @@ BOOST_AUTO_TEST_CASE(coin_selection_tests)
         }
     }
     empty_wallet();
+}
+
+BOOST_AUTO_TEST_CASE(ApproximateBestSubset)
+{
+    CoinSet setCoinsRet;
+    CAmount nValueRet;
+
+    LOCK(wallet.cs_wallet);
+
+    empty_wallet();
+
+    // Test vValue sort order
+    for (int i = 0; i < 1000; i++)
+        add_coin(1000 * COIN);
+    add_coin(3 * COIN);
+
+    BOOST_CHECK(wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, vCoins, setCoinsRet, nValueRet));
+    BOOST_CHECK_EQUAL(nValueRet, 1003 * COIN);
+    BOOST_CHECK_EQUAL(setCoinsRet.size(), 2U);
+
+    empty_wallet();
+
+    // Test trimming
+    for (int i = 0; i < 100; i++)
+        add_coin(10 * COIN);
+    for (int i = 0; i < 100; i++)
+        add_coin(1000 * COIN);
+
+    BOOST_CHECK(wallet.SelectCoinsMinConf(100001 * COIN, 1, 6, vCoins, setCoinsRet, nValueRet));
+    // We need all 100 larger coins and exactly one small coin.
+    // Superfluous small coins must be trimmed from the set:
+    BOOST_CHECK_EQUAL(nValueRet, 100010 * COIN);
+    BOOST_CHECK_EQUAL(setCoinsRet.size(), 101);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -177,6 +177,11 @@ public:
      */
     bool Verify(const uint256& hash, const std::vector<unsigned char>& vchSig) const;
 
+    /**
+     * Check whether a signature is normalized (lower-S).
+     */
+    static bool CheckLowS(const std::vector<unsigned char>& vchSig);
+
     //! Recover a public key from a compact signature.
     bool RecoverCompact(const uint256& hash, const std::vector<unsigned char>& vchSig);
 
@@ -203,6 +208,17 @@ struct CExtPubKey {
     void Encode(unsigned char code[74]) const;
     void Decode(const unsigned char code[74]);
     bool Derive(CExtPubKey& out, unsigned int nChild) const;
+};
+
+/** Users of this module must hold an ECCVerifyHandle. The constructor and
+ *  destructor of these are not allowed to run in parallel, though. */
+class ECCVerifyHandle
+{
+    static int refcount;
+
+public:
+    ECCVerifyHandle();
+    ~ECCVerifyHandle();
 };
 
 #endif // BITCOIN_PUBKEY_H

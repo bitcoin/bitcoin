@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "policy/fees.h"
+#include "policy/policy.h"
 
 #include "amount.h"
 #include "primitives/transaction.h"
@@ -86,7 +87,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     int maxbucketindex = buckets.size() - 1;
 
     // requireGreater means we are looking for the lowest fee/priority such that all higher
-    // values pass, so we start at maxbucketindex (highest fee) and look at succesively
+    // values pass, so we start at maxbucketindex (highest fee) and look at successively
     // smaller buckets until we reach failure.  Otherwise, we are looking for the highest
     // fee/priority such that all lower values fail, and we go in the opposite direction.
     unsigned int startbucket = requireGreater ? maxbucketindex : 0;
@@ -504,6 +505,33 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget)
     return CFeeRate(median);
 }
 
+CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool)
+{
+    if (answerFoundAtTarget)
+        *answerFoundAtTarget = confTarget;
+    // Return failure if trying to analyze a target we're not tracking
+    if (confTarget <= 0 || (unsigned int)confTarget > feeStats.GetMaxConfirms())
+        return CFeeRate(0);
+
+    double median = -1;
+    while (median < 0 && (unsigned int)confTarget <= feeStats.GetMaxConfirms()) {
+        median = feeStats.EstimateMedianVal(confTarget++, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    }
+
+    if (answerFoundAtTarget)
+        *answerFoundAtTarget = confTarget - 1;
+
+    // If mempool is limiting txs , return at least the min fee from the mempool
+    CAmount minPoolFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+    if (minPoolFee > 0 && minPoolFee > median)
+        return CFeeRate(minPoolFee);
+
+    if (median < 0)
+        return CFeeRate(0);
+
+    return CFeeRate(median);
+}
+
 double CBlockPolicyEstimator::estimatePriority(int confTarget)
 {
     // Return failure if trying to analyze a target we're not tracking
@@ -511,6 +539,30 @@ double CBlockPolicyEstimator::estimatePriority(int confTarget)
         return -1;
 
     return priStats.EstimateMedianVal(confTarget, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+}
+
+double CBlockPolicyEstimator::estimateSmartPriority(int confTarget, int *answerFoundAtTarget, const CTxMemPool& pool)
+{
+    if (answerFoundAtTarget)
+        *answerFoundAtTarget = confTarget;
+    // Return failure if trying to analyze a target we're not tracking
+    if (confTarget <= 0 || (unsigned int)confTarget > priStats.GetMaxConfirms())
+        return -1;
+
+    // If mempool is limiting txs, no priority txs are allowed
+    CAmount minPoolFee = pool.GetMinFee(GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+    if (minPoolFee > 0)
+        return INF_PRIORITY;
+
+    double median = -1;
+    while (median < 0 && (unsigned int)confTarget <= priStats.GetMaxConfirms()) {
+        median = priStats.EstimateMedianVal(confTarget++, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+    }
+
+    if (answerFoundAtTarget)
+        *answerFoundAtTarget = confTarget - 1;
+
+    return median;
 }
 
 void CBlockPolicyEstimator::Write(CAutoFile& fileout)

@@ -8,7 +8,7 @@
 #include "compat.h"
 #include "util.h"
 #include "netbase.h"
-#include "rpcprotocol.h" // For HTTP status codes
+#include "rpc/protocol.h" // For HTTP status codes
 #include "sync.h"
 #include "ui_interface.h"
 
@@ -365,6 +365,10 @@ static void HTTPWorkQueueRun(WorkQueue<HTTPClosure>* queue)
 /** libevent event log callback */
 static void libevent_log_cb(int severity, const char *msg)
 {
+#ifndef EVENT_LOG_WARN
+// EVENT_LOG_WARN was added in 2.0.19; but before then _EVENT_LOG_WARN existed.
+# define EVENT_LOG_WARN _EVENT_LOG_WARN
+#endif
     if (severity >= EVENT_LOG_WARN) // Log warn messages and higher without debug category
         LogPrintf("libevent: %s\n", msg);
     else
@@ -483,7 +487,11 @@ void StopHTTPServer()
         // master that appears to be solved, so in the future that solution
         // could be used again (if desirable).
         // (see discussion in https://github.com/bitcoin/bitcoin/pull/6990)
+#if BOOST_VERSION >= 105000
         if (!threadHTTP.try_join_for(boost::chrono::milliseconds(2000))) {
+#else
+        if (!threadHTTP.timed_join(boost::posix_time::milliseconds(2000))) {
+#endif
             LogPrintf("HTTP event loop did not exit within allotted time, sending loopbreak\n");
             event_base_loopbreak(eventBase);
             threadHTTP.join();

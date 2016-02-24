@@ -306,6 +306,10 @@
         <translation>Bitcoin Nucleus</translation>
     </message>
     <message>
+        <source>&amp;Command-line options</source>
+        <translation>Optiones mandati initiantis</translation>
+    </message>
+    <message>
         <source>No block source available...</source>
         <translation>Nulla fons frustorum absens...</translation>
     </message>
@@ -476,7 +480,7 @@
         <source>command-line options</source>
         <translation>Optiones mandati intiantis</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -512,6 +516,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>&amp;Rete</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Cassidile</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -656,6 +664,10 @@
         <translation>&amp;Informatio</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>Fenestra Debug</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>Utens OpenSSL versione</translation>
     </message>
@@ -715,8 +727,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Quantitas:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Titulus:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Nuntius:</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -729,6 +749,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Copia Inscriptionem</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Inscriptio</translation>
@@ -784,8 +808,16 @@
         <translation>Mitte Nummos</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>Inopia nummorum</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Quantitas:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Transactionis merces:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -869,6 +901,10 @@
     <message>
         <source>Message:</source>
         <translation>Nuntius:</translation>
+    </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Pensa Ad:</translation>
     </message>
     </context>
 <context>
@@ -1410,10 +1446,6 @@
         <translation>Monitio: wallet.data corrupta, data salvata!  Originalis wallet.dat salvata ut wallet.{timestamp}.bak in %s; si pendendum tuum vel transactiones pravae sunt, oportet ab conservato restituere.</translation>
     </message>
     <message>
-        <source>Attempt to recover private keys from a corrupt wallet.dat</source>
-        <translation>Conare recipere claves privatas de corrupto wallet.dat</translation>
-    </message>
-    <message>
         <source>Block creation options:</source>
         <translation>Optiones creandi frustorum:</translation>
     </message>
@@ -1466,12 +1498,16 @@
         <translation>Verificante cassidilem...</translation>
     </message>
     <message>
-        <source>Imports blocks from external blk000??.dat file</source>
-        <translation>Importat frusta ab externa plica blk000??.dat</translation>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Non posse resolvere -whitebind inscriptionem: '%s'</translation>
     </message>
     <message>
         <source>Information</source>
         <translation>Informatio</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Quantitas non valida pro -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -1486,24 +1522,12 @@
         <translation>Mitte informationem vestigii/debug ad terminale potius quam plicam debug.log</translation>
     </message>
     <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Constitue linguam, exempli gratia "de_DE" (praedefinitum: lingua systematis)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: 1)</source>
-        <translation>Monstra principem imaginem ad initium (praedefinitum: 1)</translation>
-    </message>
-    <message>
         <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
         <translation>Diminue plicam debug.log ad initium clientis (praedefinitum: 1 nisi -debug)</translation>
     </message>
     <message>
         <source>Signing transaction failed</source>
         <translation>Signandum transactionis abortum est</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Incipe minifactum ut icon</translation>
     </message>
     <message>
         <source>Transaction amount too small</source>
@@ -1536,14 +1560,6 @@
     <message>
         <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
         <translation>Pelle mandatum quando optissimum frustum mutat (%s in mandato substituitur ab hash frusti)</translation>
-    </message>
-    <message>
-        <source>Upgrade wallet to latest format</source>
-        <translation>Progredere cassidile ad formam recentissimam</translation>
-    </message>
-    <message>
-        <source>Rescan the block chain for missing wallet transactions</source>
-        <translation>Iterum perlege catenam frustorum propter absentes cassidilis transactiones</translation>
     </message>
     <message>
         <source>This help message</source>

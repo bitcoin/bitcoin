@@ -793,6 +793,10 @@
         <translation>Bitcoin Core ҳақида</translation>
     </message>
     <message>
+        <source>Command-line options</source>
+        <translation>Буйруқлар сатри мосламалари</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Фойдаланиш:</translation>
     </message>
@@ -800,7 +804,7 @@
         <source>command-line options</source>
         <translation>буйруқлар қатори орқали мослаш</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -904,6 +908,10 @@
     <message>
         <source>&amp;Network</source>
         <translation>Тармоқ</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Ҳамён</translation>
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
@@ -1218,14 +1226,6 @@
     <message>
         <source>Last Receive</source>
         <translation>Сўнгги қабул қилинган</translation>
-    </message>
-    <message>
-        <source>Bytes Sent</source>
-        <translation>Жўнатилган байтлар</translation>
-    </message>
-    <message>
-        <source>Bytes Received</source>
-        <translation>Қабул қилинган байтлар</translation>
     </message>
     <message>
         <source>Ping Time</source>
@@ -1698,6 +1698,10 @@
         <source>Message:</source>
         <translation>Хабар</translation>
     </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Тўлов олувчи:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -2027,6 +2031,10 @@
         <translation>Ўтказмалар тарихини экспорт қилиш</translation>
     </message>
     <message>
+        <source>Watch-only</source>
+        <translation>Фақат кўришга</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Экспорт қилиб бўлмади</translation>
     </message>
@@ -2122,20 +2130,8 @@
         <translation>Уланиш кўрсаткичлари:</translation>
     </message>
     <message>
-        <source>Choose data directory on startup (default: 0)</source>
-        <translation>Ишга тушиш вақтида маълумотлар директориясини танлаш (стандарт: 0)</translation>
-    </message>
-    <message>
         <source>Information</source>
         <translation>Маълумот</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Тўлов сўровлари учун SSL асос сертификатларини ўрнатиш (стандарт: -system-)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Йиғилганларни бошлаш</translation>
     </message>
     <message>
         <source>Username for JSON-RPC connections</source>
@@ -2156,6 +2152,10 @@
     <message>
         <source>Loading addresses...</source>
         <translation>Манзиллар юкланмоқда...</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation>Кам миқдор</translation>
     </message>
     <message>
         <source>Loading block index...</source>
