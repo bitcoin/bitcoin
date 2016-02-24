@@ -8,6 +8,19 @@ Example item
 ----------------
 
 
+bitcoin-cli: arguments privacy
+--------------------------------
+
+The RPC command line client gained a new argument, `-stdin`
+to read extra arguments from standard input, one per line until EOF/Ctrl-D.
+For example:
+
+    $ echo -e "mysecretcode\n120" | src/bitcoin-cli -stdin walletpassphrase
+
+It is recommended to use this for sensitive information such as wallet
+passphrases, as command-line arguments can usually be read from the process
+table by any user on the system.
+
 0.13.0 Change log
 =================
 
