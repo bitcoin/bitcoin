@@ -618,7 +618,9 @@ static UniValue HardForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nR
         // Always report blocks found as over the threshold once the fork is active
         nFound = nRequired + 1;
         gracePeriodEnds = static_cast<uint64_t>(forkTime);
-        triggeredAtBlock = pblocktree->ForkBitActivated(FORK_BIT_2MB).GetHex();
+        uint256 activationHash = pblocktree->ForkBitActivated(FORK_BIT_2MB);
+        assert(activationHash != uint256());
+        triggeredAtBlock = activationHash.GetHex();
     } else {
         for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
         {
