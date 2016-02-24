@@ -742,6 +742,8 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      */
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet,
+                             std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
+    bool CreateTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosRet, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet,
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
