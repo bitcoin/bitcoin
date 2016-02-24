@@ -276,7 +276,7 @@ RPCConsole::RPCConsole(const PlatformStyle *platformStyle, QWidget *parent) :
 
     // set library version labels
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+#if defined(LIBRESSL_VERSION_NUMBER) || (OPENSSL_VERSION_NUMBER < 0x10100000L)
     ui->openSSLVersion->setText(SSLeay_version(SSLEAY_VERSION));
 #else
     ui->openSSLVersion->setText(OpenSSL_version(OPENSSL_VERSION));
