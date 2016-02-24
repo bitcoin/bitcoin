@@ -158,6 +158,7 @@ bool UnlimitedModel::setData(const QModelIndex& index, const QVariant& value, in
           break;
         case ExcessiveBlockSize:
           excessiveBlockSize = value.toUInt();
+          if (excessiveBlockSize < 1000) excessiveBlockSize *= 1000000;  // If the user put in a size in MB then just auto fix
           settingsToUserAgentString();
           settings.setValue("excessiveBlockSize", excessiveBlockSize);
           break;
