@@ -1091,13 +1091,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (fPrintToDebugLog)
         OpenDebugLog();
 
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
-    LogPrintf("Using OpenSSL version %s\n", SSLeay_version(SSLEAY_VERSION));
-#elif defined OPENSSL_VERSION
-    LogPrintf("Using OpenSSL version %s\n", OpenSSL_version(OPENSSL_VERSION));
-#elif defined LIBRESSL_VERSION_TEXT
-    LogPrintf("Using %s\n", LIBRESSL_VERSION_TEXT);
-#endif
+    const char *sslInfo = SSLProductAndVersionInfo();
+    if (sslInfo)
+        LogPrintf("Using SSL version: %s\n", sslInfo);
 
 #ifdef ENABLE_WALLET
     LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
