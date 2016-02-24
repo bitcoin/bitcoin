@@ -115,7 +115,7 @@
        <item row="4" column="0">
         <widget class="QLabel" name="label_14">
          <property name="text">
-          <string>Using OpenSSL version</string>
+          <string>Using SSL version</string>
          </property>
          <property name="indent">
           <number>10</number>
