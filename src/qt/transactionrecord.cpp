@@ -54,21 +54,19 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     }
 
     isminetype fAllToMe = ISMINE_SPENDABLE;
-    bool anyToMe = false;
     BOOST_FOREACH(const CTxOut& txout, wtx.vout)
     {
         isminetype mine = wallet->IsMine(txout);
-        if(mine) anyToMe = true;
         if(mine & ISMINE_WATCH_ONLY) involvesWatchAddress = true;
         if(fAllToMe > mine) fAllToMe = mine;
     }
 
-    if (anyFromMe && anyToMe && !fAllFromMe && !fAllToMe)
+    if (anyFromMe && !fAllFromMe)
     {
         //
-        // CoinJoin
+        // Multiparty
         //
-        parts.append(TransactionRecord(hash, nTime, TransactionRecord::CoinJoin, "", nNet, 0));
+        parts.append(TransactionRecord(hash, nTime, TransactionRecord::Multiparty, "", nNet, 0));
         parts.last().involvesWatchAddress = involvesWatchAddress;
     }
     else if (nNet > 0 || wtx.IsCoinBase())
@@ -167,7 +165,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     else
     {
         //
-        // Mixed debit transaction, can't break down payees
+        // can't break down payees
         //
         parts.append(TransactionRecord(hash, nTime, TransactionRecord::Other, "", nNet, 0));
         parts.last().involvesWatchAddress = involvesWatchAddress;

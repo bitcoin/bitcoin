@@ -70,11 +70,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     }
 
     isminetype fAllToMe = ISMINE_SPENDABLE;
-    bool anyToMe = false;
     BOOST_FOREACH(const CTxOut& txout, wtx.vout)
     {
         isminetype mine = wallet->IsMine(txout);
-        if(mine) anyToMe = true;
         if(fAllToMe > mine) fAllToMe = mine;
     }
 
@@ -145,10 +143,10 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     //
     // Amount
     //
-    if (anyFromMe && anyToMe && !fAllFromMe && !fAllToMe)
+    if (anyFromMe && !fAllFromMe)
     {
         //
-        // CoinJoin
+        // Multiparty
         //
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
         {
@@ -237,7 +235,7 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx, TransactionReco
     else
     {
         //
-        // Mixed debit transaction
+        // can't break down payees
         //
         BOOST_FOREACH(const CTxIn& txin, wtx.vin)
             if (wallet->IsMine(txin))
