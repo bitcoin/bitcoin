@@ -947,7 +947,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         *pfMissingInputs = false;
 
     if (!CheckTransaction(tx, state))
-        return error("%s: CheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+        return false; // state filled in by CheckTransaction
 
     // Coinbase is only valid in a block, not as a loose transaction
     if (tx.IsCoinBase())
@@ -1160,10 +1160,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             const uint256 &hashAncestor = ancestorIt->GetTx().GetHash();
             if (setConflicts.count(hashAncestor))
             {
-                return state.DoS(10, error("AcceptToMemoryPool: %s spends conflicting transaction %s",
+                return state.DoS(10, false,
+                                 REJECT_INVALID, "bad-txns-spends-conflicting-tx", false,
+                                 strprintf("%s spends conflicting transaction %s",
                                            hash.ToString(),
-                                           hashAncestor.ToString()),
-                                 REJECT_INVALID, "bad-txns-spends-conflicting-tx");
+                                           hashAncestor.ToString()));
             }
         }
 
@@ -1200,11 +1201,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 // that we don't spend too much time walking descendants.
                 // This should be rare.
                 if (mi->IsDirty()) {
-                    return state.DoS(0,
-                            error("AcceptToMemoryPool: rejecting replacement %s; cannot replace tx %s with untracked descendants",
+                    return state.DoS(0, false,
+                            REJECT_NONSTANDARD, "too many potential replacements", false,
+                            strprintf("too many potential replacements: rejecting replacement %s; cannot replace tx %s with untracked descendants",
                                 hash.ToString(),
-                                mi->GetTx().GetHash().ToString()),
-                            REJECT_NONSTANDARD, "too many potential replacements");
+                                mi->GetTx().GetHash().ToString()));
                 }
 
                 // Don't allow the replacement to reduce the feerate of the
@@ -1226,12 +1227,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 CFeeRate oldFeeRate(mi->GetModifiedFee(), mi->GetTxSize());
                 if (newFeeRate <= oldFeeRate)
                 {
-                    return state.DoS(0,
-                            error("AcceptToMemoryPool: rejecting replacement %s; new feerate %s <= old feerate %s",
+                    return state.DoS(0, false,
+                            REJECT_INSUFFICIENTFEE, "insufficient fee", false,
+                            strprintf("rejecting replacement %s; new feerate %s <= old feerate %s",
                                   hash.ToString(),
                                   newFeeRate.ToString(),
-                                  oldFeeRate.ToString()),
-                            REJECT_INSUFFICIENTFEE, "insufficient fee");
+                                  oldFeeRate.ToString()));
                 }
 
                 BOOST_FOREACH(const CTxIn &txin, mi->GetTx().vin)
@@ -1255,12 +1256,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                     nConflictingSize += it->GetTxSize();
                 }
             } else {
-                return state.DoS(0,
-                        error("AcceptToMemoryPool: rejecting replacement %s; too many potential replacements (%d > %d)\n",
+                return state.DoS(0, false,
+                        REJECT_NONSTANDARD, "too many potential replacements", false,
+                        strprintf("rejecting replacement %s; too many potential replacements (%d > %d)\n",
                             hash.ToString(),
                             nConflictingCount,
-                            maxDescendantsToVisit),
-                        REJECT_NONSTANDARD, "too many potential replacements");
+                            maxDescendantsToVisit));
             }
 
             for (unsigned int j = 0; j < tx.vin.size(); j++)
@@ -1275,9 +1276,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                     // it's cheaper to just check if the new input refers to a
                     // tx that's in the mempool.
                     if (pool.mapTx.find(tx.vin[j].prevout.hash) != pool.mapTx.end())
-                        return state.DoS(0, error("AcceptToMemoryPool: replacement %s adds unconfirmed input, idx %d",
-                                                  hash.ToString(), j),
-                                         REJECT_NONSTANDARD, "replacement-adds-unconfirmed");
+                        return state.DoS(0, false,
+                                         REJECT_NONSTANDARD, "replacement-adds-unconfirmed", false,
+                                         strprintf("replacement %s adds unconfirmed input, idx %d",
+                                                  hash.ToString(), j));
                 }
             }
 
@@ -1286,9 +1288,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             // transactions would not be paid for.
             if (nModifiedFees < nConflictingFees)
             {
-                return state.DoS(0, error("AcceptToMemoryPool: rejecting replacement %s, less fees than conflicting txs; %s < %s",
-                                          hash.ToString(), FormatMoney(nModifiedFees), FormatMoney(nConflictingFees)),
-                                 REJECT_INSUFFICIENTFEE, "insufficient fee");
+                return state.DoS(0, false,
+                                 REJECT_INSUFFICIENTFEE, "insufficient fee", false,
+                                 strprintf("rejecting replacement %s, less fees than conflicting txs; %s < %s",
+                                          hash.ToString(), FormatMoney(nModifiedFees), FormatMoney(nConflictingFees)));
             }
 
             // Finally in addition to paying more fees than the conflicts the
@@ -1296,19 +1299,19 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             CAmount nDeltaFees = nModifiedFees - nConflictingFees;
             if (nDeltaFees < ::minRelayTxFee.GetFee(nSize))
             {
-                return state.DoS(0,
-                        error("AcceptToMemoryPool: rejecting replacement %s, not enough additional fees to relay; %s < %s",
+                return state.DoS(0, false,
+                        REJECT_INSUFFICIENTFEE, "insufficient fee", false,
+                        strprintf("rejecting replacement %s, not enough additional fees to relay; %s < %s",
                               hash.ToString(),
                               FormatMoney(nDeltaFees),
-                              FormatMoney(::minRelayTxFee.GetFee(nSize))),
-                        REJECT_INSUFFICIENTFEE, "insufficient fee");
+                              FormatMoney(::minRelayTxFee.GetFee(nSize))));
             }
         }
 
         // Check against previous transactions
         // This is done last to help prevent CPU exhaustion denial-of-service attacks.
         if (!CheckInputs(tx, state, view, true, STANDARD_SCRIPT_VERIFY_FLAGS, true))
-            return error("%s: CheckInputs: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+            return false; // state filled in by CheckInputs
 
         // Check again against just the consensus-critical mandatory script
         // verification flags, in case of bugs in the standard flags that cause
