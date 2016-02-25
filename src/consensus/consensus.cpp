@@ -17,9 +17,6 @@ bool Consensus::CheckTxPreInputs(const CTransaction& tx, CValidationState& state
     if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-nonfinal", false, "non-final transaction");
 
-    if (!CheckTransaction(tx, state))
-        return false;
-
     nSigOps += GetLegacySigOpCount(tx);
     if (nSigOps > MAX_BLOCK_SIGOPS)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", "too many sigops");

@@ -30,6 +30,7 @@ namespace Consensus {
 /**
  * Performs all tx the checks that are common for coinbase and regular transactions.
  * It doesn't require knowledge of the inputs (utxo).
+ * @TODO this is incomplete until CheckTransaction() is called from it.
  */
 bool CheckTxPreInputs(const CTransaction& tx, CValidationState& state, const int nHeight, int64_t nLockTimeCutoff, int64_t& nSigOps);
 
