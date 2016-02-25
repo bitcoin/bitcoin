@@ -35,6 +35,7 @@
 #include <QFontDialog>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QInputDialog>
 #include <QIntValidator>
 #include <QLabel>
 #include <QLocale>
@@ -715,14 +716,25 @@ void OptionsDialog::on_resetButton_clicked()
             with a client shutdown. */
         reset_dialog_text.append(tr("Client will be shut down. Do you want to proceed?"));
         //: Window title text of pop-up window shown when the user has chosen to reset options.
-        QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            reset_dialog_text, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+        QStringList items;
+        QString strPrefix = tr("Use policy defaults for %1");
+        items << strPrefix.arg(tr(CLIENT_NAME));
+        items << strPrefix.arg(tr("Bitcoin Core")+" ");
 
-        if (btnRetVal == QMessageBox::Cancel)
+        QInputDialog dialog(this);
+        dialog.setWindowTitle(tr("Confirm options reset"));
+        dialog.setLabelText(reset_dialog_text);
+        dialog.setComboBoxItems(items);
+        dialog.setTextValue(items[0]);
+        dialog.setComboBoxEditable(false);
+
+        if (!dialog.exec()) {
             return;
+        }
 
         /* reset all options and close GUI */
         model->Reset();
+        model->setData(model->index(OptionsModel::corepolicy, 0), items.indexOf(dialog.textValue()));
         close();
         Q_EMIT quitOnReset();
     }

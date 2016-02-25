@@ -25,13 +25,13 @@ struct MemPoolOptions;
 };
 
 /** Default for -blockmaxsize, which controls the maximum size of block the mining code will create **/
-static const unsigned int DEFAULT_BLOCK_MAX_SIZE = MAX_BLOCK_SERIALIZED_SIZE;
+static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 300000;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
-static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 0;
+static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 100000;
 /** Minimum priority for transactions to be accepted into the priority area **/
 static const double MINIMUM_TX_PRIORITY = COIN * 144 / 250;
 /** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
-static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT};
+static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{DEFAULT_BLOCK_MAX_SIZE * WITNESS_SCALE_FACTOR};
 /** Default for BlockCreateOptions.block_reserved_size **/
 static constexpr unsigned int DEFAULT_BLOCK_RESERVED_SIZE{1000};
 /** Default for -blockreservedweight **/
@@ -79,7 +79,7 @@ static constexpr bool DEFAULT_PERMITBAREANCHOR{true};
 /** Default for -permitbarepubkey */
 static constexpr bool DEFAULT_PERMIT_BAREPUBKEY{true};
 /** Default for -permitbaremultisig */
-static constexpr bool DEFAULT_PERMIT_BAREMULTISIG{true};
+static constexpr bool DEFAULT_PERMIT_BAREMULTISIG{false};
 /** Default for -rejectparasites */
 static constexpr bool DEFAULT_REJECT_PARASITES{false};
 /** The maximum number of witness stack items in a standard P2WSH script */
@@ -114,12 +114,12 @@ static constexpr unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT_KVB{101};
 /** Default for -datacarrier */
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 /**
- * Default setting for -datacarriersize. 80 bytes of data, +1 for OP_RETURN,
- * +2 for the pushdata opcodes.
+ * Default setting for -datacarriersize. 40 bytes of data, +1 for OP_RETURN,
+ * +1 for the pushdata opcode.
  */
 /** Default for -permitbaredatacarrier */
 static const bool DEFAULT_PERMITBAREDATACARRIER{true};
-static const unsigned int MAX_OP_RETURN_RELAY = 83;
+static constexpr unsigned int MAX_OP_RETURN_RELAY{42};
 /** Default for -datacarrierfullcount */
 static constexpr bool DEFAULT_DATACARRIER_FULLCOUNT{false};
 /**

@@ -1027,7 +1027,7 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
 
     g_mempool_opts.permit_bare_multisig = false;
     CheckIsNotStandard(t, "bare-multisig");
-    g_mempool_opts.permit_bare_multisig = DEFAULT_PERMIT_BAREMULTISIG;
+    g_mempool_opts.permit_bare_multisig = true;
 
     // Add dust outputs up to allowed maximum
     assert(t.vout.size() == 1);

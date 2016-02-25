@@ -658,6 +658,8 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
 // NOTE: These tests rely on CreateNewBlock doing its own self-validation!
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
+    gArgs.ForceSetArg("-blockprioritysize", "0");
+
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 
