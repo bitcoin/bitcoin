@@ -1234,6 +1234,9 @@ bool OptionsModel::setOption(OptionID option, const QVariant& value, const std::
             gArgs.ModifyRWConfigFile("blockreconstructionextratxn", strNv);
         }
         break;
+    case corepolicy:
+        gArgs.ModifyRWConfigFile("corepolicy", value.toString().toStdString());
+        break;
     default:
         break;
     }
