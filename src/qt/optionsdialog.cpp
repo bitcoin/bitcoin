@@ -28,6 +28,7 @@
 #include <QDir>
 #include <QGroupBox>
 #include <QHBoxLayout>
+#include <QInputDialog>
 #include <QIntValidator>
 #include <QLabel>
 #include <QLocale>
@@ -633,15 +634,25 @@ void OptionsDialog::on_resetButton_clicked()
     if(model)
     {
         // confirmation dialog
-        QMessageBox::StandardButton btnRetVal = QMessageBox::question(this, tr("Confirm options reset"),
-            tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shut down. Do you want to proceed?"),
-            QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel);
+        QStringList items;
+        QString strPrefix = tr("Use policy defaults for %1");
+        items << strPrefix.arg(tr(PACKAGE_NAME));
+        items << strPrefix.arg(tr("Bitcoin Core")+" ");
 
-        if(btnRetVal == QMessageBox::Cancel)
+        QInputDialog dialog(this);
+        dialog.setWindowTitle(tr("Confirm options reset"));
+        dialog.setLabelText(tr("Client restart required to activate changes.") + "<br><br>" + tr("Client will be shut down. Do you want to proceed?"));
+        dialog.setComboBoxItems(items);
+        dialog.setTextValue(items[0]);
+        dialog.setComboBoxEditable(false);
+
+        if (!dialog.exec()) {
             return;
+        }
 
         /* reset all options and close GUI */
         model->Reset();
+        model->setData(model->index(OptionsModel::corepolicy, 0), items.indexOf(dialog.textValue()));
         QApplication::quit();
     }
 }

@@ -996,6 +996,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 gArgs.ModifyRWConfigFile("blockreconstructionextratxn", strNv);
             }
             break;
+        case corepolicy:
+            gArgs.ModifyRWConfigFile("corepolicy", value.toString().toStdString());
+            break;
         default:
             break;
         }

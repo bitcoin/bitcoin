@@ -18,13 +18,13 @@ class CCoinsViewCache;
 class CTxOut;
 
 /** Default for -blockmaxsize, which controls the maximum size of block the mining code will create **/
-static const unsigned int DEFAULT_BLOCK_MAX_SIZE = MAX_BLOCK_SERIALIZED_SIZE;
+static const unsigned int DEFAULT_BLOCK_MAX_SIZE = 500000;
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
-static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 0;
+static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 100000;
 /** Minimum priority for transactions to be accepted into the priority area **/
 static const double MINIMUM_TX_PRIORITY = COIN * 144 / 250;
 /** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
-static const unsigned int DEFAULT_BLOCK_MAX_WEIGHT = MAX_BLOCK_WEIGHT - 4000;
+static const unsigned int DEFAULT_BLOCK_MAX_WEIGHT = 3000000;
 /** Default for -blockmintxfee, which sets the minimum feerate for a transaction in blocks created by mining code **/
 static const unsigned int DEFAULT_BLOCK_MIN_TX_FEE = 1000;
 /** The maximum weight for transactions we're willing to relay/mine */
@@ -47,7 +47,7 @@ static const unsigned int DEFAULT_BYTES_PER_SIGOP_STRICT = 20;
 static const bool DEFAULT_ENABLE_REPLACEMENT = true;
 static const bool DEFAULT_REPLACEMENT_HONOUR_OPTOUT = true;
 /** Default for -permitbaremultisig */
-static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
+static const bool DEFAULT_PERMIT_BAREMULTISIG = false;
 /** The maximum number of witness stack items in a standard P2WSH script */
 static const unsigned int MAX_STANDARD_P2WSH_STACK_ITEMS = 100;
 /** The maximum size in bytes of each witness stack item in a standard P2WSH script */
