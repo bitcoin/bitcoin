@@ -2497,6 +2497,44 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     return result;
 }
 
+UniValue zaptransaction(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "zaptransaction \"txid\"\n"
+            "\nDeletes the specified transaction from the wallet. This will effect wallet balances.\n"
+            "\nArguments:\n"
+            "1. \"txid\"           (string, required) The hex-encoded id of the transaction you are deleting\n"
+            "\nExamples:\n"
+            + HelpExampleCli("zaptransaction", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("zaptransaction", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+    vector<uint256> vHash;
+    vHash.push_back(hash);
+    vector<uint256> vHashOut;
+
+    if(pwalletMain->ZapSelectTx(vHash, vHashOut) != DB_LOAD_OK) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Could not properly delete the transaction.");
+    }
+
+    if(vHashOut.empty()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction does not exist in wallet.");
+    }
+
+    ThreadFlushWalletDB(pwalletMain->strWalletFile);
+
+    return NullUniValue;
+}
+
 extern UniValue dumpprivkey(const UniValue& params, bool fHelp); // in rpcdump.cpp
 extern UniValue importprivkey(const UniValue& params, bool fHelp);
 extern UniValue importaddress(const UniValue& params, bool fHelp);
@@ -2550,6 +2588,7 @@ const CRPCCommand vWalletRPCCommands[] =
     { "wallet",             "walletlock",               &walletlock,               true  },
     { "wallet",             "walletpassphrasechange",   &walletpassphrasechange,   true  },
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true  },
+    { "wallet",             "zaptransaction",           &zaptransaction,           true  },
 };
 
 void walletRegisterRPCCommands()
