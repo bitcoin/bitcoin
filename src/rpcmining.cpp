@@ -234,8 +234,9 @@ Value gethashespersec(const Array& params, bool fHelp)
             + HelpExampleRpc("gethashespersec", "")
         );
     int64_t miners = GetArg("-minermemory", 1);
-    dHashesPerSec = dHashesPerSec * miners;
-    return (int64_t)dHashesPerSec;
+    double dTotalHPS;
+    dTotalHPS = dHashesPerSec * miners;
+    return (int64_t)dTotalHPS;
 }
 #endif
 
