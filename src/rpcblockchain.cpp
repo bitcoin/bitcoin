@@ -16,6 +16,8 @@
 #include "streams.h"
 #include "sync.h"
 #include "txmempool.h"
+#include "txdb.h"
+#include "timedata.h"
 #include "util.h"
 #include "utilstrencodings.h"
 
@@ -604,6 +606,48 @@ static UniValue SoftForkDesc(const std::string &name, int version, CBlockIndex* 
     return rv;
 }
 
+static UniValue HardForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nRequired, const Consensus::Params& consensusParams)
+{
+    uint32_t forkTime = sizeForkTime.load();
+    bool isHardForkActive = forkTime < std::numeric_limits<uint32_t>::max();
+    int nFound = 0;
+    UniValue gracePeriodEnds;
+    UniValue triggeredAtBlock;
+    CBlockIndex* pstart = pindex;
+    if (isHardForkActive) {
+        // Always report blocks found as over the threshold once the fork is active
+        nFound = nRequired + 1;
+        gracePeriodEnds = static_cast<uint64_t>(forkTime);
+        uint256 activationHash = pblocktree->ForkBitActivated(FORK_BIT_2MB);
+        assert(activationHash != uint256());
+        triggeredAtBlock = activationHash.GetHex();
+    } else {
+        for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
+        {
+            if (pstart->nVersion >= minVersion)
+                ++nFound;
+            pstart = pstart->pprev;
+        }
+    }
+
+    UniValue rv(UniValue::VOBJ);
+    rv.push_back(Pair("triggeredatblock", triggeredAtBlock));
+    rv.push_back(Pair("earliestforktime", gracePeriodEnds));
+    rv.push_back(Pair("found", nFound));
+    rv.push_back(Pair("required", nRequired));
+    rv.push_back(Pair("window", consensusParams.nMajorityWindow));
+    return rv;
+}
+
+static UniValue HardForkDesc(const std::string &name, int version, CBlockIndex* pindex, const Consensus::Params& consensusParams)
+{
+    UniValue rv(UniValue::VOBJ);
+    rv.push_back(Pair("id", name));
+    rv.push_back(Pair("version", version));
+    rv.push_back(Pair("status", HardForkMajorityDesc(version, pindex, consensusParams.nMajorityEnforceBlockUpgrade, consensusParams)));
+    return rv;
+}
+
 UniValue getblockchaininfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -635,6 +679,20 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
             "        \"reject\": { ... }      (object) progress toward rejecting pre-softfork blocks (same fields as \"enforce\")\n"
             "     }, ...\n"
             "  ]\n"
+            "  \"hardforks\": [            (array) status of hardforks in progress\n"
+            "     {\n"
+            "        \"id\": \"xxxx\",        (string) name of hardfork\n"
+            "        \"version\": xx,         (numeric) block version\n"
+            "        \"status\": {            (object) status of the hardfork\n"
+            "           \"triggeredatblock\": \"xx\",    (string) hash for the block where triggering conditions were met\n"
+            "           \"earliestforktime\": xx,        (numeric) lowest timestamp (seconds since Epoch) for which new blocks will be accepted \n"
+            "           \"found\": xx,                   (numeric) number of blocks with the new version found\n"
+            "           \"required\": xx,                (numeric) number of blocks required to trigger\n"
+            "           \"window\": xx,                  (numeric) maximum size of examined window of recent blocks\n"
+            "        },\n"
+            "        \"reject\": { ... }      (object) progress toward rejecting pre-softfork blocks (same fields as \"enforce\")\n"
+            "     }, ...\n"
+            "  ]\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getblockchaininfo", "")
@@ -661,6 +719,10 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
     softforks.push_back(SoftForkDesc("bip66", 3, tip, consensusParams));
     softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
     obj.push_back(Pair("softforks",             softforks));
+
+    UniValue hardforks(UniValue::VARR);
+    hardforks.push_back(HardForkDesc("bip109", 0x01000000, tip, consensusParams));
+    obj.push_back(Pair("hardforks", hardforks));
 
     if (fPruneMode)
     {
