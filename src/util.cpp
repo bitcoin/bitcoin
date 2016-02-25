@@ -779,6 +779,9 @@ void ModifyRWConfigFile(const std::string& strArg, const std::string& strNewValu
 void EraseRWConfigFile()
 {
     const boost::filesystem::path rwconf_path = GetRWConfigFile();
+    if (!boost::filesystem::exists(rwconf_path)) {
+        return;
+    }
     boost::filesystem::path rwconf_reset_path = rwconf_path;
     rwconf_reset_path += ".reset";
     if (!RenameOver(rwconf_path, rwconf_reset_path)) {
