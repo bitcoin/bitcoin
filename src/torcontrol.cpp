@@ -414,7 +414,10 @@ TorController::TorController(struct event_base* base, const std::string& target)
 TorController::~TorController()
 {
     if (reconnect_ev)
+    {
         event_del(reconnect_ev);
+        event_free(reconnect_ev); reconnect_ev = NULL;
+    }
     if (service.IsValid()) {
         RemoveLocal(service);
     }
@@ -626,6 +629,11 @@ void TorController::disconnected_cb(TorControlConnection& conn)
 
     // Single-shot timer for reconnect. Use exponential backoff.
     struct timeval time = MillisToTimeval(int64_t(reconnect_timeout * 1000.0));
+    if (reconnect_ev)
+    {
+        event_del(reconnect_ev);
+        event_free(reconnect_ev); reconnect_ev = NULL;
+    }
     reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
     event_add(reconnect_ev, &time);
     reconnect_timeout *= RECONNECT_TIMEOUT_EXP;
