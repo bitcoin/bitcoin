@@ -3140,6 +3140,10 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
 
+    if (block.nVersion & Consensus::HARDFORK_BIT)
+        state.Invalid(false, REJECT_OBSOLETE, "bad-version-hardfork",
+                             strprintf("rejected nVersion=%d: the deployment of an unkown hardfork has been signaled in this block", block.nVersion));
+
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
         if (block.nVersion < version && IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))

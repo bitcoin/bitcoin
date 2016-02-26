@@ -178,6 +178,11 @@ unsigned int Consensus::GetFlags(const CBlockIndex* pindexPrev, const Params& co
     return flags;
 }
 
+static bool IsHardfork(DeploymentPos deploymentPos)
+{
+    return false;
+}
+
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams, Consensus::CVersionBitsCacheInterface& versionBitsCache)
 {
     int32_t nVersion = 0;
@@ -185,9 +190,17 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     if (!pVersionBitsState)
         return nVersion;
 
-    for (int i = 0; i < MAX_VERSION_BITS_DEPLOYMENTS; ++i)
+    for (int i = 0; i < MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
+
         if (pVersionBitsState->vStates[i] == STARTED || pVersionBitsState->vStates[i] == LOCKED_IN)
             nVersion |= consensusParams.vDeployments[i].bitmask;
+
+        // If a hardfork was just activated, set the hardfork bit.
+        if (IsHardfork(i) && pVersionBitsState->vStates[i] == ACTIVATED &&
+            (pindexPrev->nHeight + 1) % consensusParams.nMinerConfirmationWindow == 0 && 
+            GetVersionBitsState(pindexPrev->pprev, consensusParams, versionBitsCache)->vStates[i] != ACTIVATED)
+            nVersion |= HARDFORK_BIT;
+    }
 
     return nVersion == 0 ? VERSIONBITS_LAST_OLD_BLOCK_VERSION : nVersion | VERSIONBIT_BIT;
 }
