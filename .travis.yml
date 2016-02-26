@@ -76,3 +76,7 @@ script:
     - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.sh; fi
 after_script:
     - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then (echo "Upload goes here. Something like: scp -r $BASE_OUTDIR server" || echo "upload failed"); fi
+notifications:
+  slack:
+    secure: PusjKeVWuBJI/rE8HE4MDUenNpQM8L+TvXS9oohnkNaYYSJ+BNFqK6b8bwimD2mim5SGVwdT9+rkaHw+Yz3xx2pxwQAUNMSgWgdD69+9slWjl/xlwMloxPbE6bHskRJ3C0kLuv2ldeY1wRPEUFBSDTb/2OXcjX9tugy9sSxm+7cx0j/n6TZqKgf8LepjLewSIb5AUcKKq9T//grcd3AE7APvcjKM7DiV29FnCfifvg1LjRScta+VGqeOOYfxysZC/qfSwPbfi9O8f3xwVAzPASzoTshViHUzO5vfzKsEAhU6D0QhrerPO/TrMxgXM+AAYdMhVqa2FDJCk9pnkQDb0lWYDvOFyWX4k8DYpx09VzpfYeM98LwYHi2NHhp/bv+ws5QYeRZP+iqTBK4uLQTfORdyA9jpiGH+I2iikL8133sEHHYnIzbkCviaKAHzZGIc5Jw0enr0YS091noQBql3jEPh5iNi9WVdHGysGlDYI/Bjc6vOxd+7w3xVCpB+0eXPKiTasGCigeO0DNR1ukdJlUyrfQNQRzJAuTrfqpecqLAkk6QTA0ao3CCndT897agFiY2GXWgBoqot3818YCrbiDPDVHmsU7+yKJJ+WtOWlwG0TbPK76s4H++TOWLj9WHx9jx4N+/fnBOox0Tu4iAdXb9gJqwH8UAy6ka+ZE2m1Fc=
+
