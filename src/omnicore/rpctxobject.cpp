@@ -72,6 +72,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
             confirmations = 1 + blockHeight - pBlockIndex->nHeight;
             blockTime = pBlockIndex->nTime;
             blockHeight = pBlockIndex->nHeight;
+            /*
             CBlock block;
             if (ReadBlockFromDisk(block, pBlockIndex)) {
                 BOOST_FOREACH(const CTransaction &blocktx, block.vtx) {
@@ -81,12 +82,13 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
                    }
                 }
             }
+            */
         }
     }
 
     // attempt to parse the transaction
     CMPTransaction mp_obj;
-    int parseRC = ParseTransaction(tx, blockHeight, positionInBlock, mp_obj, blockTime);
+    int parseRC = ParseTransaction(tx, blockHeight, 0, mp_obj, blockTime);
     if (parseRC < 0) return MP_TX_IS_NOT_MASTER_PROTOCOL;
 
     const uint256& txid = tx.GetHash();
@@ -127,6 +129,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
     if (confirmations > 0) {
         LOCK(cs_tally);
         valid = getValidMPTX(txid);
+        positionInBlock = p_OmniTXDB->FetchTransactionPosition(txid);
     }
 
     // populate some initial info for the transaction
@@ -151,7 +154,7 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
         txobj.push_back(Pair("valid", valid));
         txobj.push_back(Pair("blockhash", blockHash.GetHex()));
         txobj.push_back(Pair("blocktime", blockTime));
-        txobj.push_back(Pair("positioninblock", (uint64_t)mp_obj.getIndexInBlock()));
+        txobj.push_back(Pair("positioninblock", positionInBlock));
     }
     if (confirmations != 0) {
         txobj.push_back(Pair("block", blockHeight));

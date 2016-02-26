@@ -134,6 +134,7 @@ static int reorgRecoveryMaxHeight = 0;
 CMPTxList *mastercore::p_txlistdb;
 CMPTradeList *mastercore::t_tradelistdb;
 CMPSTOList *mastercore::s_stolistdb;
+COmniTransactionDB *mastercore::p_OmniTXDB;
 
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
@@ -2042,6 +2043,7 @@ void clear_all_state()
     p_txlistdb->Clear();
     s_stolistdb->Clear();
     t_tradelistdb->Clear();
+    p_OmniTXDB->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
@@ -2090,11 +2092,13 @@ int mastercore_init()
             boost::filesystem::path tradePath = GetDataDir() / "MP_tradelist";
             boost::filesystem::path spPath = GetDataDir() / "MP_spinfo";
             boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
+            boost::filesystem::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
             if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
             if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
             if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
             if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
             if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
+            if (boost::filesystem::exists(omniTXDBPath)) boost::filesystem::remove_all(omniTXDBPath);
             PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
             startClean = true;
         } catch (const boost::filesystem::filesystem_error& e) {
@@ -2107,6 +2111,7 @@ int mastercore_init()
     s_stolistdb = new CMPSTOList(GetDataDir() / "MP_stolist", fReindex);
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
     _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
+    p_OmniTXDB = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
@@ -2204,6 +2209,10 @@ int mastercore_shutdown()
         delete _my_sps;
         _my_sps = NULL;
     }
+    if (p_OmniTXDB) {
+        delete p_OmniTXDB;
+        p_OmniTXDB = NULL;
+    }
 
     PrintToLog("\nOmni Core shutdown completed\n");
     PrintToLog("Shutdown time: %s\n", DateTimeStrFormat("%Y-%m-%d %H:%M:%S", GetTime()));
@@ -2265,6 +2274,7 @@ bool mastercore_handler_tx(const CTransaction& tx, int nBlock, unsigned int idx,
         if (interp_ret != PKT_ERROR - 2) {
             bool bValid = (0 <= interp_ret);
             p_txlistdb->recordTX(tx.GetHash(), bValid, nBlock, mp_obj.getType(), mp_obj.getNewAmount());
+            p_OmniTXDB->RecordTransaction(tx.GetHash(), idx);
         }
         fFoundTx |= (interp_ret == 0);
     }
@@ -2363,6 +2373,33 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
 #else
     return MP_ERR_WALLET_ACCESS;
 #endif
+}
+
+void COmniTransactionDB::RecordTransaction(const uint256& txid, uint32_t posInBlock)
+{
+    assert(pdb);
+
+    const std::string key = txid.ToString();
+    const std::string value = strprintf("%d", posInBlock);
+
+    Status status = pdb->Put(writeoptions, key, value);
+    ++nWritten;
+}
+
+uint32_t COmniTransactionDB::FetchTransactionPosition(const uint256& txid)
+{
+    assert(pdb);
+
+    const std::string key = txid.ToString();
+    std::string strValue;
+    uint32_t posInBlock = 999999; // setting an initial arbitrarily high value will ensure transaction is always "last" in event of bug/exploit
+
+    Status status = pdb->Get(readoptions, key, &strValue);
+    if (status.ok()) {
+        posInBlock = boost::lexical_cast<uint32_t>(strValue);
+    }
+
+    return posInBlock;
 }
 
 std::set<int> CMPTxList::GetSeedBlocks(int startHeight, int endHeight)

@@ -152,6 +152,35 @@ extern bool autoCommit;
 //! Global lock for state objects
 extern CCriticalSection cs_tally;
 
+/** LevelDB based storage for storing Omni transaction data.  This will become the new master database, holding serialized Omni transactions.
+ *  Note, intention is to consolidate and clean up data storage
+ */
+class COmniTransactionDB : public CDBBase
+{
+public:
+    COmniTransactionDB(const boost::filesystem::path& path, bool fWipe)
+    {
+        leveldb::Status status = Open(path, fWipe);
+        PrintToConsole("Loading master transactions database: %s\n", status.ToString());
+    }
+
+    virtual ~COmniTransactionDB()
+    {
+        if (msc_debug_persistence) PrintToLog("COmniTransactionDB closed\n");
+    }
+
+    /* These functions would be expanded upon to store a serialized version of the transaction and associated state data
+     *
+     * void RecordTransaction(const uint256& txid, uint32_t posInBlock, various, other, data);
+     * int FetchTransactionPosition(const uint256& txid);
+     * bool FetchTransactionValidity(const uint256& txid);
+     *
+     * and so on...
+     */
+    void RecordTransaction(const uint256& txid, uint32_t posInBlock);
+    uint32_t FetchTransactionPosition(const uint256& txid);
+};
+
 /** LevelDB based storage for STO recipients.
  */
 class CMPSTOList : public CDBBase
@@ -213,7 +242,7 @@ public:
     CMPTxList(const boost::filesystem::path& path, bool fWipe)
     {
         leveldb::Status status = Open(path, fWipe);
-        PrintToConsole("Loading transactions database: %s\n", status.ToString());
+        PrintToConsole("Loading tx meta-info database: %s\n", status.ToString());
     }
 
     virtual ~CMPTxList()
@@ -286,6 +315,7 @@ extern std::map<std::string, CMPTally> mp_tally_map;
 extern CMPTxList *p_txlistdb;
 extern CMPTradeList *t_tradelistdb;
 extern CMPSTOList *s_stolistdb;
+extern COmniTransactionDB *p_OmniTXDB;
 
 // TODO: move, rename
 extern CCoinsView viewDummy;
