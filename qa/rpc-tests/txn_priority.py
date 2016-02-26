@@ -186,8 +186,10 @@ class PriorityTest(BitcoinTestFramework):
 
         self.testmsg('priority is updated correctly when input-confirming block is reorganised out')
 
+        # NOTE: We cannot use join_network because it restarts the nodes (thus losing the mempool)
         connect_nodes_bi(self.nodes, 1, 2)
-        self.sync_all()
+        self.is_network_split = False
+        sync_blocks(self.nodes)
 
         txid_e_reorg_prio = (amt_c2 * BTC * 6) / txmodsize_e
         self.assert_prio(txid_e, txid_e_starting_prio, txid_e_reorg_prio)
