@@ -1560,7 +1560,26 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
     if(Params().NetworkIDString() == CBaseChainParams::TESTNET) {
         // BUG: there had to be `return` at the end of this `if` but we continued to add mainnet %s,
         // TODO: RESTART TESTNET and remove this quick fix
-        ret += blockValue * 10 / 20;
+        // ret += blockValue * 10 / 20;
+        // from old testnet code
+        if(nHeight > 46000)             ret += blockValue / 20; //25% - 2014-10-07
+        if(nHeight > 46000+((576*1)*1)) ret += blockValue / 20; //30% - 2014-10-08
+        if(nHeight > 46000+((576*1)*2)) ret += blockValue / 20; //35% - 2014-10-09
+        if(nHeight > 46000+((576*1)*3)) ret += blockValue / 20; //40% - 2014-10-10
+        if(nHeight > 46000+((576*1)*4)) ret += blockValue / 20; //45% - 2014-10-11
+        if(nHeight > 46000+((576*1)*5)) ret += blockValue / 20; //50% - 2014-10-12
+        if(nHeight > 46000+((576*1)*6)) ret += blockValue / 20; //55% - 2014-10-13
+        if(nHeight > 46000+((576*1)*7)) ret += blockValue / 20; //60% - 2014-10-14
+        //from old mainnet code
+        if(nHeight > 158000)               ret += blockValue / 20; // 158000 - 25.0% - 2014-10-24
+        if(nHeight > 158000+((576*30)* 1)) ret += blockValue / 20; // 175280 - 30.0% - 2014-11-25
+        if(nHeight > 158000+((576*30)* 2)) ret += blockValue / 20; // 192560 - 35.0% - 2014-12-26
+        if(nHeight > 158000+((576*30)* 3)) ret += blockValue / 40; // 209840 - 37.5% - 2015-01-26
+        if(nHeight > 158000+((576*30)* 4)) ret += blockValue / 40; // 227120 - 40.0% - 2015-02-27
+        if(nHeight > 158000+((576*30)* 5)) ret += blockValue / 40; // 244400 - 42.5% - 2015-03-30
+        if(nHeight > 158000+((576*30)* 6)) ret += blockValue / 40; // 261680 - 45.0% - 2015-05-01
+        if(nHeight > 158000+((576*30)* 7)) ret += blockValue / 40; // 278960 - 47.5% - 2015-06-01
+        if(nHeight > 158000+((576*30)* 9)) ret += blockValue / 40; // 313520 - 50.0% - 2015-08-03
         return ret;
     }
 
