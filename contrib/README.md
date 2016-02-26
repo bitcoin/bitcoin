@@ -42,6 +42,9 @@ Various PGP files of core developers.
 ### [MacDeploy](/contrib/macdeploy) ###
 Scripts and notes for Mac builds. 
 
+### [RPM](/contrib/rpm) ###
+RPM spec file for building bitcoin-core on RPM based distributions
+
 Test and Verify Tools 
 ---------------------
 
