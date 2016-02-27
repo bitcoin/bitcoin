@@ -499,6 +499,17 @@ UniValue CRPCTable::execute(const std::string &strMethod, const UniValue &params
     g_rpcSignals.PostCommand(*pcmd);
 }
 
+std::vector<std::string> CRPCTable::listCommands() const
+{
+    std::vector<std::string> commandList;
+    typedef std::map<std::string, const CRPCCommand*> commandMap;
+
+    std::transform( mapCommands.begin(), mapCommands.end(),
+                   std::back_inserter(commandList),
+                   boost::bind(&commandMap::value_type::first,_1) );
+    return commandList;
+}
+
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
     return "> bitcoin-cli " + methodname + " " + args + "\n";

@@ -36,6 +36,7 @@
 #include <QThread>
 #include <QTime>
 #include <QTimer>
+#include <QStringList>
 
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -446,7 +447,19 @@ void RPCConsole::setClientModel(ClientModel *model)
         ui->buildDate->setText(model->formatBuildDate());
         ui->startupTime->setText(model->formatClientStartupTime());
         ui->networkName->setText(QString::fromStdString(Params().NetworkIDString()));
-    }
+
+        //Setup autocomplete and attach it
+        QStringList wordList;
+        std::vector<std::string> commandList = tableRPC.listCommands();
+        for (size_t i = 0; i < commandList.size(); ++i)
+        {
+            wordList << commandList[i].c_str();
+        }
+
+        autoCompleter = new QCompleter(wordList, this);
+        ui->lineEdit->setCompleter(autoCompleter);
+
+        }
 }
 
 static QString categoryClass(int category)
