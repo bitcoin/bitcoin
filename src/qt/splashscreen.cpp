@@ -40,7 +40,8 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     // define text to place
     QString titleText       = tr("HOdlcoin Core");
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
-    QString copyrightText   = QChar(0xA9)+QString(" %1 ").arg(COPYRIGHT_YEAR) + QString(tr("The HOdlcoin developers"));
+    QString copyrightText   = QChar(0xA9)+QString("2009-%i ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin developers"));
+    QString copyrightText2  = QChar(0xA9)+QString("2015-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The HOdlcoin developers"));
     QString titleAddText    = networkStyle->getTitleAddText();
 
     QString font            = QApplication::font().toString();
@@ -65,7 +66,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     pixPaint.fillRect(rGradient, gradient);
 
     // draw the bitcoin icon, expected size of PNG: 1024x1024
-    QRect rectIcon(QPoint(-150,-122), QSize(430,430));
+	QRect rectIcon(QPoint(-100,-22), QSize(330,330));
 
     const QSize requiredSize(1024,1024);
     QPixmap icon(networkStyle->getAppIcon().pixmap(requiredSize));
@@ -100,6 +101,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     // draw copyright stuff
     pixPaint.setFont(QFont(font, 10*fontFactor));
     pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace,copyrightText);
+    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+12,copyrightText2);
 
     // draw additional text if special network
     if(!titleAddText.isEmpty()) {
