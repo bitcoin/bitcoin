@@ -99,7 +99,7 @@ Direct headers announcement (BIP 130)
 
 Between compatible peers, [BIP 130]
 (https://github.com/bitcoin/bips/blob/master/bip-0130.mediawiki)
-direct headers announcement is used. This means that blocks are advertized by
+direct headers announcement is used. This means that blocks are advertised by
 announcing their headers directly, instead of just announcing the hash. In a
 reorganization, all new headers are sent, instead of just the new tip. This
 can often prevent an extra roundtrip before the actual block is downloaded.
@@ -272,7 +272,7 @@ at all. Therefore, a fallback value can be set with `-fallbackfee=<f>`
 
 At all times, Bitcoin Core will cap fees at `-maxtxfee=<x>` (default:
 0.10) BTC.
-Furthermore, Bitcoin Core will never create transactions smaller than
+Furthermore, Bitcoin Core will never create transactions paying less than
 the current minimum relay fee.
 Finally, a user can set the minimum fee rate for all transactions with
 `-mintxfee=<i>`, which defaults to 1000 satoshis per kB.
@@ -701,7 +701,7 @@ git merge commit are mentioned.
 - #7112 `96b8025` reduce cs_main locks during tip update, more fluently update UI (Jonas Schnelli)
 - #7206 `f43c2f9` Add "NODE_BLOOM" to guiutil so that peers don't get UNKNOWN[4] (Matt Corallo)
 - #7282 `5cadf3e` fix coincontrol update issue when deleting a send coins entry (Jonas Schnelli)
-- #7319 `1320300` Intro: Display required space (Jonas Schnelli)
+- #7319 `1320300` Intro: Display required space (MarcoFalke)
 - #7318 `9265e89` quickfix for RPC timer interface problem (Jonas Schnelli)
 - #7327 `b16b5bc` [Wallet] Transaction View: LastMonth calculation fixed (crowning-)
 - #7364 `7726c48` [qt] Windows: Make rpcconsole monospace font larger (MarcoFalke)
@@ -841,7 +841,6 @@ Thanks to everyone who directly contributed to this release:
 - Kevin Cooper
 - lpescher
 - Luke Dashjr
-- Marco
 - MarcoFalke
 - Mark Friedenbach
 - Matt
