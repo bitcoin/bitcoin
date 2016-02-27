@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-#
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -7,7 +7,6 @@
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import time
 from test_framework.blocktools import create_block, create_coinbase
 
 '''
@@ -70,7 +69,6 @@ f. Announce 1 more header that builds on that fork.
 class BaseNode(NodeConnCB):
     def __init__(self):
         NodeConnCB.__init__(self)
-        self.create_callback_map()
         self.connection = None
         self.last_inv = None
         self.last_headers = None
@@ -221,18 +219,20 @@ class SendHeadersTest(BitcoinTestFramework):
 
     # mine count blocks and return the new tip
     def mine_blocks(self, count):
+        # Clear out last block announcement from each p2p listener
+        [ x.clear_last_announcement() for x in self.p2p_connections ]
         self.nodes[0].generate(count)
         return int(self.nodes[0].getbestblockhash(), 16)
 
     # mine a reorg that invalidates length blocks (replacing them with
     # length+1 blocks).
-    # peers is the p2p nodes we're using; we clear their state after the
+    # Note: we clear the state of our p2p connections after the
     # to-be-reorged-out blocks are mined, so that we don't break later tests.
     # return the list of block hashes newly mined
-    def mine_reorg(self, length, peers):
+    def mine_reorg(self, length):
         self.nodes[0].generate(length) # make sure all invalidated blocks are node0's
         sync_blocks(self.nodes, wait=0.1)
-        [x.clear_last_announcement() for x in peers]
+        [x.clear_last_announcement() for x in self.p2p_connections]
 
         tip_height = self.nodes[1].getblockcount()
         hash_to_invalidate = self.nodes[1].getblockhash(tip_height-(length-1))
@@ -245,6 +245,8 @@ class SendHeadersTest(BitcoinTestFramework):
         # Setup the p2p connections and start up the network thread.
         inv_node = InvNode()
         test_node = TestNode()
+
+        self.p2p_connections = [inv_node, test_node]
 
         connections = []
         connections.append(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], inv_node))
@@ -304,7 +306,6 @@ class SendHeadersTest(BitcoinTestFramework):
         prev_tip = int(self.nodes[0].getbestblockhash(), 16)
         test_node.get_headers(locator=[prev_tip], hashstop=0L)
         test_node.sync_with_ping()
-        test_node.clear_last_announcement() # Clear out empty headers response
 
         # Now that we've synced headers, headers announcements should work
         tip = self.mine_blocks(1)
@@ -353,8 +354,6 @@ class SendHeadersTest(BitcoinTestFramework):
                 # broadcast it)
                 assert_equal(inv_node.last_inv, None)
                 assert_equal(inv_node.last_headers, None)
-                inv_node.clear_last_announcement()
-                test_node.clear_last_announcement()
                 tip = self.mine_blocks(1)
                 assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
                 assert_equal(test_node.check_last_announcement(headers=[tip]), True)
@@ -369,7 +368,7 @@ class SendHeadersTest(BitcoinTestFramework):
         # getheaders or inv from peer.
         for j in xrange(2):
             # First try mining a reorg that can propagate with header announcement
-            new_block_hashes = self.mine_reorg(length=7, peers=[test_node, inv_node])
+            new_block_hashes = self.mine_reorg(length=7)
             tip = new_block_hashes[-1]
             assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
             assert_equal(test_node.check_last_announcement(headers=new_block_hashes), True)
@@ -377,7 +376,7 @@ class SendHeadersTest(BitcoinTestFramework):
             block_time += 8 
 
             # Mine a too-large reorg, which should be announced with a single inv
-            new_block_hashes = self.mine_reorg(length=8, peers=[test_node, inv_node])
+            new_block_hashes = self.mine_reorg(length=8)
             tip = new_block_hashes[-1]
             assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
             assert_equal(test_node.check_last_announcement(inv=[tip]), True)
@@ -389,7 +388,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
             # Use getblocks/getdata
             test_node.send_getblocks(locator = [fork_point])
-            assert_equal(test_node.check_last_announcement(inv=new_block_hashes[0:-1]), True)
+            assert_equal(test_node.check_last_announcement(inv=new_block_hashes), True)
             test_node.get_data(new_block_hashes)
             test_node.wait_for_block(new_block_hashes[-1])
 
@@ -408,7 +407,6 @@ class SendHeadersTest(BitcoinTestFramework):
                     test_node.get_headers(locator=[fork_point], hashstop=new_block_hashes[1])
                     test_node.get_data([tip])
                     test_node.wait_for_block(tip)
-                    test_node.clear_last_announcement()
                 elif i == 2:
                     test_node.get_data([tip])
                     test_node.wait_for_block(tip)
@@ -446,7 +444,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         inv_node.sync_with_ping() # Make sure blocks are processed
         test_node.last_getdata = None
-        test_node.send_header_for_blocks(blocks);
+        test_node.send_header_for_blocks(blocks)
         test_node.sync_with_ping()
         # should not have received any getdata messages
         with mininode_lock:

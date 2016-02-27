@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
+# Copyright (c) 2014-2015 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -70,9 +70,11 @@ class KeyPoolTest(BitcoinTestFramework):
             assert(e.error['code']==-12)
 
         # refill keypool with three new addresses
-        nodes[0].walletpassphrase('test', 12000)
+        nodes[0].walletpassphrase('test', 1)
         nodes[0].keypoolrefill(3)
-        nodes[0].walletlock()
+        # test walletpassphrase timeout
+        time.sleep(1.1)
+        assert_equal(nodes[0].getwalletinfo()["unlocked_until"], 0)
 
         # drain them by mining
         nodes[0].generate(1)

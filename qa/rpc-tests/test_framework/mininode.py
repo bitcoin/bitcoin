@@ -36,6 +36,7 @@ MY_VERSION = 60001  # past bip-31 for ping/pong
 MY_SUBVERSION = "/python-mininode-tester:0.0.1/"
 
 MAX_INV_SZ = 50000
+MAX_BLOCK_SIZE = 1000000
 
 # Keep our own socket map for asyncore, so that we can track disconnects
 # ourselves (to workaround an issue with closing an asyncore socket when 
@@ -230,6 +231,14 @@ def ser_int_vector(l):
         r += struct.pack("<i", i)
     return r
 
+# Deserialize from a hex string representation (eg from RPC)
+def FromHex(obj, hex_string):
+    obj.deserialize(cStringIO.StringIO(binascii.unhexlify(hex_string)))
+    return obj
+
+# Convert a binary-serializable object to hex (eg for submission via RPC)
+def ToHex(obj):
+    return binascii.hexlify(obj.serialize()).decode('utf-8')
 
 # Objects that map to bitcoind objects, which can be serialized/deserialized
 
@@ -535,7 +544,7 @@ class CBlock(CBlockHeader):
         return True
 
     def solve(self):
-        self.calc_sha256()
+        self.rehash()
         target = uint256_from_compact(self.nBits)
         while self.sha256 > target:
             self.nNonce += 1
@@ -1003,6 +1012,18 @@ class msg_reject(object):
 class NodeConnCB(object):
     def __init__(self):
         self.verack_received = False
+        # deliver_sleep_time is helpful for debugging race conditions in p2p
+        # tests; it causes message delivery to sleep for the specified time
+        # before acquiring the global lock and delivering the next message.
+        self.deliver_sleep_time = None
+
+    def set_deliver_sleep_time(self, value):
+        with mininode_lock:
+            self.deliver_sleep_time = value
+
+    def get_deliver_sleep_time(self):
+        with mininode_lock:
+            return self.deliver_sleep_time
 
     # Spin until verack message is received from the node.
     # Tests may want to use this as a signal that the test can begin.
@@ -1015,32 +1036,13 @@ class NodeConnCB(object):
                     return
             time.sleep(0.05)
 
-    # Derived classes should call this function once to set the message map
-    # which associates the derived classes' functions to incoming messages
-    def create_callback_map(self):
-        self.cbmap = {
-            "version": self.on_version,
-            "verack": self.on_verack,
-            "addr": self.on_addr,
-            "alert": self.on_alert,
-            "inv": self.on_inv,
-            "getdata": self.on_getdata,
-            "getblocks": self.on_getblocks,
-            "tx": self.on_tx,
-            "block": self.on_block,
-            "getaddr": self.on_getaddr,
-            "ping": self.on_ping,
-            "pong": self.on_pong,
-            "headers": self.on_headers,
-            "getheaders": self.on_getheaders,
-            "reject": self.on_reject,
-            "mempool": self.on_mempool
-        }
-
     def deliver(self, conn, message):
+        deliver_sleep = self.get_deliver_sleep_time()
+        if deliver_sleep is not None:
+            time.sleep(deliver_sleep)
         with mininode_lock:
             try:
-                self.cbmap[message.command](conn, message)
+                getattr(self, 'on_' + message.command)(conn, message)
             except:
                 print "ERROR delivering %s (%s)" % (repr(message),
                                                     sys.exc_info()[0])

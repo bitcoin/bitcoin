@@ -363,8 +363,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Montant :</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Étiquette :</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Message :</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -426,6 +434,10 @@
     <message>
         <source>Send Coins</source>
         <translation>Envoyer des pièces</translation>
+    </message>
+    <message>
+        <source>Insufficient funds!</source>
+        <translation>Fonds insuffisants</translation>
     </message>
     <message>
         <source>Amount:</source>
@@ -494,6 +506,10 @@
         <source>Message:</source>
         <translation>Message :</translation>
     </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Payer à :</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -519,6 +535,10 @@
     <message>
         <source>Enter the message you want to sign here</source>
         <translation>Entrez ici le message que vous désirez signer</translation>
+    </message>
+    <message>
+        <source>Sign &amp;Message</source>
+        <translation>&amp;Signer le message</translation>
     </message>
     </context>
 <context>

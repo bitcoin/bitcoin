@@ -85,7 +85,11 @@
         <source>Exporting Failed</source>
         <translation>Exportación fallida</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Hubo un error intentando guardar la lista de direcciones al %1. Por favor intente nuevamente.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -234,6 +238,10 @@
         <translation>Quitar aplicación</translation>
     </message>
     <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Recepción de direcciones</translation>
+    </message>
+    <message>
         <source>Bitcoin Core client</source>
         <translation>Cliente Bitcoin Core</translation>
     </message>
@@ -312,6 +320,14 @@
     <message>
         <source>Bitcoin Core</source>
         <translation>Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>Acerca de Bitcoin Core</translation>
+    </message>
+    <message>
+        <source>&amp;Command-line options</source>
+        <translation>Opciones de línea de comandos</translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -684,7 +700,7 @@
         <source>command-line options</source>
         <translation>opciones de línea de comandos</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -746,6 +762,10 @@
         <translation>&amp;Main</translation>
     </message>
     <message>
+        <source>W&amp;allet</source>
+        <translation>Billetera</translation>
+    </message>
+    <message>
         <source>none</source>
         <translation>ninguno</translation>
     </message>
@@ -771,9 +791,21 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>&amp;Information</source>
+        <translation>Información</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Amount:</source>
+        <translation>Monto:</translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Etiqueta:</translation>
+    </message>
     <message>
         <source>Copy label</source>
         <translation>Copiar etiqueta</translation>
@@ -785,6 +817,10 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Copiar Dirección</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Dirección</translation>
@@ -882,6 +918,14 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>A&amp;mount:</source>
+        <translation>Monto:</translation>
+    </message>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Etiqueta:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -904,6 +948,10 @@
     <message>
         <source>Date</source>
         <translation>Fecha</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transacción</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -989,6 +1037,14 @@
     <message>
         <source>Backup Failed</source>
         <translation>Copia de seguridad fallida</translation>
+    </message>
+    <message>
+        <source>There was an error trying to save the wallet data to %1.</source>
+        <translation>Hubo un error intentando guardar los datos de la billetera al %1</translation>
+    </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>Los datos de la billetera fueron guardados exitosamente al %1</translation>
     </message>
     <message>
         <source>Backup Successful</source>

@@ -15,21 +15,7 @@ COIN = 100000000
 class PrioritiseTransactionTest(BitcoinTestFramework):
 
     def __init__(self):
-        # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
-        # So we have big transactions (and therefore can't fit very many into each block)
-        # create one script_pubkey
-        script_pubkey = "6a4d0200" #OP_RETURN OP_PUSH2 512 bytes
-        for i in xrange (512):
-            script_pubkey = script_pubkey + "01"
-        # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
-        self.txouts = "81"
-        for k in xrange(128):
-            # add txout value
-            self.txouts = self.txouts + "0000000000000000"
-            # add length of script_pubkey
-            self.txouts = self.txouts + "fd0402"
-            # add script_pubkey
-            self.txouts = self.txouts + script_pubkey
+        self.txouts = gen_return_txouts()
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -42,62 +28,15 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-printpriority=1"]))
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
-    def create_confirmed_utxos(self, count):
-        self.nodes[0].generate(int(0.5*count)+101)
-        utxos = self.nodes[0].listunspent()
-        iterations = count - len(utxos)
-        addr1 = self.nodes[0].getnewaddress()
-        addr2 = self.nodes[0].getnewaddress()
-        if iterations <= 0:
-            return utxos
-        for i in xrange(iterations):
-            t = utxos.pop()
-            fee = self.relayfee
-            inputs = []
-            inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
-            outputs = {}
-            send_value = t['amount'] - fee
-            outputs[addr1] = satoshi_round(send_value/2)
-            outputs[addr2] = satoshi_round(send_value/2)
-            raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
-            signed_tx = self.nodes[0].signrawtransaction(raw_tx)["hex"]
-            txid = self.nodes[0].sendrawtransaction(signed_tx)
-
-        while (self.nodes[0].getmempoolinfo()['size'] > 0):
-            self.nodes[0].generate(1)
-
-        utxos = self.nodes[0].listunspent()
-        assert(len(utxos) >= count)
-        return utxos
-
-    def create_lots_of_big_transactions(self, utxos, fee):
-        addr = self.nodes[0].getnewaddress()
-        txids = []
-        for i in xrange(len(utxos)):
-            t = utxos.pop()
-            inputs = []
-            inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
-            outputs = {}
-            send_value = t['amount'] - fee
-            outputs[addr] = satoshi_round(send_value)
-            rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
-            newtx = rawtx[0:92]
-            newtx = newtx + self.txouts
-            newtx = newtx + rawtx[94:]
-            signresult = self.nodes[0].signrawtransaction(newtx, None, None, "NONE")
-            txid = self.nodes[0].sendrawtransaction(signresult["hex"], True)
-            txids.append(txid)
-        return txids
-
     def run_test(self):
-        utxos = self.create_confirmed_utxos(90)
+        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], 90)
         base_fee = self.relayfee*100 # our transactions are smaller than 100kb
         txids = []
 
         # Create 3 batches of transactions at 3 different fee rate levels
         for i in xrange(3):
             txids.append([])
-            txids[i] = self.create_lots_of_big_transactions(utxos[30*i:30*i+30], (i+1)*base_fee)
+            txids[i] = create_lots_of_big_transactions(self.nodes[0], self.txouts, utxos[30*i:30*i+30], (i+1)*base_fee)
 
         # add a fee delta to something in the cheapest bucket and make sure it gets mined
         # also check that a different entry in the cheapest bucket is NOT mined (lower
@@ -142,6 +81,46 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         for x in txids[2]:
             if (x != high_fee_tx):
                 assert(x not in mempool)
+
+        # Create a free, low priority transaction.  Should be rejected.
+        utxo_list = self.nodes[0].listunspent()
+        assert(len(utxo_list) > 0)
+        utxo = utxo_list[0]
+
+        inputs = []
+        outputs = {}
+        inputs.append({"txid" : utxo["txid"], "vout" : utxo["vout"]})
+        outputs[self.nodes[0].getnewaddress()] = utxo["amount"] - self.relayfee
+        raw_tx = self.nodes[0].createrawtransaction(inputs, outputs)
+        tx_hex = self.nodes[0].signrawtransaction(raw_tx)["hex"]
+        txid = self.nodes[0].sendrawtransaction(tx_hex)
+
+        # A tx that spends an in-mempool tx has 0 priority, so we can use it to
+        # test the effect of using prioritise transaction for mempool acceptance
+        inputs = []
+        inputs.append({"txid": txid, "vout": 0})
+        outputs = {}
+        outputs[self.nodes[0].getnewaddress()] = utxo["amount"] - self.relayfee
+        raw_tx2 = self.nodes[0].createrawtransaction(inputs, outputs)
+        tx2_hex = self.nodes[0].signrawtransaction(raw_tx2)["hex"]
+        tx2_id = self.nodes[0].decoderawtransaction(tx2_hex)["txid"]
+
+        try:
+            self.nodes[0].sendrawtransaction(tx2_hex)
+        except JSONRPCException as exp:
+            assert_equal(exp.error['code'], -26) # insufficient fee
+            assert(tx2_id not in self.nodes[0].getrawmempool())
+        else:
+            assert(False)
+
+        # This is a less than 1000-byte transaction, so just set the fee
+        # to be the minimum for a 1000 byte transaction and check that it is
+        # accepted.
+        self.nodes[0].prioritisetransaction(tx2_id, 0, int(self.relayfee*COIN))
+
+        print "Assert that prioritised free transaction is accepted to mempool"
+        assert_equal(self.nodes[0].sendrawtransaction(tx2_hex), tx2_id)
+        assert(tx2_id in self.nodes[0].getrawmempool())
 
 if __name__ == '__main__':
     PrioritiseTransactionTest().main()
