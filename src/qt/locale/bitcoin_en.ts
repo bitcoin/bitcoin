@@ -1153,7 +1153,7 @@
     </message>
     <message>
         <location line="+1"/>
-        <source>Reset all settings changes made over the GUI</source>
+        <source>Reset all settings changed in the GUI</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

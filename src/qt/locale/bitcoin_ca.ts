@@ -222,7 +222,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP / Màscara de xarxa</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>Bandejat fins</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -874,6 +882,34 @@
         <source>command-line options</source>
         <translation>Opcions de la línia d'ordres</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>Opcions d'interfície d'usuari:</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Trieu el directori de dades a l'inici (per defecte: %u)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Defineix la llengua, per exemple «de_DE» (per defecte: la definida pel sistema)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Inicia minimitzat</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Defineix els certificats arrel SSL per a la sol·licitud de pagament (per defecte: els del sistema)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Mostra la pantalla de benvinguda a l'inici (per defecte: %u)</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>Reinicialitza tots els canvis de configuració fets des de la interfície gràfica</translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -1070,6 +1106,18 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port del proxy (per exemple 9050)</translation>
+    </message>
+    <message>
+        <source>Used for reaching peers via:</source>
+        <translation>Utilitzat per arribar als iguals mitjançant:</translation>
+    </message>
+    <message>
+        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>Mostra si el proxy SOCKS5 per defecte proporcionat s'utilitza per arribar als iguals mitjançant aquest tipus de xarxa.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>Utilitza un proxy SOCKS4 apart per a arribar als iguals a través de serveis ocults de Tor:</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1458,8 +1506,16 @@
         <translation>&amp;Iguals</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>Iguals bandejats</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>Seleccioneu un igual per mostrar informació detallada.</translation>
+    </message>
+    <message>
+        <source>Whitelisted</source>
+        <translation>A la llista blanca</translation>
     </message>
     <message>
         <source>Direction</source>
@@ -1468,6 +1524,18 @@
     <message>
         <source>Version</source>
         <translation>Versió</translation>
+    </message>
+    <message>
+        <source>Starting Block</source>
+        <translation>Bloc d'inici</translation>
+    </message>
+    <message>
+        <source>Synced Headers</source>
+        <translation>Capçaleres sincronitzades</translation>
+    </message>
+    <message>
+        <source>Synced Blocks</source>
+        <translation>Blocs sincronitzats</translation>
     </message>
     <message>
         <source>User Agent</source>
@@ -1496,6 +1564,14 @@
     <message>
         <source>Ping Time</source>
         <translation>Temps de ping</translation>
+    </message>
+    <message>
+        <source>The duration of a currently outstanding ping.</source>
+        <translation>La duració d'un ping més destacat actualment.</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>Espera de ping</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -1546,6 +1622,34 @@
         <translation>Neteja la consola</translation>
     </message>
     <message>
+        <source>&amp;Disconnect Node</source>
+        <translation>&amp;Desconnecta el node</translation>
+    </message>
+    <message>
+        <source>Ban Node for</source>
+        <translation>Bandeja el node durant</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;hora</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;dia</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;setmana</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;any</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>&amp;Desbandeja el node</translation>
+    </message>
+    <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
         <translation>Us donem la benviguda a la consola RPC del Bitcoin Core.</translation>
     </message>
@@ -1572,6 +1676,10 @@
     <message>
         <source>%1 GB</source>
         <translation>%1 GB</translation>
+    </message>
+    <message>
+        <source>(node id: %1)</source>
+        <translation>(id del node: %1)</translation>
     </message>
     <message>
         <source>via %1</source>
@@ -1966,6 +2074,10 @@
         <translation>Copia el canvi</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>Import total %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>o</translation>
     </message>
@@ -1996,6 +2108,10 @@
     <message>
         <source>Payment request expired.</source>
         <translation>La sol·licitud de pagament ha vençut.</translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>Paga només la comissió necessària de %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -2778,6 +2894,14 @@
     <message>
         <source>Accept command line and JSON-RPC commands</source>
         <translation>Accepta la línia d'ordres i ordres JSON-RPC </translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>Comissions totals màximes (en %s) per utilitzar en una única transacció de moneder; definir-ne una massa baixa pot interrompre les transaccions més grans (per defecte: %s)</translation>
+    </message>
+    <message>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation>Comissió (en %s/kB) per afegir a les transaccions que envieu (per defecte: %s)</translation>
     </message>
     <message>
         <source>Run in the background as a daemon and accept commands</source>

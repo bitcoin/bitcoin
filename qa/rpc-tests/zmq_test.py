@@ -11,7 +11,6 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 import zmq
 import binascii
-from test_framework.mininode import hash256
 
 try:
     import http.client as httplib
@@ -42,7 +41,7 @@ class ZMQTest (BitcoinTestFramework):
     def run_test(self):
         self.sync_all()
 
-        genhashes = self.nodes[0].generate(1);
+        genhashes = self.nodes[0].generate(1)
         self.sync_all()
 
         print "listen..."
@@ -58,7 +57,7 @@ class ZMQTest (BitcoinTestFramework):
         assert_equal(genhashes[0], blkhash) #blockhash from generate must be equal to the hash received over zmq
 
         n = 10
-        genhashes = self.nodes[1].generate(n);
+        genhashes = self.nodes[1].generate(n)
         self.sync_all()
 
         zmqHashes = []
@@ -76,7 +75,7 @@ class ZMQTest (BitcoinTestFramework):
         hashRPC = self.nodes[1].sendtoaddress(self.nodes[0].getnewaddress(), 1.0)
         self.sync_all()
 
-        #now we should receive a zmq msg because the tx was broadcastet
+        # now we should receive a zmq msg because the tx was broadcast
         msg = self.zmqSubSocket.recv_multipart()
         topic = str(msg[0])
         body = msg[1]

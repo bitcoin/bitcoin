@@ -282,6 +282,10 @@
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;ชื่อ:</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
@@ -318,6 +322,10 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;ชื่อ:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -385,5 +393,9 @@
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Options:</source>
+        <translation>ตัวเลือก:</translation>
+    </message>
     </context>
 </TS>

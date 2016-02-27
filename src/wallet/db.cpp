@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -193,9 +193,9 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     // Format of bdb dump is ascii lines:
     // header lines...
     // HEADER=END
-    // hexadecimal key
-    // hexadecimal value
-    // ... repeated
+    //  hexadecimal key
+    //  hexadecimal value
+    //  ... repeated
     // DATA=END
 
     string strLine;
@@ -205,7 +205,7 @@ bool CDBEnv::Salvage(const std::string& strFile, bool fAggressive, std::vector<C
     std::string keyHex, valueHex;
     while (!strDump.eof() && keyHex != "DATA=END") {
         getline(strDump, keyHex);
-        if (keyHex != "DATA_END") {
+        if (keyHex != "DATA=END") {
             getline(strDump, valueHex);
             vResult.push_back(make_pair(ParseHex(keyHex), ParseHex(valueHex)));
         }

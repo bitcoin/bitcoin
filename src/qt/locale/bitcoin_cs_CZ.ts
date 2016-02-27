@@ -192,6 +192,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Amount:</source>
+        <translation>Množství:</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Množství</translation>
     </message>
@@ -323,6 +327,14 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Popisek:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Zpráva:</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>Kopírovat popis</translation>
     </message>
@@ -341,6 +353,10 @@
         <source>Label</source>
         <translation>Popis</translation>
     </message>
+    <message>
+        <source>Message</source>
+        <translation>Zpráva</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -353,6 +369,10 @@
         <translation>Popis</translation>
     </message>
     <message>
+        <source>Message</source>
+        <translation>Zpráva</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Množství</translation>
     </message>
@@ -363,6 +383,10 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Množství:</translation>
+    </message>
     <message>
         <source>Balance:</source>
         <translation>Zůstatek:</translation>
@@ -378,6 +402,10 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>&amp;Label:</source>
+        <translation>&amp;Popisek:</translation>
+    </message>
     <message>
         <source>Message:</source>
         <translation>Zpráva:</translation>
@@ -416,6 +444,14 @@
     <message>
         <source>Date</source>
         <translation>Datum</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Zpráva</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transakce</translation>
     </message>
     <message>
         <source>Amount</source>

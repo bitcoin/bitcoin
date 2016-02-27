@@ -23,7 +23,7 @@
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>关闭(&amp;C)</translation>
+        <translation>关闭(&amp;l)</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -133,7 +133,7 @@
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>钱包加密</translation>
+        <translation>加密钱包</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -226,7 +226,11 @@
         <source>IP/Netmask</source>
         <translation>IP/网络掩码</translation>
     </message>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>在此之前禁止：</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -267,7 +271,7 @@
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>关于 &amp;Qt</translation>
+        <translation>关于Qt(&amp;Q)</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
@@ -303,7 +307,7 @@
     </message>
     <message>
         <source>Bitcoin Core client</source>
-        <translation>比特币核心钱包</translation>
+        <translation>比特币核心钱包客户端</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -311,7 +315,7 @@
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
-        <translation>正在为数据块建立索引...</translation>
+        <translation>正在为数据块重建索引...</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
@@ -878,6 +882,34 @@
         <source>command-line options</source>
         <translation>命令行选项</translation>
     </message>
+    <message>
+        <source>UI Options:</source>
+        <translation>界面选项：</translation>
+    </message>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>在启动时选择目录（默认%u）</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>设置语言, 例如“zh-CN”（默认：系统语言）</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>启动时最小化</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>设置付款请求的SSL根证书（默认：-系统-）</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>显示启动画面（默认：%u）</translation>
+    </message>
+    <message>
+        <source>Reset all settings changes made over the GUI</source>
+        <translation>重置所有图形界面所做的更改</translation>
+    </message>
 </context>
 <context>
     <name>Intro</name>
@@ -1076,6 +1108,14 @@
         <translation>代理端口（例如 9050）</translation>
     </message>
     <message>
+        <source>Used for reaching peers via:</source>
+        <translation>连接到同伴的方式：</translation>
+    </message>
+    <message>
+        <source>Shows, if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
+        <translation>如果默认的SOCKS5代理被用于在该网络下连接同伴，则显示</translation>
+    </message>
+    <message>
         <source>IPv4</source>
         <translation>IPv4</translation>
     </message>
@@ -1086,6 +1126,14 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>在Tor匿名网络下通过不同的SOCKS5代理连接比特币网络</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services:</source>
+        <translation>通过Tor隐藏服务连接节点时 使用不同的SOCKS5代理</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1458,6 +1506,18 @@
         <translation>当前数据块数量</translation>
     </message>
     <message>
+        <source>Memory Pool</source>
+        <translation>资金池</translation>
+    </message>
+    <message>
+        <source>Current number of transactions</source>
+        <translation>当前交易数量</translation>
+    </message>
+    <message>
+        <source>Memory usage</source>
+        <translation>内存使用</translation>
+    </message>
+    <message>
         <source>Open the Bitcoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>从当前的数据目录打开比特币核心调试日志文件。对于较大的日志文件，这可能需要几秒钟。</translation>
     </message>
@@ -1474,6 +1534,10 @@
         <translation>同伴(&amp;P)</translation>
     </message>
     <message>
+        <source>Banned peers</source>
+        <translation>节点黑名单</translation>
+    </message>
+    <message>
         <source>Select a peer to view detailed information.</source>
         <translation>选择节点查看详细信息。</translation>
     </message>
@@ -1488,6 +1552,10 @@
     <message>
         <source>Version</source>
         <translation>版本</translation>
+    </message>
+    <message>
+        <source>Starting Block</source>
+        <translation>正在启动数据块</translation>
     </message>
     <message>
         <source>Synced Headers</source>
@@ -1524,6 +1592,10 @@
     <message>
         <source>Ping Time</source>
         <translation>Ping 时间</translation>
+    </message>
+    <message>
+        <source>Ping Wait</source>
+        <translation>Ping等待</translation>
     </message>
     <message>
         <source>Time Offset</source>
@@ -1574,6 +1646,14 @@
         <translation>清空控制台</translation>
     </message>
     <message>
+        <source>&amp;Disconnect Node</source>
+        <translation>(&amp;D)断开节点连接</translation>
+    </message>
+    <message>
+        <source>Ban Node for</source>
+        <translation>禁止节点连接时长：</translation>
+    </message>
+    <message>
         <source>1 &amp;hour</source>
         <translation>1 小时(&amp;H)</translation>
     </message>
@@ -1588,6 +1668,10 @@
     <message>
         <source>1 &amp;year</source>
         <translation>1 年(&amp;Y)</translation>
+    </message>
+    <message>
+        <source>&amp;Unban Node</source>
+        <translation>(&amp;U)允许节点连接</translation>
     </message>
     <message>
         <source>Welcome to the Bitcoin Core RPC console.</source>
@@ -2014,6 +2098,10 @@
         <translation>复制零钱</translation>
     </message>
     <message>
+        <source>Total Amount %1</source>
+        <translation>总金额 %1</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>或</translation>
     </message>
@@ -2044,6 +2132,10 @@
     <message>
         <source>Payment request expired.</source>
         <translation>支付请求已过期。</translation>
+    </message>
+    <message>
+        <source>Pay only the required fee of %1</source>
+        <translation>只支付必要费用 %1</translation>
     </message>
     <message numerus="yes">
         <source>Estimated to begin confirmation within %n block(s).</source>
@@ -2681,6 +2773,10 @@
         <translation>复制交易编号</translation>
     </message>
     <message>
+        <source>Copy raw transaction</source>
+        <translation>复制原始交易</translation>
+    </message>
+    <message>
         <source>Edit label</source>
         <translation>编辑标签</translation>
     </message>
@@ -2831,8 +2927,32 @@
 </translation>
     </message>
     <message>
+        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
+        <translation>如果&lt;category&gt;未提供或&lt;category&gt; = 1，输出所有调试信息。</translation>
+    </message>
+    <message>
+        <source>Maximum total fees (in %s) to use in a single wallet transaction; setting this too low may abort large transactions (default: %s)</source>
+        <translation>最大单次转账费用（%s），设置太低可能导致大宗交易失败（默认：%s）</translation>
+    </message>
+    <message>
+        <source>Please check that your computer's date and time are correct! If your clock is wrong Bitcoin Core will not work properly.</source>
+        <translation>警请检查电脑的日期时间设置是否正确！时间错误可能会导致比特币客户端运行异常。</translation>
+    </message>
+    <message>
+        <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
+        <translation>修剪值被设置为低于最小值%d MiB，请使用更大的数值。</translation>
+    </message>
+    <message>
+        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
+        <translation>无法在开启修剪的状态下重扫描，请使用 -reindex重新下载完整的区块链。</translation>
+    </message>
+    <message>
         <source>Error: A fatal internal error occurred, see debug.log for details</source>
         <translation>错误：发生了致命的内部错误，详情见 debug.log 文件</translation>
+    </message>
+    <message>
+        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
+        <translation>为付款交易添加交易费 (%s/kB) (默认: %s) </translation>
     </message>
     <message>
         <source>Pruning blockstore...</source>
@@ -2843,6 +2963,10 @@
         <translation>在后台运行并接受命令
 
 </translation>
+    </message>
+    <message>
+        <source>Unable to start HTTP server. See debug log for details.</source>
+        <translation>无法启动HTTP服务，查看日志获取更多信息</translation>
     </message>
     <message>
         <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
@@ -2869,12 +2993,20 @@
         <translation>设置脚本验证的程序 (%u 到 %d, 0 = 自动, &lt;0 = 保留自由的核心, 默认值: %d)</translation>
     </message>
     <message>
+        <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
+        <translation>区块数据库包含未来的交易，这可能是由本机错误的日期时间引起。若确认本机日期时间正确，请重新建立区块数据库。</translation>
+    </message>
+    <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
         <translation>这是测试用的预发布版本 - 请谨慎使用 - 不要用来挖矿，或者在正式商用环境下使用</translation>
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Bitcoin Core is probably already running.</source>
         <translation>无法 %s的绑定到电脑上，比特币核心钱包可能已经在运行。</translation>
+    </message>
+    <message>
+        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
+        <translation>使用UPnP暴露本机监听端口（默认：1 当正在监听且不使用代理）</translation>
     </message>
     <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
@@ -2899,6 +3031,10 @@
     <message>
         <source>Whitelist peers connecting from the given netmask or IP address. Can be specified multiple times.</source>
         <translation>节点白名单,网络掩码或IP址。可多次指定。</translation>
+    </message>
+    <message>
+        <source>-maxmempool must be at least %d MB</source>
+        <translation>-maxmempool 最小为%d MB</translation>
     </message>
     <message>
         <source>&lt;category&gt; can be:</source>
@@ -2931,6 +3067,22 @@
     <message>
         <source>Do you want to rebuild the block database now?</source>
         <translation>你想现在就重建块数据库吗？</translation>
+    </message>
+    <message>
+        <source>Enable publish hash block in &lt;address&gt;</source>
+        <translation>允许在&lt;address&gt;广播哈希区块</translation>
+    </message>
+    <message>
+        <source>Enable publish hash transaction in &lt;address&gt;</source>
+        <translation>允许在&lt;address&gt;广播哈希交易</translation>
+    </message>
+    <message>
+        <source>Enable publish raw block in &lt;address&gt;</source>
+        <translation>允许在&lt;address&gt;广播原始区块</translation>
+    </message>
+    <message>
+        <source>Enable publish raw transaction in &lt;address&gt;</source>
+        <translation>允许在&lt;address&gt;广播原始交易</translation>
     </message>
     <message>
         <source>Error initializing block database</source>
@@ -2969,6 +3121,10 @@
         <translation>无效的 -onion 地址：“%s”</translation>
     </message>
     <message>
+        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
+        <translation>保持交易内存池大小低于&lt;n&gt;MB（默认：%u）</translation>
+    </message>
+    <message>
         <source>Not enough file descriptors available.</source>
         <translation>没有足够的文件描述符可用。</translation>
     </message>
@@ -2995,6 +3151,18 @@
     <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>指定钱包文件（数据目录内）</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -benchmark ignored, use -debug=bench.</source>
+        <translation>忽略不支持的选项 -benchmark，使用 -debug=bench</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -debugnet ignored, use -debug=net.</source>
+        <translation>忽略不支持的选项 -debugnet，使用 -debug=net。</translation>
+    </message>
+    <message>
+        <source>Unsupported argument -tor found, use -onion.</source>
+        <translation>忽略不支持的选项 -tor，使用 -oinon</translation>
     </message>
     <message>
         <source>Use UPnP to map the listening port (default: %u)</source>
@@ -3161,6 +3329,10 @@
         <translation>-whitelist: '%s' 指定的网络掩码无效</translation>
     </message>
     <message>
+        <source>Keep at most &lt;n&gt; unconnectable transactions in memory (default: %u)</source>
+        <translation>内存中最多保留 &lt;n&gt; 笔孤立的交易 (默认: %u) </translation>
+    </message>
+    <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>-whitebind: '%s' 需要指定一个端口</translation>
     </message>
@@ -3179,6 +3351,10 @@
     <message>
         <source>Receive and display P2P network alerts (default: %u)</source>
         <translation>收到并且显示P2P网络的告警(默认:%u)</translation>
+    </message>
+    <message>
+        <source>Rescan the block chain for missing wallet transactions on startup</source>
+        <translation>重新扫描区块链以查找遗漏的钱包交易</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>
@@ -3229,6 +3405,10 @@
         <translation>无法在此计算机上绑定 %s (绑定返回错误 %s)</translation>
     </message>
     <message>
+        <source>Upgrade wallet to latest format on startup</source>
+        <translation>程序启动时升级钱包到最新格式</translation>
+    </message>
+    <message>
         <source>Username for JSON-RPC connections</source>
         <translation>JSON-RPC 连接用户名</translation>
     </message>
@@ -3239,6 +3419,10 @@
     <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Whether to operate in a blocks only mode (default: %u)</source>
+        <translation>是否用块方进行 (%u)</translation>
     </message>
     <message>
         <source>Zapping all transactions from wallet...</source>
@@ -3299,12 +3483,20 @@
         <translation>输出调试信息 (默认: %u, 提供 &lt;category&gt; 是可选项)</translation>
     </message>
     <message>
+        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
+        <translation>尝试保持上传带宽低于（MiB/24h），0=无限制（默认：%d）</translation>
+    </message>
+    <message>
         <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
         <translation>通过Tor隐藏服务连接节点时 使用不同的SOCKS5代理 (默认: %s)</translation>
     </message>
     <message>
         <source>(default: %s)</source>
         <translation>(默认: %s) </translation>
+    </message>
+    <message>
+        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
+        <translation>始终通过 DNS 查询节点地址 (默认: %u)</translation>
     </message>
     <message>
         <source>Error loading wallet.dat</source>
