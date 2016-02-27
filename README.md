@@ -1,5 +1,5 @@
 #**HODLcoin**
-![](https://mymostlyunfabulouslife.files.wordpress.com/2013/06/20130606-175924.jpg)
+<img src="http://i.imgur.com/5EAaA7b.png" width="400">
 
 [http://www.HOdlcoin.com](http://www.HOdlcoin.com)
 ###**What is it?**
