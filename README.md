@@ -1,4 +1,4 @@
-#**HODLcoin**
+#**HODLcoin** [![Build Status](https://travis-ci.org/HOdlcoin/HOdlcoin.svg?branch=master)](https://travis-ci.org/HOdlcoin/HOdlcoin) [![GitHub version](https://badge.fury.io/gh/HOdlcoin%2FHOdlcoin.svg)](https://badge.fury.io/gh/HOdlcoin%2FHOdlcoin)
 <img src="http://i.imgur.com/5EAaA7b.png" width="400">
 
 [http://www.HOdlcoin.com](http://www.HOdlcoin.com)
