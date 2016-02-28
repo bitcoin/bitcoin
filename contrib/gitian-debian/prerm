@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+# stop and disable bitcoincld service if systemctl exists and is executable
+if [ -x "/bin/systemctl" ]; then
+    echo "Stopping bitcoincld.service"
+    /bin/systemctl stop bitcoincld.service
+    echo "Disabling bitcoincld.service"
+    /bin/systemctl disable bitcoincld.service
+fi

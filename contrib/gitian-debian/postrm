@@ -1,0 +1,9 @@
+#!/bin/sh -e
+
+if [ "$1" = "purge" ] && [ -e /usr/share/debconf/confmodule ]; then
+  # Source debconf library
+  . /usr/share/debconf/confmodule
+  # Remove my changes to the db 
+  echo "Purging debconf for bitcoincl"
+  db_purge || true
+fi
