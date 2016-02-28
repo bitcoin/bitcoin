@@ -107,6 +107,7 @@ BITCOIN_CORE_H = \
   consensus/consensus.h \
   core_io.h \
   core_memusage.h \
+  global/server.h \
   httprpc.h \
   httpserver.h \
   init.h \
@@ -180,6 +181,7 @@ libbitcoin_server_a_SOURCES = \
   chain.cpp \
   checkpoints.cpp \
   consensus/versionbits.cpp \
+  global/server.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
