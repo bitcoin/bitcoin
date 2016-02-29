@@ -482,8 +482,8 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
     LogPrintf("HOdlcoinMiner started\n");
     srand(clock());
     string ma=GetArg("-miningaddress", "");
-    std::vector<std::string> arr=split(ma+"",';');
-    int arraySize=arr.size();
+    //std::vector<std::string> arr=split(ma+"",';');
+    //int arraySize=arr.size();
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
     RenameThread("bitcoin-miner");
     const CChainParams& chainparams = Params();
@@ -524,15 +524,19 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
             auto_ptr<CBlockTemplate> pblocktemplate;
 
             if(ma!=""){
-                long theClock=clock()+rand();
-                long theRemainder=theClock%arraySize;
-                pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(arr[theRemainder]));
+            	if(validateAddress(ma)) {
+           		    LogPrintf("HOdlcoinMiner: Mining to User supplied address %s\n",ma);
+                	pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithAddress(ma));
+                }else{
+                	LogPrintf("HOdlcoinMiner: WARNING! User supplied address is invalid, defaulting to mempool address.\n");
+                	pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));
+                }
             }else{
                 pblocktemplate= auto_ptr<CBlockTemplate>(CreateNewBlockWithKey(reservekey));
             }
             if (!pblocktemplate.get())
             {
-                LogPrintf("Error in HOdlcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
+                LogPrintf("HOdlcoinMiner: ERROR! Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
@@ -615,6 +619,12 @@ void static BitcoinMiner(CWallet *pwallet, int nThreads)
         fGenerate = false;
         return;
     }
+}
+
+bool validateAddress(std::string address)
+{
+    CBitcoinAddress addressParsed(address);
+    return addressParsed.IsValid();
 }
 
 static bool isInterrupting=false;
