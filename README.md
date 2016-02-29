@@ -1,9 +1,10 @@
-Bitcoin Core integration/staging tree
+Bitcoin Core integration/staging tree 
 =====================================
+Powered by [Bitcoin Core Development](https://bitcoincore.org)
 
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
 
-https://bitcoincore.org
+https://bitcoin.org
 
 What is Bitcoin?
 ----------------
@@ -16,7 +17,7 @@ software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
 the Bitcoin Core software, see https://www.bitcoin.org/en/download, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
+[original whitepaper](https://bitcoin.org/bitcoin.pdf).
 
 License
 -------
