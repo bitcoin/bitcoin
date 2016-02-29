@@ -100,7 +100,6 @@ bool CZMQNotificationInterface::Initialize()
 
     if (i!=notifiers.end())
     {
-        Shutdown();
         return false;
     }
 
