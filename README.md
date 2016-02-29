@@ -1,5 +1,6 @@
-Bitcoin Core integration/staging tree
+Bitcoin Core integration/staging tree 
 =====================================
+Powered by [Bitcoin Core Development](https://bitcoincore.org)
 
 [![Build Status](https://travis-ci.org/bitcoin/bitcoin.svg?branch=master)](https://travis-ci.org/bitcoin/bitcoin)
 
