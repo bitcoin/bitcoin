@@ -50,7 +50,7 @@ DepositCoinsDialog::DepositCoinsDialog(QWidget *parent) :
 
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
 
-    ui->frameFee->hide();
+    //ui->frameFee->hide();
 
     addEntry();
 
@@ -121,9 +121,9 @@ DepositCoinsDialog::DepositCoinsDialog(QWidget *parent) :
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
 
     ui->addButton->hide();
-    ui->clearButton->hide();
-    ui->label->hide();
-    ui->labelBalance->hide();
+    //ui->clearButton->hide();
+    //ui->label->hide();
+    //ui->labelBalance->hide();
 }
 
 void DepositCoinsDialog::setClientModel(ClientModel *clientModel)
@@ -159,8 +159,8 @@ void DepositCoinsDialog::setModel(WalletModel *model)
         // Coin Control
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(coinControlUpdateLabels()));
         connect(model->getOptionsModel(), SIGNAL(coinControlFeaturesChanged(bool)), this, SLOT(coinControlFeatureChanged(bool)));
-        //ui->frameCoinControl->setVisible(model->getOptionsModel()->getCoinControlFeatures());
-        ui->frameCoinControl->setVisible(false);
+        ui->frameCoinControl->setVisible(model->getOptionsModel()->getCoinControlFeatures());
+        //ui->frameCoinControl->setVisible(false);
         coinControlUpdateLabels();
 
         // fee section
@@ -207,7 +207,6 @@ void DepositCoinsDialog::on_sendButton_clicked()
     if(!model || !model->getOptionsModel())
         return;
 
-
     QList<SendCoinsRecipient> recipients;
     bool valid = true;
 
@@ -236,7 +235,6 @@ void DepositCoinsDialog::on_sendButton_clicked()
         return;
     }
 
-
     fNewRecipientAllowed = false;
     WalletModel::UnlockContext ctx(model->requestUnlock());
     if(!ctx.isValid())
@@ -245,8 +243,6 @@ void DepositCoinsDialog::on_sendButton_clicked()
         fNewRecipientAllowed = true;
         return;
     }
-
-
 
     // prepare transaction for getting txFee earlier
     WalletModelTransaction currentTransaction(recipients);
@@ -741,8 +737,8 @@ void DepositCoinsDialog::coinControlClipboardChange()
 // Coin Control: settings menu - coin control enabled/disabled by user
 void DepositCoinsDialog::coinControlFeatureChanged(bool checked)
 {
-    //ui->frameCoinControl->setVisible(checked);
-    ui->frameCoinControl->setVisible(false);
+    ui->frameCoinControl->setVisible(checked);
+    //ui->frameCoinControl->setVisible(false);
 
     if (!checked && model) // coin control features disabled
         CoinControlDialog::coinControl->SetNull();
@@ -848,8 +844,8 @@ void DepositCoinsDialog::coinControlUpdateLabels()
 
         // show coin control stats
         ui->labelCoinControlAutomaticallySelected->hide();
-        //ui->widgetCoinControl->show();
-        ui->widgetCoinControl->hide();
+        ui->widgetCoinControl->show();
+        //ui->widgetCoinControl->hide();
     }
     else
     {
@@ -858,5 +854,5 @@ void DepositCoinsDialog::coinControlUpdateLabels()
         ui->widgetCoinControl->hide();
         ui->labelCoinControlInsuffFunds->hide();
     }
-    ui->widgetCoinControl->hide();
+    //ui->widgetCoinControl->hide();
 }
