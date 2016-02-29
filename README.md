@@ -17,7 +17,7 @@ software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
 the Bitcoin Core software, see https://www.bitcoin.org/en/download, or read the
-[original whitepaper](https://bitcoincore.org/bitcoin.pdf).
+[original whitepaper](https://bitcoin.org/bitcoin.pdf).
 
 License
 -------
