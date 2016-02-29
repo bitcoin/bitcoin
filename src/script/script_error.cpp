@@ -10,7 +10,7 @@ const char* ScriptErrorString(const ScriptError serror)
     switch (serror)
     {
         case SCRIPT_ERR_OK:
-            return "Error not found";
+            return "No Error";
         case SCRIPT_ERR_EVAL_FALSE:
             return "Script evaluated without error but finished with a false/empty top stack element";
         case SCRIPT_ERR_VERIFY:
