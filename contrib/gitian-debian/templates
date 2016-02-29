@@ -1,0 +1,4 @@
+Template: bitcoincl/start_service
+Type: boolean
+Default: true
+Description: Automatically enable and start systemd bitcoincld.service?
