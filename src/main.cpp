@@ -4203,13 +4203,8 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         pfrom->PushMessage(NetMsgType::BLOCK, block);
 
                     // BUIP010 Xtreme Thinblocks: begin section
-                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK)
-                      {                 
+                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK)               
                         SendXThinBlock(block, pfrom, inv);
-                        //LOCK(pfrom->cs_filter);  // PROPOSED: clean up this filter; it will no longer be relevant to the next block
-                        //if (pfrom->pfilter) delete pfrom->pfilter;
-                        //pfrom->pfilter=NULL;
-                      }
                     // BUIP010 Xtreme Thinblocks: end section
 
                     else // MSG_FILTERED_BLOCK)
@@ -4612,14 +4607,18 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         nodestate->nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
                         // BUIP010 Xtreme Thinblocks: begin section
                         CInv inv2(inv);
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        CBloomFilter filterMemPool;
                         if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
                             if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(inv.hash))) {
                                 // Must download a block from a ThinBlock peer
                                 if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
                                     inv2.type = MSG_XTHINBLOCK;
-                                    vToFetch.push_back(inv2);
-                                    SendSeededBloomFilter(pfrom);
+                                    BuildSeededBloomFilter(filterMemPool);
+                                    ss << inv2;
+                                    ss << filterMemPool;
+                                    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
                                     MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
                                     LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                                 }
@@ -4629,13 +4628,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                 if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
                                     inv2.type = MSG_XTHINBLOCK;
-                                    SendSeededBloomFilter(pfrom);
+                                    BuildSeededBloomFilter(filterMemPool);
+                                    ss << inv2;
+                                    ss << filterMemPool;
+                                    pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
                                     LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                                 }
-                                else
+                                else {
                                     LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+                                    vToFetch.push_back(inv2);
+                                }
                                 MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                                vToFetch.push_back(inv2);
                             }
                         }
                         else {
@@ -5026,6 +5029,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
     // BUIP010 Xtreme Thinblocks: begin section
+    else if (strCommand == NetMsgType::GET_XTHIN && !fImporting && !fReindex) // Ignore blocks received while importing
+    {
+        CBloomFilter filterMemPool;
+        CInv inv;
+        vRecv >> inv >> filterMemPool;
+
+        LoadFilter(pfrom, &filterMemPool);
+        pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), inv);
+        ProcessGetData(pfrom, chainparams.GetConsensus());
+    }
     else if (strCommand == NetMsgType::XTHINBLOCK  && !fImporting && !fReindex) // Ignore blocks received while importing
     {
         CXThinBlock thinBlock;
@@ -5487,18 +5500,24 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         CBloomFilter filter;
         vRecv >> filter;
+    
+        // BUIP010 Xtreme Thinblocks - begin section
+        LoadFilter(pfrom, &filter);
 
-        if (!filter.IsWithinSizeConstraints())
-            // There is no excuse for sending a too-large filter
-            Misbehaving(pfrom->GetId(), 100);
-        else
-        {
-            LOCK(pfrom->cs_filter);
-            delete pfrom->pfilter;
-            pfrom->pfilter = new CBloomFilter(filter);
-            pfrom->pfilter->UpdateEmptyFull();
-        }
-        pfrom->fRelayTxes = true;
+        //if (!filter.IsWithinSizeConstraints())
+        //    // There is no excuse for sending a too-large filter
+        //    Misbehaving(pfrom->GetId(), 100);
+        //else
+        //{
+        //    LOCK(pfrom->cs_filter);
+        //    delete pfrom->pfilter;
+        //    pfrom->pfilter = new CBloomFilter(filter);
+        //    pfrom->pfilter->UpdateEmptyFull();
+        //}
+        //pfrom->fRelayTxes = true;
+
+        // BUIP010 Xtreme Thinblocks - end section
+
     }
 
 
@@ -6006,12 +6025,16 @@ bool SendMessages(CNode* pto)
             BOOST_FOREACH(CBlockIndex *pindex, vToDownload) {
                 // BUIP010 Xtreme Thinblocks: begin section
                 if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
+                    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                    CBloomFilter filterMemPool;
                     if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(pindex->GetBlockHash()))) {
                         // Must download a block from a ThinBlock peer
                         if (pto->mapThinBlocksInFlight.size() < 1 && pto->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
-                            vGetData.push_back(CInv(MSG_XTHINBLOCK, pindex->GetBlockHash())); 
-                            SendSeededBloomFilter(pto);
+                            BuildSeededBloomFilter(filterMemPool);
+                            ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
+                            ss << filterMemPool;
+                            pto->PushMessage(NetMsgType::GET_XTHIN, ss);
                             MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
                             LogPrint("thin", "Requesting thinblock %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
                                      pindex->nHeight, pto->addrName.c_str(), pto->id);
@@ -6021,8 +6044,10 @@ bool SendMessages(CNode* pto)
                         // Try to download a thinblock if possible otherwise just download a regular block
                         if (pto->mapThinBlocksInFlight.size() < 1 && pto->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
-                            vGetData.push_back(CInv(MSG_XTHINBLOCK, pindex->GetBlockHash())); 
-                            SendSeededBloomFilter(pto);
+                            BuildSeededBloomFilter(filterMemPool);
+                            ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
+                            ss << filterMemPool;
+                            pto->PushMessage(NetMsgType::GET_XTHIN, ss);
                             LogPrint("thin", "Requesting Thinblock %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
                                      pindex->nHeight, pto->addrName.c_str(), pto->id);
                         }

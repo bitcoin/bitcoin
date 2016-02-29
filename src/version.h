@@ -9,7 +9,7 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 80000;
+static const int PROTOCOL_VERSION = 80001;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
@@ -40,7 +40,7 @@ static const int NO_BLOOM_VERSION = 70011;
 //! "sendheaders" command and announcing blocks with headers starts with this version
 static const int SENDHEADERS_VERSION = 70012;
 
-//! Thinblocks enabled in this version
-static const int THINBLOCKS_VERSION = 80000;
+//! Xtreme Thinblocks enabled in this version
+static const int THINBLOCKS_VERSION = 80001;
 
 #endif // BITCOIN_VERSION_H

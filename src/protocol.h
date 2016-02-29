@@ -154,6 +154,11 @@ extern const char *XBLOCKTX;
  */
 extern const char *GET_XBLOCKTX;
 /**
+ * BUIP010 Xtreme Thinblocks: The get_xthin message transmits a single serialized get_xthin.
+ */
+extern const char *GET_XTHIN;
+
+/**
  * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
  * @see https://bitcoin.org/en/developer-reference#getaddr
