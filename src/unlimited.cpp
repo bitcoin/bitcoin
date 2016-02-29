@@ -133,30 +133,40 @@ bool IsChainNearlySyncd()
     return true;
 }
 
-void SendSeededBloomFilter(CNode *pto)
+void BuildSeededBloomFilter(CBloomFilter& filterMemPool)
 {
     LogPrint("thin", "Starting creation of bloom filter\n");
     seed_insecure_rand();
-    CBloomFilter memPoolFilter;
     double nBloomPoolSize = (double)mempool.mapTx.size();
     if (nBloomPoolSize > MAX_BLOOM_FILTER_SIZE / 1.8)
         nBloomPoolSize = MAX_BLOOM_FILTER_SIZE / 1.8;
     double nBloomDecay = 1.5 - (nBloomPoolSize * 1.8 / MAX_BLOOM_FILTER_SIZE);  // We should never go below 0.5 as we will start seeing re-requests for tx's
     int nElements = std::max((int)((int)mempool.mapTx.size() * nBloomDecay), 1); // Must make sure nElements is greater than zero or will assert
-                                                                // TODO: we should probably rather fix the bloom.cpp constructor
     double nFPRate = .001 + (((double)nElements * 1.8 / MAX_BLOOM_FILTER_SIZE) * .004); // The false positive rate in percent decays as the mempool grows
-    memPoolFilter = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
+    filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
     LogPrint("thin", "Bloom multiplier: %f FPrate: %f Num elements in bloom filter: %d num mempool entries: %d\n", nBloomDecay, nFPRate, nElements, (int)mempool.mapTx.size());
 
     // Seed the filter with the transactions in the memory pool
     LOCK(cs_main);
-    std::vector<uint256> memPoolHashes;
-    mempool.queryHashes(memPoolHashes);
-    for (uint64_t i = 0; i < memPoolHashes.size(); i++)
-         memPoolFilter.insert(memPoolHashes[i]);
+    std::vector<uint256> vMemPoolHashes;
+    mempool.queryHashes(vMemPoolHashes);
+    for (uint64_t i = 0; i < vMemPoolHashes.size(); i++)
+         filterMemPool.insert(vMemPoolHashes[i]);
+}
 
-    LogPrint("thin", "Sending bloom filter: %d bytes peer=%d\n",::GetSerializeSize(memPoolFilter, SER_NETWORK, PROTOCOL_VERSION), pto->id);
-    pto->PushMessage(NetMsgType::FILTERLOAD, memPoolFilter);
+void LoadFilter(CNode *pfrom, CBloomFilter *filter)
+{
+    if (!filter->IsWithinSizeConstraints())
+        // There is no excuse for sending a too-large filter
+        Misbehaving(pfrom->GetId(), 100);
+    else
+    {
+        LOCK(pfrom->cs_filter);
+        delete pfrom->pfilter;
+        pfrom->pfilter = new CBloomFilter(*filter);
+        pfrom->pfilter->UpdateEmptyFull();
+    }
+    pfrom->fRelayTxes = true;
 }
 
 void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, const CInv &inv)
@@ -180,7 +190,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             Misbehaving(pfrom->GetId(), nDoS);
         }
     }
-    LogPrint("thin", "Processed thinblock %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
+    LogPrint("thin", "Processed Block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
     
     // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
     // Therefore we have to remove the thinblock in flight if it exists and we also need to check that 
