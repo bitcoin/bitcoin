@@ -578,14 +578,6 @@
      </column>
      <column>
       <property name="text">
-       <string>APR</string>
-      </property>
-      <property name="textAlignment">
-       <set>AlignLeft|AlignVCenter</set>
-      </property>
-     </column>
-     <column>
-      <property name="text">
        <string>Accrued Value</string>
       </property>
       <property name="textAlignment">
