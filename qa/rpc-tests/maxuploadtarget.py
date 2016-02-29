@@ -95,9 +95,9 @@ class MaxUploadTest(BitcoinTestFramework):
         initialize_chain_clean(self.options.tmpdir, 2)
 
     def setup_network(self):
-        # Start a node with maxuploadtarget of 200 MB (/24h)
+        # Start a node with maxuploadtarget of 400 MB (/24h)
         self.nodes = []
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-maxuploadtarget=200", "-blockmaxsize=999000"]))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug", "-maxuploadtarget=400", "-blockmaxsize=999000"]))
 
     def mine_full_block(self, node, address):
         # Want to create a full block
@@ -175,13 +175,13 @@ class MaxUploadTest(BitcoinTestFramework):
         getdata_request = msg_getdata()
         getdata_request.inv.append(CInv(2, big_old_block))
 
-        max_bytes_per_day = 200*1024*1024
-        daily_buffer = 144 * 1000000
+        max_bytes_per_day = 400*1024*1024
+        daily_buffer = 144 * 2000000
         max_bytes_available = max_bytes_per_day - daily_buffer
         success_count = max_bytes_available / old_block_size
 
-        # 144MB will be reserved for relaying new blocks, so expect this to
-        # succeed for ~70 tries.
+        # Space reserved for relaying 144 new blocks, so expect this to
+        # succeed for ~140 tries.
         for i in xrange(success_count):
             test_nodes[0].send_message(getdata_request)
             test_nodes[0].sync_with_ping()
