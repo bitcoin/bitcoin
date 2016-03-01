@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -54,6 +54,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     const CChainParams& chainparams = Params();
 #ifdef ENABLE_WALLET
         bitdb.MakeMock();
+        walletRegisterRPCCommands();
 #endif
         ClearDatadirCache();
         pathTemp = GetTempPath() / strprintf("test_bitcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));

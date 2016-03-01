@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2011-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,7 +44,8 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("NULLDUMMY"), (unsigned int)SCRIPT_VERIFY_NULLDUMMY)
     (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
     (string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK)
-    (string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY);
+    (string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
+    (string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY);
 
 unsigned int ParseScriptFlags(string strFlags)
 {
@@ -310,14 +311,6 @@ BOOST_AUTO_TEST_CASE(test_Get)
 
     BOOST_CHECK(AreInputsStandard(t1, coins));
     BOOST_CHECK_EQUAL(coins.GetValueIn(t1), (50+21+22)*CENT);
-
-    // Adding extra junk to the scriptSig should make it non-standard:
-    t1.vin[0].scriptSig << OP_11;
-    BOOST_CHECK(!AreInputsStandard(t1, coins));
-
-    // ... as should not having enough:
-    t1.vin[0].scriptSig = CScript();
-    BOOST_CHECK(!AreInputsStandard(t1, coins));
 }
 
 BOOST_AUTO_TEST_CASE(test_IsStandard)

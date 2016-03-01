@@ -866,7 +866,7 @@
         <source>command-line options</source>
         <translation>parancssoros opciók</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1010,6 +1010,18 @@
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Proxy portja (pl.: 9050)</translation>
+    </message>
+    <message>
+        <source>IPv4</source>
+        <translation>IPv4</translation>
+    </message>
+    <message>
+        <source>IPv6</source>
+        <translation>IPv6</translation>
+    </message>
+    <message>
+        <source>Tor</source>
+        <translation>Tor</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1278,6 +1290,10 @@
         <translation>Aktuális blokkok száma</translation>
     </message>
     <message>
+        <source>Memory usage</source>
+        <translation>Memóriahasználat</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>Fogadott</translation>
     </message>
@@ -1364,6 +1380,22 @@
     <message>
         <source>Clear console</source>
         <translation>Konzol törlése</translation>
+    </message>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;óra</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;nap</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;hét</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;év</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1622,6 +1654,14 @@
         <translation>Elrejtés</translation>
     </message>
     <message>
+        <source>Recommended:</source>
+        <translation>Ajánlott:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>Egyéni:</translation>
+    </message>
+    <message>
         <source>normal</source>
         <translation>normál</translation>
     </message>
@@ -1774,6 +1814,10 @@
         <translation>Üzenet:</translation>
     </message>
     <message>
+        <source>Pay To:</source>
+        <translation>Címzett:</translation>
+    </message>
+    <message>
         <source>Memo:</source>
         <translation>Jegyzet:</translation>
     </message>
@@ -1841,6 +1885,10 @@
     </message>
     <message>
         <source>&amp;Verify Message</source>
+        <translation>Üzenet ellenőrzése</translation>
+    </message>
+    <message>
+        <source>Verify &amp;Message</source>
         <translation>Üzenet ellenőrzése</translation>
     </message>
     <message>
@@ -2186,6 +2234,10 @@
         <translation>Tranzakciós részletek megjelenítése</translation>
     </message>
     <message>
+        <source>Watch-only</source>
+        <translation>Csak megfigyelés</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Az exportálás sikertelen volt</translation>
     </message>
@@ -2373,6 +2425,10 @@
         <translation>Az adatbázist újra kell építeni -reindex használatával (módosítás -tindex).</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Külső cím (-whitebind address) feloldása nem sikerült: '%s'</translation>
+    </message>
+    <message>
         <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
         <translation>Copyright (C) 2009-%i A Bitcoin Core Fejlesztői</translation>
     </message>
@@ -2383,6 +2439,10 @@
     <message>
         <source>Information</source>
         <translation>Információ</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Érvénytelen -maxtxfee=&lt;amount&gt;: '%s' összeg</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

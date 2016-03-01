@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2013 The Bitcoin Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "rpcserver.h"
-#include "rpcclient.h"
+#include "rpc/server.h"
+#include "rpc/client.h"
 
 #include "base58.h"
 #include "netbase.h"
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     UniValue o1 = ar[0].get_obj();
     UniValue adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/32");
-    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.0 remove")));;
+    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.0 remove")));
     BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
     ar = r.get_array();
     BOOST_CHECK_EQUAL(ar.size(), 0);
@@ -260,14 +260,14 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     adr = find_value(o1, "address");
     banned_until = find_value(o1, "banned_until");
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
-    int64_t now = GetTime();    
+    int64_t now = GetTime();
     BOOST_CHECK(banned_until.get_int64() > now);
     BOOST_CHECK(banned_until.get_int64()-now <= 200);
 
     // must throw an exception because 127.0.0.1 is in already banned suubnet range
     BOOST_CHECK_THROW(r = CallRPC(string("setban 127.0.0.1 add")), runtime_error);
 
-    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.0/24 remove")));;
+    BOOST_CHECK_NO_THROW(CallRPC(string("setban 127.0.0.0/24 remove")));
     BOOST_CHECK_NO_THROW(r = CallRPC(string("listbanned")));
     ar = r.get_array();
     BOOST_CHECK_EQUAL(ar.size(), 0);

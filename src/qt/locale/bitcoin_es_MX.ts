@@ -11,7 +11,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copiar el domicilio seleccionado al portapapeles del sistema</translation>
+        <translation>Copiar la dirección seleccionada al portapapeles del sistema</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -83,7 +83,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Arhchivo separado por comas (*.CSV)</translation>
+        <translation>Archivo separado por comas (*.CSV)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -98,7 +98,7 @@
     </message>
     <message>
         <source>Address</source>
-        <translation>Domicilio</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -165,7 +165,7 @@
     </message>
     <message>
         <source>Wallet encryption failed</source>
-        <translation>Encriptación de la cartera fallida</translation>
+        <translation>La encriptación de la cartera fallo</translation>
     </message>
     <message>
         <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
@@ -181,7 +181,7 @@
     </message>
     <message>
         <source>The passphrase entered for the wallet decryption was incorrect.</source>
-        <translation>La contraseña ingresada para la desencriptación de la cartera es incorrecto</translation>
+        <translation>La contraseña ingresada para la desencriptación de la cartera es incorrecta</translation>
     </message>
     <message>
         <source>Wallet decryption failed</source>
@@ -199,7 +199,7 @@
     <name>BitcoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
-        <translation>Sign &amp;mensaje</translation>
+        <translation>Firmar &amp;mensaje</translation>
     </message>
     <message>
         <source>Synchronizing with network...</source>
@@ -259,15 +259,19 @@
     </message>
     <message>
         <source>&amp;Sending addresses...</source>
-        <translation>&amp;Enviando direcciones...</translation>
+        <translation>Direcciones de &amp;envío...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses...</source>
-        <translation>&amp;Recibiendo direcciones...</translation>
+        <translation>Direcciones de &amp;recepción...</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir &amp;URL...</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core client</source>
+        <translation>cliente Bitcoin Core</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -295,11 +299,27 @@
     </message>
     <message>
         <source>Open debugging and diagnostic console</source>
-        <translation>Abrir la consola de depuración y disgnostico</translation>
+        <translation>Abrir consola de depuración y diagnostico</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;Verificar mensaje...</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Cartera</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>&amp;Enviar</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;Recibir</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -322,6 +342,10 @@
         <translation>nucleo Bitcoin</translation>
     </message>
     <message>
+        <source>&amp;About Bitcoin Core</source>
+        <translation>Acerca de Bitcoin Core</translation>
+    </message>
+    <message>
         <source>&amp;Command-line options</source>
         <translation>opciones de la &amp;Linea de comandos</translation>
     </message>
@@ -335,7 +359,7 @@
     </message>
     <message>
         <source>Catching up...</source>
-        <translation>Resiviendo...</translation>
+        <translation>Recibiendo...</translation>
     </message>
     <message>
         <source>Sent transaction</source>
@@ -388,40 +412,44 @@
         <translation>Confirmado </translation>
     </message>
     <message>
+        <source>Priority</source>
+        <translation>Prioridad</translation>
+    </message>
+    <message>
         <source>Copy address</source>
         <translation>Copiar dirección </translation>
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copiar capa </translation>
+        <translation>Copiar etiqueta</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>copiar monto</translation>
+        <translation>Copiar monto</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>copiar cantidad</translation>
+        <translation>Copiar cantidad</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>copiar cuota</translation>
+        <translation>Copiar cuota</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>copiar despues de cuota</translation>
+        <translation>Copiar después de cuota</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>copiar bytes</translation>
+        <translation>Copiar bytes</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation>copiar prioridad</translation>
+        <translation>Copiar prioridad</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>copiar cambio</translation>
+        <translation>Copiar cambio</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -444,23 +472,23 @@
     </message>
     <message>
         <source>New receiving address</source>
-        <translation>Nueva dirección de entregas</translation>
+        <translation>Nueva dirección de recepción</translation>
     </message>
     <message>
         <source>New sending address</source>
-        <translation>Nueva dirección de entregas</translation>
+        <translation>Nueva dirección de envío</translation>
     </message>
     <message>
         <source>Edit receiving address</source>
-        <translation>Editar dirección de entregas</translation>
+        <translation>Editar dirección de recepción</translation>
     </message>
     <message>
         <source>Edit sending address</source>
-        <translation>Editar dirección de envios</translation>
+        <translation>Editar dirección de envío</translation>
     </message>
     <message>
         <source>The entered address "%1" is already in the address book.</source>
-        <translation>El domicilio ingresado "%1" ya existe en la libreta de direcciones</translation>
+        <translation>La dirección ingresada "%1" ya existe en la libreta de direcciones</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -482,7 +510,7 @@
     </message>
     <message>
         <source>version</source>
-        <translation>Versión</translation>
+        <translation>versión</translation>
     </message>
     <message>
         <source>(%1-bit)</source>
@@ -493,6 +521,10 @@
         <translation>Acerca de Bitcoin Core</translation>
     </message>
     <message>
+        <source>Command-line options</source>
+        <translation>opciones de la Linea de comandos</translation>
+    </message>
+    <message>
         <source>Usage:</source>
         <translation>Uso:</translation>
     </message>
@@ -500,7 +532,7 @@
         <source>command-line options</source>
         <translation>Opciones de comando de lineas</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -520,6 +552,10 @@
     <message>
         <source>Active command-line options that override above options:</source>
         <translation>Activar las opciones de linea de comando que sobre escriben las siguientes opciones:</translation>
+    </message>
+    <message>
+        <source>W&amp;allet</source>
+        <translation>Cartera</translation>
     </message>
     </context>
 <context>
@@ -547,12 +583,24 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>Debug window</source>
+        <translation>Depurar ventana</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Monto:</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etiqueta</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Mensaje:</translation>
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Bitcoin network.</source>
@@ -568,18 +616,22 @@
     </message>
     <message>
         <source>Copy label</source>
-        <translation>Copiar capa </translation>
+        <translation>Copiar etiqueta</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>copiar monto</translation>
+        <translation>Copiar monto</translation>
     </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Copiar dirección</translation>
+    </message>
+    <message>
         <source>Address</source>
-        <translation>Domicilio</translation>
+        <translation>Dirección</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -588,6 +640,10 @@
     <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mensaje</translation>
     </message>
     </context>
 <context>
@@ -599,6 +655,10 @@
     <message>
         <source>Label</source>
         <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mensaje</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -613,7 +673,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Mandar monedas</translation>
+        <translation>Enviar monedas</translation>
     </message>
     <message>
         <source>Bytes:</source>
@@ -632,6 +692,10 @@
         <translation>Cuota:</translation>
     </message>
     <message>
+        <source>fast</source>
+        <translation>rápido</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>Enviar a múltiples receptores a la vez</translation>
     </message>
@@ -645,35 +709,35 @@
     </message>
     <message>
         <source>Confirm send coins</source>
-        <translation>Confirme para mandar monedas</translation>
+        <translation>Confirme para enviar monedas</translation>
     </message>
     <message>
         <source>Copy quantity</source>
-        <translation>copiar cantidad</translation>
+        <translation>Copiar cantidad</translation>
     </message>
     <message>
         <source>Copy amount</source>
-        <translation>copiar monto</translation>
+        <translation>Copiar monto</translation>
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>copiar cuota</translation>
+        <translation>Copiar cuota</translation>
     </message>
     <message>
         <source>Copy after fee</source>
-        <translation>copiar despues de cuota</translation>
+        <translation>Copiar después de cuota</translation>
     </message>
     <message>
         <source>Copy bytes</source>
-        <translation>copiar bytes</translation>
+        <translation>Copiar bytes</translation>
     </message>
     <message>
         <source>Copy priority</source>
-        <translation>copiar prioridad</translation>
+        <translation>Copiar prioridad</translation>
     </message>
     <message>
         <source>Copy change</source>
-        <translation>copiar cambio</translation>
+        <translation>Copiar cambio</translation>
     </message>
     <message>
         <source>or</source>
@@ -685,7 +749,7 @@
     </message>
     <message>
         <source>Transaction creation failed!</source>
-        <translation>¡La creación de transacion falló!</translation>
+        <translation>¡La creación de la transación falló!</translation>
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
@@ -776,12 +840,16 @@
         <source>Alt+P</source>
         <translation>Alt+P</translation>
     </message>
+    <message>
+        <source>Signature</source>
+        <translation>Firma</translation>
+    </message>
     </context>
 <context>
     <name>SplashScreen</name>
     <message>
         <source>Bitcoin Core</source>
-        <translation>nucleo Bitcoin</translation>
+        <translation>Bitcoin Core</translation>
     </message>
     <message>
         <source>The Bitcoin Core developers</source>
@@ -806,12 +874,40 @@
         <translation>%1 confirmaciones</translation>
     </message>
     <message>
+        <source>Status</source>
+        <translation>Estado</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Fecha</translation>
     </message>
     <message>
+        <source>From</source>
+        <translation>De</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>Para</translation>
+    </message>
+    <message>
+        <source>label</source>
+        <translation>etiqueta</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mensaje</translation>
+    </message>
+    <message>
+        <source>Comment</source>
+        <translation>Comentario</translation>
+    </message>
+    <message>
         <source>Transaction ID</source>
         <translation>ID</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transacción</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -869,7 +965,7 @@
     </message>
     <message>
         <source>Received with</source>
-        <translation>Recivido con</translation>
+        <translation>Recibido con</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -928,7 +1024,7 @@
     </message>
     <message>
         <source>Received with</source>
-        <translation>Recivido con</translation>
+        <translation>Recibido con</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -985,6 +1081,10 @@
     <message>
         <source>Exporting Successful</source>
         <translation>Exportacion satisfactoria</translation>
+    </message>
+    <message>
+        <source>The transaction history was successfully saved to %1.</source>
+        <translation>el historial de transaciones ha sido guardado exitosamente en %1</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -1050,12 +1150,28 @@
         <source>There was an error trying to save the wallet data to %1.</source>
         <translation>Ocurrio un error tratando de guardar la información de la cartera %1</translation>
     </message>
+    <message>
+        <source>The wallet data was successfully saved to %1.</source>
+        <translation>La información de la cartera fué guardada exitosamente a %1</translation>
+    </message>
     </context>
 <context>
     <name>bitcoin-core</name>
     <message>
+        <source>Options:</source>
+        <translation>Opciones:</translation>
+    </message>
+    <message>
         <source>&lt;category&gt; can be:</source>
         <translation>&lt;categoria&gt; puede ser:</translation>
+    </message>
+    <message>
+        <source>Verifying blocks...</source>
+        <translation>Verificando bloques...</translation>
+    </message>
+    <message>
+        <source>Verifying wallet...</source>
+        <translation>Verificando cartera...</translation>
     </message>
     <message>
         <source>Wallet options:</source>

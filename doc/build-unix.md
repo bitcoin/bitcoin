@@ -7,11 +7,11 @@ Some notes on how to build Bitcoin Core in Unix.
 Note
 ---------------------
 Always use absolute paths to configure and compile bitcoin and the dependencies,
-for example, when specifying the the path of the dependency:
+for example, when specifying the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
-Here BDB_PREFIX must absolute path - it is defined using $(pwd) which ensures
+Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
 
 To Build
@@ -46,32 +46,38 @@ Optional dependencies:
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
  protobuf    | Payments in GUI  | Data interchange format used for payment protocol (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
+ univalue    | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure)
  libzmq3     | ZMQ notification | Optional, allows generating ZMQ notifications (requires ZMQ version >= 4.x)
 
 For the versions used in the release, see [release-process.md](release-process.md) under *Fetch and build inputs*.
 
-System requirements
+Memory Requirements
 --------------------
 
-C++ compilers are memory-hungry. It is recommended to have at least 1 GB of
-memory available when compiling Bitcoin Core. With 512MB of memory or less
-compilation will take much longer due to swap thrashing.
+C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
+memory available when compiling Bitcoin Core. On systems with less, gcc can be
+tuned to conserve memory with additional CXXFLAGS:
+
+
+    ./configure CXXFLAGS="--param ggc-min-expand=1 --param ggc-min-heapsize=32768"
 
 Dependency Build Instructions: Ubuntu & Debian
 ----------------------------------------------
 Build requirements:
 
-    sudo apt-get install build-essential libtool autotools-dev autoconf pkg-config libssl-dev libevent-dev bsdmainutils
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils
 
-On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
+Options when installing required Boost library files:
+
+1. On at least Ubuntu 14.04+ and Debian 7+ there are generic names for the
 individual boost development packages, so the following can be used to only
 install necessary parts of boost:
 
-    sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
+        sudo apt-get install libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
 
-If that doesn't work, you can install all boost development packages with:
+2. If that doesn't work, you can install all boost development packages with:
 
-    sudo apt-get install libboost-all-dev
+        sudo apt-get install libboost-all-dev
 
 BerkeleyDB is required for the wallet. db4.8 packages are available [here](https://launchpad.net/~bitcoin/+archive/bitcoin).
 You can add the repository and install using the following commands:
@@ -236,3 +242,9 @@ In this case there is no dependency on Berkeley DB 4.8.
 
 Mining is also possible in disable-wallet mode, but only using the `getblocktemplate` RPC
 call not `getwork`.
+
+Additional Configure Flags
+--------------------------
+A list of additional configure flags can be displayed with:
+
+    ./configure --help

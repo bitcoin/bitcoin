@@ -695,6 +695,10 @@
         <translation>Αυτή η ετικέτα γίνεται κόκκινη αν οποιοσδήποτε παραλήπτης λάβει ποσό μικρότερο από %1.</translation>
     </message>
     <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>Μπορεί να διαφέρει +/- %1 Satoshi (ες) ανά εγγραφή.</translation>
+    </message>
+    <message>
         <source>yes</source>
         <translation>ναι</translation>
     </message>
@@ -705,6 +709,10 @@
     <message>
         <source>This means a fee of at least %1 per kB is required.</source>
         <translation>Ελάχιστο χρεώσιμο ποσό τουλάχιστο %1 ανα kB</translation>
+    </message>
+    <message>
+        <source>Can vary +/- 1 byte per input.</source>
+        <translation>Μπορεί να διαφέρει +/- 1 byte ανά εγγραφή.</translation>
     </message>
     <message>
         <source>Transactions with higher priority are more likely to get included into a block.</source>
@@ -832,7 +840,7 @@
         <source>command-line options</source>
         <translation>επιλογής γραμμής εντολών</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -2603,6 +2611,10 @@
         <translation>Μόνο σύνδεση σε κόμβους του δικτύου &lt;net&gt; (ipv4, ipv6 ή onion)</translation>
     </message>
     <message>
+        <source>Set maximum block size in bytes (default: %d)</source>
+        <translation>Ορίστε το μέγιστο μέγεθος block σε bytes (προεπιλογή: %d)</translation>
+    </message>
+    <message>
         <source>Specify wallet file (within data directory)</source>
         <translation>Επιλέξτε αρχείο πορτοφολιού (μέσα απο κατάλογο δεδομένων)</translation>
     </message>
@@ -2631,6 +2643,10 @@
         <translation>Σύνδεση μέσω διαμεσολαβητή SOCKS5</translation>
     </message>
     <message>
+        <source>Copyright (C) 2009-%i The Bitcoin Core Developers</source>
+        <translation>Πνευματικά δικαιώματα 2009-%i Οι προγραμματιστές του Bitcoin Core</translation>
+    </message>
+    <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Bitcoin Core</source>
         <translation>Σφάλμα φόρτωσης wallet.dat: Το Πορτοφόλι απαιτεί μια νεότερη έκδοση του Bitcoin</translation>
     </message>
@@ -2645,6 +2661,10 @@
     <message>
         <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
         <translation>Η εκκίνηση ελέγχου ορθότητας απέτυχε.  Γίνεται τερματισμός του Bitcoin Core.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Μη έγκυρο ποσό για την παράμετρο -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
@@ -2765,6 +2785,14 @@
     <message>
         <source>Invalid -proxy address: '%s'</source>
         <translation>Δεν είναι έγκυρη η διεύθυνση διαμεσολαβητή: '%s'</translation>
+    </message>
+    <message>
+        <source>Maintain at most &lt;n&gt; connections to peers (default: %u)</source>
+        <translation>Μέγιστες αριθμός συνδέσεων με τους peers &lt;n&gt; (προεπιλογή: %u)</translation>
+    </message>
+    <message>
+        <source>Specify configuration file (default: %s)</source>
+        <translation>Ορίστε αρχείο ρυθμίσεων (προεπιλογή: %s)</translation>
     </message>
     <message>
         <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>

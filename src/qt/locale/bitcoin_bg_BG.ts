@@ -60,6 +60,10 @@
         <source>Bitcoin Core</source>
         <translation>Биткойн ядро</translation>
     </message>
+    <message>
+        <source>About Bitcoin Core</source>
+        <translation>За Биткойн ядрото</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>

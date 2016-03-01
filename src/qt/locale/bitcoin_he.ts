@@ -418,6 +418,10 @@
         <translation>%1 ו%2</translation>
     </message>
     <message>
+        <source>%1 behind</source>
+        <translation>%1 מאחור</translation>
+    </message>
+    <message>
         <source>Last received block was generated %1 ago.</source>
         <translation>המקטע האחרון שהתקבל נוצר לפני %1.</translation>
     </message>
@@ -624,6 +628,10 @@
         <translation>הנמוך ביותר</translation>
     </message>
     <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 נעול)</translation>
+    </message>
+    <message>
         <source>none</source>
         <translation>ללא</translation>
     </message>
@@ -772,7 +780,7 @@
         <source>command-line options</source>
         <translation>אפשרויות שורת פקודה</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1658,6 +1666,10 @@
     <message>
         <source>Custom change address</source>
         <translation>כתובת לעודף מותאמת אישית</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>עמלת העברה:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2652,6 +2664,10 @@
     <message>
         <source>Initialization sanity check failed. Bitcoin Core is shutting down.</source>
         <translation>בדיקת התקינות ההתחלתית נכשלה. ליבת ביטקוין תיסגר כעת.</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>כמות לא תקינה עבור -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

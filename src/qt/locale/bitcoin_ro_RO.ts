@@ -710,6 +710,10 @@
         <translation>cea mai scăzută</translation>
     </message>
     <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 blocat)</translation>
+    </message>
+    <message>
         <source>none</source>
         <translation>nimic</translation>
     </message>
@@ -736,6 +740,10 @@
     <message>
         <source>no</source>
         <translation>nu</translation>
+    </message>
+    <message>
+        <source>This means a fee of at least %1 per kB is required.</source>
+        <translation>Aceasta înseamnă o taxă de cel puţin %1 pe kB necesar.</translation>
     </message>
     <message>
         <source>Can vary +/- 1 byte per input.</source>
@@ -866,7 +874,7 @@
         <source>command-line options</source>
         <translation>Opţiuni linie de comandă</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -880,6 +888,10 @@
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
         <translation>Dacă aceasta este prima dată cînd programul este lansat, puteţi alege unde Nucleul Bitcoin va stoca datele.</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Nucleul Bitcoin se va descărca şi va stoca o copie a lanţului blocului Bitcoin. Cel puţin %1GB de date vor fi stocate în acest dosar şi se va mări în timp. Portofelul va fi, de asemenea, stocat în acest dosar.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -2335,6 +2347,10 @@
         <source>, has not been successfully broadcast yet</source>
         <translation>, nu s-a propagat încă</translation>
     </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Deschis pentru încă %n bloc</numerusform><numerusform>Deschis pentru încă %n blocuri</numerusform><numerusform>Deschis pentru încă %n de blocuri</numerusform></translation>
+    </message>
     <message>
         <source>unknown</source>
         <translation>necunoscut</translation>
@@ -2364,6 +2380,10 @@
     <message>
         <source>Immature (%1 confirmations, will be available after %2)</source>
         <translation>Imatur (%1 confirmări, va fi disponibil după %2)</translation>
+    </message>
+    <message numerus="yes">
+        <source>Open for %n more block(s)</source>
+        <translation><numerusform>Deschis pentru încă %n bloc</numerusform><numerusform>Deschis pentru încă %n blocuri</numerusform><numerusform>Deschis pentru încă %n de blocuri</numerusform></translation>
     </message>
     <message>
         <source>Open until %1</source>
@@ -2848,8 +2868,16 @@
         <translation>Acest produs include programe dezvoltate de către Proiectul OpenSSL pentru a fi folosite în OpenSSL Toolkit &lt;https://www.openssl.org/&gt; şi programe criptografice scrise de către Eric Young şi programe UPnP scrise de către Thomas Bernard.</translation>
     </message>
     <message>
+        <source>(default: %u)</source>
+        <translation>(implicit: %u)</translation>
+    </message>
+    <message>
         <source>Accept public REST requests (default: %u)</source>
         <translation>Acceptă cererile publice REST (implicit: %u)</translation>
+    </message>
+    <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>Nu se poate rezolva adresa -whitebind: '%s'</translation>
     </message>
     <message>
         <source>Connect through SOCKS5 proxy</source>

@@ -748,7 +748,7 @@
         <source>command-line options</source>
         <translation>კომანდების ზოლის ოპციები</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -762,6 +762,10 @@
     <message>
         <source>As this is the first time the program is launched, you can choose where Bitcoin Core will store its data.</source>
         <translation>ეს პროგრამის პირველი გაშვებაა; შეგიძლიათ მიუთითოთ, სად შეინახოს მონაცემები Bitcoin Core-მ.</translation>
+    </message>
+    <message>
+        <source>Bitcoin Core will download and store a copy of the Bitcoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
+        <translation>Bitcoin Core გადმოტვირთავს და შეინახავს Bitcoin-ის ბლოკთა ჯაჭვს. მითითებულ კატალოგში დაგროვდება სულ ცოტა %1 გბ მონაცემები, და მომავალში უფრო გაიზრდება. საფულეც ამავე კატალოგში შეინახება.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -1432,6 +1436,10 @@
         <translation>ხურდის მისამართი</translation>
     </message>
     <message>
+        <source>Transaction Fee:</source>
+        <translation>ტრანსაქციის საფასური - საკომისიო:</translation>
+    </message>
+    <message>
         <source>Send to multiple recipients at once</source>
         <translation>გაგზავნა რამდენიმე რეციპიენტთან ერთდროულად</translation>
     </message>
@@ -1506,6 +1514,10 @@
     <message>
         <source>The amount exceeds your balance.</source>
         <translation>თანხა აღემატება თქვენს ბალანსს</translation>
+    </message>
+    <message>
+        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
+        <translation>საკომისიო %1-ის დამატების შემდეგ თანხა აჭარბებს თქვენს ბალანსს</translation>
     </message>
     <message>
         <source>Transaction creation failed!</source>
@@ -2326,8 +2338,16 @@
         <translation>მაღალპრიორიტეტული/დაბალსაკომისიოიანი ტრანსაქციების მაქსიმალური ზომა ბაიტებში (ნაგულისხმევი: %d)</translation>
     </message>
     <message>
+        <source>Cannot resolve -whitebind address: '%s'</source>
+        <translation>ვერ ხერხდება -whitebind მისამართის გარკვევა: '%s'</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>ინფორმაცია</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>დაუშვებელი მნიშვნელობა -pmaxtxfee&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

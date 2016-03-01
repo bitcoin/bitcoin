@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin Core developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 #include "miner.h"
 #include "net.h"
 #include "pow.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "txmempool.h"
 #include "util.h"
 #include "utilstrencodings.h"
@@ -68,7 +68,7 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     arith_uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
 
-    return (int64_t)(workDiff.getdouble() / timeDiff);
+    return workDiff.getdouble() / timeDiff;
 }
 
 UniValue getnetworkhashps(const UniValue& params, bool fHelp)

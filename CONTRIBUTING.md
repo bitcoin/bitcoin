@@ -95,6 +95,8 @@ Anyone may participate in peer review which is expressed by comments in the pull
   - Concept ACK means "I agree in the general principle of this pull request";
   - Nit refers to trivial, often non-blocking issues.
 
+Reviewers should include the commit hash which they reviewed in their comments.
+
 Project maintainers reserve the right to weigh the opinions of peer reviewers using common sense judgement and also may weight based on meritocracy: Those that have demonstrated a deeper commitment and understanding towards the project (over time) or have clear domain expertise may naturally have more weight, as one would expect in all walks of life.
 
 Where a patch set affects consensus critical code, the bar will be set much higher in terms of discussion and peer review requirements, keeping in mind that mistakes could be very costly to the wider community. This includes refactoring of consensus critical code.

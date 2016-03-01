@@ -44,7 +44,6 @@ BITCOIN_TESTS =\
   test/base64_tests.cpp \
   test/bip32_tests.cpp \
   test/bloom_tests.cpp \
-  test/checkblock_tests.cpp \
   test/Checkpoints_tests.cpp \
   test/coins_tests.cpp \
   test/compress_tests.cpp \
@@ -59,7 +58,6 @@ BITCOIN_TESTS =\
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
   test/miner_tests.cpp \
-  test/mruset_tests.cpp \
   test/multisig_tests.cpp \
   test/netbase_tests.cpp \
   test/pmt_tests.cpp \
@@ -96,7 +94,7 @@ endif
 
 test_test_bitcoin_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/test/ $(TESTDEFS)
-test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
+test_test_bitcoin_LDADD = $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) \
   $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1)
 test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 if ENABLE_WALLET
@@ -130,7 +128,9 @@ check-local:
 	@echo "Running test/bitcoin-util-test.py..."
 	$(AM_V_at)srcdir=$(srcdir) PYTHONPATH=$(builddir)/test $(srcdir)/test/bitcoin-util-test.py
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
+if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
+endif
 
 %.json.h: %.json
 	@$(MKDIR_P) $(@D)
