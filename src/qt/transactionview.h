@@ -94,6 +94,7 @@ private Q_SLOTS:
     void copyAmount();
     void copyTxID();
     void copyTxHex();
+    void copyTxPlainText();
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
 
