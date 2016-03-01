@@ -809,6 +809,7 @@ Thanks to everyone who directly contributed to this release:
 - Chris Kleeschulte
 - Christian Decker
 - Cory Fields
+- crowning-
 - daniel
 - Daniel Cousens
 - Daniel Kraft
