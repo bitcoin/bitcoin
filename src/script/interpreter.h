@@ -86,6 +86,23 @@ enum
     //
     // See BIP112 for details
     SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10),
+
+    /* BIP113: Use GetMedianTimePast() instead of nTime for end point timestamp. */
+    LOCKTIME_MEDIAN_TIME_PAST = (1U << 10),
+
+    /**
+     * BIP68: Validate relative locktime in input's sequences.
+     *
+     * CTrasaction::CTxIn::Sequence gets a consensus function for the
+     * first time, in the same spirit of the original intend: the
+     * signer should be able to arbitrarely order its own decisions in time
+     * before publishing/sharing them within smart contracts. See BIP68.
+     *
+     * In contrast with the original nSequence which was only
+     * theoretically useful assuming a universal uniform relay/mining
+     * tx policy, BIP68 can be unambiguously enforced as a consensus rule.
+     */
+    LOCKTIME_VERIFY_SEQUENCE = (1U << 11),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
