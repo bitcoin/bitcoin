@@ -40,6 +40,10 @@ def check_array_result(object_array, to_match, expected):
 
 class ListTransactionsTest(BitcoinTestFramework):
 
+    def setup_nodes(self):
+        node_count=4
+        return start_nodes(node_count, self.options.tmpdir, [["-mempoolreplacement=1"]] * node_count)
+
     def run_test(self):
         # Simple send, 0 to 1:
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
