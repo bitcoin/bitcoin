@@ -235,7 +235,13 @@ int64_t CreateNewLock(CTransaction tx)
         This prevents attackers from using transaction mallibility to predict which masternodes
         they'll use.
     */
-    int nBlockHeight = (chainActive.Tip()->nHeight - nTxAge)+4;
+    int nBlockHeight = 0;
+    {
+        LOCK(cs_main);
+        CBlockIndex* tip = chainActive.Tip();
+        if(tip) nBlockHeight = tip->nHeight - nTxAge + 4;
+        else return 0;
+    }
 
     if (!mapTxLocks.count(tx.GetHash())){
         LogPrintf("CreateNewLock - New Transaction Lock %s !\n", tx.GetHash().ToString().c_str());

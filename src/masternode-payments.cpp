@@ -183,19 +183,21 @@ void DumpMasternodePayments()
 }
 
 bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue){
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return true;
-
     int nHeight = 0;
-    if(pindexPrev->GetBlockHash() == block.hashPrevBlock)
-    {
-        nHeight = pindexPrev->nHeight+1;
-    } else { //out of order
-        BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
-        if (mi != mapBlockIndex.end() && (*mi).second)
-            nHeight = (*mi).second->nHeight+1;
-    }
 
+    {
+        LOCK(cs_main);
+        if(!chainActive.Tip()) return true;
+
+        if(chainActive.Tip()->GetBlockHash() == block.hashPrevBlock)
+        {
+            nHeight = chainActive.Tip()->nHeight+1;
+        } else { //out of order
+            BlockMap::iterator mi = mapBlockIndex.find(block.hashPrevBlock);
+            if (mi != mapBlockIndex.end() && (*mi).second)
+                nHeight = (*mi).second->nHeight+1;
+        }
+    }
     if(nHeight == 0){
         LogPrintf("IsBlockValueValid() : WARNING: Couldn't find previous block");
     }

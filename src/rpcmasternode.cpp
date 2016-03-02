@@ -155,8 +155,11 @@ UniValue masternode(const UniValue& params, bool fHelp)
         {
             int nCount = 0;
 
-            if(chainActive.Tip())
-                mnodeman.GetNextMasternodeInQueueForPayment(chainActive.Tip()->nHeight, true, nCount);
+            {
+                LOCK(cs_main);
+                if(chainActive.Tip())
+                    mnodeman.GetNextMasternodeInQueueForPayment(chainActive.Tip()->nHeight, true, nCount);
+            }
 
             if(params[1].get_str() == "ds") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
             if(params[1].get_str() == "enabled") return mnodeman.CountEnabled();
@@ -172,7 +175,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if (strCommand == "current")
     {
-        CMasternode* winner = mnodeman.GetCurrentMasterNode(1);
+        LOCK(cs_main);
+        CMasternode* winner = NULL;
+        if(chainActive.Tip())
+            winner = mnodeman.GetCurrentMasterNode(1);
         if(winner) {
             UniValue obj(UniValue::VOBJ);
 
@@ -425,6 +431,15 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if (strCommand == "winners")
     {
+        int nHeight;
+        {
+            LOCK(cs_main);
+            CBlockIndex* pindex = chainActive.Tip();
+            if(!pindex) return NullUniValue;
+
+            nHeight = pindex->nHeight;
+        }
+
         int nLast = 10;
 
         if (params.size() >= 2){
@@ -433,9 +448,9 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         UniValue obj(UniValue::VOBJ);
 
-        for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++)
+        for(int i = nHeight - nLast; i < nHeight + 20; nHeight++)
         {
-            obj.push_back(Pair(strprintf("%d", nHeight), GetRequiredPaymentsString(nHeight)));
+            obj.push_back(Pair(strprintf("%d", i), GetRequiredPaymentsString(i)));
         }
 
         return obj;
@@ -447,6 +462,15 @@ UniValue masternode(const UniValue& params, bool fHelp)
     if (strCommand == "calcscore")
     {
 
+        int nHeight;
+        {
+            LOCK(cs_main);
+            CBlockIndex* pindexPrev = chainActive.Tip();
+            if(!pindexPrev) return NullUniValue;
+
+            nHeight = pindexPrev->nHeight;
+        }
+
         int nLast = 10;
 
         if (params.size() >= 2){
@@ -455,18 +479,18 @@ UniValue masternode(const UniValue& params, bool fHelp)
         UniValue obj(UniValue::VOBJ);
 
         std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
-        for(int nHeight = chainActive.Tip()->nHeight-nLast; nHeight < chainActive.Tip()->nHeight+20; nHeight++){
+        for(int i = nHeight - nLast; i < nHeight + 20; i++){
             arith_uint256 nHigh = 0;
             CMasternode *pBestMasternode = NULL;
             BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-                arith_uint256 n = UintToArith256(mn.CalculateScore(1, nHeight-100));
+                arith_uint256 n = UintToArith256(mn.CalculateScore(1, i - 100));
                 if(n > nHigh){
                     nHigh = n;
                     pBestMasternode = &mn;
                 }
             }
             if(pBestMasternode)
-                obj.push_back(Pair(strprintf("%d", nHeight), pBestMasternode->vin.prevout.ToStringShort().c_str()));
+                obj.push_back(Pair(strprintf("%d", i), pBestMasternode->vin.prevout.ToStringShort().c_str()));
         }
 
         return obj;

@@ -53,6 +53,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
     if(strCommand == "nextblock")
     {
+        LOCK(cs_main);
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "unknown";
 
@@ -62,6 +63,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
     if(strCommand == "nextsuperblocksize")
     {
+        LOCK(cs_main);
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "unknown";
 
@@ -77,7 +79,8 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             throw runtime_error("Correct usage is 'mnbudget prepare <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash>'");
 
         int nBlockMin = 0;
-        CBlockIndex* pindexPrev = chainActive.Tip();
+        LOCK(cs_main);
+        CBlockIndex* pindex = chainActive.Tip();
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
@@ -88,7 +91,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         int nBlockStart = params[4].get_int();
 
         //set block min
-        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight;
+        if(pindex != NULL) nBlockMin = pindex->nHeight;
 
         if(nBlockStart < nBlockMin)
             return "Invalid block start, must be more than current height.";
@@ -140,6 +143,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         }
 
         int nBlockMin = 0;
+        LOCK(cs_main);
         CBlockIndex* pindexPrev = chainActive.Tip();
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
@@ -887,7 +891,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
             return "Invalid finalized proposal";
         }
 
-
+        LOCK(cs_main);
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "invalid chaintip";
 
@@ -945,6 +949,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
             return "Invalid finalized proposal";
         }
 
+        LOCK(cs_main);
         CBlockIndex* pindexPrev = chainActive.Tip();
         if(!pindexPrev) return "invalid chaintip";
 
