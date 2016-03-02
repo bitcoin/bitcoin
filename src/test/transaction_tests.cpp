@@ -7,11 +7,12 @@
 #include "test/test_bitcoin.h"
 
 #include "clientversion.h"
+#include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "key.h"
 #include "keystore.h"
-#include "main.h" // For CheckTransaction
+#include "main.h" // For cs_main, minRelayTxFee and DEFAULT_MIN_RELAY_TX_FEE
 #include "policy/policy.h"
 #include "script/script.h"
 #include "script/script_error.h"
