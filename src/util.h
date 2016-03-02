@@ -249,4 +249,6 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
 
 std::string CopyrightHolders(const std::string& strPrefix);
 
+/* returns the current SSL product and version info */
+const char * SSLProductAndVersionInfo();
 #endif // BITCOIN_UTIL_H

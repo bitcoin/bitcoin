@@ -847,3 +847,14 @@ std::string CopyrightHolders(const std::string& strPrefix)
     }
     return strCopyrightHolders;
 }
+
+const char * SSLProductAndVersionInfo()
+{
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
+    return OpenSSL_version(OPENSSL_VERSION);
+#elif defined(SSLEAY_VERSION_NUMBER) || defined(OPENSSL_VERSION_NUMBER)
+    return SSLeay_version(SSLEAY_VERSION);
+#else
+    return NULL;
+#endif
+}
