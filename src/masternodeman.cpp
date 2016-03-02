@@ -669,7 +669,8 @@ void CMasternodeMan::ProcessMasternodeConnections()
         if(pnode->fDarkSendMaster){
             if(darkSendPool.pSubmittedToMasternode != NULL && pnode->addr == darkSendPool.pSubmittedToMasternode->addr) continue;
             LogPrintf("Closing Masternode connection %s \n", pnode->addr.ToString());
-            pnode->fDisconnect = true;
+            pnode->fDarkSendMaster = false;
+            pnode->Release();
         }
     }
 }

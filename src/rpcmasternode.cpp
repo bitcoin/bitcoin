@@ -137,7 +137,9 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         CService addr = CService(strAddress);
 
-        if(ConnectNode((CAddress)addr, NULL, true)){
+        CNode *pnode = ConnectNode((CAddress)addr, NULL, false);
+        if(pnode){
+            pnode->Release();
             return "successfully connected";
         } else {
             throw runtime_error("error connecting\n");

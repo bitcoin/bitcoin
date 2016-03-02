@@ -1544,20 +1544,23 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
                 std::vector<COutput> vTempCoins2;
                 // Try to match their denominations if possible
                 if (!pwalletMain->SelectCoinsByDenominations(dsq.nDenom, nValueMin, nBalanceNeedsAnonymized, vTempCoins, vTempCoins2, nValueIn, 0, nDarksendRounds)){
-                    LogPrintf("DoAutomaticDenominating - Couldn't match denominations %d\n", dsq.nDenom);
+                    LogPrintf("DoAutomaticDenominating --- Couldn't match denominations %d\n", dsq.nDenom);
                     continue;
                 }
 
+                CMasternode* pmn = mnodeman.Find(dsq.vin);
+                if(pmn == NULL)
+                {
+                    LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in masternode list!", dsq.vin.ToString());
+                    continue;
+                }
+
+                LogPrintf("DoAutomaticDenominating --- attempt to connect to masternode from queue %s\n", pmn->addr.ToString());
+                lastTimeChanged = GetTimeMillis();
                 // connect to Masternode and submit the queue request
                 CNode* pnode = ConnectNode((CAddress)addr, NULL, true);
                 if(pnode != NULL)
                 {
-                    CMasternode* pmn = mnodeman.Find(dsq.vin);
-                    if(pmn == NULL)
-                    {
-                        LogPrintf("DoAutomaticDenominating --- dsq vin %s is not in masternode list!", dsq.vin.ToString());
-                        continue;
-                    }
                     pSubmittedToMasternode = pmn;
                     vecMasternodesUsed.push_back(dsq.vin);
                     sessionDenom = dsq.nDenom;
@@ -1599,7 +1602,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             }
 
             lastTimeChanged = GetTimeMillis();
-            LogPrintf("DoAutomaticDenominating -- attempt %d connection to Masternode %s\n", i, pmn->addr.ToString());
+            LogPrintf("DoAutomaticDenominating --- attempt %d connection to Masternode %s\n", i, pmn->addr.ToString());
             CNode* pnode = ConnectNode((CAddress)pmn->addr, NULL, true);
             if(pnode != NULL){
                 pSubmittedToMasternode = pmn;
