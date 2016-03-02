@@ -35,7 +35,6 @@ int64_t COmniFeeCache::GetCachedAmount(const uint32_t &propertyId)
     }
 }
 
-// Gets the current amount of the fee cache for a property
 // Adds a fee to the cache (eg on a completed trade)
 void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t &amount)
 {
@@ -67,8 +66,6 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t
 
 // Performs distribution of fees
 
-// Gets the current amount of the fee cache for a property
-// Adds a fee to the cache (eg on a completed trade)
 // Prunes entries over 50 blocks old from the entry for a property
 void COmniFeeCache::PruneCache(const uint32_t &propertyId, int block)
 {
@@ -101,19 +98,12 @@ void COmniFeeCache::PruneCache(const uint32_t &propertyId, int block)
     }
 }
 
-// Gets the current amount of the fee cache for a property
-// Adds a fee to the cache (eg on a completed trade)
-// Prunes entries over 50 blocks old from the entry for a property
 // Show Fee Cache DB statistics
 void COmniFeeCache::printStats()
 {
     PrintToLog("COmniFeeCache stats: nWritten= %d , nRead= %d\n", nWritten, nRead);
 }
 
-// Gets the current amount of the fee cache for a property
-// Adds a fee to the cache (eg on a completed trade)
-// Prunes entries over 50 blocks old from the entry for a property
-// Show Fee Cache DB statistics
 // Show Fee Cache DB records
 void COmniFeeCache::printAll()
 {
@@ -126,11 +116,6 @@ void COmniFeeCache::printAll()
     delete it;
 }
 
-// Gets the current amount of the fee cache for a property
-// Adds a fee to the cache (eg on a completed trade)
-// Prunes entries over 50 blocks old from the entry for a property
-// Show Fee Cache DB statistics
-// Show Fee Cache DB records
 // Return a set containing fee cache history items
 std::set<feeCacheItem> COmniFeeCache::GetCacheHistory(const uint32_t &propertyId)
 {
