@@ -14,6 +14,8 @@
 #include "consensus/consensus.h"
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
+#include "consensus/versionbits.h"
+#include "global/server.h"
 #include "hash.h"
 #include "init.h"
 #include "merkleblock.h"
@@ -2123,6 +2125,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint("bench", "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
 
+    unsigned int flags = Consensus::GetFlags(pindex, chainparams.GetConsensus(), Global::versionBitsStateCache);
+
     // Do not allow blocks that contain transactions which 'overwrite' older transactions,
     // unless those are already completely spent.
     // If such overwrites are allowed, coinbases and transactions depending upon those
@@ -2157,12 +2161,6 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                  REJECT_INVALID, "bad-txns-BIP30");
         }
     }
-
-    // BIP16 didn't become active until Apr 1 2012
-    int64_t nBIP16SwitchTime = 1333238400;
-    bool fStrictPayToScriptHash = (pindex->GetBlockTime() >= nBIP16SwitchTime);
-
-    unsigned int flags = fStrictPayToScriptHash ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE;
 
     // Start enforcing the DERSIG (BIP66) rules, for block.nVersion=3 blocks,
     // when 75% of the network has upgraded:
@@ -2221,7 +2219,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                  REJECT_INVALID, "bad-txns-nonfinal");
             }
 
-            if (fStrictPayToScriptHash)
+            if (flags & SCRIPT_VERIFY_P2SH)
             {
                 // Add in sigops done by pay-to-script-hash inputs;
                 // this is to prevent a "rogue miner" from creating
@@ -2447,24 +2445,13 @@ void static UpdateTip(CBlockIndex *pindexNew) {
 
     cvBlockChange.notify_all();
 
-    // Check the version of the last 100 blocks to see if we need to upgrade:
     static bool fWarned = false;
-    if (!IsInitialBlockDownload() && !fWarned)
-    {
-        int nUpgraded = 0;
+    if (!IsInitialBlockDownload() && !fWarned) {
         const CBlockIndex* pindex = chainActive.Tip();
-        for (int i = 0; i < 100 && pindex != NULL; i++)
-        {
-            if (pindex->nVersion > CBlock::CURRENT_VERSION)
-                ++nUpgraded;
-            pindex = pindex->pprev;
-        }
-        if (nUpgraded > 0)
-            LogPrintf("%s: %d of last 100 blocks above version %d\n", __func__, nUpgraded, (int)CBlock::CURRENT_VERSION);
-        if (nUpgraded > 100/2)
-        {
+        std::string deploymentWarning = GetLastUnknownDeploymentWarning(pindex, chainParams.GetConsensus(), Global::versionBitsStateCache);
+        if (deploymentWarning != "") {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
-            strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
+            strMiscWarning = deploymentWarning;
             CAlert::Notify(strMiscWarning, true);
             fWarned = true;
         }
@@ -3152,6 +3139,10 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
+
+    if (block.nVersion & Consensus::HARDFORK_BIT)
+        state.Invalid(false, REJECT_OBSOLETE, "bad-version-hardfork",
+                             strprintf("rejected nVersion=%d: the deployment of an unkown hardfork has been signaled in this block", block.nVersion));
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
     for (int32_t version = 2; version < 5; ++version) // check for version 2, 3 and 4 upgrades
