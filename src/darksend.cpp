@@ -2203,7 +2203,12 @@ void ThreadCheckDarkSendPool()
 {
     if(fLiteMode) return; //disable all Darksend/Masternode related functionality
 
-    // Make this thread recognisable as the wallet flushing thread
+    static bool fOneThread;
+    if (fOneThread)
+        return;
+    fOneThread = true;
+
+    // Make this thread recognisable as the Darksend/Masternode thread
     RenameThread("dash-darksend");
 
     unsigned int c = 0;
