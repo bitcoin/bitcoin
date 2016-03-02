@@ -12,6 +12,7 @@
 #include "omnicore/dex.h"
 #include "omnicore/encoding.h"
 #include "omnicore/errors.h"
+#include "omnicore/fees.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"
@@ -135,6 +136,7 @@ CMPTxList *mastercore::p_txlistdb;
 CMPTradeList *mastercore::t_tradelistdb;
 CMPSTOList *mastercore::s_stolistdb;
 COmniTransactionDB *mastercore::p_OmniTXDB;
+COmniFeeCache *mastercore::p_feecache;
 
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
@@ -2093,12 +2095,14 @@ int mastercore_init()
             boost::filesystem::path spPath = GetDataDir() / "MP_spinfo";
             boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
             boost::filesystem::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
+            boost::filesystem::path feesPath = GetDataDir() / "OMNI_feecache";
             if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
             if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
             if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
             if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
             if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
             if (boost::filesystem::exists(omniTXDBPath)) boost::filesystem::remove_all(omniTXDBPath);
+            if (boost::filesystem::exists(feesPath)) boost::filesystem::remove_all(feesPath);
             PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
             startClean = true;
         } catch (const boost::filesystem::filesystem_error& e) {
@@ -2112,6 +2116,7 @@ int mastercore_init()
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
     _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
     p_OmniTXDB = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
+    p_feecache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
@@ -2373,6 +2378,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
 #else
     return MP_ERR_WALLET_ACCESS;
 #endif
+
 }
 
 void COmniTransactionDB::RecordTransaction(const uint256& txid, uint32_t posInBlock)

@@ -7,6 +7,7 @@ OMNICORE_H = \
   omnicore/dex.h \
   omnicore/encoding.h \
   omnicore/errors.h \
+  omnicore/fees.h \
   omnicore/fetchwallettx.h \
   omnicore/log.h \
   omnicore/mbstring.h \
@@ -45,6 +46,7 @@ OMNICORE_CPP = \
   omnicore/createtx.cpp \
   omnicore/dex.cpp \
   omnicore/encoding.cpp \
+  omnicore/fees.cpp \
   omnicore/fetchwallettx.cpp \
   omnicore/log.cpp \
   omnicore/mbstring.cpp \
