@@ -570,10 +570,10 @@ void CDarksendPool::CheckFinalTransaction()
 
     CWalletTx txNew = CWalletTx(pwalletMain, finalTransaction);
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-    {
-        LogPrint("darksend", "Transaction 2: %s\n", txNew.ToString());
+    LogPrint("darksend", "Transaction 2: %s\n", txNew.ToString());
 
+    {
+        LOCK(cs_main);
         // See if the transaction is valid
         if (!txNew.AcceptToMemoryPool(false, true))
         {
@@ -585,58 +585,57 @@ void CDarksendPool::CheckFinalTransaction()
             RelayCompletedTransaction(sessionID, true, ERR_INVALID_TX);
             return;
         }
-
-        LogPrintf("CDarksendPool::Check() -- IS MASTER -- TRANSMITTING DARKSEND\n");
-
-        // sign a message
-
-        int64_t sigTime = GetAdjustedTime();
-        std::string strMessage = txNew.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
-        std::string strError = "";
-        std::vector<unsigned char> vchSig;
-        CKey key2;
-        CPubKey pubkey2;
-
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, strError, key2, pubkey2))
-        {
-            LogPrintf("CDarksendPool::Check() - ERROR: Invalid Masternodeprivkey: '%s'\n", strError);
-            return;
-        }
-
-        if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, key2)) {
-            LogPrintf("CDarksendPool::Check() - Sign message failed\n");
-            return;
-        }
-
-        if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, strError)) {
-            LogPrintf("CDarksendPool::Check() - Verify message failed\n");
-            return;
-        }
-
-        if(!mapDarksendBroadcastTxes.count(txNew.GetHash())){
-            CDarksendBroadcastTx dstx;
-            dstx.tx = txNew;
-            dstx.vin = activeMasternode.vin;
-            dstx.vchSig = vchSig;
-            dstx.sigTime = sigTime;
-
-            mapDarksendBroadcastTxes.insert(make_pair(txNew.GetHash(), dstx));
-        }
-
-        CInv inv(MSG_DSTX, txNew.GetHash());
-        RelayInv(inv);
-
-        // Tell the clients it was successful
-        RelayCompletedTransaction(sessionID, false, MSG_SUCCESS);
-
-        // Randomly charge clients
-        ChargeRandomFees();
-
-        // Reset
-        LogPrint("darksend", "CDarksendPool::Check() -- COMPLETED -- RESETTING\n");
-        SetNull();
-        RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
     }
+    LogPrintf("CDarksendPool::Check() -- IS MASTER -- TRANSMITTING DARKSEND\n");
+
+    // sign a message
+
+    int64_t sigTime = GetAdjustedTime();
+    std::string strMessage = txNew.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+    std::string strError = "";
+    std::vector<unsigned char> vchSig;
+    CKey key2;
+    CPubKey pubkey2;
+
+    if(!darkSendSigner.SetKey(strMasterNodePrivKey, strError, key2, pubkey2))
+    {
+        LogPrintf("CDarksendPool::Check() - ERROR: Invalid Masternodeprivkey: '%s'\n", strError);
+        return;
+    }
+
+    if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, key2)) {
+        LogPrintf("CDarksendPool::Check() - Sign message failed\n");
+        return;
+    }
+
+    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, strError)) {
+        LogPrintf("CDarksendPool::Check() - Verify message failed\n");
+        return;
+    }
+
+    if(!mapDarksendBroadcastTxes.count(txNew.GetHash())){
+        CDarksendBroadcastTx dstx;
+        dstx.tx = txNew;
+        dstx.vin = activeMasternode.vin;
+        dstx.vchSig = vchSig;
+        dstx.sigTime = sigTime;
+
+        mapDarksendBroadcastTxes.insert(make_pair(txNew.GetHash(), dstx));
+    }
+
+    CInv inv(MSG_DSTX, txNew.GetHash());
+    RelayInv(inv);
+
+    // Tell the clients it was successful
+    RelayCompletedTransaction(sessionID, false, MSG_SUCCESS);
+
+    // Randomly charge clients
+    ChargeRandomFees();
+
+    // Reset
+    LogPrint("darksend", "CDarksendPool::Check() -- COMPLETED -- RESETTING\n");
+    SetNull();
+    RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
 }
 
 //

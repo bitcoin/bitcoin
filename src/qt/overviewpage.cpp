@@ -351,9 +351,6 @@ void OverviewPage::updateDarksendProgress()
     double nAverageAnonymizedRounds;
 
     {
-        TRY_LOCK(cs_main, lockMain);
-        if(!lockMain) return;
-
         nDenominatedConfirmedBalance = pwalletMain->GetDenominatedBalance();
         nDenominatedUnconfirmedBalance = pwalletMain->GetDenominatedBalance(true);
         nAnonymizableBalance = pwalletMain->GetAnonymizableBalance();
@@ -434,12 +431,10 @@ void OverviewPage::updateDarksendProgress()
 
 void OverviewPage::darkSendStatus()
 {
-    if (!chainActive.Tip()) return;
     if(!masternodeSync.IsBlockchainSynced() || ShutdownRequested()) return;
 
     static int64_t nLastDSProgressBlockTime = 0;
-
-    int nBestHeight = chainActive.Tip()->nHeight;
+    int nBestHeight = clientModel->getNumBlocks();
 
     // we we're processing more then 1 block per second, we'll just leave
     if(((nBestHeight - darkSendPool.cachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;

@@ -434,8 +434,6 @@ int64_t GetAverageVoteTime()
 
 void CleanTransactionLocksList()
 {
-    if(chainActive.Tip() == NULL) return;
-
     std::map<uint256, CTransactionLock>::iterator it = mapTxLocks.begin();
 
     while(it != mapTxLocks.end()) {
@@ -460,7 +458,6 @@ void CleanTransactionLocksList()
             it++;
         }
     }
-
 }
 
 uint256 CConsensusVote::GetHash() const

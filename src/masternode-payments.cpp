@@ -269,10 +269,9 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
 
 void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 {
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(!pindexPrev) return;
+    if(!chainActive.Tip()) return;
 
-    if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(pindexPrev->nHeight+1)){
+    if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight+1)){
         budget.FillBlockPayee(txNew, nFees);
     } else {
         mnpayments.FillBlockPayee(txNew, nFees);
