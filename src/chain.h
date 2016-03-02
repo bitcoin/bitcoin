@@ -7,6 +7,7 @@
 #define BITCOIN_CHAIN_H
 
 #include "arith_uint256.h"
+#include "consensus/storage_interfaces_cpp.h"
 #include "primitives/block.h"
 #include "pow.h"
 #include "tinyformat.h"
@@ -99,7 +100,7 @@ enum BlockStatus {
  * candidates to be the next block. A blockindex may have multiple pprev pointing
  * to it, but at most one of them can be part of the currently active branch.
  */
-class CBlockIndex
+class CBlockIndex : public CBlockIndexView
 {
 public:
     //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
@@ -217,7 +218,7 @@ public:
         return block;
     }
 
-    uint256 GetBlockHash() const
+    virtual const uint256 GetBlockHash() const
     {
         return *phashBlock;
     }
@@ -229,7 +230,7 @@ public:
 
     enum { nMedianTimeSpan=11 };
 
-    int64_t GetMedianTimePast() const
+    virtual int64_t GetMedianTimePast() const
     {
         int64_t pmedian[nMedianTimeSpan];
         int64_t* pbegin = &pmedian[nMedianTimeSpan];
@@ -280,6 +281,17 @@ public:
     //! Efficiently find an ancestor of this block.
     CBlockIndex* GetAncestor(int height);
     const CBlockIndex* GetAncestor(int height) const;
+    //! Implement CBlockIndexView's interface
+    virtual const CBlockIndexView* GetAncestorView(int64_t height) const;
+    virtual int32_t GetHeight() const { return nHeight; };
+    virtual int32_t GetVersion() const { return nVersion; };
+    virtual int32_t GetTime() const { return nTime; };
+    virtual int32_t GetBits() const { return nBits; };
+    //! More efficient version of GetPrev()
+    virtual const CBlockIndexView* GetPrev() const
+    {
+        return pprev;
+    };
 };
 
 arith_uint256 GetBlockProof(const CBlockIndex& block);
@@ -326,7 +338,7 @@ public:
         READWRITE(nNonce);
     }
 
-    uint256 GetBlockHash() const
+    virtual const uint256 GetBlockHash() const
     {
         CBlockHeader block;
         block.nVersion        = nVersion;

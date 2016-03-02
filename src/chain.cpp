@@ -105,6 +105,11 @@ const CBlockIndex* CBlockIndex::GetAncestor(int height) const
     return const_cast<CBlockIndex*>(this)->GetAncestor(height);
 }
 
+const CBlockIndexView* CBlockIndex::GetAncestorView(int64_t height) const
+{
+    return this->GetAncestor(height);
+}
+
 void CBlockIndex::BuildSkip()
 {
     if (pprev)
