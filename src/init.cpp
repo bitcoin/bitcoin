@@ -70,6 +70,8 @@
 #include "zmq/zmqnotificationinterface.h"
 #endif
 
+#include "dsnotificationinterface.h"
+
 using namespace std;
 
 #ifdef ENABLE_WALLET
@@ -86,6 +88,8 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 #if ENABLE_ZMQ
 static CZMQNotificationInterface* pzmqNotificationInterface = NULL;
 #endif
+
+static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -253,6 +257,12 @@ void PrepareShutdown()
         pzmqNotificationInterface = NULL;
     }
 #endif
+
+    if (pdsNotificationInterface) {
+        UnregisterValidationInterface(pdsNotificationInterface);
+        delete pdsNotificationInterface;
+        pdsNotificationInterface = NULL;
+    }
 
 #ifndef WIN32
     try {
@@ -1428,6 +1438,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         RegisterValidationInterface(pzmqNotificationInterface);
     }
 #endif
+
+    pdsNotificationInterface = new CDSNotificationInterface();
+    RegisterValidationInterface(pdsNotificationInterface);
+
     if (mapArgs.count("-maxuploadtarget")) {
         CNode::SetMaxOutboundTarget(GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024);
     }
@@ -1938,6 +1952,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     darkSendPool.InitDenominations();
     darkSendPool.InitCollateralAddress();
 
+    // force UpdatedBlockTip to initialize pCurrentBlockIndex for DS, MN payments and budgets
+    GetMainSignals().UpdatedBlockTip(chainActive.Tip());
+
+    // start dash-darksend thread
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
 
     // ********************************************************* Step 11: start node

@@ -289,6 +289,9 @@ private:
 
     int64_t lastNewBlock;
 
+    // Keep track of current block index
+    const CBlockIndex *pCurrentBlockIndex;
+
     std::vector<CAmount> darkSendDenominationsSkipped;
 
     //debugging data
@@ -535,6 +538,8 @@ public:
     void RelayIn(const std::vector<CTxDSIn>& vin, const CAmount& nAmount, const CTransaction& txCollateral, const std::vector<CTxDSOut>& vout);
     void RelayStatus(const int sessionID, const int newState, const int newEntriesCount, const int newAccepted, const int errorID=MSG_NOERR);
     void RelayCompletedTransaction(const int sessionID, const bool error, const int errorID);
+
+    void UpdatedBlockTip(const CBlockIndex *pindex);
 };
 
 void ThreadCheckDarkSendPool();

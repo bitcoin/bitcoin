@@ -3527,14 +3527,6 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
-    if(!fLiteMode){
-        if (masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST) {
-            darkSendPool.NewBlock();
-            mnpayments.ProcessBlock(GetHeight()+10);
-            budget.NewBlock();
-        }
-    }
-
     LogPrintf("%s : ACCEPTED\n", __func__);
     return true;
 }

@@ -450,7 +450,7 @@ std::string CDarksendPool::GetStatus()
     showingDarkSendMessage += 10;
     std::string suffix = "";
 
-    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing || !masternodeSync.IsBlockchainSynced()) {
+    if((pCurrentBlockIndex && pCurrentBlockIndex->nHeight - cachedLastSuccess < minBlockSpacing) || !masternodeSync.IsBlockchainSynced()) {
         return strAutoDenomResult;
     }
     switch(state) {
@@ -1341,7 +1341,7 @@ void CDarksendPool::CompletedTransaction(bool error, int errorID)
         SetNull();
 
         // To avoid race conditions, we'll only let DS run once per block
-        cachedLastSuccess = chainActive.Tip()->nHeight;
+        cachedLastSuccess = pCurrentBlockIndex->nHeight;
     }
     lastMessage = GetMessageByID(errorID);
 }
@@ -1360,6 +1360,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 {
     if(!fEnableDarksend) return false;
     if(fMasterNode) return false;
+
+    if(!pCurrentBlockIndex) return false;
+
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
     if(GetEntriesCount() > 0) {
         strAutoDenomResult = _("Mixing in progress...");
@@ -1382,7 +1385,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         return false;
     }
 
-    if(!fDarksendMultiSession && chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
+    if(!fDarksendMultiSession && pCurrentBlockIndex->nHeight - cachedLastSuccess < minBlockSpacing) {
         LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
         strAutoDenomResult = _("Last successful Darksend action was too recent.");
         return false;
@@ -1703,7 +1706,7 @@ bool CDarksendPool::MakeCollateralAmounts()
         return false;
     }
 
-    cachedLastSuccess = chainActive.Tip()->nHeight;
+    cachedLastSuccess = pCurrentBlockIndex->nHeight;
 
     return true;
 }
@@ -1794,7 +1797,7 @@ bool CDarksendPool::CreateDenominated(CAmount nTotalValue)
 
     // use the same cachedLastSuccess as for DS mixinx to prevent race
     if(pwalletMain->CommitTransaction(wtx, reservekeyChange))
-        cachedLastSuccess = chainActive.Tip()->nHeight;
+        cachedLastSuccess = pCurrentBlockIndex->nHeight;
     else
         LogPrintf("CreateDenominated: CommitTransaction failed!\n");
 
@@ -2195,6 +2198,15 @@ void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool er
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
         pnode->PushMessage(NetMsgType::DSSTATUSUPDATE, sessionID, error, errorID);
+}
+
+void CDarksendPool::UpdatedBlockTip(const CBlockIndex *pindex)
+{
+    pCurrentBlockIndex = pindex;
+    LogPrint("darksend", "pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
+
+    if(!fLiteMode && masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST)
+        NewBlock();
 }
 
 //TODO: Rename/move to core

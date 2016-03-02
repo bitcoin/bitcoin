@@ -54,20 +54,20 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     if(strCommand == "nextblock")
     {
         LOCK(cs_main);
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        if(!pindexPrev) return "unknown";
+        CBlockIndex* pindex = chainActive.Tip();
+        if(!pindex) return "unknown";
 
-        int nNext = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
+        int nNext = pindex->nHeight - pindex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
         return nNext;
     }
 
     if(strCommand == "nextsuperblocksize")
     {
         LOCK(cs_main);
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        if(!pindexPrev) return "unknown";
+        CBlockIndex* pindex = chainActive.Tip();
+        if(!pindex) return "unknown";
 
-        int nHeight = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
+        int nHeight = pindex->nHeight - pindex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 
         CAmount nTotal = budget.GetTotalBudget(nHeight);
         return nTotal;
@@ -110,7 +110,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, uint256());
 
         std::string strError = "";
-        if(!budgetProposalBroadcast.IsValid(strError, false))
+        if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
             return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
 
         bool useIX = false; //true;
@@ -144,7 +144,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         int nBlockMin = 0;
         LOCK(cs_main);
-        CBlockIndex* pindexPrev = chainActive.Tip();
+        CBlockIndex* pindex = chainActive.Tip();
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
@@ -155,7 +155,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         int nBlockStart = params[4].get_int();
 
         //set block min
-        if(pindexPrev != NULL) nBlockMin = pindexPrev->nHeight;
+        if(pindex != NULL) nBlockMin = pindex->nHeight;
 
         if(nBlockStart < nBlockMin)
             return "Invalid payment count, must be more than current height.";
@@ -174,7 +174,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         std::string strError = "";
 
-        if(!budgetProposalBroadcast.IsValid(strError)){
+        if(!budgetProposalBroadcast.IsValid(pindex, strError)){
             return "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError;
         }
 
@@ -408,6 +408,12 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
     if(strCommand == "projection")
     {
+        CBlockIndex* pindex;
+        {
+            LOCK(cs_main);
+            pindex = chainActive.Tip();
+        }
+
         UniValue resultObj(UniValue::VOBJ);
         CAmount nTotalAllotted = 0;
 
@@ -438,7 +444,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("Alloted",  ValueFromAmount(pbudgetProposal->GetAllotted())));
 
             std::string strError = "";
-            bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+            bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(pindex, strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
             bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
 
@@ -456,6 +462,12 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         std::string strShow = "valid";
         if (params.size() == 2) strShow = params[1].get_str();
+
+        CBlockIndex* pindex;
+        {
+            LOCK(cs_main);
+            pindex = chainActive.Tip();
+        }
 
         UniValue resultObj(UniValue::VOBJ);
         int64_t nTotalAllotted = 0;
@@ -492,7 +504,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
 
             std::string strError = "";
-            bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+            bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(pindex, strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
             bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
 
@@ -548,6 +560,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         ExtractDestination(pbudgetProposal->GetPayee(), address1);
         CBitcoinAddress address2(address1);
 
+        LOCK(cs_main);
         UniValue obj(UniValue::VOBJ);
         obj.push_back(Pair("Name",  pbudgetProposal->GetName()));
         obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
@@ -569,7 +582,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         obj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
 
         std::string strError = "";
-        obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(strError)));
+        obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(chainActive.Tip(), strError)));
         obj.push_back(Pair("fValid",  pbudgetProposal->fValid));
 
         return obj;
@@ -807,6 +820,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         UniValue resultObj(UniValue::VOBJ);
 
         std::vector<CFinalizedBudget*> winningFbs = budget.GetFinalizedBudgets();
+        LOCK(cs_main);
         BOOST_FOREACH(CFinalizedBudget* finalizedBudget, winningFbs)
         {
             UniValue bObj(UniValue::VOBJ);
@@ -819,7 +833,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("Status",  finalizedBudget->GetStatus()));
 
             std::string strError = "";
-            bObj.push_back(Pair("IsValid",  finalizedBudget->IsValid(strError)));
+            bObj.push_back(Pair("IsValid",  finalizedBudget->IsValid(chainActive.Tip(), strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
 
             resultObj.push_back(Pair(finalizedBudget->GetName(), bObj));
@@ -892,10 +906,10 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         }
 
         LOCK(cs_main);
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        if(!pindexPrev) return "invalid chaintip";
+        CBlockIndex* pindex = chainActive.Tip();
+        if(!pindex) return "invalid chaintip";
 
-        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
+        int nBlockStart = pindex->nHeight - pindex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 
         CFinalizedBudgetBroadcast tempBudget("main", nBlockStart, vecTxBudgetPayments, uint256());
         // if(mapSeenFinalizedBudgets.count(tempBudget.GetHash())) {
@@ -950,10 +964,10 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         }
 
         LOCK(cs_main);
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        if(!pindexPrev) return "invalid chaintip";
+        CBlockIndex* pindex = chainActive.Tip();
+        if(!pindex) return "invalid chaintip";
 
-        int nBlockStart = pindexPrev->nHeight - pindexPrev->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
+        int nBlockStart = pindex->nHeight - pindex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
       
         // CTxIn in(COutPoint(nColHash, 0));
         // int conf = GetInputAgeIX(nColHash, in);
@@ -970,7 +984,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         CFinalizedBudgetBroadcast finalizedBudgetBroadcast("main", nBlockStart, vecTxBudgetPayments, nColHash);
 
         std::string strError = "";
-        if(!finalizedBudgetBroadcast.IsValid(strError)){
+        if(!finalizedBudgetBroadcast.IsValid(pindex, strError)){
             printf("CBudgetManager::SubmitFinalBudget - Invalid finalized budget - %s \n", strError.c_str());
             return "invalid finalized budget";
         }

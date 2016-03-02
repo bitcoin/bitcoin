@@ -448,7 +448,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         UniValue obj(UniValue::VOBJ);
 
-        for(int i = nHeight - nLast; i < nHeight + 20; nHeight++)
+        for(int i = nHeight - nLast; i < nHeight + 20; i++)
         {
             obj.push_back(Pair(strprintf("%d", i), GetRequiredPaymentsString(i)));
         }
@@ -465,10 +465,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
         int nHeight;
         {
             LOCK(cs_main);
-            CBlockIndex* pindexPrev = chainActive.Tip();
-            if(!pindexPrev) return NullUniValue;
+            CBlockIndex* pindex = chainActive.Tip();
+            if(!pindex) return NullUniValue;
 
-            nHeight = pindexPrev->nHeight;
+            nHeight = pindex->nHeight;
         }
 
         int nLast = 10;

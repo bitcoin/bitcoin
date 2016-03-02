@@ -78,6 +78,8 @@ private:
 
     //hold txes until they mature enough to use
     map<uint256, CTransaction> mapCollateral;
+    // Keep track of current block index
+    const CBlockIndex *pCurrentBlockIndex;
 
 public:
     // critical section to protect the inner data structures
@@ -179,6 +181,8 @@ public:
         READWRITE(mapProposals);
         READWRITE(mapFinalizedBudgets);
     }
+
+    void UpdatedBlockTip(const CBlockIndex *pindex);
 };
 
 
@@ -235,7 +239,7 @@ public:
     double GetScore();
     bool HasMinimumRequiredSupport();
 
-    bool IsValid(std::string& strError, bool fCheckCollateral=true);
+    bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
 
     std::string GetName() {return strBudgetName; }
     std::string GetProposals();
@@ -427,7 +431,7 @@ public:
     bool HasMinimumRequiredSupport();
     std::pair<std::string, std::string> GetVotes();
 
-    bool IsValid(std::string& strError, bool fCheckCollateral=true);
+    bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
     bool IsEstablished();
 
     std::string GetName() {return strProposalName; }
@@ -438,7 +442,7 @@ public:
     int GetTotalPaymentCount();
     int GetRemainingPaymentCount();
     int GetBlockStartCycle();
-    int GetBlockCurrentCycle();
+    int GetBlockCurrentCycle(const CBlockIndex* pindex);
     int GetBlockEndCycle();
     double GetRatio();
     int GetAbsoluteYesCount();
