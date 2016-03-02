@@ -5113,14 +5113,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
-            pfrom->AddInventoryKnown(inv); 
+            pfrom->AddInventoryKnown(inv);
 
+            // for compression statistics, we have to add up the size of xthinblock and the re-requested thinBlockTx.
+            int nSizeThinBlockTx = ::GetSerializeSize(thinBlockTx, SER_NETWORK, PROTOCOL_VERSION);
             int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
-            LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
+            LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes (thinblock) and %d bytes (re-requested tx), compression ratio %3.2f\n",
                      pfrom->thinBlock.GetHash().ToString(),
                      blockSize,
                      pfrom->nSizeThinBlock,
-                     ((float) blockSize) / ((float) pfrom->nSizeThinBlock)
+                     nSizeThinBlockTx,
+                     ((float) blockSize) / ( (float) pfrom->nSizeThinBlock + (float) nSizeThinBlockTx )
                      );
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
         }
