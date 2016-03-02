@@ -538,6 +538,7 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool)
     mempool.queryHashes(vMemPoolHashes);
     for (uint64_t i = 0; i < vMemPoolHashes.size(); i++)
          filterMemPool.insert(vMemPoolHashes[i]);
+    LogPrint("thin", "Created bloom filter: %d bytes\n",::GetSerializeSize(filterMemPool, SER_NETWORK, PROTOCOL_VERSION));
 }
 
 void LoadFilter(CNode *pfrom, CBloomFilter *filter)
