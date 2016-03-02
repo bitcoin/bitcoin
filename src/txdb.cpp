@@ -30,7 +30,7 @@ static const char DB_LAST_BLOCK = 'l';
 
 static const char DB_FORK_ACTIVATION = 'a';
 
-CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, true) 
+CCoinsViewDB::CCoinsViewDB(size_t nCacheSize, bool fMemory, bool fWipe) : db(GetDataDir() / "chainstate", nCacheSize, fMemory, fWipe, false)
 {
 }
 
