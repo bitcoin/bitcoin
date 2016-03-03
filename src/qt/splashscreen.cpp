@@ -42,6 +42,29 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     QString versionText     = QString("Version %1").arg(QString::fromStdString(FormatFullVersion()));
     QString copyrightText   = QChar(0xA9)+QString("2009-%1 ").arg(COPYRIGHT_YEAR) + QString(tr("The Bitcoin developers"));
     QString copyrightText2  = QChar(0xA9)+QString("2016 ").arg(COPYRIGHT_YEAR) + QString(tr("The HOdlcoin developers"));
+
+    const char *inspirationals[] = {
+        "Do you even HODL?",
+        "The squirrel is the animal kingdom's natural HOdler.",
+        "The nut is the smallest unit of HODL.",
+        "There are 100,000,000 nuts in one HODL."
+        "Help! I'm being HOdled against my will.",
+        "Plan for profit. Step 1:HODL, Step 2:HODL, Step 3:HODL",
+        "HOdl your horses.",
+        "I'm screwing this cat, you're just HOdling it.",
+        "What would Jesus HOdl?",
+        "Turn on, tune in, HOdl out",
+        "Winter is Coming",
+        "Ask not for a lighter burden, but for broader sHOdlers ",
+        "Keep Calm and HOdl On",
+        "Welcome to HOdl California",
+        "HODL - rating:HODL"
+    };
+
+    srand(time(NULL)+clock());
+    QString inspirationalText  = QString(inspirationals[rand() % sizeof(15)]);
+    QString authorText = QString("                        - Nutoshi Sakamoto");
+
     QString titleAddText    = networkStyle->getTitleAddText();
 
     QString font            = QApplication::font().toString();
@@ -102,6 +125,10 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     pixPaint.setFont(QFont(font, 10*fontFactor));
     pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace,copyrightText);
     pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+12,copyrightText2);
+
+    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+36,inspirationalText);
+    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+56,authorText);
+
 
     // draw additional text if special network
     if(!titleAddText.isEmpty()) {
