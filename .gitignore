@@ -122,3 +122,4 @@ share/BitcoindComparisonTool.jar
 /doc/doxygen/
 
 libbitcoinconsensus.pc
+src/qt/dash-qt.bash

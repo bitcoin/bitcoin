@@ -1812,9 +1812,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     uiInterface.InitMessage(_("Loading budget cache..."));
 
+    printf("1\n");
     CBudgetDB budgetdb;
     CBudgetDB::ReadResult readResult2 = budgetdb.Read(budget);
     
+    printf("2\n");
+
     if (readResult2 == CBudgetDB::FileError)
         LogPrintf("Missing budget cache - budget.dat, will try to recreate\n");
     else if (readResult2 != CBudgetDB::Ok)
@@ -1826,8 +1829,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             LogPrintf("file format is unknown or invalid, please fix it manually\n");
     }
 
+    printf("3\n");
+
     //flag our cached items so we send them to our peers
     budget.ResetSync();
+
+    printf("4 \n");
     budget.ClearSeen();
 
 

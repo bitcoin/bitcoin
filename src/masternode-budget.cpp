@@ -235,7 +235,7 @@ bool CBudgetDB::Write(const CBudgetManager& objToSave)
 
 CBudgetDB::ReadResult CBudgetDB::Read(CBudgetManager& objToLoad, bool fDryRun)
 {
-    LOCK(objToLoad.cs);
+    //LOCK(objToLoad.cs);
 
     int64_t nStart = GetTimeMillis();
     // open input file, and associate with CAutoFile
