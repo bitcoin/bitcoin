@@ -11,6 +11,7 @@
 #include "omnicore/convert.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
+#include "omnicore/fees.h"
 #include "omnicore/fetchwallettx.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
@@ -386,6 +387,13 @@ Value mscrpc(const Array& params, bool fHelp)
             break;
         }
 #endif
+        case 14:
+        {
+            LOCK(cs_tally);
+            p_feecache->printAll();
+            p_feecache->printStats();
+            break;
+        }
         default:
             break;
     }

@@ -1,6 +1,7 @@
 #include "omnicore/mdex.h"
 
 #include "omnicore/errors.h"
+#include "omnicore/fees.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
 #include "omnicore/sp.h"
@@ -256,9 +257,20 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             ///////////////////////////
 
+            // strip a 0.05% fee from non-OMNI pairs (for testing, strip from everything)
+            rational_t rTradingFee(seller_amountGot/2000);
+            int128_t iTradingFee = numerator(rTradingFee) / denominator(rTradingFee);
+            int64_t tradingFee = iTradingFee.convert_to<int64_t>();
+
+            // subtract the fee from the amount the seller will receive
+            int64_t seller_toGet = seller_amountGot - tradingFee;
+
+            // add the fee to the fee cache
+            p_feecache->AddFee(pold->getDesProperty(), pnew->getBlock(), tradingFee);
+
             // transfer the payment property from buyer to seller
             assert(update_tally_map(pnew->getAddr(), pnew->getProperty(), -seller_amountGot, BALANCE));
-            assert(update_tally_map(pold->getAddr(), pold->getDesProperty(), seller_amountGot, BALANCE));
+            assert(update_tally_map(pold->getAddr(), pold->getDesProperty(), seller_toGet, BALANCE));
 
             // transfer the market (the one being sold) property from seller to buyer
             assert(update_tally_map(pold->getAddr(), pold->getProperty(), -buyer_amountGot, METADEX_RESERVE));

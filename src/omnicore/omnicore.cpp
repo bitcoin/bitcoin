@@ -2046,6 +2046,7 @@ void clear_all_state()
     s_stolistdb->Clear();
     t_tradelistdb->Clear();
     p_OmniTXDB->Clear();
+    p_feecache->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
@@ -2217,6 +2218,10 @@ int mastercore_shutdown()
     if (p_OmniTXDB) {
         delete p_OmniTXDB;
         p_OmniTXDB = NULL;
+    }
+    if (p_feecache) {
+        delete p_feecache;
+        p_feecache = NULL;
     }
 
     PrintToLog("\nOmni Core shutdown completed\n");
@@ -3602,6 +3607,7 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
         p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
         t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
         s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight);
+        p_feecache->RollBackCache(pBlockIndex->nHeight - 1);
         reorgRecoveryMaxHeight = 0;
 
         nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
