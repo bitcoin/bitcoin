@@ -345,19 +345,11 @@ void CMasternodeSync::Process()
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
-<<<<<<< HEAD
 
             // MODE : MASTERNODE_SYNC_MNW
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
                 //printf("MASTERNODE_SYNC_MNW Timeout at %d\n", lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT);
 
-=======
-
-            // MODE : MASTERNODE_SYNC_MNW
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
-                //printf("MASTERNODE_SYNC_MNW Timeout at %d\n", lastMasternodeWinner < GetTime() - MASTERNODE_SYNC_TIMEOUT);
-
->>>>>>> e1616160952f25d26a88002dd9448b1ad5d48202
                 // Shall we move onto the next asset?
                 // --
                 // This might take a lot longer than 2 minutes due to new blocks, but that's OK. It will eventually time out if needed
@@ -390,11 +382,7 @@ void CMasternodeSync::Process()
                 if(pindexPrev == NULL) return;
 
                 int nMnCount = mnodeman.CountEnabled();
-<<<<<<< HEAD
-                pnode->PushMessage("mnget", nMnCount); //sync payees
-=======
                 pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
->>>>>>> e1616160952f25d26a88002dd9448b1ad5d48202
                 RequestedMasternodeAttempt++;
 
 
@@ -437,13 +425,8 @@ void CMasternodeSync::Process()
                 if(pnode->HasFulfilledRequest("busync")) continue;
                 pnode->FulfilledRequest("busync");
 
-<<<<<<< HEAD
-                uint256 n = 0;
-                pnode->PushMessage("mnvs", n); //sync masternode votes
-=======
                 uint256 n = uint256();
                 pnode->PushMessage(NetMsgType::MNBUDGETVOTESYNC, n); //sync masternode votes
->>>>>>> e1616160952f25d26a88002dd9448b1ad5d48202
                 RequestedMasternodeAttempt++;
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
