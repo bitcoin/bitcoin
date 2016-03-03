@@ -16,6 +16,7 @@
 #include "net.h"
 #include "script/script_error.h"
 #include "sync.h"
+#include "versionbits.h"
 
 #include <algorithm>
 #include <exception>
@@ -281,6 +282,9 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
 
 /** Convert CValidationState to a human-readable message for logging */
 std::string FormatStateMessage(const CValidationState &state);
+
+/** Get the BIP9 state for a given deployment at the current tip. */
+ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
 struct CNodeStateStats {
     int nMisbehavior;

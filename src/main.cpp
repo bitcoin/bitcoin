@@ -6049,6 +6049,11 @@ uint32_t MaxLegacySigops(uint32_t nBlockTime)
 }
 
 
+ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos)
+{
+    LOCK(cs_main);
+    return VersionBitsState(chainActive.Tip(), params, pos, versionbitscache);
+}
 
 class CMainCleanup
 {
