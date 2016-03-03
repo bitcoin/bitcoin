@@ -15,7 +15,7 @@ Check out the source code in the following directory hierarchy.
 	git clone https://github.com/devrandom/gitian-builder.git
 	git clone https://github.com/dashpay/dash.git
 
-###Bitcoin maintainers/release engineers, update (commit) version in sources
+###Dash maintainers/release engineers, update (commit) version in sources
 
 	pushd ./dash
 	contrib/verifysfbinaries/verify.sh
@@ -82,7 +82,7 @@ Only missing files will be fetched, so this is safe to re-run for each build.
 
 NOTE: Offline builds must use the --url flag to ensure Gitian fetches only from local URLs. For example:
 ```
-./bin/gbuild --url dash=/path/to/bitcoin,signature=/path/to/sigs {rest of arguments}
+./bin/gbuild --url dash=/path/to/dash,signature=/path/to/sigs {rest of arguments}
 ```
 The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 
@@ -92,12 +92,12 @@ The gbuild invocations below <b>DO NOT DO THIS</b> by default.
 	./bin/gsign --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-linux.yml
 	mv build/out/dash-*.tar.gz build/out/src/dash-*.tar.gz ../
 
-	./bin/gbuild --commit bitcoin=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gbuild --commit dash=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-win.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-win.yml
 	mv build/out/dash-*-win-unsigned.tar.gz inputs/dash-win-unsigned.tar.gz
 	mv build/out/dash-*.zip build/out/dash-*.exe ../
 
-	./bin/gbuild --commit bitcoin=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gbuild --commit dash=v${VERSION} ../dash/contrib/gitian-descriptors/gitian-osx.yml
 	./bin/gsign --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../dash/contrib/gitian-descriptors/gitian-osx.yml
 	mv build/out/dash-*-osx-unsigned.tar.gz inputs/dash-osx-unsigned.tar.gz
 	mv build/out/dash-*.tar.gz build/out/dash-*.dmg ../

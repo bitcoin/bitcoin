@@ -19,7 +19,7 @@ BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
             VALUE "CompanyName",        "Dash"
-            VALUE "FileDescription",    "Dash Core (GUI node for Bitcoin)"
+            VALUE "FileDescription",    "Dash Core (GUI node for Dash)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "dash-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR

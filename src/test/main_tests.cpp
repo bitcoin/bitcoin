@@ -15,47 +15,51 @@ BOOST_FIXTURE_TEST_SUITE(main_tests, TestingSetup)
 
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
-    int maxHalvings = 64;
-    CAmount nInitialSubsidy = 50 * COIN;
+    // tested in dash_tests.cpp
+    //int maxHalvings = 64;
+    //CAmount nInitialSubsidy = 50 * COIN;
 
-    CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
-        int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
-        CAmount nSubsidy = GetBlockSubsidy(0, nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
-        nPreviousSubsidy = nSubsidy;
-    }
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(0, maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
+    //CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
+    //BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
+    //for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
+    //    int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
+    //    CAmount nSubsidy = GetBlockSubsidy(0, nHeight, consensusParams);
+    //    BOOST_CHECK(nSubsidy <= nInitialSubsidy);
+    //    BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
+    //    nPreviousSubsidy = nSubsidy;
+    //}
+    //BOOST_CHECK_EQUAL(GetBlockSubsidy(0, maxHalvings * consensusParams.nSubsidyHalvingInterval, consensusParams), 0);
 }
 
 static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval)
 {
-    Consensus::Params consensusParams;
-    consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
-    TestBlockSubsidyHalvings(consensusParams);
+    // tested in dash_tests.cpp
+    //Consensus::Params consensusParams;
+    //consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
+    //TestBlockSubsidyHalvings(consensusParams);
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
 {
-    TestBlockSubsidyHalvings(Params(CBaseChainParams::MAIN).GetConsensus()); // As in main
-    TestBlockSubsidyHalvings(150); // As in regtest
-    TestBlockSubsidyHalvings(1000); // Just another interval
+    // tested in dash_tests.cpp
+    //TestBlockSubsidyHalvings(Params(CBaseChainParams::MAIN).GetConsensus()); // As in main
+    //TestBlockSubsidyHalvings(150); // As in regtest
+    //TestBlockSubsidyHalvings(1000); // Just another interval
 }
 
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
-    const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
-    CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-        /* @TODO fix subsidity, add nBits */
-        CAmount nSubsidy = GetBlockSubsidy(0, nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= 25 * COIN);
-        nSum += nSubsidy * 1000;
-        BOOST_CHECK(MoneyRange(nSum));
-    }
-    BOOST_CHECK_EQUAL(nSum, 1350824726649000ULL);
+    // tested in dash_tests.cpp
+    //const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
+    //CAmount nSum = 0;
+    //for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
+    //    /* @TODO fix subsidity, add nBits */
+    //    CAmount nSubsidy = GetBlockSubsidy(0, nHeight, consensusParams);
+    //    BOOST_CHECK(nSubsidy <= 25 * COIN);
+    //    nSum += nSubsidy * 1000;
+    //    BOOST_CHECK(MoneyRange(nSum));
+    //}
+    //BOOST_CHECK_EQUAL(nSum, 1350824726649000ULL);
 }
 
 bool ReturnFalse() { return false; }

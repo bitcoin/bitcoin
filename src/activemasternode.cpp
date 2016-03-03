@@ -69,8 +69,6 @@ void CActiveMasternode::ManageStatus()
             service = CService(strMasterNodeAddr);
         }
 
-        LogPrintf("CActiveMasternode::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString());
-
         int mainnetDefaultPort = Params(CBaseChainParams::MAIN).GetDefaultPort();
         if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
             if(service.GetPort() != mainnetDefaultPort) {
@@ -84,11 +82,15 @@ void CActiveMasternode::ManageStatus()
             return;
         }
 
-        if(!ConnectNode((CAddress)service, NULL, true)){
+        LogPrintf("CActiveMasternode::ManageStatus() - Checking inbound connection to '%s'\n", service.ToString());
+
+        CNode *pnode = ConnectNode((CAddress)service, NULL, false);
+        if(!pnode){
             notCapableReason = "Could not connect to " + service.ToString();
             LogPrintf("CActiveMasternode::ManageStatus() - not capable: %s\n", notCapableReason);
             return;
         }
+        pnode->Release();
 
         // Choose coins to use
         CPubKey pubKeyCollateralAddress;
