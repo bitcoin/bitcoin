@@ -221,7 +221,7 @@ void DepositCoinsDialog::on_sendButton_clicked()
                 recipients.append(entry->getValue());
                 //This will return 0 if not a term deposit
                 termDepositBlocks=entry->getTermDepositLength();
-                LogPrintf("TDB:%d",termDepositBlocks);
+                //LogPrintf("TDB:%d",termDepositBlocks);
             }
             else
             {
@@ -253,6 +253,15 @@ void DepositCoinsDialog::on_sendButton_clicked()
     else
         prepareStatus = model->prepareTransaction(currentTransaction, termDepositConfirmQuestion, termDepositBlocks);
 
+    // process prepareStatus and on error generate message shown to user
+    processSendCoinsReturn(prepareStatus,
+        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
+
+    if(prepareStatus.status != WalletModel::OK) {
+        fNewRecipientAllowed = true;
+        return;
+    }
+
     if(termDepositConfirmQuestion!=""){
         QString questionString = QString::fromStdString(termDepositConfirmQuestion);
         QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Term Deposit"),
@@ -270,16 +279,6 @@ void DepositCoinsDialog::on_sendButton_clicked()
             questionString,
             QMessageBox::Yes | QMessageBox::Cancel,
             QMessageBox::Cancel);
-        fNewRecipientAllowed = true;
-        return;
-    }
-
-
-    // process prepareStatus and on error generate message shown to user
-    processSendCoinsReturn(prepareStatus,
-        BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), currentTransaction.getTransactionFee()));
-
-    if(prepareStatus.status != WalletModel::OK) {
         fNewRecipientAllowed = true;
         return;
     }
@@ -579,7 +578,13 @@ void DepositCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsRetu
         return;
     }
 
-    Q_EMIT message(tr("Send Coins"), msgParams.first, msgParams.second);
+    //Don't know why, this isn't bringing up a messagebox
+    //Q_EMIT message(tr("Deposit Coins"), msgParams.first, msgParams.second);
+
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Deposit Coins"),
+        msgParams.first,
+        QMessageBox::Yes | QMessageBox::Cancel,
+        QMessageBox::Cancel);
 }
 
 void DepositCoinsDialog::minimizeFeeSection(bool fMinimize)

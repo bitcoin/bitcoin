@@ -251,10 +251,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
             setAddress.insert(rcp.address);
             ++nAddresses;
 
-            //This uses a special code, so when a transaction amount ends in '89', it is sent as a term deposit
-            //Example: amount 1.00550089 will be sent as a term deposit, released in 5500 blocks from current height
-            //CAmount remainder=rcp.amount%COIN;
-            //CAmount instruction=remainder%100;
             CScript scriptPubKey;
             if(termDepositLength>0){
                 //int termDepositLength=(remainder-instruction)/100;

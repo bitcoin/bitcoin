@@ -47,17 +47,17 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
         "Do you even HODL?",
         "The squirrel is the animal kingdom's natural HOdler.",
         "The nut is the smallest unit of HODL.",
-        "There are 100,000,000 nuts in one HODL."
+        "There are 100,000,000 nuts in one HODL.",
         "Help! I'm being HOdled against my will.",
         "Plan for profit. Step 1:HODL, Step 2:HODL, Step 3:HODL",
         "HOdl your horses.",
         "I'm screwing this cat, you're just HOdling it.",
         "What would Jesus HOdl?",
-        "Turn on, tune in, HOdl out",
-        "Winter is Coming",
-        "Ask not for a lighter burden, but for broader sHOdlers ",
-        "Keep Calm and HOdl On",
-        "Welcome to HOdl California",
+        "Turn on, tune in, HOdl out.",
+        "Winter is Coming.",
+        "Ask not for a lighter burden, but for broader sHOdlers.",
+        "Keep Calm and HOdl On.",
+        "Welcome to HOdl California.",
         "HODL - rating:HODL"
     };
 
@@ -126,8 +126,8 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace,copyrightText);
     pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+12,copyrightText2);
 
-    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+36,inspirationalText);
-    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+56,authorText);
+    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+86,inspirationalText);
+    pixPaint.drawText(pixmap.width()/devicePixelRatio-titleTextWidth-paddingRight,paddingTop+titleCopyrightVSpace+106,authorText);
 
 
     // draw additional text if special network
