@@ -25,6 +25,7 @@ env:
   global:
     - MAKEJOBS=-j5
     - RUN_TESTS=false
+    - CHECK_DOC=0
     - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
     - CCACHE_SIZE=400M
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
@@ -74,10 +75,10 @@ script:
     - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
     - BITCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$TRAVIS_BUILD_DIR/depends/$HOST --bindir=$OUTDIR/bin --libdir=$OUTDIR/lib"
     - depends/$HOST/native/bin/ccache --max-size=$CCACHE_SIZE
+    - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi
     - test -n "$USE_SHELL" && eval '"$USE_SHELL" -c "./autogen.sh"' || ./autogen.sh
     - ./configure --cache-file=config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make distdir PACKAGE=dash VERSION=$HOST
-    - if [ "$RUN_TESTS" = "true" ]; then contrib/devtools/check-doc.py; fi
     - cd dash-$HOST
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
