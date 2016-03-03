@@ -145,14 +145,26 @@ extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
 extern bool fEnableReplacement;  // BU TODO is this RBF flag?
 
-// Xpress Validation: begin section
+// BU - Xpress Validation: begin section
 /**
  * Transactions that have already been accepted into the memory pool do not need to be
  * re-verified and can avoid having to do a second and expensive CheckInputs() when 
  * processing a new block.  (Protected by cs_main)
  */
 static std::set<uint256> setPreVerifiedTxHash;
-// Xpress Validation: end section
+// BU - Xpress Validation: end section
+
+// BU - Xtreme Thinblocks Auto Mempool Limiter - begin section
+/** The default value for -minrelaytxfee */
+static const char DEFAULT_MINLIMITERTXFEE[] = "0.0";
+/** The default value for -maxrelaytxfee */
+static const char DEFAULT_MAXLIMITERTXFEE[] = "5.0";
+/** The number of block heights to gradually choke spam transactions over */
+static const unsigned int MAX_BLOCK_SIZE_MULTIPLYER = 3;
+/** The minimum value possible for -limitfreerelay when rate limiting */
+static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
+// BU - Xtreme Thinblocks Auto Mempool Limiter - end section
+
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;

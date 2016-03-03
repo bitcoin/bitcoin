@@ -61,6 +61,8 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-sendavg", _("The maximum rate that data can be sent in kB/s"));
     strUsage += HelpMessageOpt("-use-thinblocks=<n>", strprintf(_("Turn Thinblocks on or off (off: 0, on: 1, default: %d)"), 1));
     strUsage += HelpMessageOpt("-connect-thinblock=<ip:port>", _("Connect to a thinblock node(s). Blocks will only be downloaded from a thinblock peer.  If no connections are possible then regular blocks will then be downloaded form any other connected peers."));
+    strUsage += HelpMessageOpt("-minlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) smaller than this are considered zero fee and subject to -limitfreerelay (default: %s)"), DEFAULT_MINLIMITERTXFEE));
+    strUsage += HelpMessageOpt("-maxlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) larger than this are always relayed (default: %s)"), DEFAULT_MAXLIMITERTXFEE));
     return strUsage;
 }
 
