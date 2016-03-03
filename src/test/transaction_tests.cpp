@@ -4,7 +4,7 @@
 
 #include "data/tx_invalid.json.h"
 #include "data/tx_valid.json.h"
-#include "test/test_bitcoin.h"
+#include "test/test_dash.h"
 
 #include "clientversion.h"
 #include "consensus/validation.h"
@@ -348,10 +348,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     // nDustThreshold = 182 * 12340 / 1000 * 3
     minRelayTxFee = CFeeRate(12340);
     // dust:
-    t.vout[0].nValue = 6720 - 1;
+    t.vout[0].nValue = 6735 - 1;
     BOOST_CHECK(!IsStandardTx(t, reason));
     // not dust:
-    t.vout[0].nValue = 6720;
+    t.vout[0].nValue = 6735;
     BOOST_CHECK(IsStandardTx(t, reason));
     minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 

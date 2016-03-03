@@ -7,7 +7,7 @@
 #include "uint256.h"
 #include "util.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_dash.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -15,11 +15,11 @@ BOOST_FIXTURE_TEST_SUITE(policyestimator_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
 {
-    CTxMemPool mpool(CFeeRate(1000));
+    CTxMemPool mpool(CFeeRate(10000)); // we have 10x higher fee
     TestMemPoolEntryHelper entry;
-    CAmount basefee(2000);
+    CAmount basefee(20000); // we have 10x higher fee
     double basepri = 1e6;
-    CAmount deltaFee(100);
+    CAmount deltaFee(1000); // we have 10x higher fee
     double deltaPri=5e5;
     std::vector<CAmount> feeV[2];
     std::vector<double> priV[2];

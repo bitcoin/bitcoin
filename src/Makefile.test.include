@@ -78,7 +78,7 @@ BITCOIN_TESTS =\
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
   test/test_dash.cpp \
-  test/test_bitcoin.h \
+  test/test_dash.h \
   test/timedata_tests.cpp \
   test/transaction_tests.cpp \
   test/txvalidationcache_tests.cpp \

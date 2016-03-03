@@ -15,7 +15,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_dash.h"
 
 #include <fstream>
 
@@ -224,8 +224,8 @@ BOOST_AUTO_TEST_CASE(PartitionAlert)
     PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK_MESSAGE(strMiscWarning.empty(), strMiscWarning);
 
-    // Test 2: go 3.5 hours without a block, expect a warning:
-    now += 3*60*60+30*60;
+    // Test 2: go 52.5 minutes without a block, expect a warning:
+    now += (3*60*60+30*60)/4; // we have 4x faster blocks
     SetMockTime(now);
     PartitionCheck(falseFunc, csDummy, &indexDummy[99], nPowTargetSpacing);
     BOOST_CHECK(!strMiscWarning.empty());

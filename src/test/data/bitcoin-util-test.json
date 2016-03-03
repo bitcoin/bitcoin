@@ -57,7 +57,7 @@
      "outaddr=0.001:XijDvbYpPmznwgpWD3DkdYNfGmRP2KoVSk"],
     "output_cmp": "txcreatesign.hex"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
      "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
@@ -67,21 +67,21 @@
      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
     "output_cmp": "txcreatesign.hex"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outdata=4:badhexdata"],
     "return_code": 1
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
      "outdata=badhexdata"],
     "return_code": 1
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
@@ -89,7 +89,7 @@
      "outdata=4:54686973204f505f52455455524e207472616e73616374696f6e206f7574707574207761732063726561746564206279206d6f646966696564206372656174657261777472616e73616374696f6e2e"],
     "output_cmp": "txcreatedata1.hex"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./dash-tx",
     "args":
     ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",

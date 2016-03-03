@@ -6,7 +6,7 @@
 #include "chainparams.h"
 #include "main.h"
 
-#include "test/test_bitcoin.h"
+#include "test/test_dash.h"
 
 #include <boost/signals2/signal.hpp>
 #include <boost/test/unit_test.hpp>

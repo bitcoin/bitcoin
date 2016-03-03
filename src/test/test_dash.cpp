@@ -4,7 +4,7 @@
 
 #define BOOST_TEST_MODULE Dash Test Suite
 
-#include "test_bitcoin.h"
+#include "test_dash.h"
 
 #include "chainparams.h"
 #include "consensus/consensus.h"
