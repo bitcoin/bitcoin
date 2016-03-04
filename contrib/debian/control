@@ -63,5 +63,5 @@ Description: peer-to-peer digital currency - standalone transaction tool
  is the name of the open source software which enables the use of this currency.
  .
  This package provides dash-tx, a command-line transaction creation
- tool which can be used without a bitcoin daemon.  Some means of
+ tool which can be used without a dash daemon.  Some means of
  exchanging minimal transaction data with peers is still required.

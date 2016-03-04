@@ -132,13 +132,13 @@ def initialize_chain(test_dir):
         # Create cache directories, run dashds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
-            args = [ os.getenv("BITCOIND", "dashd"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            args = [ os.getenv("DASHD", "dashd"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
             if os.getenv("PYTHON_DEBUG", ""):
                 print "initialize_chain: dashd started, calling dash-cli -rpcwait getblockcount"
-            subprocess.check_call([ os.getenv("BITCOINCLI", "dash-cli"), "-datadir="+datadir,
+            subprocess.check_call([ os.getenv("DASHCLI", "dash-cli"), "-datadir="+datadir,
                                     "-rpcwait", "getblockcount"], stdout=devnull)
             if os.getenv("PYTHON_DEBUG", ""):
                 print "initialize_chain: bitcoin-cli -rpcwait getblockcount completed"
@@ -218,7 +218,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     """
     datadir = os.path.join(dirname, "node"+str(i))
     if binary is None:
-        binary = os.getenv("BITCOIND", "dashd")
+        binary = os.getenv("DASHD", "dashd")
     # RPC tests still depend on free transactions
     args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000" ]
     if extra_args is not None: args.extend(extra_args)
@@ -226,7 +226,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     devnull = open(os.devnull, "w")
     if os.getenv("PYTHON_DEBUG", ""):
         print "start_node: dashd started, calling dash-cli -rpcwait getblockcount"
-    subprocess.check_call([ os.getenv("BITCOINCLI", "dash-cli"), "-datadir="+datadir] +
+    subprocess.check_call([ os.getenv("DASHCLI", "dash-cli"), "-datadir="+datadir] +
                           _rpchost_to_args(rpchost)  +
                           ["-rpcwait", "getblockcount"], stdout=devnull)
     if os.getenv("PYTHON_DEBUG", ""):
