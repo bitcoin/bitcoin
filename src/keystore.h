@@ -78,7 +78,7 @@ public:
 typedef std::map<CKeyID, std::pair<CSecret, bool> > KeyMap;
 typedef std::map<CScriptID, CScript > ScriptMap;
 typedef std::set<CScript> WatchOnlySet;
-typedef std::map<CMalleableKeyView, CMalleableKey> MalleableKeyMap;
+typedef std::map<CMalleableKeyView, CSecret> MalleableKeyMap;
 
 /** Basic key store, that keeps keys in an address->secret map */
 class CBasicKeyStore : public CKeyStore
@@ -100,7 +100,7 @@ public:
             MalleableKeyMap::const_iterator mi = mapMalleableKeys.find(keyView);
             if (mi != mapMalleableKeys.end())
             {
-                mKey = mi->second;
+                mKey = mi->first.GetMalleableKey(mi->second);
                 return true;
             }
         }
@@ -183,8 +183,11 @@ public:
             LOCK(cs_KeyStore);
             for (MalleableKeyMap::const_iterator mi = mapMalleableKeys.begin(); mi != mapMalleableKeys.end(); mi++)
             {
-                if (mi->second.CheckKeyVariant(R, pubKeyVariant, privKey))
-                    return true;
+                if (mi->first.CheckKeyVariant(R, pubKeyVariant))
+                {
+                    CMalleableKey mKey = mi->first.GetMalleableKey(mi->second);
+                    return mKey.CheckKeyVariant(R, pubKeyVariant, privKey);
+                }
             }
         }
         return false;

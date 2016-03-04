@@ -101,7 +101,7 @@ public:
         if(!Write(std::make_pair(std::string("malmeta"), keyView.ToString()), keyMeta))
             return false;
 
-        if(!Write(std::make_pair(std::string("malpair"), keyView.ToString()), malleableKey.ToString(), false))
+        if(!Write(std::make_pair(std::string("malpair"), keyView.ToString()), malleableKey.GetSecretH(), false))
             return false;
 
         return true;

@@ -306,14 +306,14 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             string strKey, strKeyView;
 
-            CMalleableKey mKey;
+            CSecret vchSecret;
             CMalleableKeyView keyView;
 
             ssKey >> strKeyView;
-            ssValue >> strKey;
-
             keyView.SetString(strKeyView);
-            mKey.SetString(strKey);
+            ssValue >> vchSecret;
+
+            CMalleableKey mKey = keyView.GetMalleableKey(vchSecret);
 
             if (mKey.IsNull())
             {

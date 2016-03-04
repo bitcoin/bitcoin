@@ -33,7 +33,7 @@ bool CBasicKeyStore::AddMalleableKey(const CMalleableKey& mKey)
 {
     {
         LOCK(cs_KeyStore);
-        mapMalleableKeys[CMalleableKeyView(mKey)] = mKey;
+        mapMalleableKeys[CMalleableKeyView(mKey)] = mKey.GetSecretH();
     }
     return true;
 }
