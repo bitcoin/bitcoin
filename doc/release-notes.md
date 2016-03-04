@@ -53,6 +53,15 @@ The following outputs are affected by this change:
 
 The p2p alert system has been removed in #7692 and the 'alert' message is no longer supported.
 
+
+Fee filtering of invs (BIP 133)
+------------------------------------
+
+The optional new p2p message "feefilter" is implemented and the protocol
+version is bumped to 70013. Upon receiving a feefilter message from a peer,
+a node will not send invs for any transactions which do not meet the filter
+feerate. [BIP 133](https://github.com/bitcoin/bips/blob/master/bip-0133.mediawiki)
+
 ### Validation
 
 ### Build system
