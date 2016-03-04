@@ -45,12 +45,6 @@ public:
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
         Listen,                 // bool
-        UseReceiveShaping,      // bool
-        UseSendShaping,         // bool
-        ReceiveBurst,           // int
-        ReceiveAve,             // int
-        SendBurst,              // int
-        SendAve,                // int
         OptionIDRowCount,
     };
 

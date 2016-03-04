@@ -235,8 +235,6 @@ QVariant OptionsModel::data(const QModelIndex& index, int role) const
 bool OptionsModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
     bool successful = true; /* set to false on parse error */
-    bool changeSendShaper = false;
-    bool changeReceiveShaper = false;
     if (role == Qt::EditRole) {
         QSettings settings;
         switch (index.row()) {

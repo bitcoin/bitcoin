@@ -35,7 +35,8 @@
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
     QDialog(parent),
     ui(new Ui::OptionsDialog),
-    portValidator(1, 65536, this),
+    portValidator(1, 65536, this),  // BU fix memory leaks
+    proxyPortValidator(1, 65536, this),
     model(0),
     mapper(0)
 {
@@ -57,7 +58,7 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     ui->proxyIpTor->setEnabled(false);
     ui->proxyPortTor->setEnabled(false);
-    ui->proxyPortTor->setValidator(new QIntValidator(1, 65535, this));
+    ui->proxyPortTor->setValidator(&proxyPortValidator);
 
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyIp, SLOT(setEnabled(bool)));
     connect(ui->connectSocks, SIGNAL(toggled(bool)), ui->proxyPort, SLOT(setEnabled(bool)));

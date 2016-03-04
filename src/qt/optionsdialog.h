@@ -66,6 +66,7 @@ Q_SIGNALS:
 private:
     Ui::OptionsDialog *ui;
     QIntValidator portValidator;
+    QIntValidator proxyPortValidator;
     OptionsModel *model;
     QDataWidgetMapper *mapper;
 };
