@@ -44,7 +44,7 @@ NOTE: Building with Qt4 is still supported, however, could result in a broken UI
         cd dash
 
 2.  Build dash-core:
-    This will configure and build the headless bitcoin binaries as well as the gui (if Qt is found).
+    This will configure and build the headless dash binaries as well as the gui (if Qt is found).
     You can disable the gui build by passing `--without-gui` to configure.
 
         ./autogen.sh
