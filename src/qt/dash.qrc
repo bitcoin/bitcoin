@@ -1,6 +1,8 @@
 <!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/icons">
+        <file alias="bitcoin">res/icons/bitcoin.png</file>
+    </qresource>
     <qresource prefix="/icons/drkblue">
-        <file alias="bitcoin">res/icons/drkblue/bitcoin.png</file>
         <file alias="address-book">res/icons/drkblue/address-book.png</file>
         <file alias="quit">res/icons/drkblue/quit.png</file>
         <file alias="send">res/icons/drkblue/send.png</file>
@@ -52,7 +54,6 @@
         <file alias="verify">res/icons/drkblue/verify.png</file>
     </qresource>
     <qresource prefix="/icons/crownium">
-        <file alias="bitcoin">res/icons/crownium/bitcoin.png</file>
         <file alias="address-book">res/icons/crownium/address-book.png</file>
         <file alias="quit">res/icons/crownium/quit.png</file>
         <file alias="send">res/icons/crownium/send.png</file>
@@ -104,7 +105,6 @@
         <file alias="verify">res/icons/crownium/verify.png</file>
     </qresource>
     <qresource prefix="/icons/light">
-        <file alias="bitcoin">res/icons/light/bitcoin.png</file>
         <file alias="address-book">res/icons/light/address-book.png</file>
         <file alias="quit">res/icons/light/quit.png</file>
         <file alias="send">res/icons/light/send.png</file>
@@ -156,7 +156,6 @@
         <file alias="verify">res/icons/light/verify.png</file>
     </qresource>
     <qresource prefix="/icons/trad">
-        <file alias="bitcoin">res/icons/trad/bitcoin.png</file>
         <file alias="address-book">res/icons/trad/address-book.png</file>
         <file alias="quit">res/icons/trad/quit.png</file>
         <file alias="send">res/icons/trad/send.png</file>

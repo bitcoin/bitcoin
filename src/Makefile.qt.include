@@ -162,10 +162,9 @@ BITCOIN_QT_H = \
 
 RES_ICONS = \
   qt/res/icons/bitcoin.ico \
+  qt/res/icons/bitcoin.png \
   qt/res/icons/drkblue/add.png \
   qt/res/icons/drkblue/address-book.png \
-  qt/res/icons/drkblue/bitcoin.ico \
-  qt/res/icons/drkblue/bitcoin.png \
   qt/res/icons/drkblue/browse.png \
   qt/res/icons/drkblue/clock1.png \
   qt/res/icons/drkblue/clock2.png \
@@ -215,8 +214,6 @@ RES_ICONS = \
   qt/res/icons/drkblue/verify.png \
   qt/res/icons/crownium/add.png \
   qt/res/icons/crownium/address-book.png \
-  qt/res/icons/crownium/bitcoin.ico \
-  qt/res/icons/crownium/bitcoin.png \
   qt/res/icons/crownium/browse.png \
   qt/res/icons/crownium/clock1.png \
   qt/res/icons/crownium/clock2.png \
@@ -266,8 +263,6 @@ RES_ICONS = \
   qt/res/icons/crownium/verify.png \
   qt/res/icons/light/add.png \
   qt/res/icons/light/address-book.png \
-  qt/res/icons/light/bitcoin.ico \
-  qt/res/icons/light/bitcoin.png \
   qt/res/icons/light/browse.png \
   qt/res/icons/light/clock1.png \
   qt/res/icons/light/clock2.png \
@@ -317,8 +312,6 @@ RES_ICONS = \
   qt/res/icons/light/verify.png \
   qt/res/icons/trad/add.png \
   qt/res/icons/trad/address-book.png \
-  qt/res/icons/trad/bitcoin.ico \
-  qt/res/icons/trad/bitcoin.png \
   qt/res/icons/trad/browse.png \
   qt/res/icons/trad/clock1.png \
   qt/res/icons/trad/clock2.png \
