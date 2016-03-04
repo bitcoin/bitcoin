@@ -286,8 +286,7 @@ void CBlockPolicyEstimator::removeTx(uint256 hash)
 {
     std::map<uint256, TxStatsInfo>::iterator pos = mapMemPoolTxs.find(hash);
     if (pos == mapMemPoolTxs.end()) {
-        LogPrint("estimatefee", "Blockpolicy error mempool tx %s not found for removeTx\n",
-                 hash.ToString().c_str());
+        LogPrint("estimatefee", "Blockpolicy error mempool tx %s not found for removeTx\n", hash.ToString());
         return;
     }
     TxConfirmStats *stats = pos->second.stats;
@@ -347,9 +346,8 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     unsigned int txHeight = entry.GetHeight();
     uint256 hash = entry.GetTx().GetHash();
     if (mapMemPoolTxs[hash].stats != NULL) {
-        LogPrint("estimatefee", "Blockpolicy error mempool tx %s already being tracked\n",
-                 hash.ToString().c_str());
-	return;
+        LogPrint("estimatefee", "Blockpolicy error mempool tx %s already being tracked\n", hash.ToString());
+        return;
     }
 
     if (txHeight < nBestSeenHeight) {

@@ -437,7 +437,7 @@ void CDarksendPool::UnlockCoins(){
         TRY_LOCK(pwalletMain->cs_wallet, lockWallet);
         if(!lockWallet) {MilliSleep(50); continue;}
         BOOST_FOREACH(CTxIn v, lockedCoins)
-                pwalletMain->UnlockCoin(v.prevout);
+            pwalletMain->UnlockCoin(v.prevout);
         break;
     }
 
@@ -1066,12 +1066,12 @@ bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
         if(newVin.prevout == vin.prevout && vin.nSequence == newVin.nSequence){
             vin.scriptSig = newVin.scriptSig;
             vin.prevPubKey = newVin.prevPubKey;
-            LogPrint("darksend", "CDarkSendPool::AddScriptSig -- adding to finalTransaction  %s\n", ScriptToAsmStr(newVin.scriptSig).substr(0,24));
+            LogPrint("darksend", "CDarksendPool::AddScriptSig -- adding to finalTransaction  %s\n", ScriptToAsmStr(newVin.scriptSig).substr(0,24));
         }
     }
     for(unsigned int i = 0; i < entries.size(); i++){
         if(entries[i].AddSig(newVin)){
-            LogPrint("darksend", "CDarkSendPool::AddScriptSig -- adding  %s\n", ScriptToAsmStr(newVin.scriptSig).substr(0,24));
+            LogPrint("darksend", "CDarksendPool::AddScriptSig -- adding  %s\n", ScriptToAsmStr(newVin.scriptSig).substr(0,24));
             return true;
         }
     }
@@ -1318,7 +1318,7 @@ void CDarksendPool::NewBlock()
     if(GetTime() - lastNewBlock < 10) return;
     lastNewBlock = GetTime();
 
-    darkSendPool.CheckTimeout();
+    CheckTimeout();
 }
 
 // Darksend transaction was completed (failed or successful)
@@ -1581,7 +1581,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
             }
         }
 
-        // do not initiate queue if we are a liquidity proveder to avoid useless inter-mixing
+        // do not initiate queue if we are a liquidity provider to avoid useless inter-mixing
         if(nLiquidityProvider) return false;
 
         int i = 0;
@@ -1865,7 +1865,7 @@ bool CDarksendPool::IsCompatibleWithSession(CAmount nDenom, CTransaction txColla
         return false;
     }
 
-    LogPrintf("CDarkSendPool::IsCompatibleWithSession - compatible\n");
+    LogPrintf("CDarksendPool::IsCompatibleWithSession - compatible\n");
 
     sessionUsers++;
     lastTimeChanged = GetTimeMillis();

@@ -44,7 +44,7 @@ bool CDarkSendRelay::Sign(std::string strSharedKey)
 
     if(!darkSendSigner.SetKey(strSharedKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CDarkSendRelay():Sign - ERROR: Invalid shared key: '%s'\n", errorMessage.c_str());
+        LogPrintf("CDarkSendRelay():Sign - ERROR: Invalid shared key: '%s'\n", errorMessage);
         return false;
     }
 
@@ -71,7 +71,7 @@ bool CDarkSendRelay::VerifyMessage(std::string strSharedKey)
 
     if(!darkSendSigner.SetKey(strSharedKey, errorMessage, key2, pubkey2))
     {
-        LogPrintf("CDarkSendRelay()::VerifyMessage - ERROR: Invalid shared key: '%s'\n", errorMessage.c_str());
+        LogPrintf("CDarkSendRelay()::VerifyMessage - ERROR: Invalid shared key: '%s'\n", errorMessage);
         return false;
     }
 

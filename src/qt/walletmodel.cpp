@@ -523,20 +523,8 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
                               Q_ARG(int, status));
 }
 
-// queue notifications to show a non freezing progress dialog e.g. for rescan
-// static bool fQueueNotifications = false;
-// static std::vector<std::pair<uint256, ChangeType> > vQueueNotifications;
 static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
-    // if (fQueueNotifications)
-    // {
-    //     vQueueNotifications.push_back(make_pair(hash, status));
-    //     return;
-    // }
-
-    // QString strHash = QString::fromStdString(hash.GetHex());
-
-    // qDebug() << "NotifyTransactionChanged : " + strHash + " status= " + QString::number(status);
     Q_UNUSED(wallet);
     Q_UNUSED(hash);
     Q_UNUSED(status);

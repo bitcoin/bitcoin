@@ -1880,7 +1880,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         LogPrintf("IS DARKSEND MASTER NODE\n");
         strMasterNodeAddr = GetArg("-masternodeaddr", "");
 
-        LogPrintf(" addr %s\n", strMasterNodeAddr.c_str());
+        LogPrintf(" addr %s\n", strMasterNodeAddr);
 
         if(!strMasterNodeAddr.empty()){
             CService addrTest = CService(strMasterNodeAddr);
@@ -1948,7 +1948,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
     LogPrintf("Darksend rounds %d\n", nDarksendRounds);
     LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDashAmount);
-    LogPrintf("Budget Mode %s\n", strBudgetMode.c_str());
+    LogPrintf("Budget Mode %s\n", strBudgetMode);
 
     darkSendPool.InitDenominations();
     darkSendPool.InitCollateralAddress();
