@@ -397,7 +397,6 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 
                     Dbc* pcursor = db.GetCursor();
                     if (pcursor) {
-                        size_t pszSkipLen = strlen(pszSkip);
                         while (fSuccess)
                         {
                             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -414,9 +413,14 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                                 fSuccess = false;
                                 break;
                             }
-                            if (pszSkip &&
-                                strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), pszSkipLen)) == 0)
-                                continue;
+
+                            if (pszSkip != NULL)
+                            {
+                                size_t pszSkipLen = strlen(pszSkip);
+                                if (strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), pszSkipLen)) == 0)
+                                    continue;
+                            }
+
                             if (strncmp(&ssKey[0], "\x07version", 8) == 0)
                             {
                                 // Update version:
