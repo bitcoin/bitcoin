@@ -106,6 +106,7 @@ BITCOIN_CORE_H = \
   consensus/validation.h \
   core_io.h \
   darksend.h \
+  dsnotificationinterface.h \
   darksend-relay.h \
   core_memusage.h \
   hash.h \
@@ -249,6 +250,7 @@ libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   activemasternode.cpp \
   darksend.cpp \
+  dsnotificationinterface.cpp \
   darksend-relay.cpp \
   instantx.cpp \
   masternode.cpp \

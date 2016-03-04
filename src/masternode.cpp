@@ -21,6 +21,7 @@ std::map<int64_t, uint256> mapCacheBlockHashes;
 //Get the last hash that matches the modulus given. Processed in reverse order
 bool GetBlockHash(uint256& hash, int nBlockHeight)
 {
+    LOCK(cs_main);
     if (chainActive.Tip() == NULL) return false;
 
     if(nBlockHeight == 0)
@@ -151,7 +152,10 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
 //
 uint256 CMasternode::CalculateScore(int mod, int64_t nBlockHeight)
 {
-    if(chainActive.Tip() == NULL) return uint256();
+    {
+        LOCK(cs_main);
+        if(chainActive.Tip() == NULL) return uint256();
+    }
 
     uint256 hash = uint256();
     uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
@@ -241,8 +245,13 @@ int64_t CMasternode::SecondsSincePayment() {
 }
 
 int64_t CMasternode::GetLastPaid() {
-    CBlockIndex* pindexPrev = chainActive.Tip();
-    if(pindexPrev == NULL) return false;
+    CBlockIndex *pindexPrev = NULL;
+    {
+        LOCK(cs_main);
+        pindexPrev = chainActive.Tip();
+        if(!pindexPrev) return 0;
+    }
+
 
     CScript mnpayee;
     mnpayee = GetScriptForDestination(pubkey.GetID());
@@ -255,9 +264,7 @@ int64_t CMasternode::GetLastPaid() {
     // use a deterministic offset to break a tie -- 2.5 minutes
     int64_t nOffset = UintToArith256(hash).GetCompact(false) % 150;
 
-    if (chainActive.Tip() == NULL) return false;
-
-    const CBlockIndex *BlockReading = chainActive.Tip();
+    const CBlockIndex *BlockReading = pindexPrev;
 
     int nMnCount = mnodeman.CountEnabled()*1.25;
     int n = 0;
@@ -473,19 +480,21 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
     uint256 hashBlock = uint256();
     CTransaction tx2;
     GetTransaction(vin.prevout.hash, tx2, Params().GetConsensus(), hashBlock, true);
-    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi != mapBlockIndex.end() && (*mi).second)
     {
-        CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
-        CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
-        if(pConfIndex->GetBlockTime() > sigTime)
+        LOCK(cs_main);
+        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+        if (mi != mapBlockIndex.end() && (*mi).second)
         {
-            LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
-                      sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
-            return false;
+            CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
+            CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
+            if(pConfIndex->GetBlockTime() > sigTime)
+            {
+                LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
+                          sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
+                return false;
+            }
         }
     }
-
     LogPrintf("mnb - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
     CMasternode mn(*this);
     mnodeman.Add(mn);
@@ -543,8 +552,17 @@ CMasternodePing::CMasternodePing()
 
 CMasternodePing::CMasternodePing(CTxIn& newVin)
 {
+    int nHeight;
+    {
+        LOCK(cs_main);
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        if(!pindexPrev) return;
+
+        nHeight = pindexPrev->nHeight;
+    }
+
     vin = newVin;
-    blockHash = chainActive[chainActive.Height() - 12]->GetBlockHash();
+    blockHash = chainActive[nHeight - 12]->GetBlockHash();
     sigTime = GetAdjustedTime();
     vchSig = std::vector<unsigned char>();
 }
@@ -608,25 +626,27 @@ bool CMasternodePing::CheckAndUpdate(int& nDos, bool fRequireEnabled)
                 return false;
             }
 
-            BlockMap::iterator mi = mapBlockIndex.find(blockHash);
-            if (mi != mapBlockIndex.end() && (*mi).second)
             {
-                if((*mi).second->nHeight < chainActive.Height() - 24)
+                LOCK(cs_main);
+                BlockMap::iterator mi = mapBlockIndex.find(blockHash);
+                if (mi != mapBlockIndex.end() && (*mi).second)
                 {
-                    LogPrintf("CMasternodePing::CheckAndUpdate - Masternode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
-                    // Do nothing here (no Masternode update, no mnping relay)
-                    // Let this node to be visible but fail to accept mnping
+                    if((*mi).second->nHeight < chainActive.Height() - 24)
+                    {
+                        LogPrintf("CMasternodePing::CheckAndUpdate - Masternode %s block hash %s is too old\n", vin.ToString(), blockHash.ToString());
+                        // Do nothing here (no Masternode update, no mnping relay)
+                        // Let this node to be visible but fail to accept mnping
+
+                        return false;
+                    }
+                } else {
+                    if (fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Masternode %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
+                    // maybe we stuck so we shouldn't ban this node, just fail to accept it
+                    // TODO: or should we also request this block?
 
                     return false;
                 }
-            } else {
-                if (fDebug) LogPrintf("CMasternodePing::CheckAndUpdate - Masternode %s block hash %s is unknown\n", vin.ToString(), blockHash.ToString());
-                // maybe we stuck so we shouldn't ban this node, just fail to accept it
-                // TODO: or should we also request this block?
-
-                return false;
             }
-
             pmn->lastPing = *this;
 
             //mnodeman.mapSeenMasternodeBroadcast.lastPing is probably outdated, so we'll update it

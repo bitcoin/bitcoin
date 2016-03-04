@@ -42,15 +42,8 @@ bool CMasternodeSync::IsBlockchainSynced()
 
     if (fImporting || fReindex) return false;
 
-    TRY_LOCK(cs_main, lockMain);
-    if(!lockMain) return false;
-
-    CBlockIndex* pindex = chainActive.Tip();
-    if(pindex == NULL) return false;
-
-
-    if(pindex->nTime + 60*60 < GetTime())
-        return false;
+    if(!pCurrentBlockIndex) return false;
+    if(pCurrentBlockIndex->nTime + 60*60 < GetTime()) return false;
 
     fBlockchainSynced = true;
 
@@ -227,8 +220,10 @@ void CMasternodeSync::Process()
     static int tick = 0;
     if(tick++ % 6 != 0) return;
 
+    if(!pCurrentBlockIndex) return;
+
     //the actual count of masternodes we have currently
-    int nMnCount = mnodeman.CountEnabled();  
+    int nMnCount = mnodeman.CountEnabled();
 
     // RESET SYNCING INCASE OF FAILURE
     {
@@ -319,8 +314,8 @@ void CMasternodeSync::Process()
 
                 // shall we move onto the next asset?
 
-                //printf("Masternode count %d est %d\n", nMnCount, mnodeman.GetEstimatedMasternodes(chainActive.Height())) ;             
-                if(nMnCount > mnodeman.GetEstimatedMasternodes(chainActive.Height())*0.9)
+                //printf("Masternode count %d est %d\n", nMnCount, mnodeman.GetEstimatedMasternodes(pCurrentBlockIndex->nHeight));
+                if(nMnCount > mnodeman.GetEstimatedMasternodes(pCurrentBlockIndex->nHeight)*0.9)
                 {
                     GetNextAsset();
                     //printf("synced masternode list successfully\n");
@@ -378,9 +373,6 @@ void CMasternodeSync::Process()
                 if(pnode->HasFulfilledRequest("mnwsync")) continue;
                 pnode->FulfilledRequest("mnwsync");
 
-                CBlockIndex* pindexPrev = chainActive.Tip();
-                if(pindexPrev == NULL) return;
-
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
                 RequestedMasternodeAttempt++;
@@ -434,4 +426,9 @@ void CMasternodeSync::Process()
 
         }
     }
+}
+
+void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindex)
+{
+    pCurrentBlockIndex = pindex;
 }

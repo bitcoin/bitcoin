@@ -39,6 +39,7 @@ void ProcessSpork(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
         CSporkMessage spork;
         vRecv >> spork;
 
+        LOCK(cs_main);
         if(chainActive.Tip() == NULL) return;
 
         uint256 hash = spork.GetHash();

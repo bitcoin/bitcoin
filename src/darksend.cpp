@@ -450,7 +450,7 @@ std::string CDarksendPool::GetStatus()
     showingDarkSendMessage += 10;
     std::string suffix = "";
 
-    if(chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing || !masternodeSync.IsBlockchainSynced()) {
+    if((pCurrentBlockIndex && pCurrentBlockIndex->nHeight - cachedLastSuccess < minBlockSpacing) || !masternodeSync.IsBlockchainSynced()) {
         return strAutoDenomResult;
     }
     switch(state) {
@@ -570,10 +570,10 @@ void CDarksendPool::CheckFinalTransaction()
 
     CWalletTx txNew = CWalletTx(pwalletMain, finalTransaction);
 
-    LOCK2(cs_main, pwalletMain->cs_wallet);
-    {
-        LogPrint("darksend", "Transaction 2: %s\n", txNew.ToString());
+    LogPrint("darksend", "Transaction 2: %s\n", txNew.ToString());
 
+    {
+        LOCK(cs_main);
         // See if the transaction is valid
         if (!txNew.AcceptToMemoryPool(false, true))
         {
@@ -585,58 +585,57 @@ void CDarksendPool::CheckFinalTransaction()
             RelayCompletedTransaction(sessionID, true, ERR_INVALID_TX);
             return;
         }
-
-        LogPrintf("CDarksendPool::Check() -- IS MASTER -- TRANSMITTING DARKSEND\n");
-
-        // sign a message
-
-        int64_t sigTime = GetAdjustedTime();
-        std::string strMessage = txNew.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
-        std::string strError = "";
-        std::vector<unsigned char> vchSig;
-        CKey key2;
-        CPubKey pubkey2;
-
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, strError, key2, pubkey2))
-        {
-            LogPrintf("CDarksendPool::Check() - ERROR: Invalid Masternodeprivkey: '%s'\n", strError);
-            return;
-        }
-
-        if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, key2)) {
-            LogPrintf("CDarksendPool::Check() - Sign message failed\n");
-            return;
-        }
-
-        if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, strError)) {
-            LogPrintf("CDarksendPool::Check() - Verify message failed\n");
-            return;
-        }
-
-        if(!mapDarksendBroadcastTxes.count(txNew.GetHash())){
-            CDarksendBroadcastTx dstx;
-            dstx.tx = txNew;
-            dstx.vin = activeMasternode.vin;
-            dstx.vchSig = vchSig;
-            dstx.sigTime = sigTime;
-
-            mapDarksendBroadcastTxes.insert(make_pair(txNew.GetHash(), dstx));
-        }
-
-        CInv inv(MSG_DSTX, txNew.GetHash());
-        RelayInv(inv);
-
-        // Tell the clients it was successful
-        RelayCompletedTransaction(sessionID, false, MSG_SUCCESS);
-
-        // Randomly charge clients
-        ChargeRandomFees();
-
-        // Reset
-        LogPrint("darksend", "CDarksendPool::Check() -- COMPLETED -- RESETTING\n");
-        SetNull();
-        RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
     }
+    LogPrintf("CDarksendPool::Check() -- IS MASTER -- TRANSMITTING DARKSEND\n");
+
+    // sign a message
+
+    int64_t sigTime = GetAdjustedTime();
+    std::string strMessage = txNew.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+    std::string strError = "";
+    std::vector<unsigned char> vchSig;
+    CKey key2;
+    CPubKey pubkey2;
+
+    if(!darkSendSigner.SetKey(strMasterNodePrivKey, strError, key2, pubkey2))
+    {
+        LogPrintf("CDarksendPool::Check() - ERROR: Invalid Masternodeprivkey: '%s'\n", strError);
+        return;
+    }
+
+    if(!darkSendSigner.SignMessage(strMessage, strError, vchSig, key2)) {
+        LogPrintf("CDarksendPool::Check() - Sign message failed\n");
+        return;
+    }
+
+    if(!darkSendSigner.VerifyMessage(pubkey2, vchSig, strMessage, strError)) {
+        LogPrintf("CDarksendPool::Check() - Verify message failed\n");
+        return;
+    }
+
+    if(!mapDarksendBroadcastTxes.count(txNew.GetHash())){
+        CDarksendBroadcastTx dstx;
+        dstx.tx = txNew;
+        dstx.vin = activeMasternode.vin;
+        dstx.vchSig = vchSig;
+        dstx.sigTime = sigTime;
+
+        mapDarksendBroadcastTxes.insert(make_pair(txNew.GetHash(), dstx));
+    }
+
+    CInv inv(MSG_DSTX, txNew.GetHash());
+    RelayInv(inv);
+
+    // Tell the clients it was successful
+    RelayCompletedTransaction(sessionID, false, MSG_SUCCESS);
+
+    // Randomly charge clients
+    ChargeRandomFees();
+
+    // Reset
+    LogPrint("darksend", "CDarksendPool::Check() -- COMPLETED -- RESETTING\n");
+    SetNull();
+    RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
 }
 
 //
@@ -1342,7 +1341,7 @@ void CDarksendPool::CompletedTransaction(bool error, int errorID)
         SetNull();
 
         // To avoid race conditions, we'll only let DS run once per block
-        cachedLastSuccess = chainActive.Tip()->nHeight;
+        cachedLastSuccess = pCurrentBlockIndex->nHeight;
     }
     lastMessage = GetMessageByID(errorID);
 }
@@ -1361,6 +1360,9 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 {
     if(!fEnableDarksend) return false;
     if(fMasterNode) return false;
+
+    if(!pCurrentBlockIndex) return false;
+
     if(state == POOL_STATUS_ERROR || state == POOL_STATUS_SUCCESS) return false;
     if(GetEntriesCount() > 0) {
         strAutoDenomResult = _("Mixing in progress...");
@@ -1383,7 +1385,7 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
         return false;
     }
 
-    if(!fDarksendMultiSession && chainActive.Tip()->nHeight - cachedLastSuccess < minBlockSpacing) {
+    if(!fDarksendMultiSession && pCurrentBlockIndex->nHeight - cachedLastSuccess < minBlockSpacing) {
         LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
         strAutoDenomResult = _("Last successful Darksend action was too recent.");
         return false;
@@ -1704,7 +1706,7 @@ bool CDarksendPool::MakeCollateralAmounts()
         return false;
     }
 
-    cachedLastSuccess = chainActive.Tip()->nHeight;
+    cachedLastSuccess = pCurrentBlockIndex->nHeight;
 
     return true;
 }
@@ -1795,7 +1797,7 @@ bool CDarksendPool::CreateDenominated(CAmount nTotalValue)
 
     // use the same cachedLastSuccess as for DS mixinx to prevent race
     if(pwalletMain->CommitTransaction(wtx, reservekeyChange))
-        cachedLastSuccess = chainActive.Tip()->nHeight;
+        cachedLastSuccess = pCurrentBlockIndex->nHeight;
     else
         LogPrintf("CreateDenominated: CommitTransaction failed!\n");
 
@@ -2196,6 +2198,15 @@ void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool er
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
         pnode->PushMessage(NetMsgType::DSSTATUSUPDATE, sessionID, error, errorID);
+}
+
+void CDarksendPool::UpdatedBlockTip(const CBlockIndex *pindex)
+{
+    pCurrentBlockIndex = pindex;
+    LogPrint("darksend", "pCurrentBlockIndex->nHeight: %d\n", pCurrentBlockIndex->nHeight);
+
+    if(!fLiteMode && masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST)
+        NewBlock();
 }
 
 //TODO: Rename/move to core
