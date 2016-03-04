@@ -304,31 +304,31 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         }
         else if (strType == "malpair")
         {
-            string strKey, strKeyView;
+            string strKeyView;
 
             CSecret vchSecret;
-            CMalleableKeyView keyView;
-
             ssKey >> strKeyView;
-            keyView.SetString(strKeyView);
             ssValue >> vchSecret;
 
-            CMalleableKey mKey = keyView.GetMalleableKey(vchSecret);
-
-            if (mKey.IsNull())
-            {
-                strErr = "Error reading wallet database: CMalleableKey is corrupt";
-                return false;
-            }
-            if (mKey.GetID() != keyView.GetID())
-            {
-                strErr = "Error reading wallet database: CMalleableKey view inconsistency";
-                return false;
-            }
-
-            if (!pwallet->LoadMalleableKey(mKey))
+            CMalleableKeyView keyView(strKeyView);
+            if (!pwallet->LoadMalleableKey(keyView, vchSecret))
             {
                 strErr = "Error reading wallet database: LoadMalleableKey failed";
+                return false;
+            }
+        }
+        else if (strType == "malcpair")
+        {
+            string strKeyView;
+
+            std::vector<unsigned char> vchCryptedSecret;
+            ssKey >> strKeyView;
+            ssValue >> vchCryptedSecret;
+
+            CMalleableKeyView keyView(strKeyView);
+            if (!pwallet->LoadCryptedMalleableKey(keyView, vchCryptedSecret))
+            {
+                strErr = "Error reading wallet database: LoadCryptedMalleableKey failed";
                 return false;
             }
         }
@@ -497,7 +497,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 static bool IsKeyType(string strType)
 {
     return (strType== "key" || strType == "wkey" ||
-            strType == "mkey" || strType == "ckey" || strType == "malpair");
+            strType == "mkey" || strType == "ckey" || strType == "malpair" || strType == "malcpair");
 }
 
 DBErrors CWalletDB::LoadWallet(CWallet* pwallet)

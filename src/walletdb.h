@@ -95,14 +95,28 @@ public:
         return true;
     }
 
-    bool WriteMalleableKey(const CMalleableKeyView& keyView, const CMalleableKey& malleableKey, const CKeyMetadata &keyMeta)
+    bool WriteMalleableKey(const CMalleableKeyView& keyView, const CSecret& vchSecretH, const CKeyMetadata &keyMeta)
     {
         nWalletDBUpdated++;
         if(!Write(std::make_pair(std::string("malmeta"), keyView.ToString()), keyMeta))
             return false;
 
-        if(!Write(std::make_pair(std::string("malpair"), keyView.ToString()), malleableKey.GetSecretH(), false))
+        if(!Write(std::make_pair(std::string("malpair"), keyView.ToString()), vchSecretH, false))
             return false;
+
+        return true;
+    }
+
+    bool WriteCryptedMalleableKey(const CMalleableKeyView& keyView, const std::vector<unsigned char>& vchCryptedSecretH, const CKeyMetadata &keyMeta)
+    {
+        nWalletDBUpdated++;
+        if(!Write(std::make_pair(std::string("malmeta"), keyView.ToString()), keyMeta))
+            return false;
+
+        if(!Write(std::make_pair(std::string("malcpair"), keyView.ToString()), vchCryptedSecretH, false))
+            return false;
+
+        Erase(std::make_pair(std::string("malpair"), keyView.ToString()));
 
         return true;
     }
@@ -141,6 +155,11 @@ public:
     bool EraseCryptedKey(const CPubKey& vchPubKey)
     {
         return Erase(std::make_pair(std::string("ckey"), vchPubKey.Raw()));
+    }
+
+    bool EraseCryptedMalleableKey(const CMalleableKeyView& keyView)
+    {
+        return Erase(std::make_pair(std::string("malcpair"), keyView.ToString()));
     }
 
     bool WriteCScript(const uint160& hash, const CScript& redeemScript)

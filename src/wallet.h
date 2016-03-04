@@ -161,12 +161,14 @@ public:
     bool LoadMalleableKeyMetadata(const CMalleableKeyView &keyView, const CKeyMetadata &metadata);
 
     // Load malleable key without saving it to disk (used by LoadWallet)
-    bool LoadMalleableKey(const CMalleableKey &mKey) { return CCryptoKeyStore::AddMalleableKey(mKey); }
+    bool LoadMalleableKey(const CMalleableKeyView &keyView, const CSecret &vchSecretH) { return CCryptoKeyStore::AddMalleableKey(keyView, vchSecretH); }
+    bool LoadCryptedMalleableKey(const CMalleableKeyView &keyView, const std::vector<unsigned char> &vchCryptedSecretH) { return CCryptoKeyStore::AddCryptedMalleableKey(keyView, vchCryptedSecretH); }
 
     bool LoadMinVersion(int nVersion) { nWalletVersion = nVersion; nWalletMaxVersion = std::max(nWalletMaxVersion, nVersion); return true; }
 
     // Adds an encrypted key to the store, and saves it to disk.
     bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    bool AddCryptedMalleableKey(const CMalleableKeyView& keyView, const std::vector<unsigned char> &vchCryptedSecretH);
     // Adds an encrypted key to the store, without saving it to disk (used by LoadWallet)
     bool LoadCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret) { SetMinVersion(FEATURE_WALLETCRYPT); return CCryptoKeyStore::AddCryptedKey(vchPubKey, vchCryptedSecret); }
     bool AddCScript(const CScript& redeemScript);

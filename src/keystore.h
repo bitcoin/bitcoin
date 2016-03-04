@@ -40,7 +40,7 @@ public:
     virtual bool AddKey(const CKey& key) =0;
 
     // Add a malleable key to store.
-    virtual bool AddMalleableKey(const CMalleableKey& mKey) =0;
+    virtual bool AddMalleableKey(const CMalleableKeyView &keyView, const CSecret &vchSecretH) =0;
     virtual bool GetMalleableKey(const CMalleableKeyView &keyView, CMalleableKey &mKey) const =0;
 
     // Check whether a key corresponding to a given address is present in the store.
@@ -92,7 +92,7 @@ protected:
 
 public:
     bool AddKey(const CKey& key);
-    bool AddMalleableKey(const CMalleableKey& mKey);
+    bool AddMalleableKey(const CMalleableKeyView& keyView, const CSecret &vchSecretH);
     bool GetMalleableKey(const CMalleableKeyView &keyView, CMalleableKey &mKey) const
     {
         {
@@ -196,7 +196,6 @@ public:
     void ListMalleableViews(std::list<CMalleableKeyView> &malleableViewList) const
     {
         malleableViewList.clear();
-
         {
             LOCK(cs_KeyStore);
             for (MalleableKeyMap::const_iterator mi = mapMalleableKeys.begin(); mi != mapMalleableKeys.end(); mi++)
@@ -222,6 +221,7 @@ public:
 };
 
 typedef std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char> > > CryptedKeyMap;
+typedef std::map<CMalleableKeyView, std::vector<unsigned char> > CryptedMalleableKeyMap;
 
 /** Keystore which keeps the private keys encrypted.
  * It derives from the basic key store, which is used if no encryption is active.
@@ -230,6 +230,7 @@ class CCryptoKeyStore : public CBasicKeyStore
 {
 private:
     CryptedKeyMap mapCryptedKeys;
+    CryptedMalleableKeyMap mapCryptedMalleableKeys;
 
     CKeyingMaterial vMasterKey;
 
@@ -269,7 +270,10 @@ public:
     bool Lock();
 
     virtual bool AddCryptedKey(const CPubKey &vchPubKey, const std::vector<unsigned char> &vchCryptedSecret);
+    virtual bool AddCryptedMalleableKey(const CMalleableKeyView& keyView, const std::vector<unsigned char>  &vchCryptedSecretH);
+
     bool AddKey(const CKey& key);
+    bool AddMalleableKey(const CMalleableKeyView& keyView, const CSecret &vchSecretH);
     bool HaveKey(const CKeyID &address) const
     {
         {
@@ -295,6 +299,73 @@ public:
             setAddress.insert((*mi).first);
             mi++;
         }
+    }
+
+    bool GetMalleableKey(const CMalleableKeyView &keyView, CMalleableKey &mKey) const;
+
+    bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R) const
+    {
+        {
+            LOCK(cs_KeyStore);
+            if (!IsCrypted())
+                return CBasicKeyStore::CheckOwnership(pubKeyVariant, R);
+            for (CryptedMalleableKeyMap::const_iterator mi = mapCryptedMalleableKeys.begin(); mi != mapCryptedMalleableKeys.end(); mi++)
+            {
+                if (mi->first.CheckKeyVariant(R, pubKeyVariant))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    bool CheckOwnership(const CPubKey &pubKeyVariant, const CPubKey &R, CMalleableKeyView &view) const
+    {
+        {
+            LOCK(cs_KeyStore);
+            if (!IsCrypted())
+                return CBasicKeyStore::CheckOwnership(pubKeyVariant, R, view);
+            for (CryptedMalleableKeyMap::const_iterator mi = mapCryptedMalleableKeys.begin(); mi != mapCryptedMalleableKeys.end(); mi++)
+            {
+                if (mi->first.CheckKeyVariant(R, pubKeyVariant))
+                {
+                    view = mi->first;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool CreatePrivKey(const CPubKey &pubKeyVariant, const CPubKey &R, CKey &privKey) const;
+
+    void ListMalleableViews(std::list<CMalleableKeyView> &malleableViewList) const
+    {
+        malleableViewList.clear();
+        {
+            LOCK(cs_KeyStore);
+            if (!IsCrypted())
+                return CBasicKeyStore::ListMalleableViews(malleableViewList);
+            for (CryptedMalleableKeyMap::const_iterator mi = mapCryptedMalleableKeys.begin(); mi != mapCryptedMalleableKeys.end(); mi++)
+                malleableViewList.push_back(CMalleableKeyView(mi->first));
+        }
+    }
+
+    bool GetMalleableView(const CMalleablePubKey &mpk, CMalleableKeyView &view)
+    {
+        const CKeyID &mpkID = mpk.GetID();
+        {
+            LOCK(cs_KeyStore);
+            if (!IsCrypted())
+                return CBasicKeyStore::GetMalleableView(mpk, view);
+            for (CryptedMalleableKeyMap::const_iterator mi = mapCryptedMalleableKeys.begin(); mi != mapCryptedMalleableKeys.end(); mi++)
+                if (mi->first.GetID() == mpkID)
+                {
+                    view = CMalleableKeyView(mi->first);
+                    return true;
+                }
+        }
+
+        return false;
     }
 
     /* Wallet status (encrypted, locked) changed.

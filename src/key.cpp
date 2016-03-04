@@ -1002,6 +1002,11 @@ bool CMalleableKey::SetString(const std::string& strMutableKey)
 
 // CMalleableKeyView
 
+CMalleableKeyView::CMalleableKeyView(const std::string &strMalleableKey)
+{
+    SetString(strMalleableKey);
+}
+
 CMalleableKeyView::CMalleableKeyView(const CMalleableKey &b)
 {
     if (b.vchSecretL.size() != 32)

@@ -324,6 +324,7 @@ private:
 public:
     CMalleableKeyView() { nVersion = 0; };
     CMalleableKeyView(const CMalleableKey &b);
+    CMalleableKeyView(const std::string &strMalleableKey);
 
     CMalleableKeyView(const CMalleableKeyView &b);
     CMalleableKeyView& operator=(const CMalleableKey &b);

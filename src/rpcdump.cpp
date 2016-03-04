@@ -39,6 +39,8 @@ Value importprivkey(const Array& params, bool fHelp)
             "importprivkey <novacoinprivkey> [label] [rescan=true]\n"
             "Adds a private key (as returned by dumpprivkey) to your wallet.");
 
+    EnsureWalletIsUnlocked();
+
     string strSecret = params[0].get_str();
     string strLabel = "";
     if (params.size() > 1)
@@ -247,6 +249,8 @@ Value dumpmalleablekey(const Array& params, bool fHelp)
             "dumpmalleablekey <Key view>\n"
             "Dump the private and public key pairs, which correspond to provided key view.\n");
 
+    EnsureWalletIsUnlocked();
+
     CMalleableKey mKey;
     CMalleableKeyView keyView;
     keyView.SetString(params[0].get_str());
@@ -267,6 +271,9 @@ Value importmalleablekey(const Array& params, bool fHelp)
         throw runtime_error (
             "importmalleablekey <Key data>\n"
             "Imports the private key pair into your wallet.\n");
+
+
+    EnsureWalletIsUnlocked();
 
     CMalleableKey mKey;
     bool fSuccess = mKey.SetString(params[0].get_str());

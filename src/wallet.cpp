@@ -94,12 +94,32 @@ bool CWallet::AddKey(const CKey& key)
 bool CWallet::AddMalleableKey(const CMalleableKey& mKey)
 {
     CMalleableKeyView keyView = CMalleableKeyView(mKey);
-    if (!CCryptoKeyStore::AddMalleableKey(mKey))
+    CSecret vchSecretH = mKey.GetSecretH();
+    if (!CCryptoKeyStore::AddMalleableKey(keyView, vchSecretH))
         return false;
     if (!fFileBacked)
         return true;
     if (!IsCrypted())
-        return CWalletDB(strWalletFile).WriteMalleableKey(keyView, mKey, mapMalleableKeyMetadata[keyView]);
+        return CWalletDB(strWalletFile).WriteMalleableKey(keyView, vchSecretH, mapMalleableKeyMetadata[keyView]);
+    return true;
+}
+
+bool CWallet::AddCryptedMalleableKey(const CMalleableKeyView& keyView, const std::vector<unsigned char> &vchCryptedSecretH)
+{
+    if (!CCryptoKeyStore::AddCryptedMalleableKey(keyView, vchCryptedSecretH))
+        return false;
+
+    if (!fFileBacked)
+        return true;
+
+    {
+        LOCK(cs_wallet);
+        if (pwalletdbEncryption)
+            return pwalletdbEncryption->WriteCryptedMalleableKey(keyView, vchCryptedSecretH, mapMalleableKeyMetadata[keyView]);
+        else
+            return CWalletDB(strWalletFile).WriteCryptedMalleableKey(keyView, vchCryptedSecretH, mapMalleableKeyMetadata[keyView]);
+    }
+
     return true;
 }
 
@@ -458,6 +478,16 @@ bool CWallet::DecryptWallet(const SecureString& strWalletPassphrase)
                 pwalletdbDecryption->EraseCryptedKey(key.GetPubKey());
                 pwalletdbDecryption->WriteKey(key.GetPubKey(), key.GetPrivKey(), mapKeyMetadata[(*mi).first]);
                 mi++;
+            }
+
+            MalleableKeyMap::const_iterator mi2 = mapMalleableKeys.begin();
+            while (mi2 != mapMalleableKeys.end())
+            {
+                const CSecret &vchSecretH = mi2->second;
+                const CMalleableKeyView &keyView = mi2->first;
+                pwalletdbDecryption->EraseCryptedMalleableKey(keyView);
+                pwalletdbDecryption->WriteMalleableKey(keyView, vchSecretH, mapMalleableKeyMetadata[keyView]);
+                mi2++;
             }
 
             // Erase master keys
