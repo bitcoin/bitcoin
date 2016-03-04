@@ -38,6 +38,7 @@ unsigned int excessiveAcceptDepth = DEFAULT_EXCESSIVE_ACCEPT_DEPTH;
 unsigned int maxMessageSizeMultiplier = DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER;
 
 std::vector<std::string> BUComments = std::vector<std::string>();
+std::string minerComment;
 
 // Variables for traffic shaping
 CLeakyBucket receiveShaper(DEFAULT_MAX_RECV_BURST, DEFAULT_AVE_RECV);
@@ -62,6 +63,21 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-use-thinblocks=<n>", strprintf(_("Turn Thinblocks on or off (off: 0, on: 1, default: %d)"), 1));
     strUsage += HelpMessageOpt("-connect-thinblock=<ip:port>", _("Connect to a thinblock node(s). Blocks will only be downloaded from a thinblock peer.  If no connections are possible then regular blocks will then be downloaded form any other connected peers."));
     return strUsage;
+}
+
+std::string FormatCoinbaseMessage(const std::vector<std::string>& comments,const std::string& customComment)
+{
+    std::ostringstream ss;
+    if (!comments.empty())
+    {
+        std::vector<std::string>::const_iterator it(comments.begin());
+        ss << "/" << *it;
+        for(++it; it != comments.end(); ++it)
+            ss << "/" << *it;
+        ss << "/";
+    }
+    std::string ret = ss.str() + minerComment;
+    return ret;
 }
 
 UniValue pushtx(const UniValue& params, bool fHelp)
@@ -214,6 +230,33 @@ bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, u
 
     LogPrintf("Acceptable block: ver:%x time:%d size: %" PRIu64 " Tx:%" PRIu64 " Sig:%d\n", block.nVersion, block.nTime, blockSize, nTx, nSigOps);
     return false;
+}
+
+extern UniValue getminercomment(const UniValue& params, bool fHelp)
+{
+  if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "getminercomment\n"
+            "\nReturn the comment that will be put into each mined block's coinbase\n transaction after the Bitcoin Unlimited parameters."
+            "\nResult\n"
+            "  minerComment (string) miner comment\n"
+            "\nExamples:\n" +
+            HelpExampleCli("getminercomment", "") + HelpExampleRpc("getminercomment", ""));
+  
+  return minerComment;
+}
+
+extern UniValue setminercomment(const UniValue& params, bool fHelp)
+{
+  if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "setminercomment\n"
+            "\nSet the comment that will be put into each mined block's coinbase\n transaction after the Bitcoin Unlimited parameters.\n Comments that are too long will be truncated."
+            "\nExamples:\n" +
+            HelpExampleCli("setminercomment", "\"bitcoin is fundamentally emergent consensus\"") + HelpExampleRpc("setminercomment", "\"bitcoin is fundamentally emergent consensus\""));
+
+  minerComment = params[0].getValStr();
+  return NullUniValue;
 }
 
 UniValue getexcessiveblock(const UniValue& params, bool fHelp)

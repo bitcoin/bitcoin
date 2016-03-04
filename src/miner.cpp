@@ -282,7 +282,22 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 
         // Compute final coinbase transaction.
         txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-        txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
+        txNew.vin[0].scriptSig = CScript() << nHeight << CScriptNum(0);
+
+        // BU005 add block size settings to the coinbase
+        std::string cbmsg = FormatCoinbaseMessage(BUComments, minerComment);
+        const char* cbcstr = cbmsg.c_str();
+        vector<unsigned char> vec(cbcstr, cbcstr+cbmsg.size());
+        COINBASE_FLAGS = CScript() << vec;
+        // Chop off any extra data in the COINBASE_FLAGS so the sig does not exceed the max.  
+        // we can do this because the coinbase is not a "real" script...
+        if (txNew.vin[0].scriptSig.size() + COINBASE_FLAGS.size() > MAX_COINBASE_SCRIPTSIG_SIZE)
+          {
+          COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - txNew.vin[0].scriptSig.size());
+          }
+        txNew.vin[0].scriptSig = txNew.vin[0].scriptSig + COINBASE_FLAGS;
+        // BU005 END
+
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
 
@@ -314,7 +329,13 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     ++nExtraNonce;
     unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
     CMutableTransaction txCoinbase(pblock->vtx[0]);
-    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce)) + COINBASE_FLAGS;
+ 
+    CScript script = (CScript() << nHeight << CScriptNum(nExtraNonce));
+    if (script.size() + COINBASE_FLAGS.size() > MAX_COINBASE_SCRIPTSIG_SIZE)
+      {
+	COINBASE_FLAGS.resize(MAX_COINBASE_SCRIPTSIG_SIZE - script.size());
+      }
+    txCoinbase.vin[0].scriptSig = script + COINBASE_FLAGS;
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = txCoinbase;
