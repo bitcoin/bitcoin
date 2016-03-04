@@ -1,8 +1,8 @@
-Source: bitcoin
+Source: bitcoinclassic
 Section: utils
 Priority: optional
-Maintainer: Jonas Smedegaard <dr@jones.dk>
-Uploaders: Micah Anderson <micah@debian.org>
+Maintainer: The Classic Devs <packages@bitcoinclassic.com>
+Uploaders: Micah Anderson <micah@debian.org>, Jon Rumion <yamamushi@gmail.com>
 Build-Depends: debhelper,
  devscripts,
  automake,
@@ -17,15 +17,18 @@ Build-Depends: debhelper,
  libboost-program-options-dev (>> 1.35) | libboost-program-options1.35-dev,
  libboost-thread-dev (>> 1.35) | libboost-thread1.35-dev,
  libboost-test-dev (>> 1.35) | libboost-test1.35-dev,
- qt4-qmake,
- libqt4-dev,
+ libboost-dev,
+ libboost-chrono-dev,
+ libboost-all-dev,
+ libqt5gui5, libqt5core5a, libqt5dbus5, qttools5-dev, qttools5-dev-tools,
  libqrencode-dev,
  libprotobuf-dev, protobuf-compiler,
- python
+ python,
+ libevent-dev
 Standards-Version: 3.9.2
-Homepage: https://bitcoincore.org/
-Vcs-Git: git://github.com/bitcoin/bitcoin.git
-Vcs-Browser: https://github.com/bitcoin/bitcoin
+Homepage: https://bitcoinclassic.com/
+Vcs-Git: git://github.com/bitcoinclassic/bitcoinclassic.git
+Vcs-Browser: https://github.com/bitcoinclassic/bitcoinclassic
 
 Package: bitcoind
 Architecture: any

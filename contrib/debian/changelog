@@ -1,3 +1,13 @@
+bitcoinclassic (0.12.0-trusty1) trusty; urgency=medium
+
+  * Change release to Bitcoin Classic
+  * Add Qt5 libraries
+  * Use Trusty
+  * Add libboost-dev package
+  * Add libevent-event as a dependency.
+
+ -- Jon Rumion (yamamushi) <yamamushi@gmail.com>  Fri, 4 Mar 2016 11:00:00 -0600
+
 bitcoin (0.11.0-precise1) precise; urgency=medium
 
   * New upstream release.
