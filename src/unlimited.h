@@ -12,7 +12,8 @@ enum {
     DEFAULT_MAX_GENERATED_BLOCK_SIZE = 1000000,
     DEFAULT_EXCESSIVE_ACCEPT_DEPTH = 4,
     DEFAULT_EXCESSIVE_BLOCK_SIZE = 16000000,
-    DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 10
+    DEFAULT_MAX_MESSAGE_SIZE_MULTIPLIER = 10,
+    MAX_COINBASE_SCRIPTSIG_SIZE = 100
 };
 
 class CBlock;
@@ -25,8 +26,13 @@ extern unsigned int excessiveBlockSize;
 extern unsigned int excessiveAcceptDepth;
 extern unsigned int maxMessageSizeMultiplier;
 
-extern std::vector<std::string> BUComments;
+extern std::vector<std::string> BUComments;  // BU005: Strings specific to the config of this client that should be communicated to other clients
+extern std::string minerComment;  // An arbitrary field that miners can change to annotate their blocks
+// Convert the BUComments to the string client's "subversion" string
 extern void settingsToUserAgentString();
+// Convert a list of client comments (typically BUcomments) and a custom comment into a string appropriate for the coinbase txn
+// The coinbase size restriction is NOT enforced
+extern std::string FormatCoinbaseMessage(const std::vector<std::string>& comments,const std::string& customComment);  
 
 extern void UnlimitedSetup(void);
 extern std::string UnlimitedCmdLineHelp();
@@ -52,6 +58,9 @@ extern UniValue setminingmaxblock(const UniValue& params, bool fHelp);
 
 extern UniValue getexcessiveblock(const UniValue& params, bool fHelp);
 extern UniValue setexcessiveblock(const UniValue& params, bool fHelp);
+
+extern UniValue getminercomment(const UniValue& params, bool fHelp);
+extern UniValue setminercomment(const UniValue& params, bool fHelp);
 
 // These variables for traffic shaping need to be globally scoped so the GUI and CLI can adjust the parameters
 extern CLeakyBucket receiveShaper;

@@ -77,6 +77,18 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     // Simple block creation, nothing special yet:
     BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
 
+    // Simple block creation, with coinbase message
+    settingsToUserAgentString();
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+
+    // Simple block creation, with coinbase message and miner message
+    settingsToUserAgentString();
+    minerComment = "I am a meat popsicle.";
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+
+    minerComment = "flying is throwing yourself against the ground and missing.  This comment is WAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY too long.";
+    BOOST_CHECK(pblocktemplate = CreateNewBlock(chainparams, scriptPubKey));
+
     // We can't make transactions until we have inputs
     // Therefore, load 100 blocks :)
     std::vector<CTransaction*>txFirst;
