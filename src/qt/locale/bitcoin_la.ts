@@ -609,7 +609,7 @@
         <translation>Tractatio URI</translation>
     </message>
     <message>
-        <source>Cannot start bitcoin: click-to-pay handler</source>
+        <source>Cannot start hodlcoin: click-to-pay handler</source>
         <translation>Bitcoin incipere non potest: cliccare-ad-pensandum handler</translation>
     </message>
     </context>
