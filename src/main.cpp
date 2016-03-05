@@ -1925,7 +1925,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     std::vector<std::pair<uint256, CDiskTxPos> > vPos;
     vPos.reserve(block.vtx.size());
     blockundo.vtxundo.reserve(block.vtx.size() - 1);
-    int nChecked = 0;      
+    int nChecked = 0;
+    int nOrphansChecked = 0;     
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = block.vtx[i];
@@ -1959,16 +1960,21 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
             // Only check inputs when the tx hash in not in the setPreVerifiedTxHash as would only
             // happen if this were a regular block or when a tx is found w?ithin the returning XThinblock.
-            uint256 hash = tx.GetHash(); 
-            if (!setPreVerifiedTxHash.count(hash)) {          
+            uint256 hash = tx.GetHash();
+            bool inOrphanCache = setUnVerifiedOrphanTxHash.count(hash);
+            if ((inOrphanCache) || (!setPreVerifiedTxHash.count(hash) && !inOrphanCache)) {          
                 nChecked++;
+                if (inOrphanCache)
+                    nOrphansChecked++;
                 if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, 
-                           &costTracker, nScriptCheckThreads ? &vChecks : NULL))
+                            &costTracker, nScriptCheckThreads ? &vChecks : NULL))
                     return error("ConnectBlock(): CheckInputs on %s failed with %s",
                         tx.GetHash().ToString(), FormatStateMessage(state));
             }
-            else
+            else {
                 setPreVerifiedTxHash.erase(hash);
+                setUnVerifiedOrphanTxHash.erase(hash);
+            }
             control.Add(vChecks);
         }
 
@@ -1981,7 +1987,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         vPos.push_back(std::make_pair(tx.GetHash(), pos));
         pos.nTxOffset += ::GetSerializeSize(tx, SER_DISK, CLIENT_VERSION);
     }
-    LogPrint("thin", "Number of CheckInputs() performed is %d\n", nChecked);
+    LogPrint("thin", "Number of CheckInputs() performed: %d  Orphan count: %d\n", nChecked, nOrphansChecked);
 
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
@@ -4472,7 +4478,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                 if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
                                     inv2.type = MSG_XTHINBLOCK;
-                                    BuildSeededBloomFilter(filterMemPool);
+                                    std::vector<uint256> vOrphanHashes;
+                                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                                        vOrphanHashes.push_back((*mi).first);
+                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
                                     ss << inv2;
                                     ss << filterMemPool;
                                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -4485,7 +4494,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                 if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
                                     inv2.type = MSG_XTHINBLOCK;
-                                    BuildSeededBloomFilter(filterMemPool);
+                                    std::vector<uint256> vOrphanHashes;
+                                    for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                                        vOrphanHashes.push_back((*mi).first);
+                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
                                     ss << inv2;
                                     ss << filterMemPool;
                                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -4936,6 +4948,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 collision = true;
             mapPartialTxHash[cheapHash] = (*mi).first;
         }
+        for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi) {
+            uint64_t cheapHash = (*mi).first.GetCheapHash();
+            if(mapPartialTxHash.count(cheapHash)) //Check for collisions
+                collision = true;
+            mapPartialTxHash[cheapHash] = (*mi).first;
+        }
 
         // There is a remote possiblity of a Tx hash collision therefore if it occurs we re-request a normal
         // thinblock which has the full Tx hash data rather than just the truncated hash.
@@ -4963,10 +4981,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             {
                 bool inMemPool = mempool.lookup(hash, tx);
                 bool inMissingTx = thinBlock.mapMissingTx.count(hash) > 0;
-                if (inMemPool && inMissingTx)
+                bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
+
+                if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
                     unnecessaryCount++;
 
-                if (inMemPool && fXVal)
+                if (inOrphanCache) {
+                    tx = mapOrphanTransactions[hash].tx;
+                    setUnVerifiedOrphanTxHash.insert(hash);
+                }
+                else if (inMemPool && fXVal)
                     setPreVerifiedTxHash.insert(hash);
                 else if (inMissingTx)
                     tx = thinBlock.mapMissingTx[hash];
@@ -4991,6 +5015,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      ((float) blockSize) / ((float) nSizeThinBlock)
                      );
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);  // clears the thin block
+            BOOST_FOREACH(uint64_t &cheapHash, thinBlock.vTxHashes)
+                EraseOrphanTx(mapPartialTxHash[cheapHash]);
         }
         else if (pfrom->thinBlockWaitingForTxns > 0) {
             // This marks the end of the transactions we've received. If we get this and we have NOT been able to
@@ -5048,10 +5074,16 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             {
                 bool inMemPool = mempool.lookup(hash, tx);
                 bool inMissingTx = thinBlock.mapMissingTx.count(hash) > 0;
-                if (inMemPool && inMissingTx)
+                bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
+
+                if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
                     unnecessaryCount++;
 
-                if (inMemPool && fXVal)
+                if (inOrphanCache) {
+                    tx = mapOrphanTransactions[hash].tx;
+                    setUnVerifiedOrphanTxHash.insert(hash);
+                }
+                else if (inMemPool && fXVal)
                     setPreVerifiedTxHash.insert(hash);
                 else if (inMissingTx)
                     tx = thinBlock.mapMissingTx[hash];
@@ -5076,6 +5108,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      ((float) blockSize) / ((float) nSizeThinBlock)
                      );
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
+            BOOST_FOREACH(uint256 &hash, thinBlock.vTxHashes)
+                EraseOrphanTx(hash);
         }
         else if (pfrom->thinBlockWaitingForTxns > 0) {
             // This marks the end of the transactions we've received. If we get this and we have NOT been able to
@@ -5115,17 +5149,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->thinBlockWaitingForTxns = -1;
             pfrom->AddInventoryKnown(inv);
 
-            // for compression statistics, we have to add up the size of xthinblock and the re-requested thinBlockTx.
-            int nSizeThinBlockTx = ::GetSerializeSize(thinBlockTx, SER_NETWORK, PROTOCOL_VERSION);
             int blockSize = pfrom->thinBlock.GetSerializeSize(SER_NETWORK, CBlock::CURRENT_VERSION);
-            LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes (thinblock) and %d bytes (re-requested tx), compression ratio %3.2f\n",
+            LogPrint("thin", "Reassembled thin block for %s (%d bytes). Message was %d bytes, compression ratio %3.2f\n",
                      pfrom->thinBlock.GetHash().ToString(),
                      blockSize,
                      pfrom->nSizeThinBlock,
-                     nSizeThinBlockTx,
-                     ((float) blockSize) / ( (float) pfrom->nSizeThinBlock + (float) nSizeThinBlockTx )
+                     ((float) blockSize) / ((float) pfrom->nSizeThinBlock)
                      );
+            std::vector<CTransaction> vTx = pfrom->thinBlock.vtx;
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
+            for (unsigned int i = 0; i < vTx.size(); i++)
+                EraseOrphanTx(vTx[i].GetHash());
         }
         else {
             LogPrint("thin", "Failed to retrieve all transactions for block - DOS Banned\n");
@@ -5195,6 +5229,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
+        for (unsigned int i = 0; i < block.vtx.size(); i++)
+            EraseOrphanTx(block.vtx[i].GetHash());
     }
 
 
@@ -5888,7 +5924,10 @@ bool SendMessages(CNode* pto)
                         // Must download a block from a ThinBlock peer
                         if (pto->mapThinBlocksInFlight.size() < 1 && pto->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
-                            BuildSeededBloomFilter(filterMemPool);
+                            std::vector<uint256> vOrphanHashes;
+                            for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                                vOrphanHashes.push_back((*mi).first);
+                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -5901,7 +5940,10 @@ bool SendMessages(CNode* pto)
                         // Try to download a thinblock if possible otherwise just download a regular block
                         if (pto->mapThinBlocksInFlight.size() < 1 && pto->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
-                            BuildSeededBloomFilter(filterMemPool);
+                            std::vector<uint256> vOrphanHashes;
+                            for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
+                                vOrphanHashes.push_back((*mi).first);
+                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);

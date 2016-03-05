@@ -133,7 +133,7 @@ bool IsChainNearlySyncd()
     return true;
 }
 
-void BuildSeededBloomFilter(CBloomFilter& filterMemPool)
+void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256> vOrphanHashes)
 {
     LogPrint("thin", "Starting creation of bloom filter\n");
     seed_insecure_rand();
@@ -141,7 +141,7 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool)
     if (nBloomPoolSize > MAX_BLOOM_FILTER_SIZE / 1.8)
         nBloomPoolSize = MAX_BLOOM_FILTER_SIZE / 1.8;
     double nBloomDecay = 1.5 - (nBloomPoolSize * 1.8 / MAX_BLOOM_FILTER_SIZE);  // We should never go below 0.5 as we will start seeing re-requests for tx's
-    int nElements = std::max((int)((int)mempool.mapTx.size() * nBloomDecay), 1); // Must make sure nElements is greater than zero or will assert
+    int nElements = std::max((int)(((int)mempool.mapTx.size() + (int)vOrphanHashes.size()) * nBloomDecay), 1); // Must make sure nElements is greater than zero or will assert
     double nFPRate = .001 + (((double)nElements * 1.8 / MAX_BLOOM_FILTER_SIZE) * .004); // The false positive rate in percent decays as the mempool grows
     filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
     LogPrint("thin", "Bloom multiplier: %f FPrate: %f Num elements in bloom filter: %d num mempool entries: %d\n", nBloomDecay, nFPRate, nElements, (int)mempool.mapTx.size());
@@ -152,6 +152,8 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool)
     mempool.queryHashes(vMemPoolHashes);
     for (uint64_t i = 0; i < vMemPoolHashes.size(); i++)
          filterMemPool.insert(vMemPoolHashes[i]);
+    for (uint64_t i = 0; i < vOrphanHashes.size(); i++)
+         filterMemPool.insert(vOrphanHashes[i]);
     LogPrint("thin", "Created bloom filter: %d bytes\n",::GetSerializeSize(filterMemPool, SER_NETWORK, PROTOCOL_VERSION));
 }
 
@@ -212,8 +214,10 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
 
         // When we no longer have any thinblocks in flight then clear the set
         // just to make sure we don't somehow get growth over time.
-        if (nTotalThinBlocksInFlight == 0)
+        if (nTotalThinBlocksInFlight == 0) {
             setPreVerifiedTxHash.clear();
+            setUnVerifiedOrphanTxHash.clear();
+        }
     }
 
     // Clear the thinblock timer used for preferential download

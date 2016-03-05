@@ -150,7 +150,12 @@ extern bool fAlerts;
  * processing a new block.  (Protected by cs_main)
  */
 static std::set<uint256> setPreVerifiedTxHash;
-// Xpress Validation: end section
+/**
+ * Orphans that are added to the thinblock must be verifed since they have never been
+ *  accepted into the memory pool.
+ */
+static std::set<uint256> setUnVerifiedOrphanTxHash;
+// BU - Xpress Validation: end section
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
