@@ -3274,7 +3274,7 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
 
       // ensure correct amount of tokens in value string
       boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
-      if (vstr.size() != 7) {
+      if (vstr.size() != 8) {
           PrintToLog("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
           continue;
       }
@@ -3287,8 +3287,11 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
       int64_t amount1 = boost::lexical_cast<int64_t>(vstr[4]);
       int64_t amount2 = boost::lexical_cast<int64_t>(vstr[5]);
       int blockNum = atoi(vstr[6]);
+      int64_t tradingFee = boost::lexical_cast<int64_t>(vstr[7]);
+
       std::string strAmount1 = FormatMP(prop1, amount1);
       std::string strAmount2 = FormatMP(prop2, amount2);
+      std::string strTradingFee = FormatMP(prop1, tradingFee);
 
       // populate trade object and add to the trade array, correcting for orientation of trade
       Object trade;
@@ -3304,6 +3307,7 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
           trade.push_back(Pair("address", address2));
           trade.push_back(Pair("amountsold", strAmount2));
           trade.push_back(Pair("amountreceived", strAmount1));
+          trade.push_back(Pair("tradingfee", strTradingFee));
           totalReceived += amount1;
           totalSold += amount2;
       }
@@ -3340,7 +3344,7 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
       if (strKey.size() != 129) continue; // only interested in matches
       boost::split(vecKeys, strKey, boost::is_any_of("+"), boost::token_compress_on);
       boost::split(vecValues, strValue, boost::is_any_of(":"), boost::token_compress_on);
-      if (vecKeys.size() != 2 || vecValues.size() != 7) {
+      if (vecKeys.size() != 2 || vecValues.size() != 8) {
           PrintToLog("TRADEDB error - unexpected number of tokens (%s:%s)\n", strKey, strValue);
           continue;
       }
@@ -3450,11 +3454,11 @@ void CMPTradeList::recordNewTrade(const uint256& txid, const std::string& addres
   if (msc_debug_tradedb) PrintToLog("%s(): %s\n", __FUNCTION__, status.ToString());
 }
 
-void CMPTradeList::recordMatchedTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum)
+void CMPTradeList::recordMatchedTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum, int64_t fee)
 {
   if (!pdb) return;
   const string key = txid1.ToString() + "+" + txid2.ToString();
-  const string value = strprintf("%s:%s:%u:%u:%lu:%lu:%d", address1, address2, prop1, prop2, amount1, amount2, blockNum);
+  const string value = strprintf("%s:%s:%u:%u:%lu:%lu:%d:%d", address1, address2, prop1, prop2, amount1, amount2, blockNum, fee);
   Status status;
   if (pdb)
   {

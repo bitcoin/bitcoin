@@ -262,14 +262,14 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             int64_t tradingFee = seller_amountGot / feeDivider;
 
             // subtract the fee from the amount the seller will receive
-            int64_t seller_toGet = seller_amountGot - tradingFee;
+            int64_t seller_amountGotAfterFee = seller_amountGot - tradingFee;
 
             // add the fee to the fee cache
             p_feecache->AddFee(pold->getDesProperty(), pnew->getBlock(), tradingFee);
 
             // transfer the payment property from buyer to seller
             assert(update_tally_map(pnew->getAddr(), pnew->getProperty(), -seller_amountGot, BALANCE));
-            assert(update_tally_map(pold->getAddr(), pold->getDesProperty(), seller_toGet, BALANCE));
+            assert(update_tally_map(pold->getAddr(), pold->getDesProperty(), seller_amountGotAfterFee, BALANCE));
 
             // transfer the market (the one being sold) property from seller to buyer
             assert(update_tally_map(pold->getAddr(), pold->getProperty(), -buyer_amountGot, METADEX_RESERVE));
@@ -298,7 +298,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             // record the trade in MPTradeList
             t_tradelistdb->recordMatchedTrade(pold->getHash(), pnew->getHash(), // < might just pass pold, pnew
-                pold->getAddr(), pnew->getAddr(), pold->getDesProperty(), pnew->getDesProperty(), seller_amountGot, buyer_amountGot, pnew->getBlock());
+                pold->getAddr(), pnew->getAddr(), pold->getDesProperty(), pnew->getDesProperty(), seller_amountGotAfterFee, buyer_amountGot, pnew->getBlock(), tradingFee);
 
             if (msc_debug_metadex1) PrintToLog("++ erased old: %s\n", offerIt->ToString());
             // erase the old seller element
