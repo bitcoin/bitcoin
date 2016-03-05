@@ -146,6 +146,60 @@ bool BalanceToJSON(const std::string& address, uint32_t property, Object& balanc
     }
 }
 
+// Provides the current values of the fee cache
+Value omni_getfeecache(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "omni_getfeecache [ propertyid ]\n"
+            "\nReturns the amount of fees cached for distribution.\n"
+            "\nArguments:\n"
+            "1. propertyid           (number, optional) filter the results on this property id\n"
+            "\nResult:\n"
+            "[                       (array of JSON objects)\n"
+            "  {\n"
+            "    \"propertyid\" : nnnnnnn,          (number) the property id\n"
+            "    \"cachedfees\" : \"n.nnnnnnnn\",   (string) the amount of fees cached for this property\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getfeecache", "31")
+            + HelpExampleRpc("omni_getfeecache", "31")
+        );
+
+    uint32_t propertyId = 0;
+    if (0 < params.size()) {
+        propertyId = ParsePropertyId(params[0]);
+    }
+
+    if (propertyId > 0) {
+        RequireExistingProperty(propertyId);
+    }
+
+    Array response;
+
+    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
+        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
+        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
+            if (propertyId == 0 || propertyId == itPropertyId) {
+                int64_t cachedFee = p_feecache->GetCachedAmount(itPropertyId);
+                if (cachedFee == 0) {
+                    // filter empty results unless the call specifically requested this property
+                    if (propertyId != itPropertyId) continue;
+                }
+                std::string strFee = FormatMP(itPropertyId, cachedFee);
+                Object cacheObj;
+                cacheObj.push_back(Pair("propertyid", (uint64_t)itPropertyId));
+                cacheObj.push_back(Pair("cachedfees", strFee));
+                response.push_back(cacheObj);
+            }
+        }
+    }
+
+    return response;
+}
+
 // generate a list of seed blocks based on the data in LevelDB
 Value omni_getseedblocks(const Array& params, bool fHelp)
 {
