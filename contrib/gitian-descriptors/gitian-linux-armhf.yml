@@ -1,11 +1,12 @@
 ---
-name: "bitcoin-linux-armhf-0.12"
+name: "bitcoin-linux-armhf-0.13"
 enable_cache: true
 suites:
 - "trusty"
 architectures:
 - "amd64"
 packages:
+- "curl"
 - "g++-arm-linux-gnueabihf"
 - "git-core"
 - "pkg-config"
@@ -19,13 +20,24 @@ packages:
 - "python"
 reference_datetime: "2016-01-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoinclassic/bitcoinclassic.git"
+- "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files: []
 script: |
+  # Avoid exporting *any* symbols from the executable
+  # This avoids conflicts between the libraries statically linked into bitcoin and any
+  # libraries we may link dynamically (such as Qt and OpenSSL, see issue #4094).
+  # It also avoids start-up overhead to not export any unnecessary symbols.
+  # To do this, build a linker script that marks all symbols as local.
+  LINKER_SCRIPT=$HOME/build/linker_version_script
+  echo '
+  {
+    local: *;
+  };' > $LINKER_SCRIPT
   WRAP_DIR=$HOME/wrapped
   HOSTS="arm-linux-gnueabihf"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports"
+  CONFIGLDFLAGS="-static-libstdc++ -Wl,--version-script=$LINKER_SCRIPT"
   FAKETIME_HOST_PROGS=""
   FAKETIME_PROGS="date ar ranlib nm strip"
 
@@ -95,9 +107,10 @@ script: |
     mkdir -p ${INSTALLPATH}
     tar --strip-components=1 -xf ../$SOURCEDIST
 
-    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
+    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} LDFLAGS="${CONFIGLDFLAGS}"
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
+    make ${MAKEOPTS} -C src check-symbols
     make install-strip
     cd installed
     find . -name "lib*.la" -delete
