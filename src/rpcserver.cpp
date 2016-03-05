@@ -313,6 +313,9 @@ static const CRPCCommand vRPCCommands[] =
     { "rawtransactions",    "fundrawtransaction",     &fundrawtransaction,     false },
 #endif
 
+    /* Address index */
+    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false },
+
     /* Utility functions */
     { "util",               "createmultisig",         &createmultisig,         true  },
     { "util",               "validateaddress",        &validateaddress,        true  }, /* uses wallet if enabled */

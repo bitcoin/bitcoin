@@ -111,6 +111,7 @@ static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = false;
+static const bool DEFAULT_ADDRESSINDEX = false;
 static const unsigned int DEFAULT_BANSCORE_THRESHOLD = 100;
 
 static const bool DEFAULT_TESTSAFEMODE = false;
@@ -290,6 +291,42 @@ struct CNodeStateStats {
     std::vector<int> vHeightInFlight;
 };
 
+struct CAddressIndexKey {
+    uint160 hashBytes;
+    unsigned int type;
+    uint256 txhash;
+    size_t index;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(hashBytes);
+        READWRITE(type);
+        READWRITE(txhash);
+        READWRITE(index);
+    }
+
+    CAddressIndexKey(uint160 addressHash, unsigned int addressType, uint256 txid, size_t txindex) {
+        hashBytes = addressHash;
+        type = addressType;
+        txhash = txid;
+        index = txindex;
+    }
+
+    CAddressIndexKey() {
+        SetNull();
+    }
+
+    void SetNull() {
+        hashBytes.SetNull();
+        type = 0;
+        txhash.SetNull();
+        index = 0;
+    }
+
+};
+
 struct CDiskTxPos : public CDiskBlockPos
 {
     unsigned int nTxOffset; // after header
@@ -420,6 +457,7 @@ public:
     ScriptError GetScriptError() const { return error; }
 };
 
+bool GetAddressIndex(uint160 addressHash, int type, std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex);
 
 /** Functions for disk access for blocks */
 bool WriteBlockToDisk(const CBlock& block, CDiskBlockPos& pos, const CMessageHeader::MessageStartChars& messageStart);
