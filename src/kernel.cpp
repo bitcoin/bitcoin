@@ -32,6 +32,7 @@ static std::map<int, unsigned int> mapStakeModifierCheckpoints =
     ( 19080, 0xad4e4d29u )
     ( 30583, 0xdc7bf136u )
     ( 99999, 0xf555cfd2u )
+    (219999, 0x91b7444du )
     ;
 
 // Whether the given coinstake is subject to new v0.3 protocol
