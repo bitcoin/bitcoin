@@ -34,12 +34,6 @@ namespace boost {
 #include <openssl/conf.h>
 
 #ifdef WIN32
-#ifdef _MSC_VER
-#pragma warning(disable:4786)
-#pragma warning(disable:4804)
-#pragma warning(disable:4805)
-#pragma warning(disable:4717)
-#endif
 #ifdef _WIN32_WINNT
 #undef _WIN32_WINNT
 #endif

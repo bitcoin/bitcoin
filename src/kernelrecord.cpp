@@ -3,10 +3,6 @@
 #include "wallet.h"
 #include "base58.h"
 
-#ifdef _MSC_VER
-#pragma warning( disable : 4345)
-#endif
-
 using namespace std;
 
 bool KernelRecord::showTransaction(const CWalletTx &wtx)
