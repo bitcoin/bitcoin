@@ -408,16 +408,16 @@ string FormatMoney(int64_t n, bool fPlus)
     string str = strprintf("%" PRId64 ".%06" PRId64, quotient, remainder);
 
     // Right-trim excess zeros before the decimal point:
-    int nTrim = 0;
+    size_t nTrim = 0;
     for (size_t i = str.size()-1; (str[i] == '0' && isdigit(str[i-2])); --i)
         ++nTrim;
     if (nTrim)
         str.erase(str.size()-nTrim, nTrim);
 
     if (n < 0)
-        str.insert((unsigned int)0, 1, '-');
+        str.insert(0u, 1, '-');
     else if (fPlus && n > 0)
-        str.insert((unsigned int)0, 1, '+');
+        str.insert(0u, 1, '+');
     return str;
 }
 
