@@ -126,6 +126,7 @@ public:
 
     CKey();
     CKey(const CKey& b);
+    CKey(const CSecret& b, bool fCompressed=true);
 
     CKey& operator=(const CKey& b);
 
@@ -134,10 +135,11 @@ public:
     bool IsNull() const;
     bool IsCompressed() const;
 
-    void MakeNewKey(bool fCompressed);
+    void MakeNewKey(bool fCompressed=true);
     bool SetPrivKey(const CPrivKey& vchPrivKey);
-    bool SetSecret(const CSecret& vchSecret, bool fCompressed = false);
+    bool SetSecret(const CSecret& vchSecret, bool fCompressed = true);
     CSecret GetSecret(bool &fCompressed) const;
+    CSecret GetSecret() const;
     CPrivKey GetPrivKey() const;
     bool SetPubKey(const CPubKey& vchPubKey);
     CPubKey GetPubKey() const;
@@ -209,7 +211,6 @@ public:
 class CMalleablePubKey
 {
 private:
-    unsigned char nVersion;
     CPubKey pubKeyL;
     CPubKey pubKeyH;
     friend class CMalleableKey;
@@ -217,19 +218,16 @@ private:
     static const unsigned char CURRENT_VERSION = 1;
 
 public:
-    CMalleablePubKey() { nVersion = CMalleablePubKey::CURRENT_VERSION; }
+    CMalleablePubKey() { }
     CMalleablePubKey(const CMalleablePubKey& mpk)
     {
-        nVersion = mpk.nVersion;
         pubKeyL = mpk.pubKeyL;
         pubKeyH = mpk.pubKeyH;
     }
     CMalleablePubKey(const std::string& strMalleablePubKey) { SetString(strMalleablePubKey); }
-    CMalleablePubKey(const CPubKey &pubKeyInL, const CPubKey &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { nVersion = CMalleablePubKey::CURRENT_VERSION; }
+    CMalleablePubKey(const CPubKey &pubKeyInL, const CPubKey &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { }
 
     IMPLEMENT_SERIALIZE(
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(pubKeyL);
         READWRITE(pubKeyH);
     )
@@ -241,7 +239,6 @@ public:
     bool operator==(const CMalleablePubKey &b);
     bool operator!=(const CMalleablePubKey &b) { return !(*this == b); }
     CMalleablePubKey& operator=(const CMalleablePubKey& mpk) {
-        nVersion = mpk.nVersion;
         pubKeyL = mpk.pubKeyL;
         pubKeyH = mpk.pubKeyH;
         return *this;
@@ -264,13 +261,10 @@ public:
 class CMalleableKey
 {
 private:
-    unsigned char nVersion;
     CSecret vchSecretL;
     CSecret vchSecretH;
 
     friend class CMalleableKeyView;
-
-    static const unsigned char CURRENT_VERSION = 1;
 
 public:
     CMalleableKey();
@@ -279,8 +273,6 @@ public:
     ~CMalleableKey();
 
     IMPLEMENT_SERIALIZE(
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(vchSecretL);
         READWRITE(vchSecretH);
     )
@@ -289,7 +281,6 @@ public:
     bool SetString(const std::string& strMalleablePubKey);
     std::vector<unsigned char> Raw() const;
     CMalleableKey& operator=(const CMalleableKey& mk) {
-        nVersion = mk.nVersion;
         vchSecretL = mk.vchSecretL;
         vchSecretH = mk.vchSecretH;
         return *this;
@@ -315,14 +306,11 @@ public:
 class CMalleableKeyView
 {
 private:
-    unsigned char nVersion;
     CSecret vchSecretL;
     CPubKey vchPubKeyH;
 
-    static const unsigned char CURRENT_VERSION = 1;
-
 public:
-    CMalleableKeyView() { nVersion = 0; };
+    CMalleableKeyView() { };
     CMalleableKeyView(const CMalleableKey &b);
     CMalleableKeyView(const std::string &strMalleableKey);
 
@@ -331,19 +319,15 @@ public:
     ~CMalleableKeyView();
 
     IMPLEMENT_SERIALIZE(
-        READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(vchSecretL);
         READWRITE(vchPubKeyH);
     )
 
-    bool IsNull() const;
-    bool IsValid() const { return !IsNull() && GetMalleablePubKey().IsValid(); }
+    bool IsValid() const;
     std::string ToString() const;
     bool SetString(const std::string& strMalleablePubKey);
     std::vector<unsigned char> Raw() const;
     CMalleableKeyView& operator=(const CMalleableKeyView& mkv) {
-        nVersion = mkv.nVersion;
         vchSecretL = mkv.vchSecretL;
         vchPubKeyH = mkv.vchPubKeyH;
         return *this;

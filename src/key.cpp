@@ -198,6 +198,14 @@ CKey::CKey(const CKey& b)
     fCompressedPubKey = b.fCompressedPubKey;
 }
 
+CKey::CKey(const CSecret& b, bool fCompressed)
+{
+    pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+    if (pkey == NULL)
+        throw key_error("CKey::CKey(const CKey&) : EC_KEY_dup failed");
+    SetSecret(b, fCompressed);
+}
+
 CKey& CKey::operator=(const CKey& b)
 {
     if (!EC_KEY_copy(pkey, b.pkey))
@@ -321,6 +329,12 @@ CSecret CKey::GetSecret(bool &fCompressed) const
         throw key_error("CKey::GetSecret(): BN_bn2bin failed");
     fCompressed = fCompressedPubKey;
     return vchRet;
+}
+
+CSecret CKey::GetSecret() const
+{
+    bool fCompressed;
+    return GetSecret(fCompressed);
 }
 
 CPrivKey CKey::GetPrivKey() const
@@ -735,9 +749,7 @@ bool CMalleablePubKey::SetString(const std::string& strMalleablePubKey)
 
 bool CMalleablePubKey::operator==(const CMalleablePubKey &b)
 {
-    return (nVersion == b.nVersion &&
-            pubKeyL == b.pubKeyL &&
-            pubKeyH == b.pubKeyH);
+    return pubKeyL == b.pubKeyL && pubKeyH == b.pubKeyH;
 }
 
 
@@ -747,22 +759,18 @@ void CMalleableKey::Reset()
 {
     vchSecretL.clear();
     vchSecretH.clear();
-
-    nVersion = 0;
 }
 
 void CMalleableKey::MakeNewKeys()
 {
-    CKey L, H;
-    bool fCompressed = true;
+    Reset();
 
-    L.MakeNewKey(true);
-    H.MakeNewKey(true);
+    CKey keyL, keyH;
+    keyL.MakeNewKey();
+    keyH.MakeNewKey();
 
-    vchSecretL = L.GetSecret(fCompressed);
-    vchSecretH = H.GetSecret(fCompressed);
-
-    nVersion = CURRENT_VERSION;
+    vchSecretL = keyL.GetSecret();
+    vchSecretH = keyH.GetSecret();
 }
 
 CMalleableKey::CMalleableKey()
@@ -786,23 +794,21 @@ CMalleableKey::~CMalleableKey()
 
 bool CMalleableKey::IsNull() const
 {
-    return nVersion != CURRENT_VERSION;
+    return vchSecretL.size() != 32 || vchSecretH.size() != 32;
 }
 
 bool CMalleableKey::SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSecretH)
 {
     Reset();
-    CKey L, H;
 
-    if (pvchSecretL.size() != 32 || pvchSecretH.size() != 32 || !L.SetSecret(pvchSecretL, true) || !H.SetSecret(pvchSecretH, true))
-    {
-        nVersion = 0;
+    CKey keyL(pvchSecretL);
+    CKey keyH(pvchSecretH);
+
+    if (!keyL.IsValid() || !keyL.IsValid())
         return false;
-    }
 
     vchSecretL = pvchSecretL;
     vchSecretH = pvchSecretH;
-    nVersion = CURRENT_VERSION;
 
     return true;
 }
@@ -1021,14 +1027,12 @@ CMalleableKeyView::CMalleableKeyView(const CMalleableKey &b)
     H.SetSecret(b.vchSecretH, true);
 
     vchPubKeyH = H.GetPubKey().Raw();
-    nVersion = b.nVersion;
 }
 
 CMalleableKeyView::CMalleableKeyView(const CMalleableKeyView &b)
 {
     vchSecretL = b.vchSecretL;
     vchPubKeyH = b.vchPubKeyH;
-    nVersion = CURRENT_VERSION;
 }
 
 CMalleableKeyView& CMalleableKeyView::operator=(const CMalleableKey &b)
@@ -1038,7 +1042,6 @@ CMalleableKeyView& CMalleableKeyView::operator=(const CMalleableKey &b)
     CKey H;
     H.SetSecret(b.vchSecretH, true);
     vchPubKeyH = H.GetPubKey().Raw();
-    nVersion = b.nVersion;
 
     return (*this);
 }
@@ -1148,9 +1151,9 @@ std::vector<unsigned char> CMalleableKeyView::Raw() const
 }
 
 
-bool CMalleableKeyView::IsNull() const
+bool CMalleableKeyView::IsValid() const
 {
-    return nVersion != CURRENT_VERSION;
+    return vchSecretL.size() == 32 && GetMalleablePubKey().IsValid();
 }
 
 //// Asymmetric encryption
