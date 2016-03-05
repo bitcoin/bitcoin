@@ -2347,9 +2347,9 @@ bool CBlock::AcceptBlock()
         return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
 
     int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
-    int nMaxOffset = 12 * 3600; // 12 hours
+    int nMaxOffset = 12 * nOneHour; // 12 hours
     if (fTestNet || pindexPrev->nTime < 1450569600)
-        nMaxOffset = 7 * 86400; // One week (permanently on testNet or until 20 Dec, 2015 on mainNet)
+        nMaxOffset = 7 * nOneWeek; // One week (permanently on testNet or until 20 Dec, 2015 on mainNet)
 
     // Check timestamp against prev
     if (GetBlockTime() <= nMedianTimePast || FutureDrift(GetBlockTime()) < pindexPrev->GetBlockTime())

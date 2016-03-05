@@ -19,28 +19,28 @@ class CTransaction;
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 
-/* Setting nSequence to this value for every input in a transaction
- * disables nLockTime. */
+// Setting nSequence to this value for every input in a transaction
+// disables nLockTime.
 static const uint32_t SEQUENCE_FINAL = 0xffffffff;
 
-/* Threshold for inverted nSequence: below this value it is interpreted
- * as a relative lock-time, otherwise ignored. */
-static const uint32_t SEQUENCE_THRESHOLD = (1 << 31);
+// Threshold for inverted nSequence: below this value it is interpreted
+// as a relative lock-time, otherwise ignored.
+//static const uint32_t SEQUENCE_THRESHOLD = 0x80000000;
 
-/* If this flag set, CTxIn::nSequence is NOT interpreted as a
- * relative lock-time. */
-static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = (1 << 31);
+// If this flag set, CTxIn::nSequence is NOT interpreted as a
+// relative lock-time.
+static const uint32_t SEQUENCE_LOCKTIME_DISABLE_FLAG = 0x80000000;
 
-/* If CTxIn::nSequence encodes a relative lock-time and this flag
- * is set, the relative lock-time has units of 512 seconds,
- * otherwise it specifies blocks with a granularity of 1. */
-static const uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = (1 << 22);
+// If CTxIn::nSequence encodes a relative lock-time and this flag
+// is set, the relative lock-time has units of 512 seconds,
+// otherwise it specifies blocks with a granularity of 1.
+static const uint32_t SEQUENCE_LOCKTIME_TYPE_FLAG = 0x00400000;
 
-/* If CTxIn::nSequence encodes a relative lock-time, this mask is
- * applied to extract that lock-time from the sequence field. */
+// If CTxIn::nSequence encodes a relative lock-time, this mask is
+// applied to extract that lock-time from the sequence field.
 static const uint32_t SEQUENCE_LOCKTIME_MASK = 0x0000ffff;
 
-/** IsMine() return codes */
+// IsMine() return codes
 enum isminetype
 {
     MINE_NO = 0,
@@ -51,7 +51,7 @@ enum isminetype
 
 typedef uint8_t isminefilter;
 
-/** Signature hash types/flags */
+// Signature hash types/flags
 enum
 {
     SIGHASH_ALL = 1,
@@ -60,7 +60,7 @@ enum
     SIGHASH_ANYONECANPAY = 0x80
 };
 
-/** Script verification flags */
+// Script verification flags
 enum
 {
     SCRIPT_VERIFY_NONE      = 0,
@@ -68,7 +68,7 @@ enum
     SCRIPT_VERIFY_STRICTENC = (1U << 1), // enforce strict conformance to DER and SEC2 for signatures and pubkeys
     SCRIPT_VERIFY_LOW_S     = (1U << 2), // enforce low S values in signatures (depends on STRICTENC)
     SCRIPT_VERIFY_NOCACHE   = (1U << 3), // do not store results in signature cache (but do query it)
-    SCRIPT_VERIFY_NULLDUMMY = (1U << 4),  // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
+    SCRIPT_VERIFY_NULLDUMMY = (1U << 4), // verify dummy stack item consumed by CHECKMULTISIG is of zero-length
     SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY = (1U << 9),
     SCRIPT_VERIFY_CHECKSEQUENCEVERIFY = (1U << 10)
 };
@@ -108,7 +108,7 @@ enum txnouttype
 
 const char* GetTxnOutputType(txnouttype t);
 
-/** Script opcodes */
+// Script opcodes
 enum opcodetype
 {
     // push value
@@ -276,7 +276,7 @@ inline std::string StackString(const std::vector<std::vector<unsigned char> >& v
     return str;
 }
 
-/** Serialized script, used inside transaction inputs and outputs */
+// Serialized script, used inside transaction inputs and outputs
 class CScript : public std::vector<uint8_t>
 {
 protected:

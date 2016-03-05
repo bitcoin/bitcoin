@@ -1181,7 +1181,6 @@ void ThreadOpenConnections2(void* parg)
                 // it'll get a pile of addresses with newer timestamps.
                 // Seed nodes are given a random 'last seen time' of between one and two
                 // weeks ago.
-                const int64_t nOneWeek = 7*24*60*60;
                 struct in_addr ip;
                 memcpy(&ip, &pnSeed[i], sizeof(ip));
                 CAddress addr(CService(ip, GetDefaultPort()));
@@ -1197,7 +1196,6 @@ void ThreadOpenConnections2(void* parg)
             std::vector<CAddress> vAdd;
             for (unsigned int i = 0; i < ARRAYLEN(pchTorSeed); i++)
             {
-                const int64_t nOneWeek = 7*24*60*60;
                 CAddress addr(CService(pchTorSeed[i], GetDefaultPort()));
                 addr.nTime = GetTime()-GetRand(nOneWeek)-nOneWeek;
                 vAdd.push_back(addr);
