@@ -144,6 +144,9 @@ extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
 extern bool fAlerts;
 extern bool fEnableReplacement;  // BU TODO is this RBF flag?
+//! The largest block size that we have seen since startup
+extern uint64_t nLargestBlockSeen; // BU - Xtreme Thinblocks
+
 
 // BU - Xpress Validation: begin section
 /**

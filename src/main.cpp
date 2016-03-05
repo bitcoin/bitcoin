@@ -78,6 +78,9 @@ size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
+//! The largest block size that we have seen since startup
+uint64_t nLargestBlockSeen; // BU - Xtreme Thinblocks
+
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
 CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
@@ -995,10 +998,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
          * be annoying or make others' transactions take longer to confirm. */
         static const double maxFeeCutoff = boost::lexical_cast<double>(GetArg("-maxlimitertxfee", DEFAULT_MAXLIMITERTXFEE)); /* maximum feeCutoff in satoshi per byte */
 	static const double initFeeCutoff = boost::lexical_cast<double>(GetArg("-minlimitertxfee", DEFAULT_MINLIMITERTXFEE)); /* starting value for feeCutoff in satoshi per byte*/
-        static const uint64_t maxBlockSize = GetArg("-blockmaxsize", BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); 
+        static uint64_t maxBlockSize = GetArg("-blockmaxsize", BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); 
         static const int nLimitFreeRelay = GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY); 
         // get current memory pool size
         uint64_t poolBytes = pool.GetTotalTxSize();
+
+        // get the blocksize we're working with which will be the largest block seen
+        maxBlockSize = std::max(maxBlockSize, nLargestBlockSeen);
 
 	// Calculate feeCutoff in satoshis per byte:
 	//   When the feeCutoff is larger than the satoshiPerByte of the 

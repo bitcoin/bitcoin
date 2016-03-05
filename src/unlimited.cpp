@@ -562,6 +562,8 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
 {
     int64_t startTime = GetTimeMicros();
     CValidationState state;
+    uint64_t nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+
     // Process all blocks from whitelisted peers, even if not requested,
     // unless we're still syncing with the network.
     // Such an unrequested block may still be processed, subject to the
@@ -579,6 +581,9 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             Misbehaving(pfrom->GetId(), nDoS);
         }
     }
+    else 
+        nLargestBlockSeen = std::max(nSizeBlock, (uint64_t)BLOCKSTREAM_CORE_MAX_BLOCK_SIZE);
+
     LogPrint("thin", "Processed Block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
     
     // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
