@@ -1427,12 +1427,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         std::string warningString;
         std::string errorString;
         pwalletMain = CWallet::InitLoadWallet(fDisableWallet, strWalletFile, warningString, errorString);
-        if (!pwalletMain)
-            return false;
         if (!warningString.empty())
             InitWarning(warningString);
         if (!errorString.empty())
+        {
+            LogPrintf("%s", errorString);
             return InitError(errorString);
+        }
+        if (!pwalletMain)
+            return false;
     }
 #else // ENABLE_WALLET
     LogPrintf("No wallet support compiled in!\n");
