@@ -258,9 +258,8 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             ///////////////////////////
 
             // strip a 0.05% fee from non-OMNI pairs (for testing, strip from everything)
-            rational_t rTradingFee(seller_amountGot/2000);
-            int128_t iTradingFee = numerator(rTradingFee) / denominator(rTradingFee);
-            int64_t tradingFee = iTradingFee.convert_to<int64_t>();
+            int64_t feeDivider = 2000;
+            int64_t tradingFee = seller_amountGot / feeDivider;
 
             // subtract the fee from the amount the seller will receive
             int64_t seller_toGet = seller_amountGot - tradingFee;

@@ -392,6 +392,27 @@ Value mscrpc(const Array& params, bool fHelp)
             LOCK(cs_tally);
             p_feecache->printAll();
             p_feecache->printStats();
+
+            int64_t a = 1000;
+            int64_t b = 1999;
+            int64_t c = 2001;
+            int64_t d = 20001;
+            int64_t e = 19999;
+
+            int64_t z = 2000;
+
+            int64_t aa = a/z;
+            int64_t bb = b/z;
+            int64_t cc = c/z;
+            int64_t dd = d/z;
+            int64_t ee = e/z;
+
+            PrintToConsole("%d / %d = %d\n",a,z,aa);
+            PrintToConsole("%d / %d = %d\n",b,z,bb);
+            PrintToConsole("%d / %d = %d\n",c,z,cc);
+            PrintToConsole("%d / %d = %d\n",d,z,dd);
+            PrintToConsole("%d / %d = %d\n",e,z,ee);
+
             break;
         }
         default:
