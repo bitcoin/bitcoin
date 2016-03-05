@@ -1905,8 +1905,13 @@ Value newmalleablekey(const Array& params, bool fHelp)
     if (!pwalletMain->GetMalleableKey(keyView, mKey))
         throw runtime_error("Unable to generate new malleable key");
 
+    CMalleablePubKey mPubKey = mKey.GetMalleablePubKey();
+    CDataStream ssPublicBytes(SER_NETWORK, PROTOCOL_VERSION);
+    ssPublicBytes << mPubKey;
+
     Object result;
-    result.push_back(Pair("PublicPair", mKey.GetMalleablePubKey().ToString()));
+    result.push_back(Pair("PublicPair", mPubKey.ToString()));
+    result.push_back(Pair("PublicBytes", HexStr(ssPublicBytes.begin(), ssPublicBytes.end())));
     result.push_back(Pair("KeyView", keyView.ToString()));
 
     return result;
@@ -1976,7 +1981,7 @@ Value adjustmalleablepubkey(const Array& params, bool fHelp)
     string pubKeyPair = params[0].get_str();
     CMalleablePubKey malleablePubKey;
 
-    if (pubKeyPair.size() == 138) {
+    if (pubKeyPair.size() == 136) {
         CDataStream ssPublicBytes(ParseHex(pubKeyPair), SER_NETWORK, PROTOCOL_VERSION);
         ssPublicBytes >> malleablePubKey;
     } else
