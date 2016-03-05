@@ -155,6 +155,11 @@ extern uint64_t nLargestBlockSeen; // BU - Xtreme Thinblocks
  * processing a new block.  (Protected by cs_main)
  */
 static std::set<uint256> setPreVerifiedTxHash;
+/**
+ * Orphans that are added to the thinblock must be verifed since they have never been
+ *  accepted into the memory pool.
+ */
+static std::set<uint256> setUnVerifiedOrphanTxHash;
 // BU - Xpress Validation: end section
 
 // BU - Xtreme Thinblocks Auto Mempool Limiter - begin section
