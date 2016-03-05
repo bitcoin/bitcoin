@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2016 Bitcoin Unlimited developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -5453,6 +5454,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     }
 
 
+	// BUIP013 disables network alerts.  fAlerts is always false so conditional code will never run.
+#if 0
     else if (fAlerts && strCommand == NetMsgType::ALERT)
     {
         CAlert alert;
@@ -5482,7 +5485,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
         }
     }
-
+#endif
 
     else if (strCommand == NetMsgType::FILTERLOAD)
     {
