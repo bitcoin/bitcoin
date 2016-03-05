@@ -183,6 +183,11 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
         if (!vchData.empty())
             memcpy(&vchData[0], pdata, nSize);
     }
+    
+    const std::vector<unsigned char> &CBase58Data::GetData() const
+    {
+        return vchData;
+    }
 
     void CBase58Data::SetData(int nVersionIn, const unsigned char *pbegin, const unsigned char *pend)
     {
@@ -243,12 +248,22 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
         return boost::apply_visitor(CBitcoinAddressVisitor(this), dest);
     }
 
+    bool CBitcoinAddress::Set(const CMalleablePubKey &mpk) {
+        std::vector<unsigned char> vchPubkeyPair = mpk.Raw();
+        SetData(fTestNet ? PUBKEY_PAIR_ADDRESS_TEST : PUBKEY_PAIR_ADDRESS, &vchPubkeyPair[0], 68);
+        return true;
+    }
+
     bool CBitcoinAddress::IsValid() const
     {
         unsigned int nExpectedSize = 20;
         bool fExpectTestNet = false;
         switch(nVersion)
         {
+            case PUBKEY_PAIR_ADDRESS:
+                nExpectedSize = 68; // Serialized pair of public keys
+                fExpectTestNet = false;
+                break;
             case PUBKEY_ADDRESS:
                 nExpectedSize = 20; // Hash of public key
                 fExpectTestNet = false;
@@ -258,6 +273,10 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
                 fExpectTestNet = false;
                 break;
 
+            case PUBKEY_PAIR_ADDRESS_TEST:
+                nExpectedSize = 68;
+                fExpectTestNet = true;
+                break;
             case PUBKEY_ADDRESS_TEST:
                 nExpectedSize = 20;
                 fExpectTestNet = true;
@@ -304,6 +323,13 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
             keyID = CKeyID(id);
             return true;
         }
+        case PUBKEY_PAIR_ADDRESS:
+        case PUBKEY_PAIR_ADDRESS_TEST:
+        {
+            CMalleablePubKey mPubKey;
+            mPubKey.setvch(vchData);
+            keyID = mPubKey.GetID();
+        }
         default: return false;
         }
     }
@@ -314,6 +340,18 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
         switch (nVersion) {
         case SCRIPT_ADDRESS:
         case SCRIPT_ADDRESS_TEST: {
+            return true;
+        }
+        default: return false;
+        }
+    }
+    
+    bool CBitcoinAddress::IsPair() const {
+        if (!IsValid())
+            return false;
+        switch (nVersion) {
+        case PUBKEY_PAIR_ADDRESS:
+        case PUBKEY_PAIR_ADDRESS_TEST: {
             return true;
         }
         default: return false;

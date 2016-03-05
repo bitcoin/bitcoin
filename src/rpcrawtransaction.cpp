@@ -49,7 +49,7 @@ void ScriptPubKeyToJSON(const CScript& scriptPubKey, Object& out, bool fIncludeH
 
             CMalleableKeyView view;
             if (pwalletMain->CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view))
-                out.push_back(Pair("pubkeyPair", view.GetMalleablePubKey().ToString()));
+                out.push_back(Pair("pubkeyPair", CBitcoinAddress(view.GetMalleablePubKey()).ToString()));
         }
         else
         {
@@ -293,23 +293,29 @@ Value createrawtransaction(const Array& params, bool fHelp)
         // Create output destination script
         CScript scriptPubKey;
         CBitcoinAddress address(s.name_);
-        if (!address.IsValid())
-        {
-            CMalleablePubKey mpk(s.name_);
-            if (!mpk.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid output destination: ")+s.name_);
 
-            CPubKey keyVariant, R;
-            mpk.GetVariant(R, keyVariant);
-            scriptPubKey.SetDestination(R, keyVariant);
+        if (address.IsValid())
+        {
+            if (!address.IsPair())
+            {
+                scriptPubKey.SetDestination(address.Get());
+                if (setAddress.count(address))
+                    throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
+                setAddress.insert(address);
+            }
+            else
+            {
+                CMalleablePubKey mpk;
+                if (!mpk.setvch(address.GetData()))
+                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid output destination: ")+s.name_);
+
+                CPubKey R, pubKeyVariant;
+                mpk.GetVariant(R, pubKeyVariant);
+                scriptPubKey.SetDestination(R, pubKeyVariant);
+            }
         }
         else
-        {
-            scriptPubKey.SetDestination(address.Get());
-            if (setAddress.count(address))
-                throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
-            setAddress.insert(address);
-        }
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid output destination: ")+s.name_);
 
         int64_t nAmount = AmountFromValue(s.value_);
 

@@ -725,6 +725,14 @@ std::string CMalleablePubKey::ToString() const
     return EncodeBase58Check(vch);
 }
 
+bool CMalleablePubKey::setvch(const std::vector<unsigned char> &vchPubKeyPair)
+{
+    CDataStream ssKey(vchPubKeyPair, SER_NETWORK, PROTOCOL_VERSION);
+    ssKey >> *this;
+
+    return IsValid();
+}
+
 std::vector<unsigned char> CMalleablePubKey::Raw() const
 {
     CDataStream ssKey(SER_NETWORK, PROTOCOL_VERSION);

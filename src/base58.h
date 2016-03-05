@@ -67,6 +67,7 @@ public:
     bool SetString(const char* psz);
     bool SetString(const std::string& str);
     std::string ToString() const;
+    const std::vector<unsigned char> &GetData() const;
 
     int CompareTo(const CBase58Data& b58) const;
     bool operator==(const CBase58Data& b58) const { return CompareTo(b58) == 0; }
@@ -91,6 +92,7 @@ public:
     CBitcoinAddressVisitor(CBitcoinAddress *addrIn) : addr(addrIn) { }
     bool operator()(const CKeyID &id) const;
     bool operator()(const CScriptID &id) const;
+    bool operator()(const CMalleablePubKey &mpk) const;
     bool operator()(const CNoDestination &no) const;
 };
 
@@ -99,8 +101,10 @@ class CBitcoinAddress : public CBase58Data
 public:
     enum
     {
+        PUBKEY_PAIR_ADDRESS = 1,
         PUBKEY_ADDRESS = 8,
         SCRIPT_ADDRESS = 20,
+        PUBKEY_PAIR_ADDRESS_TEST = 6,
         PUBKEY_ADDRESS_TEST = 111,
         SCRIPT_ADDRESS_TEST = 196
     };
@@ -108,6 +112,7 @@ public:
     bool Set(const CKeyID &id);
     bool Set(const CScriptID &id);
     bool Set(const CTxDestination &dest);
+    bool Set(const CMalleablePubKey &mpk);
     bool IsValid() const;
 
     CBitcoinAddress()
@@ -117,6 +122,11 @@ public:
     CBitcoinAddress(const CTxDestination &dest)
     {
         Set(dest);
+    }
+
+    CBitcoinAddress(const CMalleablePubKey &mpk)
+    {
+        Set(mpk);
     }
 
     CBitcoinAddress(const std::string& strAddress)
@@ -132,11 +142,13 @@ public:
     CTxDestination Get() const;
     bool GetKeyID(CKeyID &keyID) const;
     bool IsScript() const;
+    bool IsPair() const;
 };
 
-bool inline CBitcoinAddressVisitor::operator()(const CKeyID &id) const         { return addr->Set(id); }
-bool inline CBitcoinAddressVisitor::operator()(const CScriptID &id) const      { return addr->Set(id); }
-bool inline CBitcoinAddressVisitor::operator()(const CNoDestination &id) const { return false; }
+bool inline CBitcoinAddressVisitor::operator()(const CKeyID &id) const            { return addr->Set(id); }
+bool inline CBitcoinAddressVisitor::operator()(const CScriptID &id) const         { return addr->Set(id); }
+bool inline CBitcoinAddressVisitor::operator()(const CMalleablePubKey &mpk) const { return addr->Set(mpk); }
+bool inline CBitcoinAddressVisitor::operator()(const CNoDestination &id) const    { return false; }
 
 /** A base58-encoded secret key */
 class CBitcoinSecret : public CBase58Data

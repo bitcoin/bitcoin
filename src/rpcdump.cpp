@@ -260,7 +260,7 @@ Value dumpmalleablekey(const Array& params, bool fHelp)
 
     Object result;
     result.push_back(Pair("PrivatePair", mKey.ToString()));
-    result.push_back(Pair("PublicPair", mKey.GetMalleablePubKey().ToString()));
+    result.push_back(Pair("Address", CBitcoinAddress(mKey.GetMalleablePubKey()).ToString()));
 
     return result;
 }
@@ -284,7 +284,7 @@ Value importmalleablekey(const Array& params, bool fHelp)
     {
         fSuccess = pwalletMain->AddMalleableKey(mKey);
         result.push_back(Pair("Successful", fSuccess));
-        result.push_back(Pair("PublicPair", mKey.GetMalleablePubKey().ToString()));
+        result.push_back(Pair("Address", CBitcoinAddress(mKey.GetMalleablePubKey()).ToString()));
         result.push_back(Pair("KeyView", CMalleableKeyView(mKey).ToString()));
     }
     else

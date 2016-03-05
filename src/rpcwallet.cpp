@@ -329,17 +329,22 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     CBitcoinAddress address(strAddress);
     if (address.IsValid())
-        scriptPubKey.SetDestination(address.Get());
-    else
     {
-        CMalleablePubKey mpk(strAddress);
-        if (!mpk.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
+        if (!address.IsPair())
+            scriptPubKey.SetDestination(address.Get());
+        else
+        {
+            CMalleablePubKey mpk;
+            if (!mpk.setvch(address.GetData()))
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
 
-        CPubKey R, pubKeyVariant;
-        mpk.GetVariant(R, pubKeyVariant);
-        scriptPubKey.SetDestination(R, pubKeyVariant);
+            CPubKey R, pubKeyVariant;
+            mpk.GetVariant(R, pubKeyVariant);
+            scriptPubKey.SetDestination(R, pubKeyVariant);
+        }
     }
+    else
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
 
     // Amount
     int64_t nAmount = AmountFromValue(params[1]);
@@ -716,17 +721,23 @@ Value sendfrom(const Array& params, bool fHelp)
 
     CBitcoinAddress address(strAddress);
     if (address.IsValid())
-        scriptPubKey.SetDestination(address.Get());
-    else
     {
-        CMalleablePubKey mpk(strAddress);
-        if (!mpk.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
+        if (!address.IsPair())
+            scriptPubKey.SetDestination(address.Get());
+        else
+        {
+            CMalleablePubKey mpk;
+            if (!mpk.setvch(address.GetData()))
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
 
-        CPubKey R, pubKeyVariant;
-        mpk.GetVariant(R, pubKeyVariant);
-        scriptPubKey.SetDestination(R, pubKeyVariant);
+            CPubKey R, pubKeyVariant;
+            mpk.GetVariant(R, pubKeyVariant);
+            scriptPubKey.SetDestination(R, pubKeyVariant);
+        }
     }
+    else
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
+
 
     int64_t nAmount = AmountFromValue(params[2]);
 
@@ -1747,18 +1758,34 @@ Value validateaddress(const Array& params, bool fHelp)
     ret.push_back(Pair("isvalid", isValid));
     if (isValid)
     {
-        CTxDestination dest = address.Get();
-        string currentAddress = address.ToString();
-        ret.push_back(Pair("address", currentAddress));
-        isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : MINE_NO;
-        ret.push_back(Pair("ismine", mine != MINE_NO));
-        if (mine != MINE_NO) {
-            ret.push_back(Pair("watchonly", mine == MINE_WATCH_ONLY));
-            Object detail = boost::apply_visitor(DescribeAddressVisitor(mine), dest);
-            ret.insert(ret.end(), detail.begin(), detail.end());
+        if (address.IsPair())
+        {
+            CMalleablePubKey mpk;
+            mpk.setvch(address.GetData());
+            ret.push_back(Pair("ispair", true));
+
+            CMalleableKeyView view;
+            bool isMine = pwalletMain->GetMalleableView(mpk, view);
+            ret.push_back(Pair("ismine", isMine));
+
+            if (isMine)
+                ret.push_back(Pair("KeyView", view.ToString()));
         }
-        if (pwalletMain->mapAddressBook.count(dest))
-            ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest]));
+        else
+        {
+            CTxDestination dest = address.Get();
+            string currentAddress = address.ToString();
+            ret.push_back(Pair("address", currentAddress));
+            isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : MINE_NO;
+            ret.push_back(Pair("ismine", mine != MINE_NO));
+            if (mine != MINE_NO) {
+                ret.push_back(Pair("watchonly", mine == MINE_WATCH_ONLY));
+                Object detail = boost::apply_visitor(DescribeAddressVisitor(mine), dest);
+                ret.insert(ret.end(), detail.begin(), detail.end());
+            }
+            if (pwalletMain->mapAddressBook.count(dest))
+                ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest]));
+        }
     }
     return ret;
 }
@@ -1906,39 +1933,12 @@ Value newmalleablekey(const Array& params, bool fHelp)
         throw runtime_error("Unable to generate new malleable key");
 
     CMalleablePubKey mPubKey = mKey.GetMalleablePubKey();
-    CDataStream ssPublicBytes(SER_NETWORK, PROTOCOL_VERSION);
-    ssPublicBytes << mPubKey;
 
     Object result;
     result.push_back(Pair("PublicPair", mPubKey.ToString()));
-    result.push_back(Pair("PublicBytes", HexStr(ssPublicBytes.begin(), ssPublicBytes.end())));
+    result.push_back(Pair("PublicBytes", HexStr(mPubKey.Raw())));
+    result.push_back(Pair("Address", CBitcoinAddress(mPubKey).ToString()));
     result.push_back(Pair("KeyView", keyView.ToString()));
-
-    return result;
-}
-
-Value validatemalleablepubkey(const Array& params, bool fHelp)
-{
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "validatemalleablekey <Malleable public key data>\n"
-            "Check the validity and ownership for priovided malleable public key.\n");
-
-    CMalleablePubKey mpk;
-    bool isValid = mpk.SetString(params[0].get_str());
-
-    Object result;
-    result.push_back(Pair("isvalid", isValid));
-
-    if (isValid)
-    {
-        CMalleableKeyView view;
-        bool isMine = pwalletMain->GetMalleableView(mpk, view);
-        result.push_back(Pair("ismine", isMine));
-
-        if (isMine)
-            result.push_back(Pair("KeyView", view.ToString()));
-    }
 
     return result;
 }
@@ -1982,8 +1982,7 @@ Value adjustmalleablepubkey(const Array& params, bool fHelp)
     CMalleablePubKey malleablePubKey;
 
     if (pubKeyPair.size() == 136) {
-        CDataStream ssPublicBytes(ParseHex(pubKeyPair), SER_NETWORK, PROTOCOL_VERSION);
-        ssPublicBytes >> malleablePubKey;
+        malleablePubKey.setvch(ParseHex(pubKeyPair));
     } else
         malleablePubKey.SetString(pubKeyPair);
 

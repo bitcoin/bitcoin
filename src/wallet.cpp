@@ -2829,7 +2829,7 @@ bool CWallet::ExtractAddress(const CScript& scriptPubKey, std::string& addressRe
         if (!CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view))
             return false;
 
-        addressRet = view.GetMalleablePubKey().ToString();
+        addressRet = CBitcoinAddress(view.GetMalleablePubKey()).ToString();
         return true;
     }
     else if (whichType == TX_PUBKEYHASH)

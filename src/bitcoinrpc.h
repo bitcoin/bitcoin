@@ -211,7 +211,6 @@ extern json_spirit::Value adjustmalleablekey(const json_spirit::Array& params, b
 extern json_spirit::Value adjustmalleablepubkey(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value listmalleableviews(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value dumpmalleablekey(const json_spirit::Array& params, bool fHelp);
-extern json_spirit::Value validatemalleablepubkey(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value importmalleablekey(const json_spirit::Array& params, bool fHelp);
 
 extern json_spirit::Value encryptdata(const json_spirit::Array& params, bool fHelp); // in rpccrypt.cpp

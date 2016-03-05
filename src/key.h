@@ -251,6 +251,7 @@ public:
         return pubKeyL.GetID();
     }
 
+    bool setvch(const std::vector<unsigned char> &vchPubKeyPair);
     std::vector<unsigned char> Raw() const;
 
     CPubKey& GetL() { return pubKeyL; }
