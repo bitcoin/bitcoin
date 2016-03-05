@@ -51,7 +51,7 @@ static const bool DEFAULT_WHITELISTFORCERELAY = true;
 static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = 1000;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
-static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
+static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 5000;  // BU Xtreme Thinblocks change to 5000 or 25MB (5000 x 5000KB max orphan size)
 /** Default for -limitancestorcount, max number of in-mempool ancestors */
 static const unsigned int DEFAULT_ANCESTOR_LIMIT = 25;
 /** Default for -limitancestorsize, maximum kilobytes of tx + all in-mempool ancestors */
