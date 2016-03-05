@@ -708,7 +708,7 @@ void CTxMemPool::queryHashes(vector<uint256>& vtxid)
 
     LOCK(cs);
     vtxid.reserve(mapTx.size());
-    for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
+    for (indexed_transaction_set::nth_index<1>::type::reverse_iterator mi = mapTx.get<1>().rbegin(); mi != mapTx.get<1>().rend(); ++mi)
         vtxid.push_back(mi->GetTx().GetHash());
 }
 
