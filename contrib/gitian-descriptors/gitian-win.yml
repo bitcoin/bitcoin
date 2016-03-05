@@ -1,5 +1,5 @@
 ---
-name: "hodlcoin-win-0.11"
+name: "hodlcoin-win-1.0"
 enable_cache: true
 suites:
 - "precise"

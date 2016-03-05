@@ -9,7 +9,7 @@ packages:
 - "faketime"
 reference_datetime: "2015-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin-detached-sigs.git"
+- "url": "https://github.com/HOdlcoin/hodlcoin-detached-sigs.git"
   "dir": "signature"
 files:
 - "hodlcoin-osx-unsigned.tar.gz"
