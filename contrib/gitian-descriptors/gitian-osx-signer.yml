@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-dmg-signer"
+name: "hodlcoin-dmg-signer"
 suites:
 - "precise"
 architectures:
@@ -9,10 +9,10 @@ packages:
 - "faketime"
 reference_datetime: "2015-06-01 00:00:00"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin-detached-sigs.git"
+- "url": "https://github.com/HOdlcoin/hodlcoin-detached-sigs.git"
   "dir": "signature"
 files:
-- "bitcoin-osx-unsigned.tar.gz"
+- "hodlcoin-osx-unsigned.tar.gz"
 script: |
   WRAP_DIR=$HOME/wrapped
   mkdir -p ${WRAP_DIR}
@@ -29,8 +29,8 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
-  UNSIGNED=bitcoin-osx-unsigned.tar.gz
-  SIGNED=bitcoin-osx-signed.dmg
+  UNSIGNED=hodlcoin-osx-unsigned.tar.gz
+  SIGNED=hodlcoin-osx-signed.dmg
 
   tar -xf ${UNSIGNED}
   ./detached-sig-apply.sh ${UNSIGNED} signature/osx
