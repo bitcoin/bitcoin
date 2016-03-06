@@ -2,7 +2,7 @@
 IF="eth0"
 #limit of the network interface in question
 LINKCEIL="1gbit"
-#limit outbound Bitcoin protocol traffic to this rate
+#limit outbound Dash protocol traffic to this rate
 LIMIT="160kbit"
 #defines the address space for which you wish to disable rate limiting
 LOCALNET="192.168.0.0/16"
