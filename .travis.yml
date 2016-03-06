@@ -50,11 +50,14 @@ matrix:
       env: HOST=x86_64-apple-darwin11 PACKAGES="cmake libcap-dev libz-dev libbz2-dev" BITCOIN_CONFIG="--enable-reduce-exports" OSX_SDK=10.9 GOAL="deploy"
   exclude:
     - compiler: gcc
+before_install:
+    - git clone https://github.com/dashpay/dash_hash
 install:
     - if [ -n "$PACKAGES" ]; then sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list; fi
     - if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
+    - cd dash_hash; sudo python setup.py install; cd ..;
 before_script:
     - unset CC; unset CXX
     - mkdir -p depends/SDKs depends/sdk-sources
