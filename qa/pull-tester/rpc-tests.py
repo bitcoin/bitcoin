@@ -97,35 +97,35 @@ testScripts = [
     'nodehandling.py',
     'reindex.py',
     'decodescript.py',
-    'p2p-fullblocktest.py',
+    'p2p-fullblocktest.py', # TODO: works, needs dash_hash
     'blockchain.py',
     'disablewallet.py',
-    'sendheaders.py',
+    'sendheaders.py', # TODO: works, needs dash_hash
     'keypool.py',
     'prioritise_transaction.py',
-    'invalidblockrequest.py',
-    'invalidtxrequest.py',
+    'invalidblockrequest.py', # TODO: works, needs dash_hash
+    'invalidtxrequest.py', # TODO: works, needs dash_hash
     'abandonconflict.py',
 ]
 testScriptsExt = [
     'bip65-cltv.py',
-    'bip65-cltv-p2p.py',
-    'bipdersig-p2p.py',
+    'bip65-cltv-p2p.py', # TODO: works, needs dash_hash
+    'bipdersig-p2p.py', # TODO: works, needs dash_hash
     'bipdersig.py',
-    'getblocktemplate_longpoll.py',
+    'getblocktemplate_longpoll.py', # FIXME: "socket.error: [Errno 54] Connection reset by peer" on my Mac, same as  https://github.com/bitcoin/bitcoin/issues/6651
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
-    'pruning.py',
+    # 'pruning.py', # Prune mode is incompatible with -txindex.
     'forknotify.py',
     'invalidateblock.py',
 #    'rpcbind_test.py', #temporary, bug in libevent, see #6655
     'smartfees.py',
     'maxblocksinflight.py',
-    'p2p-acceptblock.py',
+    'p2p-acceptblock.py', # TODO: works, needs dash_hash
     'mempool_packages.py',
     'maxuploadtarget.py',
-    'replace-by-fee.py',
+    # 'replace-by-fee.py', # RBF is disabled in Dash
 ]
 
 #Enable ZMQ tests

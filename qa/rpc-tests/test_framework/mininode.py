@@ -1,4 +1,4 @@
-# mininode.py - Bitcoin P2P network half-a-node
+# mininode.py - Dash P2P network half-a-node
 #
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -6,12 +6,12 @@
 # This python code was modified from ArtForz' public domain  half-a-node, as
 # found in the mini-node branch of http://github.com/jgarzik/pynode.
 #
-# NodeConn: an object which manages p2p connectivity to a bitcoin node
+# NodeConn: an object which manages p2p connectivity to a dash node
 # NodeConnCB: a base class that describes the interface for receiving
 #             callbacks with network messages from a NodeConn
 # CBlock, CTransaction, CBlockHeader, CTxIn, CTxOut, etc....:
 #     data structures that should map to corresponding structures in
-#     bitcoin/primitives
+#     dash/primitives
 # msg_block, msg_tx, msg_headers, etc.:
 #     data structures that represent network messages
 # ser_*, deser_*: functions that handle serialization/deserialization
@@ -31,8 +31,10 @@ from threading import Thread
 import logging
 import copy
 
+import dash_hash
+
 BIP0031_VERSION = 60000
-MY_VERSION = 60001  # past bip-31 for ping/pong
+MY_VERSION = 70103  # past bip-31 for ping/pong
 MY_SUBVERSION = "/python-mininode-tester:0.0.1/"
 
 MAX_INV_SZ = 50000
@@ -59,6 +61,8 @@ def sha256(s):
 def hash256(s):
     return sha256(sha256(s))
 
+def dashhash(s):
+    return dash_hash.getPoWHash(s)
 
 def deser_string(f):
     nit = struct.unpack("<B", f.read(1))[0]
@@ -232,7 +236,7 @@ def ser_int_vector(l):
     return r
 
 
-# Objects that map to bitcoind objects, which can be serialized/deserialized
+# Objects that map to dashd objects, which can be serialized/deserialized
 
 class CAddress(object):
     def __init__(self):
@@ -481,8 +485,8 @@ class CBlockHeader(object):
             r += struct.pack("<I", self.nTime)
             r += struct.pack("<I", self.nBits)
             r += struct.pack("<I", self.nNonce)
-            self.sha256 = uint256_from_str(hash256(r))
-            self.hash = hash256(r)[::-1].encode('hex_codec')
+            self.sha256 = uint256_from_str(dashhash(r))
+            self.hash = dashhash(r)[::-1].encode('hex_codec')
 
     def rehash(self):
         self.sha256 = None
@@ -957,7 +961,7 @@ class msg_headers(object):
         self.headers = []
 
     def deserialize(self, f):
-        # comment in bitcoind indicates these should be deserialized as blocks
+        # comment in dashd indicates these should be deserialized as blocks
         blocks = deser_vector(f, CBlock)
         for x in blocks:
             self.headers.append(CBlockHeader(x))
@@ -1098,9 +1102,9 @@ class NodeConn(asyncore.dispatcher):
         "mempool": msg_mempool
     }
     MAGIC_BYTES = {
-        "mainnet": "\xf9\xbe\xb4\xd9",   # mainnet
-        "testnet3": "\x0b\x11\x09\x07",  # testnet3
-        "regtest": "\xfa\xbf\xb5\xda"    # regtest
+        "mainnet": "\xbf\x0c\x6b\xbd",   # mainnet
+        "testnet3": "\xce\xe2\xca\xff",  # testnet3
+        "regtest": "\xfc\xc1\xb7\xdc"    # regtest
     }
 
     def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=1):
@@ -1127,7 +1131,7 @@ class NodeConn(asyncore.dispatcher):
         vt.addrFrom.ip = "0.0.0.0"
         vt.addrFrom.port = 0
         self.send_message(vt, True)
-        print 'MiniNode: Connecting to Bitcoin Node IP # ' + dstaddr + ':' \
+        print 'MiniNode: Connecting to Dash Node IP # ' + dstaddr + ':' \
             + str(dstport)
 
         try:

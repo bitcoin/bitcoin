@@ -13,11 +13,31 @@ from test_framework.util import *
 # Construct 2 trivial P2SH's and the ScriptSigs that spend them
 # So we can create many many transactions without needing to spend
 # time signing.
-P2SH_1 = "2MySexEGVzZpRgNQ1JdjdP5bRETznm3roQ2" # P2SH of "OP_1 OP_DROP"
-P2SH_2 = "2NBdpwq8Aoo1EEKEXPNrKvr5xQr3M9UfcZA" # P2SH of "OP_2 OP_DROP"
+P2SH_1 = "8kctg1WWKdoLveifyNnDYtRAqBPpqgL8z2" # P2SH of "OP_1 OP_DROP"
+P2SH_2 = "8xp4fcNB8rz9UbZC47tv6eui1ZSPMd3iYT" # P2SH of "OP_2 OP_DROP"
 # Associated ScriptSig's to spend satisfy P2SH_1 and P2SH_2
 # 4 bytes of OP_TRUE and push 2-byte redeem script of "OP_1 OP_DROP" or "OP_2 OP_DROP"
 SCRIPT_SIG = ["0451025175", "0451025275"]
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, Decimal):
+            return float(o)
+        return super(DecimalEncoder, self).default(o)
+
+def swap_outputs_in_rawtx(rawtx, outputs, inputnum):
+    '''
+    Since dictionaries in python are unsorted make sure that our outputs are correctly ordered.
+    Note: comparing strings to get "correct order" is based on the fact that
+    P2SH_1 string is < P2SH_2 string in this particular case.
+    '''
+    outputs_unordered = json.dumps(outputs, cls=DecimalEncoder)
+    outputs_ordered = json.dumps(outputs, sort_keys=True, cls=DecimalEncoder)
+    if outputs_ordered != outputs_unordered: # nope, we need to do some work here
+        first_rawoutput = rawtx[12+82*inputnum:12+82*inputnum+64]
+        second_rawoutput = rawtx[12+82*inputnum+64:12+82*inputnum+64+64]
+        rawtx = rawtx[0:12+82*inputnum] + second_rawoutput + first_rawoutput + rawtx[12+82*inputnum+64+64:]
+    return rawtx
 
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
     '''
@@ -52,6 +72,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     outputs[P2SH_1] = total_in - amount - fee
     outputs[P2SH_2] = amount
     rawtx = from_node.createrawtransaction(inputs, outputs)
+    rawtx = swap_outputs_in_rawtx(rawtx, outputs, len(inputs))
     # Createrawtransaction constructions a transaction that is ready to be signed
     # These transactions don't need to be signed, but we still have to insert the ScriptSig
     # that will satisfy the ScriptPubKey.
@@ -81,10 +102,11 @@ def split_inputs(from_node, txins, txouts, initial_split = False):
     outputs = {}
     inputs.append({ "txid" : prevtxout["txid"], "vout" : prevtxout["vout"] })
     half_change = satoshi_round(prevtxout["amount"]/2)
-    rem_change = prevtxout["amount"] - half_change  - Decimal("0.00001000")
+    rem_change = prevtxout["amount"] - half_change  - Decimal("0.00010000")
     outputs[P2SH_1] = half_change
     outputs[P2SH_2] = rem_change
     rawtx = from_node.createrawtransaction(inputs, outputs)
+    rawtx = swap_outputs_in_rawtx(rawtx, outputs, len(inputs))
     # If this is the initial split we actually need to sign the transaction
     # Otherwise we just need to insert the property ScriptSig
     if (initial_split) :
@@ -208,7 +230,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_all()
 
     def transact_and_mine(self, numblocks, mining_node):
-        min_fee = Decimal("0.00001")
+        min_fee = Decimal("0.0001")
         # We will now mine numblocks blocks generating on average 100 transactions between each block
         # We shuffle our confirmed txout set before each set of transactions
         # small_txpuzzle_randfee will use the transactions that have inputs already in the chain when possible

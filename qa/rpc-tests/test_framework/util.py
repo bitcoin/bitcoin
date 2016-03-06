@@ -141,7 +141,7 @@ def initialize_chain(test_dir):
             subprocess.check_call([ os.getenv("DASHCLI", "dash-cli"), "-datadir="+datadir,
                                     "-rpcwait", "getblockcount"], stdout=devnull)
             if os.getenv("PYTHON_DEBUG", ""):
-                print "initialize_chain: bitcoin-cli -rpcwait getblockcount completed"
+                print "initialize_chain: dassh-cli -rpcwait getblockcount completed"
         devnull.close()
 
         rpcs = []

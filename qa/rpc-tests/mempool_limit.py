@@ -26,7 +26,7 @@ class MempoolLimitTest(BitcoinTestFramework):
 
     def run_test(self):
         txids = []
-        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], 90)
+        utxos = create_confirmed_utxos(self.relayfee, self.nodes[0], 490)
 
         #create a mempool tx that will be evicted
         us0 = utxos.pop()
