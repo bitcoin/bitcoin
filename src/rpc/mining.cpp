@@ -68,6 +68,7 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     arith_uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
 
+    statsClient.gauge("network.hashesPerSecond", (int64_t)(workDiff.getdouble() / timeDiff), 1.0f);
     return (int64_t)(workDiff.getdouble() / timeDiff);
 }
 
