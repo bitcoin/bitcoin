@@ -71,9 +71,11 @@ UniValue getpoolinfo(const UniValue& params, bool fHelp)
             "Returns an object containing anonymous pool-related information.");
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("current_masternode",        mnodeman.GetCurrentMasterNode()->addr.ToString()));
-    obj.push_back(Pair("state",        darkSendPool.GetState()));
-    obj.push_back(Pair("entries",      darkSendPool.GetEntriesCount()));
+    if (darkSendPool.pSubmittedToMasternode)
+        obj.push_back(Pair("masternode",        darkSendPool.pSubmittedToMasternode->addr.ToString()));
+    obj.push_back(Pair("queue",                 (int64_t)vecDarksendQueue.size()));
+    obj.push_back(Pair("state",                 darkSendPool.GetState()));
+    obj.push_back(Pair("entries",               darkSendPool.GetEntriesCount()));
     obj.push_back(Pair("entries_accepted",      darkSendPool.GetCountEntriesAccepted()));
     return obj;
 }
@@ -175,21 +177,22 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if (strCommand == "current")
     {
+        int nCount = 0;
         LOCK(cs_main);
         CMasternode* winner = NULL;
         if(chainActive.Tip())
-            winner = mnodeman.GetCurrentMasterNode(1);
+            winner = mnodeman.GetNextMasternodeInQueueForPayment(chainActive.Height() - 100, true, nCount);
         if(winner) {
             UniValue obj(UniValue::VOBJ);
 
             obj.push_back(Pair("IP:port",       winner->addr.ToString()));
             obj.push_back(Pair("protocol",      (int64_t)winner->protocolVersion));
-            obj.push_back(Pair("vin",           winner->vin.prevout.hash.ToString()));
+            obj.push_back(Pair("vin",           winner->vin.prevout.ToStringShort()));
             obj.push_back(Pair("pubkey",        CBitcoinAddress(winner->pubkey.GetID()).ToString()));
             obj.push_back(Pair("lastseen",      (winner->lastPing == CMasternodePing()) ? winner->sigTime :
-                                                        (int64_t)winner->lastPing.sigTime));
+                                                        winner->lastPing.sigTime));
             obj.push_back(Pair("activeseconds", (winner->lastPing == CMasternodePing()) ? 0 :
-                                                        (int64_t)(winner->lastPing.sigTime - winner->sigTime)));
+                                                        (winner->lastPing.sigTime - winner->sigTime)));
             return obj;
         }
 
@@ -198,7 +201,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if (strCommand == "debug")
     {
-        if(activeMasternode.status != ACTIVE_MASTERNODE_INITIAL || !masternodeSync.IsSynced())
+        if(activeMasternode.status != ACTIVE_MASTERNODE_INITIAL || !masternodeSync.IsBlockchainSynced())
             return activeMasternode.GetStatus();
 
         CTxIn vin = CTxIn();
@@ -441,16 +444,26 @@ UniValue masternode(const UniValue& params, bool fHelp)
         }
 
         int nLast = 10;
+        std::string strFilter = "";
 
         if (params.size() >= 2){
             nLast = atoi(params[1].get_str());
         }
 
+        if (params.size() == 3){
+            strFilter = params[2].get_str();
+        }
+
+        if (params.size() > 3)
+            throw runtime_error("Correct usage is 'masternode winners ( \"count\" \"filter\" )'");
+
         UniValue obj(UniValue::VOBJ);
 
         for(int i = nHeight - nLast; i < nHeight + 20; i++)
         {
-            obj.push_back(Pair(strprintf("%d", i), GetRequiredPaymentsString(i)));
+            std::string strPayment = GetRequiredPaymentsString(i);
+            if(strFilter !="" && strPayment.find(strFilter) == string::npos) continue;
+            obj.push_back(Pair(strprintf("%d", i), strPayment));
         }
 
         return obj;

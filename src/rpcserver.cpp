@@ -341,6 +341,7 @@ static const CRPCCommand vRPCCommands[] =
     { "dash",               "mnfinalbudget",          &mnfinalbudget,          true  },
     { "dash",               "mnsync",                 &mnsync,                 true  },
     { "dash",               "spork",                  &spork,                  true  },
+    { "dash",               "getpoolinfo",            &getpoolinfo,            true  },
 #ifdef ENABLE_WALLET
     { "dash",               "darksend",               &darksend,               false },
 
