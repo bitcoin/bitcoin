@@ -27,6 +27,8 @@ using namespace std;
 map<uint256, CAlert> mapAlerts;
 CCriticalSection cs_mapAlerts;
 
+static void Notify(const std::string& strMessage, bool fThread);
+
 void CUnsignedAlert::SetNull()
 {
     nVersion = 1;
@@ -245,8 +247,22 @@ bool CAlert::ProcessAlert(const std::vector<unsigned char>& alertKey, bool fThre
     return true;
 }
 
-void
-CAlert::Notify(const std::string& strMessage, bool fThread)
+// static
+void CAlert::NotifyInternal(const std::string& strMessage)
+{
+    static CAlert internalAlert;
+    internalAlert.vchMsg = std::vector<unsigned char>(strMessage.begin(), strMessage.end());
+    uint256 zero;
+    {
+        LOCK(cs_mapAlerts);
+        mapAlerts[zero] = internalAlert;
+    }
+    uiInterface.NotifyAlertChanged(zero, CT_NEW);
+
+    Notify(strMessage, true);
+}
+
+static void Notify(const std::string& strMessage, bool fThread)
 {
     std::string strCmd = GetArg("-alertnotify", "");
     if (strCmd.empty()) return;

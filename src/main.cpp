@@ -1544,7 +1544,7 @@ void CheckForkWarningConditions()
         {
             std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
                 pindexBestForkBase->phashBlock->ToString() + std::string("'");
-            CAlert::Notify(warning, true);
+            CAlert::NotifyInternal(warning);
         }
         if (pindexBestForkTip && pindexBestForkBase)
         {
@@ -2075,7 +2075,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     if (!strWarning.empty())
     {
         strMiscWarning = strWarning;
-        CAlert::Notify(strWarning, true);
+        CAlert::NotifyInternal(strWarning);
         lastAlertTime = now;
     }
 }
@@ -2465,7 +2465,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
         {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
             strMiscWarning = _("Warning: This version is obsolete; upgrade required!");
-            CAlert::Notify(strMiscWarning, true);
+            CAlert::NotifyInternal(strMiscWarning);
             fWarned = true;
         }
     }
