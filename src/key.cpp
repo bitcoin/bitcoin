@@ -812,7 +812,7 @@ bool CMalleableKey::SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSe
     CKey keyL(pvchSecretL);
     CKey keyH(pvchSecretH);
 
-    if (!keyL.IsValid() || !keyL.IsValid())
+    if (!keyL.IsValid() || !keyH.IsValid())
         return false;
 
     vchSecretL = pvchSecretL;
@@ -823,14 +823,8 @@ bool CMalleableKey::SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSe
 
 CMalleablePubKey CMalleableKey::GetMalleablePubKey() const
 {
-    CKey L, H;
-    L.SetSecret(vchSecretL, true);
-    H.SetSecret(vchSecretH, true);
-
-    std::vector<unsigned char> vchPubKeyL = L.GetPubKey().Raw();
-    std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
-
-    return CMalleablePubKey(vchPubKeyL, vchPubKeyH);
+    CKey L(vchSecretL), H(vchSecretH);
+    return CMalleablePubKey(L.GetPubKey().Raw(), H.GetPubKey().Raw());
 }
 
 // Check ownership
@@ -853,8 +847,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
         throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode R value");
     }
 
-    CKey H;
-    H.SetSecret(vchSecretH, true);
+    CKey H(vchSecretH);
     std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
 
     CPoint point_H;
@@ -923,8 +916,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
         throw key_error("CMalleableKey::CheckKeyVariant() : Unable to decode R value");
     }
 
-    CKey H;
-    H.SetSecret(vchSecretH, true);
+    CKey H(vchSecretH);
     std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
 
     CPoint point_H;
@@ -978,7 +970,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
     CBigNum bnp = bnHash + bnh;
 
     std::vector<unsigned char> vchp = bnp.getBytes();
-    privKeyVariant.SetSecret(CSecret(vchp.begin(), vchp.end()), true);
+    privKeyVariant.SetSecret(CSecret(vchp.begin(), vchp.end()));
 
     return true;
 }
@@ -1027,13 +1019,11 @@ CMalleableKeyView::CMalleableKeyView(const CMalleableKey &b)
         throw key_error("CMalleableKeyView::CMalleableKeyView() : L size must be 32 bytes");
 
     if (b.vchSecretH.size() != 32)
-        throw key_error("CMalleableKeyView::CMalleableKeyView() : L size must be 32 bytes");
+        throw key_error("CMalleableKeyView::CMalleableKeyView() : H size must be 32 bytes");
 
     vchSecretL = b.vchSecretL;
 
-    CKey H;
-    H.SetSecret(b.vchSecretH, true);
-
+    CKey H(b.vchSecretH);
     vchPubKeyH = H.GetPubKey().Raw();
 }
 
@@ -1047,8 +1037,7 @@ CMalleableKeyView& CMalleableKeyView::operator=(const CMalleableKey &b)
 {
     vchSecretL = b.vchSecretL;
 
-    CKey H;
-    H.SetSecret(b.vchSecretH, true);
+    CKey H(b.vchSecretH);
     vchPubKeyH = H.GetPubKey().Raw();
 
     return (*this);
@@ -1060,8 +1049,7 @@ CMalleableKeyView::~CMalleableKeyView()
 
 CMalleablePubKey CMalleableKeyView::GetMalleablePubKey() const
 {
-    CKey keyL;
-    keyL.SetSecret(vchSecretL, true);
+    CKey keyL(vchSecretL);
     return CMalleablePubKey(keyL.GetPubKey(), vchPubKeyH);
 }
 

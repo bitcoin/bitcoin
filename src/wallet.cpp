@@ -2810,7 +2810,7 @@ void CWallet::ClearOrphans()
         EraseFromWallet(*it);
 }
 
-bool CWallet::ExtractAddress(const CScript& scriptPubKey, std::string& addressRet)
+bool CWallet::ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet)
 {
     vector<valtype> vSolutions;
     txnouttype whichType;
@@ -2819,7 +2819,7 @@ bool CWallet::ExtractAddress(const CScript& scriptPubKey, std::string& addressRe
 
     if (whichType == TX_PUBKEY)
     {
-        addressRet = CBitcoinAddress(CPubKey(vSolutions[0]).GetID()).ToString();
+        addressRet = CBitcoinAddress(CPubKey(vSolutions[0]).GetID());
         return true;
     }
     if (whichType == TX_PUBKEY_DROP)
@@ -2829,17 +2829,17 @@ bool CWallet::ExtractAddress(const CScript& scriptPubKey, std::string& addressRe
         if (!CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view))
             return false;
 
-        addressRet = CBitcoinAddress(view.GetMalleablePubKey()).ToString();
+        addressRet = CBitcoinAddress(view.GetMalleablePubKey());
         return true;
     }
     else if (whichType == TX_PUBKEYHASH)
     {
-        addressRet = CBitcoinAddress(CKeyID(uint160(vSolutions[0]))).ToString();
+        addressRet = CBitcoinAddress(CKeyID(uint160(vSolutions[0])));
         return true;
     }
     else if (whichType == TX_SCRIPTHASH)
     {
-        addressRet = CBitcoinAddress(CScriptID(uint160(vSolutions[0]))).ToString();
+        addressRet = CBitcoinAddress(CScriptID(uint160(vSolutions[0])));
         return true;
     }
     // Multisig txns have more than one address...

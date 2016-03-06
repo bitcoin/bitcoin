@@ -32,8 +32,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
     int64_t nNet = nCredit - nDebit;
     uint256 hash = wtx.GetHash(), hashPrev = 0;
     std::map<std::string, std::string> mapValue = wtx.mapValue;
+    
+    bool fCoinBase = wtx.IsCoinBase(),
+         fCoinStake = wtx.IsCoinStake();
 
-    if (nNet > 0 || wtx.IsCoinBase() || wtx.IsCoinStake())
+    if (nNet > 0 || fCoinBase || fCoinStake)
     {
         //
         // Credit
@@ -46,11 +49,11 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.idx = parts.size(); // sequence number
                 sub.credit = txout.nValue;
 
-                std::string address;
-                if (pwalletMain->ExtractAddress(txout.scriptPubKey, address))
+                CBitcoinAddress addressRet;
+                if (pwalletMain->ExtractAddress(txout.scriptPubKey, addressRet))
                 {
                     sub.type = TransactionRecord::RecvWithAddress;
-                    sub.address = address;
+                    sub.address = addressRet.ToString();
                 }
                 else
                 {
@@ -59,21 +62,18 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                     sub.address = mapValue["from"];
                 }
 
-                if (wtx.IsCoinBase())
+                if (fCoinBase || fCoinStake)
                 {
-                    // Generated (proof-of-work)
+                    // Generated
                     sub.type = TransactionRecord::Generated;
-                }
-                if (wtx.IsCoinStake())
-                {
-                    // Generated (proof-of-stake)
-
-                    if (hashPrev == hash)
-                        continue; // last coinstake output
-
-                    sub.type = TransactionRecord::Generated;
-                    sub.credit = nNet > 0 ? nNet : wtx.GetValueOut() - nDebit;
-                    hashPrev = hash;
+                    if (fCoinStake)
+                    {
+                        // proof-of-stake
+                        if (hashPrev == hash)
+                            continue; // last coinstake output
+                        sub.credit = nNet > 0 ? nNet : wtx.GetValueOut() - nDebit;
+                        hashPrev = hash;
+                    }
                 }
 
                 parts.append(sub);

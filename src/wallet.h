@@ -17,6 +17,7 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "walletdb.h"
+#include "base58.h"
 
 extern unsigned int nStakeMaxAge;
 extern bool fWalletUnlockMintOnly;
@@ -339,7 +340,7 @@ public:
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
-    bool ExtractAddress(const CScript& scriptPubKey, std::string& addressRet);
+    bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet);
 
     bool SetDefaultKey(const CPubKey &vchPubKey);
 
