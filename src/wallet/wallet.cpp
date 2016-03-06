@@ -2947,6 +2947,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 
                 const CAmount nChange = nValueIn - nValueToSelect;
+                CTxOut newTxOut;
 
                 if (nChange > 0)
                 {
@@ -2987,7 +2988,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                             scriptChange = GetScriptForDestination(vchPubKey.GetID());
                         }
 
-                        CTxOut newTxOut(nChange, scriptChange);
+                        newTxOut = CTxOut(nChange, scriptChange);
 
                         // We do not move dust-change to fees, because the sender would end up paying more than requested.
                         // This would be against the purpose of the all-inclusive feature.
@@ -3044,6 +3045,20 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 // BIP69 https://github.com/kristovatlas/bips/blob/master/bip-0069.mediawiki
                 sort(txNew.vin.begin(), txNew.vin.end());
                 sort(txNew.vout.begin(), txNew.vout.end());
+
+                // If there was change output added before, we must update its position now
+                if (nChangePosRet != -1) {
+                    int i = 0;
+                    BOOST_FOREACH(const CTxOut& txOut, txNew.vout)
+                    {
+                        if (txOut == newTxOut)
+                        {
+                            nChangePosRet = i;
+                            break;
+                        }
+                        i++;
+                    }
+                }
 
                 // Sign
                 int nIn = 0;
