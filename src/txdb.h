@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,8 +20,7 @@ struct CDiskTxPos;
 class uint256;
 
 //! -dbcache default (MiB)
-// SYSCOIN default dbcache to 0.5 gig ram
-static const int64_t nDefaultDbCache = 500;
+static const int64_t nDefaultDbCache = 100;
 //! max. -dbcache in (MiB)
 static const int64_t nMaxDbCache = sizeof(void*) > 4 ? 16384 : 1024;
 //! min. -dbcache in (MiB)

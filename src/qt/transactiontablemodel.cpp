@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -377,6 +377,45 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Payment to yourself");
     case TransactionRecord::Generated:
         return tr("Mined");
+	// SYSCOIN
+    case TransactionRecord::AliasActivate:
+        return tr("Alias Activated");
+    case TransactionRecord::AliasUpdate:
+        return tr("Alias Updated");
+    case TransactionRecord::AliasTransfer:
+        return tr("Alias Transferred");
+    case TransactionRecord::AliasRecv:
+        return tr("Alias Received");
+    case TransactionRecord::OfferActivate:
+        return tr("Offer Activated");
+    case TransactionRecord::OfferUpdate:
+        return tr("Offer Updated");
+    case TransactionRecord::OfferAccept:
+        return tr("Offer Accepted");
+    case TransactionRecord::OfferAcceptRecv:
+        return tr("Offer Accept Received");
+    case TransactionRecord::CertActivate:
+        return tr("Cert. Activated");
+    case TransactionRecord::CertUpdate:
+        return tr("Cert. Updated");
+    case TransactionRecord::CertTransfer:
+        return tr("Cert. Transferred");
+    case TransactionRecord::CertRecv:
+        return tr("Cert. Received");
+   case TransactionRecord::EscrowActivate:
+        return tr("Escrow Activated");
+    case TransactionRecord::EscrowRelease:
+        return tr("Escrow Released");
+    case TransactionRecord::EscrowRefund:
+        return tr("Escrow Refunded");
+    case TransactionRecord::EscrowRefundRecv:
+        return tr("Escrow Refund Received");
+    case TransactionRecord::EscrowComplete:
+        return tr("Escrow Complete");
+    case TransactionRecord::MessageActivate:
+        return tr("Message Sent");
+    case TransactionRecord::MessageRecv:
+        return tr("Message Received");
     default:
         return QString();
     }
@@ -384,18 +423,38 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
 
 QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx) const
 {
+	// SYSCOIN
+	QString theme = GUIUtil::getThemeName();
     switch(wtx->type)
     {
     case TransactionRecord::Generated:
-        return QIcon(":/icons/tx_mined");
+        return QIcon(":/icons/" + theme + "/tx_mined");
     case TransactionRecord::RecvWithAddress:
     case TransactionRecord::RecvFromOther:
-        return QIcon(":/icons/tx_input");
+	// SYSCOIN
+	case TransactionRecord::AliasRecv:
+	case TransactionRecord::CertRecv:
+	case TransactionRecord::OfferAcceptRecv:
+	case TransactionRecord::EscrowRefundRecv:
+	case TransactionRecord::MessageRecv:
+        return QIcon(":/icons/" + theme + "/tx_input");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
-        return QIcon(":/icons/tx_output");
+	// SYSCOIN
+	case TransactionRecord::AliasActivate:
+    case TransactionRecord::AliasTransfer:
+    case TransactionRecord::OfferActivate:
+    case TransactionRecord::OfferAccept:
+    case TransactionRecord::CertActivate:
+	case TransactionRecord::CertTransfer:
+    case TransactionRecord::EscrowActivate:
+    case TransactionRecord::EscrowRelease:
+    case TransactionRecord::EscrowRefund:
+	case TransactionRecord::EscrowComplete:
+	case TransactionRecord::MessageActivate:
+        return QIcon(":/icons/" + theme + "/tx_output");
     default:
-        return QIcon(":/icons/tx_inout");
+        return QIcon(":/icons/" + theme + "/tx_inout");
     }
 }
 
@@ -416,6 +475,26 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::Generated:
         return lookupAddress(wtx->address, tooltip) + watchAddress;
     case TransactionRecord::SendToOther:
+	// SYSCOIN
+    case TransactionRecord::AliasActivate:
+    case TransactionRecord::AliasUpdate:
+    case TransactionRecord::AliasTransfer:
+	case TransactionRecord::AliasRecv:
+    case TransactionRecord::OfferActivate:
+    case TransactionRecord::OfferUpdate:
+    case TransactionRecord::OfferAccept:
+	case TransactionRecord::OfferAcceptRecv:
+    case TransactionRecord::CertActivate:
+    case TransactionRecord::CertUpdate:
+    case TransactionRecord::CertTransfer:
+	case TransactionRecord::CertRecv:
+    case TransactionRecord::EscrowActivate:
+    case TransactionRecord::EscrowRelease:
+	case TransactionRecord::EscrowComplete:
+    case TransactionRecord::EscrowRefund:
+	case TransactionRecord::EscrowRefundRecv:
+	case TransactionRecord::MessageActivate:
+	case TransactionRecord::MessageRecv:
         return QString::fromStdString(wtx->address) + watchAddress;
     case TransactionRecord::SendToSelf:
     default:
@@ -459,6 +538,8 @@ QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool
 
 QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx) const
 {
+	// SYSCOIN
+	QString theme = GUIUtil::getThemeName();
     switch(wtx->status.status)
     {
     case TransactionStatus::OpenUntilBlock:
@@ -467,28 +548,28 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
     case TransactionStatus::Offline:
         return COLOR_TX_STATUS_OFFLINE;
     case TransactionStatus::Unconfirmed:
-        return QIcon(":/icons/transaction_0");
+        return QIcon(":/icons/" + theme + "/transaction_0");
     case TransactionStatus::Confirming:
         switch(wtx->status.depth)
         {
-        case 1: return QIcon(":/icons/transaction_1");
-        case 2: return QIcon(":/icons/transaction_2");
-        case 3: return QIcon(":/icons/transaction_3");
-        case 4: return QIcon(":/icons/transaction_4");
-        default: return QIcon(":/icons/transaction_5");
+        case 1: return QIcon(":/icons/" + theme + "/transaction_1");
+        case 2: return QIcon(":/icons/" + theme + "/transaction_2");
+        case 3: return QIcon(":/icons/" + theme + "/transaction_3");
+        case 4: return QIcon(":/icons/" + theme + "/transaction_4");
+        default: return QIcon(":/icons/" + theme + "/transaction_5");
         };
     case TransactionStatus::Confirmed:
-        return QIcon(":/icons/transaction_confirmed");
+        return QIcon(":/icons/" + theme + "/transaction_confirmed");
     case TransactionStatus::Conflicted:
-        return QIcon(":/icons/transaction_conflicted");
+        return QIcon(":/icons/" + theme + "/transaction_conflicted");
     case TransactionStatus::Immature: {
         int total = wtx->status.depth + wtx->status.matures_in;
         int part = (wtx->status.depth * 4 / total) + 1;
-        return QIcon(QString(":/icons/transaction_%1").arg(part));
+        return QIcon(QString(":/icons/" + theme + "/transaction_%1").arg(part));
         }
     case TransactionStatus::MaturesWarning:
     case TransactionStatus::NotAccepted:
-        return QIcon(":/icons/transaction_0");
+        return QIcon(":/icons/" + theme + "/transaction_0");
     default:
         return COLOR_BLACK;
     }
@@ -496,8 +577,10 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
 
 QVariant TransactionTableModel::txWatchonlyDecoration(const TransactionRecord *wtx) const
 {
+	// SYSCOIN
+	QString theme = GUIUtil::getThemeName();
     if (wtx->involvesWatchAddress)
-        return QIcon(":/icons/eye");
+        return QIcon(":/icons/" + theme + "/eye");
     else
         return QVariant();
 }

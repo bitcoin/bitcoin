@@ -34,11 +34,18 @@ RAW_TEST_FILES = test/data/alertTests.raw
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
 SYSCOIN_TESTS =\
+  test/syscoin_alias_tests.cpp \
+  test/syscoin_cert_tests.cpp \
+  test/syscoin_message_tests.cpp \
+  test/syscoin_escrow_tests.cpp \
+  test/test_syscoin_services.cpp \
+  test/test_syscoin_services.h \
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \
   test/alert_tests.cpp \
   test/allocator_tests.cpp \
+  test/auxpow_tests.cpp \
   test/base32_tests.cpp \
   test/base58_tests.cpp \
   test/base64_tests.cpp \
@@ -58,8 +65,6 @@ SYSCOIN_TESTS =\
   test/main_tests.cpp \
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
-  test/miner_tests.cpp \
-  test/mruset_tests.cpp \
   test/multisig_tests.cpp \
   test/netbase_tests.cpp \
   test/pmt_tests.cpp \

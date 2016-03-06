@@ -1,5 +1,5 @@
 from distutils.core import setup
-setup(name='sysspendfrom',
+setup(name='btcspendfrom',
       version='1.0',
       description='Command-line utility for syscoin "coin control"',
       author='Gavin Andresen',

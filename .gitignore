@@ -114,3 +114,5 @@ share/SyscoindComparisonTool.jar
 /doc/doxygen/
 
 libsyscoinconsensus.pc
+contrib/syscoin-qt.pro.user
+contrib/syscoin-qt-local.pro

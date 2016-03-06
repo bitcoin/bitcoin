@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -39,6 +39,8 @@ public:
         ProxyPortTor,           // int
         DisplayUnit,            // SyscoinUnits::Unit
         ThirdPartyTxUrls,       // QString
+		// SYSCOIN
+		Theme,                  // QString  
         Language,               // QString
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int

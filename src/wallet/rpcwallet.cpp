@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,8 +23,18 @@
 #include <boost/assign/list_of.hpp>
 
 #include <univalue.h>
-
 using namespace std;
+// SYSCOIN
+extern bool DecodeAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool DecodeMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool CheckAliasInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, bool fRescan = false);
+extern bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, bool fRescan = false);
+extern bool CheckCertInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, bool fRescan = false);
+extern bool CheckMessageInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, bool fRescan = false);
+extern bool CheckEscrowInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, bool fRescan = false);
 
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
@@ -349,29 +359,61 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
     return ret;
 }
 // SYSCOIN: Send service transactions
-void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const string& txData="", const CWalletTx* wtxIn=NULL)
+void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxOfferIn=NULL,  const CWalletTx* wtxCertIn=NULL, const CWalletTx* wtxAliasIn=NULL, const CWalletTx* wtxEscrowIn=NULL, bool syscoinTx=true)
 {
     CAmount curBalance = pwalletMain->GetBalance();
 
     // Check amount
     if (nValue <= 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
+        throw runtime_error("Invalid amount");
 
     if (nValue > curBalance)
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
+        throw runtime_error("Insufficient funds");
 
     // Create and send the transaction
     CReserveKey reservekey(pwalletMain);
     CAmount nFeeRequired;
     std::string strError;
     int nChangePosRet = -1;
-    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, NULL, true, txData, wtxIn)) {
+    if (!pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError, NULL, true, wtxOfferIn, wtxCertIn, wtxAliasIn, wtxEscrowIn, syscoinTx)) {
         if (!fSubtractFeeFromAmount && nValue + nFeeRequired > pwalletMain->GetBalance())
             strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
+        throw runtime_error(strError);
     }
+	// run a check on the inputs without putting them into the db, just to ensure it will go into the mempool without issues and cause wallet annoyance
+	vector<vector<unsigned char> > vvch;
+	int op, nOut;
+	bool fJustCheck = true;
+	CCoinsViewCache inputs(pcoinsTip);
+	if(DecodeAliasTx(wtxNew, op, nOut, vvch))
+	{
+		if(!CheckAliasInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+			 throw runtime_error("Error: The transaction was rejected! Alias Inputs were invalid!");
+	}
+	if(DecodeCertTx(wtxNew, op, nOut, vvch))
+	{
+		if(!CheckCertInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+			throw runtime_error("Error: The transaction was rejected! Certificate Inputs were invalid!");
+	}
+	if(DecodeEscrowTx(wtxNew, op, nOut, vvch))
+	{
+		if(!CheckEscrowInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+			throw runtime_error("Error: The transaction was rejected! Escrow Inputs were invalid!");
+	}
+	if(DecodeOfferTx(wtxNew, op, nOut, vvch))		
+	{
+		if(!CheckOfferInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+			throw runtime_error("Error: The transaction was rejected! Offer Inputs were invalid!");
+	}
+	if(DecodeMessageTx(wtxNew, op, nOut, vvch))
+	{
+		if(!CheckMessageInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+			throw runtime_error("Error: The transaction was rejected! Message Inputs were invalid!");
+	}
+	
+
     if (!pwalletMain->CommitTransaction(wtxNew, reservekey))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
+        throw runtime_error("Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.");
 }
 void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
 {

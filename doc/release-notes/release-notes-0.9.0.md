@@ -378,7 +378,7 @@ Thanks to everyone who contributed to this release:
 - paveljanik
 - Peter Todd
 - phantomcircuit
-- phelixsys
+- phelixbtc
 - Philip Kaufmann
 - Pieter Wuille
 - Rav3nPL

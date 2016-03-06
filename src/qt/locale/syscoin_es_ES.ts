@@ -330,6 +330,14 @@
     </context>
 <context>
     <name>EditAddressDialog</name>
+    <message>
+        <source>&amp;Label</source>
+        <translation>Etiqueta</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>Dirección</translation>
+    </message>
     </context>
 <context>
     <name>FreespaceChecker</name>
@@ -369,6 +377,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Copiar Direccón</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Dirección</translation>

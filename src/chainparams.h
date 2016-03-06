@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -42,10 +42,13 @@ struct CCheckpointData {
 class CChainParams
 {
 public:
+	// SYSCOIN allow old SYSCOIN address scheme
     enum Base58Type {
         PUBKEY_ADDRESS,
+        PUBKEY_ADDRESS_SYS,
         SCRIPT_ADDRESS,
         SECRET_KEY,
+        SECRET_KEY_SYS,
         EXT_PUBLIC_KEY,
         EXT_SECRET_KEY,
 

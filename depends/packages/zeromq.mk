@@ -1,8 +1,8 @@
 package=zeromq
-$(package)_version=4.0.4
+$(package)_version=4.0.7
 $(package)_download_path=http://download.zeromq.org
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=1ef71d46e94f33e27dd5a1661ed626cd39be4d2d6967792a275040e34457d399
+$(package)_sha256_hash=e00b2967e074990d0538361cc79084a0a92892df2c6e7585da34e4c61ee47b03
 
 define $(package)_set_vars
   $(package)_config_opts=--without-documentation --disable-shared

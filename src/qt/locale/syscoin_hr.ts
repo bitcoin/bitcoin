@@ -774,7 +774,7 @@
         <source>command-line options</source>
         <translation>opcije programa u naredbenoj liniji</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -1014,6 +1014,10 @@
         <translation>&amp;Informacije</translation>
     </message>
     <message>
+        <source>Debug window</source>
+        <translation>Konzola za dijagnostiku</translation>
+    </message>
+    <message>
         <source>Using OpenSSL version</source>
         <translation>OpenSSL verzija u upotrebi</translation>
     </message>
@@ -1214,6 +1218,10 @@
         <translation>Slanje novca</translation>
     </message>
     <message>
+        <source>Insufficient funds!</source>
+        <translation>Nedovoljna sredstva</translation>
+    </message>
+    <message>
         <source>Quantity:</source>
         <translation>Količina:</translation>
     </message>
@@ -1236,6 +1244,10 @@
     <message>
         <source>Change:</source>
         <translation>Vraćeno:</translation>
+    </message>
+    <message>
+        <source>Transaction Fee:</source>
+        <translation>Naknada za transakciju:</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -1367,11 +1379,19 @@
         <translation>Potpis</translation>
     </message>
     <message>
+        <source>Sign &amp;Message</source>
+        <translation>&amp;Potpišite poruku</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>Obriši &amp;sve</translation>
     </message>
     <message>
         <source>&amp;Verify Message</source>
+        <translation>&amp;Potvrdite poruku</translation>
+    </message>
+    <message>
+        <source>Verify &amp;Message</source>
         <translation>&amp;Potvrdite poruku</translation>
     </message>
     <message>
@@ -1778,6 +1798,18 @@
     <message>
         <source>Information</source>
         <translation>Informacija</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nevaljali iznos za opciju -maxtxfee=&lt;iznos&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nevaljali iznos za opciju -minrelaytxfee=&lt;iznos&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -mintxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Nevaljali iznos za opciju -mintxfee=&lt;iznos&gt;: '%s'</translation>
     </message>
     <message>
         <source>Send trace/debug info to console instead of debug.log file</source>

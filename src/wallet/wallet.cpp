@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,11 +32,11 @@
 
 using namespace std;
 // SYSCOIN services
-extern int IndexOfAliasOutput(const CTransaction& tx);
-extern int IndexOfCertOutput(const CTransaction& tx);
 extern int IndexOfOfferOutput(const CTransaction& tx);
-extern int IndexOfMessageOutput(const CTransaction& tx);
-extern int IndexOfEscrowOutput(const CTransaction& tx);
+extern int IndexOfCertOutput(const CTransaction& tx);
+extern int IndexOfAliasOutput(const CTransaction& tx);
+extern int IndexOfMyEscrowOutput(const CTransaction& tx);
+extern bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs);
 extern int GetSyscoinTxVersion();
 extern vector<unsigned char> vchFromString(const string &str);
 
@@ -818,6 +818,13 @@ void CWallet::MarkConflicted(const uint256& hashBlock, const uint256& hashTx)
                  }
                  iter++;
             }
+            // If a transaction changes 'conflicted' state, that changes the balance
+            // available of the outputs it spends. So force those to be recomputed
+            BOOST_FOREACH(const CTxIn& txin, wtx.vin)
+            {
+                if (mapWallet.count(txin.prevout.hash))
+                    mapWallet[txin.prevout.hash].MarkDirty();
+            }
         }
     }
 }
@@ -1041,7 +1048,8 @@ void CWalletTx::GetAmounts(list<COutputEntry>& listReceived,
 
         // In either case, we need to get the destination address
         CTxDestination address;
-        if (!ExtractDestination(txout.scriptPubKey, address))
+
+        if (!ExtractDestination(txout.scriptPubKey, address) && !txout.scriptPubKey.IsUnspendable())
         {
             LogPrintf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                      this->GetHash().ToString());
@@ -1365,6 +1373,14 @@ CAmount CWalletTx::GetChange() const
     fChangeCached = true;
     return nChangeCached;
 }
+bool CWalletTx::InMempool() const
+{
+    LOCK(mempool.cs);
+    if (mempool.exists(GetHash())) {
+        return true;
+    }
+    return false;
+}
 
 bool CWalletTx::IsTrusted() const
 {
@@ -1380,12 +1396,8 @@ bool CWalletTx::IsTrusted() const
         return false;
 
     // Don't trust unconfirmed transactions from us unless they are in the mempool.
-    {
-        LOCK(mempool.cs);
-        if (!mempool.exists(GetHash())) {
-            return false;
-        }
-    }
+    if (!InMempool())
+        return false;
 
     // Trusted if all inputs are from us and are in the mempool:
     BOOST_FOREACH(const CTxIn& txin, vin)
@@ -1639,6 +1651,15 @@ static void ApproximateBestSubset(vector<pair<CAmount, pair<const CWalletTx*,uns
             }
         }
     }
+	//Reduces the approximate best subset by removing any inputs that are smaller than the surplus of nTotal beyond nTargetValue. 
+    for (unsigned int i = 0; i < vValue.size(); i++)
+    {                        
+        if (vfBest[i] && (nBest - vValue[i].first) >= nTargetValue )
+        {
+            vfBest[i] = false;
+            nBest -= vValue[i].first;
+        }
+    }
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, vector<COutput> vCoins,
@@ -1662,15 +1683,19 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int
             continue;
 
         const CWalletTx *pcoin = output.tx;
-		// SYSCOIN txs are unspendable unless input to another syscoin tx
-		if(pcoin->nVersion == GetSyscoinTxVersion())
-			continue;
         if (output.nDepth < (pcoin->IsFromMe(ISMINE_ALL) ? nConfMine : nConfTheirs))
             continue;
 
         int i = output.i;
         CAmount n = pcoin->vout[i].nValue;
-
+		// SYSCOIN txs are unspendable unless input to another syscoin tx (passed into createtransaction)
+		if(pcoin->nVersion == GetSyscoinTxVersion())
+		{
+			int op;
+			vector<vector<unsigned char> > vvchArgs;
+			if (IsSyscoinScript(pcoin->vout[i].scriptPubKey, op, vvchArgs))
+				continue;
+		}
         pair<CAmount,pair<const CWalletTx*,unsigned int> > coin = make_pair(n,make_pair(pcoin, i));
 
         if (n == nTargetValue)
@@ -1775,9 +1800,14 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
         if (it != mapWallet.end())
         {
             const CWalletTx* pcoin = &it->second;
-			// SYSCOIN txs are unspendable unless input to another syscoin tx
+			// SYSCOIN txs are unspendable unless input to another syscoin tx (passed into createtransaction)
 			if(pcoin->nVersion == GetSyscoinTxVersion())
-				continue;
+			{
+				int op;
+				vector<vector<unsigned char> > vvchArgs;
+				if (IsSyscoinScript(pcoin->vout[outpoint.n].scriptPubKey, op, vvchArgs))
+					continue;
+			}
             // Clearly invalid input, fail
             if (pcoin->vout.size() <= outpoint.n)
                 return false;
@@ -1855,26 +1885,52 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nC
 }
 
 bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet,
-                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const string& txData, const CWalletTx* wtxIn)
+                                int& nChangePosRet, std::string& strFailReason, const CCoinControl* coinControl, bool sign, const CWalletTx* wtxInOffer, const CWalletTx* wtxInCert, const CWalletTx* wtxInAlias, const CWalletTx* wtxInEscrow, bool sysTx)
 {
     CAmount nValue = 0;
-	// SYSCOIN: get output amount of input transaction for syscoin service calls
-	int nTxOut = 0;
-	if(wtxIn != NULL)
+	// SYSCOIN: get output amount of input transactions for syscoin service calls
+	int nTxOutOffer = 0;
+	int nTxOutCert = 0;
+	int nTxOutAlias = 0;
+	int nTxOutEscrow = 0;
+	if(wtxInOffer != NULL)
 	{
-		const CTransaction& txIn = wtxIn[0];
-		nTxOut = IndexOfAliasOutput(txIn);
-		if (nTxOut < 0)
-			nTxOut = IndexOfCertOutput(txIn);
-		if (nTxOut < 0)
-			nTxOut = IndexOfOfferOutput(txIn);
-		if (nTxOut < 0)
-			nTxOut = IndexOfEscrowOutput(txIn);
-		if (nTxOut < 0)
-			nTxOut = IndexOfMessageOutput(txIn);
-		if (nTxOut < 0)
+		const CTransaction& txIn = wtxInOffer[0];
+		nTxOutOffer = IndexOfOfferOutput(txIn);
+		if (nTxOutOffer < 0)
 		{
-			strFailReason = _("Can't determine type of input into syscoin service transaction");
+			strFailReason = _("Can't determine type of offer input into syscoin service transaction");
+            return false;
+		}
+	}
+	if(wtxInCert != NULL)
+	{
+		const CTransaction& txIn = wtxInCert[0];
+		nTxOutCert = IndexOfCertOutput(txIn);
+		if (nTxOutCert < 0)
+		{
+			strFailReason = _("Can't determine type of cert input into syscoin service transaction");
+            return false;
+		}
+	}
+	if(wtxInAlias != NULL)
+	{
+		const CTransaction& txIn = wtxInAlias[0];
+		nTxOutAlias = IndexOfAliasOutput(txIn);
+		if (nTxOutAlias < 0)
+		{
+			strFailReason = _("Can't determine type of alias input into syscoin service transaction");
+            return false;
+		}
+	}
+	if(wtxInEscrow != NULL)
+	{
+		const CTransaction& txIn = wtxInEscrow[0];
+		// escrow sends multiple outs of same scriptpubkey to arbiter, seller and buyer.. we need the one this wallet owns to sign with it
+		nTxOutEscrow = IndexOfMyEscrowOutput(txIn);
+		if (nTxOutEscrow < 0)
+		{
+			strFailReason = _("Can't determine type of escrow input into syscoin service transaction");
             return false;
 		}
 	}
@@ -1901,7 +1957,7 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     wtxNew.BindWallet(this);
     CMutableTransaction txNew;
 	// SYSCOIN: set syscoin tx version if its a syscoin service call
-	if(!txData.empty())
+	if(sysTx)
 		txNew.nVersion = GetSyscoinTxVersion();
     // Discourage fee sniping.
     //
@@ -1944,9 +2000,6 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
             {
                 txNew.vin.clear();
                 txNew.vout.clear();
-				// SYSCOIN data
-				if(!txData.empty())
-					txNew.data = vchFromString(txData);
                 wtxNew.fFromMe = true;
                 nChangePosRet = -1;
                 bool fFirst = true;
@@ -1988,8 +2041,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 }
 				// SYSCOIN input credit from input tx
 				int64_t nWtxinCredit = 0;
-				if(wtxIn != NULL)
-					nWtxinCredit = wtxIn->vout[nTxOut].nValue;
+				if(wtxInOffer != NULL)
+					nWtxinCredit = wtxInOffer->vout[nTxOutOffer].nValue;
+				if(wtxInCert != NULL)
+					nWtxinCredit += wtxInCert->vout[nTxOutCert].nValue;
+				if(wtxInAlias != NULL)
+					nWtxinCredit += wtxInAlias->vout[nTxOutAlias].nValue;
+				if(wtxInEscrow != NULL)
+					nWtxinCredit += wtxInEscrow->vout[nTxOutEscrow].nValue;
                 // Choose coins to use
                 set<pair<const CWalletTx*,unsigned int> > setCoins;
                 CAmount nValueIn = 0;
@@ -2004,8 +2063,14 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
 				nValueIn += nWtxinCredit;
 				vector<pair<const CWalletTx*, unsigned int> > vecCoins(
 					setCoins.begin(), setCoins.end());
-				if(wtxIn != NULL)
-					vecCoins.insert(vecCoins.begin(), make_pair(wtxIn, nTxOut));
+				if(wtxInOffer != NULL)
+					vecCoins.insert(vecCoins.begin(), make_pair(wtxInOffer, nTxOutOffer));
+				if(wtxInCert != NULL)
+					vecCoins.insert(vecCoins.begin(), make_pair(wtxInCert, nTxOutCert));
+				if(wtxInAlias != NULL)
+					vecCoins.insert(vecCoins.begin(), make_pair(wtxInAlias, nTxOutAlias));
+				if(wtxInEscrow != NULL)
+					vecCoins.insert(vecCoins.begin(), make_pair(wtxInEscrow, nTxOutEscrow));
                 BOOST_FOREACH(PAIRTYPE(const CWalletTx*, unsigned int) pcoin, vecCoins)
                 {
                     CAmount nCredit = pcoin.first->vout[pcoin.second].nValue;
@@ -2138,7 +2203,8 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                 // Limit size
                 if (nBytes >= MAX_STANDARD_TX_SIZE)
                 {
-                    strFailReason = _("Transaction too large");
+					// SYSCOIN better output
+					strFailReason = strprintf("%s: %d bytes", _("Transaction too large"), nBytes);
                     return false;
                 }
 
@@ -2921,66 +2987,3 @@ CWalletKey::CWalletKey(int64_t nExpires)
     nTimeCreated = (nExpires ? GetTime() : 0);
     nTimeExpires = nExpires;
 }
-
-int CMerkleTx::SetMerkleBranch(const CBlock& block)
-{
-    AssertLockHeld(cs_main);
-    CBlock blockTmp;
-
-    // Update the tx's hashBlock
-    hashBlock = block.GetHash();
-
-    // Locate the transaction
-    for (nIndex = 0; nIndex < (int)block.vtx.size(); nIndex++)
-        if (block.vtx[nIndex] == *(CTransaction*)this)
-            break;
-    if (nIndex == (int)block.vtx.size())
-    {
-        nIndex = -1;
-        LogPrintf("ERROR: SetMerkleBranch(): couldn't find tx in block\n");
-        return 0;
-    }
-
-    // Is the tx in a block that's in the main chain
-    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi == mapBlockIndex.end())
-        return 0;
-    const CBlockIndex* pindex = (*mi).second;
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    return chainActive.Height() - pindex->nHeight + 1;
-}
-
-int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet) const
-{
-    if (hashBlock.IsNull())
-        return 0;
-    AssertLockHeld(cs_main);
-
-    // Find the block it claims to be in
-    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi == mapBlockIndex.end())
-        return 0;
-    CBlockIndex* pindex = (*mi).second;
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    pindexRet = pindex;
-    return ((nIndex == -1) ? (-1) : 1) * (chainActive.Height() - pindex->nHeight + 1);
-}
-
-int CMerkleTx::GetBlocksToMaturity() const
-{
-    if (!IsCoinBase())
-        return 0;
-    return max(0, (COINBASE_MATURITY+1) - GetDepthInMainChain());
-}
-
-
-bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, bool fRejectAbsurdFee)
-{
-    CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, false, fRejectAbsurdFee);
-}
-

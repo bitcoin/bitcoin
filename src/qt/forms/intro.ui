@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>674</width>
-    <height>363</height>
+    <height>406</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -216,7 +216,7 @@
      </property>
     </spacer>
    </item>
-   <item>
+  <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

@@ -446,6 +446,36 @@
         <translation>Зарежда блокове...</translation>
     </message>
     <message>
+        <source>Date: %1
+</source>
+        <translation>Дата: %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>Сума: %1
+</translation>
+    </message>
+    <message>
+        <source>Type: %1
+</source>
+        <translation>Тип: %1
+</translation>
+    </message>
+    <message>
+        <source>Label: %1
+</source>
+        <translation>Етикет: %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>Адрес: %1
+</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
         <translation>Изходяща транзакция</translation>
     </message>
@@ -776,7 +806,7 @@
         <source>command-line options</source>
         <translation>Списък с налични команди</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>Intro</name>
     <message>
@@ -834,6 +864,10 @@
         <translation>Мегабайта</translation>
     </message>
     <message>
+        <source>Number of script &amp;verification threads</source>
+        <translation>Брой на скриптове и &amp;нишки за потвърждение</translation>
+    </message>
+    <message>
         <source>Accept connections from outside</source>
         <translation>Приемай връзки отвън</translation>
     </message>
@@ -872,6 +906,10 @@
     <message>
         <source>Expert</source>
         <translation>Експерт</translation>
+    </message>
+    <message>
+        <source>Enable coin &amp;control features</source>
+        <translation>Позволяване на монетите и &amp;техните възможности</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -2235,6 +2273,10 @@
         <translation>Изнасяне историята на транзакциите</translation>
     </message>
     <message>
+        <source>Watch-only</source>
+        <translation>само гледане</translation>
+    </message>
+    <message>
         <source>Exporting Failed</source>
         <translation>Грешка при изнасянето</translation>
     </message>
@@ -2416,6 +2458,10 @@
     <message>
         <source>Information</source>
         <translation>Информация</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s'</source>
+        <translation>Невалидна сума за -maxtxfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -minrelaytxfee=&lt;amount&gt;: '%s'</source>

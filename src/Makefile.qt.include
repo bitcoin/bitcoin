@@ -97,7 +97,32 @@ QT_FORMS_UI = \
   qt/forms/sendcoinsdialog.ui \
   qt/forms/sendcoinsentry.ui \
   qt/forms/signverifymessagedialog.ui \
-  qt/forms/transactiondescdialog.ui
+  qt/forms/transactiondescdialog.ui \
+  qt/forms/aliaslistpage.ui \
+  qt/forms/editaliasdialog.ui \
+  qt/forms/newmessagedialog.ui \
+  qt/forms/messageinfodialog.ui \
+  qt/forms/escrowlistpage.ui \
+  qt/forms/myescrowlistpage.ui \
+  qt/forms/messagelistpage.ui \
+  qt/forms/myaliaslistpage.ui \
+  qt/forms/offerlistpage.ui \
+  qt/forms/editofferdialog.ui \
+  qt/forms/myofferlistpage.ui \
+  qt/forms/editwhitelistofferdialog.ui \
+  qt/forms/newwhitelistdialog.ui \
+  qt/forms/resellofferdialog.ui \
+  qt/forms/myacceptedofferlistpage.ui \
+  qt/forms/acceptedofferlistpage.ui \
+  qt/forms/mycertlistpage.ui \
+  qt/forms/acceptandpayofferlistpage.ui \
+  qt/forms/offeracceptinfodialog.ui \
+  qt/forms/offerpaydialog.ui \
+  qt/forms/offerescrowdialog.ui \
+  qt/forms/offeracceptdialog.ui \
+  qt/forms/offeracceptdialogbtc.ui \
+  qt/forms/editcertdialog.ui \
+  qt/forms/certlistpage.ui
 
 QT_MOC_CPP = \
   qt/moc_addressbookpage.cpp \
@@ -143,8 +168,46 @@ QT_MOC_CPP = \
   qt/moc_utilitydialog.cpp \
   qt/moc_walletframe.cpp \
   qt/moc_walletmodel.cpp \
-  qt/moc_walletview.cpp
-
+  qt/moc_walletview.cpp \
+  qt/moc_aliasview.cpp \
+  qt/moc_certview.cpp \
+  qt/moc_offerview.cpp \
+  qt/moc_escrowview.cpp \
+  qt/moc_messageview.cpp  \
+  qt/moc_aliastablemodel.cpp \
+  qt/moc_escrowtablemodel.cpp \
+  qt/moc_escrowlistpage.cpp \
+  qt/moc_myescrowlistpage.cpp \
+  qt/moc_messagetablemodel.cpp \
+  qt/moc_editaliasdialog.cpp \
+  qt/moc_newmessagedialog.cpp \
+  qt/moc_messageinfodialog.cpp \
+  qt/moc_inmessagelistpage.cpp \
+  qt/moc_outmessagelistpage.cpp \
+  qt/moc_aliaslistpage.cpp \
+  qt/moc_myaliaslistpage.cpp \
+  qt/moc_offertablemodel.cpp \
+  qt/moc_offeraccepttablemodel.cpp \
+  qt/moc_offeracceptinfodialog.cpp \
+  qt/moc_editofferdialog.cpp \
+  qt/moc_newwhitelistdialog.cpp \
+  qt/moc_resellofferdialog.cpp \
+  qt/moc_offerwhitelisttablemodel.cpp \
+  qt/moc_editwhitelistofferdialog.cpp \
+  qt/moc_offerlistpage.cpp \
+  qt/moc_myofferlistpage.cpp \
+  qt/moc_myacceptedofferlistpage.cpp \
+  qt/moc_acceptedofferlistpage.cpp \
+  qt/moc_offerpaydialog.cpp \
+  qt/moc_offerescrowdialog.cpp \
+  qt/moc_offeracceptdialog.cpp \
+  qt/moc_offeracceptdialogbtc.cpp \
+  qt/moc_acceptandpayofferlistpage.cpp \
+  qt/moc_certtablemodel.cpp \
+  qt/moc_editcertdialog.cpp \
+  qt/moc_mycertlistpage.cpp \
+  qt/moc_certlistpage.cpp
+  
 SYSCOIN_MM = \
   qt/macdockiconhandler.mm \
   qt/macnotificationhandler.mm
@@ -216,57 +279,109 @@ SYSCOIN_QT_H = \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
   qt/walletview.h \
-  qt/winshutdownmonitor.h
+  qt/winshutdownmonitor.h \
+  qt/aliasview.h \
+  qt/certview.h \
+  qt/offerview.h \
+  qt/escrowview.h \
+  qt/messageview.h  \
+  qt/aliastablemodel.h \
+  qt/escrowtablemodel.h \
+  qt/escrowlistpage.h \
+  qt/myescrowlistpage.h \
+  qt/messagetablemodel.h \
+  qt/editaliasdialog.h \
+  qt/newmessagedialog.h \
+  qt/messageinfodialog.h \
+  qt/inmessagelistpage.h \
+  qt/outmessagelistpage.h \
+  qt/aliaslistpage.h \
+  qt/myaliaslistpage.h \
+  qt/offertablemodel.h \
+  qt/offeraccepttablemodel.h \
+  qt/offeracceptinfodialog.h \
+  qt/editofferdialog.h \
+  qt/newwhitelistdialog.h \
+  qt/resellofferdialog.h \
+  qt/offerwhitelisttablemodel.h \
+  qt/editwhitelistofferdialog.h \
+  qt/offerlistpage.h \
+  qt/myofferlistpage.h \
+  qt/myacceptedofferlistpage.h \
+  qt/acceptedofferlistpage.h \
+  qt/offerpaydialog.h \
+  qt/offerescrowdialog.h \
+  qt/offeracceptdialog.h \
+  qt/offeracceptdialogbtc.h \
+  qt/acceptandpayofferlistpage.h \
+  qt/certtablemodel.h \
+  qt/editcertdialog.h \
+  qt/mycertlistpage.h \
+  qt/certlistpage.h
 
 RES_ICONS = \
-  qt/res/icons/add.png \
-  qt/res/icons/address-book.png \
-  qt/res/icons/about.png \
-  qt/res/icons/about_qt.png \
   qt/res/icons/syscoin.ico \
-  qt/res/icons/syscoin.png \
-  qt/res/icons/clock1.png \
-  qt/res/icons/clock2.png \
-  qt/res/icons/clock3.png \
-  qt/res/icons/clock4.png \
-  qt/res/icons/clock5.png \
-  qt/res/icons/configure.png \
-  qt/res/icons/connect0.png \
-  qt/res/icons/connect1.png \
-  qt/res/icons/connect2.png \
-  qt/res/icons/connect3.png \
-  qt/res/icons/connect4.png \
-  qt/res/icons/debugwindow.png \
-  qt/res/icons/edit.png \
-  qt/res/icons/editcopy.png \
-  qt/res/icons/editpaste.png \
-  qt/res/icons/export.png \
-  qt/res/icons/eye.png \
-  qt/res/icons/eye_minus.png \
-  qt/res/icons/eye_plus.png \
-  qt/res/icons/filesave.png \
-  qt/res/icons/history.png \
-  qt/res/icons/info.png \
-  qt/res/icons/key.png \
-  qt/res/icons/lock_closed.png \
-  qt/res/icons/lock_open.png \
-  qt/res/icons/open.png \
-  qt/res/icons/overview.png \
-  qt/res/icons/quit.png \
-  qt/res/icons/receive.png \
-  qt/res/icons/remove.png \
-  qt/res/icons/send.png \
-  qt/res/icons/synced.png \
-  qt/res/icons/transaction0.png \
-  qt/res/icons/transaction2.png \
-  qt/res/icons/transaction_conflicted.png \
-  qt/res/icons/tx_inout.png \
-  qt/res/icons/tx_input.png \
-  qt/res/icons/tx_output.png \
-  qt/res/icons/tx_mined.png \
-  qt/res/icons/warning.png \
-  qt/res/icons/verify.png
-
+  qt/res/icons/shade/add.png \
+  qt/res/icons/shade/address-book.png \
+  qt/res/icons/shade/about.png \
+  qt/res/icons/shade/about_qt.png \
+  qt/res/icons/shade/syscoin.png \
+  qt/res/icons/shade/clock1.png \
+  qt/res/icons/shade/clock2.png \
+  qt/res/icons/shade/clock3.png \
+  qt/res/icons/shade/clock4.png \
+  qt/res/icons/shade/clock5.png \
+  qt/res/icons/shade/configure.png \
+  qt/res/icons/shade/connect0.png \
+  qt/res/icons/shade/connect1.png \
+  qt/res/icons/shade/connect2.png \
+  qt/res/icons/shade/connect3.png \
+  qt/res/icons/shade/connect4.png \
+  qt/res/icons/shade/debugwindow.png \
+  qt/res/icons/shade/edit.png \
+  qt/res/icons/shade/editcopy.png \
+  qt/res/icons/shade/editpaste.png \
+  qt/res/icons/shade/export.png \
+  qt/res/icons/shade/eye.png \
+  qt/res/icons/shade/eye_minus.png \
+  qt/res/icons/shade/eye_plus.png \
+  qt/res/icons/shade/filesave.png \
+  qt/res/icons/shade/history.png \
+  qt/res/icons/shade/info.png \
+  qt/res/icons/shade/key.png \
+  qt/res/icons/shade/lock_closed.png \
+  qt/res/icons/shade/lock_open.png \
+  qt/res/icons/shade/open.png \
+  qt/res/icons/shade/overview.png \
+  qt/res/icons/shade/quit.png \
+  qt/res/icons/shade/receive.png \
+  qt/res/icons/shade/remove.png \
+  qt/res/icons/shade/send.png \
+  qt/res/icons/shade/synced.png \
+  qt/res/icons/shade/transaction0.png \
+  qt/res/icons/shade/transaction2.png \
+  qt/res/icons/shade/transaction_conflicted.png \
+  qt/res/icons/shade/tx_inout.png \
+  qt/res/icons/shade/tx_input.png \
+  qt/res/icons/shade/tx_output.png \
+  qt/res/icons/shade/tx_mined.png \
+  qt/res/icons/shade/warning.png \
+  qt/res/icons/shade/verify.png \
+  qt/res/icons/shade/alias.png \
+  qt/res/icons/shade/cart.png \
+  qt/res/icons/shade/cert.png \
+  qt/res/icons/shade/data.png \
+  qt/res/icons/shade/details.png \
+  qt/res/icons/shade/editsys.png \
+  qt/res/icons/shade/escrow.png \
+  qt/res/icons/shade/escrow1.png \
+  qt/res/icons/shade/mail.png \
+  qt/res/icons/shade/mailin.png \
+  qt/res/icons/shade/mailout.png \
+  qt/res/icons/shade/message.png \
+  qt/res/icons/shade/search.png \
+  qt/res/icons/shade/refresh.png
+  
 SYSCOIN_QT_CPP = \
   qt/bantablemodel.cpp \
   qt/syscoinaddressvalidator.cpp \
@@ -321,11 +436,66 @@ SYSCOIN_QT_CPP += \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
-  qt/walletview.cpp
+  qt/walletview.cpp \
+  qt/aliasview.cpp \
+  qt/certview.cpp \
+  qt/offerview.cpp \
+  qt/escrowview.cpp \
+  qt/messageview.cpp  \
+  qt/aliastablemodel.cpp \
+  qt/escrowtablemodel.cpp \
+  qt/escrowlistpage.cpp \
+  qt/myescrowlistpage.cpp \
+  qt/messagetablemodel.cpp \
+  qt/editaliasdialog.cpp \
+  qt/newmessagedialog.cpp \
+  qt/messageinfodialog.cpp \
+  qt/inmessagelistpage.cpp \
+  qt/outmessagelistpage.cpp \
+  qt/aliaslistpage.cpp \
+  qt/myaliaslistpage.cpp \
+  qt/offertablemodel.cpp \
+  qt/offeraccepttablemodel.cpp \
+  qt/offeracceptinfodialog.cpp \
+  qt/editofferdialog.cpp \
+  qt/newwhitelistdialog.cpp \
+  qt/resellofferdialog.cpp \
+  qt/offerwhitelisttablemodel.cpp \
+  qt/editwhitelistofferdialog.cpp \
+  qt/offerlistpage.cpp \
+  qt/myofferlistpage.cpp \
+  qt/myacceptedofferlistpage.cpp \
+  qt/acceptedofferlistpage.cpp \
+  qt/offerpaydialog.cpp \
+  qt/offerescrowdialog.cpp \
+  qt/offeracceptdialog.cpp \
+  qt/offeracceptdialogbtc.cpp \
+  qt/acceptandpayofferlistpage.cpp \
+  qt/certtablemodel.cpp \
+  qt/editcertdialog.cpp \
+  qt/mycertlistpage.cpp \
+  qt/certlistpage.cpp
 endif
 
-RES_IMAGES = 
+RES_IMAGES = \
+  qt/res/images/shade/shade_about.png \
+  qt/res/images/shade/shade_aboutbtc.png \
+  qt/res/images/shade/shade_overview.png \
+  qt/res/images/shade/shade_splash.png \
+  qt/res/images/shade/shade_logo_horizontal.png \
+  qt/res/images/shade/shade_downArrow.png \
+  qt/res/images/shade/shade_downArrow_small.png \
+  qt/res/images/shade/shade_upArrow_small.png \
+  qt/res/images/shade/shade_leftArrow_small.png \
+  qt/res/images/shade/shade_rightArrow_small.png \
+  qt/res/images/shade/shade_qtreeview_selected.png \
+  qt/res/images/shade/shade_walletFrame_bg.png \
+  qt/res/images/shade/shade_walletFrame.png \
+  qt/res/images/shade/shade_imageplaceholder.png
 
+RES_CSS = \
+  qt/res/css/shade.css
+  
 RES_MOVIES = $(wildcard qt/res/movies/spinner-*.png)
 
 SYSCOIN_RC = qt/res/syscoin-qt-res.rc
@@ -338,7 +508,7 @@ qt_libsyscoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES) $(SYSCOIN_QT_INC
 qt_libsyscoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
 qt_libsyscoinqt_a_SOURCES = $(SYSCOIN_QT_CPP) $(SYSCOIN_QT_H) $(QT_FORMS_UI) \
-  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
+  $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES  $(RES_CSS) $(RES_MOVIES)
 
 nodist_qt_libsyscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
@@ -400,7 +570,7 @@ $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin_locale $(@D)/$(<F) | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) $(PROTOBUF_H)
+$(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES)  $(RES_CSS) $(RES_MOVIES) $(PROTOBUF_H)
 	@test -f $(RCC)
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name syscoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
