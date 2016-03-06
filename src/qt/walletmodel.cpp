@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,9 +26,23 @@
 #include <QTimer>
 
 #include <boost/foreach.hpp>
-
+// SYSCOIN
+#include "aliastablemodel.h"
+#include "messagetablemodel.h"
+#include "escrowtablemodel.h"
+#include "certtablemodel.h"
+#include "offertablemodel.h"
+#include "offeraccepttablemodel.h"
+using namespace std;
+extern bool DecodeAndParseAliasTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool DecodeAndParseCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool DecodeAndParseMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
+extern bool DecodeAndParseEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *wallet, OptionsModel *optionsModel, QObject *parent) :
     QObject(parent), wallet(wallet), optionsModel(optionsModel), addressTableModel(0),
+	// SYSCOIN
+	aliasTableModelMine(0), aliasTableModelAll(0), certTableModelMine(0), certTableModelAll(0), offerTableModelMine(0), offerTableModelAll(0), offerTableModelAccept(0), offerTableModelMyAccept(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
@@ -41,7 +55,19 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *wallet, Op
     addressTableModel = new AddressTableModel(wallet, this);
     transactionTableModel = new TransactionTableModel(platformStyle, wallet, this);
     recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
-
+	// SYSCOIN
+	aliasTableModelMine = new AliasTableModel(wallet, this, MyAlias);
+	aliasTableModelAll = new AliasTableModel(wallet, this, AllAlias);
+	escrowTableModelMine = new EscrowTableModel(wallet, this, MyEscrow);
+	escrowTableModelAll = new EscrowTableModel(wallet, this, AllEscrow);
+	inMessageTableModel = new MessageTableModel(wallet, this, InMessage);
+	outMessageTableModel = new MessageTableModel(wallet, this, OutMessage);
+	certTableModelMine = new CertTableModel(wallet, this, MyCert);
+	certTableModelAll = new CertTableModel(wallet, this, AllCert);
+	offerTableModelMine = new OfferTableModel(wallet, this, MyOffer);
+	offerTableModelAll = new OfferTableModel(wallet, this, AllOffer);
+	offerTableModelAccept = new OfferAcceptTableModel(wallet, this, Accept);
+	offerTableModelMyAccept = new OfferAcceptTableModel(wallet, this, MyAccept);
     // This timer will be fired repeatedly to update the balance
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(pollBalanceChanged()));
@@ -176,7 +202,34 @@ void WalletModel::updateAddressBook(const QString &address, const QString &label
     if(addressTableModel)
         addressTableModel->updateEntry(address, label, isMine, purpose, status);
 }
+// SYSCOIN
+void WalletModel::updateAlias() {
+	if (aliasTableModelMine)
+		aliasTableModelMine->refreshAliasTable();
+}
 
+void WalletModel::updateCert() {
+	if (certTableModelMine)
+		certTableModelMine->refreshCertTable();
+}
+void WalletModel::updateMessage() {
+	if (inMessageTableModel)
+		inMessageTableModel->refreshMessageTable();
+	if (outMessageTableModel)
+		outMessageTableModel->refreshMessageTable();
+}
+void WalletModel::updateEscrow() {
+	if (escrowTableModelMine)
+		escrowTableModelMine->refreshEscrowTable();
+}
+void WalletModel::updateOffer() {
+	if (offerTableModelMine)
+		offerTableModelMine->refreshOfferTable();
+	if (offerTableModelAccept)
+		offerTableModelAccept->refreshOfferTable();
+	if (offerTableModelMyAccept)
+		offerTableModelMyAccept->refreshOfferTable();
+}
 void WalletModel::updateWatchOnlyFlag(bool fHaveWatchonly)
 {
     fHaveWatchOnly = fHaveWatchonly;
@@ -384,7 +437,44 @@ TransactionTableModel *WalletModel::getTransactionTableModel()
 {
     return transactionTableModel;
 }
+// SYSCOIN
 
+AliasTableModel *WalletModel::getAliasTableModelMine() {
+	return aliasTableModelMine;
+}
+AliasTableModel *WalletModel::getAliasTableModelAll() {
+	return aliasTableModelAll;
+}
+EscrowTableModel *WalletModel::getEscrowTableModelMine() {
+	return escrowTableModelMine;
+}
+EscrowTableModel *WalletModel::getEscrowTableModelAll() {
+	return escrowTableModelAll;
+}
+MessageTableModel *WalletModel::getMessageTableModelIn() {
+	return inMessageTableModel;
+}
+MessageTableModel *WalletModel::getMessageTableModelOut() {
+	return outMessageTableModel;
+}
+CertTableModel *WalletModel::getCertTableModelMine() {
+	return certTableModelMine;
+}
+CertTableModel *WalletModel::getCertTableModelAll() {
+	return certTableModelAll;
+}
+OfferTableModel *WalletModel::getOfferTableModelMine() {
+	return offerTableModelMine;
+}
+OfferTableModel *WalletModel::getOfferTableModelAll() {
+	return offerTableModelAll;
+}
+OfferAcceptTableModel *WalletModel::getOfferTableModelAccept() {
+	return offerTableModelAccept;
+}
+OfferAcceptTableModel *WalletModel::getOfferTableModelMyAccept() {
+	return offerTableModelMyAccept;
+}
 RecentRequestsTableModel *WalletModel::getRecentRequestsTableModel()
 {
     return recentRequestsTableModel;
@@ -473,13 +563,31 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel, CWallet *wallet,
                               Q_ARG(QString, strPurpose),
                               Q_ARG(int, status));
 }
-
+// SYSCOIN
+static void NotifySyscoinTransactionChanged(WalletModel *walletmodel, const CTransaction &tx, ChangeType status)
+{
+	std::vector<std::vector<unsigned char> > vvchArgs;
+	int op, nOut;
+	// there should only be one service with data carrying output per tx, notify for that one
+	if (DecodeAndParseAliasTx(tx, op, nOut, vvchArgs))
+		QMetaObject::invokeMethod(walletmodel, "updateAlias", Qt::QueuedConnection);
+	else if (DecodeAndParseOfferTx(tx, op, nOut, vvchArgs))
+		QMetaObject::invokeMethod(walletmodel, "updateOffer", Qt::QueuedConnection);
+	else if (DecodeAndParseCertTx(tx, op, nOut, vvchArgs))
+		QMetaObject::invokeMethod(walletmodel, "updateCert", Qt::QueuedConnection);
+	else if (DecodeAndParseEscrowTx(tx, op, nOut, vvchArgs))
+		QMetaObject::invokeMethod(walletmodel, "updateEscrow", Qt::QueuedConnection);
+	else if (DecodeAndParseMessageTx(tx, op, nOut, vvchArgs))
+		QMetaObject::invokeMethod(walletmodel, "updateMessage", Qt::QueuedConnection);
+}
 static void NotifyTransactionChanged(WalletModel *walletmodel, CWallet *wallet, const uint256 &hash, ChangeType status)
 {
-    Q_UNUSED(wallet);
-    Q_UNUSED(hash);
-    Q_UNUSED(status);
     QMetaObject::invokeMethod(walletmodel, "updateTransaction", Qt::QueuedConnection);
+    // SYSCOIN
+    std::map<uint256, CWalletTx>::iterator mi = wallet->mapWallet.find(hash);
+    bool inWallet = mi != wallet->mapWallet.end();
+	if(inWallet)
+		NotifySyscoinTransactionChanged(walletmodel, mi->second, status);
 }
 
 static void ShowProgress(WalletModel *walletmodel, const std::string &title, int nProgress)
@@ -495,7 +603,6 @@ static void NotifyWatchonlyChanged(WalletModel *walletmodel, bool fHaveWatchonly
     QMetaObject::invokeMethod(walletmodel, "updateWatchOnlyFlag", Qt::QueuedConnection,
                               Q_ARG(bool, fHaveWatchonly));
 }
-
 void WalletModel::subscribeToCoreSignals()
 {
     // Connect signals to wallet

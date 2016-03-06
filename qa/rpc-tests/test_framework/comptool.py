@@ -41,17 +41,32 @@ def wait_until(predicate, attempts=float('inf'), timeout=float('inf')):
 
     return False
 
+class RejectResult(object):
+    '''
+    Outcome that expects rejection of a transaction or block.
+    '''
+    def __init__(self, code, reason=''):
+        self.code = code
+        self.reason = reason
+    def match(self, other):
+        if self.code != other.code:
+            return False
+        return other.reason.startswith(self.reason)
+    def __repr__(self):
+        return '%i:%s' % (self.code,self.reason or '*')
+
 class TestNode(NodeConnCB):
 
     def __init__(self, block_store, tx_store):
         NodeConnCB.__init__(self)
-        self.create_callback_map()
         self.conn = None
         self.bestblockhash = None
         self.block_store = block_store
         self.block_request_map = {}
         self.tx_store = tx_store
         self.tx_request_map = {}
+        self.block_reject_map = {}
+        self.tx_reject_map = {}
 
         # When the pingmap is non-empty we're waiting for 
         # a response
@@ -94,6 +109,12 @@ class TestNode(NodeConnCB):
             del self.pingMap[message.nonce]
         except KeyError:
             raise AssertionError("Got pong for unknown ping [%s]" % repr(message))
+
+    def on_reject(self, conn, message):
+        if message.message == 'tx':
+            self.tx_reject_map[message.data] = RejectResult(message.code, message.reason)
+        if message.message == 'block':
+            self.block_reject_map[message.data] = RejectResult(message.code, message.reason)
 
     def send_inv(self, obj):
         mtype = 2 if isinstance(obj, CBlock) else 1
@@ -244,6 +265,15 @@ class TestManager(object):
                 if outcome is None:
                     if c.cb.bestblockhash != self.connections[0].cb.bestblockhash:
                         return False
+                elif isinstance(outcome, RejectResult): # Check that block was rejected w/ code
+                    if c.cb.bestblockhash == blockhash:
+                        return False
+                    if blockhash not in c.cb.block_reject_map:
+                        print 'Block not in reject map: %064x' % (blockhash)
+                        return False
+                    if not outcome.match(c.cb.block_reject_map[blockhash]):
+                        print 'Block rejected with %s instead of expected %s: %064x' % (c.cb.block_reject_map[blockhash], outcome, blockhash)
+                        return False
                 elif ((c.cb.bestblockhash == blockhash) != outcome):
                     # print c.cb.bestblockhash, blockhash, outcome
                     return False
@@ -262,6 +292,15 @@ class TestManager(object):
                     # Make sure the mempools agree with each other
                     if c.cb.lastInv != self.connections[0].cb.lastInv:
                         # print c.rpc.getrawmempool()
+                        return False
+                elif isinstance(outcome, RejectResult): # Check that tx was rejected w/ code
+                    if txhash in c.cb.lastInv:
+                        return False
+                    if txhash not in c.cb.tx_reject_map:
+                        print 'Tx not in reject map: %064x' % (txhash)
+                        return False
+                    if not outcome.match(c.cb.tx_reject_map[txhash]):
+                        print 'Tx rejected with %s instead of expected %s: %064x' % (c.cb.tx_reject_map[txhash], outcome, txhash)
                         return False
                 elif ((txhash in c.cb.lastInv) != outcome):
                     # print c.rpc.getrawmempool(), c.cb.lastInv

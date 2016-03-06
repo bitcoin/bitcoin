@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -143,10 +143,7 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
         pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
-			// SYSCOIN fInit controls syscoin tx's that get created in checkinputs, don't do this if we are verifying or reindexing
-			fInit = true;
             pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
-			fInit = false;
         }
     }
 

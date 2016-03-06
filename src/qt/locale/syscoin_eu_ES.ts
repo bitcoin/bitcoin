@@ -250,6 +250,10 @@
         <translation>&amp;Aukerak...</translation>
     </message>
     <message>
+        <source>&amp;Receiving addresses...</source>
+        <translation>Helbideak jasotzen</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Aldatu zorroa enkriptatzeko erabilitako pasahitza</translation>
     </message>
@@ -415,8 +419,16 @@
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
+        <source>&amp;Amount:</source>
+        <translation>Kopurua</translation>
+    </message>
+    <message>
         <source>&amp;Label:</source>
         <translation>&amp;Etiketa:</translation>
+    </message>
+    <message>
+        <source>&amp;Message:</source>
+        <translation>Mezua</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -425,6 +437,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;Kopiatu helbidea</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>Helbidea</translation>
@@ -437,6 +453,10 @@
         <source>Label</source>
         <translation>Etiketa</translation>
     </message>
+    <message>
+        <source>Message</source>
+        <translation>Mezua</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -447,6 +467,10 @@
     <message>
         <source>Label</source>
         <translation>Etiketa</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mezua</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -526,6 +550,10 @@
         <source>Message:</source>
         <translation>Mezua</translation>
     </message>
+    <message>
+        <source>Pay To:</source>
+        <translation>Ordaindu honi:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -572,6 +600,14 @@
     <message>
         <source>Date</source>
         <translation>Data</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Mezua</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transakzioaren</translation>
     </message>
     <message>
         <source>Amount</source>

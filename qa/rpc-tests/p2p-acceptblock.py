@@ -62,7 +62,6 @@ The test:
 class TestNode(NodeConnCB):
     def __init__(self):
         NodeConnCB.__init__(self)
-        self.create_callback_map()
         self.connection = None
         self.ping_counter = 1
         self.last_pong = msg_pong()

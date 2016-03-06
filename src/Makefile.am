@@ -44,7 +44,7 @@ $(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
 	
 $(LIBCRYPTOPP): 
 	@echo "Building LibCryptoPP ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
-	  CC="$(CC)" AR="$(AR)" \
+	  CC="$(CC)" \
           OPT="$(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) $(AM_CPPFLAGS) $(CPPFLAGS)"
   
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
@@ -93,6 +93,7 @@ SYSCOIN_CORE_H = \
   messagecrypter.h \
   addrman.h \
   alert.h \
+  auxpow.h \
   amount.h \
   arith_uint256.h \
   base58.h \
@@ -129,7 +130,6 @@ SYSCOIN_CORE_H = \
   memusage.h \
   merkleblock.h \
   miner.h \
-  mruset.h \
   net.h \
   netbase.h \
   noui.h \
@@ -138,6 +138,7 @@ SYSCOIN_CORE_H = \
   pow.h \
   prevector.h \
   primitives/block.h \
+  primitives/pureheader.h \
   primitives/transaction.h \
   protocol.h \
   pubkey.h \
@@ -203,6 +204,7 @@ libsyscoin_server_a_SOURCES = \
   escrow.cpp \
   messagecrypter.cpp \
   addrman.cpp \
+  auxpow.cpp \
   alert.cpp \
   bloom.cpp \
   chain.cpp \
@@ -296,6 +298,7 @@ libsyscoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   primitives/block.cpp \
+  primitives/pureheader.cpp \
   primitives/transaction.cpp \
   protocol.cpp \
   pubkey.cpp \
@@ -409,6 +412,9 @@ syscoin_tx_LDADD = \
   $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBSECP256K1)
+
+syscoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+#
 
 # syscoinconsensus library #
 if BUILD_SYSCOIN_LIBS

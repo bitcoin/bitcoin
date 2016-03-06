@@ -60,6 +60,10 @@
         <source>Syscoin Core</source>
         <translation>Биткойн ядро</translation>
     </message>
+    <message>
+        <source>About Syscoin Core</source>
+        <translation>За Биткойн ядрото</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>

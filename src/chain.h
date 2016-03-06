@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -111,6 +111,9 @@ public:
     //! pointer to the index of some further predecessor of this block
     CBlockIndex* pskip;
 
+    //! SYSCOIN pointer to the AuxPoW header, if this block has one
+    boost::shared_ptr<CAuxPow> pauxpow;
+
     //! height of the entry in the chain. The genesis block has height 0
     int nHeight;
 
@@ -139,7 +142,8 @@ public:
     unsigned int nStatus;
 
     //! block header
-    int nVersion;
+	// SYSCOIN version
+    CBlockVersion  nVersion;
     uint256 hashMerkleRoot;
     unsigned int nTime;
     unsigned int nBits;
@@ -153,6 +157,7 @@ public:
         phashBlock = NULL;
         pprev = NULL;
         pskip = NULL;
+		pauxpow.reset();
         nHeight = 0;
         nFile = 0;
         nDataPos = 0;
@@ -163,7 +168,7 @@ public:
         nStatus = 0;
         nSequenceId = 0;
 
-        nVersion       = 0;
+        nVersion.SetNull();
         hashMerkleRoot = uint256();
         nTime          = 0;
         nBits          = 0;
@@ -204,18 +209,8 @@ public:
         return ret;
     }
 
-    CBlockHeader GetBlockHeader() const
-    {
-        CBlockHeader block;
-        block.nVersion       = nVersion;
-        if (pprev)
-            block.hashPrevBlock = pprev->GetBlockHash();
-        block.hashMerkleRoot = hashMerkleRoot;
-        block.nTime          = nTime;
-        block.nBits          = nBits;
-        block.nNonce         = nNonce;
-        return block;
-    }
+	// SYSCOIN defined in chain.cpp
+    CBlockHeader GetBlockHeader(const Consensus::Params& consensusParams) const;
 
     uint256 GetBlockHash() const
     {
@@ -320,6 +315,13 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
+        if (this->nVersion.IsAuxpow()) {
+            if (ser_action.ForRead())
+                pauxpow.reset(new CAuxPow());
+            assert(pauxpow);
+            READWRITE(*pauxpow);
+        } else if (ser_action.ForRead())
+            pauxpow.reset();
     }
 
     uint256 GetBlockHash() const

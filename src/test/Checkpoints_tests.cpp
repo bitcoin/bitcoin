@@ -21,7 +21,8 @@ BOOST_FIXTURE_TEST_SUITE(Checkpoints_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(sanity)
 {
     const CCheckpointData& checkpoints = Params(CBaseChainParams::MAIN).Checkpoints();
-    BOOST_CHECK(Checkpoints::GetTotalBlocksEstimate(checkpoints) >= 134444);
+	// SYSCOIN update this everytime checkpoints is updated or we do a new build
+    BOOST_CHECK(Checkpoints::GetTotalBlocksEstimate(checkpoints) == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2014 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -110,6 +110,12 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
+	// SYSCOIN
+    QAction *aliasListAction;
+    QAction *escrowListAction;
+    QAction *messageListAction;
+    QAction *offerListAction;
+    QAction *certListAction;
 
     QSystemTrayIcon *trayIcon;
     QMenu *trayIconMenu;
@@ -189,7 +195,15 @@ private Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
-
+	// SYSCOIN
+    /** Switch to alias list page */
+    void gotoAliasListPage();
+    void gotoEscrowListPage();
+    void gotoMessageListPage();
+    /** Switch to offers page */
+    void gotoOfferListPage();
+    /** Switch to certificate  page */
+    void gotoCertListPage();
     /** Show open dialog */
     void openClicked();
 #endif // ENABLE_WALLET

@@ -1,4 +1,4 @@
-# Copyright (c) 2014 The Syscoin Core developers
+# Copyright (c) 2014-2015 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -107,6 +107,7 @@ def initialize_datadir(dirname, n):
         f.write("rpcpassword=rt\n");
         f.write("port="+str(p2p_port(n))+"\n");
         f.write("rpcport="+str(rpc_port(n))+"\n");
+        f.write("listenonion=0\n");
     return datadir
 
 def initialize_chain(test_dir):
@@ -130,7 +131,7 @@ def initialize_chain(test_dir):
         # Create cache directories, run syscoinds:
         for i in range(4):
             datadir=initialize_datadir("cache", i)
-            args = [ os.getenv("SYSCOIND", "syscoind"), "-keypool=1", "-datadir="+datadir, "-discover=0" ]
+            args = [ os.getenv("SYSCOIND", "syscoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             syscoind_processes[i] = subprocess.Popen(args)
@@ -218,7 +219,7 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     if binary is None:
         binary = os.getenv("SYSCOIND", "syscoind")
     # RPC tests still depend on free transactions
-    args = [ binary, "-datadir="+datadir, "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000" ]
+    args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-blockprioritysize=50000" ]
     if extra_args is not None: args.extend(extra_args)
     syscoind_processes[i] = subprocess.Popen(args)
     devnull = open(os.devnull, "w")
@@ -408,3 +409,67 @@ def assert_raises(exc, fun, *args, **kwds):
 
 def satoshi_round(amount):
     return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+
+def create_confirmed_utxos(fee, node, count):
+    node.generate(int(0.5*count)+101)
+    utxos = node.listunspent()
+    iterations = count - len(utxos)
+    addr1 = node.getnewaddress()
+    addr2 = node.getnewaddress()
+    if iterations <= 0:
+        return utxos
+    for i in xrange(iterations):
+        t = utxos.pop()
+        inputs = []
+        inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
+        outputs = {}
+        send_value = t['amount'] - fee
+        outputs[addr1] = satoshi_round(send_value/2)
+        outputs[addr2] = satoshi_round(send_value/2)
+        raw_tx = node.createrawtransaction(inputs, outputs)
+        signed_tx = node.signrawtransaction(raw_tx)["hex"]
+        txid = node.sendrawtransaction(signed_tx)
+
+    while (node.getmempoolinfo()['size'] > 0):
+        node.generate(1)
+
+    utxos = node.listunspent()
+    assert(len(utxos) >= count)
+    return utxos
+
+def gen_return_txouts():
+    # Some pre-processing to create a bunch of OP_RETURN txouts to insert into transactions we create
+    # So we have big transactions (and therefore can't fit very many into each block)
+    # create one script_pubkey
+    script_pubkey = "6a4d0200" #OP_RETURN OP_PUSH2 512 bytes
+    for i in xrange (512):
+        script_pubkey = script_pubkey + "01"
+    # concatenate 128 txouts of above script_pubkey which we'll insert before the txout for change
+    txouts = "81"
+    for k in xrange(128):
+        # add txout value
+        txouts = txouts + "0000000000000000"
+        # add length of script_pubkey
+        txouts = txouts + "fd0402"
+        # add script_pubkey
+        txouts = txouts + script_pubkey
+    return txouts
+
+def create_lots_of_big_transactions(node, txouts, utxos, fee):
+    addr = node.getnewaddress()
+    txids = []
+    for i in xrange(len(utxos)):
+        t = utxos.pop()
+        inputs = []
+        inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
+        outputs = {}
+        send_value = t['amount'] - fee
+        outputs[addr] = satoshi_round(send_value)
+        rawtx = node.createrawtransaction(inputs, outputs)
+        newtx = rawtx[0:92]
+        newtx = newtx + txouts
+        newtx = newtx + rawtx[94:]
+        signresult = node.signrawtransaction(newtx, None, None, "NONE")
+        txid = node.sendrawtransaction(signresult["hex"], True)
+        txids.append(txid)
+    return txids

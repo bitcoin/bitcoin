@@ -1,0 +1,43 @@
+#ifndef OFFERACCEPTDIALOGBTC_H
+#define OFFERACCEPTDIALOGBTC_H
+#include "walletmodel.h"
+#include <QDialog>
+#include <QImage>
+#include <QLabel>
+class PlatformStyle;
+namespace Ui {
+    class OfferAcceptDialogBTC;
+}
+class OfferAcceptDialogBTC : public QDialog
+{
+    Q_OBJECT
+
+public:
+    explicit OfferAcceptDialogBTC(const PlatformStyle *platformStyle, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString strPrice, QString sellerAlias, QString address, QWidget *parent=0);
+    ~OfferAcceptDialogBTC();
+
+    bool getPaymentStatus();
+
+private:
+	const PlatformStyle *platformStyle;
+    Ui::OfferAcceptDialogBTC *ui;
+	SendCoinsRecipient info;
+	QString quantity;
+	QString notes;
+	QString price;
+	QString title;
+	QString offer;
+	QString sellerAlias;
+	QString address;
+	QString alias;
+	bool offerPaid; 
+	
+
+private Q_SLOTS:
+	void acceptPayment();
+	void on_cancelButton_clicked();
+    void acceptOffer();
+	void openBTCWallet();
+};
+
+#endif // OFFERACCEPTDIALOGBTC_H

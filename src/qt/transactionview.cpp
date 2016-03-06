@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2013 The Syscoin Core developers
+// Copyright (c) 2011-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,11 +53,13 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
         hlayout->addSpacing(23);
     }
 
+	// SYSCOIN
+	QString theme = GUIUtil::getThemeName();
     watchOnlyWidget = new QComboBox(this);
     watchOnlyWidget->setFixedWidth(24);
     watchOnlyWidget->addItem("", TransactionFilterProxy::WatchOnlyFilter_All);
-    watchOnlyWidget->addItem(platformStyle->SingleColorIcon(":/icons/eye_plus"), "", TransactionFilterProxy::WatchOnlyFilter_Yes);
-    watchOnlyWidget->addItem(platformStyle->SingleColorIcon(":/icons/eye_minus"), "", TransactionFilterProxy::WatchOnlyFilter_No);
+    watchOnlyWidget->addItem(platformStyle->SingleColorIcon(":/icons/" + theme + "/eye_plus"), "", TransactionFilterProxy::WatchOnlyFilter_Yes);
+    watchOnlyWidget->addItem(platformStyle->SingleColorIcon(":/icons/" + theme + "/eye_minus"), "", TransactionFilterProxy::WatchOnlyFilter_No);
     hlayout->addWidget(watchOnlyWidget);
 
     dateWidget = new QComboBox(this);
@@ -90,6 +92,30 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
+    // SYSCOIN
+	typeWidget->addItem(tr("Alias Activated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasActivate));
+    typeWidget->addItem(tr("Alias Updated"), TransactionFilterProxy::TYPE(TransactionRecord::AliasUpdate));
+    typeWidget->addItem(tr("Alias Transferred"), TransactionFilterProxy::TYPE(TransactionRecord::AliasTransfer));
+	typeWidget->addItem(tr("Alias Received"), TransactionFilterProxy::TYPE(TransactionRecord::AliasRecv));
+   
+    typeWidget->addItem(tr("Offer Activated"), TransactionFilterProxy::TYPE(TransactionRecord::OfferActivate));
+    typeWidget->addItem(tr("Offer Updated"), TransactionFilterProxy::TYPE(TransactionRecord::OfferUpdate));
+    typeWidget->addItem(tr("Offer Accepted"), TransactionFilterProxy::TYPE(TransactionRecord::OfferAccept));
+	typeWidget->addItem(tr("Offer Accept Received"), TransactionFilterProxy::TYPE(TransactionRecord::OfferAcceptRecv));
+
+    typeWidget->addItem(tr("Certificate Activated"), TransactionFilterProxy::TYPE(TransactionRecord::CertActivate));
+    typeWidget->addItem(tr("Certificate Updated"), TransactionFilterProxy::TYPE(TransactionRecord::CertUpdate));
+    typeWidget->addItem(tr("Certificate Transferred"), TransactionFilterProxy::TYPE(TransactionRecord::CertTransfer));
+	typeWidget->addItem(tr("Certificate Received"), TransactionFilterProxy::TYPE(TransactionRecord::CertRecv));
+
+    typeWidget->addItem(tr("Escrow Activated"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowActivate));
+    typeWidget->addItem(tr("Escrow Released"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowRelease));
+    typeWidget->addItem(tr("Escrow Refunded"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowRefund));
+	typeWidget->addItem(tr("Escrow Refund Received"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowRefund));
+	typeWidget->addItem(tr("Escrow Complete"), TransactionFilterProxy::TYPE(TransactionRecord::EscrowComplete));
+
+	typeWidget->addItem(tr("Message Sent"), TransactionFilterProxy::TYPE(TransactionRecord::MessageActivate));
+	typeWidget->addItem(tr("Message Received"), TransactionFilterProxy::TYPE(TransactionRecord::MessageRecv));
 
     hlayout->addWidget(typeWidget);
 

@@ -8,12 +8,17 @@
 #include "transactiontablemodel.h"
 
 #include <QModelIndex>
-
+// SYSCOIN
+#include "guiutil.h"
 TransactionDescDialog::TransactionDescDialog(const QModelIndex &idx, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::TransactionDescDialog)
 {
     ui->setupUi(this);
+
+    // SYSCOIN Open CSS when configured
+    this->setStyleSheet(GUIUtil::loadStyleSheet());
+
     QString desc = idx.data(TransactionTableModel::LongDescriptionRole).toString();
     ui->detailText->setHtml(desc);
 }

@@ -8,54 +8,33 @@
 class CWalletTx;
 class CTransaction;
 class CReserveKey;
-class CValidationState;
 class CCoinsViewCache;
 class CCoins;
+class CBlockIndex;
 
-bool CheckOfferInputs(const CTransaction &tx, CValidationState &state, const CCoinsViewCache &inputs, bool fBlock, bool fMiner, bool fJustCheck, int nHeight);
-
-bool IsOfferMine(const CTransaction& tx);
+bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, bool fRescan = false);
 
 
-bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch, int nHeight);
-
+bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
+bool DecodeAndParseOfferTx(const CTransaction& tx, int& op, int& nOut, std::vector<std::vector<unsigned char> >& vvch);
 bool DecodeOfferScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
 bool IsOfferOp(int op);
 int IndexOfOfferOutput(const CTransaction& tx);
-bool GetValueOfOfferTxHash(const uint256 &txHash, std::vector<unsigned char>& vchValue, uint256& hash, int& nHeight);
 int GetOfferExpirationDepth();
-int64_t GetOfferNetworkFee(const std::vector<unsigned char>& vchCurrency, opcodetype seed, unsigned int nHeight);
-int64_t GetOfferNetFee(const CTransaction& tx);
-bool InsertOfferFee(CBlockIndex *pindex, uint256 hash, uint64_t nValue);
-
 std::string offerFromOp(int op);
 CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
-bool DecodeOfferScript(const CScript& script, int& op,
-		std::vector<std::vector<unsigned char> > &vvch,
-		CScript::const_iterator& pc);
-
-static const char* norefund = "norefund";
-static const char* inprogress = "inprogress";
-static const char* complete = "complete";
-static const std::vector<unsigned char> OFFER_NOREFUND = std::vector<unsigned char>(norefund, norefund + strlen(norefund));
-static const std::vector<unsigned char> OFFER_REFUND_PAYMENT_INPROGRESS = std::vector<unsigned char>(inprogress, inprogress + strlen(inprogress));
-static const std::vector<unsigned char> OFFER_REFUND_COMPLETE = std::vector<unsigned char>(complete, complete + strlen(complete));
 
 class COfferAccept {
 public:
-	std::vector<unsigned char> vchRand;
+	std::vector<unsigned char> vchAcceptRand;
     std::vector<unsigned char> vchMessage;
 	uint256 txHash;
 	uint64_t nHeight;
+	uint64_t nAcceptHeight;
 	unsigned int nQty;
 	float nPrice;
-	bool bPaid;
-	bool bRefunded;
-	uint256 txRefundId;
-	std::vector<unsigned char> vchRefundAddress;
+	uint256 txBTCId;
 	std::vector<unsigned char> vchLinkOfferAccept;
-	std::vector<unsigned char> vchCertLink;
-	std::vector<unsigned char> vchEscrowLink;
 	std::vector<unsigned char> vchBuyerKey;	
 	COfferAccept() {
         SetNull();
@@ -64,57 +43,45 @@ public:
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(vchRand);
+		READWRITE(vchAcceptRand);
         READWRITE(vchMessage);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
+		READWRITE(VARINT(nAcceptHeight));
         READWRITE(VARINT(nQty));
     	READWRITE(nPrice);
-    	READWRITE(bPaid);
-		READWRITE(bRefunded);
-		READWRITE(txRefundId);
-		READWRITE(vchRefundAddress);
 		READWRITE(vchLinkOfferAccept);
-		READWRITE(vchCertLink);
-		READWRITE(vchEscrowLink);
 		READWRITE(vchBuyerKey);	
+		READWRITE(txBTCId);	
 		
 	}
 
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
         return (
-        a.vchRand == b.vchRand
+		a.vchAcceptRand == b.vchAcceptRand
         && a.vchMessage == b.vchMessage
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
+		&& a.nAcceptHeight == b.nAcceptHeight
         && a.nQty == b.nQty
         && a.nPrice == b.nPrice
-        && a.bPaid == b.bPaid
-		&& a.bRefunded == b.bRefunded
-		&& a.txRefundId == b.txRefundId
-		&& a.vchRefundAddress == b.vchRefundAddress
 		&& a.vchLinkOfferAccept == b.vchLinkOfferAccept
-		&& a.vchCertLink == b.vchCertLink
-		&& a.vchEscrowLink == b.vchEscrowLink
 		&& a.vchBuyerKey == b.vchBuyerKey
+		&& a.txBTCId == b.txBTCId
         );
     }
 
     COfferAccept operator=(const COfferAccept &b) {
-        vchRand = b.vchRand;
+		vchAcceptRand = b.vchAcceptRand;
         vchMessage = b.vchMessage;
         txHash = b.txHash;
         nHeight = b.nHeight;
+		nAcceptHeight = b.nAcceptHeight;
         nQty = b.nQty;
         nPrice = b.nPrice;
-        bPaid = b.bPaid;
-		bRefunded = b.bRefunded;
-		txRefundId = b.txRefundId;
-		vchRefundAddress = b.vchRefundAddress;
 		vchLinkOfferAccept = b.vchLinkOfferAccept;
-		vchCertLink = b.vchCertLink;
-		vchEscrowLink = b.vchEscrowLink;
 		vchBuyerKey = b.vchBuyerKey;
+		txBTCId = b.txBTCId;
         return *this;
     }
 
@@ -122,14 +89,14 @@ public:
         return !(a == b);
     }
 
-    void SetNull() { nHeight = nPrice = nQty = 0; txHash.SetNull(); bPaid = false; txRefundId.SetNull(); vchBuyerKey.clear(); bRefunded=false;vchRefundAddress.clear();vchLinkOfferAccept.clear();vchCertLink.clear(); vchEscrowLink.clear();}
-    bool IsNull() const { return (txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 && bPaid == 0 && bRefunded == false && txRefundId.IsNull()); }
+    void SetNull() { vchAcceptRand.clear(); nHeight = nAcceptHeight = nPrice = nQty = 0; txHash.SetNull(); txBTCId.SetNull(); vchBuyerKey.clear(); vchLinkOfferAccept.clear();}
+    bool IsNull() const { return (vchAcceptRand.empty() && txHash.IsNull() && nHeight == 0 && nAcceptHeight == 0 &&nPrice == 0 && nQty == 0 && txBTCId.IsNull() && vchBuyerKey.empty()); }
 
 };
 class COfferLinkWhitelistEntry {
 public:
 	std::vector<unsigned char> certLinkVchRand;
-	int nDiscountPct;
+	char nDiscountPct;
 	COfferLinkWhitelistEntry() {
 		SetNull();
 	}
@@ -177,7 +144,7 @@ public:
 		READWRITE(bExclusiveResell);
 
 	}
-    bool GetLinkEntryByHash(std::vector<unsigned char> ahash, COfferLinkWhitelistEntry &entry) {
+    bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) {
     	for(unsigned int i=0;i<entries.size();i++) {
     		if(entries[i].certLinkVchRand == ahash) {
     			entry = entries[i];
@@ -186,7 +153,7 @@ public:
     	}
     	return false;
     }
-    bool RemoveWhitelistEntry(std::vector<unsigned char> ahash) {
+    bool RemoveWhitelistEntry(const std::vector<unsigned char> &ahash) {
     	for(unsigned int i=0;i<entries.size();i++) {
     		if(entries[i].certLinkVchRand == ahash) {
     			return entries.erase(entries.begin()+i) != entries.end();
@@ -194,7 +161,7 @@ public:
     	}
     	return false;
     }	
-    void PutWhitelistEntry(COfferLinkWhitelistEntry &theEntry) {
+    void PutWhitelistEntry(const COfferLinkWhitelistEntry &theEntry) {
     	for(unsigned int i=0;i<entries.size();i++) {
     		COfferLinkWhitelistEntry entry = entries[i];
     		if(theEntry.certLinkVchRand == entry.certLinkVchRand) {
@@ -222,15 +189,13 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { entries.clear();bExclusiveResell = false;}
-    bool IsNull() const { return (entries.empty() && bExclusiveResell == false);}
+    void SetNull() { entries.clear();}
+    bool IsNull() const { return (entries.empty());}
 
 };
 class COffer {
 
 public:
-	std::vector<unsigned char> vchRand;
-	std::string aliasName;
 	std::vector<unsigned char> vchPubKey;
     uint256 txHash;
     uint64_t nHeight;
@@ -238,15 +203,16 @@ public:
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
 	float nPrice;
-	int nCommission;
-	unsigned int nQty;
-	std::vector<COfferAccept>accepts;
+	unsigned char nCommission;
+	int nQty;
+	COfferAccept accept;
 	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> sCurrencyCode;
 	std::vector<unsigned char> vchCert;
 	COfferLinkWhitelist linkWhitelist;
 	std::vector<std::vector<unsigned char> > offerLinks;
 	bool bPrivate;
+	bool bOnlyAcceptBTC;
 	COffer() { 
         SetNull();
     }
@@ -255,11 +221,24 @@ public:
         SetNull();
         UnserializeFromTx(tx);
     }
+	// clear everything but the necessary information for an offer to prepare it to go into a txn
+	void ClearOffer()
+	{
+		accept.SetNull();
+		linkWhitelist.SetNull();
+		offerLinks.clear();
+		sCategory.clear();
+		sTitle.clear();
+		sDescription.clear();
+		vchLinkOffer.clear();
+		sCurrencyCode.clear();
+		vchLinkOffer.clear();
+		vchCert.clear();
+	}
 
  	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(vchRand);
         READWRITE(sCategory);
         READWRITE(sTitle);
         READWRITE(sDescription);
@@ -267,59 +246,38 @@ public:
 		READWRITE(VARINT(nHeight));
     	READWRITE(nPrice);
     	READWRITE(VARINT(nQty));
-    	READWRITE(accepts);
+    	READWRITE(accept);
 		READWRITE(vchLinkOffer);
 		READWRITE(linkWhitelist);
 		READWRITE(sCurrencyCode);
 		READWRITE(VARINT(nCommission));
 		READWRITE(offerLinks);
-		READWRITE(aliasName);
 		READWRITE(vchPubKey);
 		READWRITE(vchCert);
 		READWRITE(bPrivate);
+		READWRITE(bOnlyAcceptBTC);
 		
 		
 	}
 	float GetPrice(const COfferLinkWhitelistEntry& entry=COfferLinkWhitelistEntry()){
-		double price = nPrice;
-		if(!entry.IsNull())
-		{
-			double discountPct = entry.nDiscountPct;
-			if(entry.nDiscountPct < -99 || entry.nDiscountPct > 99)
-				discountPct = 0;
-			double fDiscount = (double)discountPct / 100.0;
-			price -= fDiscount*price;
-
-		}
-		// add commission
-		double fCommission = (double)nCommission / 100.0;
-		price = price + price*fCommission;
+		float price = nPrice;
+		if(price==0 && !accept.IsNull())
+			return accept.nPrice;
+		float fDiscount = entry.nDiscountPct;
+		if(entry.nDiscountPct < -99 || entry.nDiscountPct > 99)
+			fDiscount = 0;
+		// fMarkup is a percentage, commission minus discount
+		float fMarkup = nCommission - fDiscount;
+		
+		// add commission , subtract discount
+		fMarkup = price*(fMarkup / 100);
+		price = price + fMarkup;
 		return price;
 	}
+
 	void SetPrice(float price){
 		nPrice = price;
 	}
-    bool GetAcceptByHash(std::vector<unsigned char> ahash, COfferAccept &ca) {
-    	for(unsigned int i=0;i<accepts.size();i++) {
-    		if(accepts[i].vchRand == ahash) {
-    			ca = accepts[i];
-    			return true;
-    		}
-    	}
-    	return false;
-    }
-
-    void PutOfferAccept(COfferAccept &theOA) {
-    	for(unsigned int i=0;i<accepts.size();i++) {
-    		COfferAccept oa = accepts[i];
-    		if(theOA.vchRand == oa.vchRand) {
-    			accepts[i] = theOA;
-    			return;
-    		}
-    	}
-    	accepts.push_back(theOA);
-    }
-
     void PutToOfferList(std::vector<COffer> &offerList) {
         for(unsigned int i=0;i<offerList.size();i++) {
             COffer o = offerList[i];
@@ -331,44 +289,45 @@ public:
         offerList.push_back(*this);
     }
 
-    bool GetOfferFromList(const std::vector<COffer> &offerList) {
+    bool GetOfferFromList(std::vector<COffer> &offerList) {
         if(offerList.size() == 0) return false;
-        for(unsigned int i=0;i<offerList.size();i++) {
-            COffer o = offerList[i];
-            if(o.nHeight == nHeight) {
-                *this = offerList[i];
-                return true;
-            }
+		COffer myOffer = offerList.front();
+		// find the closest offer without going over in height, assuming offerList orders entries by nHeight ascending
+        for(std::vector<COffer>::reverse_iterator it = offerList.rbegin(); it != offerList.rend(); ++it) {
+            const COffer &o = *it;
+			// skip if this is an offeraccept or height is greater than our offer height
+			if(!o.accept.IsNull() || o.nHeight > nHeight)
+				continue;
+            myOffer = o;
+			break;
         }
-        *this = offerList.back();
-        return false;
+        *this = myOffer;
+        return true;
     }
 
     friend bool operator==(const COffer &a, const COffer &b) {
         return (
-           a.vchRand == b.vchRand
-        && a.sCategory==b.sCategory
+         a.sCategory==b.sCategory
         && a.sTitle == b.sTitle 
         && a.sDescription == b.sDescription 
         && a.nPrice == b.nPrice 
         && a.nQty == b.nQty 
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
-        && a.accepts == b.accepts
+        && a.accept == b.accept
 		&& a.vchLinkOffer == b.vchLinkOffer
 		&& a.linkWhitelist == b.linkWhitelist
 		&& a.sCurrencyCode == b.sCurrencyCode
 		&& a.nCommission == b.nCommission
 		&& a.vchPubKey == b.vchPubKey
-		&& a.aliasName == b.aliasName
 		&& a.vchCert == b.vchCert
 		&& a.bPrivate == b.bPrivate
+		&& a.bOnlyAcceptBTC == b.bOnlyAcceptBTC
 		
         );
     }
 
     COffer operator=(const COffer &b) {
-    	vchRand = b.vchRand;
         sCategory = b.sCategory;
         sTitle = b.sTitle;
         sDescription = b.sDescription;
@@ -376,16 +335,16 @@ public:
         nQty = b.nQty;
         txHash = b.txHash;
         nHeight = b.nHeight;
-        accepts = b.accepts;
+        accept = b.accept;
 		vchLinkOffer = b.vchLinkOffer;
 		linkWhitelist = b.linkWhitelist;
 		sCurrencyCode = b.sCurrencyCode;
 		offerLinks = b.offerLinks;
 		nCommission = b.nCommission;
 		vchPubKey = b.vchPubKey;
-		aliasName = b.aliasName;
 		vchCert = b.vchCert;
 		bPrivate = b.bPrivate;
+		bOnlyAcceptBTC = b.bOnlyAcceptBTC;
         return *this;
     }
 
@@ -393,13 +352,12 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = nPrice = nQty = 0; txHash.SetNull(); bPrivate = false; aliasName = ""; accepts.clear(); vchRand.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchPubKey.clear();vchCert.clear();}
-    bool IsNull() const { return (txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull() && offerLinks.empty() && nCommission == 0 && bPrivate == false); }
+    void SetNull() { nHeight = nPrice = nQty = 0; txHash.SetNull(); bPrivate = false; bOnlyAcceptBTC = false; accept.SetNull(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchPubKey.clear();vchCert.clear();}
+    bool IsNull() const { return (vchPubKey.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull() && offerLinks.empty() && nCommission == 0 && bPrivate == false && bOnlyAcceptBTC == false); }
 
     bool UnserializeFromTx(const CTransaction &tx);
-    std::string SerializeToString();
+	const std::vector<unsigned char> Serialize();
 };
-
 
 class COfferDB : public CDBWrapper {
 public:
@@ -421,28 +379,6 @@ public:
 	    return Exists(make_pair(std::string("offeri"), name));
 	}
 
-	bool WriteOfferAccept(const std::vector<unsigned char>& name, std::vector<unsigned char>& vchValue) {
-		return Write(make_pair(std::string("offera"), name), vchValue);
-	}
-
-	bool EraseOfferAccept(const std::vector<unsigned char>& name) {
-	    return Erase(make_pair(std::string("offera"), name));
-	}
-
-	bool ReadOfferAccept(const std::vector<unsigned char>& name, std::vector<unsigned char>& vchValue) {
-		return Read(make_pair(std::string("offera"), name), vchValue);
-	}
-
-	bool ExistsOfferAccept(const std::vector<unsigned char>& name) {
-	    return Exists(make_pair(std::string("offera"), name));
-	}
-    bool WriteOfferIndex(std::vector<std::vector<unsigned char> >& vtxPos) {
-        return Write(make_pair(std::string("offera"), std::string("offerndx")), vtxPos);
-    }
-
-    bool ReadOfferIndex(std::vector<std::vector<unsigned char> >& vtxPos) {
-        return Read(make_pair(std::string("offera"), std::string("offerndx")), vtxPos);
-    }
 
     bool ScanOffers(
             const std::vector<unsigned char>& vchName,
@@ -451,6 +387,8 @@ public:
 
     bool ReconstructOfferIndex(CBlockIndex *pindexRescan);
 };
-
+bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca);
+bool GetTxOfOfferAccept(COfferDB& dbOffer, const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
+		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx);
 bool GetTxOfOffer(COfferDB& dbOffer, const std::vector<unsigned char> &vchOffer, COffer& txPos, CTransaction& tx);
 #endif // OFFER_H

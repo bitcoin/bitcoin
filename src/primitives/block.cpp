@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Syscoin Core developers
+// Copyright (c) 2009-2015 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,18 +9,25 @@
 #include "tinyformat.h"
 #include "utilstrencodings.h"
 #include "crypto/common.h"
-
-uint256 CBlockHeader::GetHash() const
+// SYSCOIN setauxpow and remove gethash (moved to pureheader.cpp)
+void CBlockHeader::SetAuxpow (CAuxPow* apow)
 {
-    return SerializeHash(*this);
+    if (apow)
+    {
+        auxpow.reset(apow);
+        nVersion.SetAuxpow(true);
+    } else
+    {
+        auxpow.reset();
+        nVersion.SetAuxpow(false);
+    }
 }
-
 std::string CBlock::ToString() const
 {
     std::stringstream s;
     s << strprintf("CBlock(hash=%s, ver=%d, hashPrevBlock=%s, hashMerkleRoot=%s, nTime=%u, nBits=%08x, nNonce=%u, vtx=%u)\n",
         GetHash().ToString(),
-        nVersion,
+        nVersion.GetFullVersion(),
         hashPrevBlock.ToString(),
         hashMerkleRoot.ToString(),
         nTime, nBits, nNonce,

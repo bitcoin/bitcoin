@@ -15,7 +15,8 @@
 #include <boost/variant/apply_visitor.hpp>
 #include <boost/variant/static_visitor.hpp>
 // SYSCOIN use aliases as addresses
-extern void GetAliasValue(const std::string& strName, std::string& strAddress);
+extern void GetAddressFromAlias(const std::string& strAlias, std::string& strAddress);
+extern void GetAliasFromAddress(const std::string& strAddress, std::string& strAlias);
 /** All alphanumeric characters except for "0", "I", "O", and "l" */
 static const char* pszBase58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
@@ -232,15 +233,29 @@ CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) {
 	isAlias = false;
 	aliasName = "";
     SetString(strAddress);
-	// try to resolve alias address
+	// try to resolve alias address from alias name
 	if (!IsValid())
 	{
 		try 
 		{
 			std::string strAliasAddress;
-			GetAliasValue(strAddress, strAliasAddress);
+			GetAddressFromAlias(strAddress, strAliasAddress);
 			SetString(strAliasAddress);
 			aliasName = strAddress;
+			isAlias = true;
+		}
+		catch(...)
+		{
+		}
+	}
+	// try to resolve alias name from alias address
+	else
+	{
+		try 
+		{
+			std::string strAlias;
+			GetAliasFromAddress(strAddress, strAlias);
+			aliasName = strAlias;
 			isAlias = true;
 		}
 		catch(...)
@@ -258,11 +273,24 @@ CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
 		try 
 		{
 			std::string strAliasAddress;
-			GetAliasValue(std::string(pszAddress), strAliasAddress);
+			GetAddressFromAlias(std::string(pszAddress), strAliasAddress);
 			SetString(strAliasAddress);
 			aliasName = std::string(pszAddress);
 			isAlias = true;
 			
+		}
+		catch(...)
+		{
+		}
+	}
+	else
+	{
+		try 
+		{
+			std::string strAlias;
+			GetAliasFromAddress(std::string(pszAddress), strAlias);
+			aliasName = strAlias;
+			isAlias = true;
 		}
 		catch(...)
 		{
@@ -294,7 +322,9 @@ bool CSyscoinAddress::IsValid() const
 bool CSyscoinAddress::IsValid(const CChainParams& params) const
 {
     bool fCorrectSize = vchData.size() == 20;
-    bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
+	// SYSCOIN allow old SYSCOIN address scheme
+    bool fKnownVersion = vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS)     ||
+						 vchVersion == params.Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS) ||
                          vchVersion == params.Base58Prefix(CChainParams::SCRIPT_ADDRESS);
     return fCorrectSize && fKnownVersion;
 }
@@ -305,7 +335,9 @@ CTxDestination CSyscoinAddress::Get() const
         return CNoDestination();
     uint160 id;
     memcpy(&id, &vchData[0], 20);
-    if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+	// SYSCOIN allow old SYSCOIN address scheme
+    if (vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS) ||
+		vchVersion == Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS))
         return CKeyID(id);
     else if (vchVersion == Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS))
         return CScriptID(id);
@@ -315,7 +347,8 @@ CTxDestination CSyscoinAddress::Get() const
 
 bool CSyscoinAddress::GetKeyID(CKeyID& keyID) const
 {
-    if (!IsValid() || vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS))
+	// SYSCOIN allow old SYSCOIN address scheme
+    if (!IsValid() || (vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS) && vchVersion != Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS_SYS)))
         return false;
     uint160 id;
     memcpy(&id, &vchData[0], 20);
@@ -347,7 +380,9 @@ CKey CSyscoinSecret::GetKey()
 bool CSyscoinSecret::IsValid() const
 {
     bool fExpectedFormat = vchData.size() == 32 || (vchData.size() == 33 && vchData[32] == 1);
-    bool fCorrectVersion = vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY);
+	// SYSCOIN allow old SYSCOIN address scheme
+    bool fCorrectVersion = vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY) ||
+                               vchVersion == Params().Base58Prefix(CChainParams::SECRET_KEY_SYS);
     return fExpectedFormat && fCorrectVersion;
 }
 
