@@ -58,7 +58,7 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="QValidatedLineEdit" name="addAsLabel">
+      <widget class="QValidatedLineEdit" name="addAsLabel" native="true">
        <property name="enabled">
         <bool>true</bool>
        </property>
@@ -88,12 +88,12 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="QValidatedLineEdit" name="payTo">
+      <widget class="QValidatedLineEdit" name="payTo" native="true">
        <property name="toolTip">
         <string>The address to send the payment to  (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</string>
        </property>
-       <property name="maxLength">
-        <number>34</number>
+       <property name="maxLength" stdset="0">
+        <number>100</number>
        </property>
       </widget>
      </item>
@@ -152,7 +152,7 @@
  <customwidgets>
   <customwidget>
    <class>QValidatedLineEdit</class>
-   <extends>QLineEdit</extends>
+   <extends>QWidget</extends>
    <header>qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>

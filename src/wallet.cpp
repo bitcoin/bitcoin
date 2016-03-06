@@ -1688,8 +1688,8 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
                     CScript scriptChange;
 
                     // coin control: send change to custom address
-                    if (coinControl && !boost::get<CNoDestination>(&coinControl->destChange))
-                        scriptChange.SetDestination(coinControl->destChange);
+                    if (coinControl && coinControl->destChange.IsValid())
+                        scriptChange.SetAddress(coinControl->destChange);
 
                     // no coin control: send change to newly generated address
                     else

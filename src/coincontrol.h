@@ -1,11 +1,13 @@
 #ifndef COINCONTROL_H
 #define COINCONTROL_H
 
+#include "base58.h"
+
 /** Coin Control Features. */
 class CCoinControl
 {
 public:
-    CTxDestination destChange;
+    CBitcoinAddress destChange;
 
     CCoinControl()
     {
@@ -14,7 +16,7 @@ public:
         
     void SetNull()
     {
-        destChange = CNoDestination();
+        destChange = CBitcoinAddress();
         setSelected.clear();
     }
     

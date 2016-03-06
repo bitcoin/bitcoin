@@ -131,12 +131,12 @@ void SendCoinsDialog::on_sendButton_clicked()
         if(!ui->lineEditCoinControlChange->hasAcceptableInput() ||
            (model && !model->validateAddress(ui->lineEditCoinControlChange->text())))
         {
-            CoinControlDialog::coinControl->destChange = CNoDestination();
+            CoinControlDialog::coinControl->destChange = CBitcoinAddress();
             ui->lineEditCoinControlChange->setValid(false);
             valid = false;
         }
         else
-            CoinControlDialog::coinControl->destChange = CBitcoinAddress(ui->lineEditCoinControlChange->text().toStdString()).Get();
+            CoinControlDialog::coinControl->destChange = CBitcoinAddress(ui->lineEditCoinControlChange->text().toStdString());
     }
 
     for(int i = 0; i < ui->entries->count(); ++i)
@@ -461,9 +461,9 @@ void SendCoinsDialog::coinControlChangeChecked(int state)
     if (model)
     {
         if (state == Qt::Checked)
-            CoinControlDialog::coinControl->destChange = CBitcoinAddress(ui->lineEditCoinControlChange->text().toStdString()).Get();
+            CoinControlDialog::coinControl->destChange = CBitcoinAddress(ui->lineEditCoinControlChange->text().toStdString());
         else
-            CoinControlDialog::coinControl->destChange = CNoDestination();
+            CoinControlDialog::coinControl->destChange = CBitcoinAddress();
     }
 
     ui->lineEditCoinControlChange->setEnabled((state == Qt::Checked));
