@@ -370,7 +370,7 @@ public:
     CFinalizedBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid(bool fSignatureCheck);
+    bool IsValid(bool fSignatureCheck);
     void Relay();
 
     uint256 GetHash(){
@@ -560,7 +560,7 @@ public:
     CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid(bool fSignatureCheck);
+    bool IsValid(bool fSignatureCheck);
     void Relay();
 
     std::string GetVoteString() {

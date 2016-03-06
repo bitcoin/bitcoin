@@ -667,8 +667,8 @@ UniValue mnbudgetvoteraw(const UniValue& params, bool fHelp)
     vote.nTime = nTime;
     vote.vchSig = vchSig;
 
-    if(!vote.SignatureValid(true)){
-        return "Failure to verify signature.";
+    if(!vote.IsValid(true)){
+        return "Failure to verify vote.";
     }
 
     std::string strError = "";
