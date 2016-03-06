@@ -204,7 +204,8 @@ bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue){
 
     if(!masternodeSync.IsSynced()) { //there is no budget data to use to check anything
         //super blocks will always be on these blocks, max Params().GetConsensus().nBudgetPaymentsWindowBlocks per budgeting
-        if(nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks < Params().GetConsensus().nBudgetPaymentsWindowBlocks){
+        if(nHeight >= Params().GetConsensus().nBudgetPaymentsStartBlock &&
+            nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks < Params().GetConsensus().nBudgetPaymentsWindowBlocks){
             return true;
         } else {
             if(block.vtx[0].GetValueOut() > nExpectedValue) return false;
@@ -216,7 +217,8 @@ bool IsBlockValueValid(const CBlock& block, CAmount nExpectedValue){
             return block.vtx[0].GetValueOut() <= nExpectedValue;
         }
         
-        if(budget.IsBudgetPaymentBlock(nHeight)){
+        if(nHeight >= Params().GetConsensus().nBudgetPaymentsStartBlock &&
+            budget.IsBudgetPaymentBlock(nHeight)){
             //the value of the block is evaluated in CheckBlock
             return true;
         } else {
