@@ -879,7 +879,8 @@ bool ImportWallet(CWallet *pwallet, const string& strLocation)
               continue;
 
           std::vector<std::string> vstr;
-          boost::split(vstr, line, boost::is_any_of(" "));
+          istringstream iss(line);
+          copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vstr));
           if (vstr.size() < 2)
               continue;
           CBitcoinSecret vchSecret;
