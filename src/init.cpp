@@ -36,6 +36,7 @@
 #include "activemasternode.h"
 #include "masternode-budget.h"
 #include "masternode-payments.h"
+#include "masternode-sync.h"
 #include "masternodeman.h"
 #include "masternodeconfig.h"
 #include "spork.h"
@@ -1953,7 +1954,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     darkSendPool.InitCollateralAddress();
 
     // force UpdatedBlockTip to initialize pCurrentBlockIndex for DS, MN payments and budgets
-    GetMainSignals().UpdatedBlockTip(chainActive.Tip());
+    // but don't call it directly to prevent triggering of other listeners like zmq etc.
+    // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
+    darkSendPool.UpdatedBlockTip(chainActive.Tip());
+    mnpayments.UpdatedBlockTip(chainActive.Tip());
+    budget.UpdatedBlockTip(chainActive.Tip());
+    masternodeSync.UpdatedBlockTip(chainActive.Tip());
 
     // start dash-darksend thread
     threadGroup.create_thread(boost::bind(&ThreadCheckDarkSendPool));
