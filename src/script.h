@@ -12,10 +12,12 @@
 
 #include "keystore.h"
 #include "bignum.h"
+#include "base58.h"
 
 typedef std::vector<uint8_t> valtype;
 
 class CTransaction;
+class CBitcoinAddress;
 
 static const unsigned int MAX_SCRIPT_ELEMENT_SIZE = 520; // bytes
 
@@ -583,7 +585,7 @@ public:
     bool HasCanonicalPushes() const;
 
     void SetDestination(const CTxDestination& address);
-    void SetDestination(const CPubKey& R, CPubKey& pubKeyVariant);
+    void SetAddress(const CBitcoinAddress& dest);
     void SetMultisig(int nRequired, const std::vector<CKey>& keys);
 
 

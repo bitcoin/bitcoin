@@ -258,11 +258,13 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
     {
         unsigned int nExpectedSize = 20;
         bool fExpectTestNet = false;
+        bool fSimple = true;
         switch(nVersion)
         {
             case PUBKEY_PAIR_ADDRESS:
                 nExpectedSize = 68; // Serialized pair of public keys
                 fExpectTestNet = false;
+                fSimple = false;
                 break;
             case PUBKEY_ADDRESS:
                 nExpectedSize = 20; // Hash of public key
@@ -276,6 +278,7 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
             case PUBKEY_PAIR_ADDRESS_TEST:
                 nExpectedSize = 68;
                 fExpectTestNet = true;
+                fSimple = false;
                 break;
             case PUBKEY_ADDRESS_TEST:
                 nExpectedSize = 20;
@@ -289,7 +292,20 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
             default:
                 return false;
         }
-        return fExpectTestNet == fTestNet && vchData.size() == nExpectedSize;
+
+        // Basic format sanity check
+        bool fSeemsSane = (fExpectTestNet == fTestNet && vchData.size() == nExpectedSize);
+
+        if (fSeemsSane && !fSimple)
+        {
+            // Perform dditional checking
+            //    for pubkey pair addresses
+            CMalleablePubKey mpk;
+            mpk.setvch(vchData);
+            return mpk.IsValid();
+        }
+        else
+            return fSeemsSane;
     }
 
     CTxDestination CBitcoinAddress::Get() const {
@@ -340,6 +356,18 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
         switch (nVersion) {
         case SCRIPT_ADDRESS:
         case SCRIPT_ADDRESS_TEST: {
+            return true;
+        }
+        default: return false;
+        }
+    }
+
+    bool CBitcoinAddress::IsPubKey() const {
+        if (!IsValid())
+            return false;
+        switch (nVersion) {
+        case PUBKEY_ADDRESS:
+        case PUBKEY_ADDRESS_TEST: {
             return true;
         }
         default: return false;

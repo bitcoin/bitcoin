@@ -207,7 +207,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(const QList<SendCoinsRecipie
         foreach(const SendCoinsRecipient &rcp, recipients)
         {
             CScript scriptPubKey;
-            scriptPubKey.SetDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
+            scriptPubKey.SetAddress(CBitcoinAddress(rcp.address.toStdString()));
             vecSend.push_back(make_pair(scriptPubKey, rcp.amount));
         }
 

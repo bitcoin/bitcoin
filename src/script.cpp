@@ -2136,12 +2136,24 @@ void CScript::SetDestination(const CTxDestination& dest)
     boost::apply_visitor(CScriptVisitor(this), dest);
 }
 
-void CScript::SetDestination(const CPubKey& R, CPubKey& pubKeyVariant)
+void CScript::SetAddress(const CBitcoinAddress& dest)
 {
     this->clear();
-    *this << pubKeyVariant << R << OP_DROP << OP_CHECKSIG;
+    if (dest.IsScript())
+        *this << OP_HASH160 << dest.GetData() << OP_EQUAL;
+    else if (dest.IsPubKey())
+        *this << OP_DUP << OP_HASH160 << dest.GetData() << OP_EQUALVERIFY << OP_CHECKSIG;
+    else if (dest.IsPair()) {
+        // Pubkey pair address, going to generate
+        //   new one-time public key.
+        CMalleablePubKey mpk;
+        if (!mpk.setvch(dest.GetData()))
+            return;
+        CPubKey R, pubKeyVariant;
+        mpk.GetVariant(R, pubKeyVariant);
+        *this << pubKeyVariant << R << OP_DROP << OP_CHECKSIG;
+    }
 }
-
 
 void CScript::SetMultisig(int nRequired, const std::vector<CKey>& keys)
 {

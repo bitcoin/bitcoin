@@ -329,20 +329,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
 
     CBitcoinAddress address(strAddress);
     if (address.IsValid())
-    {
-        if (!address.IsPair())
-            scriptPubKey.SetDestination(address.Get());
-        else
-        {
-            CMalleablePubKey mpk;
-            if (!mpk.setvch(address.GetData()))
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
-
-            CPubKey R, pubKeyVariant;
-            mpk.GetVariant(R, pubKeyVariant);
-            scriptPubKey.SetDestination(R, pubKeyVariant);
-        }
-    }
+        scriptPubKey.SetAddress(address);
     else
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
 
@@ -721,20 +708,7 @@ Value sendfrom(const Array& params, bool fHelp)
 
     CBitcoinAddress address(strAddress);
     if (address.IsValid())
-    {
-        if (!address.IsPair())
-            scriptPubKey.SetDestination(address.Get());
-        else
-        {
-            CMalleablePubKey mpk;
-            if (!mpk.setvch(address.GetData()))
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
-
-            CPubKey R, pubKeyVariant;
-            mpk.GetVariant(R, pubKeyVariant);
-            scriptPubKey.SetDestination(R, pubKeyVariant);
-        }
-    }
+        scriptPubKey.SetAddress(address);
     else
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
 
@@ -800,12 +774,15 @@ Value sendmany(const Array& params, bool fHelp)
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid NovaCoin address: ")+s.name_);
 
-        if (setAddress.count(address))
-            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
-        setAddress.insert(address);
+        if (!address.IsPair())
+        {
+            if (setAddress.count(address))
+                throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
+            setAddress.insert(address);
+        }
 
         CScript scriptPubKey;
-        scriptPubKey.SetDestination(address.Get());
+        scriptPubKey.SetAddress(address);
         int64_t nAmount = AmountFromValue(s.value_);
 
         if (nAmount < nMinimumInputValue)

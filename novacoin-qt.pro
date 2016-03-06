@@ -52,8 +52,8 @@ contains(RELEASE, 1) {
 }
 
 contains(DEBUG, 1) {
-    QMAKE_CXXFLAGS_RELEASE -= -O2
-    QMAKE_CFLAGS_RELEASE -= -O2
+    QMAKE_CXXFLAGS -= -O2
+    QMAKE_CFLAGS -= -O2
 
     QMAKE_CFLAGS += -g -O0
     QMAKE_CXXCFLAGS += -g -O0

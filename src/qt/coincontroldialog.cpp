@@ -4,6 +4,7 @@
 #include "init.h"
 #include "base58.h"
 #include "bitcoinunits.h"
+#include "wallet.h"
 #include "walletmodel.h"
 #include "addresstablemodel.h"
 #include "optionsmodel.h"
@@ -469,17 +470,22 @@ void CoinControlDialog::updateLabels(WalletModel *model, QWidget* dialog)
         dPriorityInputs += (double)out.tx->vout[out.i].nValue * (out.nDepth+1);
 
         // Bytes
-        CTxDestination address;
-        if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, address))
+        CBitcoinAddress address;
+        if(pwalletMain->ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
         {
-            CPubKey pubkey;
-            CKeyID *keyid = boost::get< CKeyID >(&address);
-            if (keyid && model->getPubKey(*keyid, pubkey))
-                nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
-            else
-                nBytesInputs += 148; // in all error cases, simply assume 148 here
+            if (address.IsPair())
+                nBytesInputs += 213;
+            else if (address.IsPubKey())
+            {
+                CPubKey pubkey;
+                CTxDestination dest = address.Get();
+                CKeyID *keyid = boost::get< CKeyID >(&dest);
+                if (keyid && model->getPubKey(*keyid, pubkey))
+                    nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
+                else
+                    nBytesInputs += 148; // in all error cases, simply assume 148 here
+            }
         }
-        else nBytesInputs += 148;
     }
 
     // calculation
@@ -631,10 +637,10 @@ void CoinControlDialog::updateView()
             itemOutput->setCheckState(COLUMN_CHECKBOX,Qt::Unchecked);
 
             // address
-/*
-            CTxDestination outputAddress;
+            CBitcoinAddress outputAddress;
             QString sAddress = "";
-            if(ExtractDestination(out.tx->vout[out.i].scriptPubKey, outputAddress))
+
+            if(pwalletMain->ExtractAddress(out.tx->vout[out.i].scriptPubKey, outputAddress))
             {
                 sAddress = CBitcoinAddress(outputAddress).ToString().c_str();
 
@@ -642,56 +648,14 @@ void CoinControlDialog::updateView()
                 if (!treeMode || (!(sAddress == sWalletAddress)))
                     itemOutput->setText(COLUMN_ADDRESS, sAddress);
 
-                CPubKey pubkey;
-                CKeyID *keyid = boost::get< CKeyID >(&outputAddress);
-                if (keyid && model->getPubKey(*keyid, pubkey) && !pubkey.IsCompressed())
-                    nInputSize = 180;
-            }
-*/
-            QString sAddress = "";
-            txnouttype whichType;
-            std::vector<valtype> vSolutions;
-            if (Solver(out.tx->vout[out.i].scriptPubKey, whichType, vSolutions))
-            {
-                CTxDestination address;
-                if (whichType == TX_PUBKEY)
+                if (outputAddress.IsPubKey())
                 {
-                    // Pay-to-Pubkey
-                    CPubKey pubKey = CPubKey(vSolutions[0]);
-                    address = pubKey.GetID();
-                    sAddress = CBitcoinAddress(address).ToString().c_str();
-
-                    if (!pubKey.IsCompressed())
-                        nInputSize = 180;
-                }
-                else if (whichType == TX_PUBKEYHASH)
-                {
-                    // Pay-to-PubkeyHash
-                    address = CKeyID(uint160(vSolutions[0]));
-                    sAddress = CBitcoinAddress(address).ToString().c_str();
-
                     CPubKey pubkey;
-                    CKeyID *keyid = boost::get< CKeyID >(&address);
+                    CTxDestination dest = outputAddress.Get();
+                    CKeyID *keyid = boost::get< CKeyID >(&dest);
                     if (keyid && model->getPubKey(*keyid, pubkey) && !pubkey.IsCompressed())
                         nInputSize = 180;
                 }
-                else if (whichType == TX_SCRIPTHASH)
-                {
-                    // Pay-to-ScriptHash
-                    address = CScriptID(uint160(vSolutions[0]));
-                    sAddress = CBitcoinAddress(address).ToString().c_str();
-                }
-                else if (whichType == TX_PUBKEY_DROP)
-                {
-                    // Pay-to-Pubkey-R
-                    CMalleableKeyView view;
-                    pwalletMain->CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view);
-                    sAddress = CBitcoinAddress(view.GetMalleablePubKey()).ToString().c_str();
-                }
-
-                // if listMode or change => show bitcoin address. In tree mode, address is not shown again for direct wallet address outputs
-                if (!treeMode || (!(sAddress == sWalletAddress)))
-                    itemOutput->setText(COLUMN_ADDRESS, sAddress);
             }
 
             // label

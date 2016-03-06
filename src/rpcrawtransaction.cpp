@@ -296,22 +296,14 @@ Value createrawtransaction(const Array& params, bool fHelp)
 
         if (address.IsValid())
         {
+            scriptPubKey.SetAddress(address);
+
+            // Don't perform duplication checking for pubkey-pair addresses
             if (!address.IsPair())
             {
-                scriptPubKey.SetDestination(address.Get());
                 if (setAddress.count(address))
                     throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+s.name_);
                 setAddress.insert(address);
-            }
-            else
-            {
-                CMalleablePubKey mpk;
-                if (!mpk.setvch(address.GetData()))
-                    throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid output destination: ")+s.name_);
-
-                CPubKey R, pubKeyVariant;
-                mpk.GetVariant(R, pubKeyVariant);
-                scriptPubKey.SetDestination(R, pubKeyVariant);
             }
         }
         else
