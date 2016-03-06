@@ -1503,7 +1503,7 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
     double dDiff = (double)0x0000ffff / (double)(nPrevBits & 0x00ffffff);
 
     /* fixed bug caused diff to not be correctly calculated */
-    if(nPrevHeight > 4500 || Params().NetworkIDString() == CBaseChainParams::TESTNET) dDiff = ConvertBitsToDouble(nPrevBits);
+    if(nPrevHeight > 4500 || Params().NetworkIDString() != CBaseChainParams::MAIN) dDiff = ConvertBitsToDouble(nPrevBits);
 
     CAmount nSubsidy = 0;
     if(nPrevHeight >= 5465) {

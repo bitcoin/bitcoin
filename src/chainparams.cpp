@@ -269,9 +269,9 @@ public:
     CRegTestParams() {
         strNetworkID = "regtest";
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.nMasternodePaymentsStartBlock = 40;
-        consensus.nMasternodePaymentsIncreaseBlock = 50;
-        consensus.nMasternodePaymentsIncreasePeriod = 100;
+        consensus.nMasternodePaymentsStartBlock = 240;
+        consensus.nMasternodePaymentsIncreaseBlock = 350;
+        consensus.nMasternodePaymentsIncreasePeriod = 10;
         consensus.nBudgetPaymentsStartBlock = 1000;
         consensus.nBudgetPaymentsCycleBlocks = 50;
         consensus.nBudgetPaymentsWindowBlocks = 100;
