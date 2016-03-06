@@ -427,7 +427,8 @@ int ReadHTTPStatus(std::basic_istream<char>& stream, int &proto)
     string str;
     getline(stream, str);
     vector<string> vWords;
-    boost::split(vWords, str, boost::is_any_of(" "));
+    istringstream iss(str);
+    copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vWords));
     if (vWords.size() < 2)
         return HTTP_INTERNAL_SERVER_ERROR;
     proto = 0;
