@@ -19,6 +19,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "utilstrencodings.h"
+#include "unlimited.h"
 
 #ifdef WIN32
 #include <string.h>

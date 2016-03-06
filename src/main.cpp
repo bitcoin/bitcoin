@@ -35,6 +35,7 @@
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
+#include "unlimited.h" // This is here because many files include util, so hopefully it will minimize diffs
 
 #include <sstream>
 
@@ -4315,7 +4316,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             // nodes)
 
             // BUIP010 Extreme Thinblocks: We only do inv/getdata for xthinblocks and so we must have headersfirst turned off
-            if (!IsThinBlocksEnabled)
+            if (!IsThinBlocksEnabled())
                 pfrom->PushMessage(NetMsgType::SENDHEADERS);
         }
     }
@@ -4391,7 +4392,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
     {
         LOCK(cs_main);
         // BUIP010 Xtreme Thinblocks: We only do inv/getdata for xthinblocks and so we must have headersfirst turned off
-        if (IsThinBlocksEnabled)
+        if (IsThinBlocksEnabled())
             State(pfrom->GetId())->fPreferHeaders = false;
         else
             State(pfrom->GetId())->fPreferHeaders = true;
@@ -4831,7 +4832,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         pindexLast->GetBlockHash().ToString(),
                         pindexLast->nHeight);
             //} else {   BU: We don't support headers first for XThinblocks.
-            } else if (!IsThinBlocksEnabled) {
+            } else if (!IsThinBlocksEnabled()) {
                 vector<CInv> vGetData;
                 // Download as much as possible, from earliest to latest.
                 BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vToFetch) {
