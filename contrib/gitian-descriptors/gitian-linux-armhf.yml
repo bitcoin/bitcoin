@@ -1,0 +1,124 @@
+---
+name: "bitcoin-linux-armhf-0.12"
+enable_cache: true
+suites:
+- "trusty"
+architectures:
+- "amd64"
+packages:
+- "g++-arm-linux-gnueabihf"
+- "git-core"
+- "pkg-config"
+- "autoconf"
+- "libtool"
+- "automake"
+- "faketime"
+- "bsdmainutils"
+- "binutils-gold"
+- "ca-certificates"
+- "python"
+reference_datetime: "2016-01-01 00:00:00"
+remotes:
+- "url": "https://github.com/bitcoinclassic/bitcoinclassic.git"
+  "dir": "bitcoin"
+files: []
+script: |
+  # Avoid exporting *any* symbols from the executable
+  # This avoids conflicts between the libraries statically linked into bitcoin and any
+  # libraries we may link dynamically (such as Qt and OpenSSL, see issue #4094).
+  # It also avoids start-up overhead to not export any unnecessary symbols.
+  # To do this, build a linker script that marks all symbols as local.
+  LINKER_SCRIPT=$HOME/build/linker_version_script
+  echo '
+  {
+    local: *;
+  };' > $LINKER_SCRIPT
+  WRAP_DIR=$HOME/wrapped
+  HOSTS="arm-linux-gnueabihf"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports"
+  CONFIGLDFLAGS="-static-libstdc++ -Wl,--version-script=$LINKER_SCRIPT"
+  FAKETIME_HOST_PROGS=""
+  FAKETIME_PROGS="date ar ranlib nm strip"
+
+  export QT_RCC_TEST=1
+  export GZIP="-9n"
+  export TAR_OPTIONS="--mtime="$REFERENCE_DATE\\\ $REFERENCE_TIME""
+  export TZ="UTC"
+  export BUILD_DIR=`pwd`
+  mkdir -p ${WRAP_DIR}
+  if test -n "$GBUILD_CACHE_ENABLED"; then
+    export SOURCES_PATH=${GBUILD_COMMON_CACHE}
+    export BASE_CACHE=${GBUILD_PACKAGE_CACHE}
+    mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
+  fi
+
+  # Create global faketime wrappers
+  for prog in ${FAKETIME_PROGS}; do
+    echo '#!/bin/bash' > ${WRAP_DIR}/${prog}
+    echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
+    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${prog}
+    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    chmod +x ${WRAP_DIR}/${prog}
+  done
+
+  # Create per-host faketime wrappers
+  for i in $HOSTS; do
+    for prog in ${FAKETIME_HOST_PROGS}; do
+        echo '#!/bin/bash' > ${WRAP_DIR}/${i}-${prog}
+        echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
+        echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+        echo "export FAKETIME=\"${REFERENCE_DATETIME}\"" >> ${WRAP_DIR}/${i}-${prog}
+        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        chmod +x ${WRAP_DIR}/${i}-${prog}
+    done
+  done
+  export PATH=${WRAP_DIR}:${PATH}
+
+  cd bitcoin
+  BASEPREFIX=`pwd`/depends
+  # Build dependencies for each host
+  # disable building the GUI as Qt needs to be built for specific devices
+  for i in $HOSTS; do
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" NO_QT=1
+  done
+
+  # Create the release tarball using (arbitrarily) the first host
+  ./autogen.sh
+  ./configure --prefix=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`
+  make dist
+  SOURCEDIST=`echo bitcoin-*.tar.gz`
+  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
+  # Correct tar file order
+  mkdir -p temp
+  pushd temp
+  tar xf ../$SOURCEDIST
+  find bitcoin-* | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
+  popd
+
+  ORIGPATH="$PATH"
+  # Extract the release tarball into a dir for each host and build
+  for i in ${HOSTS}; do
+    export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
+    mkdir -p distsrc-${i}
+    cd distsrc-${i}
+    INSTALLPATH=`pwd`/installed/${DISTNAME}
+    mkdir -p ${INSTALLPATH}
+    tar --strip-components=1 -xf ../$SOURCEDIST
+
+    ./configure --prefix=${BASEPREFIX}/${i} --bindir=${INSTALLPATH}/bin --includedir=${INSTALLPATH}/include --libdir=${INSTALLPATH}/lib --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} LDFLAGS="${CONFIGLDFLAGS}"
+    make ${MAKEOPTS}
+    make ${MAKEOPTS} -C src check-security
+    make ${MAKEOPTS} -C src check-symbols
+    make install-strip
+    cd installed
+    find . -name "lib*.la" -delete
+    find . -name "lib*.a" -delete
+    rm -rf ${DISTNAME}/lib/pkgconfig
+    find ${DISTNAME} | sort | tar --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
+    cd ../../
+  done
+  mkdir -p $OUTDIR/src
+  mv $SOURCEDIST $OUTDIR/src
+  mv ${OUTDIR}/${DISTNAME}-arm-*.tar.gz ${OUTDIR}/${DISTNAME}-armhf-cli.tar.gz
+

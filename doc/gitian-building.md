@@ -311,7 +311,7 @@ Setting up the Gitian image
 -------------------------
 
 Gitian needs a virtual image of the operating system to build in.
-Currently this is Ubuntu Precise x86_64.
+Currently this is Ubuntu Trusty x86_64.
 This image will be copied and used every time that a build is started to
 make sure that the build is deterministic.
 Creating the image will take a while, but only has to be done once.
@@ -361,7 +361,7 @@ Output from `gbuild` will look something like
     Resolving deltas: 100% (41590/41590), done.
     From https://github.com/bitcoin/bitcoin
     ... (new tags, new branch etc)
-    --- Building for precise amd64 ---
+    --- Building for trusty x86_64 ---
     Stopping target if it is up
     Making a new image copy
     stdin: is not a tty
@@ -390,6 +390,7 @@ COMMIT=2014_03_windows_unicode_path
 ./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-linux.yml
 ./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-win.yml
 ./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-osx.yml
+./bin/gbuild --commit bitcoin=${COMMIT} --url bitcoin=${URL} ../bitcoin/contrib/gitian-descriptors/gitian-linux-armhf.yml
 ```
 
 Building fully offline
@@ -456,6 +457,7 @@ in `gitian.sigs` to your signing machine and do
 
 ```bash
     gpg --detach-sign ${VERSION}-linux/${SIGNER}/bitcoin-linux-build.assert
+    gpg --detach-sign ${VERSION}-linux/${SIGNER}/bitcoin-linux-armhf-build.assert
     gpg --detach-sign ${VERSION}-win/${SIGNER}/bitcoin-win-build.assert
     gpg --detach-sign ${VERSION}-osx-unsigned/${SIGNER}/bitcoin-osx-build.assert
 ```
