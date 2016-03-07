@@ -1647,6 +1647,13 @@ isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest)
     return IsMine(keystore, script);
 }
 
+isminetype IsMine(const CKeyStore &keystore, const CBitcoinAddress& dest)
+{
+    CScript script;
+    script.SetAddress(dest);
+    return IsMine(keystore, script);
+}
+
 isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
 {
     vector<valtype> vSolutions;

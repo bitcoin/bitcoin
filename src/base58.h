@@ -82,6 +82,8 @@ public:
  * The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
  * Script-hash-addresses have version 5 (or 196 testnet).
  * The data vector contains RIPEMD160(SHA256(cscript)), where cscript is the serialized redemption script.
+ * Pubkey-pair-addresses have version 1 (or 6 testnet)
+ * The data vector contains a serialized copy of two compressed ECDSA secp256k1 public keys.
  */
 class CBitcoinAddress;
 class CBitcoinAddressVisitor : public boost::static_visitor<bool>

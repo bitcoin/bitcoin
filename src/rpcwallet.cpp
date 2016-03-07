@@ -463,16 +463,14 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getreceivedbyaddress <novacoinaddress> [minconf=1]\n"
-            "Returns the total amount received by <novacoinaddress> in transactions with at least [minconf] confirmations.");
+                "getreceivedbyaddress <novacoinaddress> [minconf=1]\n"
+                "Returns the total amount received by <novacoinaddress> in transactions with at least [minconf] confirmations.");
 
     // Bitcoin address
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
-    CScript scriptPubKey;
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
-    scriptPubKey.SetDestination(address.Get());
-    if (!IsMine(*pwalletMain,scriptPubKey))
+    if (!IsMine(*pwalletMain,address))
         return 0.0;
 
     // Minimum confirmations
@@ -480,23 +478,25 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     if (params.size() > 1)
         nMinDepth = params[1].get_int();
 
-    // Tally
     int64_t nAmount = 0;
     for (map<uint256, CWalletTx>::iterator it = pwalletMain->mapWallet.begin(); it != pwalletMain->mapWallet.end(); ++it)
     {
         const CWalletTx& wtx = (*it).second;
         if (wtx.IsCoinBase() || wtx.IsCoinStake() || !wtx.IsFinal())
             continue;
-
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-            if (txout.scriptPubKey == scriptPubKey)
+        {
+            CBitcoinAddress addressRet;
+            if (!pwalletMain->ExtractAddress(txout.scriptPubKey, addressRet))
+                continue;
+            if (addressRet == address)
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
+        }
     }
 
     return  ValueFromAmount(nAmount);
 }
-
 
 void GetAccountAddresses(string strAccount, set<CTxDestination>& setAddress)
 {
