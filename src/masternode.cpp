@@ -407,8 +407,18 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     //search existing Masternode list, this is where we update existing Masternodes with new mnb broadcasts
     CMasternode* pmn = mnodeman.Find(vin);
 
-    // no such masternode or it's not enabled yet/already, nothing to update
-    if(pmn == NULL || (pmn != NULL && !pmn->IsEnabled())) return true;
+    // no such masternode, nothing to update
+    if(pmn == NULL) return true ;
+    else {
+        // this broadcast older than we have, it's bad. 
+        if(pmn->sigTime > sigTime) {
+            LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (existing broadcast is at %d)\n",
+                          sigTime, addr.ToString(), vin.ToString(), pmn->sigTime);
+            return false;
+        }
+        // masternode is not enabled yet/already, nothing to update
+        if(!pmn->IsEnabled()) return true;
+    }
 
     // mn.pubkey = pubkey, IsVinAssociatedWithPubkey is validated once below,
     //   after that they just need to match
