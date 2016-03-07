@@ -583,22 +583,25 @@ UniValue messagelist(const UniValue& params, bool fHelp) {
 		vector<CMessage> vtxPos;
 		CMessage message;
 		int pending = 0;
-		if (!pmessagedb->ReadMessage(vchName, vtxPos))
+		if (!pmessagedb->ReadMessage(vchName, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
 			message = CMessage(wtx);
+			if(!IsSyscoinTxMine(wtx, "message"))
+				continue;
 		}
-		if (vtxPos.size() < 1)
-		{
-			pending = 1;
-			message = CMessage(wtx);
-		}	
-		if(pending != 1)
+		else
 		{
 			message = vtxPos.back();
+			CTransaction tx;
+			if (!GetSyscoinTransaction(message.nHeight, message.txHash, tx, Params().GetConsensus()))
+				continue;
+			if (!DecodeMessageTx(tx, op, nOut, vvch) || !IsMessageOp(op))
+				continue;
+			if(!IsSyscoinTxMine(tx, "message"))
+				continue;
 		}
-		if(!IsSyscoinTxMine(wtx, "message"))
-			continue;
+
         // build the output
         UniValue oName(UniValue::VOBJ);
         oName.push_back(Pair("GUID", stringFromVch(vchName)));
@@ -674,22 +677,25 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 		vector<CMessage> vtxPos;
 		CMessage message;
 		int pending = 0;
-		if (!pmessagedb->ReadMessage(vchName, vtxPos))
+		if (!pmessagedb->ReadMessage(vchName, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
 			message = CMessage(wtx);
+			if(IsSyscoinTxMine(wtx, "message"))
+				continue;
 		}
-		if (vtxPos.size() < 1)
-		{
-			pending = 1;
-			message = CMessage(wtx);
-		}	
-		if(pending != 1)
+		else
 		{
 			message = vtxPos.back();
+			CTransaction tx;
+			if (!GetSyscoinTransaction(message.nHeight, message.txHash, tx, Params().GetConsensus()))
+				continue;
+			if (!DecodeMessageTx(tx, op, nOut, vvch) || !IsMessageOp(op))
+				continue;
+			if(!IsSyscoinTxMine(tx, "message"))
+				continue;
 		}
-		if(IsSyscoinTxMine(wtx, "message"))
-			continue;
+
         // build the output
         UniValue oName(UniValue::VOBJ);
         oName.push_back(Pair("GUID", stringFromVch(vchName)));
