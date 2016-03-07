@@ -4475,7 +4475,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         if (IsThinBlocksEnabled() && IsChainNearlySyncd()) {
                             if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(inv.hash))) {
                                 // Must download a block from a ThinBlock peer
-                                if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
+                                if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
                                     inv2.type = MSG_XTHINBLOCK;
                                     std::vector<uint256> vOrphanHashes;
@@ -4491,7 +4491,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                             }
                             else {
                                 // Try to download a thinblock if possible otherwise just download a regular block
-                                if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
+                                if (pfrom->mapThinBlocksInFlight.size() < 1 && pfrom->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
                                     pfrom->mapThinBlocksInFlight[inv2.hash] = GetTime();
                                     inv2.type = MSG_XTHINBLOCK;
                                     std::vector<uint256> vOrphanHashes;
@@ -5922,7 +5922,7 @@ bool SendMessages(CNode* pto)
                     CBloomFilter filterMemPool;
                     if (HaveConnectThinblockNodes() || (HaveThinblockNodes() && CheckThinblockTimer(pindex->GetBlockHash()))) {
                         // Must download a block from a ThinBlock peer
-                        if (pto->mapThinBlocksInFlight.size() < 1 && pto->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
+                        if (pto->mapThinBlocksInFlight.size() < 1 && pto->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
                             std::vector<uint256> vOrphanHashes;
                             for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
@@ -5938,7 +5938,7 @@ bool SendMessages(CNode* pto)
                     }
                     else {
                         // Try to download a thinblock if possible otherwise just download a regular block
-                        if (pto->mapThinBlocksInFlight.size() < 1 && pto->nVersion >= THINBLOCKS_VERSION) { // We can only send one thinblock per peer at a time
+                        if (pto->mapThinBlocksInFlight.size() < 1 && pto->ThinBlockCapable()) { // We can only send one thinblock per peer at a time
                             pto->mapThinBlocksInFlight[pindex->GetBlockHash()] = GetTime();
                             std::vector<uint256> vOrphanHashes;
                             for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)

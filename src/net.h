@@ -489,10 +489,9 @@ public:
     // BUIP010:
     bool ThinBlockCapable()
     {
-        if(nVersion >= THINBLOCKS_VERSION) return true;
+        if (nServices & NODE_XTHIN) return true;
         return false;
     }
-    
 
 
     void AddAddressKnown(const CAddress& addr)
