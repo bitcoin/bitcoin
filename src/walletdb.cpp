@@ -784,75 +784,94 @@ bool BackupWallet(const CWallet& wallet, const string& strDest)
 
 bool DumpWallet(CWallet* pwallet, const string& strDest)
 {
+    if (!pwallet->fFileBacked)
+        return false;
 
-  if (!pwallet->fFileBacked)
-      return false;
-  while (!fShutdown)
-  {
-      // Populate maps
-      std::map<CKeyID, int64_t> mapKeyBirth;
-      std::set<CKeyID> setKeyPool;
-      pwallet->GetKeyBirthTimes(mapKeyBirth);
-      pwallet->GetAllReserveKeys(setKeyPool);
+    std::map<CBitcoinAddress, int64_t> mapAddresses;
+    std::set<CKeyID> setKeyPool;
 
-      // sort time/key pairs
-      std::vector<std::pair<int64_t, CKeyID> > vKeyBirth;
-      for (std::map<CKeyID, int64_t>::const_iterator it = mapKeyBirth.begin(); it != mapKeyBirth.end(); it++) {
-          vKeyBirth.push_back(std::make_pair(it->second, it->first));
-      }
-      mapKeyBirth.clear();
-      std::sort(vKeyBirth.begin(), vKeyBirth.end());
+    pwallet->GetAddresses(mapAddresses);
+    pwallet->GetAllReserveKeys(setKeyPool);
 
-      // open outputfile as a stream
-      ofstream file;
-      file.open(strDest.c_str());
-      if (!file.is_open())
-         return false;
+    // sort time/key pairs
+    std::vector<std::pair<int64_t, CBitcoinAddress> > vAddresses;
+    for (std::map<CBitcoinAddress, int64_t>::const_iterator it = mapAddresses.begin(); it != mapAddresses.end(); it++) {
+        vAddresses.push_back(std::make_pair(it->second, it->first));
+    }
+    mapAddresses.clear();
+    std::sort(vAddresses.begin(), vAddresses.end());
 
-      // produce output
-      file << strprintf("# Wallet dump created by NovaCoin %s (%s)\n", CLIENT_BUILD.c_str(), CLIENT_DATE.c_str());
-      file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()).c_str());
-      file << strprintf("# * Best block at time of backup was %i (%s),\n", nBestHeight, hashBestChain.ToString().c_str());
-      file << strprintf("#   mined on %s\n", EncodeDumpTime(pindexBest->nTime).c_str());
-      file << "\n";
-      for (std::vector<std::pair<int64_t, CKeyID> >::const_iterator it = vKeyBirth.begin(); it != vKeyBirth.end(); it++) {
-          const CKeyID &keyid = it->second;
-          std::string strTime = EncodeDumpTime(it->first);
-          std::string strAddr = CBitcoinAddress(keyid).ToString();
-          bool IsCompressed;
+    // open outputfile as a stream
+    ofstream file;
+    file.open(strDest.c_str());
+    if (!file.is_open())
+       return false;
 
-          CKey key;
-          if (pwallet->GetKey(keyid, key)) {
-              if (pwallet->mapAddressBook.count(keyid)) {
-                  CSecret secret = key.GetSecret(IsCompressed);
-                  file << strprintf("%s %s label=%s # addr=%s\n",
-                                    CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
-                                    strTime.c_str(),
-                                    EncodeDumpString(pwallet->mapAddressBook[keyid]).c_str(),
-                                    strAddr.c_str());
-              } else if (setKeyPool.count(keyid)) {
-                  CSecret secret = key.GetSecret(IsCompressed);
-                  file << strprintf("%s %s reserve=1 # addr=%s\n",
-                                    CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
-                                    strTime.c_str(),
-                                    strAddr.c_str());
-              } else {
-                  CSecret secret = key.GetSecret(IsCompressed);
-                  file << strprintf("%s %s change=1 # addr=%s\n",
-                                    CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
-                                    strTime.c_str(),
-                                    strAddr.c_str());
-              }
-          }
-      }
-      file << "\n";
-      file << "# End of dump\n";
-      file.close();
-      return true;
-     }
-   return false;
+    // produce output
+    file << strprintf("# Wallet dump created by NovaCoin %s (%s)\n", CLIENT_BUILD.c_str(), CLIENT_DATE.c_str());
+    file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()).c_str());
+    file << strprintf("# * Best block at time of backup was %i (%s),\n", nBestHeight, hashBestChain.ToString().c_str());
+    file << strprintf("#   mined on %s\n", EncodeDumpTime(pindexBest->nTime).c_str());
+    file << "\n";
+
+    for (std::vector<std::pair<int64_t, CBitcoinAddress> >::const_iterator it = vAddresses.begin(); it != vAddresses.end(); it++) {
+        const CBitcoinAddress &addr = it->second;
+        std::string strTime = EncodeDumpTime(it->first);
+        std::string strAddr = addr.ToString();
+        bool IsCompressed;
+
+        if (addr.IsPair()) {
+            // Pubkey pair address
+            CMalleableKeyView keyView;
+            CMalleablePubKey mPubKey(addr.GetData());
+            if (pwallet->GetMalleableView(mPubKey, keyView)) {
+                CMalleableKey mKey;
+                pwallet->GetMalleableKey(keyView, mKey);
+
+                file << strprintf("%s %s # addr=%s view=%s\n",
+                                  mKey.ToString().c_str(),
+                                  strTime.c_str(),
+                                  strAddr.c_str(),
+                                  keyView.ToString().c_str());
+            }
+        }
+        else {
+            // Pubkey hash address
+            CKeyID keyid;
+            addr.GetKeyID(keyid);
+
+            CKey key;
+            if (pwallet->GetKey(keyid, key)) {
+                if (pwallet->mapAddressBook.count(keyid)) {
+                    CSecret secret = key.GetSecret(IsCompressed);
+                    file << strprintf("%s %s label=%s # addr=%s\n",
+                                      CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
+                                      strTime.c_str(),
+                                      EncodeDumpString(pwallet->mapAddressBook[keyid]).c_str(),
+                                      strAddr.c_str());
+                } else if (setKeyPool.count(keyid)) {
+                    CSecret secret = key.GetSecret(IsCompressed);
+                    file << strprintf("%s %s reserve=1 # addr=%s\n",
+                                      CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
+                                      strTime.c_str(),
+                                      strAddr.c_str());
+                } else {
+                    CSecret secret = key.GetSecret(IsCompressed);
+                    file << strprintf("%s %s change=1 # addr=%s\n",
+                                      CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
+                                      strTime.c_str(),
+                                      strAddr.c_str());
+                }
+            }
+        }
+    }
+
+    file << "\n";
+    file << "# End of dump\n";
+    file.close();
+
+    return true;
 }
-
 
 bool ImportWallet(CWallet *pwallet, const string& strLocation)
 {

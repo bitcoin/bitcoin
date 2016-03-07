@@ -186,7 +186,7 @@ public:
     bool EncryptWallet(const SecureString& strWalletPassphrase);
     bool DecryptWallet(const SecureString& strWalletPassphrase);
 
-    void GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const;
+    void GetAddresses(std::map<CBitcoinAddress, int64_t> &mapAddresses) const;
 
 
     /** Increment the next transaction order id

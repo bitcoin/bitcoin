@@ -224,6 +224,7 @@ public:
         pubKeyL = mpk.pubKeyL;
         pubKeyH = mpk.pubKeyH;
     }
+    CMalleablePubKey(const std::vector<unsigned char> &vchPubKeyPair) { setvch(vchPubKeyPair); }
     CMalleablePubKey(const std::string& strMalleablePubKey) { SetString(strMalleablePubKey); }
     CMalleablePubKey(const CPubKey &pubKeyInL, const CPubKey &pubKeyInH) : pubKeyL(pubKeyInL), pubKeyH(pubKeyInH) { }
 

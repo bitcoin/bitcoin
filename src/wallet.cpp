@@ -2741,55 +2741,50 @@ void CWallet::UpdatedTransaction(const uint256 &hashTx)
     }
 }
 
-void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const {
-    mapKeyBirth.clear();
+void CWallet::GetAddresses(std::map<CBitcoinAddress, int64_t> &mapAddresses) const {
+    mapAddresses.clear();
 
     // get birth times for keys with metadata
-    for (std::map<CKeyID, CKeyMetadata>::const_iterator it = mapKeyMetadata.begin(); it != mapKeyMetadata.end(); it++)
-        if (it->second.nCreateTime)
-            mapKeyBirth[it->first] = it->second.nCreateTime;
-
-    // map in which we'll infer heights of other keys
-    CBlockIndex *pindexMax = FindBlockByHeight(std::max(0, nBestHeight - 144)); // the tip can be reorganised; use a 144-block safety margin
-    std::map<CKeyID, CBlockIndex*> mapKeyFirstBlock;
-    std::set<CKeyID> setKeys;
-    GetKeys(setKeys);
-    BOOST_FOREACH(const CKeyID &keyid, setKeys) {
-        if (mapKeyBirth.count(keyid) == 0)
-            mapKeyFirstBlock[keyid] = pindexMax;
+    for (std::map<CMalleableKeyView, CKeyMetadata>::const_iterator it = mapMalleableKeyMetadata.begin(); it != mapMalleableKeyMetadata.end(); it++) {
+        CBitcoinAddress addr(it->first.GetMalleablePubKey());
+        mapAddresses[addr] = it->second.nCreateTime ? it->second.nCreateTime : 0;
     }
-    setKeys.clear();
 
-    // if there are no such keys, we're done
-    if (mapKeyFirstBlock.empty())
-        return;
+    for (std::map<CKeyID, CKeyMetadata>::const_iterator it = mapKeyMetadata.begin(); it != mapKeyMetadata.end(); it++) {
+        CBitcoinAddress addr(it->first);
+        mapAddresses[addr] = it->second.nCreateTime ? it->second.nCreateTime : 0;
+    }
 
-    // find first block that affects those keys, if there are any left
-    std::vector<CKeyID> vAffected;
     for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); it++) {
         // iterate over all wallet transactions...
         const CWalletTx &wtx = (*it).second;
-        std::map<uint256, CBlockIndex*>::const_iterator blit = mapBlockIndex.find(wtx.hashBlock);
-        if (blit != mapBlockIndex.end() && blit->second->IsInMainChain()) {
-            // ... which are already in a block
-            int nHeight = blit->second->nHeight;
-            BOOST_FOREACH(const CTxOut &txout, wtx.vout) {
-                // iterate over all their outputs
-                ::ExtractAffectedKeys(*this, txout.scriptPubKey, vAffected);
-                BOOST_FOREACH(const CKeyID &keyid, vAffected) {
-                    // ... and all their affected keys
-                    std::map<CKeyID, CBlockIndex*>::iterator rit = mapKeyFirstBlock.find(keyid);
-                    if (rit != mapKeyFirstBlock.end() && nHeight < rit->second->nHeight)
-                        rit->second = blit->second;
+        if (wtx.hashBlock == 0)
+            continue; // skip unconfirmed transactions
+
+        for(std::vector<CTxOut>::const_iterator it2 = wtx.vout.begin(); it2 != wtx.vout.end(); it2++) {
+            const CTxOut &out = (*it2);
+            // iterate over all their outputs
+            CBitcoinAddress addressRet;
+            if (const_cast<CWallet*>(this)->ExtractAddress(out.scriptPubKey, addressRet)) {
+                if (mapAddresses.find(addressRet) != mapAddresses.end() && mapAddresses[addressRet] > wtx.nTime)
+                    mapAddresses[addressRet] = wtx.nTime;
+            }
+            else {
+                // multisig output affects more than one key
+                std::vector<CKeyID> vAffected;
+                ::ExtractAffectedKeys(*this, out.scriptPubKey, vAffected);
+
+                for(std::vector<CKeyID>::const_iterator it3 = vAffected.begin(); it3 != vAffected.end(); it3++) {
+                    CBitcoinAddress addrAffected(*it3);
+
+                    if (mapAddresses.find(addrAffected) != mapAddresses.end() && mapAddresses[addrAffected] > wtx.nTime)
+                        mapAddresses[addrAffected] = wtx.nTime;
                 }
                 vAffected.clear();
             }
         }
-    }
 
-    // Extract block timestamps for those keys
-    for (std::map<CKeyID, CBlockIndex*>::const_iterator it = mapKeyFirstBlock.begin(); it != mapKeyFirstBlock.end(); it++)
-        mapKeyBirth[it->first] = it->second->nTime - 7200; // block times can be 2h off
+    }
 }
 
 void CWallet::ClearOrphans()
