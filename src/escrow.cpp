@@ -11,6 +11,7 @@
 #include "policy/policy.h"
 #include "script/script.h"
 #include "chainparams.h"
+#include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
@@ -1731,8 +1732,6 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		{
 			escrow = vtxPos.back();
 		}
-		if(!IsSyscoinTxMine(wtx, "escrow"))
-			continue;	
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
 			continue;
@@ -1918,7 +1917,8 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
     vector<pair<vector<unsigned char>, CEscrow> > escrowScan;
     if (!pescrowdb->ScanEscrows(vchEscrow, GetEscrowExpirationDepth(), escrowScan))
         throw runtime_error("scan failed");
-
+	string strSearchLower = strSearch;
+	boost::algorithm::to_lower(strSearchLower);
     pair<vector<unsigned char>, CEscrow> pairScan;
     BOOST_FOREACH(pairScan, escrowScan) {
 		const CEscrow &txEscrow = pairScan.second;
@@ -1935,7 +1935,14 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		CPubKey BuyerPubKey(txEscrow.vchBuyerKey);
 		CSyscoinAddress buyeraddy(BuyerPubKey.GetID());
 		buyeraddy = CSyscoinAddress(buyeraddy.ToString());
-        if (strSearch != "" && strSearch != escrow && strSearch != buyeraddy.aliasName && strSearch != arbiteraddy.aliasName && strSearch != selleraddy.aliasName)
+		string buyerAliasLower = buyeraddy.aliasName;
+		string sellerAliasLower = selleraddy.aliasName;
+		string arbiterAliasLower = arbiteraddy.aliasName;
+		boost::algorithm::to_lower(buyerAliasLower);
+		boost::algorithm::to_lower(sellerAliasLower);
+		boost::algorithm::to_lower(arbiterAliasLower);
+
+        if (strSearch != "" && strSearch != escrow && strSearchLower != buyerAliasLower && strSearchLower != sellerAliasLower && strSearchLower != arbiterAliasLower)
             continue;
 
         
