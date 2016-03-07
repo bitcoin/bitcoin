@@ -129,7 +129,7 @@ void COmniFeeCache::RollBackCache(int block)
 // Evaluates fee caches for the property against threshold and executes distribution if threshold met
 void COmniFeeCache::EvalCache(const uint32_t &propertyId)
 {
-    if (GetCachedAmount(propertyId) > feeDistributionThreshold) {
+    if (GetCachedAmount(propertyId) >= feeDistributionThreshold) {
         DistributeCache(propertyId);
     }
 }
