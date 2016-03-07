@@ -692,7 +692,7 @@ UniValue messagesentlist(const UniValue& params, bool fHelp) {
 				continue;
 			if (!DecodeMessageTx(tx, op, nOut, vvch) || !IsMessageOp(op))
 				continue;
-			if(!IsSyscoinTxMine(tx, "message"))
+			if(IsSyscoinTxMine(tx, "message"))
 				continue;
 		}
 
