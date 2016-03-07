@@ -419,7 +419,8 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 {
     LOCK(cs);
 
-    if(!pCurrentBlockIndex) return;
+    AssertLockHeld(cs_main);
+    if(!chainActive.Tip()) return;
 
     int nHighestCount = 0;
     CScript payee;
@@ -432,9 +433,9 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
     {
         CFinalizedBudget* pfinalizedBudget = &((*it).second);
         if(pfinalizedBudget->GetVoteCount() > nHighestCount &&
-                pCurrentBlockIndex->nHeight + 1 >= pfinalizedBudget->GetBlockStart() &&
-                pCurrentBlockIndex->nHeight + 1 <= pfinalizedBudget->GetBlockEnd() &&
-                pfinalizedBudget->GetPayeeAndAmount(pCurrentBlockIndex->nHeight + 1, payee, nAmount)){
+                chainActive.Tip()->nHeight + 1 >= pfinalizedBudget->GetBlockStart() &&
+                chainActive.Tip()->nHeight + 1 <= pfinalizedBudget->GetBlockEnd() &&
+                pfinalizedBudget->GetPayeeAndAmount(chainActive.Tip()->nHeight + 1, payee, nAmount)){
                     nHighestCount = pfinalizedBudget->GetVoteCount();
         }
 
@@ -442,7 +443,7 @@ void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
     }
 
     //miners get the full amount on these blocks
-    txNew.vout[0].nValue = nFees + GetBlockSubsidy(pCurrentBlockIndex->nBits, pCurrentBlockIndex->nHeight, Params().GetConsensus());
+    txNew.vout[0].nValue = nFees + GetBlockSubsidy(chainActive.Tip()->nBits, chainActive.Tip()->nHeight, Params().GetConsensus());
 
     if(nHighestCount > 0){
         txNew.vout.resize(2);

@@ -273,6 +273,7 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight)
 
 void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 {
+    AssertLockHeld(cs_main);
     if(!chainActive.Tip()) return;
 
     if(IsSporkActive(SPORK_13_ENABLE_SUPERBLOCKS) && budget.IsBudgetPaymentBlock(chainActive.Tip()->nHeight+1)){
@@ -293,13 +294,14 @@ std::string GetRequiredPaymentsString(int nBlockHeight)
 
 void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
 {
-    if(!pCurrentBlockIndex) return;
+    AssertLockHeld(cs_main);
+    if(!chainActive.Tip()) return;
 
     bool hasPayment = true;
     CScript payee;
 
     //spork
-    if(!mnpayments.GetBlockPayee(pCurrentBlockIndex->nHeight+1, payee)){
+    if(!mnpayments.GetBlockPayee(chainActive.Tip()->nHeight+1, payee)){
         //no masternode detected
         CMasternode* winningNode = mnodeman.GetCurrentMasterNode();
         if(winningNode){
@@ -310,8 +312,8 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, CAmount nFe
         }
     }
 
-    CAmount blockValue = nFees + GetBlockSubsidy(pCurrentBlockIndex->nBits, pCurrentBlockIndex->nHeight, Params().GetConsensus());
-    CAmount masternodePayment = GetMasternodePayment(pCurrentBlockIndex->nHeight+1, blockValue);
+    CAmount blockValue = nFees + GetBlockSubsidy(chainActive.Tip()->nBits, chainActive.Tip()->nHeight, Params().GetConsensus());
+    CAmount masternodePayment = GetMasternodePayment(chainActive.Tip()->nHeight+1, blockValue);
 
     txNew.vout[0].nValue = blockValue;
 
