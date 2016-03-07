@@ -491,11 +491,15 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
     feeStats.UpdateMovingAverages();
     priStats.UpdateMovingAverages();
 
-    // emit stats for estimated fees and priorities
+    // emit stats for estimated fees
     for (unsigned int i = 1; i <= MAX_BLOCK_CONFIRMS; i++)
     {
         std::string feeName = "estimates.fee.block" + boost::lexical_cast<std::string>(i);
-        statsClient.gauge(feeName, (double)CBlockPolicyEstimator::estimateFee(i).GetFeePerK());
+        double feeEstimate = feeStats.EstimateMedianVal(i, SUFFICIENT_FEETXS, MIN_SUCCESS_PCT, true, nBestSeenHeight);
+        if (feeEstimate > 0)
+            statsClient.gauge(feeName, feeEstimate);
+        else
+            statsClient.gauge(feeName, 0);
     }
 
     LogPrint("estimatefee", "Blockpolicy after updating estimates for %u confirmed entries, new mempool map size %u\n",
