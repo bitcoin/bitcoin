@@ -2362,6 +2362,31 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     return DB_LOAD_OK;
 }
 
+DBErrors CWallet::ZapSelectTx(vector<uint256>& vHashIn, vector<uint256>& vHashOut)
+{
+    if (!fFileBacked)
+        return DB_LOAD_OK;
+    DBErrors nZapSelectTxRet = CWalletDB(strWalletFile,"cr+").ZapSelectTx(this, vHashIn, vHashOut);
+    if (nZapSelectTxRet == DB_NEED_REWRITE)
+    {
+        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        {
+            LOCK(cs_wallet);
+            setKeyPool.clear();
+            // Note: can't top-up keypool here, because wallet is locked.
+            // User will be prompted to unlock wallet the next operation
+            // that requires a new key.
+        }
+    }
+
+    if (nZapSelectTxRet != DB_LOAD_OK)
+        return nZapSelectTxRet;
+
+    MarkDirty();
+
+    return DB_LOAD_OK;
+
+}
 
 DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
 {

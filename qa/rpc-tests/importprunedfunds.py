@@ -115,5 +115,26 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], True)
 
+        #Remove transactions
+
+        try:
+            self.nodes[1].removeprunedfunds(txnid1)
+        except JSONRPCException,e:
+            errorString = e.error['message']
+
+        assert('does not exist' in errorString)
+
+        balance1 = Decimal(self.nodes[1].getbalance("", 0, True))
+        assert_equal(balance1, Decimal('0.075'))
+
+
+        self.nodes[1].removeprunedfunds(txnid2)
+        balance2 = Decimal(self.nodes[1].getbalance("", 0, True))
+        assert_equal(balance2, Decimal('0.025'))
+
+        self.nodes[1].removeprunedfunds(txnid3)
+        balance3 = Decimal(self.nodes[1].getbalance("", 0, True))
+        assert_equal(balance3, Decimal('0.0'))
+
 if __name__ == '__main__':
     ImportPrunedFundsTest ().main ()
