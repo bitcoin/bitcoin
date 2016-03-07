@@ -310,6 +310,44 @@ UniValue importprunedfunds(const UniValue& params, bool fHelp)
     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No addresses in wallet correspond to included transaction");
 }
 
+UniValue removeprunedfunds(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "removeprunedfunds \"txid\"\n"
+            "\nDeletes the specified transaction from the wallet. Meant for use with pruned wallets and as a companion to importprunedfunds. This will effect wallet balances.\n"
+            "\nArguments:\n"
+            "1. \"txid\"           (string, required) The hex-encoded id of the transaction you are deleting\n"
+            "\nExamples:\n"
+            + HelpExampleCli("removeprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"") +
+            "\nAs a JSON-RPC call\n"
+            + HelpExampleRpc("removprunedfunds", "\"a8d0c0184dde994a09ec054286f1ce581bebf46446a512166eae7628734ea0a5\"")
+        );
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    uint256 hash;
+    hash.SetHex(params[0].get_str());
+    vector<uint256> vHash;
+    vHash.push_back(hash);
+    vector<uint256> vHashOut;
+
+    if(pwalletMain->ZapSelectTx(vHash, vHashOut) != DB_LOAD_OK) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Could not properly delete the transaction.");
+    }
+
+    if(vHashOut.empty()) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction does not exist in wallet.");
+    }
+
+    ThreadFlushWalletDB(pwalletMain->strWalletFile);
+
+    return NullUniValue;
+}
+
 UniValue importpubkey(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
