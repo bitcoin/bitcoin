@@ -1718,20 +1718,14 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		vchName = vvch[0];
 		vector<CEscrow> vtxPos;
 		CEscrow escrow;
-		if (!pescrowdb->ReadEscrow(vchName, vtxPos))
+		if (!pescrowdb->ReadEscrow(vchName, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
 			escrow = CEscrow(wtx);
 		}
-		if (vtxPos.size() < 1)
-		{
-			pending = 1;
-			escrow = CEscrow(wtx);
-		}	
-		if(pending != 1)
-		{
+		else
 			escrow = vtxPos.back();
-		}
+		
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
 			continue;
@@ -1740,7 +1734,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			continue;
 
 		nHeight = escrow.nHeight;
-        // build the output UniValue
+        // build the output
         UniValue oName(UniValue::VOBJ);
         oName.push_back(Pair("escrow", stringFromVch(vchName)));
 		string sTime;
