@@ -49,6 +49,9 @@ void UnlimitedPushTxns(CNode* dest);
 // BUIP010 Xtreme Thinblocks Variables
 std::map<uint256, uint64_t> mapThinBlockTimer;
 
+//! The largest block size that we have seen since startup
+uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
+
 std::string UnlimitedCmdLineHelp()
 {
     std::string strUsage;
@@ -584,7 +587,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
         }
     }
     else 
-        nLargestBlockSeen = std::max(nSizeBlock, (uint64_t)BLOCKSTREAM_CORE_MAX_BLOCK_SIZE);
+        nLargestBlockSeen = std::max(nSizeBlock, nLargestBlockSeen);
 
     LogPrint("thin", "Processed Block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
     

@@ -29,6 +29,20 @@ extern unsigned int excessiveBlockSize;
 extern unsigned int excessiveAcceptDepth;
 extern unsigned int maxMessageSizeMultiplier;
 
+// BU - Xtreme Thinblocks Auto Mempool Limiter - begin section
+/** The default value for -minrelaytxfee */
+static const char DEFAULT_MINLIMITERTXFEE[] = "0.0";
+/** The default value for -maxrelaytxfee */
+static const char DEFAULT_MAXLIMITERTXFEE[] = "5.0";
+/** The number of block heights to gradually choke spam transactions over */
+static const unsigned int MAX_BLOCK_SIZE_MULTIPLIER = 3;
+/** The minimum value possible for -limitfreerelay when rate limiting */
+static const unsigned int DEFAULT_MIN_LIMITFREERELAY = 1;
+// BU - Xtreme Thinblocks Auto Mempool Limiter - end section
+
+//! The largest block size that we have seen since startup
+extern uint64_t nLargestBlockSeen; // BU - Xtreme Thinblocks
+
 extern std::vector<std::string> BUComments;
 extern void settingsToUserAgentString();
 

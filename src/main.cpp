@@ -78,8 +78,6 @@ size_t nCoinCacheUsage = 5000 * 300;
 uint64_t nPruneTarget = 0;
 bool fAlerts = DEFAULT_ALERTS;
 bool fEnableReplacement = DEFAULT_ENABLE_REPLACEMENT;
-//! The largest block size that we have seen since startup
-uint64_t nLargestBlockSeen; // BU - Xtreme Thinblocks
 
 
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying, mining and transaction creation) */
@@ -614,6 +612,7 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
     // BU - we do not limit the size of orphans.  There is no danger to having memory overrun since the
     //      orphan cache is limited to only 5000 entries by default. Only 500MB of memory could be consumed
     //      if there were some kind of orphan memory exhaustion attack.
+    //      Dropping any tx means they need to be included in the thin block when it it mined, which is inefficient.
     //unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
     //if (sz > 5000)
     //{
@@ -1004,13 +1003,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
          * be annoying or make others' transactions take longer to confirm. */
         static const double maxFeeCutoff = boost::lexical_cast<double>(GetArg("-maxlimitertxfee", DEFAULT_MAXLIMITERTXFEE)); /* maximum feeCutoff in satoshi per byte */
 	static const double initFeeCutoff = boost::lexical_cast<double>(GetArg("-minlimitertxfee", DEFAULT_MINLIMITERTXFEE)); /* starting value for feeCutoff in satoshi per byte*/
-        static uint64_t maxBlockSize = GetArg("-blockmaxsize", BLOCKSTREAM_CORE_MAX_BLOCK_SIZE); 
         static const int nLimitFreeRelay = GetArg("-limitfreerelay", DEFAULT_LIMITFREERELAY); 
         // get current memory pool size
         uint64_t poolBytes = pool.GetTotalTxSize();
-
-        // get the blocksize we're working with which will be the largest block seen
-        maxBlockSize = std::max(maxBlockSize, nLargestBlockSeen);
 
 	// Calculate feeCutoff in satoshis per byte:
 	//   When the feeCutoff is larger than the satoshiPerByte of the 
@@ -1028,17 +1023,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // When the mempool starts falling use an exponentially decaying ~24 hour window:
         feeCutoff *= pow(1.0 - 1.0/86400, (double)(nNow - nLastTime));
 
-        if (poolBytes < maxBlockSize) {
+        if (poolBytes < nLargestBlockSeen) {
             feeCutoff = std::max(feeCutoff, initFeeCutoff);
             nFreeLimit = std::min(nFreeLimit, (double)nLimitFreeRelay);
         }
-        else if(poolBytes < (maxBlockSize * MAX_BLOCK_SIZE_MULTIPLYER)) {
+        else if(poolBytes < (nLargestBlockSeen * MAX_BLOCK_SIZE_MULTIPLIER)) {
             // Gradually choke off what is considered a free transaction
-            feeCutoff = std::max(feeCutoff, initFeeCutoff + ((maxFeeCutoff - initFeeCutoff) * (poolBytes - maxBlockSize) / (maxBlockSize * (MAX_BLOCK_SIZE_MULTIPLYER-1))));
+            feeCutoff = std::max(feeCutoff, initFeeCutoff + ((maxFeeCutoff - initFeeCutoff) * (poolBytes - nLargestBlockSeen) / (nLargestBlockSeen * (MAX_BLOCK_SIZE_MULTIPLIER-1))));
 
             // Gradually choke off the nFreeLimit as well but leave at least DEFAULT_MIN_LIMITFREERELAY
             // So that some free transactions can still get through
-            nFreeLimit = std::min(nFreeLimit, ((double)nLimitFreeRelay - ((double)(nLimitFreeRelay - DEFAULT_MIN_LIMITFREERELAY) * (double)(poolBytes - maxBlockSize) / (maxBlockSize * (MAX_BLOCK_SIZE_MULTIPLYER-1)))));
+            nFreeLimit = std::min(nFreeLimit, ((double)nLimitFreeRelay - ((double)(nLimitFreeRelay - DEFAULT_MIN_LIMITFREERELAY) * (double)(poolBytes - nLargestBlockSeen) / (nLargestBlockSeen * (MAX_BLOCK_SIZE_MULTIPLIER-1)))));
             if(nFreeLimit < DEFAULT_MIN_LIMITFREERELAY)
                 nFreeLimit = DEFAULT_MIN_LIMITFREERELAY;
         }
@@ -5135,6 +5130,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->xThinBlockHashes = thinBlock.vTxHashes;
 
         // Create a map of all 8 bytes tx hashes pointing to their full tx hash counterpart 
+        // We need to check all transaction sources (orphan list, mempool, and new (incoming) transactions in this block) for a collision.
         bool collision = false;
         std::map<uint64_t, uint256> mapPartialTxHash;
         LOCK(cs_main);
