@@ -23,10 +23,12 @@
 #include "omnicore/rpcvalues.h"
 #include "omnicore/rules.h"
 #include "omnicore/sp.h"
+#include "omnicore/sto.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
+#include "omnicore/wallettxs.h"
 
 #include "amount.h"
 #include "init.h"
@@ -144,6 +146,62 @@ bool BalanceToJSON(const std::string& address, uint32_t property, Object& balanc
     } else {
         return true;
     }
+}
+
+// Provides the fee share the wallet (or specific address) will receive from fee distributions
+Value omni_getfeeshare(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "omni_getfeeshare [ address ]\n"
+            "\nReturns the percentage share of fees distribution applied to the wallet (default) or address (if supplied).\n"
+            "\nArguments:\n"
+            "1. address              (string, optional) retrieve the fee share for the supplied address\n"
+            "\nResult:\n"
+            "[                       (array of JSON objects)\n"
+            "  {\n"
+            "    \"propertyid\" : nnnnnnn,          (number) the property id\n"
+            "    \"cachedfees\" : \"n.nnnnnnnn\",   (string) the amount of fees cached for this property\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getfeeshare", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\"")
+            + HelpExampleRpc("omni_getfeeshare", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\"")
+        );
+
+    std::string address;
+    if (0 < params.size()) {
+        address = ParseAddress(params[0]);
+    }
+
+    Array response;
+    bool addObj = false;
+
+    OwnerAddrType receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_MSC, COIN);
+    for (OwnerAddrType::reverse_iterator it = receiversSet.rbegin(); it != receiversSet.rend(); ++it) {
+        addObj = false;
+        if (address.empty()) {
+            if (IsMyAddress(it->second)) {
+                addObj = true;
+            }
+        } else if (address == it->second) {
+            addObj = true;
+        }
+        if (addObj) {
+            Object feeShareObj;
+            // NOTE: using float here as this is a display value only which isn't an exact percentage and
+            //       changes block to block (due to dev Omni) so high precision not required(?)
+            double feeShare = (double(it->first) / double(COIN)) * (double)100;
+            std::string strFeeShare = strprintf("%.4f", feeShare);
+            strFeeShare += "%";
+            feeShareObj.push_back(Pair("address", it->second));
+            feeShareObj.push_back(Pair("feeshare", strFeeShare));
+            response.push_back(feeShareObj);
+        }
+    }
+
+    return response;
 }
 
 // Provides the current values of the fee cache

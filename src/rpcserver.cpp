@@ -383,6 +383,7 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (data retrieval)",         "omni_getfeecache",                &omni_getfeecache,                false,      true,       false },
 #ifdef ENABLE_WALLET
     { "omni layer (data retrieval)",         "omni_listtransactions",           &omni_listtransactions,           false,      true,       true },
+    { "omni layer (data retrieval)",         "omni_getfeeshare",                &omni_getfeeshare,                false,      true,       true },
 
     /* Omni Core configuration calls */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */

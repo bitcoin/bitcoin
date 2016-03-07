@@ -9,6 +9,7 @@
 #include "omnicore/omnicore.h"
 #include "omnicore/log.h"
 #include "omnicore/sp.h"
+#include "omnicore/sto.h"
 
 #include "leveldb/db.h"
 
@@ -17,8 +18,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 
+using namespace mastercore;
+
 // Arbitrary value used for testing - TODO: how are we calculating the threshold for distribution?
-int64_t feeDistributionThreshold = 1000000;
+int64_t feeDistributionThreshold = 10000000;
 
 // Gets the current amount of the fee cache for a property
 int64_t COmniFeeCache::GetCachedAmount(const uint32_t &propertyId)
@@ -36,6 +39,17 @@ int64_t COmniFeeCache::GetCachedAmount(const uint32_t &propertyId)
         return 0; // property has never generated a fee
     }
 }
+
+// Zeros a property in the fee cache
+void COmniFeeCache::ClearCache(const uint32_t &propertyId)
+{
+    const std::string key = strprintf("%010d", propertyId);
+    leveldb::Status status = pdb->Delete(writeoptions, key);
+    assert(status.ok());
+    ++nWritten;
+    if (msc_debug_fees) PrintToLog("Clearing cache entry for property %d [%s]\n", propertyId, status.ToString());
+}
+
 
 // Adds a fee to the cache (eg on a completed trade)
 void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t &amount)
@@ -73,6 +87,9 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t
     // Call for pruning (we only prune when we update a record)
     PruneCache(propertyId, block);
 
+    // Call for cache evaluation (we only need to do this each time a fee cache is increased)
+    EvalCache(propertyId);
+
     return;
 }
 
@@ -109,20 +126,45 @@ void COmniFeeCache::RollBackCache(int block)
 */
 }
 
-// Evaluates fee caches for all properties against threshold and executes distribution if threshold met
-void COmniFeeCache::EvalCache()
+// Evaluates fee caches for the property against threshold and executes distribution if threshold met
+void COmniFeeCache::EvalCache(const uint32_t &propertyId)
 {
-    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
-        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
-        for (uint32_t propertyId = startPropertyId; propertyId < mastercore::_my_sps->peekNextSPID(ecosystem); propertyId++) {
-            if (GetCachedAmount(propertyId) > feeDistributionThreshold) {
-                // Execute distribution of fees for this property
-            }
-        }
+    if (GetCachedAmount(propertyId) > feeDistributionThreshold) {
+        DistributeCache(propertyId);
     }
 }
 
 // Performs distribution of fees
+void COmniFeeCache::DistributeCache(const uint32_t &propertyId)
+{
+    LOCK(cs_tally);
+
+    int64_t cachedAmount = GetCachedAmount(propertyId);
+
+    OwnerAddrType receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_MSC, cachedAmount);
+    uint64_t numberOfReceivers = receiversSet.size(); // there will always be addresses holding OMNI, so no need to check size>0
+    PrintToLog("Starting fee distribution for property %d to %d recipients...\n", propertyId, numberOfReceivers);
+
+    int64_t sent_so_far = 0;
+    for (OwnerAddrType::reverse_iterator it = receiversSet.rbegin(); it != receiversSet.rend(); ++it) {
+        const std::string& address = it->second;
+        int64_t will_really_receive = it->first;
+        sent_so_far += will_really_receive;
+        if (msc_debug_fees) PrintToLog("  %s receives %d (running total %d of %d)\n", address, will_really_receive, sent_so_far, cachedAmount);
+        assert(update_tally_map(address, propertyId, will_really_receive, BALANCE));
+
+        // TODO
+        // * Do we need to record these fee distributions for retrieval at a later date?
+        // * Do we need to make fee distribution information available over the RPC interface?
+        // * If so, do we want to reuse STOlistDB for this (same schema) or something new?
+    }
+
+    PrintToLog("Fee distribution completed, distributed %d out of %d\n", sent_so_far, cachedAmount);
+
+    // final check to ensure the entire fee cache was distributed, then empty the cache
+    assert(sent_so_far == cachedAmount);
+    ClearCache(propertyId);
+}
 
 // Prunes entries over 50 blocks old from the entry for a property
 void COmniFeeCache::PruneCache(const uint32_t &propertyId, int block)
@@ -209,6 +251,7 @@ std::set<feeCacheItem> COmniFeeCache::GetCacheHistory(const uint32_t &propertyId
         boost::split(vCacheHistoryItem, *it, boost::is_any_of(":"), boost::token_compress_on);
         if (2 != vCacheHistoryItem.size()) {
             PrintToConsole("ERROR: vCacheHistoryItem has unexpected number of elements: %d (raw %s)!\n", vCacheHistoryItem.size(), *it);
+            printAll();
             continue;
         }
         int64_t cacheItemBlock = boost::lexical_cast<int64_t>(vCacheHistoryItem[0]);

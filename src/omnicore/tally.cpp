@@ -84,6 +84,7 @@ bool CMPTally::updateMoney(uint32_t propertyId, int64_t amount, TallyType ttype)
         // NOTE:
         // Negative balances are only permitted for pending balances
     } else {
+
         now64 += amount;
         mp_token[propertyId].balance[ttype] = now64;
 
