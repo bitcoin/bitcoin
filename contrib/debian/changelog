@@ -1,3 +1,9 @@
+bitcoinclassic (0.12.0-trusty2) trusty; urgency=medium
+
+  * Update to 0.12.0 Final Release
+
+ -- Jon Rumion (yamamushi) <yamamushi@gmail.com>  Fri, 7 Mar 2016 11:16:27 -0600
+
 bitcoinclassic (0.12.0-trusty1) trusty; urgency=medium
 
   * Change release to Bitcoin Classic
