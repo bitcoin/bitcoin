@@ -68,7 +68,6 @@ UniValue GetNetworkHashPS(int lookup, int height) {
     arith_uint256 workDiff = pb->nChainWork - pb0->nChainWork;
     int64_t timeDiff = maxTime - minTime;
 
-    statsClient.gauge("network.hashesPerSecond", (int64_t)(workDiff.getdouble() / timeDiff), 1.0f);
     return (int64_t)(workDiff.getdouble() / timeDiff);
 }
 
@@ -266,6 +265,8 @@ UniValue getmininginfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("testnet",          Params().TestnetToBeDeprecatedFieldRPC()));
     obj.push_back(Pair("chain",            Params().NetworkIDString()));
     obj.push_back(Pair("generate",         getgenerate(params, false)));
+    statsClient.gauge("network.hashesPerSecond", getnetworkhashps(params, false).get_int64());
+    statsClient.gauge("network.difficulty", (double)GetDifficulty());
     return obj;
 }
 
