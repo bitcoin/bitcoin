@@ -1724,7 +1724,14 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			escrow = CEscrow(wtx);
 		}
 		else
+		{
 			escrow = vtxPos.back();
+			CTransaction tx;
+			if (!GetSyscoinTransaction(escrow.nHeight, escrow.txHash, tx, Params().GetConsensus()))
+				continue;
+			if (!DecodeEscrowTx(tx, op, nOut, vvch) || !IsEscrowOp(op))
+				continue;
+		}
 		
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)

@@ -841,22 +841,25 @@ UniValue certlist(const UniValue& params, bool fHelp) {
 			
 		vector<CCert> vtxPos;
 		CCert cert;
-		if (!pcertdb->ReadCert(vchName, vtxPos))
+		if (!pcertdb->ReadCert(vchName, vtxPos) || vtxPos.empty())
 		{
 			pending = 1;
 			cert = CCert(wtx);
+			if(!IsSyscoinTxMine(wtx, "cert"))
+				continue;
 		}
-		if (vtxPos.size() < 1)
-		{
-			pending = 1;
-			cert = CCert(wtx);
-		}	
-		if(pending != 1)
+		else
 		{
 			cert = vtxPos.back();
+			CTransaction tx;
+			if (!GetSyscoinTransaction(cert.nHeight, cert.txHash, tx, Params().GetConsensus()))
+				continue;
+			if (!DecodeCertTx(tx, op, nOut, vvch) || !IsCertOp(op))
+				continue;
+			if(!IsSyscoinTxMine(tx, "cert"))
+				continue;
 		}
-		if(!IsSyscoinTxMine(wtx, "cert"))
-			continue;
+
 		nHeight = cert.nHeight;
 		// get last active name only
 		if (vNamesI.find(vchName) != vNamesI.end() && (nHeight < vNamesI[vchName] || vNamesI[vchName] < 0))
