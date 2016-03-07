@@ -44,8 +44,6 @@ class CValidationState;
 struct CNodeStateStats;
 struct LockPoints;
 
-/** Default for accepting alerts from the P2P network. */
-static const bool DEFAULT_ALERTS = true;
 /** Default for DEFAULT_WHITELISTRELAY. */
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */
@@ -149,7 +147,6 @@ extern bool fCheckBlockIndex;
 extern bool fCheckpointsEnabled;
 extern size_t nCoinCacheUsage;
 extern CFeeRate minRelayTxFee;
-extern bool fAlerts;
 extern bool fEnableReplacement;
 
 /** Best header we've seen so far (used for getheaders queries' starting points). */
