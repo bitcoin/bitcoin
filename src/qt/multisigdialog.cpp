@@ -312,7 +312,7 @@ void MultisigDialog::on_createTransactionButton_clicked()
                 SendCoinsRecipient recipient = entry->getValue();
                 CBitcoinAddress address(recipient.address.toStdString());
                 CScript scriptPubKey;
-                scriptPubKey.SetDestination(address.Get());
+                scriptPubKey.SetAddress(address);
                 int64_t amount = recipient.amount;
                 CTxOut output(amount, scriptPubKey);
                 transaction.vout.push_back(output);

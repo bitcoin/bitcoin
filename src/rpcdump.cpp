@@ -101,13 +101,14 @@ Value importaddress(const Array& params, bool fHelp)
     CScript script;
     CBitcoinAddress address(params[0].get_str());
     if (address.IsValid()) {
-        script.SetDestination(address.Get());
+        if (address.IsPair())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "It's senseless to import pubkey pair address.");
+        script.SetAddress(address);
     } else if (IsHex(params[0].get_str())) {
         std::vector<unsigned char> data(ParseHex(params[0].get_str()));
         script = CScript(data.begin(), data.end());
-    } else {
+    } else
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Novacoin address or script");
-    }
 
     string strLabel = "";
     if (params.size() > 1)
@@ -161,13 +162,14 @@ Value removeaddress(const Array& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (address.IsValid()) {
-        script.SetDestination(address.Get());
+        if (address.IsPair())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Pubkey pair addresses aren't supported.");
+        script.SetAddress(address);
     } else if (IsHex(params[0].get_str())) {
         std::vector<unsigned char> data(ParseHex(params[0].get_str()));
         script = CScript(data.begin(), data.end());
-    } else {
+    } else
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address or script");
-    }
 
     if (::IsMine(*pwalletMain, script) == MINE_SPENDABLE)
         throw JSONRPCError(RPC_WALLET_ERROR, "The wallet contains the private key for this address or script - can't remove it");
