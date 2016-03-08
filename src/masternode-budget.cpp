@@ -398,12 +398,15 @@ void CBudgetManager::CheckAndRemove()
         if(pfinalizedBudget->fValid) {
             pfinalizedBudget->AutoCheck();
             ++it;
-        
-        // if it's too old, remove it
+            continue;
         } else if(pfinalizedBudget->nBlockStart != 0 && pfinalizedBudget->nBlockStart < pCurrentBlockIndex->nHeight - Params().GetConsensus().nBudgetPaymentsCycleBlocks) {
+            // it's too old, remove it
             mapFinalizedBudgets.erase(it++);
             LogPrintf("CBudgetManager::CheckAndRemove - removing budget %s\n", pfinalizedBudget->GetHash().ToString());
+            continue;
         }
+        // it's not valid already but it's not too old yet, keep it and move to the next one
+        ++it;
     }
 
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
