@@ -212,7 +212,7 @@ public:
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     int ScanForWalletTransaction(const uint256& hashTx);
     void ReacceptWalletTransactions();
-    void ResendWalletTransactions();
+    void ResendWalletTransactions(bool fForceResend=false);
     int64_t GetBalance() const;
     int64_t GetWatchOnlyBalance() const;
     int64_t GetUnconfirmedBalance() const;

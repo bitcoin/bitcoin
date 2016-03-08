@@ -1152,23 +1152,25 @@ void CWalletTx::RelayWalletTransaction()
    RelayWalletTransaction(txdb);
 }
 
-void CWallet::ResendWalletTransactions()
+void CWallet::ResendWalletTransactions(bool fForceResend)
 {
-    // Do this infrequently and randomly to avoid giving away
-    // that these are our transactions.
-    static int64_t nNextTime = GetRand(GetTime() + 30 * 60);
-    if (GetTime() < nNextTime)
-        return;
-    bool fFirst = (nNextTime == 0);
-    nNextTime = GetTime() + GetRand(30 * 60);
-    if (fFirst)
-        return;
+    if (!fForceResend) {
+        // Do this infrequently and randomly to avoid giving away
+        // that these are our transactions.
+        static int64_t nNextTime = GetRand(GetTime() + 30 * 60);
+        if (GetTime() < nNextTime)
+            return;
+        bool fFirst = (nNextTime == 0);
+        nNextTime = GetTime() + GetRand(30 * 60);
+        if (fFirst)
+            return;
 
-    // Only do it if there's been a new block since last time
-    static int64_t nLastTime = 0;
-    if (nTimeBestReceived < nLastTime)
-        return;
-    nLastTime = GetTime();
+        // Only do it if there's been a new block since last time
+        static int64_t nLastTime = 0;
+        if (nTimeBestReceived < nLastTime)
+            return;
+        nLastTime = GetTime();
+    }
 
     // Rebroadcast any of our txes that aren't in a block yet
     printf("ResendWalletTransactions()\n");
@@ -1182,7 +1184,7 @@ void CWallet::ResendWalletTransactions()
             CWalletTx& wtx = item.second;
             // Don't rebroadcast until it's had plenty of time that
             // it should have gotten in already by now.
-            if (nTimeBestReceived - (int64_t)wtx.nTimeReceived > 5 * 60)
+            if (fForceResend || nTimeBestReceived - (int64_t)wtx.nTimeReceived > 5 * 60)
                 mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
         }
         BOOST_FOREACH(PAIRTYPE(const unsigned int, CWalletTx*)& item, mapSorted)
@@ -2776,14 +2778,12 @@ void CWallet::GetAddresses(std::map<CBitcoinAddress, int64_t> &mapAddresses) con
 
                 for(std::vector<CKeyID>::const_iterator it3 = vAffected.begin(); it3 != vAffected.end(); it3++) {
                     CBitcoinAddress addrAffected(*it3);
-
                     if (mapAddresses.find(addrAffected) != mapAddresses.end() && (mapAddresses[addrAffected] == 0 || mapAddresses[addrAffected] > wtx.nTime))
                         mapAddresses[addrAffected] = wtx.nTime;
                 }
                 vAffected.clear();
             }
         }
-
     }
 }
 
