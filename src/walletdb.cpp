@@ -818,51 +818,33 @@ bool DumpWallet(CWallet* pwallet, const string& strDest)
         const CBitcoinAddress &addr = it->second;
         std::string strTime = EncodeDumpTime(it->first);
         std::string strAddr = addr.ToString();
-        bool IsCompressed;
 
         if (addr.IsPair()) {
             // Pubkey pair address
             CMalleableKeyView keyView;
             CMalleablePubKey mPubKey(addr.GetData());
-            if (pwallet->GetMalleableView(mPubKey, keyView)) {
-                CMalleableKey mKey;
-                pwallet->GetMalleableKey(keyView, mKey);
-
-                file << strprintf("%s %s # addr=%s view=%s\n",
-                                  mKey.ToString().c_str(),
-                                  strTime.c_str(),
-                                  strAddr.c_str(),
-                                  keyView.ToString().c_str());
-            }
+            if (!pwallet->GetMalleableView(mPubKey, keyView))
+                continue;
+            CMalleableKey mKey;
+            pwallet->GetMalleableKey(keyView, mKey);
+            file << strprintf("%s %s # view=%s addr=%s\n", mKey.ToString().c_str(), strTime.c_str(), keyView.ToString().c_str(), strAddr.c_str());
         }
         else {
             // Pubkey hash address
             CKeyID keyid;
             addr.GetKeyID(keyid);
-
+            bool IsCompressed;
             CKey key;
-            if (pwallet->GetKey(keyid, key)) {
-                if (pwallet->mapAddressBook.count(keyid)) {
-                    CSecret secret = key.GetSecret(IsCompressed);
-                    file << strprintf("%s %s label=%s # addr=%s\n",
-                                      CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
-                                      strTime.c_str(),
-                                      EncodeDumpString(pwallet->mapAddressBook[keyid]).c_str(),
-                                      strAddr.c_str());
-                } else if (setKeyPool.count(keyid)) {
-                    CSecret secret = key.GetSecret(IsCompressed);
-                    file << strprintf("%s %s reserve=1 # addr=%s\n",
-                                      CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
-                                      strTime.c_str(),
-                                      strAddr.c_str());
-                } else {
-                    CSecret secret = key.GetSecret(IsCompressed);
-                    file << strprintf("%s %s change=1 # addr=%s\n",
-                                      CBitcoinSecret(secret, IsCompressed).ToString().c_str(),
-                                      strTime.c_str(),
-                                      strAddr.c_str());
-                }
-            }
+            if (!pwallet->GetKey(keyid, key))
+                continue;
+            CSecret secret = key.GetSecret(IsCompressed);
+            file << CBitcoinSecret(secret, IsCompressed).ToString().c_str();
+            if (pwallet->mapAddressBook.count(keyid))
+                file << strprintf(" %s label=%s # addr=%s\n", strTime.c_str(), EncodeDumpString(pwallet->mapAddressBook[keyid]).c_str(), strAddr.c_str());
+            else if (setKeyPool.count(keyid))
+                file << strprintf(" %s reserve=1 # addr=%s\n", strTime.c_str(), strAddr.c_str());
+            else
+                file << strprintf(" %s change=1 # addr=%s\n", strTime.c_str(), strAddr.c_str());
         }
     }
 

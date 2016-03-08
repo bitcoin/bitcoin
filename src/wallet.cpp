@@ -2766,7 +2766,7 @@ void CWallet::GetAddresses(std::map<CBitcoinAddress, int64_t> &mapAddresses) con
             // iterate over all their outputs
             CBitcoinAddress addressRet;
             if (const_cast<CWallet*>(this)->ExtractAddress(out.scriptPubKey, addressRet)) {
-                if (mapAddresses.find(addressRet) != mapAddresses.end() && mapAddresses[addressRet] > wtx.nTime)
+                if (mapAddresses.find(addressRet) != mapAddresses.end() && (mapAddresses[addressRet] == 0 || mapAddresses[addressRet] > wtx.nTime))
                     mapAddresses[addressRet] = wtx.nTime;
             }
             else {
@@ -2777,7 +2777,7 @@ void CWallet::GetAddresses(std::map<CBitcoinAddress, int64_t> &mapAddresses) con
                 for(std::vector<CKeyID>::const_iterator it3 = vAffected.begin(); it3 != vAffected.end(); it3++) {
                     CBitcoinAddress addrAffected(*it3);
 
-                    if (mapAddresses.find(addrAffected) != mapAddresses.end() && mapAddresses[addrAffected] > wtx.nTime)
+                    if (mapAddresses.find(addrAffected) != mapAddresses.end() && (mapAddresses[addrAffected] == 0 || mapAddresses[addrAffected] > wtx.nTime))
                         mapAddresses[addrAffected] = wtx.nTime;
                 }
                 vAffected.clear();
