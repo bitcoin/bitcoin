@@ -838,7 +838,7 @@ bool DumpWallet(CWallet* pwallet, const string& strDest)
             if (!pwallet->GetKey(keyid, key))
                 continue;
             CSecret secret = key.GetSecret(IsCompressed);
-            file << CBitcoinSecret(secret, IsCompressed).ToString().c_str();
+            file << CBitcoinSecret(secret, IsCompressed).ToString();
             if (pwallet->mapAddressBook.count(keyid))
                 file << strprintf(" %s label=%s # addr=%s\n", strTime.c_str(), EncodeDumpString(pwallet->mapAddressBook[keyid]).c_str(), strAddr.c_str());
             else if (setKeyPool.count(keyid))
