@@ -15,7 +15,7 @@
 #define MASTERNODE_SYNC_FAILED            998
 #define MASTERNODE_SYNC_FINISHED          999
 
-#define MASTERNODE_SYNC_TIMEOUT           120
+#define MASTERNODE_SYNC_TIMEOUT           30 // our blocks are 2.5 minutes so 30 seconds should be fine
 
 class CMasternodeSync;
 extern CMasternodeSync masternodeSync;
