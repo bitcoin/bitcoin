@@ -860,89 +860,103 @@ bool ImportWallet(CWallet *pwallet, const string& strLocation)
 
    if (!pwallet->fFileBacked)
        return false;
-   while (!fShutdown)
-   {
-      // open inputfile as stream
-      ifstream file;
-      file.open(strLocation.c_str());
-      if (!file.is_open())
-          return false;
 
-      int64_t nTimeBegin = pindexBest->nTime;
+   // open inputfile as stream
+   ifstream file;
+   file.open(strLocation.c_str());
+   if (!file.is_open())
+       return false;
 
-      bool fGood = true;
+   bool fGood = true;
+   int64_t nTimeBegin = pindexBest->nTime;
 
-      // read through input file checking and importing keys into wallet.
-      while (file.good()) {
-          std::string line;
-          std::getline(file, line);
-          if (line.empty() || line[0] == '#')
-              continue;
+   // read through input file checking and importing keys into wallet.
+   while (file.good()) {
+       std::string line;
+       std::getline(file, line);
+       if (line.empty() || line[0] == '#')
+           continue; // Skip comments and empty lines
 
-          std::vector<std::string> vstr;
-          istringstream iss(line);
-          copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vstr));
-          if (vstr.size() < 2)
-              continue;
-          CBitcoinSecret vchSecret;
-          if (!vchSecret.SetString(vstr[0]))
-              continue;
+       std::vector<std::string> vstr;
+       istringstream iss(line);
+       copy(istream_iterator<string>(iss), istream_iterator<string>(), back_inserter(vstr));
+       if (vstr.size() < 2)
+           continue;
 
-          bool fCompressed;
-          CKey key;
-          CSecret secret = vchSecret.GetSecret(fCompressed);
-          key.SetSecret(secret, fCompressed);
-          CKeyID keyid = key.GetPubKey().GetID();
+       int64_t nTime = DecodeDumpTime(vstr[1]);
+       std::string strLabel;
+       bool fLabel = true;
+       for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
+           if (boost::algorithm::starts_with(vstr[nStr], "#"))
+               break;
+           if (vstr[nStr] == "change=1")
+               fLabel = false;
+           if (vstr[nStr] == "reserve=1")
+               fLabel = false;
+           if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
+               strLabel = DecodeDumpString(vstr[nStr].substr(6));
+               fLabel = true;
+           }
+       }
 
-          if (pwallet->HaveKey(keyid)) {
-              printf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString().c_str());
-             continue;
-          }
-          int64_t nTime = DecodeDumpTime(vstr[1]);
-          std::string strLabel;
-          bool fLabel = true;
-          for (unsigned int nStr = 2; nStr < vstr.size(); nStr++) {
-              if (boost::algorithm::starts_with(vstr[nStr], "#"))
-                  break;
-              if (vstr[nStr] == "change=1")
-                  fLabel = false;
-              if (vstr[nStr] == "reserve=1")
-                  fLabel = false;
-              if (boost::algorithm::starts_with(vstr[nStr], "label=")) {
-                  strLabel = DecodeDumpString(vstr[nStr].substr(6));
-                  fLabel = true;
-              }
-          }
-          printf("Importing %s...\n", CBitcoinAddress(keyid).ToString().c_str());
-          if (!pwallet->AddKey(key)) {
-              fGood = false;
-              continue;
-          }
-          pwallet->mapKeyMetadata[keyid].nCreateTime = nTime;
-          if (fLabel)
-              pwallet->SetAddressBookName(keyid, strLabel);
-          nTimeBegin = std::min(nTimeBegin, nTime);
-      }
-      file.close();
+       CBitcoinSecret vchSecret;
+       if (vchSecret.SetString(vstr[0])) {
+           // Simple private key
 
-      // rescan block chain looking for coins from new keys
-      CBlockIndex *pindex = pindexBest;
-      while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
-          pindex = pindex->pprev;
+           bool fCompressed;
+           CKey key;
+           CSecret secret = vchSecret.GetSecret(fCompressed);
+           key.SetSecret(secret, fCompressed);
+           CKeyID keyid = key.GetPubKey().GetID();
 
-      printf("Rescanning last %i blocks\n", pindexBest->nHeight - pindex->nHeight + 1);
-      pwallet->ScanForWalletTransactions(pindex);
-      pwallet->ReacceptWalletTransactions();
-      pwallet->MarkDirty();
+           if (pwallet->HaveKey(keyid)) {
+               printf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString().c_str());
+               continue;
+           }
 
-      return fGood;
+           printf("Importing %s...\n", CBitcoinAddress(keyid).ToString().c_str());
+           if (!pwallet->AddKey(key)) {
+               fGood = false;
+               continue;
+           }
+           pwallet->mapKeyMetadata[keyid].nCreateTime = nTime;
+           if (fLabel)
+               pwallet->SetAddressBookName(keyid, strLabel);
+       } else {
+           // A pair of private keys
 
-  }
+           CMalleableKey mKey;
+           if (!mKey.SetString(vstr[0]))
+               continue;
+           CMalleablePubKey mPubKey = mKey.GetMalleablePubKey();
+           if (pwallet->CheckOwnership(mPubKey)) {
+               printf("Skipping import of %s (key already present)\n", CBitcoinAddress(mPubKey).ToString().c_str());
+               continue;
+           }
 
-  return false;
+           printf("Importing %s...\n", CBitcoinAddress(mPubKey).ToString().c_str());
+           if (!pwallet->AddMalleableKey(mKey)) {
+               fGood = false;
+               continue;
+           }
+           pwallet->mapMalleableKeyMetadata[CMalleableKeyView(mKey)].nCreateTime = nTime;
+       }
+       nTimeBegin = std::min(nTimeBegin, nTime);
+   }
+   file.close();
 
+   // rescan block chain looking for coins from new keys
+   CBlockIndex *pindex = pindexBest;
+   while (pindex && pindex->pprev && pindex->nTime > nTimeBegin - 7200)
+       pindex = pindex->pprev;
+
+   printf("Rescanning last %i blocks\n", pindexBest->nHeight - pindex->nHeight + 1);
+   pwallet->ScanForWalletTransactions(pindex);
+   pwallet->ReacceptWalletTransactions();
+   pwallet->MarkDirty();
+
+   return fGood;
 }
-
 
 //
 // Try to (very carefully!) recover wallet.dat if there is a problem.

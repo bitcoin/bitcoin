@@ -336,6 +336,12 @@ public:
         return false;
     }
 
+    bool CheckOwnership(const CMalleablePubKey &mpk)
+    {
+        CMalleableKeyView view;
+        return GetMalleableView(mpk, view);
+    }
+
     bool CreatePrivKey(const CPubKey &pubKeyVariant, const CPubKey &R, CKey &privKey) const;
 
     void ListMalleableViews(std::list<CMalleableKeyView> &malleableViewList) const
