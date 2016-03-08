@@ -609,6 +609,34 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         return QString::fromStdString(rec->hash.ToString());
     case TxHexRole:
         return priv->getTxHex(rec);
+    case TxPlainTextRole:
+        {
+            QString details;
+            QDateTime date = QDateTime::fromTime_t(static_cast<uint>(rec->time));
+            QString txLabel = walletModel->getAddressTableModel()->labelForAddress(QString::fromStdString(rec->address));
+
+            details.append(date.toString("M/d/yy HH:mm"));
+            details.append(" ");
+            details.append(formatTxStatus(rec));
+            details.append(". ");
+            if(!formatTxType(rec).isEmpty()) {
+                details.append(formatTxType(rec));
+                details.append(" ");
+            }
+            if(!rec->address.empty()) {
+                if(txLabel.isEmpty())
+                    details.append(tr("(no label)") + " ");
+                else {
+                    details.append("(");
+                    details.append(txLabel);
+                    details.append(") ");
+                }
+                details.append(QString::fromStdString(rec->address));
+                details.append(" ");
+            }
+            details.append(formatTxAmount(rec, false, BitcoinUnits::separatorNever));
+            return details;
+        }
     case ConfirmedRole:
         return rec->status.countsForBalance;
     case FormattedAmountRole:
