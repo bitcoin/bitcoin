@@ -176,12 +176,6 @@ class CTestNetParams : public CChainParams {
 public:
     CTestNetParams() {
         strNetworkID = "test";
-        pchMessageStart[0] = 0xce;
-        pchMessageStart[1] = 0xe2;
-        pchMessageStart[2] = 0xca;
-        pchMessageStart[3] = 0xff;
-        vAlertPubKey = ParseHex("04517d8a699cb43d3938d7b24faaff7cda448ca4ea267723ba614784de661949bf632d6304316b244646dea079735b9a6fc4af804efb4752075b9fe2245e14e412");
-        nDefaultPort = 19999;
         consensus.nSubsidyHalvingInterval = 210240;
         consensus.nMasternodePaymentsStartBlock = 10000; // not true, but it's ok as long as it's less then nMasternodePaymentsIncreaseBlock
         consensus.nMasternodePaymentsIncreaseBlock = 46000;
@@ -200,6 +194,7 @@ public:
         consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
+
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
