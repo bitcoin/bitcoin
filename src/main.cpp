@@ -2487,6 +2487,10 @@ static CBlockIndex* FindMostWorkChain() {
         CBlockIndex *pindexTest = pindexNew;
         bool fInvalidAncestor = false;
         uint64_t depth=0;
+        bool fFailedChain = false;
+        bool fMissingData = false;
+        bool fRecentExcessive = false;  // Has there been a excessive block within our accept depth?
+        bool fOldExcessive = false;     // Was there an excessive block prior to our accept depth (if so we ignore the accept depth -- this chain has already been accepted as valid)
         while (pindexTest && !chainActive.Contains(pindexTest)) {  // follow the chain all the way back to where it joins the current active chain.
             assert(pindexTest->nChainTx || pindexTest->nHeight == 0);
 
@@ -2494,10 +2498,47 @@ static CBlockIndex* FindMostWorkChain() {
             // which block files have been deleted.  Remove those as candidates
             // for the most work chain if we come across them; we can't switch
             // to a chain unless we have all the non-active-chain parent blocks.
-            bool fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
-            bool fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
-            bool fExcessive = (depth < excessiveAcceptDepth) && (pindexTest->nStatus & BLOCK_EXCESSIVE);  // Unlimited: deny this candidate chain if there's a recent excessive block
-            if (fFailedChain || fMissingData || fExcessive) {
+            fFailedChain = pindexTest->nStatus & BLOCK_FAILED_MASK;
+            fMissingData = !(pindexTest->nStatus & BLOCK_HAVE_DATA);
+            if (depth < excessiveAcceptDepth)
+	      {
+		fRecentExcessive |= ((pindexTest->nStatus & BLOCK_EXCESSIVE) != 0);  // Unlimited: deny this candidate chain if there's a recent excessive block
+	      }
+            else
+	      {
+		fOldExcessive |= ((pindexTest->nStatus & BLOCK_EXCESSIVE) != 0);  // Unlimited: unless there is an even older excessive block
+	      }
+
+            if (fFailedChain | fMissingData | fRecentExcessive) break;
+            pindexTest = pindexTest->pprev;
+            depth++;
+        }
+
+        // If there was a recent excessive block, check a certain distance beyond the acceptdepth to see if this chain has already seen an excessive block... if it has then allow the chain.
+        // This stops the client from always tracking excessiveDepth blocks behind the chain tip in a situation where lots of excessive blocks are being created.
+        // But after a while with no excessive blocks, we reset and our reluctance to accept an excessive block resumes on this chain.
+        // An alternate algorithm would be to move the excessive block size up to match the size of the accepted block, but this changes a user-defined field and is awkward to code because
+        // block sizes are not saved.
+        if ((fRecentExcessive && !fOldExcessive)&&(depth<excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET))
+	  {
+            CBlockIndex *chain = pindexTest;  
+            while (chain && (depth<excessiveAcceptDepth)) // skip accept depth blocks, we are looking for an older excessive
+	      {
+              chain = chain->pprev;
+              depth++;
+	      }
+
+            while (chain && (depth<excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET)) 
+              {
+              fOldExcessive |= ((chain->nStatus & BLOCK_EXCESSIVE) != 0);
+              chain = chain->pprev;
+              depth++;
+              }
+	  }
+
+        // Conditions where we want to reject the chain
+	if (fFailedChain || fMissingData || (fRecentExcessive && !fOldExcessive)) 
+          {
                 // Candidate chain is not usable (either invalid or missing data)
                 if (fFailedChain && (pindexBestInvalid == NULL || pindexNew->nChainWork > pindexBestInvalid->nChainWork))
                     pindexBestInvalid = pindexNew;
@@ -2506,7 +2547,7 @@ static CBlockIndex* FindMostWorkChain() {
                 while (pindexTest != pindexFailed) {
                     if (fFailedChain) {
                         pindexFailed->nStatus |= BLOCK_FAILED_CHILD;
-                    } else if (fMissingData || fExcessive) {
+                    } else if (fMissingData || (fRecentExcessive && !fOldExcessive)) {
                         // If we're missing data, then add back to mapBlocksUnlinked,
                         // so that if the block arrives in the future we can try adding
                         // to setBlockIndexCandidates again.
@@ -2517,14 +2558,12 @@ static CBlockIndex* FindMostWorkChain() {
                 }
                 setBlockIndexCandidates.erase(pindexTest);
                 fInvalidAncestor = true;
-                break;
             }
-            pindexTest = pindexTest->pprev;
-            depth++;
-        }
+
         if (!fInvalidAncestor)
             return pindexNew;
     } while(true);
+    assert(0); // should never get here
 }
 
 /** Delete all entries in setBlockIndexCandidates that are worse than the current tip. */
@@ -3935,7 +3974,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
                 // is valid and we have all data for its parents, it must be in
                 // setBlockIndexCandidates.  chainActive.Tip() must also be there
                 // even if some data has been pruned.
-              if ((!isChainExcessive(pindex)) && (pindexFirstMissing == NULL || pindex == chainActive.Tip()) )  // BU: if the chain is excessive it won't be on the list of active chain candidates
+              if ((!chainContainsExcessive(pindex)) && (pindexFirstMissing == NULL || pindex == chainActive.Tip()) )  // BU: if the chain is excessive it won't be on the list of active chain candidates
                 assert(setBlockIndexCandidates.count(pindex));
                 // If some parent is missing, then it could be that this block was in
                 // setBlockIndexCandidates but had to be removed because of the missing data.
@@ -3960,7 +3999,7 @@ void static CheckBlockIndex(const Consensus::Params& consensusParams)
             assert(foundInUnlinked);
         }
         if (!(pindex->nStatus & BLOCK_HAVE_DATA)) assert(!foundInUnlinked); // Can't be in mapBlocksUnlinked if we don't HAVE_DATA
-        if ((pindexFirstMissing == NULL)&&(!isChainExcessive(pindex))) // BU: why is this needed here?
+        if ((pindexFirstMissing == NULL)&&(!chainContainsExcessive(pindex))) // BU: blocks that are excessive are placed in the unlinked map
           {
           assert(!foundInUnlinked); // We aren't missing data for any parent -- cannot be in mapBlocksUnlinked.
           }

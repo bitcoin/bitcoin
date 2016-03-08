@@ -208,17 +208,44 @@ std::string LicenseInfo()
            "\n";
 }
 
+
+int chainContainsExcessive(const CBlockIndex* blk, unsigned int goBack)
+{
+    if (goBack == 0)
+        goBack = excessiveAcceptDepth+EXCESSIVE_BLOCK_CHAIN_RESET;
+    for (unsigned int i = 0; i < goBack; i++, blk = blk->pprev) 
+    {
+        if (!blk)
+	  break; // we hit the beginning
+        if (blk->nStatus & BLOCK_EXCESSIVE)
+	  return true;
+    }
+    return false;
+}
+
 int isChainExcessive(const CBlockIndex* blk, unsigned int goBack)
 {
     if (goBack == 0)
         goBack = excessiveAcceptDepth;
-    for (unsigned int i = 1; i <= goBack; i++, blk = blk->pprev) {
+    bool recentExcessive = false;
+    bool oldExcessive = false;
+    for (unsigned int i = 0; i < goBack; i++, blk = blk->pprev) {
         if (!blk)
-            return 0; // Not excessive if we hit the beginning
+	  break; // we hit the beginning
         if (blk->nStatus & BLOCK_EXCESSIVE)
-            return i;
+	  recentExcessive = true;
     }
-    return 0;
+ 
+    // Once an excessive block is built upon the chain is not excessive even if more large blocks appear.
+    // So look back to make sure that this is the "first" excessive block for a while
+    for (unsigned int i = 0; i < EXCESSIVE_BLOCK_CHAIN_RESET; i++, blk = blk->pprev) {
+        if (!blk)
+	  break; // we hit the beginning
+        if (blk->nStatus & BLOCK_EXCESSIVE)
+	  oldExcessive = true;
+    }
+
+    return (recentExcessive && !oldExcessive);
 }
 
 bool CheckExcessive(const CBlock& block, uint64_t blockSize, uint64_t nSigOps, uint64_t nTx)

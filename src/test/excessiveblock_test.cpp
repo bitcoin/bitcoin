@@ -7,9 +7,9 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
-using namespace json_spirit;
 
-extern Value CallRPC(string args);
+// Defined in rpc_tests.cpp not bitcoin-cli.cpp
+extern UniValue CallRPC(string strMethod);
 
 BOOST_FIXTURE_TEST_SUITE(excessiveblock_test, TestingSetup)
 
