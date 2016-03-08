@@ -101,6 +101,9 @@ enum BlockStatus {
  */
 class CBlockIndex
 {
+private:
+    int64_t nMedianTimePast;
+
 public:
     //! pointer to the hash of the block, if any. Memory is owned by this CBlockIndex
     const uint256* phashBlock;
@@ -168,6 +171,8 @@ public:
         nTime          = 0;
         nBits          = 0;
         nNonce         = 0;
+
+        nMedianTimePast = -1;
     }
 
     CBlockIndex()
@@ -231,16 +236,20 @@ public:
 
     int64_t GetMedianTimePast() const
     {
-        int64_t pmedian[nMedianTimeSpan];
-        int64_t* pbegin = &pmedian[nMedianTimeSpan];
-        int64_t* pend = &pmedian[nMedianTimeSpan];
+        if (nMedianTimePast < 0) {
+          int64_t pmedian[nMedianTimeSpan];
+          int64_t* pbegin = &pmedian[nMedianTimeSpan];
+          int64_t* pend = &pmedian[nMedianTimeSpan];
 
-        const CBlockIndex* pindex = this;
-        for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
-            *(--pbegin) = pindex->GetBlockTime();
+          const CBlockIndex* pindex = this;
+          for (int i = 0; i < nMedianTimeSpan && pindex; i++, pindex = pindex->pprev)
+              *(--pbegin) = pindex->GetBlockTime();
 
-        std::sort(pbegin, pend);
-        return pbegin[(pend - pbegin)/2];
+          std::sort(pbegin, pend);
+          nMedianTimePast = pbegin[(pend - pbegin)/2];
+        }
+
+        return nMedianTimePast;
     }
 
     std::string ToString() const
