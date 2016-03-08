@@ -1939,7 +1939,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     CBanDB bandb;
     banmap_t banmap;
     if (!bandb.Read(banmap))
-        LogPrintf("Invalid or missing banlist.dat; recreating\n");
+        LogPrintf("Could not read banlist.dat, starting with empty list.\n");
 
     CNode::SetBanned(banmap); //thread save setter
     CNode::SetBannedSetDirty(false); //no need to write down just read or nonexistent data
