@@ -78,4 +78,21 @@ public:
         READWRITE(mapTx);
     }
 };
+
+// This class stores statistics for thin block derived protocols.
+class CThinBlockStats
+{
+private:
+	static uint64_t nOriginalSize;
+	static uint64_t nThinSize;
+	static uint64_t nBlocks;
+public:
+	static void Update(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+	static std::string ToString();
+};
+
+
+
+
+
 #endif // BITCOIN_THINBLOCK_H
