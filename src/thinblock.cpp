@@ -20,7 +20,7 @@ CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
         // NOTE: We always add the first tx, the coinbase as it is the one
         //       most often missing.
         if (!filter.contains(hash) || i == 0)
-            mapMissingTx[hash] = block.vtx[i];
+            vMissingTx.push_back(block.vtx[i]);
     }
 }
 
@@ -47,7 +47,7 @@ CXThinBlock::CXThinBlock(const CBlock& block, CBloomFilter* filter)
         // NOTE: We always add the first tx, the coinbase as it is the one
         //       most often missing.
         if ((filter && !filter->contains(hash256)) || i == 0)
-            mapMissingTx[hash256] = block.vtx[i];
+            vMissingTx.push_back(block.vtx[i]);
     }
 }
 
@@ -72,11 +72,9 @@ CXThinBlock::CXThinBlock(const CBlock& block)
 
         // We always add the first tx, the coinbase as it is the one
         // most often missing.
-        if (i == 0) mapMissingTx[hash256] = block.vtx[i];
+        if (i == 0) vMissingTx.push_back(block.vtx[i]);
     }
 }
-
-
 
 CXThinBlockTx::CXThinBlockTx(uint256 blockHash, std::vector<uint64_t>& vHashesToRequest)
 {
