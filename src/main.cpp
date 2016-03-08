@@ -5128,21 +5128,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->thinBlock.hashPrevBlock = thinBlock.header.hashPrevBlock;
         pfrom->xThinBlockHashes = thinBlock.vTxHashes;
 
+        // Create the mapMissingTx from all the supplied tx's in the xthinblock
+        std::map<uint256, CTransaction> mapMissingTx;
+        BOOST_FOREACH(CTransaction tx, thinBlock.vMissingTx)
+            mapMissingTx[tx.GetHash()] = tx;
 
         // Create a map of all 8 bytes tx hashes pointing to their full tx hash counterpart 
         // We need to check all transaction sources (orphan list, mempool, and new (incoming) transactions in this block) for a collision.
         bool collision = false;
         std::map<uint64_t, uint256> mapPartialTxHash;
-        // Create the mapMissingTx from all the supplied tx's in the xthinblock
-        std::map<uint256, CTransaction> mapMissingTx;
-        BOOST_FOREACH(CTransaction tx, thinBlock.vMissingTx) {
-            uint256 hash = tx.GetHash();
-            mapMissingTx[hash] = tx;
-            uint64_t cheapHash = hash.GetCheapHash();
-            if(mapPartialTxHash.count(cheapHash)) //Check for collisions
-                collision = true;
-            mapPartialTxHash[cheapHash] = hash;
-        }
         LOCK(cs_main);
         std::vector<uint256> memPoolHashes;
         mempool.queryHashes(memPoolHashes);
@@ -5151,6 +5145,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if(mapPartialTxHash.count(cheapHash)) //Check for collisions
                 collision = true;
             mapPartialTxHash[cheapHash] = memPoolHashes[i];
+        }
+        for (map<uint256, CTransaction>::iterator mi = mapMissingTx.begin(); mi != mapMissingTx.end(); ++mi) {
+            uint64_t cheapHash = (*mi).first.GetCheapHash();
+            if(mapPartialTxHash.count(cheapHash)) //Check for collisions
+                collision = true;
+            mapPartialTxHash[cheapHash] = (*mi).first;
         }
         for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi) {
             uint64_t cheapHash = (*mi).first.GetCheapHash();
@@ -5225,15 +5225,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         else if (pfrom->thinBlockWaitingForTxns > 0) {
             // This marks the end of the transactions we've received. If we get this and we have NOT been able to
             // finish reassembling the block, we need to re-request the transactions we're missing:
-            std::vector<uint64_t> vHashesToRequest;
+            std::set<uint64_t> setHashesToRequest;
             for (size_t i = 0; i < pfrom->thinBlock.vtx.size(); i++) {
                  if (pfrom->thinBlock.vtx[i].IsNull()) {
-                     vHashesToRequest.push_back(pfrom->xThinBlockHashes[i]);
+                     setHashesToRequest.insert(pfrom->xThinBlockHashes[i]);
                      LogPrint("thin", "Re-requesting tx ==> 8 byte hash %d\n", pfrom->xThinBlockHashes[i]);
                  }
             }
             // Re-request transactions that we are still missing
-            CXThinBlockTx thinBlockTx(thinBlock.header.GetHash(), vHashesToRequest);
+            CXRequestThinBlockTx thinBlockTx(thinBlock.header.GetHash(), setHashesToRequest);
             pfrom->PushMessage(NetMsgType::GET_XBLOCKTX, thinBlockTx);
             LogPrint("thin", "Missing %d transactions for xthinblock, re-requesting\n", 
                       pfrom->thinBlockWaitingForTxns);
@@ -5346,9 +5346,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             Misbehaving(pfrom->GetId(), 20);
         }
 
+        // Create the mapMissingTx from all the supplied tx's in the xthinblock
+        std::map<uint64_t, CTransaction> mapMissingTx;
+        BOOST_FOREACH(CTransaction tx, thinBlockTx.vMissingTx) 
+            mapMissingTx[tx.GetHash().GetCheapHash()] = tx;
+
         for (size_t i = 0; i < pfrom->thinBlock.vtx.size(); i++) {
              if (pfrom->thinBlock.vtx[i].IsNull()) {
-                 pfrom->thinBlock.vtx[i] = thinBlockTx.mapTx[pfrom->xThinBlockHashes[i]];
+                 pfrom->thinBlock.vtx[i] = mapMissingTx[pfrom->xThinBlockHashes[i]];
                  pfrom->thinBlockWaitingForTxns--;
                  LogPrint("thin", "Got Re-requested tx ==> 8 byte hash %d\n", pfrom->xThinBlockHashes[i]);
              }
@@ -5383,12 +5388,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
     else if (strCommand == NetMsgType::GET_XBLOCKTX && !fImporting && !fReindex) // return Re-requested xthinblock transactions
     {
-        CXThinBlockTx thinBlockTx;
-        vRecv >> thinBlockTx;
+        CXRequestThinBlockTx thinRequestBlockTx;
+        vRecv >> thinRequestBlockTx;
 
         // We use MSG_TX here even though we refer to blockhash because we need to track 
         // how many xblocktx requests we make in case of DOS
-        CInv inv(MSG_TX, thinBlockTx.blockhash); 
+        CInv inv(MSG_TX, thinRequestBlockTx.blockhash); 
         LogPrint("thin", "received get_xblocktx for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
 
         // Check for Misbehaving and DOS
@@ -5415,16 +5420,19 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         const Consensus::Params& consensusParams = Params().GetConsensus();
         if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
             assert(!"cannot load block from disk");
-
+        
+        std::vector<CTransaction> vTx;
         for (unsigned int i = 0; i < block.vtx.size(); i++)
         { 
             uint64_t cheapHash = block.vtx[i].GetHash().GetCheapHash();
-            if(thinBlockTx.mapTx.count(cheapHash))
-                thinBlockTx.mapTx[cheapHash] = block.vtx[i];
+            if(thinRequestBlockTx.setCheapHashesToRequest.count(cheapHash))
+                vTx.push_back(block.vtx[i]);
         }
-        }
+
         pfrom->AddInventoryKnown(inv);
+        CXThinBlockTx thinBlockTx(thinRequestBlockTx.blockhash, vTx);
         pfrom->PushMessage(NetMsgType::XBLOCKTX, thinBlockTx);
+        }
     }
     // BUIP010 Xtreme Thinblocks: end section
 

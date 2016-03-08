@@ -76,12 +76,14 @@ CXThinBlock::CXThinBlock(const CBlock& block)
     }
 }
 
-CXThinBlockTx::CXThinBlockTx(uint256 blockHash, std::vector<uint64_t>& vHashesToRequest)
+CXThinBlockTx::CXThinBlockTx(uint256 blockHash, std::vector<CTransaction>& vTx)
 {
     blockhash = blockHash;
+    vMissingTx = vTx;
+}
 
-    CTransaction tx;
-    unsigned int n = vHashesToRequest.size();
-    for (unsigned int i = 0; i < n; i++)
-        mapTx[vHashesToRequest[i]] = tx;
+CXRequestThinBlockTx::CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>& setHashesToRequest)
+{
+    blockhash = blockHash;
+    setCheapHashesToRequest = setHashesToRequest;
 }
