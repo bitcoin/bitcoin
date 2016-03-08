@@ -1543,14 +1543,13 @@ int CBudgetProposal::GetTotalPaymentCount()
     return (GetBlockEndCycle() - GetBlockStartCycle()) / Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 }
 
-int CBudgetProposal::GetRemainingPaymentCount()
+int CBudgetProposal::GetRemainingPaymentCount(int nBlockHeight)
 {
-    int nBlockHeight = nBlockStart;
     int nPayments = 0;
     // printf("-> Budget Name : %s\n", strProposalName.c_str());
     // printf("------- nBlockStart : %d\n", nBlockStart);
     // printf("------- nBlockEnd : %d\n", nBlockEnd);
-    while(nBlockHeight + Params().GetConsensus().nBudgetPaymentsCycleBlocks < nBlockEnd)
+    while(nBlockHeight + Params().GetConsensus().nBudgetPaymentsCycleBlocks < GetBlockEndCycle())
     {
         // printf("------- P : %d %d - %d < %d - %d\n", nBlockHeight, nPayments, nBlockHeight + Params().GetConsensus().nBudgetPaymentsCycleBlocks, nBlockEnd, nBlockHeight + Params().GetConsensus().nBudgetPaymentsCycleBlocks < nBlockEnd);
         nBlockHeight += Params().GetConsensus().nBudgetPaymentsCycleBlocks;

@@ -432,7 +432,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
             bObj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
-            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
+            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount(pindex->nHeight)));
             bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
             bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
             bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
@@ -491,7 +491,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
             bObj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
             bObj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
-            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
+            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount(pindex->nHeight)));
             bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
             bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
             bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
@@ -556,6 +556,12 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         if(pbudgetProposal == NULL) return "Unknown proposal";
 
+        CBlockIndex* pindex;
+        {
+            LOCK(cs_main);
+            pindex = chainActive.Tip();
+        }
+
         CTxDestination address1;
         ExtractDestination(pbudgetProposal->GetPayee(), address1);
         CBitcoinAddress address2(address1);
@@ -569,7 +575,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         obj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
         obj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
         obj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
-        obj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount()));
+        obj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount(pindex->nHeight)));
         obj.push_back(Pair("PaymentAddress",   address2.ToString()));
         obj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
         obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
