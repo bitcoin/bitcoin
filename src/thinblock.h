@@ -17,7 +17,7 @@ class CThinBlock
 public:
     CBlockHeader header;
     std::vector<uint256> vTxHashes; // List of all transactions id's in the block
-    std::map<uint256, CTransaction> mapMissingTx; // map of transactions that did not match the bloom filter
+    std::vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
 
 public:
     CThinBlock(const CBlock& block, CBloomFilter& filter);
@@ -29,7 +29,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(header);
         READWRITE(vTxHashes);
-        READWRITE(mapMissingTx);
+        READWRITE(vMissingTx);
     }
 };
 
@@ -38,7 +38,7 @@ class CXThinBlock
 public:
     CBlockHeader header;
     std::vector<uint64_t> vTxHashes; // List of all transactions id's in the block
-    std::map<uint256, CTransaction> mapMissingTx; // map of transactions that did not match the bloom filter
+    std::vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
     bool collision;
 
 public:
@@ -52,7 +52,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(header);
         READWRITE(vTxHashes);
-        READWRITE(mapMissingTx);
+        READWRITE(vMissingTx);
     }
 };
 

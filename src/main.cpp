@@ -5128,10 +5128,21 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->thinBlock.hashPrevBlock = thinBlock.header.hashPrevBlock;
         pfrom->xThinBlockHashes = thinBlock.vTxHashes;
 
+
         // Create a map of all 8 bytes tx hashes pointing to their full tx hash counterpart 
         // We need to check all transaction sources (orphan list, mempool, and new (incoming) transactions in this block) for a collision.
         bool collision = false;
         std::map<uint64_t, uint256> mapPartialTxHash;
+        // Create the mapMissingTx from all the supplied tx's in the xthinblock
+        std::map<uint256, CTransaction> mapMissingTx;
+        BOOST_FOREACH(CTransaction tx, thinBlock.vMissingTx) {
+            uint256 hash = tx.GetHash();
+            mapMissingTx[hash] = tx;
+            uint64_t cheapHash = hash.GetCheapHash();
+            if(mapPartialTxHash.count(cheapHash)) //Check for collisions
+                collision = true;
+            mapPartialTxHash[cheapHash] = hash;
+        }
         LOCK(cs_main);
         std::vector<uint256> memPoolHashes;
         mempool.queryHashes(memPoolHashes);
@@ -5140,12 +5151,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if(mapPartialTxHash.count(cheapHash)) //Check for collisions
                 collision = true;
             mapPartialTxHash[cheapHash] = memPoolHashes[i];
-        }
-        for (map<uint256, CTransaction>::iterator mi = thinBlock.mapMissingTx.begin(); mi != thinBlock.mapMissingTx.end(); ++mi) {
-            uint64_t cheapHash = (*mi).first.GetCheapHash();
-            if(mapPartialTxHash.count(cheapHash)) //Check for collisions
-                collision = true;
-            mapPartialTxHash[cheapHash] = (*mi).first;
         }
         for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi) {
             uint64_t cheapHash = (*mi).first.GetCheapHash();
@@ -5179,7 +5184,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (!hash.IsNull())
             {
                 bool inMemPool = mempool.lookup(hash, tx);
-                bool inMissingTx = thinBlock.mapMissingTx.count(hash) > 0;
+                bool inMissingTx = mapMissingTx.count(hash) > 0;
                 bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
 
                 if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
@@ -5192,7 +5197,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 else if (inMemPool && fXVal)
                     setPreVerifiedTxHash.insert(hash);
                 else if (inMissingTx)
-                    tx = thinBlock.mapMissingTx[hash];
+                    tx = mapMissingTx[hash];
             }
             if (tx.IsNull())
                 missingCount++;
@@ -5200,7 +5205,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->thinBlock.vtx.push_back(tx);
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
-        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), thinBlock.mapMissingTx.size());
+        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
@@ -5259,6 +5264,11 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->thinBlock.hashPrevBlock = thinBlock.header.hashPrevBlock;
         pfrom->thinBlockHashes = thinBlock.vTxHashes;
 
+        // Create the mapMissingTx from all the supplied tx's in the xthinblock
+        std::map<uint256, CTransaction> mapMissingTx;
+        BOOST_FOREACH(CTransaction tx, thinBlock.vMissingTx) 
+            mapMissingTx[tx.GetHash()] = tx;
+
         LOCK(cs_main);
         int missingCount = 0;
         int unnecessaryCount = 0;
@@ -5272,7 +5282,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             if (!hash.IsNull())
             {
                 bool inMemPool = mempool.lookup(hash, tx);
-                bool inMissingTx = thinBlock.mapMissingTx.count(hash) > 0;
+                bool inMissingTx = mapMissingTx.count(hash) > 0;
                 bool inOrphanCache = mapOrphanTransactions.count(hash) > 0;
 
                 if ((inMemPool && inMissingTx) || (inOrphanCache && inMissingTx))
@@ -5285,7 +5295,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 else if (inMemPool && fXVal)
                     setPreVerifiedTxHash.insert(hash);
                 else if (inMissingTx)
-                    tx = thinBlock.mapMissingTx[hash];
+                    tx = mapMissingTx[hash];
             }
             if (tx.IsNull())
                 missingCount++;
@@ -5293,7 +5303,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->thinBlock.vtx.push_back(tx);
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
-        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), thinBlock.mapMissingTx.size());
+        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
