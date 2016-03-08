@@ -146,7 +146,7 @@ public:
 
     bool IsExpired()
     {
-        return (GetTime() - addedTime) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
+        return (GetTime() - addedTime) > DARKSEND_QUEUE_TIMEOUT;// 30 seconds
     }
 };
 
@@ -220,7 +220,7 @@ public:
     /// Is this Darksend expired?
     bool IsExpired()
     {
-        return (GetTime() - time) > DARKSEND_QUEUE_TIMEOUT;// 120 seconds
+        return (GetTime() - time) > DARKSEND_QUEUE_TIMEOUT;// 30 seconds
     }
 
     /// Check if we have a valid Masternode address

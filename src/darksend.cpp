@@ -792,6 +792,18 @@ void CDarksendPool::ChargeRandomFees(){
 // Check for various timeouts (queue objects, Darksend, etc)
 //
 void CDarksendPool::CheckTimeout(){
+
+    // check Darksend queue objects for timeouts
+    int c = 0;
+    vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
+    while(it != vecDarksendQueue.end()){
+        if((*it).IsExpired()){
+            LogPrint("darksend", "CDarksendPool::CheckTimeout() : Removing expired queue entry - %d\n", c);
+            it = vecDarksendQueue.erase(it);
+        } else ++it;
+        c++;
+    }
+
     if(!fEnableDarksend && !fMasterNode) return;
 
     // catching hanging sessions
@@ -810,17 +822,6 @@ void CDarksendPool::CheckTimeout(){
                 Check();
                 break;
         }
-    }
-
-    // check Darksend queue objects for timeouts
-    int c = 0;
-    vector<CDarksendQueue>::iterator it = vecDarksendQueue.begin();
-    while(it != vecDarksendQueue.end()){
-        if((*it).IsExpired()){
-            LogPrint("darksend", "CDarksendPool::CheckTimeout() : Removing expired queue entry - %d\n", c);
-            it = vecDarksendQueue.erase(it);
-        } else ++it;
-        c++;
     }
 
     int addLagTime = 0;
