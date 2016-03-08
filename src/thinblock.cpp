@@ -8,8 +8,9 @@ CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
 {
     header = block.GetBlockHeader();
 
-    vTxHashes.reserve(block.vtx.size());
-    for (unsigned int i = 0; i < block.vtx.size(); i++)
+    unsigned int nTx = block.vtx.size();
+    vTxHashes.reserve(nTx);
+    for (unsigned int i = 0; i < nTx; i++)
     {
         const uint256& hash = block.vtx[i].GetHash();
         vTxHashes.push_back(hash);
@@ -28,9 +29,10 @@ CXThinBlock::CXThinBlock(const CBlock& block, CBloomFilter* filter)
     header = block.GetBlockHeader();
     this->collision = false;
 
-    vTxHashes.reserve(block.vtx.size());
+    unsigned int nTx = block.vtx.size();
+    vTxHashes.reserve(nTx);
     std::set<uint64_t> setPartialTxHash;
-    for (unsigned int i = 0; i < block.vtx.size(); i++)
+    for (unsigned int i = 0; i < nTx; i++)
     {
         const uint256 hash256 = block.vtx[i].GetHash();
         uint64_t cheapHash = hash256.GetCheapHash();
@@ -54,10 +56,11 @@ CXThinBlock::CXThinBlock(const CBlock& block)
     header = block.GetBlockHeader();
     this->collision = false;
 
-    vTxHashes.reserve(block.vtx.size());
+    unsigned int nTx = block.vtx.size();
+    vTxHashes.reserve(nTx);
     std::set<uint64_t> setPartialTxHash;
 
-    for (unsigned int i = 1; i < block.vtx.size(); i++)
+    for (unsigned int i = 1; i < nTx; i++)
     {
         const uint256 hash256 = block.vtx[i].GetHash();
         uint64_t cheapHash = hash256.GetCheapHash();
@@ -80,6 +83,7 @@ CXThinBlockTx::CXThinBlockTx(uint256 blockHash, std::vector<uint64_t>& vHashesTo
     blockhash = blockHash;
 
     CTransaction tx;
-    for (unsigned int i = 0; i < vHashesToRequest.size(); i++)
+    unsigned int n = vHashesToRequest.size();
+    for (unsigned int i = 0; i < n; i++)
         mapTx[vHashesToRequest[i]] = tx;
 }
