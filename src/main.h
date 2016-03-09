@@ -165,11 +165,11 @@ static const unsigned int MIN_BLOCKS_TO_KEEP = 288;
 static const signed int DEFAULT_CHECKBLOCKS = MIN_BLOCKS_TO_KEEP;
 static const unsigned int DEFAULT_CHECKLEVEL = 3;
 
-// Require that user allocate at least 550MB for block & undo files (blk???.dat and rev???.dat)
+// Require that user allocate at least 950MB for block & undo files (blk???.dat and rev???.dat)
 // At 2MB per block, 288 blocks = 576MB.
 // Add 15% for Undo data = 662MB
 // Add 20% for Orphan block rate = 794MB
-// We want the low water mark after pruning to be at least 397 MB and since we prune in
+// We want the low water mark after pruning to be at least 794 MB and since we prune in
 // full block file chunks, we need the high water mark which triggers the prune to be
 // one 128MB block file + added 15% undo data = 147MB greater for a total of 942MB
 // Setting the target to > than 950MB will make it likely we can respect the target.
