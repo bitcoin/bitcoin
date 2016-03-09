@@ -411,18 +411,17 @@ UniValue getaddresstxids(const UniValue& params, bool fHelp)
         );
 
     CBitcoinAddress address(params[0].get_str());
-    if (!address.IsValid())
+    uint160 hashBytes;
+    int type = 0;
+    if (!address.GetIndexKey(hashBytes, type)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
 
-    CKeyID keyID;
-    address.GetKeyID(keyID);
-
-    int type = 1; // TODO
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
 
     LOCK(cs_main);
 
-    if (!GetAddressIndex(keyID, type, addressIndex))
+    if (!GetAddressIndex(hashBytes, type, addressIndex))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
 
     UniValue result(UniValue::VARR);

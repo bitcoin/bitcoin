@@ -42,11 +42,17 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), 0)
 
         txid0 = self.nodes[0].sendtoaddress("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs", 10)
+        txidb0 = self.nodes[0].sendtoaddress("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", 10)
         self.nodes[0].generate(1)
+
         txid1 = self.nodes[0].sendtoaddress("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs", 15)
+        txidb1 = self.nodes[0].sendtoaddress("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", 15)
         self.nodes[0].generate(1)
+
         txid2 = self.nodes[0].sendtoaddress("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs", 20)
+        txidb2 = self.nodes[0].sendtoaddress("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", 20)
         self.nodes[0].generate(1)
+
         self.sync_all()
 
         txids = self.nodes[1].getaddresstxids("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs");
@@ -54,6 +60,13 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(txids[0], txid0);
         assert_equal(txids[1], txid1);
         assert_equal(txids[2], txid2);
+
+        txidsb = self.nodes[1].getaddresstxids("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br");
+        assert_equal(len(txidsb), 3);
+        assert_equal(txidsb[0], txidb0);
+        assert_equal(txidsb[1], txidb1);
+        assert_equal(txidsb[2], txidb2);
+
 
 if __name__ == '__main__':
     AddressIndexTest().main()
