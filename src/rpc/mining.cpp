@@ -114,13 +114,13 @@ UniValue getgenerate(const UniValue& params, bool fHelp)
 
 UniValue generate(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() < 1 || params.size() > 1)
+    if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "generate numblocks\n"
-            "\nMine blocks immediately (before the RPC call returns)\n"
-            "\nNote: this function can only be used on the regtest network\n"
+            "generate numblocks ( maxtries )\n"
+            "\nMine up to numblocks blocks immediately (before the RPC call returns)\n"
             "\nArguments:\n"
             "1. numblocks    (numeric, required) How many blocks are generated immediately.\n"
+            "2. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
             "\nResult\n"
             "[ blockhashes ]     (array) hashes of blocks generated\n"
             "\nExamples:\n"
@@ -128,13 +128,15 @@ UniValue generate(const UniValue& params, bool fHelp)
             + HelpExampleCli("generate", "11")
         );
 
-    if (!Params().MineBlocksOnDemand())
-        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This method can only be used on regtest");
-
+    static const int nInnerLoopCount = 0x10000;
     int nHeightStart = 0;
     int nHeightEnd = 0;
     int nHeight = 0;
     int nGenerate = params[0].get_int();
+    uint64_t nMaxTries = 1000000;
+    if (params.size() > 1) {
+        nMaxTries = params[1].get_int();
+    }
 
     boost::shared_ptr<CReserveScript> coinbaseScript;
     GetMainSignals().ScriptForMining(coinbaseScript);
@@ -165,10 +167,15 @@ UniValue generate(const UniValue& params, bool fHelp)
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-            // Yes, there is a chance every nonce could fail to satisfy the -regtest
-            // target -- 1 in 2^(2^32). That ain't gonna happen.
+        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
             ++pblock->nNonce;
+            --nMaxTries;
+        }
+        if (nMaxTries == 0) {
+            break;
+        }
+        if (pblock->nNonce == nInnerLoopCount) {
+            continue;
         }
         CValidationState state;
         if (!ProcessNewBlock(state, Params(), NULL, pblock, true, NULL))
