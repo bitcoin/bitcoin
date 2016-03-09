@@ -42,10 +42,14 @@ public:
     explicit CFeeRate(const CAmount& _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
     CFeeRate(const CAmount& nFeePaid, size_t nSize);
     CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
-
-    CAmount GetFee(size_t size) const; // unit returned is satoshis
-    CAmount GetFeePerK() const { return GetFee(1000); } // satoshis-per-1000-bytes
-
+    /**
+     * Return the fee in satoshis for the given size in bytes.
+     */
+    CAmount GetFee(size_t size) const;
+    /**
+     * Return the fee in satoshis for a size of 1000 bytes
+     */
+    CAmount GetFeePerK() const { return GetFee(1000); }
     friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
     friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
     friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
