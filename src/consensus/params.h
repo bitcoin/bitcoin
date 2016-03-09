@@ -14,7 +14,8 @@ namespace Consensus {
 
 enum DeploymentPos
 {
-    MAX_VERSION_BITS_DEPLOYMENTS = 0,
+    DEPLOYMENT_TESTDUMMY,
+    MAX_VERSION_BITS_DEPLOYMENTS
 };
 
 /**
