@@ -79,7 +79,6 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     if(!pblocktemplate.get())
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
-    ValidationCostTracker resourceTracker(std::numeric_limits<size_t>::max(), std::numeric_limits<size_t>::max());
 
     // Create coinbase tx
     CMutableTransaction txNew;
