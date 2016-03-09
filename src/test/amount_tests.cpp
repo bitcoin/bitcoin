@@ -48,6 +48,16 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK_EQUAL(feeRate.GetFee(122, true), 16);
     BOOST_CHECK_EQUAL(feeRate.GetFee(999, true), 123);
     BOOST_CHECK_EQUAL(feeRate.GetFee(1e3, true), 123);
+
+    feeRate = CFeeRate(1);
+    // Check rounding for really small fee rates
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0, true), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1, true), 1);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3, true), 1);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(999), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
