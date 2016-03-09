@@ -62,6 +62,7 @@ ALLOWED_LIBRARIES = {
 'librt.so.1', # real-time (clock)
 'ld-linux-x86-64.so.2', # 64-bit dynamic linker
 'ld-linux.so.2', # 32-bit dynamic linker
+'ld-linux-armhf.so.3', # 32-bit armhf dynamic linker
 # bitcoin-qt only
 'libX11-xcb.so.1', # part of X11
 'libX11.so.6', # part of X11
