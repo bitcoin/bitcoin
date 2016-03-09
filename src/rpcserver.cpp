@@ -13,6 +13,8 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
+#include "unlimited.h"
+
 #include <univalue.h>
 
 #include <boost/bind.hpp>
@@ -321,6 +323,8 @@ static const CRPCCommand vRPCCommands[] =
     { "util",               "estimatepriority",       &estimatepriority,       true  },
     { "util",               "estimatesmartfee",       &estimatesmartfee,       true  },
     { "util",               "estimatesmartpriority",  &estimatesmartpriority,  true  },
+    { "util",               "getstatlist",            &getstatlist,            true  },  // BU
+    { "util",               "getstat",                &getstat,                true  },  // BU
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true  },

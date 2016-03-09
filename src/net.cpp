@@ -758,6 +758,7 @@ void SocketSendData(CNode *pnode)
         assert(data.size() > pnode->nSendOffset);
         int nBytes = send(pnode->hSocket, &data[pnode->nSendOffset], data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         if (nBytes > 0) {
+            pnode->bytesSent += nBytes;  // BU stats
             pnode->nLastSend = GetTime();
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
@@ -1024,8 +1025,8 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
 void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
-    while (true)
-    {
+    while (true) {
+        stat_io_service.poll(); // BU instrumentation
         //
         // Disconnect nodes
         //
@@ -1216,6 +1217,7 @@ void ThreadSocketHandler()
                                 pnode->CloseSocketDisconnect();
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;
+                            pnode->bytesReceived += nBytes;  // BU stats
                             pnode->RecordBytesRecv(nBytes);
                         }
                         else if (nBytes == 0)
@@ -2387,6 +2389,19 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
+
+    // BU instrumentation
+    std::string xmledName;
+    if (addrNameIn != "") xmledName = addrNameIn;
+    else
+      {
+	xmledName="ip" + addr.ToStringIP() + "p" + addr.ToStringPort();
+      }
+    bytesSent.init("node/" + xmledName + "/bytesSent");
+    bytesReceived.init("node/" + xmledName + "/bytesReceived");
+    //txReqLatency.init("node/" + xmledName + "/txLatency", STAT_OP_AVE);
+    //firstTx.init("node/" + xmledName + "/firstTxn");
+    //firstBlock.init("node/" + xmledName + "/firstBlock");
 
     {
         LOCK(cs_nLastNodeId);

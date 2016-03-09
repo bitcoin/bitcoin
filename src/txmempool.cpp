@@ -15,6 +15,7 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "utiltime.h"
+#include "unlimited.h"
 #include "version.h"
 
 using namespace std;
@@ -412,6 +413,8 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
+    txAdded +=1;  // BU
+    poolSize() = totalTxSize; // BU
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
 
     return true;

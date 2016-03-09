@@ -158,6 +158,7 @@ BITCOIN_CORE_H = \
   uint256.h \
   undo.h \
   unlimited.h \
+  stat.h \
   util.h \
   utilmoneystr.h \
   utilstrencodings.h \
