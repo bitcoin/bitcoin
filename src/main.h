@@ -292,26 +292,33 @@ struct CNodeStateStats {
 };
 
 struct CAddressIndexKey {
-    uint160 hashBytes;
     unsigned int type;
+    uint160 hashBytes;
+    int blockHeight;
+    unsigned int txindex;
     uint256 txhash;
-    size_t index;
+    size_t outindex;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(hashBytes);
         READWRITE(type);
+        READWRITE(hashBytes);
+        READWRITE(blockHeight);
+        READWRITE(txindex);
         READWRITE(txhash);
-        READWRITE(index);
+        READWRITE(outindex);
     }
 
-    CAddressIndexKey(uint160 addressHash, unsigned int addressType, uint256 txid, size_t txindex) {
-        hashBytes = addressHash;
+    CAddressIndexKey(unsigned int addressType, uint160 addressHash, int height, int blockindex,
+                     uint256 txid, size_t outputIndex) {
         type = addressType;
+        hashBytes = addressHash;
+        blockHeight = height;
+        txindex = blockindex;
         txhash = txid;
-        index = txindex;
+        outindex = outputIndex;
     }
 
     CAddressIndexKey() {
@@ -319,12 +326,41 @@ struct CAddressIndexKey {
     }
 
     void SetNull() {
-        hashBytes.SetNull();
         type = 0;
+        hashBytes.SetNull();
+        blockHeight = 0;
+        txindex = 0;
         txhash.SetNull();
-        index = 0;
+        outindex = 0;
     }
 
+};
+
+struct CAddressIndexIteratorKey {
+    unsigned int type;
+    uint160 hashBytes;
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(type);
+        READWRITE(hashBytes);
+    }
+
+    CAddressIndexIteratorKey(unsigned int addressType, uint160 addressHash) {
+        type = addressType;
+        hashBytes = addressHash;
+    }
+
+    CAddressIndexIteratorKey() {
+        SetNull();
+    }
+
+    void SetNull() {
+        type = 0;
+        hashBytes.SetNull();
+    }
 };
 
 struct CDiskTxPos : public CDiskBlockPos

@@ -18,6 +18,7 @@ class CBlockFileInfo;
 class CBlockIndex;
 struct CDiskTxPos;
 struct CAddressIndexKey;
+struct CAddressIndexIteratorKey;
 class uint256;
 
 //! -dbcache default (MiB)
