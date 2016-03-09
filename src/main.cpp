@@ -344,7 +344,7 @@ void FinalizeNode(NodeId nodeid) {
         nQueuedValidatedHeaders -= entry.fValidatedHeaders;
         mapBlocksInFlight.erase(entry.hash);
     }
-    EraseOrphansFor(nodeid);
+    //EraseOrphansFor(nodeid);  BUIP010 Xtreme Thinblocks - We do not want to delete orphans at any time.  We handle them when we accept a block
     nPreferredDownload -= state->fPreferredDownload;
 
     mapNodeState.erase(nodeid);
