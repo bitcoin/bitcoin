@@ -3,6 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <cmath>
+
 #include "amount.h"
 
 #include "tinyformat.h"
@@ -17,14 +19,12 @@ CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nSize)
         nSatoshisPerK = 0;
 }
 
-CAmount CFeeRate::GetFee(size_t nSize) const
+CAmount CFeeRate::GetFee(size_t nSize, bool ceil) const
 {
-    CAmount nFee = nSatoshisPerK*nSize / 1000;
-
-    if (nFee == 0 && nSatoshisPerK > 0)
-        nFee = nSatoshisPerK;
-
-    return nFee;
+    if (ceil)
+        return (CAmount)std::ceil(nSatoshisPerK * nSize / 1000.);
+    else
+        return nSatoshisPerK * nSize / 1000;
 }
 
 std::string CFeeRate::ToString() const
