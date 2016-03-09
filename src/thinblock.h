@@ -17,7 +17,7 @@ class CThinBlock
 public:
     CBlockHeader header;
     std::vector<uint256> vTxHashes; // List of all transactions id's in the block
-    std::map<uint256, CTransaction> mapMissingTx; // map of transactions that did not match the bloom filter
+    std::vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
 
 public:
     CThinBlock(const CBlock& block, CBloomFilter& filter);
@@ -29,7 +29,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(header);
         READWRITE(vTxHashes);
-        READWRITE(mapMissingTx);
+        READWRITE(vMissingTx);
     }
 };
 
@@ -38,7 +38,7 @@ class CXThinBlock
 public:
     CBlockHeader header;
     std::vector<uint64_t> vTxHashes; // List of all transactions id's in the block
-    std::map<uint256, CTransaction> mapMissingTx; // map of transactions that did not match the bloom filter
+    std::vector<CTransaction> vMissingTx; // vector of transactions that did not match the bloom filter
     bool collision;
 
 public:
@@ -52,7 +52,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(header);
         READWRITE(vTxHashes);
-        READWRITE(mapMissingTx);
+        READWRITE(vMissingTx);
     }
 };
 
@@ -64,10 +64,10 @@ class CXThinBlockTx
 public:
     /** Public only for unit testing */
     uint256 blockhash;
-    std::map<uint64_t, CTransaction> mapTx; // map of missing transactions
+    std::vector<CTransaction> vMissingTx; // map of missing transactions
 
 public:
-    CXThinBlockTx(uint256 blockHash, std::vector<uint64_t>& vHashesToRequest);
+    CXThinBlockTx(uint256 blockHash, std::vector<CTransaction>& vTx);
     CXThinBlockTx() {}
 
     ADD_SERIALIZE_METHODS;
@@ -75,7 +75,29 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(blockhash);
-        READWRITE(mapTx);
+        READWRITE(vMissingTx);
+    }
+};
+// This class is used for retrieving a list of still missing transactions after receiving a "thinblock" message.
+// The CXThinBlockTx when recieved can be used to fill in the missing transactions after which it is sent
+// back to the requestor.  This class uses a 64bit hash as opposed to the normal 256bit hash.
+class CXRequestThinBlockTx
+{
+public:
+    /** Public only for unit testing */
+    uint256 blockhash;
+    std::set<uint64_t> setCheapHashesToRequest; // map of missing transactions
+
+public:
+    CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>& setHashesToRequest);
+    CXRequestThinBlockTx() {}
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(blockhash);
+        READWRITE(setCheapHashesToRequest);
     }
 };
 #endif // BITCOIN_THINBLOCK_H
