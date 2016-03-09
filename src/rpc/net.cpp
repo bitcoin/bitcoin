@@ -7,6 +7,7 @@
 #include "chainparams.h"
 #include "clientversion.h"
 #include "main.h"
+#include "policy/mempool.h"
 #include "net.h"
 #include "netbase.h"
 #include "protocol.h"
@@ -494,7 +495,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
     obj.push_back(Pair("connections",   (int)vNodes.size()));
     obj.push_back(Pair("networks",      GetNetworksInfo()));
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(mempoolPolicy.GetMinRelayFeeRate().GetFeePerK())));
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(cs_mapLocalHost);

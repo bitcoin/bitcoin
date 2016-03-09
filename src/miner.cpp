@@ -15,6 +15,7 @@
 #include "hash.h"
 #include "main.h"
 #include "net.h"
+#include "policy/mempool.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/transaction.h"
@@ -205,7 +206,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                 waitPriMap.clear();
             }
             if (!priorityTx &&
-                (iter->GetModifiedFee() < ::minRelayTxFee.GetFee(nTxSize) && nBlockSize >= nBlockMinSize)) {
+                (iter->GetModifiedFee() < mempoolPolicy.GetMinRelayFeeRate().GetFee(nTxSize) && nBlockSize >= nBlockMinSize)) {
                 break;
             }
             if (nBlockSize + nTxSize >= nBlockMaxSize) {

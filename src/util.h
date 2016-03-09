@@ -210,6 +210,14 @@ std::string HelpMessageGroup(const std::string& message);
 std::string HelpMessageOpt(const std::string& option, const std::string& message);
 
 /**
+ * @param strUsage a help message string where the additoinal option descriptions will be appended
+ * @param optionsHelp a vector of string pairs to iteratively call HelpMessageOpt on
+ */
+void AppendMessagesOpt(std::string& strUsage, const std::vector<std::pair<std::string, std::string> >& optionsHelp);
+
+std::string AmountErrMsg(const char * const optname, const std::string& strValue);
+
+/**
  * Return the number of physical cores available on the current system.
  * @note This does not count virtual cores, such as those provided by HyperThreading
  * when boost is newer than 1.56.

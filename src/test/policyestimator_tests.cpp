@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(BlockPolicyEstimates)
     // Test that if the mempool is limited, estimateSmartFee won't return a value below the mempool min fee
     // and that estimateSmartPriority returns essentially an infinite value
     mpool.addUnchecked(tx.GetHash(),  entry.Fee(feeV[0][5]).Time(GetTime()).Priority(priV[1][5]).Height(blocknum).FromTx(tx, &mpool));
-    // evict that transaction which should set a mempool min fee of minRelayTxFee + feeV[0][5]
+    // evict that transaction which should set a mempool min fee of minRelayFeeRate + feeV[0][5]
     mpool.TrimToSize(1);
     BOOST_CHECK(mpool.GetMinFee(1).GetFeePerK() > feeV[0][5]);
     for (int i = 1; i < 10; i++) {
