@@ -1,4 +1,3 @@
-#include <boost/unordered_map.hpp>
 #include <iostream>
 #include <openssl/sha.h>
 #include "patternsearch.h"
