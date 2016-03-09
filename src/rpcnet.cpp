@@ -16,6 +16,8 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #include "version.h"
+#include "thinblock.h"
+#include "unlimited.h"
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -412,6 +414,20 @@ static UniValue GetNetworksInfo()
     return networks;
 }
 
+// BitcoinUnlimited BUIP010 : Start
+static UniValue GetThinBlockStats()
+{
+    UniValue obj(UniValue::VOBJ);
+    bool enabled = IsThinBlocksEnabled();
+    obj.push_back(Pair("enabled", enabled));
+    if (enabled) {
+        obj.push_back(Pair("summary", CThinBlockStats::ToString()));
+    }
+    return obj;
+}
+// BitcoinUnlimited BUIP010 : End
+
+
 UniValue getnetworkinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -445,6 +461,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
             "  ,...\n"
             "  ]\n"
             "  \"warnings\": \"...\"                    (string) any network warnings (such as alert messages) \n"
+            "  \"thinblockstats\": \"...\"              (string) thin block related statistics \n" 
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getnetworkinfo", "")
@@ -475,6 +492,9 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
         }
     }
     obj.push_back(Pair("localaddresses", localAddresses));
+// BitcoinUnlimited BUIP010: Start
+    obj.push_back(Pair("thinblockstats", GetThinBlockStats()));
+// BitcoinUnlimited BUIP010: End
     obj.push_back(Pair("warnings",       GetWarnings("statusbar")));
     return obj;
 }
