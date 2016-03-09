@@ -355,7 +355,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         //check to see if input is spent already? (and probably not confirmed)
         SignFinalTransaction(txNew, pfrom);
 
-    } else if (strCommand == NetMsgType::DSSTATUSUPDATE) { //Darksend Complete
+    } else if (strCommand == NetMsgType::DSCOMPLETE) { //Darksend Complete
 
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
             return;
@@ -2198,7 +2198,7 @@ void CDarksendPool::RelayCompletedTransaction(const int sessionID, const bool er
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
-        pnode->PushMessage(NetMsgType::DSSTATUSUPDATE, sessionID, error, errorID);
+        pnode->PushMessage(NetMsgType::DSCOMPLETE, sessionID, error, errorID);
 }
 
 void CDarksendPool::UpdatedBlockTip(const CBlockIndex *pindex)

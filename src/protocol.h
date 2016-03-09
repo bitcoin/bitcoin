@@ -240,7 +240,7 @@ extern const char *DSACCEPT;
 extern const char *DSVIN;
 extern const char *DSFINALTX;
 extern const char *DSSIGNFINALTX;
-extern const char *DSDSCOMPLETE;
+extern const char *DSCOMPLETE;
 extern const char *DSSTATUSUPDATE;
 extern const char *DSTX;
 extern const char *DSQUEUE;
