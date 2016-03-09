@@ -37,6 +37,9 @@ public:
     UniValue(int val_) {
         setInt(val_);
     }
+    UniValue(unsigned int val_) {  // BU
+       setInt((uint64_t)val_);
+    }
     UniValue(double val_) {
         setFloat(val_);
     }
