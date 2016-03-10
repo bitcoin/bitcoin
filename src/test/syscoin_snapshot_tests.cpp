@@ -30,7 +30,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	for(int i =0;i<paymentAmounts.size();i++)
 	{
 		if(sendManyString != "") 
-			sendManyString += ","
+			sendManyString += ",";
 		sendManyString += paymentAmounts[i].address + "," + paymentAmounts[i].amount;
 		if((i%numberOfTxPerBlock) == 0)
 		{
