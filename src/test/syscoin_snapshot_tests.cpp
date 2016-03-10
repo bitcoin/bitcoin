@@ -4,7 +4,7 @@
 #include "rpcserver.h"
 #include <boost/test/unit_test.hpp>
 #include <univalue.h>
-
+int currentTx = 0;
 extern UniValue read_json(const std::string& jsondata);
 BOOST_FIXTURE_TEST_SUITE (syscoin_snapshot_tests, SyscoinMainNetSetup)
 struct PaymentAmount
@@ -15,8 +15,37 @@ struct PaymentAmount
 void VerifySnapShot()
 {
 }
-void GenerateSnapShot()
+void SendSnapShotPayment(const std::string &strSend)
 {
+	currentTx++;
+	std::string strSendMany = "sendmany \"\" " + strSend + "}";
+	std::
+	UniValue r;
+	printf("strSendMany #%d: %s\n", currentTx, strSendMany);
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", strSendMany, false));
+}
+void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
+{
+	int numberOfTxPerBlock = 1000;
+	std::string sendManyString = "";
+	for(int i =0;i<paymentAmounts.size();i++)
+	{
+		if(sendManyString != "") 
+			sendManyString += ","
+		sendManyString += paymentAmounts[i].address + "," + paymentAmounts[i].amount;
+		if((i%numberOfTxPerBlock) == 0)
+		{
+			sendManyString = "";
+			SendSnapShotPayment(sendManyString);
+			GenerateMainNetBlocks(1, "mainnet1");
+		}
+	}
+	if(sendManyString != "") 
+	{
+		SendSnapShotPayment(sendManyString);
+		GenerateMainNetBlocks(1, "mainnet1");
+	}
+	
 }
 void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 {
