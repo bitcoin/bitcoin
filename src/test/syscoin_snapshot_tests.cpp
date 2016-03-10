@@ -19,7 +19,6 @@ void SendSnapShotPayment(const std::string &strSend)
 {
 	currentTx++;
 	std::string strSendMany = "sendmany \"\" " + strSend + "}";
-	std::
 	UniValue r;
 	printf("strSendMany #%d: %s\n", currentTx, strSendMany);
 	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", strSendMany, false));
@@ -82,7 +81,7 @@ BOOST_AUTO_TEST_CASE (generate_and_verify_snapshot)
 	}
 	else
 	{
-		GenerateSnapShot();
+		GenerateSnapShot(paymentAmounts);
 		VerifySnapShot();
 	}
 }
