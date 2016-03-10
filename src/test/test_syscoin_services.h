@@ -13,6 +13,7 @@ void StartMainNetNodes();
 void StopMainNetNodes();
 void StopNodes();
 void GenerateBlocks(int nBlocks, const string& node="node1");
+void GenerateMainNetBlocks(int nBlocks, const string& node);
 string CallExternal(string &cmd);
 string AliasNew(const string& node, const string& aliasname, const string& aliasdata);
 void AliasUpdate(const string& node, const string& aliasname, const string& pubdata, const string& privdata);
