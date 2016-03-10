@@ -1834,14 +1834,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         return true;
     }
 
-    bool fScriptChecks = true;
-    if (fCheckpointsEnabled) {
-        CBlockIndex *pindexLastCheckpoint = Checkpoints::GetLastCheckpoint(chainparams.Checkpoints());
-        if (pindexLastCheckpoint && pindexLastCheckpoint->GetAncestor(pindex->nHeight) == pindex) {
-            // This block is an ancestor of a checkpoint: disable script checks
-            fScriptChecks = false;
-        }
-    }
+    const int64_t timeBarrier = GetTime() - 24 * 3600 * std::max(1, nScriptCheckThreads);
+    // Blocks that have varius days of POW behind them makes them secure in
+    // that actually online nodes checked the scripts, so during initial sync we
+    // don't need to check the scripts.
+    // All other block validity tests are still checked.
+    bool fScriptChecks = !fCheckpointsEnabled || block.nTime > timeBarrier;
 
     int64_t nTime1 = GetTimeMicros(); nTimeCheck += nTime1 - nTimeStart;
     LogPrint("bench", "    - Sanity checks: %.2fms [%.2fs]\n", 0.001 * (nTime1 - nTimeStart), nTimeCheck * 0.000001);
