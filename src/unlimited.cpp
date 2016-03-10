@@ -34,10 +34,10 @@ const char* sampleNames[] = { "sec10", "min5", "hourly", "daily","monthly"};
 int operateSampleCount[] = { 30,       12,   24,  30 };
 int interruptIntervals[] = { 30,       30*12,   30*12*24,   30*12*24*30 };
 
-boost::asio::io_service stat_io_service;
 boost::posix_time::milliseconds statMinInterval(10000);
+boost::asio::io_service stat_io_service __attribute__((init_priority(101)));
 
-CStatMap statistics __attribute__((init_priority(2)));
+CStatMap statistics __attribute__((init_priority(102)));
 
 CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);

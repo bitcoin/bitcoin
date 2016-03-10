@@ -9,6 +9,7 @@
 #include "uint256.h"
 #include "primitives/block.h"
 #include "bloom.h"
+#include "stat.h"
 
 #include <vector>
 
@@ -105,9 +106,9 @@ public:
 class CThinBlockStats
 {
 private:
-	static uint64_t nOriginalSize;
-	static uint64_t nThinSize;
-	static uint64_t nBlocks;
+	static CStatHistory<uint64_t> nOriginalSize;
+	static CStatHistory<uint64_t> nThinSize;
+	static CStatHistory<uint64_t> nBlocks;
 public:
 	static void Update(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
 	static std::string ToString();
