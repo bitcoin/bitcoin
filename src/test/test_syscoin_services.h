@@ -6,9 +6,11 @@
 using namespace std;
 /** Testing syscoin services setup that configures a complete environment with 3 nodes.
  */
-UniValue CallRPC(const string &dataDir, const string& commandWithArgs);
-void StartNode(const string &dataDir);
+UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true);
+void StartNode(const string &dataDir, bool regTest = true);
 void StartNodes();
+void StartMainNetNodes();
+void StopMainNetNodes();
 void StopNodes();
 void GenerateBlocks(int nBlocks, const string& node="node1");
 string CallExternal(string &cmd);
@@ -37,5 +39,9 @@ struct SyscoinTestingSetup {
 struct BasicSyscoinTestingSetup {
     BasicSyscoinTestingSetup();
     ~BasicSyscoinTestingSetup();
+};
+struct SyscoinMainNetSetup {
+	SyscoinMainNetSetup();
+	~SyscoinMainNetSetup();
 };
 #endif

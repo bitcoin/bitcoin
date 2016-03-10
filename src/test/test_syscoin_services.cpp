@@ -28,6 +28,33 @@ void StartNodes()
 	StartNode("node1");
 	StartNode("node2");
 	StartNode("node3");
+
+}
+void StartMainNetNodes()
+{
+	StopMainNetNodes();
+	printf("Starting 2 nodes in mainnet setup...\n");
+	StartNode("mainnet1", false);
+	StartNode("mainnet2", false);
+}
+void StopMainNetNodes()
+{
+	printf("Stopping mainnet1..\n");
+	try{
+		CallRPC("mainnet1", "stop");
+	}
+	catch(const runtime_error& error)
+	{
+	}	
+	MilliSleep(3000);
+	printf("Stopping mainnet2..\n");
+	try{
+		CallRPC("mainnet2", "stop");
+	}
+	catch(const runtime_error& error)
+	{
+	}	
+	printf("Done!\n");
 }
 void StopNodes()
 {
@@ -57,17 +84,19 @@ void StopNodes()
 	MilliSleep(3000);
 	printf("Done!\n");
 }
-void StartNode(const string &dataDir)
+void StartNode(const string &dataDir, bool regTest)
 {
     boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoind");
-	string nodePath = fpath.string() + string(" -datadir=") + dataDir + string(" -regtest -debug");
+	string nodePath = fpath.string() + string(" -datadir=") + dataDir;
+	if(regTest)
+		nodePath += string(" -regtest -debug");
     boost::thread t(runCommand, nodePath);
 	printf("Launching %s, waiting 3 seconds before trying to ping...\n", dataDir.c_str());
 	MilliSleep(3000);
 	while (1)
 	{
 		try{
-			CallRPC(dataDir, "getinfo");
+			CallRPC(dataDir, "getinfo", regTest);
 		}
 		catch(const runtime_error& error)
 		{
@@ -79,11 +108,14 @@ void StartNode(const string &dataDir)
 	}
 	printf("Done!\n");
 }
-UniValue CallRPC(const string &dataDir, const string& commandWithArgs)
+UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest)
 {
 	UniValue val;
 	boost::filesystem::path fpath = boost::filesystem::system_complete("../syscoin-cli");
-	string path = fpath.string() + string(" -datadir=") + dataDir + string(" -regtest ") + commandWithArgs;
+	string path = fpath.string() + string(" -datadir=") + dataDir;
+	if(regTest)
+		path += string(" -regtest ");
+	path += commandWithArgs;
 	string rawJson = CallExternal(path);
     val.read(rawJson);
 	if(val.isNull())
@@ -126,6 +158,32 @@ std::string CallExternal(std::string &cmd)
 		}
 	}
     return result;
+}
+void GenerateMainNetBlocks(int nBlocks, const string& node)
+{
+	int targetHeight, newHeight;
+	UniValue r;
+	string otherNode1 = "mainnet1";
+	if(node == "mainnet1")
+	{
+		otherNode1 = "mainnet2";
+	}
+	else if(node == "mainnet2")
+	{
+		otherNode1 = "mainnet1";
+	}
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
+	targetHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
+	newHeight = 0;
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "setgenerate 1"));
+	while(newHeight < targetHeight)
+	{
+	  MilliSleep(100);
+	  BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "getinfo"));
+	  newHeight = find_value(r.get_obj(), "blocks").get_int();
+	}
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "setgenerate 0"));
+	BOOST_CHECK(newHeight >= targetHeight);
 }
 // generate n Blocks, with up to 10 seconds relay time buffer for other nodes to get the blocks.
 // may fail if your network is slow or you try to generate too many blocks such that can't relay within 10 seconds
@@ -777,4 +835,12 @@ SyscoinTestingSetup::~SyscoinTestingSetup()
 	MilliSleep(1000);
 	if(boost::filesystem::exists(boost::filesystem::system_complete("node3/regtest")))
 		boost::filesystem::remove_all(boost::filesystem::system_complete("node3/regtest"));
+}
+SyscoinMainNetSetup::SyscoinMainNetSetup()
+{
+	StartMainNetNodes();
+}
+SyscoinMainNetSetup::~SyscoinMainNetSetup()
+{
+	StopMainNetNodes();
 }
