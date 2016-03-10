@@ -115,6 +115,8 @@ UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regT
 	string path = fpath.string() + string(" -datadir=") + dataDir;
 	if(regTest)
 		path += string(" -regtest ");
+	else
+		path += " ";
 	path += commandWithArgs;
 	string rawJson = CallExternal(path);
     val.read(rawJson);
