@@ -31,7 +31,7 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
         }
 		PaymentAmount payment;
         payment.address  = test[0].get_str();
-        payment.amount = ValueFromAmount(test[1].get_int64()).write());
+        payment.amount = ValueFromAmount(test[1].get_int64()).write();
 		paymentAmounts.push_back(payment);
     }
 }
@@ -39,7 +39,7 @@ bool IsMainNetAlreadyCreated()
 {
 	int height;
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getinfo"));
 	height = find_value(r.get_obj(), "blocks").get_int();
 	return height > 0;
 }
