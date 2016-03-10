@@ -5146,16 +5146,25 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 collision = true;
             mapPartialTxHash[cheapHash] = memPoolHashes[i];
         }
-        for (map<uint256, CTransaction>::iterator mi = mapMissingTx.begin(); mi != mapMissingTx.end(); ++mi) {
+        for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi) {
             uint64_t cheapHash = (*mi).first.GetCheapHash();
             if(mapPartialTxHash.count(cheapHash)) //Check for collisions
                 collision = true;
             mapPartialTxHash[cheapHash] = (*mi).first;
         }
-        for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi) {
+        for (map<uint256, CTransaction>::iterator mi = mapMissingTx.begin(); mi != mapMissingTx.end(); ++mi) {
             uint64_t cheapHash = (*mi).first.GetCheapHash();
-            if(mapPartialTxHash.count(cheapHash)) //Check for collisions
-                collision = true;
+            // Check for cheap hash collision. Only mark as collision if the full hash is not the same,
+            // because the same tx could have been received into the mempool during the request of the xthinblock.
+            // In that case we would have the same transaction twice, so it is not a real cheap hash collision and we continue normally.
+            const uint256 existingHash = mapPartialTxHash[cheapHash];
+            if( (!existingHash.IsNull()) ) { // Check if we already have the cheap hash
+                LogPrint("thin", "TX with the same cheap hash was already found\n");
+                if ((existingHash != (*mi).first)) { // Check if it really is a cheap hash collision and not just the same transaction
+                	LogPrint("thin", "TX full hashes are not matching\n");
+                    collision = true;
+                }
+            }
             mapPartialTxHash[cheapHash] = (*mi).first;
         }
 
