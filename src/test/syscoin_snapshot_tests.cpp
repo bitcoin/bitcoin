@@ -25,15 +25,29 @@ void SendSnapShotPayment(const std::string &strSend)
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
+	std::vector<std::string> addressPaid;
 	int numberOfTxPerBlock = 1000;
 	std::string sendManyString = "";
 	for(int i =0;i<paymentAmounts.size();i++)
 	{
 		if(sendManyString != "") 
 			sendManyString += ",";
-		sendManyString += "\"" + paymentAmounts[i].address + "\":" + paymentAmounts[i].amount;
+		if(addressPaid.find(paymentAmounts[i].address) == addressPaid.end())
+		{
+			addressPaid.push_back(paymentAmounts[i].address);
+			sendManyString += "\"" + paymentAmounts[i].address  + "\"," + paymentAmounts[i].amount;
+		}
+		else
+		{
+			addressPaid.clear();
+			SendSnapShotPayment(sendManyString);
+			GenerateMainNetBlocks(1, "mainnet1");
+			sendManyString = "";
+			continue;
+		}
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{
+			addressPaid.clear();
 			SendSnapShotPayment(sendManyString);
 			GenerateMainNetBlocks(1, "mainnet1");
 			sendManyString = "";
@@ -48,6 +62,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 }
 void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 {
+	
     UniValue tests = read_json(std::string(json_tests::utxo, json_tests::utxo + sizeof(json_tests::utxo)));
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
