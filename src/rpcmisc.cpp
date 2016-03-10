@@ -424,9 +424,15 @@ UniValue getaddresstxids(const UniValue& params, bool fHelp)
     if (!GetAddressIndex(hashBytes, type, addressIndex))
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
 
+    std::set<std::string> txids;
+
     UniValue result(UniValue::VARR);
-    for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++)
-        result.push_back(it->first.txhash.GetHex());
+    for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
+        std::string txid = it->first.txhash.GetHex();
+        if (txids.insert(txid).second) {
+            result.push_back(txid);
+        }
+    }
 
     return result;
 
