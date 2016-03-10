@@ -39,7 +39,7 @@ bool IsMainNetAlreadyCreated()
 {
 	int height;
 	UniValue r;
-	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getinfo"));
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getinfo", false));
 	height = find_value(r.get_obj(), "blocks").get_int();
 	return height > 0;
 }
