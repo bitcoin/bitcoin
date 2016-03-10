@@ -7,9 +7,9 @@
 #include <iomanip>
 
 // Start statistics at zero
-uint64_t CThinBlockStats::nOriginalSize = 0;
-uint64_t CThinBlockStats::nThinSize = 0;
-uint64_t CThinBlockStats::nBlocks = 0;
+CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize",STAT_OP_SUM | STAT_KEEP);
+CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize",STAT_OP_SUM | STAT_KEEP);
+CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks",STAT_OP_SUM | STAT_KEEP);
 
 
 CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
@@ -102,7 +102,7 @@ void CThinBlockStats::Update(uint64_t nThinBlockSize, uint64_t nOriginalBlockSiz
 {
 	CThinBlockStats::nOriginalSize += nOriginalBlockSize;
 	CThinBlockStats::nThinSize += nThinBlockSize;
-	CThinBlockStats::nBlocks++;
+	CThinBlockStats::nBlocks+=1;
 }
 
 
@@ -110,7 +110,7 @@ std::string CThinBlockStats::ToString()
 {
 	static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
 	int i = 0;
-	double size = double( CThinBlockStats::nOriginalSize - CThinBlockStats::nThinSize );
+	double size = double( CThinBlockStats::nOriginalSize() - CThinBlockStats::nThinSize() );
 	while (size > 1024) {
 		size /= 1024;
 		i++;
@@ -118,7 +118,7 @@ std::string CThinBlockStats::ToString()
 
 	std::ostringstream ss;
 	ss << std::fixed << std::setprecision(2);
-	ss << CThinBlockStats::nBlocks << " thin " << ((CThinBlockStats::nBlocks>1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
+	ss << CThinBlockStats::nBlocks() << " thin " << ((CThinBlockStats::nBlocks()>1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
 	std::string s = ss.str();
 	return s;
 }

@@ -38,7 +38,7 @@
 #include "unlimited.h" // This is here because many files include util, so hopefully it will minimize diffs
 
 #include <sstream>
-
+#include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -1066,10 +1066,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
         // BU - Xtreme Thinblocks Auto Mempool Limiter - end section
 
 
-        if (fRejectAbsurdFee && nFees > ::minRelayTxFee.GetFee(nSize) * 10000)
+        if (fRejectAbsurdFee && nFees > (std::max((int64_t)1L,(int64_t)::minRelayTxFee.GetFee(nSize)) * 10000))
             return state.Invalid(false,
                 REJECT_HIGHFEE, "absurdly-high-fee",
-                strprintf("%d > %d", nFees, ::minRelayTxFee.GetFee(nSize) * 10000));
+				 strprintf("%d > %d", nFees, std::max((int64_t)1L,(int64_t)::minRelayTxFee.GetFee(nSize)) * 10000));
 
         // Calculate in-mempool ancestors, up to a limit.
         CTxMemPool::setEntries setAncestors;
