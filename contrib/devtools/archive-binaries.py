@@ -16,24 +16,31 @@ import subprocess
 
 SRC = 'src/'
 TARGET = 'bin/'
-BINARIES = ['bitcoind', 'bitcoin-tx', 'bitcoin-cli', 'qt/bitcoin-qt'] # TODO libconsensus?
+BINARY_PATTERNS = ['%sd', '%s-tx', '%s-cli', 'qt/%s-qt']
+
+def GetArg(argv, pos, default):
+    if (argv and len(argv) > pos and argv[pos]):
+        return argv[pos]
+    else:
+        return default
 
 def run_copy_tagged_binary(src, target):
     print "Copying " + src + " to " + target
     subprocess.check_call(['cp', src, target])
 
-def loop_copy_tagged_binaries(binaries, petname):
+def loop_copy_tagged_binaries(binaries, petname, exec_name):
     last_commit = os.popen('git log -n 1 --format="%H"').read()[0:7]
-    for binary in binaries:
+    for binary_pattern in binaries:
+        binary = binary_pattern % exec_name
         run_copy_tagged_binary(SRC + binary, TARGET + binary + petname + '-' + last_commit)
 
 def main(argv):
-    if (argv and len(argv) > 1 and argv[1]):
-        petname = '-' + argv[1]
-    else:
-        petname = ''
+    petname = GetArg(argv, 1, '')
+    if len(petname) > 0:
+        petname = '-' +petname
+    exec_name = GetArg(argv, 2, 'bitcoin')
 
-    loop_copy_tagged_binaries(BINARIES, petname)
+    loop_copy_tagged_binaries(BINARY_PATTERNS, petname, exec_name)
 
 if __name__ == "__main__":
     main(sys.argv)

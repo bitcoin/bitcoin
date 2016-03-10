@@ -24,6 +24,7 @@ python contrib/devtools/archive-binaries.py v0.12.0
 ./bin/bitcoind-v0.12.0-188ca9c
 
 git checkout origin/master
+git clean -fdx -e bin/
 ./autogen.sh
 ./configure
 make check -j21
