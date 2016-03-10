@@ -20,7 +20,7 @@ void SendSnapShotPayment(const std::string &strSend)
 	currentTx++;
 	std::string strSendMany = "sendmany \"\" " + strSend + "}";
 	UniValue r;
-	printf("strSendMany #%d: %s\n", currentTx, strSendMany);
+	printf("strSendMany #%d: %s\n", currentTx, strSendMany.c_str());
 	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", strSendMany, false));
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
