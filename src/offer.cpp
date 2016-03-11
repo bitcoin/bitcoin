@@ -1009,6 +1009,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 		throw runtime_error("Offer must be a valid alias");
 
 	CTransaction aliastx;
+	CAliasIndex alias;
 	if (!GetTxOfAlias(vchAlias, alias, aliastx))
 		throw runtime_error("could not find an alias with this name");
     if(!IsSyscoinTxMine(aliastx, "alias")) {
@@ -1191,6 +1192,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 		throw runtime_error("Offer must be a valid alias");
 
 	CTransaction aliastx;
+	CAliasIndex alias;
 	if (!GetTxOfAlias(vchAlias, alias, aliastx))
 		throw runtime_error("could not find an alias with this name");
     if(!IsSyscoinTxMine(aliastx, "alias")) {
@@ -2109,7 +2111,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	else
 		txAccept.vchMessage = vchMessage;
 	txAccept.nQty = nQty;
-	txAccept.nPrice = theOffer.GetPrice(foundCert);
+	txAccept.nPrice = theOffer.GetPrice(foundAlias);
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	// if we have a linked offer accept then use height from linked accept (the one buyer makes, not the reseller). We need to do this to make sure we convert price at the time of initial buyer's accept.
 	// in checkescrowinput we override this if its from an escrow release, just like above.
