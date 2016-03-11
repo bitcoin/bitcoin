@@ -20,23 +20,27 @@ void SendSnapShotPayment(const std::string &strSend)
 	currentTx++;
 	std::string strSendMany = "sendmany \"\" {" + strSend + "}";
 	UniValue r;
-	printf("strSendMany #%d\n", currentTx);
+	
 	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", strSendMany, false));
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
 	// generate snapshot payments and let it mature
+	printf("Generating 100 blocks to start the mainnet\n");
 	GenerateMainNetBlocks(100, "mainnet1");
 
 	int numberOfTxPerBlock = 1000;
+	double nTotal  =0;
 	std::string sendManyString = "";
 	for(int i =0;i<paymentAmounts.size();i++)
 	{
 		if(sendManyString != "") 
 			sendManyString += ",";
 		sendManyString += "\\\"" + paymentAmounts[i].address + "\\\":" + paymentAmounts[i].amount;
+		nTotal += atof(paymentAmounts[i].amount);
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{
+			printf("strSendMany #%d, total %f\n", currentTx, nTotal);
 			SendSnapShotPayment(sendManyString);
 			GenerateMainNetBlocks(1, "mainnet1");
 			sendManyString = "";
@@ -62,7 +66,7 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
         }
 		PaymentAmount payment;
         payment.address  = test[0].get_str();
-		CAmount amount = test[1].get_int64() / 300;
+		CAmount amount = test[1].get_int64() / 299.4f;
         payment.amount = ValueFromAmount(amount).write();
 		paymentAmounts.push_back(payment);
     }
