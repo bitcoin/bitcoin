@@ -909,8 +909,6 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
 	string strPublicValue = params[1].get_str();
-	if(params[0].get_str() == "SYS_RATES")
-		boost::replace_all(strPublicValue, "Qu", "\"");
 	vchPublicValue = vchFromString(strPublicValue);
 
 	string strPrivateValue = params.size()>=3?params[2].get_str():"";
@@ -1005,8 +1003,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchPublicValue;
 	vector<unsigned char> vchPrivateValue;
 	string strPublicValue = params[1].get_str();
-	if(params[0].get_str() == "SYS_RATES")
-		boost::replace_all(strPublicValue, "Qu", "\"");
 	vchPublicValue = vchFromString(strPublicValue);
 	string strPrivateValue = params.size()>=3?params[2].get_str():"";
 	vchPrivateValue = vchFromString(strPrivateValue);
