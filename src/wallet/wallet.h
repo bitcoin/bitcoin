@@ -60,6 +60,8 @@ static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 2;
 static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 static const bool DEFAULT_WALLETBROADCAST = true;
 
+extern const char * DEFAULT_WALLET_DAT;
+
 //! if set, all keys will be derived by using BIP39/BIP44
 static const bool DEFAULT_USE_HD_WALLET = false;
 
@@ -1016,6 +1018,9 @@ public:
 
     /* Mark a transaction (and it in-wallet descendants) as abandoned so its inputs may be respent. */
     bool AbandonTransaction(const uint256& hashTx);
+
+    /* Returns the wallets help message */
+    static std::string GetWalletHelpString(bool showDebug);
 
     /**
      * HD Wallet Functions
