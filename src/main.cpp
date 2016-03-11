@@ -5634,23 +5634,17 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         CBloomFilter filter;
         vRecv >> filter;
     
-        // BUIP010 Xtreme Thinblocks - begin section
-        LoadFilter(pfrom, &filter);
-
-        //if (!filter.IsWithinSizeConstraints())
-        //    // There is no excuse for sending a too-large filter
-        //    Misbehaving(pfrom->GetId(), 100);
-        //else
-        //{
-        //    LOCK(pfrom->cs_filter);
-        //    delete pfrom->pfilter;
-        //    pfrom->pfilter = new CBloomFilter(filter);
-        //    pfrom->pfilter->UpdateEmptyFull();
-        //}
-        //pfrom->fRelayTxes = true;
-
-        // BUIP010 Xtreme Thinblocks - end section
-
+        if (!filter.IsWithinSizeConstraints())
+            // There is no excuse for sending a too-large filter
+            Misbehaving(pfrom->GetId(), 100);
+        else
+        {
+            LOCK(pfrom->cs_filter);
+            delete pfrom->pfilter;
+            pfrom->pfilter = new CBloomFilter(filter);
+            pfrom->pfilter->UpdateEmptyFull();
+        }
+        pfrom->fRelayTxes = true;
     }
 
 

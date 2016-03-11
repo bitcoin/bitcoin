@@ -366,6 +366,7 @@ public:
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;
+    CBloomFilter* pThinBlockFilter; // BU - Xtreme Thinblocks: a bloom filter which is separate from the one used by SPV wallets
     int nRefCount;
     NodeId id;
 
