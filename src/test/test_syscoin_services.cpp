@@ -185,7 +185,7 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	  newHeight = find_value(r.get_obj(), "blocks").get_int();
 	  BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
 	  CAmount balance = AmountFromValue(find_value(r.get_obj(), "balance"));
-	  printf("Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance)); 
+	  printf("Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance).get_real()); 
 	}
 	BOOST_CHECK_THROW(r = CallRPC(node, "setgenerate false"), runtime_error);
 	BOOST_CHECK(newHeight >= targetHeight);
