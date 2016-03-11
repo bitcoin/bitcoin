@@ -398,6 +398,9 @@ TorController::TorController(struct event_base* base, const std::string& target)
     target(target), conn(base), reconnect(true), reconnect_ev(0),
     reconnect_timeout(RECONNECT_TIMEOUT_START)
 {
+    reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
+    if (!reconnect_ev)
+        LogPrintf("tor: Failed to create event for reconnection: out of memory?\n");
     // Start connection attempts immediately
     if (!conn.Connect(target, boost::bind(&TorController::connected_cb, this, _1),
          boost::bind(&TorController::disconnected_cb, this, _1) )) {
@@ -413,8 +416,10 @@ TorController::TorController(struct event_base* base, const std::string& target)
 
 TorController::~TorController()
 {
-    if (reconnect_ev)
-        event_del(reconnect_ev);
+    if (reconnect_ev) {
+        event_free(reconnect_ev);
+        reconnect_ev = 0;
+    }
     if (service.IsValid()) {
         RemoveLocal(service);
     }
@@ -626,8 +631,8 @@ void TorController::disconnected_cb(TorControlConnection& conn)
 
     // Single-shot timer for reconnect. Use exponential backoff.
     struct timeval time = MillisToTimeval(int64_t(reconnect_timeout * 1000.0));
-    reconnect_ev = event_new(base, -1, 0, reconnect_cb, this);
-    event_add(reconnect_ev, &time);
+    if (reconnect_ev)
+        event_add(reconnect_ev, &time);
     reconnect_timeout *= RECONNECT_TIMEOUT_EXP;
 }
 
