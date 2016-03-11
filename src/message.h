@@ -115,6 +115,6 @@ public:
     bool ReconstructMessageIndex(CBlockIndex *pindexRescan);
 };
 
-bool GetTxOfMessage(CMessageDB& dbMessage, const std::vector<unsigned char> &vchMessage, CTransaction& tx);
+bool GetTxOfMessage(const std::vector<unsigned char> &vchMessage, CTransaction& tx);
 
 #endif // MESSAGE_H

@@ -95,7 +95,7 @@ public:
 };
 class COfferLinkWhitelistEntry {
 public:
-	std::vector<unsigned char> certLinkVchRand;
+	std::vector<unsigned char> aliasLinkVchRand;
 	char nDiscountPct;
 	COfferLinkWhitelistEntry() {
 		SetNull();
@@ -104,19 +104,19 @@ public:
 	ADD_SERIALIZE_METHODS;
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(certLinkVchRand);
+        READWRITE(aliasLinkVchRand);
 		READWRITE(VARINT(nDiscountPct));
 	}
 
     friend bool operator==(const COfferLinkWhitelistEntry &a, const COfferLinkWhitelistEntry &b) {
         return (
-           a.certLinkVchRand == b.certLinkVchRand
+           a.aliasLinkVchRand == b.aliasLinkVchRand
 		&& a.nDiscountPct == b.nDiscountPct
         );
     }
 
     COfferLinkWhitelistEntry operator=(const COfferLinkWhitelistEntry &b) {
-    	certLinkVchRand = b.certLinkVchRand;
+    	aliasLinkVchRand = b.aliasLinkVchRand;
 		nDiscountPct = b.nDiscountPct;
         return *this;
     }
@@ -125,8 +125,8 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { certLinkVchRand.clear(); nDiscountPct = 0;}
-    bool IsNull() const { return (certLinkVchRand.empty() && nDiscountPct == 0); }
+    void SetNull() { aliasLinkVchRand.clear(); nDiscountPct = 0;}
+    bool IsNull() const { return (aliasLinkVchRand.empty() && nDiscountPct == 0); }
 
 };
 class COfferLinkWhitelist {
@@ -146,7 +146,7 @@ public:
 	}
     bool GetLinkEntryByHash(const std::vector<unsigned char> &ahash, COfferLinkWhitelistEntry &entry) {
     	for(unsigned int i=0;i<entries.size();i++) {
-    		if(entries[i].certLinkVchRand == ahash) {
+    		if(entries[i].aliasLinkVchRand == ahash) {
     			entry = entries[i];
     			return true;
     		}
@@ -155,7 +155,7 @@ public:
     }
     bool RemoveWhitelistEntry(const std::vector<unsigned char> &ahash) {
     	for(unsigned int i=0;i<entries.size();i++) {
-    		if(entries[i].certLinkVchRand == ahash) {
+    		if(entries[i].aliasLinkVchRand == ahash) {
     			return entries.erase(entries.begin()+i) != entries.end();
     		}
     	}
@@ -164,7 +164,7 @@ public:
     void PutWhitelistEntry(const COfferLinkWhitelistEntry &theEntry) {
     	for(unsigned int i=0;i<entries.size();i++) {
     		COfferLinkWhitelistEntry entry = entries[i];
-    		if(theEntry.certLinkVchRand == entry.certLinkVchRand) {
+    		if(theEntry.aliasLinkVchRand == entry.aliasLinkVchRand) {
     			entries[i] = theEntry;
     			return;
     		}
@@ -203,7 +203,7 @@ public:
 	std::vector<unsigned char> sTitle;
 	std::vector<unsigned char> sDescription;
 	float nPrice;
-	unsigned char nCommission;
+	char nCommission;
 	int nQty;
 	COfferAccept accept;
 	std::vector<unsigned char> vchLinkOffer;
@@ -388,7 +388,7 @@ public:
     bool ReconstructOfferIndex(CBlockIndex *pindexRescan);
 };
 bool GetAcceptByHash(std::vector<COffer> &offerList,  COfferAccept &ca);
-bool GetTxOfOfferAccept(COfferDB& dbOffer, const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
+bool GetTxOfOfferAccept(const std::vector<unsigned char> &vchOffer, const std::vector<unsigned char> &vchOfferAccept,
 		COffer &theOffer, COfferAccept &theOfferAccept, CTransaction& tx);
-bool GetTxOfOffer(COfferDB& dbOffer, const std::vector<unsigned char> &vchOffer, COffer& txPos, CTransaction& tx);
+bool GetTxOfOffer(const std::vector<unsigned char> &vchOffer, COffer& txPos, CTransaction& tx);
 #endif // OFFER_H

@@ -12,30 +12,28 @@ using namespace std;
 struct OfferWhitelistTableEntry
 {
 
-	QString cert;
-    QString title;
     QString alias;
 	QString expires;
 	QString discount;	
 
     OfferWhitelistTableEntry() {}
-    OfferWhitelistTableEntry(const QString &cert, const QString &title, const QString &alias, const QString &expires,const QString &discount):
-        cert(cert), title(title), alias(alias), expires(expires),discount(discount) {}
+    OfferWhitelistTableEntry(const QString &alias, const QString &expires,const QString &discount):
+        alias(alias), expires(expires),discount(discount) {}
 };
 
 struct OfferWhitelistTableEntryLessThan
 {
     bool operator()(const OfferWhitelistTableEntry &a, const OfferWhitelistTableEntry &b) const
     {
-        return a.cert < b.cert;
+        return a.alias < b.alias;
     }
     bool operator()(const OfferWhitelistTableEntry &a, const QString &b) const
     {
-        return a.cert < b;
+        return a.alias < b;
     }
     bool operator()(const QString &a, const OfferWhitelistTableEntry &b) const
     {
-        return a < b.cert;
+        return a < b.alias;
     }
 };
 
@@ -50,7 +48,7 @@ public:
         parent(parent) {}
 
 
-    void updateEntry(const QString &cert, const QString &title, const QString &alias, const QString &expires,const QString &discount, int status)
+    void updateEntry(const QString &alias, const QString &expires,const QString &discount, int status)
     {
 		if(!parent)
 		{
@@ -58,9 +56,9 @@ public:
 		}
         // Find offer / value in model
         QList<OfferWhitelistTableEntry>::iterator lower = qLowerBound(
-            cachedEntryTable.begin(), cachedEntryTable.end(), cert, OfferWhitelistTableEntryLessThan());
+            cachedEntryTable.begin(), cachedEntryTable.end(), alias, OfferWhitelistTableEntryLessThan());
         QList<OfferWhitelistTableEntry>::iterator upper = qUpperBound(
-            cachedEntryTable.begin(), cachedEntryTable.end(), cert, OfferWhitelistTableEntryLessThan());
+            cachedEntryTable.begin(), cachedEntryTable.end(), alias, OfferWhitelistTableEntryLessThan());
         int lowerIndex = (lower - cachedEntryTable.begin());
         int upperIndex = (upper - cachedEntryTable.begin());
         bool inModel = (lower != upper);
@@ -73,7 +71,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedEntryTable.insert(lowerIndex, OfferWhitelistTableEntry(cert, title, alias, expires, discount));
+            cachedEntryTable.insert(lowerIndex, OfferWhitelistTableEntry(alias, expires, discount));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -81,9 +79,6 @@ public:
             {
                 break;
             }
-            lower->cert = cert;
-			lower->title = title;
-
 			lower->alias = alias;
 			lower->expires = expires;
 			lower->discount = discount;
@@ -122,7 +117,7 @@ public:
 OfferWhitelistTableModel::OfferWhitelistTableModel(WalletModel *parent) :
     QAbstractTableModel(parent)
 {
-    columns << tr("GUID") << tr("Title") << tr("Owner") << tr("Expires In") << tr("Discount");
+    columns << tr("Alias") << << tr("Discount") << tr("Expires In");
     priv = new OfferWhitelistTablePriv(this);
 
 }
@@ -154,10 +149,6 @@ QVariant OfferWhitelistTableModel::data(const QModelIndex &index, int role) cons
     {
         switch(index.column())
         {
-        case Cert:
-            return rec->cert;
-        case Title:
-            return rec->title;
         case Alias:
             return rec->alias;
         case Discount:
@@ -166,9 +157,9 @@ QVariant OfferWhitelistTableModel::data(const QModelIndex &index, int role) cons
             return rec->expires;
         }
     }
-    else if (role == CertRole)
+    else if (role == AliasRole)
     {
-        return rec->cert;
+        return rec->alias;
     }
     return QVariant();
 }
@@ -185,15 +176,6 @@ bool OfferWhitelistTableModel::setData(const QModelIndex &index, const QVariant 
     {
         switch(index.column())
         {
-        case Title:
-            // Do nothing, if old value == new value
-            if(rec->title == value.toString())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-           
-            break;
         case Alias:
             // Do nothing, if old value == new value
             if(rec->alias == value.toString())
@@ -201,7 +183,12 @@ bool OfferWhitelistTableModel::setData(const QModelIndex &index, const QVariant 
                 editStatus = NO_CHANGES;
                 return false;
             }
-           
+             // Check for duplicates
+            else if(lookupEntry(rec->alias) != -1)
+            {
+                editStatus = DUPLICATE_ENTRY;
+                return false;
+            }         
             break;
         case Discount:
             // Do nothing, if old value == new value
@@ -220,21 +207,6 @@ bool OfferWhitelistTableModel::setData(const QModelIndex &index, const QVariant 
                 return false;
             }
             break;
-        case Cert:
-            // Do nothing, if old offer == new offer
-            if(rec->cert == value.toString())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-            // Check for duplicates
-            else if(lookupEntry(rec->cert) != -1)
-            {
-                editStatus = DUPLICATE_ENTRY;
-                return false;
-            }
-            break;
-        }
         return true;
     }
     return false;
@@ -274,18 +246,18 @@ QModelIndex OfferWhitelistTableModel::index(int row, int column, const QModelInd
     }
 }
 
-void OfferWhitelistTableModel::updateEntry(const QString &cert, const QString &title, const QString &alias, const QString &expires,const QString &discount, int status)
+void OfferWhitelistTableModel::updateEntry(const QString &alias, const QString &expires,const QString &discount, int status)
 {
-    priv->updateEntry(cert, title, alias, expires, discount, status);
+    priv->updateEntry(alias, expires, discount, status);
 }
 
-QString OfferWhitelistTableModel::addRow(const QString &cert, const QString &title, const QString &alias, const QString &expires,const QString &discount)
+QString OfferWhitelistTableModel::addRow(const QString &alias, const QString &expires,const QString &discount)
 {
-    std::string strCert = cert.toStdString();
+    std::string strAlias = alias.toStdString();
     editStatus = OK;
     // Check for duplicate
     {
-        if(lookupEntry(cert) != -1)
+        if(lookupEntry(alias) != -1)
         {
             editStatus = DUPLICATE_ENTRY;
             return QString();
@@ -294,7 +266,7 @@ QString OfferWhitelistTableModel::addRow(const QString &cert, const QString &tit
 
     // Add entry
 
-    return QString::fromStdString(strCert);
+    return QString::fromStdString(strAlias);
 }
 void OfferWhitelistTableModel::clear()
 {
@@ -304,10 +276,10 @@ void OfferWhitelistTableModel::clear()
 }
 
 
-int OfferWhitelistTableModel::lookupEntry(const QString &cert) const
+int OfferWhitelistTableModel::lookupEntry(const QString &alias) const
 {
-    QModelIndexList lst = match(index(0, Cert, QModelIndex()),
-                                Qt::EditRole, cert, 1, Qt::MatchExactly);
+    QModelIndexList lst = match(index(0, Alias, QModelIndex()),
+                                Qt::EditRole, alias, 1, Qt::MatchExactly);
     if(lst.isEmpty())
     {
         return -1;

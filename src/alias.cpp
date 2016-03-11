@@ -684,13 +684,12 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName,
 int GetAliasExpirationDepth() {
 	return 525600;
 }
-
-bool GetTxOfAlias(const vector<unsigned char> &vchName,
-		CTransaction& tx) {
+bool GetTxOfAlias(const vector<unsigned char> &vchName, 
+				  CAliasIndex& txPos, CTransaction& tx) {
 	vector<CAliasIndex> vtxPos;
 	if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
 		return false;
-	CAliasIndex& txPos = vtxPos.back();
+	txPos = vtxPos.back();
 	int nHeight = txPos.nHeight;
 	if (nHeight + GetAliasExpirationDepth()
 			< chainActive.Tip()->nHeight) {
@@ -931,7 +930,8 @@ UniValue aliasnew(const UniValue& params, bool fHelp) {
 	CWalletTx wtx;
 
 	CTransaction tx;
-	if (GetTxOfAlias(vchName, tx)) {
+	CAliasIndex theAlias;
+	if (GetTxOfAlias(vchName, theAlias, tx)) {
 		error("aliasactivate() : this alias is already active with tx %s",
 				tx.GetHash().GetHex().c_str());
 		throw runtime_error("this alias is already active");
@@ -1035,7 +1035,8 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 
 	EnsureWalletIsUnlocked();
 	CTransaction tx;
-	if (!GetTxOfAlias(vchName, tx))
+	CAliasIndex theAlias;
+	if (!GetTxOfAlias(vchName, theAlias, tx))
 		throw runtime_error("could not find an alias with this name");
 
     if(!IsSyscoinTxMine(tx, "alias")) {
@@ -1048,12 +1049,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 	if (ExistsInMempool(vchName, OP_ALIAS_ACTIVATE) || ExistsInMempool(vchName, OP_ALIAS_UPDATE)) {
 		throw runtime_error("there are pending operations on that alias");
 	}
-   // get the alias from DB
-	CAliasIndex theAlias;
-    vector<CAliasIndex> vtxPos;
-    if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
-        throw runtime_error("could not read alias from DB");
-    theAlias = vtxPos.back();
+
 	if(vchPubKeyByte.empty())
 		vchPubKeyByte = theAlias.vchPubKey;
 	if(vchPrivateValue.size() > 0)

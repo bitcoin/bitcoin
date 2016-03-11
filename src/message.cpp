@@ -122,7 +122,7 @@ int IndexOfMessageOutput(const CTransaction& tx) {
 }
 
 
-bool GetTxOfMessage(CMessageDB& dbMessage, const vector<unsigned char> &vchMessage,
+bool GetTxOfMessage(const vector<unsigned char> &vchMessage,
         CMessage& txPos, CTransaction& tx) {
     vector<CMessage> vtxPos;
     if (!pmessagedb->ReadMessage(vchMessage, vtxPos) || vtxPos.empty())
