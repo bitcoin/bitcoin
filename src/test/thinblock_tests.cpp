@@ -45,24 +45,24 @@ BOOST_AUTO_TEST_CASE(thinblock_test) {
     CBlock block = TestBlock();
     CThinBlock thinblock(block, filter);
     CXThinBlock xthinblock(block, &filter);
-    BOOST_CHECK_EQUAL(9, thinblock.mapMissingTx.size());
-    BOOST_CHECK_EQUAL(9, xthinblock.mapMissingTx.size());
+    BOOST_CHECK_EQUAL(9, thinblock.vMissingTx.size());
+    BOOST_CHECK_EQUAL(9, xthinblock.vMissingTx.size());
 
     /* insert txid not in block */
     const uint256 random_hash = uint256S("3fba505b48865fccda4e248cecc39d5dfbc6b8ef7b4adc9cd27242c1193c7133");
     filter.insert(random_hash);
     CThinBlock thinblock1(block, filter);
     CXThinBlock xthinblock1(block, &filter);
-    BOOST_CHECK_EQUAL(9, thinblock1.mapMissingTx.size());
-    BOOST_CHECK_EQUAL(9, xthinblock1.mapMissingTx.size());
+    BOOST_CHECK_EQUAL(9, thinblock1.vMissingTx.size());
+    BOOST_CHECK_EQUAL(9, xthinblock1.vMissingTx.size());
 
     /* insert txid in block */
     const uint256 hash_in_block = block.vtx[1].GetHash();
     filter.insert(hash_in_block);
     CThinBlock thinblock2(block, filter);
     CXThinBlock xthinblock2(block, &filter);
-    BOOST_CHECK_EQUAL(8, thinblock2.mapMissingTx.size());
-    BOOST_CHECK_EQUAL(8, xthinblock2.mapMissingTx.size());
+    BOOST_CHECK_EQUAL(8, thinblock2.vMissingTx.size());
+    BOOST_CHECK_EQUAL(8, xthinblock2.vMissingTx.size());
 
     /*collision test*/
     BOOST_CHECK(!xthinblock2.collision);

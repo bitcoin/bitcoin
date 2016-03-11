@@ -29,6 +29,7 @@
 #include <boost/signals2/signal.hpp>
 
 #include "unlimited.h"
+#include "stat.h"
 
 class CAddrMan;
 class CScheduler;
@@ -365,6 +366,7 @@ public:
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;
+    CBloomFilter* pThinBlockFilter; // BU - Xtreme Thinblocks: a bloom filter which is separate from the one used by SPV wallets
     int nRefCount;
     NodeId id;
 
@@ -428,6 +430,18 @@ public:
     int64_t nMinPingUsecTime;
     // Whether a ping is requested.
     bool fPingQueued;
+
+    // BU instrumentation
+    // track the number of bytes sent to this node
+    CStatHistory<unsigned int > bytesSent;
+    // track the number of bytes received from this node
+    CStatHistory<unsigned int > bytesReceived;
+    // track the average round trip latency for transaction requests to this node
+    // CStatHistory<unsigned int > txReqLatency;
+    // track the # of times this node is the first to send us a transaction INV
+    //CStatHistory<unsigned int> firstTx;
+    // track the # of times this node is the first to send us a block INV
+    //CStatHistory<unsigned int> firstBlock;
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
@@ -493,10 +507,9 @@ public:
     // BUIP010:
     bool ThinBlockCapable()
     {
-        if(nVersion >= THINBLOCKS_VERSION) return true;
+        if (nServices & NODE_XTHIN) return true;
         return false;
     }
-    
 
     void AddAddressKnown(const CAddress& addr)
     {

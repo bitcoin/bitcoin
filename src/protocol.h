@@ -154,6 +154,11 @@ extern const char *XBLOCKTX;
  */
 extern const char *GET_XBLOCKTX;
 /**
+ * BUIP010 Xtreme Thinblocks: The get_xthin message transmits a single serialized get_xthin.
+ */
+extern const char *GET_XTHIN;
+
+/**
  * The getaddr message requests an addr message from the receiving node,
  * preferably one with lots of IP addresses of other receiving nodes.
  * @see https://bitcoin.org/en/developer-reference#getaddr
@@ -254,6 +259,13 @@ enum {
     // Bitcoin Core nodes used to support this by default, without advertising this bit,
     // but no longer do as of protocol version 70011 (= NO_BLOOM_VERSION)
     NODE_BLOOM = (1 << 2),
+
+    // BUIP010 - Xtreme Thinblocks - begin section
+    // NODE_XTHIN means the node supports Xtreme Thinblocks
+    // If this is turned off then the node will not service xthin requests nor  
+    // make xthin requests
+    NODE_XTHIN = (1 << 4),
+    // BUIP010 - Xtreme Thinblocks - end section
 
     // Bits 24-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the

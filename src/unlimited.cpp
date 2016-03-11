@@ -21,6 +21,7 @@
 #include "util.h"
 #include "validationinterface.h"
 #include "version.h"
+#include "stat.h"
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -45,10 +46,27 @@ CLeakyBucket receiveShaper(DEFAULT_MAX_RECV_BURST, DEFAULT_AVE_RECV);
 CLeakyBucket sendShaper(DEFAULT_MAX_SEND_BURST, DEFAULT_AVE_SEND);
 boost::chrono::steady_clock CLeakyBucket::clock;
 
+// Variables for statistics tracking, must be before the "requester" singleton instantiation
+const char* sampleNames[] = { "sec10", "min5", "hourly", "daily","monthly"};
+int operateSampleCount[] = { 30,       12,   24,  30 };
+int interruptIntervals[] = { 30,       30*12,   30*12*24,   30*12*24*30 };
+
+boost::posix_time::milliseconds statMinInterval(10000);
+boost::asio::io_service stat_io_service __attribute__((init_priority(101)));
+
+CStatMap statistics __attribute__((init_priority(102)));
+
+CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
+CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
+
+
 void UnlimitedPushTxns(CNode* dest);
 
 // BUIP010 Xtreme Thinblocks Variables
 std::map<uint256, uint64_t> mapThinBlockTimer;
+
+//! The largest block size that we have seen since startup
+uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
 
 std::string UnlimitedCmdLineHelp()
 {
@@ -62,6 +80,8 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-sendavg", _("The maximum rate that data can be sent in kB/s"));
     strUsage += HelpMessageOpt("-use-thinblocks=<n>", strprintf(_("Turn Thinblocks on or off (off: 0, on: 1, default: %d)"), 1));
     strUsage += HelpMessageOpt("-connect-thinblock=<ip:port>", _("Connect to a thinblock node(s). Blocks will only be downloaded from a thinblock peer.  If no connections are possible then regular blocks will then be downloaded form any other connected peers."));
+    strUsage += HelpMessageOpt("-minlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) smaller than this are considered zero fee and subject to -limitfreerelay (default: %s)"), DEFAULT_MINLIMITERTXFEE));
+    strUsage += HelpMessageOpt("-maxlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) larger than this are always relayed (default: %s)"), DEFAULT_MAXLIMITERTXFEE));
     return strUsage;
 }
 
@@ -174,6 +194,9 @@ void UnlimitedSetup(void)
 
     receiveShaper.set(rb, ra);
     sendShaper.set(sb, sa);
+
+    txAdded.init("memPool/txAdded");
+    poolSize.init("memPool/size",STAT_OP_AVE | STAT_KEEP);
 }
 
 
@@ -543,7 +566,7 @@ bool HaveThinblockNodes()
     {
         LOCK(cs_vNodes);
         BOOST_FOREACH (CNode* pnode, vNodes)
-            if (pnode->nVersion >= THINBLOCKS_VERSION)
+            if (pnode->ThinBlockCapable())
                 return true;
     }
     return false;
@@ -578,7 +601,14 @@ void ClearThinBlockTimer(uint256 hash)
 
 bool IsThinBlocksEnabled() 
 {
-    return GetBoolArg("-use-thinblocks", true);
+    bool fThinblocksEnabled = GetBoolArg("-use-thinblocks", true);
+
+    // Enabling the XTHIN service should really be in init.cpp but because
+    // we want to avoid possile future merge conflicts with Core we can enable
+    // it here as it has little performance impact.
+    if (fThinblocksEnabled)
+        nLocalServices |= NODE_XTHIN;
+    return fThinblocksEnabled;
 }
 
 bool IsChainNearlySyncd() 
@@ -589,36 +619,52 @@ bool IsChainNearlySyncd()
     return true;
 }
 
-void SendSeededBloomFilter(CNode *pto)
+void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& vOrphanHashes)
 {
     LogPrint("thin", "Starting creation of bloom filter\n");
     seed_insecure_rand();
-    CBloomFilter memPoolFilter;
     double nBloomPoolSize = (double)mempool.mapTx.size();
     if (nBloomPoolSize > MAX_BLOOM_FILTER_SIZE / 1.8)
         nBloomPoolSize = MAX_BLOOM_FILTER_SIZE / 1.8;
     double nBloomDecay = 1.5 - (nBloomPoolSize * 1.8 / MAX_BLOOM_FILTER_SIZE);  // We should never go below 0.5 as we will start seeing re-requests for tx's
-    int nElements = std::max((int)((int)mempool.mapTx.size() * nBloomDecay), 1); // Must make sure nElements is greater than zero or will assert
-                                                                // TODO: we should probably rather fix the bloom.cpp constructor
+    int nElements = std::max((int)(((int)mempool.mapTx.size() + (int)vOrphanHashes.size()) * nBloomDecay), 1); // Must make sure nElements is greater than zero or will assert
     double nFPRate = .001 + (((double)nElements * 1.8 / MAX_BLOOM_FILTER_SIZE) * .004); // The false positive rate in percent decays as the mempool grows
-    memPoolFilter = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
+    filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
     LogPrint("thin", "Bloom multiplier: %f FPrate: %f Num elements in bloom filter: %d num mempool entries: %d\n", nBloomDecay, nFPRate, nElements, (int)mempool.mapTx.size());
 
     // Seed the filter with the transactions in the memory pool
     LOCK(cs_main);
-    std::vector<uint256> memPoolHashes;
-    mempool.queryHashes(memPoolHashes);
-    for (uint64_t i = 0; i < memPoolHashes.size(); i++)
-         memPoolFilter.insert(memPoolHashes[i]);
+    std::vector<uint256> vMemPoolHashes;
+    mempool.queryHashes(vMemPoolHashes);
+    for (uint64_t i = 0; i < vMemPoolHashes.size(); i++)
+         filterMemPool.insert(vMemPoolHashes[i]);
+    for (uint64_t i = 0; i < vOrphanHashes.size(); i++)
+         filterMemPool.insert(vOrphanHashes[i]);
+    LogPrint("thin", "Created bloom filter: %d bytes\n",::GetSerializeSize(filterMemPool, SER_NETWORK, PROTOCOL_VERSION));
+}
 
-    LogPrint("thin", "Sending bloom filter: %d bytes peer=%d\n",::GetSerializeSize(memPoolFilter, SER_NETWORK, PROTOCOL_VERSION), pto->id);
-    pto->PushMessage(NetMsgType::FILTERLOAD, memPoolFilter);
+void LoadFilter(CNode *pfrom, CBloomFilter *filter)
+{
+    if (!filter->IsWithinSizeConstraints())
+        // There is no excuse for sending a too-large filter
+        Misbehaving(pfrom->GetId(), 100);
+    else
+    {
+        LOCK(pfrom->cs_filter);
+        delete pfrom->pThinBlockFilter;
+        pfrom->pThinBlockFilter = new CBloomFilter(*filter);
+        pfrom->pThinBlockFilter->UpdateEmptyFull();
+    }
+    uint64_t nSizeFilter = ::GetSerializeSize(*pfrom->pThinBlockFilter, SER_NETWORK, PROTOCOL_VERSION);
+    LogPrint("thin", "Thinblock Bloom filter size: %d\n", nSizeFilter);
 }
 
 void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, const CInv &inv)
 {
     int64_t startTime = GetTimeMicros();
     CValidationState state;
+    uint64_t nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
+
     // Process all blocks from whitelisted peers, even if not requested,
     // unless we're still syncing with the network.
     // Such an unrequested block may still be processed, subject to the
@@ -636,7 +682,10 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
             Misbehaving(pfrom->GetId(), nDoS);
         }
     }
-    LogPrint("thin", "Processed thinblock %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
+    else 
+        nLargestBlockSeen = std::max(nSizeBlock, nLargestBlockSeen);
+
+    LogPrint("thin", "Processed Block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
     
     // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
     // Therefore we have to remove the thinblock in flight if it exists and we also need to check that 
@@ -657,8 +706,10 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
 
         // When we no longer have any thinblocks in flight then clear the set
         // just to make sure we don't somehow get growth over time.
-        if (nTotalThinBlocksInFlight == 0)
+        if (nTotalThinBlocksInFlight == 0) {
             setPreVerifiedTxHash.clear();
+            setUnVerifiedOrphanTxHash.clear();
+        }
     }
 
     // Clear the thinblock timer used for preferential download
@@ -712,12 +763,14 @@ void ConnectToThinBlockNodes()
 
 void CheckNodeSupportForThinBlocks()
 {
-    // Check that a nodes pointed to with connect-thinblock actually supports thinblocks
-    BOOST_FOREACH(string& strAddr, mapMultiArgs["-connect-thinblock"]) {
-        if(CNode* pnode = FindNode(strAddr)) {
-            if(pnode->nVersion < THINBLOCKS_VERSION && pnode->nVersion > 0) {
-                LogPrintf("ERROR: You are trying to use connect-thinblocks but to a node that does not support it - Protocol Version: %d peer=%d\n", 
-                           pnode->nVersion, pnode->id);
+    if(IsThinBlocksEnabled()) {
+        // Check that a nodes pointed to with connect-thinblock actually supports thinblocks
+        BOOST_FOREACH(string& strAddr, mapMultiArgs["-connect-thinblock"]) {
+            if(CNode* pnode = FindNode(strAddr)) {
+                if(!pnode->ThinBlockCapable()) {
+                    LogPrintf("ERROR: You are trying to use connect-thinblocks but to a node that does not support it - Protocol Version: %d peer=%d\n", 
+                               pnode->nVersion, pnode->id);
+                }
             }
         }
     }
@@ -725,22 +778,22 @@ void CheckNodeSupportForThinBlocks()
 
 void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
 {
+    LOCK(pfrom->cs_filter);
     if (inv.type == MSG_XTHINBLOCK)
     {
-      CXThinBlock xThinBlock(block, pfrom->pfilter);
-      //CXThinBlock xThinBlock(block);
+        CXThinBlock xThinBlock(block, pfrom->pThinBlockFilter);
         int nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
         if (xThinBlock.collision == true) // If there is a cheapHash collision in this block then send a normal thinblock
         {
-            CThinBlock thinBlock(block, *pfrom->pfilter);
+            CThinBlock thinBlock(block, *pfrom->pThinBlockFilter);
             int nSizeThinBlock = ::GetSerializeSize(xThinBlock, SER_NETWORK, PROTOCOL_VERSION);
             if (nSizeThinBlock < nSizeBlock) {
                 pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
-                LogPrint("thin", "TX HASH COLLISION: Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.mapMissingTx.size(), pfrom->id);
+                LogPrint("thin", "TX HASH COLLISION: Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(), pfrom->id);
             }
             else {
                 pfrom->PushMessage(NetMsgType::BLOCK, block);
-                LogPrint("thin", "Sent regular block instead - xthinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.mapMissingTx.size(), pfrom->id);
+                LogPrint("thin", "Sent regular block instead - xthinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(), pfrom->id);
             }
         }
         else // Send an xThinblock
@@ -749,26 +802,26 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
             int nSizeThinBlock = ::GetSerializeSize(xThinBlock, SER_NETWORK, PROTOCOL_VERSION);
             if (nSizeThinBlock < nSizeBlock) {
                 pfrom->PushMessage(NetMsgType::XTHINBLOCK, xThinBlock);
-                LogPrint("thin", "Sent xthinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.mapMissingTx.size(), pfrom->id);
+                LogPrint("thin", "Sent xthinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(), pfrom->id);
             }
             else {
                 pfrom->PushMessage(NetMsgType::BLOCK, block);
-                LogPrint("thin", "Sent regular block instead - xthinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.mapMissingTx.size(), pfrom->id);
+                LogPrint("thin", "Sent regular block instead - xthinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(), pfrom->id);
             }
         }
     }
     else if (inv.type == MSG_THINBLOCK)
     {
-        CThinBlock thinBlock(block, *pfrom->pfilter);
+        CThinBlock thinBlock(block, *pfrom->pThinBlockFilter);
         int nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         if (nSizeThinBlock < nSizeBlock) { // Only send a thinblock if smaller than a regular block
             pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
-            LogPrint("thin", "Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.mapMissingTx.size(), pfrom->id);
+            LogPrint("thin", "Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.vMissingTx.size(), pfrom->id);
         }
         else {
             pfrom->PushMessage(NetMsgType::BLOCK, block);
-            LogPrint("thin", "Sent regular block instead - thinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.mapMissingTx.size(), pfrom->id);
+            LogPrint("thin", "Sent regular block instead - thinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.vMissingTx.size(), pfrom->id);
         }
     }
 }
@@ -798,4 +851,120 @@ bool TestConservativeBlockValidity(CValidationState& state, const CChainParams& 
     assert(state.IsValid());
 
     return true;
+}
+
+// Statistics:
+
+CStatBase* FindStatistic(const char* name)
+{
+  CStatMap::iterator item = statistics.find(name);
+  if (item != statistics.end())
+    return item->second;
+  return NULL;
+}
+
+UniValue getstatlist(const UniValue& params, bool fHelp)
+{
+  if (fHelp || (params.size() != 0))
+        throw runtime_error(
+            "getstatlist"
+            "\nReturns a list of all statistics available on this node.\n"
+            "\nArguments: None\n"
+            "\nResult:\n"
+            "  {\n"
+            "    \"name\" : (string) name of the statistic\n"
+            "    ...\n"
+            "  }\n"
+            "\nExamples:\n" +
+            HelpExampleCli("getstatlist", "") + HelpExampleRpc("getstatlist", ""));
+
+  CStatMap::iterator it;
+
+  UniValue ret(UniValue::VARR);
+  for (it = statistics.begin(); it != statistics.end(); ++it)
+    {
+    ret.push_back(it->first);
+    }
+
+  return ret;
+}
+
+UniValue getstat(const UniValue& params, bool fHelp)
+{
+    string specificIssue;
+
+    int count = 0;
+    if (params.size() < 3) count = 1;  // if a count is not specified, give the latest sample
+    else
+      {
+	if (!params[2].isNum()) 
+	  {
+          try
+	    {
+	      count =  boost::lexical_cast<int>(params[2].get_str());
+	    }
+          catch (const boost::bad_lexical_cast &)
+	    {
+            fHelp=true;
+            specificIssue = "Invalid argument 3 \"count\" -- not a number";
+  	    }
+	  }
+        else
+	  {
+	    count = params[2].get_int();
+	  }
+      }
+    if (fHelp || (params.size() < 1))
+        throw runtime_error(
+            "getstat"
+            "\nReturns the current settings for the network send and receive bandwidth and burst in kilobytes per second.\n"
+            "\nArguments: \n"
+            "1. \"statistic\"     (string, required) Specify what statistic you want\n"
+            "2. \"series\"  (string, optional) Specify what data series you want.  Options are \"now\",\"all\", \"sec10\", \"min5\", \"hourly\", \"daily\",\"monthly\".  Default is all.\n"
+            "3. \"count\"  (string, optional) Specify the number of samples you want.\n"
+
+            "\nResult:\n"
+            "  {\n"
+            "    \"<statistic name>\"\n"
+            "    {\n"
+            "    \"<series name>\"\n"
+            "      [\n"
+            "      <data>, (any type) The data points in the series\n"
+            "      ],\n"
+            "    ...\n"
+            "    },\n"
+            "  ...\n"            
+            "  }\n"
+            "\nExamples:\n" +
+            HelpExampleCli("getstat", "") + HelpExampleRpc("getstat", "")
+            + "\n" + specificIssue);
+
+    UniValue ret(UniValue::VARR);
+
+    string seriesStr;
+    if (params.size() < 2)
+      seriesStr = "now";
+    else seriesStr = params[1].get_str();
+    //uint_t series = 0; 
+    //if (series == "now") series |= 1;
+    //if (series == "all") series = 0xfffffff;
+
+    CStatBase* base = FindStatistic(params[0].get_str().c_str());
+    if (base)
+      {
+        UniValue ustat(UniValue::VOBJ);
+        if (seriesStr == "now")
+          {
+	    ustat.push_back(Pair("now", base->GetNow()));
+	  }
+        else
+	  {
+            UniValue series = base->GetSeries(seriesStr,count);
+	    ustat.push_back(Pair(seriesStr,series));
+	  }
+
+        ret.push_back(ustat);  
+      }
+
+    return ret;
 }
