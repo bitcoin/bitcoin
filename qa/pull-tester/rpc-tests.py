@@ -40,6 +40,15 @@ if not vars().has_key('ENABLE_UTILS'):
     ENABLE_UTILS=0
 if not vars().has_key('ENABLE_ZMQ'):
     ENABLE_ZMQ=0
+    
+# python-zmq may not be installed. Handle this gracefully and with some helpful info
+if ENABLE_ZMQ:
+    try:
+        import zmq
+    except ImportError:
+        print("WARNING: \"import zmq\" failed. Setting ENABLE_ZMQ=0. " \
+            "To run zmq tests, see dependency info in /qa/README.md.")
+        ENABLE_ZMQ=0
 
 ENABLE_COVERAGE=0
 
