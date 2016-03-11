@@ -84,7 +84,7 @@
      <item>
       <widget class="QPushButton" name="whitelistButton">
        <property name="text">
-        <string>&amp;Manage Whitelist</string>
+        <string>&amp;Manage Affiliates</string>
        </property>
       </widget>
      </item>

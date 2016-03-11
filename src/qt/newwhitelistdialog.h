@@ -23,7 +23,6 @@ public:
 
     void setModel(WalletModel*,OfferWhitelistTableModel *model);
     QString getEntry() const;
-	void loadCerts();
 
 public Q_SLOTS:
     void accept();

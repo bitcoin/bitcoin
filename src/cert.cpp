@@ -152,7 +152,7 @@ int IndexOfCertOutput(const CTransaction& tx) {
     return nOut;
 }
 
-bool GetTxOfCert(CCertDB& dbCert, const vector<unsigned char> &vchCert,
+bool GetTxOfCert(const vector<unsigned char> &vchCert,
         CCert& txPos, CTransaction& tx) {
     vector<CCert> vtxPos;
     if (!pcertdb->ReadCert(vchCert, vtxPos) || vtxPos.empty())
@@ -542,7 +542,7 @@ UniValue certupdate(const UniValue& params, bool fHelp) {
     // look for a transaction with this key
     CTransaction tx;
 	CCert theCert;
-    if (!GetTxOfCert(*pcertdb, vchCert, theCert, tx))
+    if (!GetTxOfCert( vchCert, theCert, tx))
         throw runtime_error("could not find a certificate with this key");
     // make sure cert is in wallet
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());

@@ -65,11 +65,11 @@ EditWhitelistOfferDialog::EditWhitelistOfferDialog(const PlatformStyle *platform
 	
 	ui->buttonBox->setVisible(false);
 	ui->removeAllButton->setEnabled(false);
-    ui->labelExplanation->setText(tr("These are the whitelist entries for your offer. Whitelist operations take 2-5 minutes to become active. You may specify discount levels for each whitelist entry or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own a certificate that you've added to your whitelist. Click the button at the bottom of this dialog to toggle the exclusive mode."));
+    ui->labelExplanation->setText(tr("These are the affiliates for your offer. Affiliate operations take 2-5 minutes to become active. You may specify discount levels for each affiliate or control who may resell your offer if you are in Exclusive Resell Mode. If Exclusive Resell Mode is off anyone can resell your offers, although discounts will still be applied if they own an alias that you've added to your affiliate list. Click the button at the bottom of this dialog to toggle the exclusive mode."));
 	
     // Context menu actions
     QAction *removeAction = new QAction(tr("&Remove"), this);
-	QAction *copyAction = new QAction(tr("&Copy Certificate ID"), this);
+	QAction *copyAction = new QAction(tr("&Copy Alias"), this);
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyAction);
@@ -111,15 +111,11 @@ void EditWhitelistOfferDialog::setModel(WalletModel *walletModel, OfferWhitelist
     ui->tableView->setSelectionMode(QAbstractItemView::SingleSelection);
     // Set column widths
 #if QT_VERSION < 0x050000
-    ui->tableView->horizontalHeader()->setResizeMode(OfferWhitelistTableModel::Cert, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setResizeMode(OfferWhitelistTableModel::Title, QHeaderView::Stretch);
-	ui->tableView->horizontalHeader()->setResizeMode(OfferWhitelistTableModel::Alias, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setResizeMode(OfferWhitelistTableModel::Alias, QHeaderView::Stretch);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferWhitelistTableModel::Expires, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setResizeMode(OfferWhitelistTableModel::Discount, QHeaderView::ResizeToContents);
 #else
-    ui->tableView->horizontalHeader()->setSectionResizeMode(OfferWhitelistTableModel::Cert, QHeaderView::ResizeToContents);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(OfferWhitelistTableModel::Title, QHeaderView::Stretch);
-	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferWhitelistTableModel::Alias, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(OfferWhitelistTableModel::Alias, QHeaderView::Stretch);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferWhitelistTableModel::Expires, QHeaderView::ResizeToContents);
 	ui->tableView->horizontalHeader()->setSectionResizeMode(OfferWhitelistTableModel::Discount, QHeaderView::ResizeToContents);
 #endif
@@ -141,7 +137,7 @@ void EditWhitelistOfferDialog::showEvent ( QShowEvent * event )
 }
 void EditWhitelistOfferDialog::on_copy()
 {
-    GUIUtil::copyEntryData(ui->tableView, OfferWhitelistTableModel::Cert);
+    GUIUtil::copyEntryData(ui->tableView, OfferWhitelistTableModel::Alias);
 }
 void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
 {
@@ -187,14 +183,14 @@ void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not change the whitelist mode: %1").arg(QString::fromStdString(strError)),
+			tr("Could not change the affiliate mode: %1").arg(QString::fromStdString(strError)),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to change the whitelist mode: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to change the affiliate mode: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 	
@@ -211,7 +207,7 @@ void EditWhitelistOfferDialog::on_removeButton_clicked()
     {
         return;
     }
-	QString certGUID = selection.at(0).data(OfferWhitelistTableModel::Cert).toString();
+	QString aliasGUID = selection.at(0).data(OfferWhitelistTableModel::Alias).toString();
 
 
 	string strError;
@@ -219,14 +215,14 @@ void EditWhitelistOfferDialog::on_removeButton_clicked()
 	UniValue params(UniValue::VARR);
 	UniValue result;
 	params.push_back(offerGUID.toStdString());
-	params.push_back(certGUID.toStdString());
+	params.push_back(aliasGUID.toStdString());
 
 	try {
 		result = tableRPC.execute(strMethod, params);
 		QMessageBox::information(this, windowTitle(),
 		tr("Entry removed successfully!"),
 			QMessageBox::Ok, QMessageBox::Ok);
-		model->updateEntry(certGUID, certGUID, certGUID, certGUID, certGUID, CT_DELETED); 
+		model->updateEntry(aliasGUID, aliasGUID, aliasGUID, aliasGUID, aliasGUID, CT_DELETED); 
 	}
 	catch (UniValue& objError)
 	{
@@ -257,7 +253,7 @@ void EditWhitelistOfferDialog::on_removeAllButton_clicked()
 	try {
 		result = tableRPC.execute(strMethod, params);
 		QMessageBox::information(this, windowTitle(),
-		tr("Whitelist cleared successfully!"),
+		tr("Affiliate list cleared successfully!"),
 			QMessageBox::Ok, QMessageBox::Ok);
 		model->clear();
 	}
@@ -265,14 +261,14 @@ void EditWhitelistOfferDialog::on_removeAllButton_clicked()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not clear the whitelist: %1").arg(QString::fromStdString(strError)),
+			tr("Could not clear the affiliate list: %1").arg(QString::fromStdString(strError)),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to clear the whitelist: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to clear the affiliate list: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 }
@@ -290,11 +286,8 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 		if (result.type() == UniValue::VARR)
 		{
 			this->model->clear();
-			string cert_str = "";
-			string title_str = "";
-			string mine_str = "";
-			string cert_alias_str = "";
-			string cert_expiresin_str = "";
+			string alias_str = "";
+			string expiresin_str = "";
 			string offer_discount_percentage_str = "";
 			int cert_expiresin = 0;
 			const UniValue &arr = result.get_array();
@@ -302,25 +295,19 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 			    const UniValue& input = arr[idx];
 				if (input.type() != UniValue::VOBJ)
 					continue;
-				const UniValue& o = input.get_obj();
-				const UniValue& cert_value = find_value(o, "guid");
-				if (cert_value.type() == UniValue::VSTR)
-					cert_str = cert_value.get_str();
-				const UniValue& title_value = find_value(o, "title");
-				if (title_value.type() == UniValue::VSTR)
-					title_str = title_value.get_str();
-				const UniValue& cert_alias_value = find_value(o, "alias");
-				if (cert_alias_value.type() == UniValue::VSTR)
-					cert_alias_str = cert_alias_value.get_str();
-				const UniValue& cert_expiresin_value = find_value(o, "expiresin");
-				if (cert_expiresin_value.type() == UniValue::VNUM)
-					cert_expiresin = cert_expiresin_value.get_int();
+				
+				const UniValue& alias_value = find_value(o, "alias");
+				if (alias_value.type() == UniValue::VSTR)
+					alias_str = alias_value.get_str();
+				const UniValue& expiresin_value = find_value(o, "expiresin");
+				if (expiresin_value.type() == UniValue::VNUM)
+					expiresin = expiresin_value.get_int();
 				const UniValue& offer_discount_percentage_value = find_value(o, "offer_discount_percentage");
 				if (offer_discount_percentage_value.type() == UniValue::VSTR)
 					offer_discount_percentage_str = offer_discount_percentage_value.get_str();
-				cert_expiresin_str = strprintf("%d Blocks", cert_expiresin);
-				model->addRow(QString::fromStdString(cert_str), QString::fromStdString(title_str), QString::fromStdString(cert_alias_str), QString::fromStdString(cert_expiresin_str), QString::fromStdString(offer_discount_percentage_str));
-				model->updateEntry(QString::fromStdString(cert_str), QString::fromStdString(title_str), QString::fromStdString(cert_alias_str), QString::fromStdString(cert_expiresin_str), QString::fromStdString(offer_discount_percentage_str), CT_NEW); 
+				expiresin_str = strprintf("%d Blocks", expiresin);
+				model->addRow(QString::fromStdString(alias_str), String::fromStdString(expiresin_str), QString::fromStdString(offer_discount_percentage_str));
+				model->updateEntry(QString::fromStdString(alias_str), QString::fromStdString(expiresin_str), QString::fromStdString(offer_discount_percentage_str), CT_NEW); 
 				ui->removeAllButton->setEnabled(true);
 			}
 		}
@@ -337,14 +324,14 @@ void EditWhitelistOfferDialog::on_refreshButton_clicked()
 	{
 		string strError = find_value(objError, "message").get_str();
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not refresh the whitelist: %1").arg(QString::fromStdString(strError)),
+			tr("Could not refresh the affiliate list: %1").arg(QString::fromStdString(strError)),
 				QMessageBox::Ok, QMessageBox::Ok);
 
 	}
 	catch(std::exception& e)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to refresh the whitelist: ") + QString::fromStdString(e.what()),
+			tr("There was an exception trying to refresh the affiliate list: ") + QString::fromStdString(e.what()),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
 
@@ -389,8 +376,6 @@ void EditWhitelistOfferDialog::on_exportButton_clicked()
     CSVModelWriter writer(filename);
     // name, column, role
     writer.setModel(proxyModel);
-    writer.addColumn("Cert", OfferWhitelistTableModel::Cert, Qt::EditRole);
-	writer.addColumn("Title", OfferWhitelistTableModel::Title, Qt::EditRole);
 	writer.addColumn("Alias", OfferWhitelistTableModel::Alias, Qt::EditRole);
 	writer.addColumn("Expires", OfferWhitelistTableModel::Expires, Qt::EditRole);
 	writer.addColumn("Discount", OfferWhitelistTableModel::Discount, Qt::EditRole);
