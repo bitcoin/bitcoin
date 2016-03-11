@@ -117,7 +117,7 @@ public:
 OfferWhitelistTableModel::OfferWhitelistTableModel(WalletModel *parent) :
     QAbstractTableModel(parent)
 {
-    columns << tr("Alias") << << tr("Discount") << tr("Expires In");
+    columns << tr("Alias") << tr("Discount") << tr("Expires In");
     priv = new OfferWhitelistTablePriv(this);
 
 }
@@ -208,6 +208,7 @@ bool OfferWhitelistTableModel::setData(const QModelIndex &index, const QVariant 
             }
             break;
         return true;
+		}
     }
     return false;
 }
