@@ -26,10 +26,10 @@ void SendSnapShotPayment(const std::string &strSend)
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
 	// generate snapshot payments and let it mature
-	printf("Generating 100 blocks to start the mainnet\n");
+	printf("Generating 101 blocks to start the mainnet\n");
 	GenerateMainNetBlocks(101, "mainnet1");
 
-	int numberOfTxPerBlock = 1;
+	int numberOfTxPerBlock = 250;
 	double nTotal  =0;
 	std::string sendManyString = "";
 	for(int i =0;i<paymentAmounts.size();i++)
