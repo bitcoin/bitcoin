@@ -319,6 +319,8 @@ public:
 
     DBErrors ZapWalletTx();
 
+    bool SetAddressBookName(const CTxDestination& address, const std::string& strName);
+
     bool SetAddressBookName(const CBitcoinAddress& address, const std::string& strName);
 
     bool DelAddressBookName(const CBitcoinAddress& address);

@@ -173,7 +173,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
         if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
-        pwalletMain->SetAddressBookName(CBitcoinAddress(account.vchPubKey.GetID()), strAccount);
+        pwalletMain->SetAddressBookName(account.vchPubKey.GetID(), strAccount);
         walletdb.WriteAccount(strAccount, account);
     }
 

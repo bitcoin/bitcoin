@@ -2236,6 +2236,11 @@ DBErrors CWallet::ZapWalletTx()
     return DB_LOAD_OK;
 }
 
+bool CWallet::SetAddressBookName(const CTxDestination& address, const string& strName)
+{
+    return SetAddressBookName(CBitcoinAddress(address), strName);
+}
+
 bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& strName)
 {
     std::map<CBitcoinAddress, string>::iterator mi = mapAddressBook.find(address);
