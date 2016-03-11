@@ -25,6 +25,9 @@ void SendSnapShotPayment(const std::string &strSend)
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
+	// generate snapshot payments
+	GenerateMainNetBlocks(1, "mainnet1");
+
 	int numberOfTxPerBlock = 1000;
 	std::string sendManyString = "";
 	for(int i =0;i<paymentAmounts.size();i++)
@@ -75,8 +78,6 @@ bool IsMainNetAlreadyCreated()
 BOOST_AUTO_TEST_CASE (generate_and_verify_snapshot)
 {
 	std::vector<PaymentAmount> paymentAmounts;
-	// generate snapshot payments
-	GenerateMainNetBlocks(1, "mainnet1");
 	GetUTXOs(paymentAmounts);
 	if(IsMainNetAlreadyCreated())
 	{
