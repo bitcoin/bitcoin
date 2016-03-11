@@ -778,7 +778,6 @@ void CheckNodeSupportForThinBlocks()
 
 void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
 {
-    LOCK(pfrom->cs_filter);
     if (inv.type == MSG_XTHINBLOCK)
     {
         CXThinBlock xThinBlock(block, pfrom->pThinBlockFilter);
