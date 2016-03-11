@@ -25,8 +25,8 @@ void SendSnapShotPayment(const std::string &strSend)
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
-	// generate snapshot payments
-	GenerateMainNetBlocks(1, "mainnet1");
+	// generate snapshot payments and let it mature
+	GenerateMainNetBlocks(100, "mainnet1");
 
 	int numberOfTxPerBlock = 1000;
 	std::string sendManyString = "";
