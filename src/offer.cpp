@@ -2954,7 +2954,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 			continue;
 		string alias = selleraddy.aliasName;
 		boost::algorithm::to_lower(alias);
-        if (strRegexp != "" && !regex_search(title, offerparts, cregex) && !regex_search(category, offerparts, cregex) && !regex_search(description, offerparts, cregex) && (strRegexp != offer) && strRegexpLower != alias)
+        if (strRegexp != "" && !regex_search(title, offerparts, cregex) && !regex_search(category, offerparts, cregex) && !regex_search(description, offerparts, cregex) && strRegexp != offer && strRegexpLower != alias)
             continue;
 		if(txOffer.bPrivate && strRegexp != offer)
 			continue;
