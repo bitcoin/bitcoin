@@ -824,7 +824,7 @@ UniValue getstat(const UniValue& params, bool fHelp)
     string specificIssue;
 
     int count = 0;
-    if (params.size() < 3) count = 0x7fffffff; // give all that is available
+    if (params.size() < 3) count = 1;  // if a count is not specified, give the latest sample
     else
       {
 	if (!params[2].isNum()) 
