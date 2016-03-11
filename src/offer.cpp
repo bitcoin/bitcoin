@@ -1008,21 +1008,13 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	if (!aliasAddress.isAlias)
 		throw runtime_error("Offer must be a valid alias");
 
-	// check for alias existence in DB
-	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchFromString(aliasAddress.aliasName), vtxPos))
-		throw runtime_error("failed to read alias from alias DB");
-	if (vtxPos.size() < 1)
-		throw runtime_error("no result returned");
-	CAliasIndex alias = vtxPos.back();
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchAlias, aliastx))
+	if (!GetTxOfAlias(vchAlias, alias, aliastx))
 		throw runtime_error("could not find an alias with this name");
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");
     }
-	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
-	if (wtxAliasIn == NULL)
+	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
 		throw runtime_error("this alias is not in your wallet");
 	vector<unsigned char> vchCat = vchFromValue(params[1]);
 	vector<unsigned char> vchTitle = vchFromValue(params[2]);
@@ -1198,15 +1190,8 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	if (!aliasAddress.isAlias)
 		throw runtime_error("Offer must be a valid alias");
 
-	// check for alias existence in DB
-	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchFromString(aliasAddress.aliasName), vtxPos))
-		throw runtime_error("failed to read alias from alias DB");
-	if (vtxPos.size() < 1)
-		throw runtime_error("no result returned");
-	CAliasIndex alias = vtxPos.back();
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchAlias, aliastx))
+	if (!GetTxOfAlias(vchAlias, alias, aliastx))
 		throw runtime_error("could not find an alias with this name");
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");
@@ -1708,15 +1693,8 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		if (!aliasAddress.isAlias)
 			throw runtime_error("Offer must be owned by a valid alias");
 
-		// check for alias existence in DB
-		vector<CAliasIndex> vtxPos;
-		if (!paliasdb->ReadAlias(vchFromString(aliasAddress.aliasName), vtxPos))
-			throw runtime_error("failed to read alias from alias DB");
-		if (vtxPos.size() < 1)
-			throw runtime_error("no result returned");
-		alias = vtxPos.back();
 		CTransaction aliastx;
-		if (!GetTxOfAlias(vchAlias, aliastx))
+		if (!GetTxOfAlias(vchAlias, alias, aliastx))
 			throw runtime_error("could not find an alias with this name");
 
 		if(!IsSyscoinTxMine(aliastx, "alias")) {
@@ -1912,15 +1890,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	if (!aliasAddress.isAlias)
 		throw runtime_error("Invalid syscoin alias");
 
-	// check for alias existence in DB
-	vector<CAliasIndex> aliasVtxPos;
-	if (!paliasdb->ReadAlias(vchFromString(aliasAddress.aliasName), aliasVtxPos))
-		throw runtime_error("failed to read alias from alias DB");
-	if (aliasVtxPos.size() < 1)
-		throw runtime_error("no result returned");
-	CAliasIndex alias = aliasVtxPos.back();
+	CAliasIndex alias;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchAlias, aliastx))
+	if (!GetTxOfAlias(vchAlias, alias, aliastx))
 		throw runtime_error("could not find an alias with this name");
     if (vchEscrowTxHash.empty())
 	{
@@ -2087,7 +2059,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		throw runtime_error(strprintf("not enough remaining quantity to fulfill this orderaccept, qty remaining %u, qty desired %u,  qty waiting to be accepted by the network %d", vtxPos.back().nQty, nQty, memPoolQty));
 
 	int precision = 2;
-	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundCert), nHeight, precision);
+	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
 	string strCipherText = "";
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
 	if(vchLinkOfferAccept.empty() && vchEscrowTxHash.empty())
