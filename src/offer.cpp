@@ -375,6 +375,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 	bool foundOffer = false;
 	bool foundCert = false;
 	bool foundEscrow = false;
+	bool foundAlias = false;
 	const COutPoint *prevOutput = NULL;
 	CCoins prevCoins;
 	uint256 prevOfferHash;
@@ -530,7 +531,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 						COffer myParentOffer = myVtxPos.back();
 						if (myParentOffer.bOnlyAcceptBTC)
 							return error("CheckOfferInputs() OP_OFFER_ACTIVATE: cannot link to an offer that only accepts Bitcoins as payment");
-						if (!IsAliasp(prevAliasOp) && myParentOffer.linkWhitelist.bExclusiveResell)
+						if (!IsAliasOp(prevAliasOp) && myParentOffer.linkWhitelist.bExclusiveResell)
 							return error("CheckOfferInputs() OP_OFFER_ACTIVATE: parent offer set to exlusive resell but no alias input given to linked offer");			
 						if (IsAliasOp(prevAliasOp) && !myParentOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevAliasArgs[0], entry))
 							return error("CheckOfferInputs() OP_OFFER_ACTIVATE: can't find this alias in the parent offer affiliate list");
@@ -1210,8 +1211,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");
     }
-	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
-	if (wtxAliasIn == NULL)
+	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
 		throw runtime_error("this alias is not in your wallet");
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[1]);
 	vector<unsigned char> vchDesc;
@@ -1266,7 +1266,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 			CAliasIndex theAlias;
 			COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
 			// make sure this cert is still valid
-			if (GetTxOfAlias(*pcertdb, entry.aliasLinkVchRand, theAlias, txAlias))
+			if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
 			{
       			// check for existing cert 's
 				if (ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
@@ -1636,7 +1636,7 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 			oList.push_back(Pair("alias", stringFromVch(entry.aliasLinkVchRand)));
 			int expires_in = 0;
 			uint64_t nHeight = theAlias.nHeight;
-			if (!GetSyscoinTransaction(nHeight, txAlias.GetHash(), txCert, Params().GetConsensus()))
+			if (!GetSyscoinTransaction(nHeight, txAlias.GetHash(), txAlias, Params().GetConsensus()))
 				continue;
 			
             if(nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight > 0)
@@ -1927,14 +1927,13 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		if(!IsSyscoinTxMine(aliastx, "alias")) {
 			throw runtime_error("This alias is not yours.");
 		}
-		const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
-		if (wtxAliasIn == NULL)
+		if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
 			throw runtime_error("this alias is not in your wallet");
 	}
 	vchPubKey = alias.vchPubKey;
 	// this is a syscoin txn
 	CWalletTx wtx;
-	CScript scriptPubKeyOrig, scriptPubKeyCertOrig, scriptPubKeyEscrowOrig;
+	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig, scriptPubKeyEscrowOrig;
 	// generate offer accept identifier and hash
 	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 	vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
@@ -1942,7 +1941,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKey;
-	CScript scriptPubKeyEscrow, scriptPubKeyCert;
+	CScript scriptPubKeyEscrow, scriptPubKeyAlias;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << OP_2DROP << OP_DROP;
 	EnsureWalletIsUnlocked();
 	CTransaction acceptTx;
@@ -2041,7 +2040,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	}
 	COfferLinkWhitelistEntry foundAlias;
 	const CWalletTx *wtxAliasIn = NULL;
-	vector<unsigned char> vchAlias;
+	vector<unsigned char> vchWhitelistAlias;
 	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
 	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
 		CTransaction txAlias;
@@ -2063,9 +2062,9 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 				// find the entry with the biggest discount, for buyers convenience
 				if(entry.nDiscountPct >= foundAlias.nDiscountPct || foundAlias.nDiscountPct == 0)
 				{
-					wtxAliasIn = pwalletMain->GetWalletTx(txCert.GetHash());		
+					wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
 					foundAlias = entry;		
-					vchAlias = entry.aliasLinkVchRand;
+					vchWhitelistAlias = entry.aliasLinkVchRand;
 					CPubKey currentKey(theAlias.vchPubKey);
 					scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
 				}
@@ -2074,13 +2073,13 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		}
 	}
 
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchWhitelistAlias << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
-	// if this is an accept for a linked offer, the offer is set to exclusive mode and you dont have a cert in the whitelist, you cannot accept this offer
-	if(!vchLinkOfferAccept.empty() && foundCert.IsNull() && theOffer.linkWhitelist.bExclusiveResell)
+	// if this is an accept for a linked offer, the offer is set to exclusive mode and you dont have an alias in the whitelist, you cannot accept this offer
+	if(!vchLinkOfferAccept.empty() && foundAlias.IsNull() && theOffer.linkWhitelist.bExclusiveResell)
 	{
-		throw runtime_error("cannot pay for this linked offer because you don't own a cert from its affiliate list");
+		throw runtime_error("cannot pay for this linked offer because you don't own am alias from its affiliate list");
 	}
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
@@ -2154,8 +2153,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	vector<CRecipient> vecSend;
 	CRecipient paymentRecipient = {scriptPubKey, nTotalValue, false};
-	CRecipient certRecipient;
-	CreateRecipient(scriptPubKeyCert, certRecipient);
+	CRecipient aliasRecipient;
+	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
 	CRecipient escrowRecipient;
 	CreateRecipient(scriptPubKeyEscrow, escrowRecipient);
 	// if we are accepting an escrow transaction then create another escrow utxo for escrowcomplete to be able to do its thing
@@ -2273,19 +2272,20 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 		vector<unsigned char> vchEscrowLink;
 		COfferLinkWhitelistEntry entry;	
-
+		vector<unsigned char> vchAliasLink;
 		vector<unsigned char> vchOfferLink;
 		vector<unsigned char> vchCertLink;
 		bool foundOffer = false;
 		bool foundCert = false;
 		bool foundEscrow = false;
+		bool foundAlias = false;
 		for (unsigned int i = 0; i < txA.vin.size(); i++) {
 			vector<vector<unsigned char> > vvchIn;
 			int opIn;
 			const COutPoint *prevOutput = &txA.vin[i].prevout;
 			if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 				continue;
-			if(foundOffer && foundCert && foundEscrow)
+			if(foundOffer && foundCert && foundEscrow && foundAlias)
 				break;
 
 			if (!foundOffer && IsOfferOp(opIn)) {
@@ -2300,15 +2300,19 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 				foundCert = true; 
 				vchCertLink = vvchIn[0];
 			}
+			if (!foundAlias && IsAliasOp(opIn)) {
+				foundAlias = true; 
+				vchAliasLink = vvchIn[0];
+			}
 		}
-		if(foundCert)
-			theOffer.linkWhitelist.GetLinkEntryByHash(vchCertLink, entry);	
+		if(foundAlias)
+			theOffer.linkWhitelist.GetLinkEntryByHash(vchAliasLink, entry);	
 		if(foundEscrow)
 		{
 			vector<CEscrow> vtxEscrowPos;
 			pescrowdb->ReadEscrow(vchEscrowLink, vtxEscrowPos);
-			if(!vtxEscrowPos.back().vchCert.empty())
-				theOffer.linkWhitelist.GetLinkEntryByHash(vtxEscrowPos.back().vchCert, entry);	
+			if(!vtxEscrowPos.back().vchWhitelistAlias.empty())
+				theOffer.linkWhitelist.GetLinkEntryByHash(vtxEscrowPos.back().vchWhitelistAlias, entry);	
 				
 		}
 		
@@ -2482,9 +2486,11 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			vector<unsigned char> vchEscrowLink;
 			vector<unsigned char> vchCertLink;
 			vector<unsigned char> vchOfferLink;
+			vector<unsigned char> vchAliasLink;
 			bool foundOffer = false;
 			bool foundEscrow = false;
 			bool foundCert = false;
+			bool foundAlias = false;
 			for (unsigned int i = 0; i < acceptTx.vin.size(); i++) {
 				vector<vector<unsigned char> > vvchIn;
 				int opIn;
@@ -2506,15 +2512,19 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					foundCert = true; 
 					vchCertLink = vvchIn[0];
 				}
+				if (!foundAlias && IsAliasOp(opIn)) {
+					foundAlias = true; 
+					vchAliasLink = vvchIn[0];
+				}
 			}
-			if(foundCert)
-				theOffer.linkWhitelist.GetLinkEntryByHash(vchCertLink, entry);
+			if(foundAlias)
+				theOffer.linkWhitelist.GetLinkEntryByHash(vchAliasLink, entry);
 			if(foundEscrow)
 			{
 				vector<CEscrow> vtxEscrowPos;
 				pescrowdb->ReadEscrow(vchEscrowLink, vtxEscrowPos);
-				if(!vtxEscrowPos.back().vchCert.empty())
-					theOffer.linkWhitelist.GetLinkEntryByHash(vtxEscrowPos.back().vchCert, entry);	
+				if(!vtxEscrowPos.back().vchWhitelistAlias.empty())
+					theOffer.linkWhitelist.GetLinkEntryByHash(vtxEscrowPos.back().vchWhitelistAlias, entry);	
 					
 			}		
 			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
@@ -2615,9 +2625,11 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			vector<unsigned char> vchEscrowLink;
 			vector<unsigned char> vchCertLink;
 			vector<unsigned char> vchOfferLink;
+			vector<unsigned char> vchAliasLink;
 			bool foundOffer = false;
 			bool foundEscrow = false;
 			bool foundCert = false;
+			bool foundAlias = false;
 			COfferLinkWhitelistEntry entry;
 			for (unsigned int i = 0; i < acceptTx.vin.size(); i++) {
 				vector<vector<unsigned char> > vvchIn;
@@ -2640,15 +2652,19 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					foundCert = true; 
 					vchCertLink = vvchIn[0];
 				}
+				if (!foundAlias && IsAliasOp(opIn)) {
+					foundAlias = true; 
+					vchAliasLink = vvchIn[0];
+				}
 			}
-			if(foundCert)
-				theOffer.linkWhitelist.GetLinkEntryByHash(vchCertLink, entry);
+			if(foundAlias)
+				theOffer.linkWhitelist.GetLinkEntryByHash(vchAliasLink, entry);
 			if(foundEscrow)
 			{
 				vector<CEscrow> vtxEscrowPos;
 				pescrowdb->ReadEscrow(vchEscrowLink, vtxEscrowPos);
-				if(!vtxEscrowPos.back().vchCert.empty())
-					theOffer.linkWhitelist.GetLinkEntryByHash(vtxEscrowPos.back().vchCert, entry);	
+				if(!vtxEscrowPos.back().vchWhitelistAlias.empty())
+					theOffer.linkWhitelist.GetLinkEntryByHash(vtxEscrowPos.back().vchWhitelistAlias, entry);	
 					
 			}			
 			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));			
