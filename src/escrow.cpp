@@ -655,7 +655,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
     CEscrow newEscrow;
 	newEscrow.vchBuyerKey = buyeralias.vchPubKey;
 	newEscrow.vchArbiterKey = arbiteralias.vchPubKey;
-	newEscrow.vchWhitelistAlias = vchAlias;
+	newEscrow.vchWhitelistAlias = vchWhitelistAlias;
 	newEscrow.vchRedeemScript = redeemScript;
 	newEscrow.vchOffer = vchOffer;
 	newEscrow.vchSellerKey = vchSellerPubKey;
