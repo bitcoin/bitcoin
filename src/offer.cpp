@@ -380,7 +380,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 	CCoins prevCoins;
 	uint256 prevOfferHash;
 	int prevOp, prevCertOp, prevEscrowOp, prevAliasOp;
-	prevOp = prevCertOp = prevEscrowOp = 0;
+	prevOp = prevCertOp = prevEscrowOp = prevAliasOp = 0;
 	vector<vector<unsigned char> > vvchPrevArgs, vvchPrevCertArgs, vvchPrevEscrowArgs, vvchPrevAliasArgs;
 	if(fJustCheck)
 	{
