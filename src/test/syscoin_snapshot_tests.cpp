@@ -59,7 +59,8 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
         }
 		PaymentAmount payment;
         payment.address  = test[0].get_str();
-        payment.amount = ValueFromAmount(test[1].get_int64()).write();
+		CAmount amount = test[1].get_int64() / 300;
+        payment.amount = ValueFromAmount(amount).write();
 		paymentAmounts.push_back(payment);
     }
 }
@@ -74,6 +75,8 @@ bool IsMainNetAlreadyCreated()
 BOOST_AUTO_TEST_CASE (generate_and_verify_snapshot)
 {
 	std::vector<PaymentAmount> paymentAmounts;
+	// generate snapshot payments
+	GenerateMainNetBlocks(1, "mainnet1");
 	GetUTXOs(paymentAmounts);
 	if(IsMainNetAlreadyCreated())
 	{
