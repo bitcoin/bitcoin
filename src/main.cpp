@@ -4936,6 +4936,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             mapMissingTx[tx.GetHash()] = tx;
 
         // Create a map of all 8 bytes tx hashes pointing to their full tx hash counterpart 
+        // We need to check all transaction sources (orphan list, mempool, and new (incoming) transactions in this block) for a collision.
         bool collision = false;
         std::map<uint64_t, uint256> mapPartialTxHash;
         LOCK(cs_main);
@@ -5193,6 +5194,12 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      nSizeThinBlockTx,
                      ((float) blockSize) / ( (float) pfrom->nSizeThinBlock + (float) nSizeThinBlockTx )
                      );
+
+            // Update run-time statistics of thin block bandwidth savings
+            CThinBlockStats::Update(nSizeThinBlockTx + pfrom->nSizeThinBlock, blockSize);
+            std::string ss = CThinBlockStats::ToString();
+            LogPrint("thin", "thin block stats: %s\n", ss.c_str());
+
             std::vector<CTransaction> vTx = pfrom->thinBlock.vtx;
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
             for (unsigned int i = 0; i < vTx.size(); i++)
