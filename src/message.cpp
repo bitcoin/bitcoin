@@ -370,15 +370,9 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	if (!fromAddress.isAlias)
 		throw runtime_error("Invalid alias");
 
-	// check for alias existence in DB
-	vector<CAliasIndex> vtxAliasPos;
-	if (!paliasdb->ReadAlias(vchFromString(fromAddress.aliasName), vtxAliasPos))
-		throw runtime_error("failed to read alias from alias DB");
-	if (vtxAliasPos.size() < 1)
-		throw runtime_error("no result returned");
-	CAliasIndex alias = vtxAliasPos.back();
+	CAliasIndex alias;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchFromString(strFromAddress), aliastx))
+	if (!GetTxOfAlias(vchFromString(strFromAddress), alias, aliastx))
 		throw runtime_error("could not find an alias with this name");
 	// check for existing pending alias updates
 	if (ExistsInMempool(vchFromString(strFromAddress), OP_ALIAS_UPDATE)) {
