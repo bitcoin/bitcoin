@@ -1893,13 +1893,18 @@ Value makekeypair(const Array& params, bool fHelp)
 
 Value newmalleablekey(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 0)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
             "newmalleablekey\n"
             "Make a malleable public/private key pair.\n");
 
     if (!(fDebug || fTestNet) && GetTime() < SMALLDATA_SWITCH_TIME)
         throw runtime_error("This feature has been disabled for mainNet clients");
+
+    // Parse the account first so we don't generate a key if there's an error
+    string strAccount;
+    if (params.size() > 0)
+        strAccount = AccountFromValue(params[0]);
 
     CMalleableKeyView keyView = pwalletMain->GenerateNewMalleableKey();
 
@@ -1908,11 +1913,14 @@ Value newmalleablekey(const Array& params, bool fHelp)
         throw runtime_error("Unable to generate new malleable key");
 
     CMalleablePubKey mPubKey = mKey.GetMalleablePubKey();
+    CBitcoinAddress address(mPubKey);
+
+    pwalletMain->SetAddressBookName(address, strAccount);
 
     Object result;
     result.push_back(Pair("PublicPair", mPubKey.ToString()));
     result.push_back(Pair("PublicBytes", HexStr(mPubKey.Raw())));
-    result.push_back(Pair("Address", CBitcoinAddress(mPubKey).ToString()));
+    result.push_back(Pair("Address", address.ToString()));
     result.push_back(Pair("KeyView", keyView.ToString()));
 
     return result;
