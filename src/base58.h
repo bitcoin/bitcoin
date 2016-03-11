@@ -115,6 +115,7 @@ public:
     bool Set(const CScriptID &id);
     bool Set(const CTxDestination &dest);
     bool Set(const CMalleablePubKey &mpk);
+    bool Set(const CBitcoinAddress &dest);
     bool IsValid() const;
 
     CBitcoinAddress()

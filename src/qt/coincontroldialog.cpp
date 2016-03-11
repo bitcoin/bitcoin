@@ -4,7 +4,7 @@
 #include "init.h"
 #include "base58.h"
 #include "bitcoinunits.h"
-#include "wallet.h"
+#include "script.h"
 #include "walletmodel.h"
 #include "addresstablemodel.h"
 #include "optionsmodel.h"
@@ -471,16 +471,15 @@ void CoinControlDialog::updateLabels(WalletModel *model, QWidget* dialog)
 
         // Bytes
         CBitcoinAddress address;
-        if(pwalletMain->ExtractAddress(out.tx->vout[out.i].scriptPubKey, address))
+        if(ExtractAddress(*pwalletMain, out.tx->vout[out.i].scriptPubKey, address))
         {
             if (address.IsPair())
                 nBytesInputs += 213;
             else if (address.IsPubKey())
             {
                 CPubKey pubkey;
-                CTxDestination dest = address.Get();
-                CKeyID *keyid = boost::get< CKeyID >(&dest);
-                if (keyid && model->getPubKey(*keyid, pubkey))
+                CKeyID keyid;
+                if (address.GetKeyID(keyid) && model->getPubKey(keyid, pubkey))
                     nBytesInputs += (pubkey.IsCompressed() ? 148 : 180);
                 else
                     nBytesInputs += 148; // in all error cases, simply assume 148 here
@@ -640,7 +639,7 @@ void CoinControlDialog::updateView()
             CBitcoinAddress outputAddress;
             QString sAddress = "";
 
-            if(pwalletMain->ExtractAddress(out.tx->vout[out.i].scriptPubKey, outputAddress))
+            if(ExtractAddress(*pwalletMain, out.tx->vout[out.i].scriptPubKey, outputAddress))
             {
                 sAddress = CBitcoinAddress(outputAddress).ToString().c_str();
 
@@ -651,9 +650,8 @@ void CoinControlDialog::updateView()
                 if (outputAddress.IsPubKey())
                 {
                     CPubKey pubkey;
-                    CTxDestination dest = outputAddress.Get();
-                    CKeyID *keyid = boost::get< CKeyID >(&dest);
-                    if (keyid && model->getPubKey(*keyid, pubkey) && !pubkey.IsCompressed())
+                    CKeyID keyid;
+                    if (outputAddress.GetKeyID(keyid) && model->getPubKey(keyid, pubkey) && !pubkey.IsCompressed())
                         nInputSize = 180;
                 }
             }

@@ -243,8 +243,8 @@ void MultisigDialog::on_saveMultisigAddressButton_clicked()
     LOCK(wallet->cs_wallet);
     if(!wallet->HaveCScript(scriptID))
         wallet->AddCScript(script);
-    if(!wallet->mapAddressBook.count(CBitcoinAddress(address).Get()))
-        wallet->SetAddressBookName(CBitcoinAddress(address).Get(), label);
+    if(!wallet->mapAddressBook.count(CBitcoinAddress(address)))
+        wallet->SetAddressBookName(CBitcoinAddress(address), label);
 }
 
 void MultisigDialog::clear()

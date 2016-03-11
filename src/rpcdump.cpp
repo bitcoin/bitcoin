@@ -62,18 +62,19 @@ Value importprivkey(const Array& params, bool fHelp)
     bool fCompressed;
     CSecret secret = vchSecret.GetSecret(fCompressed);
     key.SetSecret(secret, fCompressed);
-    CKeyID vchAddress = key.GetPubKey().GetID();
+    CKeyID keyid = key.GetPubKey().GetID();
+    CBitcoinAddress addr = CBitcoinAddress(keyid);
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
 
         pwalletMain->MarkDirty();
-        pwalletMain->SetAddressBookName(vchAddress, strLabel);
+        pwalletMain->SetAddressBookName(addr, strLabel);
 
         // Don't throw error in case a key is already there
-        if (pwalletMain->HaveKey(vchAddress))
+        if (pwalletMain->HaveKey(keyid))
             return Value::null;
 
-        pwalletMain->mapKeyMetadata[vchAddress].nCreateTime = 1;
+        pwalletMain->mapKeyMetadata[addr].nCreateTime = 1;
 
         if (!pwalletMain->AddKey(key))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding key to wallet");
@@ -131,7 +132,7 @@ Value importaddress(const Array& params, bool fHelp)
         pwalletMain->MarkDirty();
 
         if (address.IsValid())
-            pwalletMain->SetAddressBookName(address.Get(), strLabel);
+            pwalletMain->SetAddressBookName(address, strLabel);
 
         if (!pwalletMain->AddWatchOnly(script))
             throw JSONRPCError(RPC_WALLET_ERROR, "Error adding address to wallet");

@@ -48,7 +48,7 @@ CPubKey CWallet::GenerateNewKey()
 
     // Create new metadata
     int64_t nCreationTime = GetTime();
-    mapKeyMetadata[pubkey.GetID()] = CKeyMetadata(nCreationTime);
+    mapKeyMetadata[CBitcoinAddress(pubkey.GetID())] = CKeyMetadata(nCreationTime);
     if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
         nTimeFirstKey = nCreationTime;
 
@@ -70,7 +70,7 @@ CMalleableKeyView CWallet::GenerateNewMalleableKey()
 
     // Create new metadata
     int64_t nCreationTime = GetTime();
-    mapMalleableKeyMetadata[keyView] = CKeyMetadata(nCreationTime);
+    mapKeyMetadata[CBitcoinAddress(keyView.GetMalleablePubKey())] = CKeyMetadata(nCreationTime);
     if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
         nTimeFirstKey = nCreationTime;
 
@@ -87,7 +87,7 @@ bool CWallet::AddKey(const CKey& key)
     if (!fFileBacked)
         return true;
     if (!IsCrypted())
-        return CWalletDB(strWalletFile).WriteKey(pubkey, key.GetPrivKey(), mapKeyMetadata[pubkey.GetID()]);
+        return CWalletDB(strWalletFile).WriteKey(pubkey, key.GetPrivKey(), mapKeyMetadata[CBitcoinAddress(pubkey.GetID())]);
     return true;
 }
 
@@ -100,7 +100,7 @@ bool CWallet::AddMalleableKey(const CMalleableKey& mKey)
     if (!fFileBacked)
         return true;
     if (!IsCrypted())
-        return CWalletDB(strWalletFile).WriteMalleableKey(keyView, vchSecretH, mapMalleableKeyMetadata[keyView]);
+        return CWalletDB(strWalletFile).WriteMalleableKey(keyView, vchSecretH, mapKeyMetadata[CBitcoinAddress(keyView.GetMalleablePubKey())]);
     return true;
 }
 
@@ -114,10 +114,11 @@ bool CWallet::AddCryptedMalleableKey(const CMalleableKeyView& keyView, const std
 
     {
         LOCK(cs_wallet);
+        CBitcoinAddress addr(keyView.GetMalleablePubKey());
         if (pwalletdbEncryption)
-            return pwalletdbEncryption->WriteCryptedMalleableKey(keyView, vchCryptedSecretH, mapMalleableKeyMetadata[keyView]);
+            return pwalletdbEncryption->WriteCryptedMalleableKey(keyView, vchCryptedSecretH, mapKeyMetadata[addr]);
         else
-            return CWalletDB(strWalletFile).WriteCryptedMalleableKey(keyView, vchCryptedSecretH, mapMalleableKeyMetadata[keyView]);
+            return CWalletDB(strWalletFile).WriteCryptedMalleableKey(keyView, vchCryptedSecretH, mapKeyMetadata[addr]);
     }
 
     return true;
@@ -138,10 +139,11 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey, const vector<unsigned char
         return true;
     {
         LOCK(cs_wallet);
+        CBitcoinAddress addr(vchPubKey.GetID());
         if (pwalletdbEncryption)
-            return pwalletdbEncryption->WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[vchPubKey.GetID()]);
+            return pwalletdbEncryption->WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[addr]);
         else
-            return CWalletDB(strWalletFile).WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[vchPubKey.GetID()]);
+            return CWalletDB(strWalletFile).WriteCryptedKey(vchPubKey, vchCryptedSecret, mapKeyMetadata[addr]);
     }
     return false;
 }
@@ -151,16 +153,16 @@ bool CWallet::LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &meta)
     if (meta.nCreateTime && (!nTimeFirstKey || meta.nCreateTime < nTimeFirstKey))
         nTimeFirstKey = meta.nCreateTime;
 
-    mapKeyMetadata[pubkey.GetID()] = meta;
+    mapKeyMetadata[CBitcoinAddress(pubkey.GetID())] = meta;
     return true;
 }
 
-bool CWallet::LoadMalleableKeyMetadata(const CMalleableKeyView &keyView, const CKeyMetadata &metadata)
+bool CWallet::LoadKeyMetadata(const CMalleableKeyView &keyView, const CKeyMetadata &metadata)
 {
     if (metadata.nCreateTime && (!nTimeFirstKey || metadata.nCreateTime < nTimeFirstKey))
         nTimeFirstKey = metadata.nCreateTime;
 
-    mapMalleableKeyMetadata[keyView] = metadata;
+    mapKeyMetadata[CBitcoinAddress(keyView.GetMalleablePubKey())] = metadata;
     return true;
 }
 
@@ -476,7 +478,7 @@ bool CWallet::DecryptWallet(const SecureString& strWalletPassphrase)
                 CKey key;
                 key.SetSecret((*mi).second.first, (*mi).second.second);
                 pwalletdbDecryption->EraseCryptedKey(key.GetPubKey());
-                pwalletdbDecryption->WriteKey(key.GetPubKey(), key.GetPrivKey(), mapKeyMetadata[(*mi).first]);
+                pwalletdbDecryption->WriteKey(key.GetPubKey(), key.GetPrivKey(), mapKeyMetadata[CBitcoinAddress(mi->first)]);
                 mi++;
             }
 
@@ -486,7 +488,7 @@ bool CWallet::DecryptWallet(const SecureString& strWalletPassphrase)
                 const CSecret &vchSecretH = mi2->second;
                 const CMalleableKeyView &keyView = mi2->first;
                 pwalletdbDecryption->EraseCryptedMalleableKey(keyView);
-                pwalletdbDecryption->WriteMalleableKey(keyView, vchSecretH, mapMalleableKeyMetadata[keyView]);
+                pwalletdbDecryption->WriteMalleableKey(keyView, vchSecretH, mapKeyMetadata[CBitcoinAddress(keyView.GetMalleablePubKey())]);
                 mi2++;
             }
 
@@ -867,8 +869,8 @@ int CWalletTx::GetRequestCount() const
     return nRequests;
 }
 
-void CWalletTx::GetAmounts(int64_t& nGeneratedImmature, int64_t& nGeneratedMature, list<pair<CTxDestination, int64_t> >& listReceived,
-                           list<pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, string& strSentAccount, const isminefilter& filter) const
+void CWalletTx::GetAmounts(int64_t& nGeneratedImmature, int64_t& nGeneratedMature, list<pair<CBitcoinAddress, int64_t> >& listReceived,
+                           list<pair<CBitcoinAddress, int64_t> >& listSent, int64_t& nFee, string& strSentAccount, const isminefilter& filter) const
 {
     nGeneratedImmature = nGeneratedMature = nFee = 0;
     listReceived.clear();
@@ -909,12 +911,12 @@ void CWalletTx::GetAmounts(int64_t& nGeneratedImmature, int64_t& nGeneratedMatur
             continue;
 
         // In either case, we need to get the destination address
-        CTxDestination address;
-        if (!ExtractDestination(txout.scriptPubKey, address))
+        CBitcoinAddress address;
+        if (!ExtractAddress(*pwallet, txout.scriptPubKey, address))
         {
             printf("CWalletTx::GetAmounts: Unknown transaction type found, txid %s\n",
                    this->GetHash().ToString().c_str());
-            address = CNoDestination();
+            address = CBitcoinAddress();
         }
 
         // If we are debited by the transaction, add the output as a "sent" entry
@@ -936,25 +938,25 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64_t& nGenerated,
     int64_t allGeneratedImmature, allGeneratedMature, allFee;
     allGeneratedImmature = allGeneratedMature = allFee = 0;
     string strSentAccount;
-    list<pair<CTxDestination, int64_t> > listReceived;
-    list<pair<CTxDestination, int64_t> > listSent;
+    list<pair<CBitcoinAddress, int64_t> > listReceived;
+    list<pair<CBitcoinAddress, int64_t> > listSent;
     GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount, filter);
 
     if (strAccount == "")
         nGenerated = allGeneratedMature;
     if (strAccount == strSentAccount)
     {
-        BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64_t)& s, listSent)
+        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64_t)& s, listSent)
             nSent += s.second;
         nFee = allFee;
     }
     {
         LOCK(pwallet->cs_wallet);
-        BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64_t)& r, listReceived)
+        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64_t)& r, listReceived)
         {
             if (pwallet->mapAddressBook.count(r.first))
             {
-                map<CTxDestination, string>::const_iterator mi = pwallet->mapAddressBook.find(r.first);
+                map<CBitcoinAddress, string>::const_iterator mi = pwallet->mapAddressBook.find(r.first);
                 if (mi != pwallet->mapAddressBook.end() && (*mi).second == strAccount)
                     nReceived += r.second;
             }
@@ -2234,23 +2236,23 @@ DBErrors CWallet::ZapWalletTx()
     return DB_LOAD_OK;
 }
 
-bool CWallet::SetAddressBookName(const CTxDestination& address, const string& strName)
+bool CWallet::SetAddressBookName(const CBitcoinAddress& address, const string& strName)
 {
-    std::map<CTxDestination, std::string>::iterator mi = mapAddressBook.find(address);
+    std::map<CBitcoinAddress, string>::iterator mi = mapAddressBook.find(address);
     mapAddressBook[address] = strName;
     NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address) != MINE_NO, (mi == mapAddressBook.end()) ? CT_NEW : CT_UPDATED);
     if (!fFileBacked)
         return false;
-    return CWalletDB(strWalletFile).WriteName(CBitcoinAddress(address).ToString(), strName);
+    return CWalletDB(strWalletFile).WriteName(address.ToString(), strName);
 }
 
-bool CWallet::DelAddressBookName(const CTxDestination& address)
+bool CWallet::DelAddressBookName(const CBitcoinAddress& address)
 {
     mapAddressBook.erase(address);
     NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address) != MINE_NO, CT_DELETED);
     if (!fFileBacked)
         return false;
-    return CWalletDB(strWalletFile).EraseName(CBitcoinAddress(address).ToString());
+    return CWalletDB(strWalletFile).EraseName(address.ToString());
 }
 
 
@@ -2470,9 +2472,9 @@ int64_t CWallet::GetOldestKeyPoolTime()
     return keypool.nTime;
 }
 
-std::map<CTxDestination, int64_t> CWallet::GetAddressBalances()
+std::map<CBitcoinAddress, int64_t> CWallet::GetAddressBalances()
 {
-    map<CTxDestination, int64_t> balances;
+    map<CBitcoinAddress, int64_t> balances;
 
     {
         LOCK(cs_wallet);
@@ -2492,10 +2494,10 @@ std::map<CTxDestination, int64_t> CWallet::GetAddressBalances()
 
             for (unsigned int i = 0; i < pcoin->vout.size(); i++)
             {
-                CTxDestination addr;
+                CBitcoinAddress addr;
                 if (!IsMine(pcoin->vout[i]))
                     continue;
-                if(!ExtractDestination(pcoin->vout[i].scriptPubKey, addr))
+                if(!ExtractAddress(*this, pcoin->vout[i].scriptPubKey, addr))
                     continue;
 
                 int64_t n = pcoin->IsSpent(i) ? 0 : pcoin->vout[i].nValue;
@@ -2510,10 +2512,10 @@ std::map<CTxDestination, int64_t> CWallet::GetAddressBalances()
     return balances;
 }
 
-set< set<CTxDestination> > CWallet::GetAddressGroupings()
+set< set<CBitcoinAddress> > CWallet::GetAddressGroupings()
 {
-    set< set<CTxDestination> > groupings;
-    set<CTxDestination> grouping;
+    set< set<CBitcoinAddress> > groupings;
+    set<CBitcoinAddress> grouping;
 
     BOOST_FOREACH(PAIRTYPE(uint256, CWalletTx) walletEntry, mapWallet)
     {
@@ -2524,8 +2526,8 @@ set< set<CTxDestination> > CWallet::GetAddressGroupings()
             // group all input addresses with each other
             BOOST_FOREACH(CTxIn txin, pcoin->vin)
             {
-                CTxDestination address;
-                if(!ExtractDestination(mapWallet[txin.prevout.hash].vout[txin.prevout.n].scriptPubKey, address))
+                CBitcoinAddress address;
+                if(!ExtractAddress(*this, mapWallet[txin.prevout.hash].vout[txin.prevout.n].scriptPubKey, address))
                     continue;
                 grouping.insert(address);
             }
@@ -2535,8 +2537,8 @@ set< set<CTxDestination> > CWallet::GetAddressGroupings()
                 if (IsChange(txout))
                 {
                     CWalletTx tx = mapWallet[pcoin->vin[0].prevout.hash];
-                    CTxDestination txoutAddr;
-                    if(!ExtractDestination(txout.scriptPubKey, txoutAddr))
+                    CBitcoinAddress txoutAddr;
+                    if(!ExtractAddress(*this, txout.scriptPubKey, txoutAddr))
                         continue;
                     grouping.insert(txoutAddr);
                 }
@@ -2548,8 +2550,8 @@ set< set<CTxDestination> > CWallet::GetAddressGroupings()
         for (unsigned int i = 0; i < pcoin->vout.size(); i++)
             if (IsMine(pcoin->vout[i]))
             {
-                CTxDestination address;
-                if(!ExtractDestination(pcoin->vout[i].scriptPubKey, address))
+                CBitcoinAddress address;
+                if(!ExtractAddress(*this, pcoin->vout[i].scriptPubKey, address))
                     continue;
                 grouping.insert(address);
                 groupings.insert(grouping);
@@ -2557,20 +2559,20 @@ set< set<CTxDestination> > CWallet::GetAddressGroupings()
             }
     }
 
-    set< set<CTxDestination>* > uniqueGroupings; // a set of pointers to groups of addresses
-    map< CTxDestination, set<CTxDestination>* > setmap;  // map addresses to the unique group containing it
-    BOOST_FOREACH(set<CTxDestination> grouping, groupings)
+    set< set<CBitcoinAddress>* > uniqueGroupings; // a set of pointers to groups of addresses
+    map< CBitcoinAddress, set<CBitcoinAddress>* > setmap;  // map addresses to the unique group containing it
+    BOOST_FOREACH(set<CBitcoinAddress> grouping, groupings)
     {
         // make a set of all the groups hit by this new group
-        set< set<CTxDestination>* > hits;
-        map< CTxDestination, set<CTxDestination>* >::iterator it;
-        BOOST_FOREACH(CTxDestination address, grouping)
+        set< set<CBitcoinAddress>* > hits;
+        map< CBitcoinAddress, set<CBitcoinAddress>* >::iterator it;
+        BOOST_FOREACH(CBitcoinAddress address, grouping)
             if ((it = setmap.find(address)) != setmap.end())
                 hits.insert((*it).second);
 
         // merge all hit groups into a new single group and delete old groups
-        set<CTxDestination>* merged = new set<CTxDestination>(grouping);
-        BOOST_FOREACH(set<CTxDestination>* hit, hits)
+        set<CBitcoinAddress>* merged = new set<CBitcoinAddress>(grouping);
+        BOOST_FOREACH(set<CBitcoinAddress>* hit, hits)
         {
             merged->insert(hit->begin(), hit->end());
             uniqueGroupings.erase(hit);
@@ -2579,12 +2581,12 @@ set< set<CTxDestination> > CWallet::GetAddressGroupings()
         uniqueGroupings.insert(merged);
 
         // update setmap
-        BOOST_FOREACH(CTxDestination element, *merged)
+        BOOST_FOREACH(CBitcoinAddress element, *merged)
             setmap[element] = merged;
     }
 
-    set< set<CTxDestination> > ret;
-    BOOST_FOREACH(set<CTxDestination>* uniqueGrouping, uniqueGroupings)
+    set< set<CBitcoinAddress> > ret;
+    BOOST_FOREACH(set<CBitcoinAddress>* uniqueGrouping, uniqueGroupings)
     {
         ret.insert(*uniqueGrouping);
         delete uniqueGrouping;
@@ -2747,14 +2749,8 @@ void CWallet::GetAddresses(std::map<CBitcoinAddress, int64_t> &mapAddresses) con
     mapAddresses.clear();
 
     // get birth times for keys with metadata
-    for (std::map<CMalleableKeyView, CKeyMetadata>::const_iterator it = mapMalleableKeyMetadata.begin(); it != mapMalleableKeyMetadata.end(); it++) {
-        CBitcoinAddress addr(it->first.GetMalleablePubKey());
-        mapAddresses[addr] = it->second.nCreateTime ? it->second.nCreateTime : 0;
-    }
-
-    for (std::map<CKeyID, CKeyMetadata>::const_iterator it = mapKeyMetadata.begin(); it != mapKeyMetadata.end(); it++) {
-        CBitcoinAddress addr(it->first);
-        mapAddresses[addr] = it->second.nCreateTime ? it->second.nCreateTime : 0;
+    for (std::map<CBitcoinAddress, CKeyMetadata>::const_iterator it = mapKeyMetadata.begin(); it != mapKeyMetadata.end(); it++) {
+        mapAddresses[it->first] = it->second.nCreateTime ? it->second.nCreateTime : 0;
     }
 
     for (std::map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); it++) {
@@ -2767,7 +2763,7 @@ void CWallet::GetAddresses(std::map<CBitcoinAddress, int64_t> &mapAddresses) con
             const CTxOut &out = (*it2);
             // iterate over all their outputs
             CBitcoinAddress addressRet;
-            if (const_cast<CWallet*>(this)->ExtractAddress(out.scriptPubKey, addressRet)) {
+            if (ExtractAddress(*this, out.scriptPubKey, addressRet)) {
                 if (mapAddresses.find(addressRet) != mapAddresses.end() && (mapAddresses[addressRet] == 0 || mapAddresses[addressRet] > wtx.nTime))
                     mapAddresses[addressRet] = wtx.nTime;
             }
@@ -2805,38 +2801,3 @@ void CWallet::ClearOrphans()
         EraseFromWallet(*it);
 }
 
-bool CWallet::ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet)
-{
-    vector<valtype> vSolutions;
-    txnouttype whichType;
-    if (!Solver(scriptPubKey, whichType, vSolutions))
-        return false;
-
-    if (whichType == TX_PUBKEY)
-    {
-        addressRet = CBitcoinAddress(CPubKey(vSolutions[0]).GetID());
-        return true;
-    }
-    if (whichType == TX_PUBKEY_DROP)
-    {
-        // Pay-to-Pubkey-R
-        CMalleableKeyView view;
-        if (!CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view))
-            return false;
-
-        addressRet = CBitcoinAddress(view.GetMalleablePubKey());
-        return true;
-    }
-    else if (whichType == TX_PUBKEYHASH)
-    {
-        addressRet = CBitcoinAddress(CKeyID(uint160(vSolutions[0])));
-        return true;
-    }
-    else if (whichType == TX_SCRIPTHASH)
-    {
-        addressRet = CBitcoinAddress(CScriptID(uint160(vSolutions[0])));
-        return true;
-    }
-    // Multisig txns have more than one address...
-    return false;
-}

@@ -254,6 +254,13 @@ bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRe
         return true;
     }
 
+    bool CBitcoinAddress::Set(const CBitcoinAddress &dest)
+    {
+        nVersion = dest.nVersion;
+        vchData = dest.vchData;
+        return true;
+    }
+
     bool CBitcoinAddress::IsValid() const
     {
         unsigned int nExpectedSize = 20;

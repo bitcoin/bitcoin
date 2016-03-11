@@ -134,11 +134,11 @@ Value getnewaddress(const Array& params, bool fHelp)
     CPubKey newKey;
     if (!pwalletMain->GetKeyFromPool(newKey, false))
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-    CKeyID keyID = newKey.GetID();
+    CBitcoinAddress address(newKey.GetID());
 
-    pwalletMain->SetAddressBookName(keyID, strAccount);
+    pwalletMain->SetAddressBookName(address, strAccount);
 
-    return CBitcoinAddress(keyID).ToString();
+    return address.ToString();
 }
 
 
@@ -173,7 +173,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
         if (!pwalletMain->GetKeyFromPool(account.vchPubKey, false))
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
-        pwalletMain->SetAddressBookName(account.vchPubKey.GetID(), strAccount);
+        pwalletMain->SetAddressBookName(CBitcoinAddress(account.vchPubKey.GetID()), strAccount);
         walletdb.WriteAccount(strAccount, account);
     }
 
@@ -216,14 +216,14 @@ Value setaccount(const Array& params, bool fHelp)
         strAccount = AccountFromValue(params[1]);
 
     // Detect when changing the account of an address that is the 'unused current key' of another account:
-    if (pwalletMain->mapAddressBook.count(address.Get()))
+    if (pwalletMain->mapAddressBook.count(address))
     {
-        string strOldAccount = pwalletMain->mapAddressBook[address.Get()];
+        string strOldAccount = pwalletMain->mapAddressBook[address];
         if (address == GetAccountAddress(strOldAccount))
             GetAccountAddress(strOldAccount, true);
     }
 
-    pwalletMain->SetAddressBookName(address.Get(), strAccount);
+    pwalletMain->SetAddressBookName(address, strAccount);
 
     return Value::null;
 }
@@ -241,7 +241,7 @@ Value getaccount(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid NovaCoin address");
 
     string strAccount;
-    map<CTxDestination, string>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
+    map<CBitcoinAddress, string>::iterator mi = pwalletMain->mapAddressBook.find(address);
     if (mi != pwalletMain->mapAddressBook.end() && !(*mi).second.empty())
         strAccount = (*mi).second;
     return strAccount;
@@ -366,19 +366,19 @@ Value listaddressgroupings(const Array& params, bool fHelp)
             "in past transactions");
 
     Array jsonGroupings;
-    map<CTxDestination, int64_t> balances = pwalletMain->GetAddressBalances();
-    BOOST_FOREACH(set<CTxDestination> grouping, pwalletMain->GetAddressGroupings())
+    map<CBitcoinAddress, int64_t> balances = pwalletMain->GetAddressBalances();
+    BOOST_FOREACH(set<CBitcoinAddress> grouping, pwalletMain->GetAddressGroupings())
     {
         Array jsonGrouping;
-        BOOST_FOREACH(CTxDestination address, grouping)
+        BOOST_FOREACH(CBitcoinAddress address, grouping)
         {
             Array addressInfo;
-            addressInfo.push_back(CBitcoinAddress(address).ToString());
+            addressInfo.push_back(address.ToString());
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
                 LOCK(pwalletMain->cs_wallet);
-                if (pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != pwalletMain->mapAddressBook.end())
-                    addressInfo.push_back(pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second);
+                if (pwalletMain->mapAddressBook.find(address) != pwalletMain->mapAddressBook.end())
+                    addressInfo.push_back(pwalletMain->mapAddressBook.find(address)->second);
             }
             jsonGrouping.push_back(addressInfo);
         }
@@ -487,7 +487,7 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
             CBitcoinAddress addressRet;
-            if (!pwalletMain->ExtractAddress(txout.scriptPubKey, addressRet))
+            if (!ExtractAddress(*pwalletMain, txout.scriptPubKey, addressRet))
                 continue;
             if (addressRet == address)
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
@@ -498,11 +498,11 @@ Value getreceivedbyaddress(const Array& params, bool fHelp)
     return  ValueFromAmount(nAmount);
 }
 
-void GetAccountAddresses(string strAccount, set<CTxDestination>& setAddress)
+void GetAccountAddresses(string strAccount, set<CBitcoinAddress>& setAddress)
 {
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& item, pwalletMain->mapAddressBook)
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& item, pwalletMain->mapAddressBook)
     {
-        const CTxDestination& address = item.first;
+        const CBitcoinAddress& address = item.first;
         const string& strName = item.second;
         if (strName == strAccount)
             setAddress.insert(address);
@@ -523,7 +523,7 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
     // Get the set of pub keys assigned to account
     string strAccount = AccountFromValue(params[0]);
-    set<CTxDestination> setAddress;
+    set<CBitcoinAddress> setAddress;
     GetAccountAddresses(strAccount, setAddress);
 
     // Tally
@@ -536,8 +536,8 @@ Value getreceivedbyaccount(const Array& params, bool fHelp)
 
         BOOST_FOREACH(const CTxOut& txout, wtx.vout)
         {
-            CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*pwalletMain, address) && setAddress.count(address))
+            CBitcoinAddress address;
+            if (ExtractAddress(*pwalletMain, txout.scriptPubKey, address) && IsMine(*pwalletMain, address) && setAddress.count(address))
                 if (wtx.GetDepthInMainChain() >= nMinDepth)
                     nAmount += txout.nValue;
         }
@@ -614,15 +614,15 @@ Value getbalance(const Array& params, bool fHelp)
             allGeneratedImmature = allGeneratedMature = allFee = 0;
 
             string strSentAccount;
-            list<pair<CTxDestination, int64_t> > listReceived;
-            list<pair<CTxDestination, int64_t> > listSent;
+            list<pair<CBitcoinAddress, int64_t> > listReceived;
+            list<pair<CBitcoinAddress, int64_t> > listSent;
             wtx.GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount, filter);
             if (wtx.GetDepthInMainChain() >= nMinDepth)
             {
-                BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64_t)& r, listReceived)
+                BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64_t)& r, listReceived)
                     nBalance += r.second;
             }
-            BOOST_FOREACH(const PAIRTYPE(CTxDestination,int64_t)& r, listSent)
+            BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress,int64_t)& r, listSent)
                 nBalance -= r.second;
             nBalance -= allFee;
             nBalance += allGeneratedMature;
@@ -886,11 +886,11 @@ Value addmultisigaddress(const Array& params, bool fHelp)
     throw runtime_error(
         strprintf("redeemScript exceeds size limit: %" PRIszu " > %d", inner.size(), MAX_SCRIPT_ELEMENT_SIZE));
 
-    CScriptID innerID = inner.GetID();
     pwalletMain->AddCScript(inner);
+    CBitcoinAddress address(inner.GetID());
 
-    pwalletMain->SetAddressBookName(innerID, strAccount);
-    return CBitcoinAddress(innerID).ToString();
+    pwalletMain->SetAddressBookName(address, strAccount);
+    return address.ToString();
 }
 
 Value addredeemscript(const Array& params, bool fHelp)
@@ -910,11 +910,11 @@ Value addredeemscript(const Array& params, bool fHelp)
     // Construct using pay-to-script-hash:
     vector<unsigned char> innerData = ParseHexV(params[0], "redeemScript");
     CScript inner(innerData.begin(), innerData.end());
-    CScriptID innerID = inner.GetID();
     pwalletMain->AddCScript(inner);
+    CBitcoinAddress address(inner.GetID());
 
-    pwalletMain->SetAddressBookName(innerID, strAccount);
-    return CBitcoinAddress(innerID).ToString();
+    pwalletMain->SetAddressBookName(address, strAccount);
+    return address.ToString();
 }
 
 struct tallyitem
@@ -1049,19 +1049,17 @@ Value listreceivedbyaccount(const Array& params, bool fHelp)
     return ListReceived(params, true);
 }
 
-static void MaybePushAddress(Object & entry, const CTxDestination &dest)
+static void MaybePushAddress(Object & entry, const CBitcoinAddress &dest)
 {
-    CBitcoinAddress addr;
-    if (addr.Set(dest))
-        entry.push_back(Pair("address", addr.ToString()));
+    entry.push_back(Pair("address", dest.ToString()));
 }
 
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, Array& ret, const isminefilter& filter)
 {
     int64_t nGeneratedImmature, nGeneratedMature, nFee;
     string strSentAccount;
-    list<pair<CTxDestination, int64_t> > listReceived;
-    list<pair<CTxDestination, int64_t> > listSent;
+    list<pair<CBitcoinAddress, int64_t> > listReceived;
+    list<pair<CBitcoinAddress, int64_t> > listSent;
 
     wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount, filter);
 
@@ -1091,7 +1089,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Sent
     if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
     {
-        BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& s, listSent)
+        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64_t)& s, listSent)
         {
             Object entry;
             entry.push_back(Pair("account", strSentAccount));
@@ -1116,7 +1114,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     // Received
     if (listReceived.size() > 0 && wtx.GetDepthInMainChain() >= nMinDepth)
     {
-        BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& r, listReceived)
+        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64_t)& r, listReceived)
         {
             string account;
             if (pwalletMain->mapAddressBook.count(r.first))
@@ -1246,7 +1244,7 @@ Value listaccounts(const Array& params, bool fHelp)
 
 
     map<string, int64_t> mapAccountBalances;
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, string)& entry, pwalletMain->mapAddressBook) {
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, string)& entry, pwalletMain->mapAddressBook) {
         if (IsMine(*pwalletMain, entry.first)) // This address belongs to me
             mapAccountBalances[entry.second] = 0;
     }
@@ -1256,16 +1254,16 @@ Value listaccounts(const Array& params, bool fHelp)
         const CWalletTx& wtx = (*it).second;
         int64_t nGeneratedImmature, nGeneratedMature, nFee;
         string strSentAccount;
-        list<pair<CTxDestination, int64_t> > listReceived;
-        list<pair<CTxDestination, int64_t> > listSent;
+        list<pair<CBitcoinAddress, int64_t> > listReceived;
+        list<pair<CBitcoinAddress, int64_t> > listSent;
         wtx.GetAmounts(nGeneratedImmature, nGeneratedMature, listReceived, listSent, nFee, strSentAccount, includeWatchonly);
         mapAccountBalances[strSentAccount] -= nFee;
-        BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& s, listSent)
+        BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64_t)& s, listSent)
             mapAccountBalances[strSentAccount] -= s.second;
         if (wtx.GetDepthInMainChain() >= nMinDepth)
         {
             mapAccountBalances[""] += nGeneratedMature;
-            BOOST_FOREACH(const PAIRTYPE(CTxDestination, int64_t)& r, listReceived)
+            BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, int64_t)& r, listReceived)
                 if (pwalletMain->mapAddressBook.count(r.first))
                     mapAccountBalances[pwalletMain->mapAddressBook[r.first]] += r.second;
                 else
@@ -1750,18 +1748,18 @@ Value validateaddress(const Array& params, bool fHelp)
         }
         else
         {
-            CTxDestination dest = address.Get();
             string currentAddress = address.ToString();
+            CTxDestination dest = address.Get();
             ret.push_back(Pair("address", currentAddress));
-            isminetype mine = pwalletMain ? IsMine(*pwalletMain, dest) : MINE_NO;
+            isminetype mine = pwalletMain ? IsMine(*pwalletMain, address) : MINE_NO;
             ret.push_back(Pair("ismine", mine != MINE_NO));
             if (mine != MINE_NO) {
                 ret.push_back(Pair("watchonly", mine == MINE_WATCH_ONLY));
                 Object detail = boost::apply_visitor(DescribeAddressVisitor(mine), dest);
                 ret.insert(ret.end(), detail.begin(), detail.end());
             }
-            if (pwalletMain->mapAddressBook.count(dest))
-                ret.push_back(Pair("account", pwalletMain->mapAddressBook[dest]));
+            if (pwalletMain->mapAddressBook.count(address))
+                ret.push_back(Pair("account", pwalletMain->mapAddressBook[address]));
         }
     }
     return ret;

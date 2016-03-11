@@ -225,7 +225,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         {
             string strAddress;
             ssKey >> strAddress;
-            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress).Get()];
+            ssValue >> pwallet->mapAddressBook[CBitcoinAddress(strAddress)];
         }
         else if (strType == "tx")
         {
@@ -428,7 +428,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> keyMeta;
             wss.nKeyMeta++;
 
-            pwallet->LoadMalleableKeyMetadata(keyView, keyMeta);
+            pwallet->LoadKeyMetadata(keyView, keyMeta);
         }
         else if (strType == "keymeta")
         {
@@ -460,9 +460,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             // If no metadata exists yet, create a default with the pool key's
             // creation time. Note that this may be overwritten by actually
             // stored metadata for that key later, which is fine.
-            CKeyID keyid = keypool.vchPubKey.GetID();
-            if (pwallet->mapKeyMetadata.count(keyid) == 0)
-                pwallet->mapKeyMetadata[keyid] = CKeyMetadata(keypool.nTime);
+            CBitcoinAddress addr = CBitcoinAddress(keypool.vchPubKey.GetID());
+            if (pwallet->mapKeyMetadata.count(addr) == 0)
+                pwallet->mapKeyMetadata[addr] = CKeyMetadata(keypool.nTime);
 
         }
         else if (strType == "version")
@@ -827,7 +827,11 @@ bool DumpWallet(CWallet* pwallet, const string& strDest)
                 continue;
             CMalleableKey mKey;
             pwallet->GetMalleableKey(keyView, mKey);
-            file << strprintf("%s %s # view=%s addr=%s\n", mKey.ToString().c_str(), strTime.c_str(), keyView.ToString().c_str(), strAddr.c_str());
+            file << mKey.ToString();
+            if (pwallet->mapAddressBook.count(addr))
+                file << strprintf(" %s label=%s # view=%s addr=%s\n", strTime.c_str(), EncodeDumpString(pwallet->mapAddressBook[addr]).c_str(), keyView.ToString().c_str(), strAddr.c_str());
+            else
+                file << strprintf(" %s # view=%s addr=%s\n", strTime.c_str(), keyView.ToString().c_str(), strAddr.c_str());
         }
         else {
             // Pubkey hash address
@@ -839,8 +843,8 @@ bool DumpWallet(CWallet* pwallet, const string& strDest)
                 continue;
             CSecret secret = key.GetSecret(IsCompressed);
             file << CBitcoinSecret(secret, IsCompressed).ToString();
-            if (pwallet->mapAddressBook.count(keyid))
-                file << strprintf(" %s label=%s # addr=%s\n", strTime.c_str(), EncodeDumpString(pwallet->mapAddressBook[keyid]).c_str(), strAddr.c_str());
+            if (pwallet->mapAddressBook.count(addr))
+                file << strprintf(" %s label=%s # addr=%s\n", strTime.c_str(), EncodeDumpString(pwallet->mapAddressBook[addr]).c_str(), strAddr.c_str());
             else if (setKeyPool.count(keyid))
                 file << strprintf(" %s reserve=1 # addr=%s\n", strTime.c_str(), strAddr.c_str());
             else
@@ -899,6 +903,7 @@ bool ImportWallet(CWallet *pwallet, const string& strLocation)
            }
        }
 
+       CBitcoinAddress addr;
        CBitcoinSecret vchSecret;
        if (vchSecret.SetString(vstr[0])) {
            // Simple private key
@@ -908,20 +913,18 @@ bool ImportWallet(CWallet *pwallet, const string& strLocation)
            CSecret secret = vchSecret.GetSecret(fCompressed);
            key.SetSecret(secret, fCompressed);
            CKeyID keyid = key.GetPubKey().GetID();
+           addr = CBitcoinAddress(keyid);
 
            if (pwallet->HaveKey(keyid)) {
-               printf("Skipping import of %s (key already present)\n", CBitcoinAddress(keyid).ToString().c_str());
+               printf("Skipping import of %s (key already present)\n", addr.ToString().c_str());
                continue;
            }
 
-           printf("Importing %s...\n", CBitcoinAddress(keyid).ToString().c_str());
+           printf("Importing %s...\n", addr.ToString().c_str());
            if (!pwallet->AddKey(key)) {
                fGood = false;
                continue;
            }
-           pwallet->mapKeyMetadata[keyid].nCreateTime = nTime;
-           if (fLabel)
-               pwallet->SetAddressBookName(keyid, strLabel);
        } else {
            // A pair of private keys
 
@@ -929,18 +932,24 @@ bool ImportWallet(CWallet *pwallet, const string& strLocation)
            if (!mKey.SetString(vstr[0]))
                continue;
            CMalleablePubKey mPubKey = mKey.GetMalleablePubKey();
+           addr = CBitcoinAddress(mPubKey);
+
            if (pwallet->CheckOwnership(mPubKey)) {
-               printf("Skipping import of %s (key already present)\n", CBitcoinAddress(mPubKey).ToString().c_str());
+               printf("Skipping import of %s (key already present)\n", addr.ToString().c_str());
                continue;
            }
 
-           printf("Importing %s...\n", CBitcoinAddress(mPubKey).ToString().c_str());
+           printf("Importing %s...\n", addr.ToString().c_str());
            if (!pwallet->AddMalleableKey(mKey)) {
                fGood = false;
                continue;
            }
-           pwallet->mapMalleableKeyMetadata[CMalleableKeyView(mKey)].nCreateTime = nTime;
        }
+
+       pwallet->mapKeyMetadata[addr].nCreateTime = nTime;
+       if (fLabel)
+           pwallet->SetAddressBookName(addr, strLabel);
+
        nTimeBegin = std::min(nTimeBegin, nTime);
    }
    file.close();

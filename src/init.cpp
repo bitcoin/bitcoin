@@ -900,7 +900,7 @@ bool AppInit2()
         if (!pwalletMain->GetKeyFromPool(newDefaultKey, false))
             strErrors << _("Cannot initialize keypool") << "\n";
         pwalletMain->SetDefaultKey(newDefaultKey);
-        if (!pwalletMain->SetAddressBookName(pwalletMain->vchDefaultKey.GetID(), ""))
+        if (!pwalletMain->SetAddressBookName(CBitcoinAddress(pwalletMain->vchDefaultKey.GetID()), ""))
             strErrors << _("Cannot write default address") << "\n";
     }
 

@@ -96,8 +96,12 @@ public:
     std::string strWalletFile;
 
     std::set<int64_t> setKeyPool;
+    /*
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
     std::map<CMalleableKeyView, CKeyMetadata> mapMalleableKeyMetadata;
+    */
+
+    std::map<CBitcoinAddress, CKeyMetadata> mapKeyMetadata;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
@@ -133,7 +137,7 @@ public:
     int64_t nOrderPosNext;
     std::map<uint256, int> mapRequestCount;
 
-    std::map<CTxDestination, std::string> mapAddressBook;
+    std::map<CBitcoinAddress, std::string> mapAddressBook;
 
     CPubKey vchDefaultKey;
     int64_t nTimeFirstKey;
@@ -159,7 +163,7 @@ public:
     bool LoadKey(const CKey& key) { return CCryptoKeyStore::AddKey(key); }
     // Load metadata (used by LoadWallet)
     bool LoadKeyMetadata(const CPubKey &pubkey, const CKeyMetadata &metadata);
-    bool LoadMalleableKeyMetadata(const CMalleableKeyView &keyView, const CKeyMetadata &metadata);
+    bool LoadKeyMetadata(const CMalleableKeyView &keyView, const CKeyMetadata &metadata);
 
     // Load malleable key without saving it to disk (used by LoadWallet)
     bool LoadMalleableKey(const CMalleableKeyView &keyView, const CSecret &vchSecretH) { return CCryptoKeyStore::AddMalleableKey(keyView, vchSecretH); }
@@ -243,8 +247,8 @@ public:
     int64_t GetOldestKeyPoolTime();
     void GetAllReserveKeys(std::set<CKeyID>& setAddress) const;
 
-    std::set< std::set<CTxDestination> > GetAddressGroupings();
-    std::map<CTxDestination, int64_t> GetAddressBalances();
+    std::set< std::set<CBitcoinAddress> > GetAddressGroupings();
+    std::map<CBitcoinAddress, int64_t> GetAddressBalances();
 
     isminetype IsMine(const CTxIn& txin) const;
     int64_t GetDebit(const CTxIn& txin, const isminefilter& filter) const;
@@ -315,9 +319,9 @@ public:
 
     DBErrors ZapWalletTx();
 
-    bool SetAddressBookName(const CTxDestination& address, const std::string& strName);
+    bool SetAddressBookName(const CBitcoinAddress& address, const std::string& strName);
 
-    bool DelAddressBookName(const CTxDestination& address);
+    bool DelAddressBookName(const CBitcoinAddress& address);
 
     void UpdatedTransaction(const uint256 &hashTx);
 
@@ -340,8 +344,6 @@ public:
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
 
-    bool ExtractAddress(const CScript& scriptPubKey, CBitcoinAddress& addressRet);
-
     bool SetDefaultKey(const CPubKey &vchPubKey);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
@@ -359,7 +361,7 @@ public:
     /** Address book entry changed.
      * @note called with lock cs_wallet held.
      */
-    boost::signals2::signal<void (CWallet *wallet, const CTxDestination &address, const std::string &label, bool isMine, ChangeType status)> NotifyAddressBookChanged;
+    boost::signals2::signal<void (CWallet *wallet, const CBitcoinAddress &address, const std::string &label, bool isMine, ChangeType status)> NotifyAddressBookChanged;
 
     /** Wallet transaction added, removed or updated.
      * @note called with lock cs_wallet held.
@@ -797,8 +799,8 @@ public:
         return nChangeCached;
     }
 
-    void GetAmounts(int64_t& nGeneratedImmature, int64_t& nGeneratedMature, std::list<std::pair<CTxDestination, int64_t> >& listReceived,
-                    std::list<std::pair<CTxDestination, int64_t> >& listSent, int64_t& nFee, std::string& strSentAccount, const isminefilter& filter) const;
+    void GetAmounts(int64_t& nGeneratedImmature, int64_t& nGeneratedMature, std::list<std::pair<CBitcoinAddress, int64_t> >& listReceived,
+                    std::list<std::pair<CBitcoinAddress, int64_t> >& listSent, int64_t& nFee, std::string& strSentAccount, const isminefilter& filter) const;
 
     void GetAccountAmounts(const std::string& strAccount, int64_t& nGenerated, int64_t& nReceived,
                            int64_t& nSent, int64_t& nFee, const isminefilter& filter) const;

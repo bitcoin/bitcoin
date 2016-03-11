@@ -50,7 +50,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet *
                 sub.credit = txout.nValue;
 
                 CBitcoinAddress addressRet;
-                if (pwalletMain->ExtractAddress(txout.scriptPubKey, addressRet))
+                if (ExtractAddress(*pwalletMain, txout.scriptPubKey, addressRet))
                 {
                     sub.type = TransactionRecord::RecvWithAddress;
                     sub.address = addressRet.ToString();

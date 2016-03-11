@@ -142,9 +142,9 @@ QString TransactionDesc::toHTML(CWallet *wallet, CWalletTx &wtx)
             // Online transaction
             std::string strAddress = wtx.mapValue["to"];
             strHTML += "<b>" + tr("To") + ":</b> ";
-            CTxDestination dest = CBitcoinAddress(strAddress).Get();
-            if (wallet->mapAddressBook.count(dest) && !wallet->mapAddressBook[dest].empty())
-                strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[dest]) + " ";
+            CBitcoinAddress addr(strAddress);
+            if (wallet->mapAddressBook.count(addr) && !wallet->mapAddressBook[addr].empty())
+                strHTML += GUIUtil::HtmlEscape(wallet->mapAddressBook[addr]) + " ";
             strHTML += GUIUtil::HtmlEscape(strAddress) + "<br>";
         }
 

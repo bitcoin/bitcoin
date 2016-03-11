@@ -1640,12 +1640,13 @@ public:
     bool operator()(const CScriptID &scriptID) const { return keystore->HaveCScript(scriptID); }
 };
 
+/*
 isminetype IsMine(const CKeyStore &keystore, const CTxDestination& dest)
 {
     CScript script;
     script.SetDestination(dest);
     return IsMine(keystore, script);
-}
+}*/
 
 isminetype IsMine(const CKeyStore &keystore, const CBitcoinAddress& dest)
 {
@@ -1738,6 +1739,42 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     else if (whichType == TX_SCRIPTHASH)
     {
         addressRet = CScriptID(uint160(vSolutions[0]));
+        return true;
+    }
+    // Multisig txns have more than one address...
+    return false;
+}
+
+bool ExtractAddress(const CKeyStore &keystore, const CScript& scriptPubKey, CBitcoinAddress& addressRet)
+{
+    vector<valtype> vSolutions;
+    txnouttype whichType;
+    if (!Solver(scriptPubKey, whichType, vSolutions))
+        return false;
+
+    if (whichType == TX_PUBKEY)
+    {
+        addressRet = CBitcoinAddress(CPubKey(vSolutions[0]).GetID());
+        return true;
+    }
+    if (whichType == TX_PUBKEY_DROP)
+    {
+        // Pay-to-Pubkey-R
+        CMalleableKeyView view;
+        if (!keystore.CheckOwnership(CPubKey(vSolutions[0]), CPubKey(vSolutions[1]), view))
+            return false;
+
+        addressRet = CBitcoinAddress(view.GetMalleablePubKey());
+        return true;
+    }
+    else if (whichType == TX_PUBKEYHASH)
+    {
+        addressRet = CBitcoinAddress(CKeyID(uint160(vSolutions[0])));
+        return true;
+    }
+    else if (whichType == TX_SCRIPTHASH)
+    {
+        addressRet = CBitcoinAddress(CScriptID(uint160(vSolutions[0])));
         return true;
     }
     // Multisig txns have more than one address...
