@@ -2383,6 +2383,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nNextInvSend = 0;
     fRelayTxes = false;
     pfilter = new CBloomFilter();
+    pThinBlockFilter = new CBloomFilter(); // BUIP010 - Xtreme Thinblocks
     nPingNonceSent = 0;
     nPingUsecStart = 0;
     nPingUsecTime = 0;
@@ -2426,6 +2427,10 @@ CNode::~CNode()
 
     if (pfilter)
         delete pfilter;
+    // BUIP010 - Xtreme Thinblocks - begin section
+    if (pThinBlockFilter)
+        delete pThinBlockFilter;
+    // BUIP010 - Xtreme Thinblocks - end section
 
     GetNodeSignals().FinalizeNode(GetId());
 }

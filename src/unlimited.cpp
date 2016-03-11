@@ -187,11 +187,12 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
     else
     {
         LOCK(pfrom->cs_filter);
-        delete pfrom->pfilter;
-        pfrom->pfilter = new CBloomFilter(*filter);
-        pfrom->pfilter->UpdateEmptyFull();
+        delete pfrom->pThinBlockFilter;
+        pfrom->pThinBlockFilter = new CBloomFilter(*filter);
+        pfrom->pThinBlockFilter->UpdateEmptyFull();
     }
-    pfrom->fRelayTxes = true;
+    uint64_t nSizeFilter = ::GetSerializeSize(*pfrom->pThinBlockFilter, SER_NETWORK, PROTOCOL_VERSION);
+    LogPrint("thin", "Thinblock Bloom filter size: %d\n", nSizeFilter);
 }
 
 void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, const CInv &inv)
@@ -308,13 +309,14 @@ void CheckNodeSupportForThinBlocks()
 
 void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
 {
+    LOCK(pfrom->cs_filter);
     if (inv.type == MSG_XTHINBLOCK)
     {
-        CXThinBlock xThinBlock(block, pfrom->pfilter);
+        CXThinBlock xThinBlock(block, pfrom->pThinBlockFilter);
         int nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
         if (xThinBlock.collision == true) // If there is a cheapHash collision in this block then send a normal thinblock
         {
-            CThinBlock thinBlock(block, *pfrom->pfilter);
+            CThinBlock thinBlock(block, *pfrom->pThinBlockFilter);
             int nSizeThinBlock = ::GetSerializeSize(xThinBlock, SER_NETWORK, PROTOCOL_VERSION);
             if (nSizeThinBlock < nSizeBlock) {
                 pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
@@ -341,7 +343,7 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
     }
     else if (inv.type == MSG_THINBLOCK)
     {
-        CThinBlock thinBlock(block, *pfrom->pfilter);
+        CThinBlock thinBlock(block, *pfrom->pThinBlockFilter);
         int nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         if (nSizeThinBlock < nSizeBlock) { // Only send a thinblock if smaller than a regular block
