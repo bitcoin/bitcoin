@@ -72,7 +72,7 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 		if(amountInSys1 <= 1)
 			continue;
 		CAmount amountInSys2 = amountInSys1 / 299.4f;
-        payment.amount = ValueFromAmount(amount).write();
+        payment.amount = ValueFromAmount(amountInSys2).write();
 		paymentAmounts.push_back(payment);
     }
 }
