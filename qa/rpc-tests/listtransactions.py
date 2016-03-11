@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Exercise the listtransactions API
-
+import pdb
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction
@@ -190,15 +190,18 @@ class ListTransactionsTest(BitcoinTestFramework):
         tx3_b.vout[0].nValue -= 0.004*100000000 # bump the fee
         tx3_b = binascii.hexlify(tx3_b.serialize()).decode('utf-8')
         tx3_b_signed = self.nodes[0].signrawtransaction(tx3_b)['hex']
-        txid_3b = self.nodes[0].sendrawtransaction(tx3_b_signed, True)
-        assert(is_opt_in(self.nodes[0], txid_3b))
-
-        check_array_result(self.nodes[0].listtransactions(), {"txid": txid_4}, {"bip125-replaceable":"unknown"})
+        try: # BU RBF should be rejected
+          txid_3b = self.nodes[0].sendrawtransaction(tx3_b_signed, True)
+          assert(0)  # should never get here because RBF double spend should be rejected
+        except JSONRPCException:
+          pass
+        # assert(is_opt_in(self.nodes[0], txid_3b))
+        # check_array_result(self.nodes[0].listtransactions(), {"txid": txid_4}, {"bip125-replaceable":"unknown"})
         sync_mempools(self.nodes)
-        check_array_result(self.nodes[1].listtransactions(), {"txid": txid_4}, {"bip125-replaceable":"unknown"})
+        # check_array_result(self.nodes[1].listtransactions(), {"txid": txid_4}, {"bip125-replaceable":"unknown"})
 
         # Check gettransaction as well:
-        for n in self.nodes[0:2]:
+        if 0: # BU RBF removed for n in self.nodes[0:2]:
             assert_equal(n.gettransaction(txid_1)["bip125-replaceable"], "no")
             assert_equal(n.gettransaction(txid_2)["bip125-replaceable"], "no")
             assert_equal(n.gettransaction(txid_3)["bip125-replaceable"], "yes")
@@ -207,9 +210,9 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         # After mining a transaction, it's no longer BIP125-replaceable
         self.nodes[0].generate(1)
-        assert(txid_3b not in self.nodes[0].getrawmempool())
-        assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
-        assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")
+        # assert(txid_3b not in self.nodes[0].getrawmempool())
+        # assert_equal(self.nodes[0].gettransaction(txid_3b)["bip125-replaceable"], "no")
+        # assert_equal(self.nodes[0].gettransaction(txid_4)["bip125-replaceable"], "unknown")
 
 
 if __name__ == '__main__':

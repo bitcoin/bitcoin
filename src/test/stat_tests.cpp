@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(stat_testvectors)
     }
   BOOST_CHECK(s1.History(1,0) == 29*5 + 20);  
   BOOST_CHECK(s2.History(1,0) == (29*10 + 120)/30);  
-  BOOST_CHECK(s3.History(1,0) == 130000);  
+  BOOST_CHECK(s3.History(1,0) == 120000);  
   BOOST_CHECK(s4.History(1,0) == 3.3); 
 
   statMinInterval=boost::posix_time::milliseconds(10); // boost::posix_time::seconds(1); // Speed things up
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(stat_testvectors)
     }
   BOOST_CHECK(s1.History(2,0) > 0);  
   BOOST_CHECK(s2.History(2,0) > 0);  
-  BOOST_CHECK(s3.History(2,0) == 130000);  
+  BOOST_CHECK(s3.History(2,0) == 120000);  
   BOOST_CHECK(s4.History(2,0) == 3.3); 
 
   int array[15];
