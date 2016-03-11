@@ -2943,6 +2943,10 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		const string &offer = stringFromVch(pairScan.first);
 		string title = stringFromVch(txOffer.sTitle);
 		boost::algorithm::to_lower(title);
+		string description = stringFromVch(txOffer.sDescription);
+		boost::algorithm::to_lower(description);
+		string category = stringFromVch(txOffer.sCategory);
+		boost::algorithm::to_lower(category);
 		CPubKey SellerPubKey(txOffer.vchPubKey);
 		CSyscoinAddress selleraddy(SellerPubKey.GetID());
 		selleraddy = CSyscoinAddress(selleraddy.ToString());
@@ -2950,9 +2954,10 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 			continue;
 		string alias = selleraddy.aliasName;
 		boost::algorithm::to_lower(alias);
-        if (strRegexp != "" && !regex_search(title, offerparts, cregex) && strRegexp != offer && strRegexpLower != alias)
+        if (strRegexp != "" && !regex_search(title, offerparts, cregex) && !regex_search(category, offerparts, cregex) && !regex_search(description, offerparts, cregex) && (strRegexp != offer) && strRegexpLower != alias)
             continue;
-
+		if(txOffer.bPrivate && strRegexp != offer)
+			continue;
 		int expired = 0;
 		int expires_in = 0;
 		int expired_block = 0;		
@@ -2971,8 +2976,6 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 			continue;
 		// dont return sold out offers
 		if(txOffer.nQty <= 0)
-			continue;
-		if(txOffer.bPrivate)
 			continue;
 		UniValue oOffer(UniValue::VOBJ);
 		oOffer.push_back(Pair("offer", offer));
