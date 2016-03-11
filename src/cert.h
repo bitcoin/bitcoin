@@ -114,7 +114,7 @@ public:
 
     bool ReconstructCertIndex(CBlockIndex *pindexRescan);
 };
-bool GetTxOfCert(CCertDB& dbCert, const std::vector<unsigned char> &vchCert,
+bool GetTxOfCert(const std::vector<unsigned char> &vchCert,
         CCert& txPos, CTransaction& tx);
 
 #endif // CERT_H

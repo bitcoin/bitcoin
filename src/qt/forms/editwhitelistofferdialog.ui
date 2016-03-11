@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>My Offer Whitelist</string>
+   <string>My Offer Affiliates</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>

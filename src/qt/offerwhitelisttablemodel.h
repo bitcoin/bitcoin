@@ -18,15 +18,13 @@ public:
     ~OfferWhitelistTableModel();
 
     enum ColumnIndex {
-        Cert = 0,  /**< cert  */
-		Title = 1,
-		Alias = 2,
-		Expires = 3,
-		Discount = 4
+		Alias = 0,
+		Discount = 1,
+		Expires = 2,
     };
 
     enum RoleIndex {
-        CertRole = Qt::UserRole
+        AliasRole = Qt::UserRole
     };
     /** Return status of edit/insert operation */
     enum EditStatus {
@@ -52,12 +50,12 @@ public:
     /* Add an offer to the model.
        Returns the added offer on success, and an empty string otherwise.
      */
-    QString addRow(const QString &cert, const QString &title, const QString &alias, const QString &expires,const QString &discount);
+    QString addRow(const QString &alias, const QString &expires,const QString &discount);
 
-    /* Look up row index of a cert in the model.
+    /* Look up row index of a alias in the model.
        Return -1 if not found.
      */
-    int lookupEntry(const QString &cert) const;
+    int lookupEntry(const QString &alias) const;
 	void clear();
     EditStatus getEditStatus() const { return editStatus; }
 	EditStatus editStatus;
@@ -72,7 +70,7 @@ private:
 public Q_SLOTS:
     /* Update offer list from core.
      */
-    void updateEntry(const QString &cert, const QString &title, const QString &alias, const QString &expires,const QString &discount, int status);
+    void updateEntry(const QString &alias, const QString &expires,const QString &discount, int status);
 
     friend class OfferWhitelistTablePriv;
 };
