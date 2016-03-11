@@ -497,22 +497,15 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	if (!aliasAddress.isAlias)
 		throw runtime_error("Offer must be a valid alias");
 
-	// check for alias existence in DB
-	vtxPos.clear();
-	if (!paliasdb->ReadAlias(vchFromString(aliasAddress.aliasName), vtxPos))
-		throw runtime_error("failed to read alias from alias DB");
-	if (vtxPos.size() < 1)
-		throw runtime_error("no result returned");
-	CAliasIndex buyeralias = vtxPos.back();
+	CAliasIndex buyeralias;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchAlias, aliastx))
+	if (!GetTxOfAlias(vchAlias, buyeralias, aliastx))
 		throw runtime_error("could not find an alias with this name");
 
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");
     }
-	const CWalletTx *wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
-	if (wtxAliasIn == NULL)
+	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
 		throw runtime_error("this alias is not in your wallet");
 
 	COffer theOffer, linkedOffer;
@@ -535,9 +528,9 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	}
 	COfferLinkWhitelistEntry foundAlias;
 	const CWalletTx *wtxAliasIn = NULL;
-	vector<unsigned char> vchAlias;
+	vector<unsigned char> vchWhitelistAlias;
 	CScript scriptPubKeyAlias, scriptPubKeyAliasOrig;
-	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
+	// go through the whitelist and see if you own any of the aliases to apply to this offer for a discount
 	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
 		CTransaction txAlias;	
 		CAliasIndex theAlias;
@@ -546,7 +539,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 		// make sure this alias is still valid
 		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
 		{
-			// check for existing cert updates/transfers
+			// check for existing alias updates/transfers
 			if (ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
 				throw runtime_error("there is are pending operations on that alias");
 			}
@@ -555,13 +548,13 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 			if (IsSyscoinTxMine(txAlias, "alias") && wtxAliasIn != NULL) 
 			{
 				foundAlias = entry;
-				vchAlias = entry.aliasLinkVchRand;
+				vchWhitelistAlias = entry.aliasLinkVchRand;
 				CPubKey currentKey(theAlias.vchPubKey);
 				scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
 			}		
 		}
 	}
-	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchAlias << OP_2DROP;
+	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << vchWhitelistAlias << OP_2DROP;
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
@@ -642,7 +635,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	// send to escrow address
 
 	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundCert), chainActive.Tip()->nHeight, precision);
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), chainActive.Tip()->nHeight, precision);
 	CAmount nTotal = nPricePerUnit*nQty;
 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
