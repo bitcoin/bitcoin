@@ -403,8 +403,7 @@ UniValue messagenew(const UniValue& params, bool fHelp) {
 	if (!toAddress.isAlias)
 		throw runtime_error("Invalid alias");
 
-	// check for alias existence in DB
-	vtxAliasPos.clear();
+	vector<CAliasIndex> vtxAliasPos;
 	if (!paliasdb->ReadAlias(vchFromString(toAddress.aliasName), vtxAliasPos))
 		throw runtime_error("failed to read alias from alias DB");
 	if (vtxAliasPos.size() < 1)
