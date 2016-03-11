@@ -411,15 +411,9 @@ UniValue certnew(const UniValue& params, bool fHelp) {
 	if (!aliasAddress.isAlias)
 		throw runtime_error("Offer must be a valid alias");
 
-	// check for alias existence in DB
-	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchFromString(aliasAddress.aliasName), vtxPos))
-		throw runtime_error("failed to read alias from alias DB");
-	if (vtxPos.size() < 1)
-		throw runtime_error("no result returned");
-	CAliasIndex alias = vtxPos.back();
+	CAliasIndex alias;
 	CTransaction aliastx;
-	if (!GetTxOfAlias(vchAlias, aliastx))
+	if (!GetTxOfAlias(vchAlias, alias, aliastx))
 		throw runtime_error("could not find an alias with this name");
     if(!IsSyscoinTxMine(aliastx, "alias")) {
 		throw runtime_error("This alias is not yours.");
