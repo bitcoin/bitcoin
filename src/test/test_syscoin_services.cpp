@@ -176,14 +176,15 @@ void GenerateMainNetBlocks(int nBlocks, const string& node)
 	}
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
 	targetHeight = find_value(r.get_obj(), "blocks").get_int() + nBlocks;
-	CAmount balance = AmountFromValue(find_value(r.get_obj(), "balance"));
 	newHeight = 0;
 	BOOST_CHECK_THROW(r = CallRPC(node, "setgenerate true 1"), runtime_error);
 	while(newHeight < targetHeight)
 	{
-	  MilliSleep(100);
+	  MilliSleep(2000);
 	  BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "getinfo"));
 	  newHeight = find_value(r.get_obj(), "blocks").get_int();
+	  BOOST_CHECK_NO_THROW(r = CallRPC(node, "getinfo"));
+	  CAmount balance = AmountFromValue(find_value(r.get_obj(), "balance"));
 	  printf("Current block height %d, Target block height %d, balance %f\n", newHeight, targetHeight, ValueFromAmount(balance)); 
 	}
 	BOOST_CHECK_THROW(r = CallRPC(node, "setgenerate false"), runtime_error);

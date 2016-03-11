@@ -44,6 +44,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 			SendSnapShotPayment(sendManyString);
 			GenerateMainNetBlocks(1, "mainnet1");
 			sendManyString = "";
+			nTotal = 0;
 		}
 	}
 	if(sendManyString != "") 
