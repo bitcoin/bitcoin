@@ -196,6 +196,7 @@ QT_MOC_CPP = \
   qt/moc_offerwhitelisttablemodel.cpp \
   qt/moc_myofferwhitelisttablemodel.cpp \
   qt/moc_editwhitelistofferdialog.cpp \
+  qt/moc_mywhitelistofferdialog.cpp \
   qt/moc_offerlistpage.cpp \
   qt/moc_myofferlistpage.cpp \
   qt/moc_myacceptedofferlistpage.cpp \
@@ -308,6 +309,7 @@ SYSCOIN_QT_H = \
   qt/offerwhitelisttablemodel.h \
   qt/myofferwhitelisttablemodel.h \
   qt/editwhitelistofferdialog.h \
+  qt/mywhitelistofferdialog.h \
   qt/offerlistpage.h \
   qt/myofferlistpage.h \
   qt/myacceptedofferlistpage.h \
@@ -466,6 +468,7 @@ SYSCOIN_QT_CPP += \
   qt/offerwhitelisttablemodel.cpp \
   qt/myofferwhitelisttablemodel.cpp \
   qt/editwhitelistofferdialog.cpp \
+  qt/mywhitelistofferdialog.cpp \
   qt/offerlistpage.cpp \
   qt/myofferlistpage.cpp \
   qt/myacceptedofferlistpage.cpp \
