@@ -28,7 +28,7 @@ public:
     explicit MyWhitelistOfferDialog(const PlatformStyle *platformStyle, QWidget *parent = 0);
     ~MyWhitelistOfferDialog();
 
-    void setModel(WalletModel*,MyWhitelistOfferDialog *model);
+    void setModel(WalletModel*);
 
 protected:
 	 void showEvent(QShowEvent *e);
