@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MyAliasListPage</class>
- <widget class="QWidget" name="MyAliasListPage">
+ <class>MyWhitelistOfferDialog</class>
+ <widget class="QWidget" name="MyWhitelistOfferDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>My Aliases</string>
+   <string>My Offer Affiliates</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -55,40 +55,6 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="newAlias">
-       <property name="toolTip">
-        <string>Create a new alias</string>
-       </property>
-       <property name="text">
-        <string>&amp;New Alias</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="copyAlias">
-       <property name="toolTip">
-        <string>Copy the currently selected alias to the system clipboard</string>
-       </property>
-       <property name="text">
-        <string>&amp;Copy Alias ID</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="editButton">
-       <property name="text">
-        <string>Edit</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="transferButton">
-       <property name="text">
-        <string>Transfer</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="refreshButton">
        <property name="maximumSize">
         <size>
@@ -98,20 +64,6 @@
        </property>
        <property name="text">
         <string>&amp;Refresh</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="newPubKey">
-       <property name="text">
-        <string>New Public Key</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="whitelistButton">
-       <property name="text">
-        <string>Affiliations</string>
        </property>
       </widget>
      </item>
