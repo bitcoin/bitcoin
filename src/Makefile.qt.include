@@ -110,6 +110,7 @@ QT_FORMS_UI = \
   qt/forms/editofferdialog.ui \
   qt/forms/myofferlistpage.ui \
   qt/forms/editwhitelistofferdialog.ui \
+  qt/forms/mywhitelistofferdialog.ui \
   qt/forms/newwhitelistdialog.ui \
   qt/forms/resellofferdialog.ui \
   qt/forms/myacceptedofferlistpage.ui \
@@ -193,6 +194,7 @@ QT_MOC_CPP = \
   qt/moc_newwhitelistdialog.cpp \
   qt/moc_resellofferdialog.cpp \
   qt/moc_offerwhitelisttablemodel.cpp \
+  qt/moc_myofferwhitelisttablemodel.cpp \
   qt/moc_editwhitelistofferdialog.cpp \
   qt/moc_offerlistpage.cpp \
   qt/moc_myofferlistpage.cpp \
@@ -304,6 +306,7 @@ SYSCOIN_QT_H = \
   qt/newwhitelistdialog.h \
   qt/resellofferdialog.h \
   qt/offerwhitelisttablemodel.h \
+  qt/myofferwhitelisttablemodel.h \
   qt/editwhitelistofferdialog.h \
   qt/offerlistpage.h \
   qt/myofferlistpage.h \
@@ -461,6 +464,7 @@ SYSCOIN_QT_CPP += \
   qt/newwhitelistdialog.cpp \
   qt/resellofferdialog.cpp \
   qt/offerwhitelisttablemodel.cpp \
+  qt/myofferwhitelisttablemodel.cpp \
   qt/editwhitelistofferdialog.cpp \
   qt/offerlistpage.cpp \
   qt/myofferlistpage.cpp \

@@ -163,7 +163,7 @@ void EditWhitelistOfferDialog::on_exclusiveButton_clicked()
 			params.push_back("1");
 		result = tableRPC.execute(strMethod, params);
 		QMessageBox::information(this, windowTitle(),
-		tr("Whitelist exclusive mode changed successfully!"),
+		tr("Affiliate exclusive mode changed successfully!"),
 			QMessageBox::Ok, QMessageBox::Ok);
 		if(tmpExclusiveWhitelist == QString("ON"))
 			exclusiveWhitelist = QString("OFF");
@@ -368,7 +368,7 @@ void EditWhitelistOfferDialog::on_exportButton_clicked()
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(
             this,
-            tr("Export Whitelist Data"), QString(),
+            tr("Export Affiliate Data"), QString(),
             tr("Comma separated file (*.csv)"), NULL);
 
     if (filename.isNull()) return;

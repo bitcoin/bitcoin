@@ -10,6 +10,7 @@
 #include "walletmodel.h"
 #include "syscoingui.h"
 #include "editaliasdialog.h"
+#include "mywhitelistofferdialog.h"
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 
@@ -37,6 +38,7 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->copyAlias->setIcon(QIcon());
 		ui->refreshButton->setIcon(QIcon());
 		ui->newPubKey->setIcon(QIcon());
+		ui->whitelistButton->setIcon(QIcon());
 
 	}
 	else
@@ -48,6 +50,7 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
 		ui->copyAlias->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editcopy"));
 		ui->refreshButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/refresh"));
 		ui->newPubKey->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/add"));
+		ui->whitelistButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/address-book"));
 		
 	}
 
@@ -187,6 +190,12 @@ void MyAliasListPage::on_refreshButton_clicked()
     if(!model)
         return;
     model->refreshAliasTable();
+}
+void MyAliasListPage::on_whitelistButton_clicked()
+{
+    MyWhitelistOfferDialog dlg(platformStyle);
+	dlg.setModel(walletModel);
+    dlg.exec();    
 }
 void MyAliasListPage::on_newAlias_clicked()
 {
