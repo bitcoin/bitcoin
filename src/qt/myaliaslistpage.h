@@ -48,7 +48,7 @@ private:
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
     QString newAliasToSelect;
-
+	const PlatformStyle *platformStyle;
 private Q_SLOTS:
     /** Create a new alias */
     void on_newAlias_clicked();
