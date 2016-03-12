@@ -644,6 +644,14 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 							"CheckOfferInputs() : failed to read from offer DB");
 			}
 			theOffer = vtxPos.back();
+			if(!theOffer.vchLinkOffer.empty())
+			{
+				if(!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, linkedTx))
+					return error("CheckOfferInputs() OP_OFFER_ACCEPT: could not get linked offer");
+				// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
+				if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), vvchArgs[0]) == linkOffer.offerLinks.end())
+					return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer does not exist in the root offerLinks table, are you sure you are allowed to link to the offer and take payments?");
+			}
 			// trying to purchase a cert
 			if(!theOffer.vchCert.empty())
 			{
@@ -655,8 +663,20 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 					// if we do an offeraccept based on an escrow release, it's assumed that the cert has already been transferred manually so buyer releases funds which can invalidate this accept
 					// so in that case the escrow is attached to the accept and we skip this check
 					// if the escrow is not attached means the buyer didnt use escrow, so ensure cert didn't get transferred since vendor created the offer in that case.
-					if(theCert.vchPubKey != theOffer.vchPubKey && !IsEscrowOp(prevOp))
-						return error("CheckOfferInputs() OP_OFFER_ACCEPT: cannot purchase this offer because the certificate has been transferred since it offer was created or it is linked to another offer. Cert pubkey %s vs Offer pubkey %s", HexStr(theCert.vchPubKey).c_str(), HexStr(theOffer.vchPubKey).c_str());
+					// also ensure its not a linked offer we are accepting, that check is done below
+					if(!IsEscrowOp(prevEscrowOp))
+					{
+						if(theOffer.vchLinkOffer.empty())
+						{
+							if(theCert.vchPubKey != theOffer.vchPubKey)
+								return error("CheckOfferInputs() OP_OFFER_ACCEPT: cannot purchase this offer because the certificate has been transferred since it offer was created or it is linked to another offer. Cert pubkey %s vs Offer pubkey %s", HexStr(theCert.vchPubKey).c_str(), HexStr(theOffer.vchPubKey).c_str());
+						}
+						else
+						{
+							if(theCert.vchPubKey != linkOffer.vchPubKey)
+								return error("CheckOfferInputs() OP_OFFER_ACCEPT: cannot purchase this linked offer because the certificate has been transferred since it offer was created or it is linked to another offer. Cert pubkey %s vs Offer pubkey %s", HexStr(theCert.vchPubKey).c_str(), HexStr(theOffer.vchPubKey).c_str());
+						}
+					}
 					theOfferAccept.nQty = 1;
 				}
 			}
@@ -740,14 +760,6 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 					return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %ld, currency %s, value found %ld\n", nPrice, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue);											
 			}						
 		
-			if(!myPriceOffer.vchLinkOffer.empty())
-			{
-				if(!GetTxOfOffer( myPriceOffer.vchLinkOffer, linkOffer, linkedTx))
-					return error("CheckOfferInputs() OP_OFFER_ACCEPT: could not get linked offer");
-				// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
-				if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), vvchArgs[0]) == linkOffer.offerLinks.end())
-					return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer does not exist in the root offerLinks table, are you sure you are allowed to link to the offer and take payments?");
-			}
 			if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
 				return error("CheckOfferInputs() OP_OFFER_ACCEPT: txn %s rejected because desired qty %u is more than available qty %u\n", tx.GetHash().GetHex().c_str(), theOfferAccept.nQty, theOffer.nQty);
 			break;
@@ -827,6 +839,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 						theOffer.sTitle = myParentOffer.sTitle;
 						theOffer.linkWhitelist.bExclusiveResell = true;
 						theOffer.sCurrencyCode = myParentOffer.sCurrencyCode;
+						theOffer.vchCert = myParentOffer.vchCert;
 
 						myParentOffer.offerLinks.push_back(vvchArgs[0]);							
 						myParentOffer.PutToOfferList(myVtxPos);
@@ -1266,7 +1279,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 					foundEntry = entry;
 					CPubKey currentAliasKey(theAlias.vchPubKey);
 					scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
-					if(commissionInteger < -foundEntry.nDiscountPct)
+					if(commissionInteger <= -foundEntry.nDiscountPct)
 						throw runtime_error(strprintf("commission was found to be less than a discount(%d%%) you receive as an affiliate for this offer, you will do not have any profit margin on this offer. Please increase your commission and try again!", foundEntry.nDiscountPct));
 
 				}
@@ -2474,7 +2487,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				const COutPoint *prevOutput = &acceptTx.vin[i].prevout;
 				if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 					continue;
-				if(foundOffer && foundEscrow && foundCert)
+				if(foundOffer && foundEscrow && foundCert && foundAlias)
 					break;
 
 				if (!foundOffer && IsOfferOp(opIn)) {
@@ -2614,7 +2627,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				const COutPoint *prevOutput = &acceptTx.vin[i].prevout;
 				if(!GetPreviousInput(prevOutput, opIn, vvchIn))
 					continue;
-				if(foundOffer && foundEscrow && foundCert)
+				if(foundOffer && foundEscrow && foundCert && foundAlias)
 					break;
 
 				if (!foundOffer && IsOfferOp(opIn)) {
