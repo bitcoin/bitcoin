@@ -1213,7 +1213,7 @@ UniValue aliasaffiliates(const UniValue& params, bool fHelp) {
 
 	vector<unsigned char> vchOffer;
 	UniValue oRes(UniValue::VARR);
-	map<vector<unsigned char>, int> vOffersI;
+	map<vector<unsigned char>, int> vOfferI;
 	map<vector<unsigned char>, UniValue> vOfferO;
 	{
 		uint256 hash;
