@@ -379,6 +379,7 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "aliasnew",          &aliasnew,          false },
     { "wallet", "aliasupdate",       &aliasupdate,       false },
     { "wallet", "aliaslist",         &aliaslist,         false },
+	{ "wallet", "aliasaffiliates",         &aliaslist,         false },
     { "wallet", "aliasinfo",         &aliasinfo,         false },
     { "wallet", "aliashistory",      &aliashistory,      false },
     { "wallet", "aliasfilter",       &aliasfilter,       false },

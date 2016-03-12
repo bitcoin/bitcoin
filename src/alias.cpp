@@ -1205,7 +1205,90 @@ UniValue aliaslist(const UniValue& params, bool fHelp) {
 
 	return oRes;
 }
+UniValue aliasaffiliates(const UniValue& params, bool fHelp) {
+	if (fHelp || 1 < params.size())
+		throw runtime_error("aliasaffiliates \n"
+				"list my own affiliations with merchant offers.\n");
+	
 
+	vector<unsigned char> vchOffer;
+	UniValue oRes(UniValue::VARR);
+	map<vector<unsigned char>, int> vOffersI;
+	map<vector<unsigned char>, UniValue> vOfferO;
+	{
+		uint256 hash;
+		CTransaction tx;
+		int pending = 0;
+		uint64_t nHeight;
+		BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet) {
+			pending = 0;
+			// get txn hash, read txn index
+			hash = item.second.GetHash();
+			const CWalletTx &wtx = item.second;
+			// skip non-syscoin txns
+			if (wtx.nVersion != SYSCOIN_TX_VERSION)
+				continue;
+
+			// decode txn, skip non-alias txns
+            vector<vector<unsigned char> > vvch;
+            int op, nOut;
+            if (!DecodeOfferTx(wtx, op, nOut, vvch) 
+            	|| !IsOfferOp(op) 
+            	|| (op == OP_OFFER_ACCEPT))
+                continue;
+			if(!IsSyscoinTxMine(wtx, "offer"))
+					continue;
+            vchOffer = vvch[0];
+
+			vector<COffer> vtxPos;
+			COffer theOffer;
+			if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty())
+				continue;
+			
+			theOffer = vtxPos.back();
+			nHeight = theOffer.nHeight;
+			// get last active name only
+			if (vOfferI.find(vchOffer) != vOfferI.end() && (nHeight < vOfferI[vchOffer] || vOfferI[vchOffer] < 0))
+				continue;
+			vOfferI[vchOffer] = nHeight;
+			// if this is my offer and it is linked go through else skip
+			if(theOffer.vchLinkOffer.empty())
+				continue;
+			// get parent offer
+			CTransaction tx;
+			COffer linkOffer;
+			if (!GetTxOfOffer( theOffer.vchLinkOffer, linkOffer, tx))
+				continue;
+
+			for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {
+				CTransaction txAlias;
+				CAliasIndex theAlias;
+				COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
+				if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
+				{
+					if (!IsSyscoinTxMine(txAlias, "alias"))
+						continue;
+					UniValue oList(UniValue::VOBJ);
+					oList.push_back(Pair("offer", stringFromVch(vchOffer)));
+					oList.push_back(Pair("alias", stringFromVch(entry.aliasLinkVchRand)));
+					int expires_in = 0;
+					if(nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight > 0)
+					{
+						expires_in = nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight;
+					}  
+					oList.push_back(Pair("expiresin",expires_in));
+					oList.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
+					vOfferO[vchOffer] = oList;	
+				}  
+			}
+		}
+	}
+
+	BOOST_FOREACH(const PAIRTYPE(vector<unsigned char>, UniValue)& item, vOfferO)
+		oRes.push_back(item.second);
+
+	return oRes;
+}
 /**
  * [aliasinfo description]
  * @param  params [description]
@@ -1266,7 +1349,7 @@ UniValue aliasinfo(const UniValue& params, bool fHelp) {
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetCertExpirationDepth() - chainActive.Tip()->nHeight;
+			expires_in = nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight;
 		}
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));
@@ -1340,7 +1423,7 @@ UniValue aliashistory(const UniValue& params, bool fHelp) {
 			}  
 			if(expired == 0)
 			{
-				expires_in = nHeight + GetCertExpirationDepth() - chainActive.Tip()->nHeight;
+				expires_in = nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight;
 			}
 			oName.push_back(Pair("expires_in", expires_in));
 			oName.push_back(Pair("expires_on", expired_block));
@@ -1464,7 +1547,7 @@ UniValue aliasfilter(const UniValue& params, bool fHelp) {
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetCertExpirationDepth() - chainActive.Tip()->nHeight;
+			expires_in = nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight;
 		}
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));
@@ -1547,7 +1630,7 @@ UniValue aliasscan(const UniValue& params, bool fHelp) {
 		}  
 		if(expired == 0)
 		{
-			expires_in = nHeight + GetCertExpirationDepth() - chainActive.Tip()->nHeight;
+			expires_in = nHeight + GetAliasExpirationDepth() - chainActive.Tip()->nHeight;
 		}
 		oName.push_back(Pair("expires_in", expires_in));
 		oName.push_back(Pair("expires_on", expired_block));
