@@ -1,4 +1,4 @@
-#include "offerwhitelisttablemodel.h"
+#include "myofferwhitelisttablemodel.h"
 
 #include "guiutil.h"
 #include "walletmodel.h"
