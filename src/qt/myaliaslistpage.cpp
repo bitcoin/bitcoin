@@ -25,7 +25,8 @@ MyAliasListPage::MyAliasListPage(const PlatformStyle *platformStyle, QWidget *pa
     QDialog(parent),
     ui(new Ui::MyAliasListPage),
     model(0),
-    optionsModel(0)
+    optionsModel(0),
+	platformStyle(platformStyle)
 {
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();  
