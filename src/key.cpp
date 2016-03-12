@@ -1202,7 +1202,7 @@ void CKey::EncryptData(const std::vector<unsigned char>& data, std::vector<unsig
 
     cryptogram = ecies_encrypt(ctx, (unsigned char*)&data[0], data.size(), error);
     if (cryptogram == NULL) {
-        free(ctx);
+        delete ctx;
         ctx = NULL;
         throw key_error(std::string("Error in encryption: %s") + error);
     }
@@ -1211,7 +1211,7 @@ void CKey::EncryptData(const std::vector<unsigned char>& data, std::vector<unsig
     unsigned char *key_data = cryptogram_key_data(cryptogram);
     memcpy(&encrypted[0], key_data, encrypted.size());
     cryptogram_free(cryptogram);
-    free(ctx);
+    delete ctx;
 }
 
 void CKey::DecryptData(const std::vector<unsigned char>& encrypted, std::vector<unsigned char>& data)
@@ -1234,7 +1234,7 @@ void CKey::DecryptData(const std::vector<unsigned char>& encrypted, std::vector<
 
     decrypted = ecies_decrypt(ctx, cryptogram, &length, error);
     cryptogram_free(cryptogram);
-    free(ctx);
+    delete ctx;
 
     if (decrypted == NULL) {
         throw key_error(std::string("Error in decryption: %s") + error);

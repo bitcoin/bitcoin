@@ -556,12 +556,18 @@ unsigned char * ecies_decrypt(const ies_ctx_t *ctx, const cryptogram_t *cryptogr
 
 ies_ctx_t *create_context(EC_KEY *user_key)
 {
-    ies_ctx_t* ctx = (ies_ctx_t*) malloc(sizeof(ies_ctx_t));
-    ctx->cipher = EVP_aes_128_cbc();
-    ctx->md = EVP_sha1();
-    ctx->kdf_md = EVP_sha1();
-    ctx->stored_key_length = 33;
-    ctx->user_key = user_key;
-
-    return ctx;
+    try {
+      ies_ctx_t* ctx = new ies_ctx_t;
+      ctx->cipher = EVP_aes_128_cbc();
+      ctx->md = EVP_sha1();
+      ctx->kdf_md = EVP_sha1();
+      ctx->stored_key_length = 33;
+      ctx->user_key = user_key;
+      return ctx;
+    }
+    catch (const std::bad_alloc& e) {
+      printf("Error: %s in %s:%d\n", e.what(), __FILE__, __LINE__);
+// TODO: add checking to NULL where necessary
+      return NULL;
+    }
 }
