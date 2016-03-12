@@ -4,9 +4,9 @@
 #include <QDialog>
 class PlatformStyle;
 namespace Ui {
-    class MyOfferWhitelistTableModel;
+    class MyWhitelistOfferDialog;
 }
-class OfferWhitelistTableModel;
+class MyOfferWhitelistTableModel;
 class WalletModel;
 QT_BEGIN_NAMESPACE
 class QTableView;
@@ -20,15 +20,15 @@ QT_END_NAMESPACE
 
 /** Dialog for editing whitelists
  */
-class MyOfferWhitelistTableModel : public QDialog
+class MyWhitelistOfferDialog : public QDialog
 {
     Q_OBJECT
 
 public:
-    explicit MyOfferWhitelistTableModel(const PlatformStyle *platformStyle, QWidget *parent = 0);
-    ~MyOfferWhitelistTableModel();
+    explicit MyWhitelistOfferDialog(const PlatformStyle *platformStyle, QWidget *parent = 0);
+    ~MyWhitelistOfferDialog();
 
-    void setModel(WalletModel*,MyOfferWhitelistTableModel *model);
+    void setModel(WalletModel*,MyWhitelistOfferDialog *model);
 
 protected:
 	 void showEvent(QShowEvent *e);
