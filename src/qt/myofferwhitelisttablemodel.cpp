@@ -68,11 +68,11 @@ public:
         case CT_NEW:
 
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedEntryTable.insert(lowerIndex, MyOfferWhitelistTableEntry(alias, expires, discount));
+            cachedEntryTable.insert(lowerIndex, MyOfferWhitelistTableEntry(offer, alias, expires, discount));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
- 
+			lower->offer = offer;
 			lower->alias = alias;
 			lower->expires = expires;
 			lower->discount = discount;
@@ -233,12 +233,12 @@ QModelIndex MyOfferWhitelistTableModel::index(int row, int column, const QModelI
     }
 }
 
-void MyOfferWhitelistTableModel::updateEntry(const QString &alias, const QString &expires,const QString &discount, int status)
+void MyOfferWhitelistTableModel::updateEntry(const QString &offer, const QString &alias, const QString &expires,const QString &discount, int status)
 {
-    priv->updateEntry(alias, expires, discount, status);
+    priv->updateEntry(offer, alias, expires, discount, status);
 }
 
-QString MyOfferWhitelistTableModel::addRow(const QString &alias, const QString &expires,const QString &discount)
+QString MyOfferWhitelistTableModel::addRow(const QString &offer, const QString &alias, const QString &expires,const QString &discount)
 {
     std::string strAlias = alias.toStdString();
     editStatus = OK;
