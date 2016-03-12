@@ -101,12 +101,7 @@ void MyWhitelistOfferDialog::setModel(WalletModel *walletModel)
 	ui->tableView->horizontalHeader()->setSectionResizeMode(MyOfferWhitelistTableModel::Discount, QHeaderView::ResizeToContents);
 #endif
 
-    connect(ui->tableView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
-            this, SLOT(selectionChanged()));
 
-    // Select row for newly created offer
-    connect(model, SIGNAL(rowsInserted(QModelIndex,int,int)), this, SLOT(selectNewEntry(QModelIndex,int,int)));
-    selectionChanged();
 	model->clear();
 }
 
