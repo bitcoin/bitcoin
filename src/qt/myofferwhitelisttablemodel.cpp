@@ -140,6 +140,8 @@ QVariant MyOfferWhitelistTableModel::data(const QModelIndex &index, int role) co
     {
         switch(index.column())
         {
+        case Offer:
+            return rec->offer;
         case Alias:
             return rec->alias;
         case Discount:
@@ -167,6 +169,15 @@ bool MyOfferWhitelistTableModel::setData(const QModelIndex &index, const QVarian
     {
         switch(index.column())
         {
+        case Offer:
+            // Do nothing, if old value == new value
+            if(rec->offer == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+           
+            break;
         case Alias:
             // Do nothing, if old value == new value
             if(rec->alias == value.toString())
