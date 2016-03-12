@@ -1,4 +1,4 @@
-#include "offerwhitelisttablemodel.h"
+#include "myofferwhitelisttablemodel.h"
 
 #include "guiutil.h"
 #include "walletmodel.h"
@@ -44,7 +44,7 @@ public:
     QList<MyOfferWhitelistTableEntry> cachedEntryTable;
     MyOfferWhitelistTableModel *parent;
 
-    OfferWhitelistTablePriv(MyOfferWhitelistTableModel *parent):
+    MyOfferWhitelistTablePriv(MyOfferWhitelistTableModel *parent):
         parent(parent) {}
 
 
@@ -68,7 +68,7 @@ public:
         case CT_NEW:
 
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedEntryTable.insert(lowerIndex, OfferWhitelistTableEntry(alias, expires, discount));
+            cachedEntryTable.insert(lowerIndex, MyOfferWhitelistTableEntry(alias, expires, discount));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -92,7 +92,7 @@ public:
         return cachedEntryTable.size();
     }
 
-    OfferWhitelistTableEntry *index(int idx)
+    MyOfferWhitelistTableEntry *index(int idx)
     {
         if(idx >= 0 && idx < cachedEntryTable.size())
         {
@@ -109,7 +109,7 @@ MyOfferWhitelistTableModel::MyOfferWhitelistTableModel(WalletModel *parent) :
     QAbstractTableModel(parent)
 {
     columns << tr("Alias") << tr("Discount") << tr("Expires In");
-    priv = new OfferWhitelistTablePriv(this);
+    priv = new MyOfferWhitelistTablePriv(this);
 
 }
 
@@ -134,7 +134,7 @@ QVariant MyOfferWhitelistTableModel::data(const QModelIndex &index, int role) co
     if(!index.isValid())
         return QVariant();
 
-    OfferWhitelistTableEntry *rec = static_cast<OfferWhitelistTableEntry*>(index.internalPointer());
+    MyOfferWhitelistTableEntry *rec = static_cast<MyOfferWhitelistTableEntry*>(index.internalPointer());
 
     if(role == Qt::DisplayRole || role == Qt::EditRole)
     {
@@ -159,7 +159,7 @@ bool MyOfferWhitelistTableModel::setData(const QModelIndex &index, const QVarian
 {
     if(!index.isValid())
         return false;
-    OfferWhitelistTableEntry *rec = static_cast<OfferWhitelistTableEntry*>(index.internalPointer());
+    MyOfferWhitelistTableEntry *rec = static_cast<MyOfferWhitelistTableEntry*>(index.internalPointer());
 
     editStatus = OK;
 
@@ -222,7 +222,7 @@ Qt::ItemFlags MyOfferWhitelistTableModel::flags(const QModelIndex &index) const
 QModelIndex MyOfferWhitelistTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    OfferWhitelistTableEntry *data = priv->index(row);
+    MyOfferWhitelistTableEntry *data = priv->index(row);
     if(data)
     {
         return createIndex(row, column, priv->index(row));
