@@ -1,4 +1,4 @@
-#include "myofferwhitelisttablemodel.h"
+#include "offerwhitelisttablemodel.h"
 
 #include "guiutil.h"
 #include "walletmodel.h"
@@ -21,6 +21,21 @@ struct MyOfferWhitelistTableEntry
         offer(offer), alias(alias), expires(expires),discount(discount) {}
 };
 
+struct MyOfferWhitelistTableEntryLessThan
+{
+    bool operator()(const MyOfferWhitelistTableEntry &a, const MyOfferWhitelistTableEntry &b) const
+    {
+        return a.offer < b.offer;
+    }
+    bool operator()(const MyOfferWhitelistTableEntry &a, const QString &b) const
+    {
+        return a.offer < b;
+    }
+    bool operator()(const QString &a, const MyOfferWhitelistTableEntry &b) const
+    {
+        return a < b.offer;
+    }
+};
 
 // Private implementation
 class MyOfferWhitelistTablePriv
@@ -29,7 +44,7 @@ public:
     QList<MyOfferWhitelistTableEntry> cachedEntryTable;
     MyOfferWhitelistTableModel *parent;
 
-    MyOfferWhitelistTablePriv(MyOfferWhitelistTableModel *parent):
+    OfferWhitelistTablePriv(MyOfferWhitelistTableModel *parent):
         parent(parent) {}
 
 
@@ -39,24 +54,32 @@ public:
 		{
 			return;
 		}
+        // Find offer / value in model
+        QList<MyOfferWhitelistTableEntry>::iterator lower = qLowerBound(
+            cachedEntryTable.begin(), cachedEntryTable.end(), offer, MyOfferWhitelistTableEntryLessThan());
+        QList<MyOfferWhitelistTableEntry>::iterator upper = qUpperBound(
+            cachedEntryTable.begin(), cachedEntryTable.end(), offer, MyOfferWhitelistTableEntryLessThan());
+        int lowerIndex = (lower - cachedEntryTable.begin());
+        int upperIndex = (upper - cachedEntryTable.begin());
+        bool inModel = (lower != upper);
 
         switch(status)
         {
         case CT_NEW:
 
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedEntryTable.insert(lowerIndex, MyOfferWhitelistTableEntry(offer, alias, expires, discount));
+            cachedEntryTable.insert(lowerIndex, OfferWhitelistTableEntry(alias, expires, discount));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
-            lower->offer = offer;
+ 
 			lower->alias = alias;
 			lower->expires = expires;
 			lower->discount = discount;
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
- 
+
             parent->beginRemoveRows(QModelIndex(), lowerIndex, upperIndex-1);
             cachedEntryTable.erase(lower, upper);
             parent->endRemoveRows();
@@ -69,7 +92,7 @@ public:
         return cachedEntryTable.size();
     }
 
-    MyOfferWhitelistTableEntry *index(int idx)
+    OfferWhitelistTableEntry *index(int idx)
     {
         if(idx >= 0 && idx < cachedEntryTable.size())
         {
@@ -85,7 +108,7 @@ public:
 MyOfferWhitelistTableModel::MyOfferWhitelistTableModel(WalletModel *parent) :
     QAbstractTableModel(parent)
 {
-    columns << tr("Offer") << tr("Alias") << tr("Discount") << tr("Expires In");
+    columns << tr("Alias") << tr("Discount") << tr("Expires In");
     priv = new OfferWhitelistTablePriv(this);
 
 }
@@ -111,14 +134,12 @@ QVariant MyOfferWhitelistTableModel::data(const QModelIndex &index, int role) co
     if(!index.isValid())
         return QVariant();
 
-    MyOfferWhitelistTableEntry *rec = static_cast<MyOfferWhitelistTableEntry*>(index.internalPointer());
+    OfferWhitelistTableEntry *rec = static_cast<OfferWhitelistTableEntry*>(index.internalPointer());
 
     if(role == Qt::DisplayRole || role == Qt::EditRole)
     {
         switch(index.column())
         {
-        case Offer:
-            return rec->offer;
         case Alias:
             return rec->alias;
         case Discount:
@@ -138,7 +159,7 @@ bool MyOfferWhitelistTableModel::setData(const QModelIndex &index, const QVarian
 {
     if(!index.isValid())
         return false;
-    MyOfferWhitelistTableEntry *rec = static_cast<MyOfferWhitelistTableEntry*>(index.internalPointer());
+    OfferWhitelistTableEntry *rec = static_cast<OfferWhitelistTableEntry*>(index.internalPointer());
 
     editStatus = OK;
 
@@ -146,15 +167,6 @@ bool MyOfferWhitelistTableModel::setData(const QModelIndex &index, const QVarian
     {
         switch(index.column())
         {
-        case Offer:
-            // Do nothing, if old value == new value
-            if(rec->offer == value.toString())
-            {
-                editStatus = NO_CHANGES;
-                return false;
-            }
-           
-            break;
         case Alias:
             // Do nothing, if old value == new value
             if(rec->alias == value.toString())
@@ -210,7 +222,7 @@ Qt::ItemFlags MyOfferWhitelistTableModel::flags(const QModelIndex &index) const
 QModelIndex MyOfferWhitelistTableModel::index(int row, int column, const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
-    MyOfferWhitelistTableEntry *data = priv->index(row);
+    OfferWhitelistTableEntry *data = priv->index(row);
     if(data)
     {
         return createIndex(row, column, priv->index(row));
@@ -221,12 +233,12 @@ QModelIndex MyOfferWhitelistTableModel::index(int row, int column, const QModelI
     }
 }
 
-void MyOfferWhitelistTableModel::updateEntry(const QString &offer, const QString &alias, const QString &expires,const QString &discount, int status)
+void MyOfferWhitelistTableModel::updateEntry(const QString &alias, const QString &expires,const QString &discount, int status)
 {
-    priv->updateEntry(offer, alias, expires, discount, status);
+    priv->updateEntry(alias, expires, discount, status);
 }
 
-QString MyOfferWhitelistTableModel::addRow(const QString &offer, const QString &alias, const QString &expires,const QString &discount)
+QString MyOfferWhitelistTableModel::addRow(const QString &alias, const QString &expires,const QString &discount)
 {
     std::string strAlias = alias.toStdString();
     editStatus = OK;
