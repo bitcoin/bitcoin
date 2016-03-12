@@ -567,6 +567,7 @@ ies_ctx_t *create_context(EC_KEY *user_key)
     }
     catch (const std::bad_alloc& e) {
       printf("Error: %s in %s:%d\n", e.what(), __FILE__, __LINE__);
+// TODO: add checking to NULL where necessary
       return NULL;
     }
 }
