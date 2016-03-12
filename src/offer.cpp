@@ -1214,9 +1214,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	}
 
 	int commissionInteger = atoi(params[2].get_str().c_str());
-	if(commissionInteger < 0 || commissionInteger > 255)
+	if(commissionInteger > 255)
 	{
-		throw runtime_error("commission must positive and less than 256!");
+		throw runtime_error("commission must be less than 256!");
 	}
 	
 	if(params.size() >= 4)
@@ -1266,6 +1266,9 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 					foundEntry = entry;
 					CPubKey currentAliasKey(theAlias.vchPubKey);
 					scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
+					if(commissionInteger < -foundEntry.nDiscountPct)
+						throw runtime_error(strprintf("commission was found to be less than a discount(%d) you receive as an affiliate for this offer, you will do not have any profit margin on this offer. Please increase your commission and try again!"), foundEntry.nDiscountPct);
+
 				}
 			}
 		}
