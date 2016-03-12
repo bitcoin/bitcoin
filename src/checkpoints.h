@@ -40,6 +40,9 @@ namespace Checkpoints
     // Returns true if block passes checkpoint checks
     bool CheckHardened(int nHeight, const uint256& hash);
 
+    // Returns true if block passes banlist checks
+    bool CheckBanned(const uint256 &nHash);
+
     // Return conservative estimate of total number of blocks, 0 if unknown
     int GetTotalBlocksEstimate();
 

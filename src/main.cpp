@@ -2528,6 +2528,13 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     if (mapOrphanBlocks.count(hash))
         return error("ProcessBlock() : already have block (orphan) %s", hash.ToString().substr(0,20).c_str());
 
+    // Check that block isn't listed as unconditionally banned.
+    if (!Checkpoints::CheckBanned(hash)) {
+        if (pfrom)
+            pfrom->Misbehaving(100);
+        return error("ProcessBlock() : block %s is rejected by hard-coded banlist", hash.GetHex().substr(0,20).c_str());
+    }
+
     // Check proof-of-stake
     // Limited duplicity on stake: prevents block flood attack
     // Duplicate stake allowed only when there is orphan child block

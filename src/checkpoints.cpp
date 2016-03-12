@@ -4,6 +4,7 @@
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include <boost/foreach.hpp>
+#include <algorithm>
 
 #include "checkpoints.h"
 
@@ -14,6 +15,7 @@
 namespace Checkpoints
 {
     typedef std::map<int, std::pair<uint256, unsigned int> > MapCheckpoints;
+    typedef std::list<uint256> ListBannedBlocks;
 
     //
     // What makes a good checkpoint block?
@@ -32,6 +34,12 @@ namespace Checkpoints
         ( 200000, std::make_pair(uint256("0x0000000000029f8bbf66e6ea6f3e5db55009404aae0fe395a53dd33142b2bff2"), 1441127233) )
         ( 221047, std::make_pair(uint256("0xa28aef712e7aa0c285bfe29351ca21ed416689139e3063ef770fc826a8b9e9da"), 1449431646) )
     ;
+    
+    static ListBannedBlocks listBanned =
+        boost::assign::list_of
+        // Invalid block #221047 with future timestamp of 2016/02/23 09:24:17 UTC
+        ( uint256("0x46223e5432ceffe650d5729b4bb8479dcdf0ca1e534fa8e69382dc87b42ea94b") )
+    ;
 
     // TestNet has no checkpoints
     static MapCheckpoints mapCheckpointsTestnet =
@@ -46,6 +54,14 @@ namespace Checkpoints
         MapCheckpoints::const_iterator i = checkpoints.find(nHeight);
         if (i == checkpoints.end()) return true;
         return hash == i->second.first;
+    }
+
+    bool CheckBanned(const uint256 &nHash)
+    {
+        if (fTestNet) // Testnet has no banned blocks
+            return true;
+        ListBannedBlocks::const_iterator it = std::find(listBanned.begin(), listBanned.end(), nHash);
+        return it == listBanned.end();
     }
 
     int GetTotalBlocksEstimate()
