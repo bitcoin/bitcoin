@@ -58,7 +58,7 @@ public:
 	EditStatus editStatus;
 private:
     WalletModel *walletModel;
-    OfferWhitelistTablePriv *priv;
+    MyOfferWhitelistTablePriv *priv;
     QStringList columns;
 
     /** Notify listeners that data changed. */
