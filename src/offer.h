@@ -245,12 +245,12 @@ public:
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
     	READWRITE(nPrice);
-    	READWRITE(VARINT(nQty));
+    	READWRITE(nQty);
     	READWRITE(accept);
 		READWRITE(vchLinkOffer);
 		READWRITE(linkWhitelist);
 		READWRITE(sCurrencyCode);
-		READWRITE(VARINT(nCommission));
+		READWRITE(nCommission);
 		READWRITE(offerLinks);
 		READWRITE(vchPubKey);
 		READWRITE(vchCert);
