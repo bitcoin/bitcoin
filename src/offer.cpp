@@ -2070,7 +2070,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		throw runtime_error(strprintf("not enough remaining quantity to fulfill this orderaccept, qty remaining %u, qty desired %u,  qty waiting to be accepted by the network %d", vtxPos.back().nQty, nQty, memPoolQty));
 
 	int precision = 2;
-	CAmount nPrice = convertCurrencyCodeToSyscoin(thzeOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
+	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
 	string strCipherText = "";
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
 	if(vchLinkOfferAccept.empty() && vchEscrowTxHash.empty())
