@@ -1838,11 +1838,11 @@ bool static Reorganize(CTxDB& txdb, CBlockIndex* pindexNew)
     while (pfork != plonger)
     {
         while (plonger->nHeight > pfork->nHeight)
-            if (!(plonger = plonger->pprev))
+            if ((plonger = plonger->pprev) == NULL)
                 return error("Reorganize() : plonger->pprev is null");
         if (pfork == plonger)
             break;
-        if (!(pfork = pfork->pprev))
+        if ((pfork = pfork->pprev) == NULL)
             return error("Reorganize() : pfork->pprev is null");
     }
 
