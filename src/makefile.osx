@@ -6,6 +6,7 @@
 # Mac OS X makefile for bitcoin
 # Originally by Laszlo Hanyecz (solar@heliacal.net)
 
+CC=llvm-gcc
 CXX=llvm-g++
 DEPSDIR=/opt/local
 
@@ -115,7 +116,7 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-	@echo "Building LevelDB ..."; cd leveldb; make; cd ..
+	@echo "Building LevelDB ..."; cd leveldb; CC=$(CC) CXX=$(CXX) make; cd ..
 obj/txdb-leveldb.o: leveldb/libleveldb.a
 else
 OBJS += obj/txdb-bdb.o

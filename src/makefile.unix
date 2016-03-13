@@ -5,6 +5,9 @@
 USE_LEVELDB:=0
 USE_IPV6:=1
 
+# CC=clang
+# CXX=clang++
+
 LINK:=$(CXX)
 ARCH:=$(shell uname -m)
 
@@ -148,7 +151,7 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-	@echo "Building LevelDB ..."; cd leveldb; make libleveldb.a libmemenv.a; cd ..;
+	@echo "Building LevelDB ..."; cd leveldb; CC=$(CC) CXX=$(CXX) make libleveldb.a libmemenv.a; cd ..;
 obj/txdb-leveldb.o: leveldb/libleveldb.a
 endif
 ifneq (${USE_LEVELDB}, 1)

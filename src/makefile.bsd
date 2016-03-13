@@ -6,6 +6,9 @@ USE_LEVELDB:=0
 USE_IPV6:=1
 ARCH:=$(uname -m)
 
+# CC:=clang
+# CXX:=clang++
+
 LINK:=$(CXX)
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS
@@ -147,7 +150,7 @@ DEFS += $(addprefix -I,$(CURDIR)/leveldb/include) -DUSE_LEVELDB
 DEFS += $(addprefix -I,$(CURDIR)/leveldb/helpers)
 OBJS += obj/txdb-leveldb.o
 leveldb/libleveldb.a:
-	@echo "Building LevelDB ..."; cd leveldb; gmake libleveldb.a libmemenv.a; cd ..;
+	@echo "Building LevelDB ..."; cd leveldb; CC=$(CC) CXX=$(CXX) gmake libleveldb.a libmemenv.a; cd ..;
 obj/txdb-leveldb.o: leveldb/libleveldb.a
 endif
 ifneq (${USE_LEVELDB}, 1)
