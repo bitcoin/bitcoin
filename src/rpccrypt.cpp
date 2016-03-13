@@ -68,7 +68,7 @@ Value decryptmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "decryptdata <novacoin address> <encrypted message>\n"
+            "decryptmessage <novacoin address> <encrypted message>\n"
             "Decrypt message string.\n");
 
     EnsureWalletIsUnlocked();
