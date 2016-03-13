@@ -268,7 +268,10 @@ bool AcceptandPayOfferListPage::lookup(const QString &lookupid)
 			offerOut.sTitle = vchFromString(find_value(offerObj, "title").get_str());
 			offerOut.sCategory = vchFromString(find_value(offerObj, "category").get_str());
 			offerOut.sCurrencyCode = vchFromString(find_value(offerObj, "currency").get_str());
-			offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toUInt();	
+			if(find_value(offerObj, "quantity").get_str() == "unlimited")
+				offerOut.nQty = -1;
+			else
+				offerOut.nQty = QString::fromStdString(find_value(offerObj, "quantity").get_str()).toUInt();	
 			offerOut.bOnlyAcceptBTC = find_value(offerObj, "btconly").get_str() == "Yes"? true: false;	
 			string descString = find_value(offerObj, "description").get_str();
 
