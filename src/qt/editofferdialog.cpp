@@ -289,6 +289,7 @@ void EditOfferDialog::loadRow(int row)
 		QModelIndex indexCurrency = model->index(row, OfferTableModel::Currency, tmpIndex);
 		QModelIndex indexPrivate = model->index(row, OfferTableModel::Private, tmpIndex);	
 		QModelIndex indexAlias = model->index(row, OfferTableModel::Alias, tmpIndex);
+		QModelIndex indexQty = model->index(row, OfferTableModel::Qty, tmpIndex);
 		QModelIndex indexBTCOnly = model->index(row, OfferTableModel::AcceptBTCOnly, tmpIndex);
 		if(indexPrivate.isValid())
 		{
@@ -302,12 +303,20 @@ void EditOfferDialog::loadRow(int row)
 		}
 		if(indexBTCOnly.isValid())
 		{
-			QString btcOnlyStr = indexBTCOnly.data(OfferTableModel::BTCOnlyRole).toString();
-			ui->acceptBTCOnlyEdit->setCurrentIndex(ui->acceptBTCOnlyEdit->findText(btcOnlyStr));
+			QString qtyStr = indexBTCOnly.data(OfferTableModel::QtyRole).toString();
+			if(qtyStr == tr("unlimited"))
+				ui->qtyEdit->setText("-1");
+			else
+				ui->qtyEdit->setText(qtyStr);
 		}
 		if(indexAlias.isValid())
 		{
 			QString aliasStr = indexAlias.data(OfferTableModel::AliasRole).toString();
+			ui->aliasEdit->setCurrentIndex(ui->aliasEdit->findText(aliasStr));
+	}
+		if(indexQty.isValid())
+		{
+			QString aliasStr = indexQty.data(OfferTableModel::AliasRole).toString();
 			ui->aliasEdit->setCurrentIndex(ui->aliasEdit->findText(aliasStr));
 		}
 	}
