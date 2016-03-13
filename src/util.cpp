@@ -1276,16 +1276,23 @@ void ShrinkDebugFile()
     if (file && GetFilesize(file) > 10 * 1000000)
     {
         // Restart the file with some of the end
-        char pch[200000];
-        fseek(file, -((long long)sizeof(pch)), SEEK_END);
-        size_t nBytes = fread(pch, 1, sizeof(pch), file);
-        fclose(file);
-
-        file = fopen(pathLog.string().c_str(), "w");
-        if (file)
-        {
-            fwrite(pch, 1, nBytes, file);
+        try {
+            vector<char>* vBuf = new vector <char>(200000, 0);
+            fseek(file, -((long)(vBuf->size())), SEEK_END);
+            size_t nBytes = fread(&vBuf->operator[](0), 1, vBuf->size(), file);
             fclose(file);
+            file = fopen(pathLog.string().c_str(), "w");
+            if (file)
+            {
+                fwrite(&vBuf->operator[](0), 1, nBytes, file);
+                fclose(file);
+            }
+            delete vBuf;
+        }
+        catch (const bad_alloc& e) {
+            // Bad things happen - no free memory in heap at program startup
+            fclose(file);
+            printf("Warning: %s in %s:%d\n ShrinkDebugFile failed - debug.log expands further", e.what(), __FILE__, __LINE__);
         }
     }
 }

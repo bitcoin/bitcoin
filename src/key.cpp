@@ -612,7 +612,7 @@ bool CPoint::setPubKey(const CPubKey &vchPubKey)
 // Serialize to octets stream
 bool CPoint::getBytes(std::vector<unsigned char> &vchBytes)
 {
-    unsigned int nSize = EC_POINT_point2oct(group, point, POINT_CONVERSION_COMPRESSED, NULL, 0, ctx);
+    size_t nSize = EC_POINT_point2oct(group, point, POINT_CONVERSION_COMPRESSED, NULL, 0, ctx);
     vchBytes.resize(nSize);
     if (!(nSize == EC_POINT_point2oct(group, point, POINT_CONVERSION_COMPRESSED, &vchBytes[0], nSize, ctx))) {
         return false;
