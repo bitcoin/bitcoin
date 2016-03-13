@@ -187,7 +187,7 @@ void OfferListPage::on_resellButton_clicked()
         return;
     }
 	unsigned int qtyRemain = selection.at(0).data(OfferTableModel::QtyRole).toUInt();
-	if(qtyRemain <= 0)
+	if(qtyRemain <= 0 && selection.at(0).data(OfferTableModel::QtyRole).toString() != tr("unlimited"))
 	{
         QMessageBox::critical(this, windowTitle(),
         tr("Sorry, you cannot not resell this offer, it is sold out!"),
@@ -209,7 +209,7 @@ void OfferListPage::on_purchaseButton_clicked()
         return;
     }
 	unsigned int qtyRemain = selection.at(0).data(OfferTableModel::QtyRole).toUInt();
-	if(qtyRemain <= 0)
+	if(qtyRemain <= 0 && selection.at(0).data(OfferTableModel::QtyRole).toString() != tr("unlimited"))
 	{
         QMessageBox::critical(this, windowTitle(),
         tr("Sorry, you cannot not purchase this offer, it is sold out!"),
