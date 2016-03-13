@@ -303,21 +303,21 @@ void EditOfferDialog::loadRow(int row)
 		}
 		if(indexBTCOnly.isValid())
 		{
-			QString qtyStr = indexBTCOnly.data(OfferTableModel::QtyRole).toString();
-			if(qtyStr == tr("unlimited"))
-				ui->qtyEdit->setText("-1");
-			else
-				ui->qtyEdit->setText(qtyStr);
+			QString btcOnlyStr = indexBTCOnly.data(OfferTableModel::BTCOnlyRole).toString();
+			ui->acceptBTCOnlyEdit->setCurrentIndex(ui->acceptBTCOnlyEdit->findText(btcOnlyStr));
 		}
 		if(indexAlias.isValid())
 		{
 			QString aliasStr = indexAlias.data(OfferTableModel::AliasRole).toString();
 			ui->aliasEdit->setCurrentIndex(ui->aliasEdit->findText(aliasStr));
-	}
+		}
 		if(indexQty.isValid())
 		{
-			QString aliasStr = indexQty.data(OfferTableModel::AliasRole).toString();
-			ui->aliasEdit->setCurrentIndex(ui->aliasEdit->findText(aliasStr));
+			QString qtyStr = indexBTCOnly.data(OfferTableModel::QtyRole).toString();
+			if(qtyStr == tr("unlimited"))
+				ui->qtyEdit->setText("-1");
+			else
+				ui->qtyEdit->setText(qtyStr);
 		}
 	}
 }
