@@ -1387,7 +1387,7 @@ UniValue offeraddwhitelist(const UniValue& params, bool fHelp) {
 	CWalletTx wtx;
 	const CWalletTx* wtxIn;
 	if (!GetTxOfAlias(vchAlias, theAlias, txAlias))
-		throw runtime_error("could not find a certificate with this key");
+		throw runtime_error("could not find an alias with this name");
 
 	// this is a syscoin txn
 	CScript scriptPubKeyOrig;
