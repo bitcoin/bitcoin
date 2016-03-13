@@ -2364,7 +2364,10 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("address", selleraddy.ToString()));
 	oOffer.push_back(Pair("category", stringFromVch(theOffer.sCategory)));
 	oOffer.push_back(Pair("title", stringFromVch(theOffer.sTitle)));
-	oOffer.push_back(Pair("quantity", strprintf("%d", theOffer.nQty)));
+	if(theOffer.nQty == -1)
+		oOffer.push_back(Pair("quantity", "unlimited"));
+	else
+		oOffer.push_back(Pair("quantity", strprintf("%d", theOffer.nQty)));
 	oOffer.push_back(Pair("currency", stringFromVch(theOffer.sCurrencyCode)));
 	
 	
@@ -2774,7 +2777,10 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
 			oName.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
-            oName.push_back(Pair("quantity", strprintf("%d", theOfferA.nQty)));
+			if(theOfferA.nQty == -1)
+				oName.push_back(Pair("quantity", "unlimited"));
+			else
+				oName.push_back(Pair("quantity", strprintf("%d", theOfferA.nQty)));
 			CPubKey SellerPubKey(theOfferA.vchPubKey);
 			CSyscoinAddress selleraddy(SellerPubKey.GetID());
 			selleraddy = CSyscoinAddress(selleraddy.ToString());
@@ -2867,7 +2873,10 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
 
 			oOffer.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
 			oOffer.push_back(Pair("commission", strprintf("%d%%", theOfferA.nCommission)));
-            oOffer.push_back(Pair("quantity", strprintf("%d", theOfferA.nQty)));
+			if(theOfferA.nQty == -1)
+				oOffer.push_back(Pair("quantity", "unlimited"));
+			else
+				oOffer.push_back(Pair("quantity", strprintf("%d", theOfferA.nQty)));
 
 			oOffer.push_back(Pair("txid", tx.GetHash().GetHex()));
 			expired_block = nHeight + GetOfferExpirationDepth();
@@ -3001,7 +3010,10 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		oOffer.push_back(Pair("price", strprintf("%.*f", precision, foundOffer.GetPrice() ))); 	
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
 		oOffer.push_back(Pair("commission", strprintf("%d%%", txOffer.nCommission)));
-        oOffer.push_back(Pair("quantity", strprintf("%d", txOffer.nQty)));
+		if(txOffer.nQty == -1)
+			oOffer.push_back(Pair("quantity", "unlimited"));
+		else
+			oOffer.push_back(Pair("quantity", strprintf("%d", txOffer.nQty)));
 		oOffer.push_back(Pair("exclusive_resell", txOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 		oOffer.push_back(Pair("btconly", txOffer.bOnlyAcceptBTC ? "Yes" : "No"));
 		expired_block = nHeight + GetOfferExpirationDepth();
