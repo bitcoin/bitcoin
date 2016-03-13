@@ -40,6 +40,9 @@
        </property>
       </widget>
      </item>
+      <item row="2" column="1">
+        <widget class="QLineEdit" name="aliasEdit"/>
+      </item> 
      <item row="4" column="0">
       <widget class="QLabel" name="categoryLabel">
        <property name="text">
@@ -49,13 +52,6 @@
      </item>
      <item row="4" column="1">
       <widget class="QLineEdit" name="discountEdit"/>
-     </item>
-     <item row="6" column="0">
-      <widget class="QLabel" name="discountText">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
      </item>
      <item row="6" column="1">
       <widget class="QLabel" name="discountDisclaimer">
@@ -75,9 +71,6 @@
      </item>
      <item row="5" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_4"/>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="aliasEdit"/>
      </item>
     </layout>
    </item>
