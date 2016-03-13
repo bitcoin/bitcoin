@@ -2991,7 +2991,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		if (!GetSyscoinTransaction(txOffer.nHeight, txOffer.txHash, tx, Params().GetConsensus()))
 			continue;
 		// dont return sold out offers
-		if(txOffer.nQty <= 0)
+		if(txOffer.nQty <= 0 && txOffer.nQty != -1)
 			continue;
 		UniValue oOffer(UniValue::VOBJ);
 		oOffer.push_back(Pair("offer", offer));
@@ -3078,7 +3078,7 @@ UniValue offerscan(const UniValue& params, bool fHelp) {
 		CTransaction tx;
 		COffer txOffer = pairScan.second;
 		// dont return sold out offers
-		if(txOffer.nQty <= 0)
+		if(txOffer.nQty <= 0 && && txOffer.nQty != -1)
 			continue;
 		if(txOffer.bPrivate)
 			continue;
