@@ -552,10 +552,8 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 				return error("CheckOfferInputs() :offerupdate previous op is invalid");	
 			if(prevOp == OP_OFFER_ACCEPT)
 				return error("CheckOfferInputs(): cannot use offeraccept as input to an update");
-			if (IsAliasOp(prevCertOp) && theOffer.linkWhitelist.entries.size() > 0 && !theOffer.linkWhitelist.GetLinkEntryByHash(vvchPrevAliasArgs[0], entry))
-				return error("CheckOfferInputs() : cannot find this alias in the offer's affiliate list");
-			if (!IsOfferOp(prevOp) && !IsCertOp(prevCertOp) && !IsAliasOp(prevAliasOp) )
-				return error("offerupdate previous op is invalid");			
+			if (!IsOfferOp(prevOp) && !IsCertOp(prevCertOp))
+				return error("CheckOfferInputs() :offerupdate previous op is invalid");			
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offerupdate offer mismatch");	
 
