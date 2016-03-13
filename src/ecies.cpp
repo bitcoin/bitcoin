@@ -559,8 +559,8 @@ ies_ctx_t *create_context(EC_KEY *user_key)
     try {
       ies_ctx_t* ctx = new ies_ctx_t;
       ctx->cipher = EVP_aes_128_cbc();
-      ctx->md = EVP_sha1();
-      ctx->kdf_md = EVP_sha1();
+      ctx->md = EVP_ripemd160();
+      ctx->kdf_md = EVP_ripemd160();
       ctx->stored_key_length = 33;
       ctx->user_key = user_key;
       return ctx;
