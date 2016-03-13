@@ -4,11 +4,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "wallet.h"
-#include "walletdb.h"
 #include "bitcoinrpc.h"
 #include "init.h"
-#include "util.h"
-#include "ntp.h"
 #include "base58.h"
 
 using namespace json_spirit;
