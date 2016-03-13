@@ -760,6 +760,26 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 		
 			if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
 				return error("CheckOfferInputs() OP_OFFER_ACCEPT: txn %s rejected because desired qty %u is more than available qty %u\n", tx.GetHash().GetHex().c_str(), theOfferAccept.nQty, theOffer.nQty);
+			if (!fRescan && pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
+			{	
+				// vchPubKey is for when transfering cert after an offer accept, the pubkey is the transfer-to address and encryption key for cert data
+				// theOffer.vchLinkOffer is the linked offer guid
+				// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
+				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
+				string strError = makeOfferLinkAcceptTX(theOfferAccept, theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer);
+				if(strError != "")					
+					return error("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
+				
+			}
+			// only if we are the root offer owner do we even consider xfering a cert					
+			// purchased a cert so xfer it
+			if(!fRescan && pwalletMain && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
+			{
+				string strError = makeTransferCertTX(theOffer, theOfferAccept);
+				if(strError != "")
+					return error("CheckOfferInputs() - OP_OFFER_ACCEPT - makeTransferCert %s\n", strError.c_str());						
+				
+			}
 			break;
 
 		default:
@@ -882,30 +902,6 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 					}
 				}
 			}		
-			// only if we are the root offer owner do we even consider xfering a cert					
-			// purchased a cert so xfer it
-			if(!fRescan && pwalletMain && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
-			{
-				string strError = makeTransferCertTX(theOffer, theOfferAccept);
-				if(strError != "")
-					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeTransferCert %s\n", strError.c_str());						
-				
-			}
-			if (!fRescan && pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
-			{	
-				// vchPubKey is for when transfering cert after an offer accept, the pubkey is the transfer-to address and encryption key for cert data
-				// theOffer.vchLinkOffer is the linked offer guid
-				// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
-				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
-				string strError = makeOfferLinkAcceptTX(theOfferAccept, theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer);
-				if(strError != "")
-				{
-					if(fDebug)
-					{
-						LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
-					}
-				}
-			}
 			theOfferAccept.nHeight = nHeight;
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			theOfferAccept.txHash = tx.GetHash();
