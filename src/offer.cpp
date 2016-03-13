@@ -3078,7 +3078,7 @@ UniValue offerscan(const UniValue& params, bool fHelp) {
 		CTransaction tx;
 		COffer txOffer = pairScan.second;
 		// dont return sold out offers
-		if(txOffer.nQty <= 0 && && txOffer.nQty != -1)
+		if(txOffer.nQty <= 0 && txOffer.nQty != -1)
 			continue;
 		if(txOffer.bPrivate)
 			continue;
