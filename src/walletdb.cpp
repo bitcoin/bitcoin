@@ -311,9 +311,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> vchSecret;
 
             CMalleableKeyView keyView(strKeyView);
-            if (!pwallet->LoadMalleableKey(keyView, vchSecret))
+            if (!pwallet->LoadKey(keyView, vchSecret))
             {
-                strErr = "Error reading wallet database: LoadMalleableKey failed";
+                strErr = "Error reading wallet database: LoadKey failed";
                 return false;
             }
         }
@@ -326,9 +326,9 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             ssValue >> vchCryptedSecret;
 
             CMalleableKeyView keyView(strKeyView);
-            if (!pwallet->LoadCryptedMalleableKey(keyView, vchCryptedSecret))
+            if (!pwallet->LoadCryptedKey(keyView, vchCryptedSecret))
             {
-                strErr = "Error reading wallet database: LoadCryptedMalleableKey failed";
+                strErr = "Error reading wallet database: LoadCryptedKey failed";
                 return false;
             }
         }
@@ -940,7 +940,7 @@ bool ImportWallet(CWallet *pwallet, const string& strLocation)
            }
 
            printf("Importing %s...\n", addr.ToString().c_str());
-           if (!pwallet->AddMalleableKey(mKey)) {
+           if (!pwallet->AddKey(mKey)) {
                fGood = false;
                continue;
            }

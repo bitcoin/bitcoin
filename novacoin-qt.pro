@@ -9,6 +9,9 @@ CONFIG += no_include_pwd
 CONFIG += thread
 CONFIG += static
 
+#QMAKE_CC=clang
+#QMAKE_CXX=clang++
+
 freebsd-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch
 linux-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch
 linux-g++-32: QMAKE_TARGET.arch = i686

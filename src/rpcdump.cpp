@@ -285,7 +285,7 @@ Value importmalleablekey(const Array& params, bool fHelp)
 
     if (fSuccess)
     {
-        fSuccess = pwalletMain->AddMalleableKey(mKey);
+        fSuccess = pwalletMain->AddKey(mKey);
         result.push_back(Pair("Successful", fSuccess));
         result.push_back(Pair("Address", CBitcoinAddress(mKey.GetMalleablePubKey()).ToString()));
         result.push_back(Pair("KeyView", CMalleableKeyView(mKey).ToString()));

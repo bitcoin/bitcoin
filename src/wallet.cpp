@@ -74,8 +74,8 @@ CMalleableKeyView CWallet::GenerateNewMalleableKey()
     if (!nTimeFirstKey || nCreationTime < nTimeFirstKey)
         nTimeFirstKey = nCreationTime;
 
-    if (!AddMalleableKey(mKey))
-        throw std::runtime_error("CWallet::GenerateNewMalleableKey() : AddMalleableKey failed");
+    if (!AddKey(mKey))
+        throw std::runtime_error("CWallet::GenerateNewMalleableKey() : AddKey failed");
     return CMalleableKeyView(mKey);
 }
 
@@ -91,7 +91,7 @@ bool CWallet::AddKey(const CKey& key)
     return true;
 }
 
-bool CWallet::AddMalleableKey(const CMalleableKey& mKey)
+bool CWallet::AddKey(const CMalleableKey& mKey)
 {
     CMalleableKeyView keyView = CMalleableKeyView(mKey);
     CSecret vchSecretH = mKey.GetSecretH();
