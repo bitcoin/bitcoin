@@ -2404,8 +2404,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
     vector<unsigned char> vchOffer;
 	vector<unsigned char> vchOfferToFind;
     if (params.size() == 1)
-        vchOfferToFind = vchFromValue(params[0]);
-    map< vector<unsigned char>, int > vNamesI;
+        vchOfferToFind = vchFromValue(params[0]);	
 	vector<unsigned char> vchEscrow;	
     UniValue oRes(UniValue::VARR);
     {
@@ -2447,10 +2446,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				continue;
 			if(theOfferAccept.vchAcceptRand != vchAcceptRand)
 				continue;
-			// get last active accept only
-			if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
-				continue;	
-			vNamesI[vchAcceptRand] = theOfferAccept.nHeight;
+
 			string offer = stringFromVch(vchOffer);
 			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
 			oOfferAccept.push_back(Pair("offer", offer));
