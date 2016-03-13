@@ -2029,7 +2029,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	COfferLinkWhitelistEntry foundAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 	vector<unsigned char> vchWhitelistAlias;
-	// go through the whitelist and see if you own any of the certs to apply to this offer for a discount
+	// go through the whitelist and see if you own any of the aliases to apply to this offer for a discount
 	for(unsigned int i=0;i<theOffer.linkWhitelist.entries.size();i++) {
 		CTransaction txAlias;
 		
@@ -2039,25 +2039,25 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		// make sure this alias is still valid
 		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
 		{
-			// check for existing alias updates/transfers
-			if (ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
-				throw runtime_error("there is are pending operations on that alias");
 			}
-			// make sure its in your wallet (you control this cert)
+			// make sure its in your wallet (you control this alias)
 			// if escrow has a whitelist alias attached, use that to get the offerlinkwhitelist entry, else check the seller's whitelist to see if we own any aliases from his whitelist
 			if (IsSyscoinTxMine(txAlias, "alias") || vchEscrowWhitelistAlias == entry.aliasLinkVchRand) 
 			{
-				// find the entry with the biggest discount, for buyers convenience
-				if(entry.nDiscountPct >= foundAlias.nDiscountPct || foundAlias.nDiscountPct == 0)
-				{
-					wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
-					foundAlias = entry;		
-					vchWhitelistAlias = entry.aliasLinkVchRand;
-					CPubKey currentKey(theAlias.vchPubKey);
-					scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+				// check for existing alias updates/transfers
+				if (!ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
+					
+					// find the entry with the biggest discount, for buyers convenience
+					if(entry.nDiscountPct >= foundAlias.nDiscountPct || foundAlias.nDiscountPct == 0)
+					{
+						wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
+						foundAlias = entry;		
+						vchWhitelistAlias = entry.aliasLinkVchRand;
+						CPubKey currentKey(theAlias.vchPubKey);
+						scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+					}
 				}
 			}		
-
 		}
 	}
 
