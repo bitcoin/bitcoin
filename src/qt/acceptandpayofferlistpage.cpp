@@ -357,7 +357,10 @@ void AcceptandPayOfferListPage::setValue(const QString& strAlias, const QString&
 	ui->infoCategory->setText(QString::fromStdString(stringFromVch(offer.sCategory)));
 	ui->infoCurrency->setText(QString::fromStdString(stringFromVch(offer.sCurrencyCode)));
 	ui->infoPrice->setText(price);
-	ui->infoQty->setText(QString::number(offer.nQty));
+	if(offer.nQty == -1)
+		ui->infoQty->setText(tr("unlimited"));
+	else
+		ui->infoQty->setText(QString::number(offer.nQty));
 	ui->infoDescription->setPlainText(QString::fromStdString(stringFromVch(offer.sDescription)));
 	ui->qtyEdit->setText(QString("1"));
 	ui->notesEdit->setPlainText(QString(""));
