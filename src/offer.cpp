@@ -2537,7 +2537,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 			oRes.push_back(oOfferAccept);
         }
-		vNamesI.clear();
+
        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
         {
 			UniValue oOfferAccept(UniValue::VOBJ);
@@ -2582,10 +2582,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			if(offerVvch[0] != vchOfferToFind && !vchOfferToFind.empty())
 				continue;
 			const vector<unsigned char> &vchAcceptRand = offerVvch[1];
-			// get last active accept only
-			if (vNamesI.find(vchAcceptRand) != vNamesI.end() && (theOfferAccept.nHeight <= vNamesI[vchAcceptRand] || vNamesI[vchAcceptRand] < 0))
-				continue;
-			vNamesI[vchAcceptRand] = theOfferAccept.nHeight;
+	
 			string offer = stringFromVch(theEscrow.vchOffer);
 			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
 			oOfferAccept.push_back(Pair("offer", offer));
