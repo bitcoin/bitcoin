@@ -1274,7 +1274,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 					CPubKey currentAliasKey(theAlias.vchPubKey);
 					scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
 					if(commissionInteger <= -foundEntry.nDiscountPct)
-						throw runtime_error(strprintf("commission was found to be less than a discount(%d%%) you receive as an affiliate for this offer, you will do not have any profit margin on this offer. Please increase your commission and try again!", foundEntry.nDiscountPct));
+						throw runtime_error(strprintf(""You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
 
 				}
 			}
