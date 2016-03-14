@@ -1258,7 +1258,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 		CTransaction txAlias;
 		CAliasIndex theAlias;
 		COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
-		// make sure this cert is still valid
+		// make sure this alias is still valid
 		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
 		{
 			// make sure its in your wallet (you control this alias)		
@@ -1271,17 +1271,16 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 				if(commissionInteger <= -foundEntry.nDiscountPct)
 						throw runtime_error(strprintf("You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
 
-				}
 			}
-		
-
-		// if the whitelist exclusive mode is on and you dont have a cert in the whitelist, you cannot link to this offer
-		if(foundEntry.IsNull())
-		{
-			throw runtime_error("cannot link to this offer because you don't own an alias from its affiliate list (the offer is in exclusive mode)");
 		}
+		
 		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << foundEntry.aliasLinkVchRand << OP_2DROP;
 		scriptPubKeyAlias += scriptPubKeyAliasOrig;
+	}
+	// if the whitelist exclusive mode is on and you dont have an alias in the whitelist, you cannot link to this offer
+	if(foundEntry.IsNull() && linkOffer.linkWhitelist.bExclusiveResell)
+	{
+		throw runtime_error("Cannot link to this offer because you don't own an alias from its affiliate list (the offer is in exclusive mode)");
 	}
 	if(linkOffer.bOnlyAcceptBTC)
 	{
