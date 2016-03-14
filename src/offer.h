@@ -27,7 +27,6 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn);
 class COfferAccept {
 public:
 	std::vector<unsigned char> vchAcceptRand;
-    std::vector<unsigned char> vchMessage;
 	uint256 txHash;
 	uint64_t nHeight;
 	uint64_t nAcceptHeight;
@@ -44,7 +43,6 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
 		READWRITE(vchAcceptRand);
-        READWRITE(vchMessage);
 		READWRITE(txHash);
 		READWRITE(VARINT(nHeight));
 		READWRITE(VARINT(nAcceptHeight));
@@ -59,7 +57,6 @@ public:
     friend bool operator==(const COfferAccept &a, const COfferAccept &b) {
         return (
 		a.vchAcceptRand == b.vchAcceptRand
-        && a.vchMessage == b.vchMessage
         && a.txHash == b.txHash
         && a.nHeight == b.nHeight
 		&& a.nAcceptHeight == b.nAcceptHeight
@@ -73,7 +70,6 @@ public:
 
     COfferAccept operator=(const COfferAccept &b) {
 		vchAcceptRand = b.vchAcceptRand;
-        vchMessage = b.vchMessage;
         txHash = b.txHash;
         nHeight = b.nHeight;
 		nAcceptHeight = b.nAcceptHeight;
