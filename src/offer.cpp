@@ -1223,7 +1223,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	int commissionInteger = atoi(params[2].get_str().c_str());
 	if(commissionInteger > 255)
 	{
-		throw runtime_error("commission must be less than 256!");
+		throw runtime_error("markup must be less than 256!");
 	}
 	
 	if(params.size() >= 4)
