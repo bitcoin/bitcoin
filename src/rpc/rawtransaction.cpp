@@ -939,14 +939,16 @@ UniValue verifyrawtransactions(const UniValue& params, bool fHelp)
         if (state.IsValid() && checkFinal && !CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
             state.Invalid(false, REJECT_NONSTANDARD, "non-final");
         }
-        // Only accept BIP68 sequence locked transactions that can be mined in the next
-        // block
-        if (state.IsValid() && checkFinal && !CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
-            state.Invalid(false, REJECT_NONSTANDARD, "non-BIP68-final");
-        }
         // Do this check separately because CheckInputs will set code 0 and no reason for missing inputs
         if (state.IsValid() && !view.HaveInputs(tx)) {
             state.Invalid(false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
+        }
+        // Only accept BIP68 sequence locked transactions that can be mined in the next
+        // block
+        // This check is done after HaveInputs because CheckSequenceLocks looks up the inputs.
+        // TODO: pass in the view into CheckSequenceLocks
+        if (state.IsValid() && checkFinal && !CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
+            state.Invalid(false, REJECT_NONSTANDARD, "non-BIP68-final");
         }
         // Check for non-standard pay-to-script-hash in inputs
         if (state.IsValid() && checkStandard && !AreInputsStandard(tx, view)) {
