@@ -399,13 +399,14 @@ bool CWallet::Verify(const string& walletFile, string& warningString, string& er
         CDBEnv::VerifyResult r = bitdb.Verify(walletFile, CWalletDB::Recover);
         if (r == CDBEnv::RECOVER_OK)
         {
-            warningString += strprintf(_("Warning: wallet.dat corrupt, data salvaged!"
-                                     " Original wallet.dat saved as wallet.{timestamp}.bak in %s; if"
-                                     " your balance or transactions are incorrect you should"
-                                     " restore from a backup."), GetDataDir());
+            warningString += strprintf(_("Warning: Wallet file corrupt, data salvaged!"
+                                         " Original %s saved as %s in %s; if"
+                                         " your balance or transactions are incorrect you should"
+                                         " restore from a backup."),
+                walletFile, "wallet.{timestamp}.bak", GetDataDir());
         }
         if (r == CDBEnv::RECOVER_FAIL)
-            errorString += _("wallet.dat corrupt, salvage failed");
+            errorString += strprintf(_("%s corrupt, salvage failed"), walletFile);
     }
     
     return true;
@@ -2968,7 +2969,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
     strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
                                                             CURRENCY_UNIT, FormatMoney(payTxFee.GetFeePerK())));
     strUsage += HelpMessageOpt("-rescan", _("Rescan the block chain for missing wallet transactions on startup"));
-    strUsage += HelpMessageOpt("-salvagewallet", _("Attempt to recover private keys from a corrupt wallet.dat on startup"));
+    strUsage += HelpMessageOpt("-salvagewallet", _("Attempt to recover private keys from a corrupt wallet on startup"));
     strUsage += HelpMessageOpt("-sendfreetransactions", strprintf(_("Send transactions as zero-fee transactions if possible (default: %u)"), DEFAULT_SEND_FREE_TRANSACTIONS));
     strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
     strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
@@ -3002,8 +3003,8 @@ CWallet* CWallet::InitLoadWallet(bool fDisableWallet, const std::string& strWall
         CWallet *tempWallet = new CWallet(strWalletFile);
         DBErrors nZapWalletRet = tempWallet->ZapWalletTx(vWtx);
         if (nZapWalletRet != DB_LOAD_OK) {
-            errorString = _("Error loading wallet.dat: Wallet corrupted");
-            uiInterface.InitMessage(_("Error loading wallet.dat: Wallet corrupted"));
+            errorString = strprintf(_("Error loading %s: Wallet corrupted"), strWalletFile);
+            uiInterface.InitMessage(strprintf(_("Error loading %s: Wallet corrupted"), strWalletFile));
             return NULL;
         }
 
@@ -3020,21 +3021,24 @@ CWallet* CWallet::InitLoadWallet(bool fDisableWallet, const std::string& strWall
     if (nLoadWalletRet != DB_LOAD_OK)
     {
         if (nLoadWalletRet == DB_CORRUPT)
-            errorString += _("Error loading wallet.dat: Wallet corrupted") + "\n";
+            errorString += strprintf(_("Error loading %s: Wallet corrupted"), strWalletFile) + "\n";
         else if (nLoadWalletRet == DB_NONCRITICAL_ERROR)
         {
-            warningString += _("Error reading wallet.dat! All keys read correctly, but transaction data"
-                          " or address book entries might be missing or incorrect.");
+            warningString += strprintf(_("Error reading %s! All keys read correctly, but transaction data"
+                                         " or address book entries might be missing or incorrect."),
+                strWalletFile);
         }
         else if (nLoadWalletRet == DB_TOO_NEW)
-            errorString += strprintf(_("Error loading wallet.dat: Wallet requires newer version of %s"), _(PACKAGE_NAME)) + "\n";
+            errorString += strprintf(_("Error loading %s: Wallet requires newer version of %s"),
+                               strWalletFile, _(PACKAGE_NAME)) +
+                           "\n";
         else if (nLoadWalletRet == DB_NEED_REWRITE)
         {
             errorString += strprintf(_("Wallet needed to be rewritten: restart %s to complete"), _(PACKAGE_NAME)) + "\n";
             LogPrintf("%s", errorString);
         }
         else
-            errorString += _("Error loading wallet.dat") + "\n";
+            errorString += strprintf(_("Error loading %s"), strWalletFile) + "\n";
 
         if (!errorString.empty())
             return NULL;
