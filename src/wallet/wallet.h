@@ -13,6 +13,7 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 #include "wallet/crypter.h"
+#include "wallet/hdkeystore.h"
 #include "wallet/wallet_ismine.h"
 #include "wallet/walletdb.h"
 #include "wallet/rpcwallet.h"
@@ -54,6 +55,7 @@ static const unsigned int DEFAULT_TX_CONFIRM_TARGET = 2;
 //! Largest (in bytes) free transaction we're willing to create
 static const unsigned int MAX_FREE_TRANSACTION_CREATE_SIZE = 1000;
 static const bool DEFAULT_WALLETBROADCAST = true;
+static const bool DEFAULT_USE_HD_WALLET = true;
 
 extern const char * DEFAULT_WALLET_DAT;
 
@@ -72,8 +74,9 @@ enum WalletFeature
 
     FEATURE_WALLETCRYPT = 40000, // wallet encryption
     FEATURE_COMPRPUBKEY = 60000, // compressed public keys
+    FEATURE_HD          = 70000, // hd keys
 
-    FEATURE_LATEST = 60000
+    FEATURE_LATEST = 70000
 };
 
 
@@ -536,7 +539,7 @@ private:
  * A CWallet is an extension of a keystore, which also maintains a set of transactions and balances,
  * and provides the ability to create new transactions.
  */
-class CWallet : public CCryptoKeyStore, public CValidationInterface
+class CWallet : public CHDKeyStore, public CValidationInterface
 {
 private:
     /**
@@ -587,11 +590,13 @@ public:
     std::string strWalletFile;
 
     std::set<int64_t> setKeyPool;
-    std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
+
+    //! current active hd chain
+    HDChainID activeHDChain;
 
     CWallet()
     {
@@ -874,6 +879,16 @@ public:
 
     /* Returns the wallets help message */
     static std::string GetWalletHelpString(bool showDebug);
+
+    /** HD functions */
+    //! Adds a master seed the the in-mem map (store it in the db if memonly == false)
+    bool AddMasterSeed(const HDChainID& chainID, const CKeyingMaterial& masterSeed, bool memonly = false);
+    //! Adds a new HD keychain
+    bool AddHDChain(const CHDChain& chain, bool memonly = false);
+    //! Encrypt the HD seeds
+    bool EncryptHDSeeds(CKeyingMaterial& vMasterKeyIn);
+    bool SetActiveHDChainID(const HDChainID& chainID, bool check = true, bool memonly = false);
+    bool GetActiveHDChainID(HDChainID& chainID);
 };
 
 /** A key allocated from the key pool. */

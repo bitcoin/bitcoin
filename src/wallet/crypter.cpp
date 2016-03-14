@@ -292,3 +292,26 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
     }
     return true;
 }
+
+bool CCryptoKeyStore::EncryptSeed(CKeyingMaterial& vMasterKeyIn, const CKeyingMaterial& seedIn, const uint256& seedPubHash, std::vector<unsigned char> &vchCiphertext) const
+{
+    LOCK(cs_KeyStore);
+    CKeyingMaterial *masterKey = &vMasterKeyIn;
+
+    if (!vMasterKeyIn.size() && vMasterKey.size() > 0)
+        *masterKey = vMasterKey;
+
+    if (!EncryptSecret(*masterKey, seedIn, seedPubHash, vchCiphertext))
+        return false;
+
+    return true;
+}
+
+bool CCryptoKeyStore::DecryptSeed(CKeyingMaterial& vMasterKeyIn, const std::vector<unsigned char>& vchCiphertextIn, const uint256& seedPubHash, CKeyingMaterial& seedOut) const
+{
+    LOCK(cs_KeyStore);
+    if (!DecryptSecret(vMasterKey, vchCiphertextIn, seedPubHash, seedOut))
+        return false;
+
+    return true;
+}
