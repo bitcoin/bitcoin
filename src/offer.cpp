@@ -520,7 +520,6 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 						return error("CheckOfferInputs() OP_OFFER_ACTIVATE: cert and offer pubkey's must match, this cert may already be linked to another offer");
 				}
 			}	
-		
 			if(!theOffer.vchLinkOffer.empty())
 			{
 
@@ -1252,33 +1251,31 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	CScript scriptPubKey, scriptPubKeyAlias;
 	const CWalletTx *wtxAliasIn = NULL;
 
-	if(linkOffer.linkWhitelist.bExclusiveResell)
-	{
-		// go through the whitelist and see if you own any of the aliases to apply to this offer for a discount
-		for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {
-			CTransaction txAlias;
-			CAliasIndex theAlias;
-			COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
-			// make sure this cert is still valid
-			if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
+	// go through the whitelist and see if you own any of the aliases to apply to this offer for a discount
+	for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {
+		CTransaction txAlias;
+		CAliasIndex theAlias;
+		COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
+		// make sure this cert is still valid
+		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
+		{
+  			// check for existing cert 's
+			if (ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
+				throw runtime_error("there are pending operations on that alias");
+			}
+			// make sure its in your wallet (you control this alias)		
+			if (IsSyscoinTxMine(txAlias, "alias")) 
 			{
-      			// check for existing cert 's
-				if (ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
-					throw runtime_error("there are pending operations on that alias");
-				}
-				// make sure its in your wallet (you control this alias)		
-				if (IsSyscoinTxMine(txAlias, "alias")) 
-				{
-					wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());
-					foundEntry = entry;
-					CPubKey currentAliasKey(theAlias.vchPubKey);
-					scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
-					if(commissionInteger <= -foundEntry.nDiscountPct)
+				wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());
+				foundEntry = entry;
+				CPubKey currentAliasKey(theAlias.vchPubKey);
+				scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
+				if(commissionInteger <= -foundEntry.nDiscountPct)
 						throw runtime_error(strprintf("You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
 
 				}
 			}
-		}
+		
 
 		// if the whitelist exclusive mode is on and you dont have a cert in the whitelist, you cannot link to this offer
 		if(foundEntry.IsNull())
