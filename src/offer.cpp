@@ -1259,10 +1259,6 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 		// make sure this cert is still valid
 		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
 		{
-  			// check for existing cert 's
-			if (ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
-				throw runtime_error("there are pending operations on that alias");
-			}
 			// make sure its in your wallet (you control this alias)		
 			if (IsSyscoinTxMine(txAlias, "alias")) 
 			{
@@ -2036,19 +2032,15 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			// if escrow has a whitelist alias attached, use that to get the offerlinkwhitelist entry, else check the seller's whitelist to see if we own any aliases from his whitelist
 			if (IsSyscoinTxMine(txAlias, "alias") || vchEscrowWhitelistAlias == entry.aliasLinkVchRand) 
 			{
-				// check for existing alias updates/transfers
-				if (!ExistsInMempool(entry.aliasLinkVchRand, OP_ALIAS_UPDATE)) {
-					
-					// find the entry with the biggest discount, for buyers convenience
-					if(entry.nDiscountPct >= foundAlias.nDiscountPct || foundAlias.nDiscountPct == 0)
-					{
-						wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
-						foundAlias = entry;		
-						vchWhitelistAlias = entry.aliasLinkVchRand;
-						CPubKey currentKey(theAlias.vchPubKey);
-						scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
-					}
-				}
+				// find the entry with the biggest discount, for buyers convenience
+				if(entry.nDiscountPct >= foundAlias.nDiscountPct || foundAlias.nDiscountPct == 0)
+				{
+					wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());		
+					foundAlias = entry;		
+					vchWhitelistAlias = entry.aliasLinkVchRand;
+					CPubKey currentKey(theAlias.vchPubKey);
+					scriptPubKeyAliasOrig = GetScriptForDestination(currentKey.GetID());
+				}				
 			}		
 		}
 	}
@@ -2059,7 +2051,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// if this is an accept for a linked offer, the offer is set to exclusive mode and you dont have an alias in the whitelist, you cannot accept this offer
 	if(!vchLinkOfferAccept.empty() && foundAlias.IsNull() && theOffer.linkWhitelist.bExclusiveResell)
 	{
-		throw runtime_error("cannot pay for this linked offer because you don't own am alias from its affiliate list");
+		throw runtime_error("cannot pay for this linked offer because you don't own an alias from its affiliate list");
 	}
 
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
