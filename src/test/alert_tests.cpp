@@ -12,9 +12,9 @@
 #include "main.h" // For PartitionCheck
 #include "serialize.h"
 #include "streams.h"
-#include "util.h"
 #include "utilstrencodings.h"
 
+#include "test/testutil.h"
 #include "test/test_bitcoin.h"
 
 #include <fstream>
