@@ -24,6 +24,7 @@
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <univalue.h>
 
@@ -111,6 +112,30 @@ UniValue getinfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
     obj.push_back(Pair("errors",        GetWarnings("statusbar")));
     return obj;
+}
+
+UniValue debug(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "debug ( 0|1|addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool"
+            "|mempoolrej|net|proxy|prune|http|libevent|tor|zmq|"
+            "dash|darksend|instantx|masternode|keepass|mnpayments|mnbudget )\n"
+            "Change debug category on the fly. Specify single category or use comma to specify many.\n"
+            "\nExamples:\n"
+            + HelpExampleCli("debug", "dash")
+            + HelpExampleRpc("debug", "dash,net")
+        );
+
+    std::string strMode = params[0].get_str();
+
+    mapMultiArgs["-debug"].clear();
+    boost::split(mapMultiArgs["-debug"], strMode, boost::is_any_of(","));
+    mapArgs["-debug"] = mapMultiArgs["-debug"][mapMultiArgs["-debug"].size() - 1];
+
+    fDebug = mapArgs["-debug"] != "0";
+
+    return "Debug mode: " + (fDebug ? strMode : "off");
 }
 
 UniValue mnsync(const UniValue& params, bool fHelp)

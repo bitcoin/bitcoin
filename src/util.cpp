@@ -253,16 +253,26 @@ bool LogAcceptCategory(const char* category)
 {
     if (category != NULL)
     {
-        if (!fDebug)
-            return false;
-
         // Give each thread quick access to -debug settings.
         // This helps prevent issues debugging global destructors,
         // where mapMultiArgs might be deleted before another
         // global destructor calls LogPrint()
         static boost::thread_specific_ptr<set<string> > ptrCategory;
+
+        if (!fDebug) {
+            if (ptrCategory.get() != NULL) {
+                LogPrintf("debug turned off: thread %s\n", GetThreadName());
+                ptrCategory.release();
+            }
+            return false;
+        }
+
         if (ptrCategory.get() == NULL)
         {
+            std::string strThreadName = GetThreadName();
+            LogPrintf("debug turned on:\n");
+            for (int i = 0; i < (int)mapMultiArgs["-debug"].size(); ++i)
+                LogPrintf("  thread %s category %s\n", strThreadName, mapMultiArgs["-debug"][i]);
             const vector<string>& categories = mapMultiArgs["-debug"];
             ptrCategory.reset(new set<string>(categories.begin(), categories.end()));
             // thread_specific_ptr automatically deletes the set when the thread ends.
