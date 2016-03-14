@@ -249,7 +249,7 @@ CScript RemoveCertScriptPrefix(const CScript& scriptIn) {
 }
 
 bool CheckCertInputs(const CTransaction &tx,
-        const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block) {
+        const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 	
 	if (tx.IsCoinBase())
 		return true;
