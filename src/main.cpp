@@ -919,15 +919,15 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			bool good = true;
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckAliasInputs(tx, inputs, fJustCheck, nHeight, block);
+				good = CheckAliasInputs(tx, inputs, fJustCheck, nHeight, &block);
 			}
 			if(DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckCertInputs(tx, inputs, fJustCheck, nHeight, block);			
+				good = CheckCertInputs(tx, inputs, fJustCheck, nHeight, &block);			
 			}
 			if(DecodeEscrowTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckEscrowInputs(tx, inputs, fJustCheck, nHeight, block);		
+				good = CheckEscrowInputs(tx, inputs, fJustCheck, nHeight, &block);		
 			}
 			// remove tx's that don't pass our check
 			if(!good)
@@ -949,11 +949,11 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			bool good = true;
 			if(DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{	
-				good = CheckOfferInputs(tx, inputs, fJustCheck, nHeight, block);	 
+				good = CheckOfferInputs(tx, inputs, fJustCheck, nHeight, &block);	 
 			}
 			if(DecodeMessageTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckMessageInputs(tx, inputs, fJustCheck, nHeight, block);		
+				good = CheckMessageInputs(tx, inputs, fJustCheck, nHeight, &block);		
 			}
 			// remove tx's that don't pass our check
 			if(!good)
