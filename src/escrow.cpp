@@ -266,7 +266,7 @@ CScript RemoveEscrowScriptPrefix(const CScript& scriptIn) {
     return CScript(pc, scriptIn.end());
 }
 
-bool CheckEscrowInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block) {
+bool CheckEscrowInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 		
 	if (tx.IsCoinBase())
 		return true;

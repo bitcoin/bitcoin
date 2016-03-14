@@ -219,7 +219,7 @@ CScript RemoveMessageScriptPrefix(const CScript& scriptIn) {
     return CScript(pc, scriptIn.end());
 }
 
-bool CheckMessageInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block) {
+bool CheckMessageInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 	
 	if (tx.IsCoinBase())
 		return true;
