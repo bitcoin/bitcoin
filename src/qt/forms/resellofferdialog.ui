@@ -36,7 +36,7 @@
      <item row="2" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>Commission:</string>
+        <string>Affiliate Markup:</string>
        </property>
        <property name="buddy">
         <cstring>commissionEdit</cstring>
@@ -46,7 +46,7 @@
      <item row="2" column="1">
       <widget class="QLineEdit" name="commissionEdit">
        <property name="toolTip">
-        <string>A commission to apply to your resold offer ontop of any discounts you may recieve from the seller.</string>
+        <string>Enter Markup or Markdown(negative amount) percentage amount(without the % sign). You cannot give more of a discount than the rebate you were provided to Re-sell.</string>
        </property>
       </widget>
      </item>
