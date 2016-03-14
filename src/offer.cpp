@@ -609,7 +609,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 				return error("OP_OFFER_ACCEPT could not read accept from offer txn");
 			if (theOfferAccept.vchAcceptRand.size() > MAX_NAME_LENGTH)
 				return error("OP_OFFER_ACCEPT offer accept hex guid too long");
-			if (vvchArgs[2] > MAX_ENCRYPTED_VALUE_LENGTH)
+			if (vvchArgs[2].size() > MAX_ENCRYPTED_VALUE_LENGTH)
 				return error("OP_OFFER_ACCEPT message field too big");
 			if (theOfferAccept.vchLinkOfferAccept.size() > MAX_NAME_LENGTH)
 				return error("OP_OFFER_ACCEPT offer accept link field too big");
