@@ -18,11 +18,12 @@
 #include "txdb.h"
 #include "txmempool.h"
 #include "ui_interface.h"
-#include "util.h"
 #ifdef ENABLE_WALLET
 #include "wallet/db.h"
 #include "wallet/wallet.h"
 #endif
+
+#include "test/testutil.h"
 
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
