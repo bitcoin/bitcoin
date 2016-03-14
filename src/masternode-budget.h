@@ -512,7 +512,7 @@ public:
         swap(first.nAmount, second.nAmount);
         swap(first.address, second.address);
         swap(first.nTime, second.nTime);
-        swap(first.nFeeTXHash, second.nFeeTXHash);        
+        swap(first.nFeeTXHash, second.nFeeTXHash);
         first.mapVotes.swap(second.mapVotes);
     }
 

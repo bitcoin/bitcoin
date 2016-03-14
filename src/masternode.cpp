@@ -64,7 +64,7 @@ CMasternode::CMasternode()
     addr = CService();
     pubkey = CPubKey();
     pubkey2 = CPubKey();
-    sig = std::vector<unsigned char>();
+    vchSig = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -86,7 +86,7 @@ CMasternode::CMasternode(const CMasternode& other)
     addr = other.addr;
     pubkey = other.pubkey;
     pubkey2 = other.pubkey2;
-    sig = other.sig;
+    vchSig = other.vchSig;
     activeState = other.activeState;
     sigTime = other.sigTime;
     lastPing = other.lastPing;
@@ -108,7 +108,7 @@ CMasternode::CMasternode(const CMasternodeBroadcast& mnb)
     addr = mnb.addr;
     pubkey = mnb.pubkey;
     pubkey2 = mnb.pubkey2;
-    sig = mnb.sig;
+    vchSig = mnb.vchSig;
     activeState = MASTERNODE_ENABLED;
     sigTime = mnb.sigTime;
     lastPing = mnb.lastPing;
@@ -131,12 +131,12 @@ bool CMasternode::UpdateFromNewBroadcast(CMasternodeBroadcast& mnb)
     if(mnb.sigTime > sigTime) {    
         pubkey2 = mnb.pubkey2;
         sigTime = mnb.sigTime;
-        sig = mnb.sig;
+        vchSig = mnb.vchSig;
         protocolVersion = mnb.protocolVersion;
         addr = mnb.addr;
         lastTimeChecked = 0;
-        int nDoS = 0;
-        if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDoS, false))) {
+        int nDos = 0;
+        if(mnb.lastPing == CMasternodePing() || (mnb.lastPing != CMasternodePing() && mnb.lastPing.CheckAndUpdate(nDos, false))) {
             lastPing = mnb.lastPing;
             mnodeman.mapSeenMasternodePing.insert(make_pair(lastPing.GetHash(), lastPing));
         }
@@ -297,7 +297,7 @@ CMasternodeBroadcast::CMasternodeBroadcast()
     addr = CService();
     pubkey = CPubKey();
     pubkey2 = CPubKey();
-    sig = std::vector<unsigned char>();
+    vchSig = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -317,7 +317,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(CService newAddr, CTxIn newVin, CPubK
     addr = newAddr;
     pubkey = newPubkey;
     pubkey2 = newPubkey2;
-    sig = std::vector<unsigned char>();
+    vchSig = std::vector<unsigned char>();
     activeState = MASTERNODE_ENABLED;
     sigTime = GetAdjustedTime();
     lastPing = CMasternodePing();
@@ -337,7 +337,7 @@ CMasternodeBroadcast::CMasternodeBroadcast(const CMasternode& mn)
     addr = mn.addr;
     pubkey = mn.pubkey;
     pubkey2 = mn.pubkey2;
-    sig = mn.sig;
+    vchSig = mn.vchSig;
     activeState = mn.activeState;
     sigTime = mn.sigTime;
     lastPing = mn.lastPing;
@@ -355,7 +355,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
 {
     // make sure signature isn't in the future (past is OK)
     if (sigTime > GetAdjustedTime() + 60 * 60) {
-        LogPrintf("mnb - Signature rejected, too far into the future %s\n", vin.ToString());
+        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Signature rejected, too far into the future %s\n", vin.ToString());
         nDos = 1;
         return false;
     }
@@ -365,7 +365,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
     if(protocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
-        LogPrintf("mnb - ignoring outdated Masternode %s protocol version %d\n", vin.ToString(), protocolVersion);
+        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - ignoring outdated Masternode %s protocol version %d\n", vin.ToString(), protocolVersion);
         return false;
     }
 
@@ -373,7 +373,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     pubkeyScript = GetScriptForDestination(pubkey.GetID());
 
     if(pubkeyScript.size() != 25) {
-        LogPrintf("mnb - pubkey the wrong size\n");
+        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - pubkey the wrong size\n");
         nDos = 100;
         return false;
     }
@@ -382,19 +382,19 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     pubkeyScript2 = GetScriptForDestination(pubkey2.GetID());
 
     if(pubkeyScript2.size() != 25) {
-        LogPrintf("mnb - pubkey2 the wrong size\n");
+        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - pubkey2 the wrong size\n");
         nDos = 100;
         return false;
     }
 
     if(!vin.scriptSig.empty()) {
-        LogPrintf("mnb - Ignore Not Empty ScriptSig %s\n",vin.ToString());
+        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Ignore Not Empty ScriptSig %s\n",vin.ToString());
         return false;
     }
 
     std::string errorMessage = "";
-    if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)){
-        LogPrintf("mnb - Got bad Masternode address signature\n");
+    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)){
+        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Got bad Masternode address signature\n");
         nDos = 100;
         return false;
     }
@@ -412,7 +412,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     else {
         // this broadcast older than we have, it's bad. 
         if(pmn->sigTime > sigTime) {
-            LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (existing broadcast is at %d)\n",
+            LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Bad sigTime %d for Masternode %20s %105s (existing broadcast is at %d)\n",
                           sigTime, addr.ToString(), vin.ToString(), pmn->sigTime);
             return false;
         }
@@ -424,7 +424,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     //   after that they just need to match
     if(pmn->pubkey == pubkey && !pmn->IsBroadcastedWithin(MASTERNODE_MIN_MNB_SECONDS)) {
         //take the newest entry
-        LogPrintf("mnb - Got updated entry for %s\n", addr.ToString());
+        LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Got updated entry for %s\n", addr.ToString());
         if(pmn->UpdateFromNewBroadcast((*this))){
             pmn->Check();
             if(pmn->IsEnabled()) Relay();
@@ -435,7 +435,7 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
     return true;
 }
 
-bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
+bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
 {
     // we are a masternode with the same vin (i.e. already activated) and this mnb is ours (matches our Masternode privkey)
     // so nothing to do here for us
@@ -469,16 +469,16 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
         if(!AcceptToMemoryPool(mempool, state, CTransaction(tx), false, NULL, false, true, true)) {
             //set nDos
-            LogPrint("masternode", "mnb - Failed to accepted Masternode entry tx to mempool - %s\n", tx.ToString());
-            state.IsInvalid(nDoS);
+            LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd - Failed to accepted Masternode entry tx to mempool - %s\n", tx.ToString());
+            state.IsInvalid(nDos);
             return false;
         }
     }
 
-    LogPrint("masternode", "mnb - Accepted Masternode entry\n");
+    LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd - Accepted Masternode entry\n");
 
     if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
-        LogPrintf("mnb - Input must have at least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
+        LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Input must have at least %d confirmations\n", MASTERNODE_MIN_CONFIRMATIONS);
         // maybe we miss few blocks, let this mnb to be checked again later
         mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
         masternodeSync.mapSeenSyncMNB.erase(GetHash());
@@ -499,13 +499,13 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
             CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + MASTERNODE_MIN_CONFIRMATIONS - 1]; // block where tx got MASTERNODE_MIN_CONFIRMATIONS
             if(pConfIndex->GetBlockTime() > sigTime)
             {
-                LogPrintf("mnb - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
+                LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
                           sigTime, addr.ToString(), vin.ToString(), MASTERNODE_MIN_CONFIRMATIONS, pConfIndex->GetBlockTime());
                 return false;
             }
         }
     }
-    LogPrintf("mnb - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
+    LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
     CMasternode mn(*this);
     mnodeman.Add(mn);
 
@@ -539,12 +539,12 @@ bool CMasternodeBroadcast::Sign(CKey& keyCollateralAddress)
 
     std::string strMessage = addr.ToString() + boost::lexical_cast<std::string>(sigTime) + vchPubKey + vchPubKey2 + boost::lexical_cast<std::string>(protocolVersion);
 
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, sig, keyCollateralAddress)) {
+    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyCollateralAddress)) {
         LogPrintf("CMasternodeBroadcast::Sign() - Error: %s\n", errorMessage);
         return false;
     }
 
-    if(!darkSendSigner.VerifyMessage(pubkey, sig, strMessage, errorMessage)) {
+    if(!darkSendSigner.VerifyMessage(pubkey, vchSig, strMessage, errorMessage)) {
         LogPrintf("CMasternodeBroadcast::Sign() - Error: %s\n", errorMessage);
         return false;
     }

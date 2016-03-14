@@ -767,7 +767,7 @@ bool CMasternodePaymentWinner::SignatureValid()
 
         std::string errorMessage = "";
         if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
-            return error("CMasternodePaymentWinner::SignatureValid() - Got bad Masternode address signature %s \n", vinMasternode.ToString().c_str());
+            return error("CMasternodePaymentWinner::SignatureValid() - Got bad Masternode payment signature %s", vinMasternode.ToString().c_str());
         }
 
         return true;

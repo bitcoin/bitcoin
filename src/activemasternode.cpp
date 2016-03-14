@@ -115,13 +115,13 @@ void CActiveMasternode::ManageStatus()
             if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
             {
                 notCapableReason = "Error upon calling SetKey: " + errorMessage;
-                LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
+                LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
                 return;
             }
 
             if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage)) {
                 notCapableReason = "Error on Register: " + errorMessage;
-                LogPrintf("Register::ManageStatus() - %s\n", notCapableReason);
+                LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
                 return;
             }
 

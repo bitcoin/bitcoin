@@ -37,19 +37,19 @@ private:
     bool GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey);
 
 public:
-	// Initialized by init.cpp
-	// Keys for the main Masternode
-	CPubKey pubKeyMasternode;
+    // Initialized by init.cpp
+    // Keys for the main Masternode
+    CPubKey pubKeyMasternode;
 
-	// Initialized while registering Masternode
-	CTxIn vin;
+    // Initialized while registering Masternode
+    CTxIn vin;
     CService service;
 
     int status;
     std::string notCapableReason;
 
     CActiveMasternode()
-    {        
+    {
         status = ACTIVE_MASTERNODE_INITIAL;
     }
 

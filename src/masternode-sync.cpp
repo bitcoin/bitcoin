@@ -242,8 +242,6 @@ void CMasternodeSync::Process()
         } else if (RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED) {
             return;
         }
-    
-        if(fDebug) LogPrintf("CMasternodeSync::Process() - tick %d RequestedMasternodeAssets %d\n", tick, RequestedMasternodeAssets);
     }
 
     double nSyncProgress = double(RequestedMasternodeAttempt + (RequestedMasternodeAssets - 1) * 8) / (8*4);

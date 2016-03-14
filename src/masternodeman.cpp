@@ -699,11 +699,11 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         LogPrint("masternode", "mnb - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
 
-        int nDoS = 0;
-        if(!mnb.CheckAndUpdate(nDoS)){
+        int nDos = 0;
+        if(!mnb.CheckAndUpdate(nDos)){
 
-            if(nDoS > 0)
-                Misbehaving(pfrom->GetId(), nDoS);
+            if(nDos > 0)
+                Misbehaving(pfrom->GetId(), nDos);
 
             LogPrint("masternode", "mnb - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
 
@@ -721,15 +721,15 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         // make sure it's still unspent
         //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
-        if(mnb.CheckInputsAndAdd(nDoS)) {
+        if(mnb.CheckInputsAndAdd(nDos)) {
             // use this as a peer
             addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
             masternodeSync.AddedMasternodeList(mnb.GetHash());
         } else {
             LogPrintf("mnb - Rejected Masternode entry %s\n", mnb.addr.ToString());
 
-            if (nDoS > 0)
-                Misbehaving(pfrom->GetId(), nDoS);
+            if (nDos > 0)
+                Misbehaving(pfrom->GetId(), nDos);
         }
     }
 
@@ -742,14 +742,14 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         if(mapSeenMasternodePing.count(mnp.GetHash())) return; //seen
         mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
 
-        LogPrint("masternode", "mnp - Masternode ping, vin: %s\n new", mnp.vin.ToString());
+        LogPrint("masternode", "mnp - Masternode ping, vin: %s new\n", mnp.vin.ToString());
 
-        int nDoS = 0;
-        if(mnp.CheckAndUpdate(nDoS)) return;
+        int nDos = 0;
+        if(mnp.CheckAndUpdate(nDos)) return;
 
-        if(nDoS > 0) {
+        if(nDos > 0) {
             // if anything significant failed, mark that node
-            Misbehaving(pfrom->GetId(), nDoS);
+            Misbehaving(pfrom->GetId(), nDos);
         } else {
             // if nothing significant failed, search existing Masternode list
             CMasternode* pmn = Find(mnp.vin);

@@ -5190,7 +5190,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
                 std::string errorMessage = "";
                 if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)){
-                    LogPrintf("dstx: Got bad masternode address signature %s \n", vin.ToString());
+                    LogPrintf("dstx: Got bad Masternode transaction signature %s\n", vin.ToString());
                     //pfrom->Misbehaving(20);
                     return false;
                 }
