@@ -41,7 +41,7 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 		{
 			if(op == OP_OFFER_ACCEPT)
 			{
-				if(vvchArgs.size() == 2 && vvchArgs[0] == vchOffer)
+				if(vvchArgs.size() == 3 && vvchArgs[0] == vchOffer)
 				{
 					COffer theOffer(wtx);
 					COfferAccept theOfferAccept = theOffer.accept;
@@ -83,7 +83,7 @@ string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAc
 
 }
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const vector<unsigned char> &vchOfferAcceptLink, const COffer& theOffer)
+string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchMessage, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const vector<unsigned char> &vchOfferAcceptLink, const COffer& theOffer)
 {
 	string strError;
 	string strMethod = string("offeraccept");
@@ -115,7 +115,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	params.push_back(address.aliasName);
 	params.push_back(stringFromVch(vchLinkOffer));
 	params.push_back(static_cast<ostringstream*>( &(ostringstream() << theOfferAccept.nQty) )->str());
-	params.push_back(stringFromVch(theOfferAccept.vchMessage));
+	params.push_back(stringFromVch(vchMessage));
 	params.push_back("");
 	params.push_back(offerAcceptLinkTxHash);
 	params.push_back(stringFromVch(vchOfferAcceptLink));
@@ -341,7 +341,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 
 	if ((op == OP_OFFER_ACTIVATE && vvch.size() == 1)
 		|| (op == OP_OFFER_UPDATE && vvch.size() == 1)
-		|| (op == OP_OFFER_ACCEPT && vvch.size() == 2))
+		|| (op == OP_OFFER_ACCEPT && vvch.size() == 3))
 		return true;
 	return false;
 }
@@ -609,7 +609,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 				return error("OP_OFFER_ACCEPT could not read accept from offer txn");
 			if (theOfferAccept.vchAcceptRand.size() > MAX_NAME_LENGTH)
 				return error("OP_OFFER_ACCEPT offer accept hex guid too long");
-			if (theOfferAccept.vchMessage.size() > MAX_ENCRYPTED_VALUE_LENGTH)
+			if (vvchArgs[2] > MAX_ENCRYPTED_VALUE_LENGTH)
 				return error("OP_OFFER_ACCEPT message field too big");
 			if (theOfferAccept.vchLinkOfferAccept.size() > MAX_NAME_LENGTH)
 				return error("OP_OFFER_ACCEPT offer accept link field too big");
@@ -962,7 +962,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 				// theOffer.vchLinkOffer is the linked offer guid
 				// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
 				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
-				string strError = makeOfferLinkAcceptTX(theOfferAccept, theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer);
+				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[2], theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer);
 				if(strError != "")					
 					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
 				
@@ -1921,7 +1921,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKey;
 	CScript scriptPubKeyEscrow, scriptPubKeyAlias;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << OP_2DROP << OP_DROP;
 	EnsureWalletIsUnlocked();
 	CTransaction acceptTx;
 	COffer theOffer;
@@ -2079,6 +2078,12 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 				throw runtime_error("could not encrypt message to seller");
 		}
 	}
+	vector<unsigned char> vchPaymentMessage;
+	if(strCipherText.size() > 0)
+		vchPaymentMessage = vchFromString(strCipherText);
+	else
+		vchPaymentMessage = vchMessage;
+		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << OP_2DROP << OP_2DROP;
 	if(!vchLinkOfferAccept.empty() && !vchBTCTxId.empty())
 		throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
 
@@ -2106,10 +2111,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// create accept
 	COfferAccept txAccept;
 	txAccept.vchAcceptRand = vchAccept;
-	if(strCipherText.size() > 0)
-		txAccept.vchMessage = vchFromString(strCipherText);
-	else
-		txAccept.vchMessage = vchMessage;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.GetPrice(foundAlias);
 	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
@@ -2227,6 +2228,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
         	|| (op != OP_OFFER_ACCEPT))
             continue;
 		const vector<unsigned char> &vchAcceptRand = vvch[1];	
+		const vector<unsigned char> &vchMessage = vvch[2];	
 		string sTime;
 		CBlockIndex *pindex = chainActive[ca.nHeight];
 		if (pindex) {
@@ -2307,7 +2309,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		else
 			oOfferAccept.push_back(Pair("paid","true"));
 		string strMessage = string("");
-		if(!DecryptMessage(theOffer.vchPubKey, ca.vchMessage, strMessage))
+		if(!DecryptMessage(theOffer.vchPubKey, vchMessage, strMessage))
 			strMessage = string("Encrypted for owner of offer");
 		oOfferAccept.push_back(Pair("pay_message", strMessage));
 		aoOfferAccepts.push_back(oOfferAccept);
@@ -2421,6 +2423,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
                 continue;
 			if(vvch[0] != vchOfferToFind && !vchOfferToFind.empty())
 				continue;
+			const vector<unsigned char> &vchMessage = vvch[2];	
             vchOffer = vvch[0];
 			
 			COfferAccept theOfferAccept;
@@ -2518,7 +2521,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 
 			
 			string strMessage = string("");
-			if(!DecryptMessage(theOffer.vchPubKey, theOfferAccept.vchMessage, strMessage))
+			if(!DecryptMessage(theOffer.vchPubKey, vchMessage, strMessage))
 				strMessage = string("Encrypted for owner of offer");
 			oOfferAccept.push_back(Pair("pay_message", strMessage));
 
@@ -2569,6 +2572,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			if(offerVvch[0] != vchOfferToFind && !vchOfferToFind.empty())
 				continue;
 			const vector<unsigned char> &vchAcceptRand = offerVvch[1];
+			const vector<unsigned char> &vchMessage = offerVvch[2];
 	
 			string offer = stringFromVch(theEscrow.vchOffer);
 			string sHeight = strprintf("%llu", theOfferAccept.nHeight);
@@ -2652,7 +2656,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("status","paid"));
 
 			string strMessage = string("");
-			if(!DecryptMessage(theOffer.vchPubKey, theOfferAccept.vchMessage, strMessage))
+			if(!DecryptMessage(theOffer.vchPubKey, vchMessage, strMessage))
 				strMessage = string("Encrypted for owner of offer");
 			oOfferAccept.push_back(Pair("pay_message", strMessage));
 			oRes.push_back(oOfferAccept);	
