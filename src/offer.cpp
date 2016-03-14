@@ -863,44 +863,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 				if(theOffer.nQty < 0)
 					theOffer.nQty = 0;
 			}
-			if(theOffer.vchLinkOffer.empty())
-			{
-				// go through the linked offers, if any, and update the linked offer qty based on the this qty
-				for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
-					vector<COffer> myVtxPos;
-					if (pofferdb->ExistsOffer(theOffer.offerLinks[i])) {
-						if (pofferdb->ReadOffer(theOffer.offerLinks[i], myVtxPos))
-						{
-							COffer myLinkOffer = myVtxPos.back();
-							myLinkOffer.nQty = theOffer.nQty;	
-							myLinkOffer.PutToOfferList(myVtxPos);
-							// write offer
-							if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
-								return error( "CheckOfferInputs() : failed to write to offer link to DB");
-						}
-					}
-				}
-			}	
-			if (!fRescan && pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
-			{	
-				// vchPubKey is for when transfering cert after an offer accept, the pubkey is the transfer-to address and encryption key for cert data
-				// theOffer.vchLinkOffer is the linked offer guid
-				// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
-				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
-				string strError = makeOfferLinkAcceptTX(theOfferAccept, theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer);
-				if(strError != "")					
-					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
-				
-			}
-			// only if we are the root offer owner do we even consider xfering a cert					
-			// purchased a cert so xfer it
-			if(!fRescan && pwalletMain && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
-			{
-				string strError = makeTransferCertTX(theOffer, theOfferAccept);
-				if(strError != "")
-					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeTransferCert %s\n", strError.c_str());						
-				
-			}
+
 			theOfferAccept.nHeight = nHeight;
 			theOfferAccept.vchAcceptRand = vvchArgs[1];
 			theOfferAccept.txHash = tx.GetHash();
@@ -973,8 +936,47 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 		// write offer
 		if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 			return error( "CheckOfferInputs() : failed to write to offer DB");
-
-       				
+		if(op == OP_OFFER_ACCEPT)
+		{
+ 			if(theOffer.vchLinkOffer.empty())
+			{
+				// go through the linked offers, if any, and update the linked offer qty based on the this qty
+				for(unsigned int i=0;i<theOffer.offerLinks.size();i++) {
+					vector<COffer> myVtxPos;
+					if (pofferdb->ExistsOffer(theOffer.offerLinks[i])) {
+						if (pofferdb->ReadOffer(theOffer.offerLinks[i], myVtxPos))
+						{
+							COffer myLinkOffer = myVtxPos.back();
+							myLinkOffer.nQty = theOffer.nQty;	
+							myLinkOffer.PutToOfferList(myVtxPos);
+							// write offer
+							if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+								return error( "CheckOfferInputs() : failed to write to offer link to DB");
+						}
+					}
+				}
+			}	
+			if (!fRescan && pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
+			{	
+				// vchPubKey is for when transfering cert after an offer accept, the pubkey is the transfer-to address and encryption key for cert data
+				// theOffer.vchLinkOffer is the linked offer guid
+				// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
+				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
+				string strError = makeOfferLinkAcceptTX(theOfferAccept, theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer);
+				if(strError != "")					
+					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
+				
+			}
+			// only if we are the root offer owner do we even consider xfering a cert					
+			// purchased a cert so xfer it
+			if(!fRescan && pwalletMain && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
+			{
+				string strError = makeTransferCertTX(theOffer, theOfferAccept);
+				if(strError != "")
+					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeTransferCert %s\n", strError.c_str());						
+				
+			}  
+		}
 		// debug
 		if (fDebug)
 			LogPrintf( "CONNECTED OFFER: op=%s offer=%s title=%s qty=%u hash=%s height=%d\n",
