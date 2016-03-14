@@ -337,6 +337,11 @@ uint64_t CNode::nMaxOutboundTotalBytesSentInCycle = 0;
 uint64_t CNode::nMaxOutboundTimeframe = 60*60*24; //1 day
 uint64_t CNode::nMaxOutboundCycleStartTime = 0;
 
+CCriticalSection CNode::cs_globalFilterStats;
+uint64_t CNode::nTimeFilterStatsStart = GetTime();
+uint64_t CNode::nTimeframeFilter = 3600; //1 h
+NodeFilterStats CNode::globalFilterStats;
+
 CNode* FindNode(const CNetAddr& ip)
 {
     LOCK(cs_vNodes);
@@ -2307,6 +2312,73 @@ uint64_t CNode::GetOutboundTargetBytesLeft()
         return 0;
 
     return (nMaxOutboundTotalBytesSentInCycle >= nMaxOutboundLimit) ? 0 : nMaxOutboundLimit - nMaxOutboundTotalBytesSentInCycle;
+}
+
+uint64_t CNode::FilterStatsGetTimeInCycle()
+{
+    LOCK(cs_globalFilterStats);
+    if (CNode::nTimeFilterStatsStart == 0)
+        return 0;
+
+    return GetTime() - CNode::nTimeFilterStatsStart;
+}
+
+uint64_t CNode::FilterStatsGetTimeframe()
+{
+    LOCK(cs_totalBytesSent);
+    return nTimeframeFilter;
+}
+
+void CNode::FilterStatsCheckTimeframe()
+{
+    AssertLockHeld(cs_globalFilterStats);
+    uint64_t now = GetTime();
+    if (nTimeFilterStatsStart == 0 || nTimeFilterStatsStart + nTimeframeFilter < now)
+    {
+        nTimeFilterStatsStart = now;
+
+        //copy over current stats for calculating data deltas
+        globalFilterStats.nFilterBlockCountInCycle.first       = globalFilterStats.nFilterBlockCountInCycle.second;
+        globalFilterStats.nFilterBlockTimeCountInCycle.first   = globalFilterStats.nFilterBlockTimeCountInCycle.second;
+        globalFilterStats.nFilterBlockDataCountInCycle.first   = globalFilterStats.nFilterBlockDataCountInCycle.second;
+        globalFilterStats.nFilterMempoolCountInCycle.first     = globalFilterStats.nFilterMempoolCountInCycle.second;
+        globalFilterStats.nFilterMempoolTimeCountInCycle.first = globalFilterStats.nFilterMempoolTimeCountInCycle.second;
+        globalFilterStats.nFilterMempoolDataCountInCycle.first = globalFilterStats.nFilterMempoolDataCountInCycle.second;
+    }
+}
+
+void CNode::FilterStatsProcessBlock(const CBlock &block, int64_t processTime)
+{
+    LOCK(cs_globalFilterStats);
+
+    FilterStatsCheckTimeframe();
+    globalFilterStats.nFilterBlockCountInCycle.second++;
+    globalFilterStats.nFilterBlockTimeCountInCycle.second += processTime;
+    globalFilterStats.nFilterBlockDataCountInCycle.second += ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
+}
+
+void CNode::FilterStatsProcessMempoolPoll(uint64_t amountOfTransactions, int64_t processTime)
+{
+    LOCK(cs_globalFilterStats);
+
+    FilterStatsCheckTimeframe();
+    globalFilterStats.nFilterMempoolCountInCycle.second++;
+    globalFilterStats.nFilterMempoolTimeCountInCycle.second += processTime;
+    globalFilterStats.nFilterMempoolDataCountInCycle.second += amountOfTransactions;
+}
+
+const NodeFilterStats CNode::FilterStatsGetGlobalStats()
+{
+    LOCK(cs_globalFilterStats);
+    return CNode::globalFilterStats;
+}
+
+uint64_t CNode::FilterStatsGetValue(const filterDataset datapair, bool total)
+{
+    if (total)
+        return datapair.second;
+
+    return datapair.second - datapair.first;
 }
 
 uint64_t CNode::GetTotalBytesRecv()

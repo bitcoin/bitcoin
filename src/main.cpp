@@ -4784,7 +4784,12 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         LOCK(pfrom->cs_filter);
                         if (pfrom->pfilter)
                         {
+                            int64_t nStart = GetTimeMillis();
                             CMerkleBlock merkleBlock(block, *pfrom->pfilter);
+
+                            // collect statistics of block filter interaction
+                            pfrom->FilterStatsProcessBlock(block, GetTimeMillis()-nStart);
+
                             pfrom->PushMessage(NetMsgType::MERKLEBLOCK, merkleBlock);
                             // CMerkleBlock just contains hashes, so also push any transactions in the block the client did not see
                             // This avoids hurting performance by pointlessly requiring a round-trip
@@ -6609,6 +6614,10 @@ bool SendMessages(CNode* pto)
                     if (vInv.size() == MAX_INV_SZ) {
                         pto->PushMessage(NetMsgType::INV, vInv);
                         vInv.clear();
+                    }
+                    if (pto->pfilter) {
+                        // collect statistics of mempool filter interaction
+                        CNode::FilterStatsProcessMempoolPoll(vtxid.size(), GetTimeMillis() - nStart);
                     }
                 }
                 pto->timeLastMempoolReq = GetTime();
