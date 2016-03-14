@@ -1660,7 +1660,7 @@ bool CWallet::CreateTransaction(const vector<pair<CScript, int64_t> >& vecSend, 
         CTxDB txdb("r");
         {
             nFeeRet = nTransactionFee;
-            while (true)
+            for ( ; ; )
             {
                 wtxNew.vin.clear();
                 wtxNew.vout.clear();
@@ -2048,7 +2048,7 @@ bool CWallet::CreateCoinStake(uint256 &hashTx, uint32_t nOut, uint32_t nGenerati
     nCredit += GetProofOfStakeReward(nCoinAge, nBits, nGenerationTime);
 
     int64_t nMinFee = 0;
-    while (true)
+    for ( ; ; )
     {
         // Set output amount
         if (fDontSplitCoins)

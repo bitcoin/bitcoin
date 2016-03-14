@@ -306,7 +306,7 @@ string vstrprintf(const char *format, va_list ap)
     char* p = buffer;
     int limit = sizeof(buffer);
     int ret;
-    while (true)
+    for ( ; ; )
     {
 #ifndef _MSC_VER
         va_list arg_ptr;
@@ -370,7 +370,7 @@ void ParseString(const string& str, char c, vector<string>& v)
         return;
     string::size_type i1 = 0;
     string::size_type i2;
-    while (true)
+    for ( ; ; )
     {
         i2 = str.find(c, i1);
         if (i2 == str.npos)
@@ -486,7 +486,7 @@ vector<unsigned char> ParseHex(const char* psz)
 {
     // convert hex dump to vector
     vector<unsigned char> vch;
-    while (true)
+    for ( ; ; )
     {
         while (isspace(*psz))
             psz++;
@@ -705,7 +705,7 @@ vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
     int mode = 0;
     int left = 0;
 
-    while (1)
+    for ( ; ; )
     {
          int dec = decode64_table[(unsigned char)*p];
          if (dec == -1) break;
@@ -858,7 +858,7 @@ vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid)
     int mode = 0;
     int left = 0;
 
-    while (1)
+    for ( ; ; )
     {
          int dec = decode32_table[(unsigned char)*p];
          if (dec == -1) break;
@@ -1001,7 +1001,7 @@ std::string DecodeDumpString(const std::string &str) {
 
 bool WildcardMatch(const char* psz, const char* mask)
 {
-    while (true)
+    for ( ; ; )
     {
         switch (*mask)
         {

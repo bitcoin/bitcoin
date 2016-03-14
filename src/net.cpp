@@ -143,7 +143,7 @@ CAddress GetLocalAddress(const CNetAddr *paddrPeer)
 bool RecvLine(SOCKET hSocket, string& strLine)
 {
     strLine = "";
-    while (true)
+    for ( ; ; )
     {
         char c;
         int nBytes = recv(hSocket, &c, 1, 0);
@@ -606,7 +606,7 @@ void ThreadSocketHandler2(void* parg)
 {
     printf("ThreadSocketHandler started\n");
     size_t nPrevNodeCount = 0;
-    while (true)
+    for ( ; ; )
     {
         //
         // Disconnect nodes
@@ -1154,7 +1154,7 @@ void ThreadOpenConnections2(void* parg)
 
     // Initiate network connections
     int64_t nStart = GetTime();
-    while (true)
+    for ( ; ; )
     {
         ProcessOneShot();
 
@@ -1225,7 +1225,7 @@ void ThreadOpenConnections2(void* parg)
         int64_t nANow = GetAdjustedTime();
 
         int nTries = 0;
-        while (true)
+        for ( ; ; )
         {
             // use an nUnkBias between 10 (no outgoing connections) and 90 (8 outgoing connections)
             CAddress addr = addrman.Select(10 + min(nOutbound,8)*10);

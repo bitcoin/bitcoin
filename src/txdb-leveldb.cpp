@@ -41,7 +41,7 @@ void init_blockindex(leveldb::Options& options, bool fRemoveOld = false) {
         filesystem::remove_all(directory); // remove directory
         unsigned int nFile = 1;
 
-        while (true)
+        for ( ; ; )
         {
             filesystem::path strBlockFile = GetDataDir() / strprintf("blk%04u.dat", nFile);
 

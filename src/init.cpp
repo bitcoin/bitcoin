@@ -1013,7 +1013,7 @@ bool AppInit2()
 #if !defined(QT_GUI)
     // Loop until process is exit()ed from shutdown() function,
     // called from ThreadRPCServer thread when a "stop" command is received.
-    while (1)
+    for ( ; ; )
         Sleep(5000);
 #endif
 
