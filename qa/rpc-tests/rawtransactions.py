@@ -226,6 +226,19 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert(err['code'] == 16)
         assert(err['reason'].startswith('bad-txns-inputs-missingorspent'))
 
+        #check ordering of dependent tx's in verifyrawtransactions
+        parent  = rawTxSigned['hex']
+        child   = rawTx2
+        err1     = self.nodes[2].verifyrawtransactions([parent, child], {'include_mempool':True})
+        err2     = self.nodes[2].verifyrawtransactions([parent, child], {'include_mempool':False})
+        assert(err1 is None and err2 is None)
+
+        # out-of-order succeeds with mempool, fails without
+        err1     = self.nodes[2].verifyrawtransactions([child, parent], {'include_mempool':True})
+        err2     = self.nodes[2].verifyrawtransactions([child, parent], {'include_mempool':False})
+        assert(err1 is None and err2 is not None)
+        assert(err2['reason'].startswith('bad-txns-inputs-missingorspent'))
+
         # mine the transaction into a block and check end result
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
         self.sync_all()
