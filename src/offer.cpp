@@ -364,7 +364,7 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 	return CScript(pc, scriptIn.end());
 }
 
-bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, bool fRescan) {
+bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block) {
 		
 	if (tx.IsCoinBase())
 		return true;
@@ -956,7 +956,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 					}
 				}
 			}	
-			if (!fRescan && pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
+			if (pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
 			{	
 				// vchPubKey is for when transfering cert after an offer accept, the pubkey is the transfer-to address and encryption key for cert data
 				// theOffer.vchLinkOffer is the linked offer guid
@@ -969,7 +969,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 			}
 			// only if we are the root offer owner do we even consider xfering a cert					
 			// purchased a cert so xfer it
-			if(!fRescan && pwalletMain && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
+			if(pwalletMain && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
 			{
 				string strError = makeTransferCertTX(theOffer, theOfferAccept);
 				if(strError != "")
