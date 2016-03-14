@@ -809,6 +809,8 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
 			case OP_OFFER_ACCEPT: 
 				if (vvch[1].size() > MAX_NAME_LENGTH)
 					err = error("offeraccept tx with accept GUID too big");
+				if (vvch[2] > MAX_ENCRYPTED_VALUE_LENGTH)
+					return error("offeraccept message field too big");
 				break;
 			default:
 				break;
