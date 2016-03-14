@@ -12,6 +12,7 @@
 #include "net.h"
 
 #include <QWidget>
+#include <QCompleter>
 
 class ClientModel;
 class PlatformStyle;
@@ -143,6 +144,7 @@ private:
     QMenu *peersTableContextMenu;
     QMenu *banTableContextMenu;
     int consoleFontSize;
+    QCompleter *autoCompleter;
 };
 
 #endif // BITCOIN_QT_RPCCONSOLE_H
