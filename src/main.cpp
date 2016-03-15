@@ -955,7 +955,7 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 				// so we can use one alias input attached which proves to the network that you are on the whitelist of the root merchant offer owner, we can only use 1 input per block, so we need to group all of the accepts in a block into one tx
 				for (unsigned int j = 0; j < tx.vout.size(); j++)
 				{
-					if (IsSyscoinScript(tx.vout[j].scriptPubKey, offerOp, offerVvch))
+					if (!IsSyscoinScript(tx.vout[j].scriptPubKey, offerOp, offerVvch))
 						continue;
 					if(!IsOfferOp(offerOp))
 						continue;
