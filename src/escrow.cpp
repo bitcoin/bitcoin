@@ -266,7 +266,7 @@ CScript RemoveEscrowScriptPrefix(const CScript& scriptIn) {
     return CScript(pc, scriptIn.end());
 }
 
-bool CheckEscrowInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
+bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 		
 	if (tx.IsCoinBase())
 		return true;
@@ -282,27 +282,27 @@ bool CheckEscrowInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bo
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
-			int op;
+			int pop;
 			prevOutput = &tx.vin[i].prevout;	
 			if(!prevOutput)
 				continue;
 			// ensure inputs are unspent when doing consensus check to add to block
 			if(!inputs.GetCoins(prevOutput->hash, prevCoins))
 				continue;
-			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, op, vvch))
+			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
 			if(foundEscrow && foundAlias)
 				break;
 
-			if (!foundEscrow && IsEscrowOp(op)) {
+			if (!foundEscrow && IsEscrowOp(pop)) {
 				foundEscrow = true; 
-				prevOp = op;
+				prevOp = pop;
 				vvchPrevArgs = vvch;
 			}
-			else if (!foundAlias && IsAliasOp(op))
+			else if (!foundAlias && IsAliasOp(pop))
 			{
 				foundAlias = true; 
-				prevAliasOp = op;
+				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;
 			}
 		}
@@ -315,11 +315,7 @@ bool CheckEscrowInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bo
 		LogPrintf("CheckEscrowInputs() : non-syscoin transaction\n");
         return true;
     }
-    vector<vector<unsigned char> > vvchArgs;
-    int op, nOut;
-    bool good = DecodeEscrowTx(tx, op, nOut, vvchArgs);
-    if (!good)
-        return error("CheckEscrowInputs() : could not decode a syscoin tx");
+
     // unserialize escrow UniValue from txn, check for valid
     CEscrow theEscrow;
     theEscrow.UnserializeFromTx(tx);

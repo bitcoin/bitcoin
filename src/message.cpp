@@ -219,7 +219,7 @@ CScript RemoveMessageScriptPrefix(const CScript& scriptIn) {
     return CScript(pc, scriptIn.end());
 }
 
-bool CheckMessageInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
+bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 	
 	if (tx.IsCoinBase())
 		return true;
@@ -237,18 +237,18 @@ bool CheckMessageInputs(const CTransaction &tx, const CCoinsViewCache &inputs, b
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
-			int op;
+			int pop;
 			prevOutput = &tx.vin[i].prevout;
 			if(!prevOutput)
 				continue;
 			// ensure inputs are unspent when doing consensus check to add to block
 			if(!inputs.GetCoins(prevOutput->hash, prevCoins))
 				continue;
-			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, op, vvch))
+			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
-			if (IsAliasOp(op))
+			if (IsAliasOp(pop))
 			{
-				prevAliasOp = op;
+				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;
 				break;
 			}
@@ -259,11 +259,7 @@ bool CheckMessageInputs(const CTransaction &tx, const CCoinsViewCache &inputs, b
 		LogPrintf("CheckMessageInputs() : non-syscoin transaction\n");
         return true;
     }
-    vector<vector<unsigned char> > vvchArgs;
-    int op, nOut;
-    bool good = DecodeMessageTx(tx, op, nOut, vvchArgs);
-    if (!good)
-        return error("CheckMessageInputs() : could not decode a syscoin tx");
+
     // unserialize message UniValue from txn, check for valid
     CMessage theMessage;
     theMessage.UnserializeFromTx(tx);

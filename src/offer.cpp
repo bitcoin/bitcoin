@@ -367,7 +367,7 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 	return CScript(pc, scriptIn.end());
 }
 
-bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 		
 	if (tx.IsCoinBase())
 		return true;
@@ -390,42 +390,42 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
-			int op;
+			int pop;
 			prevOutput = &tx.vin[i].prevout;
 			if(!prevOutput)
 				continue;
 			// ensure inputs are unspent when doing consensus check to add to block
 			if(!inputs.GetCoins(prevOutput->hash, prevCoins))
 				continue;
-			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, op, vvch))
+			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
 
 
 			if(foundEscrow && foundOffer && foundCert && foundAlias)
 				break;
 
-			if (!foundOffer && IsOfferOp(op)) {
+			if (!foundOffer && IsOfferOp(pop)) {
 				foundOffer = true; 
-				prevOp = op;
+				prevOp = pop;
 				vvchPrevArgs = vvch;
 				prevOfferHash = prevOutput->hash;
 			}
-			else if (!foundCert && IsCertOp(op))
+			else if (!foundCert && IsCertOp(pop))
 			{
 				foundCert = true; 
-				prevCertOp = op;
+				prevCertOp = pop;
 				vvchPrevCertArgs = vvch;
 			}
-			else if (!foundEscrow && IsEscrowOp(op))
+			else if (!foundEscrow && IsEscrowOp(pop))
 			{
 				foundEscrow = true; 
-				prevEscrowOp = op;
+				prevEscrowOp = pop;
 				vvchPrevEscrowArgs = vvch;
 			}
-			else if (!foundAlias && IsAliasOp(op))
+			else if (!foundAlias && IsAliasOp(pop))
 			{
 				foundAlias = true; 
-				prevAliasOp = op;
+				prevAliasOp = pop;
 				vvchPrevAliasArgs = vvch;
 			}
 		}
@@ -440,12 +440,6 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 		return true;
 	}
 
-	vector<vector<unsigned char> > vvchArgs;
-	int op;
-	int nOut;
-	bool good = DecodeOfferTx(tx, op, nOut, vvchArgs);
-	if (!good)
-		return error("CheckOfferInputs() : could not decode offer tx");
 	// unserialize offer from txn, check for valid
 	COffer theOffer(tx);
 	COfferAccept theOfferAccept;
