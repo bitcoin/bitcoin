@@ -106,6 +106,7 @@ testScripts = [
     'invalidblockrequest.py',
     'invalidtxrequest.py',
     'abandonconflict.py',
+    'p2p-versionbits-warning.py',
 ]
 testScriptsExt = [
     'bip65-cltv.py',
