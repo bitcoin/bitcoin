@@ -115,11 +115,15 @@ testScripts = [
     'invalidblockrequest.py',
     'invalidtxrequest.py',
     'abandonconflict.py',
+    'bip68-sequence.py',
+    'bip68-sequence-p2p.py',
+    'bip112-csv-p2p.py',
+    'bip113-mtp-p2p.py',
+    'blockversion5-ism.py',
 ]
 testScriptsExt = [
     'bip65-cltv.py',
     'bip65-cltv-p2p.py',
-    'bip68-sequence.py',
     'bipdersig-p2p.py',
     'bipdersig.py',
     'getblocktemplate_longpoll.py',
