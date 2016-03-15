@@ -25,7 +25,7 @@ bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectMessage(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
 bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs );
-
+static const CBlock *linkedAcceptBlock = NULL;
 bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchAcceptRandLink)
 {
     TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
@@ -83,14 +83,14 @@ string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAc
 
 }
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchMessage, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const vector<unsigned char> &vchOfferAcceptLink, const COffer& theOffer)
+string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchMessage, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const vector<unsigned char> &vchOfferAcceptLink, const COffer& theOffer, const CBlock* block)
 {
 	string strError;
 	string strMethod = string("offeraccept");
 	UniValue params(UniValue::VARR);
 
 	CPubKey newDefaultKey;
-	
+	linkedAcceptBlock = block;
 	if(foundOfferLinkInWallet(vchLinkOffer, vchOfferAcceptLink))
 	{
 		if(fDebug)
@@ -126,12 +126,15 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	}
 	catch (UniValue& objError)
 	{
+		linkedAcceptBlock = NULL;
 		return find_value(objError, "message").get_str().c_str();
 	}
 	catch(std::exception& e)
 	{
+		linkedAcceptBlock = NULL;
 		return string(e.what()).c_str();
 	}
+	linkedAcceptBlock = NULL;
 	return "";
 
 }
@@ -962,7 +965,7 @@ bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 				// theOffer.vchLinkOffer is the linked offer guid
 				// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
 				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
-				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[2], theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer);
+				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[2], theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer, block);
 				if(strError != "")					
 					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
 				
