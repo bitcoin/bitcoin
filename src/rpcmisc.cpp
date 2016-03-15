@@ -410,20 +410,50 @@ UniValue getaddresstxids(const UniValue& params, bool fHelp)
             "]\n"
         );
 
-    CBitcoinAddress address(params[0].get_str());
-    uint160 hashBytes;
-    int type = 0;
-    if (!address.GetIndexKey(hashBytes, type)) {
+    std::vector<std::pair<uint160, int> > addresses;
+
+    if (params[0].isStr()) {
+
+        CBitcoinAddress address(params[0].get_str());
+        uint160 hashBytes;
+        int type = 0;
+        if (!address.GetIndexKey(hashBytes, type)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+        }
+        addresses.push_back(std::make_pair(hashBytes, type));
+
+    } else if (params[0].isObject()) {
+
+        UniValue addressValues = find_value(params[0].get_obj(), "addresses");
+        if (!addressValues.isArray()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Addresses is expected to be an array");
+        }
+
+        std::vector<UniValue> values = addressValues.getValues();
+
+        for (std::vector<UniValue>::iterator it = values.begin(); it != values.end(); ++it) {
+
+            CBitcoinAddress address(it->get_str());
+            uint160 hashBytes;
+            int type = 0;
+            if (!address.GetIndexKey(hashBytes, type)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+            }
+            addresses.push_back(std::make_pair(hashBytes, type));
+        }
+    } else {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
 
-    LOCK(cs_main);
+    for (std::vector<std::pair<uint160, int> >::iterator it = addresses.begin(); it != addresses.end(); ++it) {
+        if (!GetAddressIndex((*it).first, (*it).second, addressIndex)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+        }
+    }
 
-    if (!GetAddressIndex(hashBytes, type, addressIndex))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
-
+    // TODO sort by height
     std::set<std::string> txids;
 
     UniValue result(UniValue::VARR);
