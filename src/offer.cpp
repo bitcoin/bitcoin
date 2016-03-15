@@ -1889,7 +1889,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 		vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
 		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvch[2] << OP_2DROP << OP_2DROP; 
 		scriptPubKey += scriptPubKeyDestination;
-		CRecipient paymentRecipient = {scriptPubKey, nTotalValue, false};
+		CRecipient paymentRecipient = {scriptPubKey, nTotalAmount, false};
 		vecSend.push_back(paymentRecipient);
 	}
 	return vecSend.size() != size;
