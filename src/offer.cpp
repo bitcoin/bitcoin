@@ -39,8 +39,14 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
             continue;
 		if (DecodeOfferTx(wtx, op, nOut, vvchArgs))
 		{
-			if(op == OP_OFFER_ACCEPT)
+			// go through each vout and see if we have multiple offers in this transactions... the linked offer accept needs this to group multiple accepts into one 
+			// so we can use one alias input attached which proves to the network that you are on the whitelist of the root merchant offer owner, we can only use 1 input per block, so we need to group all of the accepts in a block into one tx
+			for (unsigned int j = 0; j < wtx.vout.size(); j++)
 			{
+				if (IsSyscoinScript(wtx.vout[j].scriptPubKey, op, vvchArgs))
+					continue;
+				if(op != OP_OFFER_ACCEPT)
+					continue;
 				if(vvchArgs.size() == 3 && vvchArgs[0] == vchOffer)
 				{
 					COffer theOffer(wtx);
