@@ -453,15 +453,22 @@ UniValue getaddresstxids(const UniValue& params, bool fHelp)
         }
     }
 
-    // TODO sort by height
     std::set<std::string> txids;
+    std::vector<std::pair<int, std::string> > vtxids;
 
-    UniValue result(UniValue::VARR);
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
+        int height = it->first.blockHeight;
         std::string txid = it->first.txhash.GetHex();
         if (txids.insert(txid).second) {
-            result.push_back(txid);
+            vtxids.push_back(std::make_pair(height, txid));
         }
+    }
+
+    std::sort(vtxids.begin(), vtxids.end());
+
+    UniValue result(UniValue::VARR);
+    for (std::vector<std::pair<int, std::string> >::const_iterator it=vtxids.begin(); it!=vtxids.end(); it++) {
+        result.push_back(it->second);
     }
 
     return result;

@@ -48,14 +48,20 @@ class AddressIndexTest(BitcoinTestFramework):
         print "Testing p2pkh and p2sh address index..."
 
         txid0 = self.nodes[0].sendtoaddress("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs", 10)
+        self.nodes[0].generate(1)
+
         txidb0 = self.nodes[0].sendtoaddress("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", 10)
         self.nodes[0].generate(1)
 
         txid1 = self.nodes[0].sendtoaddress("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs", 15)
+        self.nodes[0].generate(1)
+
         txidb1 = self.nodes[0].sendtoaddress("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", 15)
         self.nodes[0].generate(1)
 
         txid2 = self.nodes[0].sendtoaddress("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs", 20)
+        self.nodes[0].generate(1)
+
         txidb2 = self.nodes[0].sendtoaddress("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", 20)
         self.nodes[0].generate(1)
 
@@ -76,6 +82,12 @@ class AddressIndexTest(BitcoinTestFramework):
         # Check that multiple addresses works
         multitxids = self.nodes[1].getaddresstxids({"addresses": ["2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", "mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs"]});
         assert_equal(len(multitxids), 6);
+        assert_equal(multitxids[0], txid0);
+        assert_equal(multitxids[1], txidb0);
+        assert_equal(multitxids[2], txid1);
+        assert_equal(multitxids[3], txidb1);
+        assert_equal(multitxids[4], txid2);
+        assert_equal(multitxids[5], txidb2);
 
         # Check that outputs with the same address will only return one txid
         print "Testing for txid uniqueness..."
