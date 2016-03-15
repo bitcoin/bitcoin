@@ -949,8 +949,9 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 		{
 			
 			bool good = true;
-			if(DecodeOfferTx(tx, offerOp, nOut, offerVvch))
+			if(DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{	
+				offerVvch.clear();
 				// go through each vout and see if we have multiple offers in this transactions... the linked offer accept needs this to group multiple accepts into one 
 				// so we can use one alias input attached which proves to the network that you are on the whitelist of the root merchant offer owner, we can only use 1 input per block, so we need to group all of the accepts in a block into one tx
 				for (unsigned int j = 0; j < tx.vout.size(); j++)
