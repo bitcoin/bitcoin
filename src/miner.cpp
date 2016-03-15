@@ -111,6 +111,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     unsigned int nBlockSigOps = 100;
     int lastFewTxs = 0;
     CAmount nFees = 0;
+    bool fCreatedValidBlock = false;
 
     {
         LOCK2(cs_main, mempool.cs);
@@ -303,9 +304,29 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CValidationState state;
-        if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
-            throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+        fCreatedValidBlock = TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false);
+        if (!fCreatedValidBlock) {
+            if (pblock->vtx.size() <= 1) {
+                // This should REALLY never happen! Empty block that is invalid.
+                throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", 
+                                                   __func__, FormatStateMessage(state)));
+            }
+            // This should also never happen... but if an invalid transaction somehow entered
+            // the mempool due to a bug, remove all the transactions in the block
+            // and try again (it is not worth trying to figure out which transaction(s)
+            // are causing the block to be invalid).
+            LogPrintf("%s: TestBlockValidity failed: %s, retrying with smaller mempool",
+                      __func__, FormatStateMessage(state));
+            std::list<CTransaction> unused;
+            BOOST_REVERSE_FOREACH(const CTransaction& tx, pblock->vtx) {
+                mempool.remove(tx, unused, true);
+            }
         }
+    }
+
+    if (!fCreatedValidBlock) {
+        pblocktemplate.reset();
+        return CreateNewBlock(chainparams, scriptPubKeyIn); // recurse with smaller mempool
     }
 
     return pblocktemplate.release();
