@@ -378,8 +378,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	if (tx.IsCoinBase())
 		return true;
 	if (fDebug)
-		LogPrintf("*** %d %d %s %s\n", nHeight,
+		LogPrintf("*** %d %d %s %s %s\n", nHeight,
 			chainActive.Tip()->nHeight, tx.GetHash().ToString().c_str(),
+			op==OP_OFFER_ACCEPT ? "OFFERACCEPT: " + stringFromVch(vvchArgs[1]).c_str(): "", 
 			fJustCheck ? "JUSTCHECK" : "BLOCK");
 	bool foundOffer = false;
 	bool foundCert = false;
