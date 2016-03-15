@@ -2723,7 +2723,7 @@ static unsigned int nCurrentBlockFile = 1;
 FILE* AppendBlockFile(unsigned int& nFileRet)
 {
     nFileRet = 0;
-    while (true)
+    for ( ; ; )
     {
         FILE* file = OpenBlockFile(nCurrentBlockFile, 0, "ab");
         if (!file)
@@ -3808,7 +3808,7 @@ bool ProcessMessages(CNode* pfrom)
     //  (x) data
     //
 
-    while (true)
+    for ( ; ; )
     {
         // Don't bother if send buffer is too full to respond anyway
         if (pfrom->vSend.size() >= SendBufferSize())

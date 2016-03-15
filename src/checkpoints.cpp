@@ -34,7 +34,7 @@ namespace Checkpoints
         ( 200000, std::make_pair(uint256("0x0000000000029f8bbf66e6ea6f3e5db55009404aae0fe395a53dd33142b2bff2"), 1441127233) )
         ( 221047, std::make_pair(uint256("0xa28aef712e7aa0c285bfe29351ca21ed416689139e3063ef770fc826a8b9e9da"), 1449431646) )
     ;
-    
+
     static ListBannedBlocks listBanned =
         boost::assign::list_of
         // Invalid block #221047 with future timestamp of 2016/02/23 09:24:17 UTC
@@ -129,7 +129,7 @@ namespace Checkpoints
             // that current checkpoint should be a descendant block
             CBlockIndex* pindex = pindexSyncCheckpoint;
             while (pindex->nHeight > pindexCheckpointRecv->nHeight)
-                if (!(pindex = pindex->pprev))
+                if ((pindex = pindex->pprev) == NULL)
                     return error("ValidateSyncCheckpoint: pprev null - block index structure failure");
             if (pindex->GetBlockHash() != hashCheckpoint)
             {
@@ -144,7 +144,7 @@ namespace Checkpoints
         // to verify.
         CBlockIndex* pindex = pindexCheckpointRecv;
         while (pindex->nHeight > pindexSyncCheckpoint->nHeight)
-            if (!(pindex = pindex->pprev))
+            if ((pindex = pindex->pprev) == NULL)
                 return error("ValidateSyncCheckpoint: pprev2 null - block index structure failure");
         if (pindex->GetBlockHash() != hashSyncCheckpoint)
         {
@@ -246,7 +246,7 @@ namespace Checkpoints
             // trace back to same height as sync-checkpoint
             const CBlockIndex* pindex = pindexPrev;
             while (pindex->nHeight > pindexSync->nHeight)
-                if (!(pindex = pindex->pprev))
+                if ((pindex = pindex->pprev) == NULL)
                     return error("CheckSync: pprev null - block index structure failure");
             if (pindex->nHeight < pindexSync->nHeight || pindex->GetBlockHash() != hashSyncCheckpoint)
                 return false; // only descendant of sync-checkpoint can pass check
