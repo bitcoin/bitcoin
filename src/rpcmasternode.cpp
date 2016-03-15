@@ -123,18 +123,13 @@ UniValue masternode(const UniValue& params, bool fHelp)
         return masternodelist(newParams, fHelp);
     }
 
-    if (strCommand == "budget")
-    {
-        return "Show budgets";
-    }
-
     if(strCommand == "connect")
     {
         std::string strAddress = "";
         if (params.size() == 2){
             strAddress = params[1].get_str();
         } else {
-            throw runtime_error("Masternode address required\n");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Masternode address required");
         }
 
         CService addr = CService(strAddress);
@@ -144,14 +139,14 @@ UniValue masternode(const UniValue& params, bool fHelp)
             pnode->Release();
             return "successfully connected";
         } else {
-            throw runtime_error("error connecting\n");
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Error connecting");
         }
     }
 
     if (strCommand == "count")
     {
         if (params.size() > 2){
-            throw runtime_error("too many parameters\n");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Too many parameters");
         }
         if (params.size() == 2)
         {
@@ -209,7 +204,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
         CKey key;
         bool found = activeMasternode.GetMasterNodeVin(vin, pubkey, key);
         if(!found){
-            throw runtime_error("Missing masternode input, please look at the documentation for instructions on masternode creation\n");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Missing masternode input, please look at the documentation for instructions on masternode creation");
         } else {
             return activeMasternode.GetStatus();
         }
@@ -222,7 +217,8 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if (strCommand == "start")
     {
-        if(!fMasterNode) throw runtime_error("you must set masternode=1 in the configuration\n");
+        if(!fMasterNode)
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "You must set masternode=1 in the configuration");
 
         if(pwalletMain->IsLocked()) {
             SecureString strWalletPass;
@@ -231,11 +227,11 @@ UniValue masternode(const UniValue& params, bool fHelp)
             if (params.size() == 2){
                 strWalletPass = params[1].get_str().c_str();
             } else {
-                throw runtime_error("Your wallet is locked, passphrase is required\n");
+                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
             }
 
             if(!pwalletMain->Unlock(strWalletPass)){
-                throw runtime_error("incorrect passphrase\n");
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
             }
         }
 
@@ -251,7 +247,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
     if (strCommand == "start-alias")
     {
         if (params.size() < 2){
-            throw runtime_error("command needs at least 2 parameters\n");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Command needs at least 2 parameters");
         }
 
         std::string alias = params[1].get_str();
@@ -263,11 +259,11 @@ UniValue masternode(const UniValue& params, bool fHelp)
             if (params.size() == 3){
                 strWalletPass = params[2].get_str().c_str();
             } else {
-                throw runtime_error("Your wallet is locked, passphrase is required\n");
+                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
             }
 
             if(!pwalletMain->Unlock(strWalletPass)){
-                throw runtime_error("incorrect passphrase\n");
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
             }
         }
 
@@ -293,7 +289,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         if(!found) {
             statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "could not find alias in config. Verify with list-conf."));
+            statusObj.push_back(Pair("errorMessage", "Could not find alias in config. Verify with list-conf."));
         }
 
         pwalletMain->Lock();
@@ -310,18 +306,18 @@ UniValue masternode(const UniValue& params, bool fHelp)
             if (params.size() == 2){
                 strWalletPass = params[1].get_str().c_str();
             } else {
-                throw runtime_error("Your wallet is locked, passphrase is required\n");
+                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Your wallet is locked, passphrase is required");
             }
 
             if(!pwalletMain->Unlock(strWalletPass)){
-                throw runtime_error("incorrect passphrase\n");
+                throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
             }
         }
 
         if((strCommand == "start-missing" || strCommand == "start-disabled") &&
          (masternodeSync.RequestedMasternodeAssets <= MASTERNODE_SYNC_LIST ||
           masternodeSync.RequestedMasternodeAssets == MASTERNODE_SYNC_FAILED)) {
-            throw runtime_error("You can't use this command until masternode list is synced\n");
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "You can't use this command until masternode list is synced");
         }
 
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
@@ -363,12 +359,6 @@ UniValue masternode(const UniValue& params, bool fHelp)
         returnObj.push_back(Pair("detail", resultsObj));
 
         return returnObj;
-    }
-
-    if (strCommand == "create")
-    {
-
-        throw runtime_error("Not implemented yet, please look at the documentation for instructions on masternode creation\n");
     }
 
     if (strCommand == "genkey")
@@ -420,7 +410,8 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
     if(strCommand == "status")
     {
-        if(!fMasterNode) throw runtime_error("This is not a masternode\n");
+        if(!fMasterNode)
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a masternode");
 
         UniValue mnObj(UniValue::VOBJ);
         CMasternode *pmn = mnodeman.Find(activeMasternode.vin);
@@ -455,7 +446,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
         }
 
         if (params.size() > 3)
-            throw runtime_error("Correct usage is 'masternode winners ( \"count\" \"filter\" )'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'masternode winners ( \"count\" \"filter\" )'");
 
         UniValue obj(UniValue::VOBJ);
 
