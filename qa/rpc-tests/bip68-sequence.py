@@ -22,6 +22,9 @@ SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 # RPC error for non-BIP68 final transactions
 NOT_FINAL_ERROR = "64: non-BIP68-final"
 
+def satoshi_round(amount):
+    return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
+
 class BIP68Test(BitcoinTestFramework):
 
     def setup_network(self):
@@ -101,7 +104,16 @@ class BIP68Test(BitcoinTestFramework):
     # the current tip).
     def get_median_time_past(self, confirmations):
         block_hash = self.nodes[0].getblockhash(self.nodes[0].getblockcount()-confirmations)
-        return self.nodes[0].getblockheader(block_hash)["mediantime"]
+        # Recreate calculation of median time past
+        times = []
+        while len(times) < 11:
+            block = self.nodes[0].getblock(block_hash)
+            times.append(block["time"])
+            if block["height"] == 0:
+                break;
+            block_hash = block["previousblockhash"]
+        samples = len(times)
+        return sorted(times)[samples/2]
 
     # Test that sequence locks are respected for transactions spending confirmed inputs.
     def test_sequence_lock_confirmed_inputs(self):
@@ -304,15 +316,21 @@ class BIP68Test(BitcoinTestFramework):
         # And currently tx4 is in the mempool.
         #
         # If we invalidate the tip, tx3 should get added to the mempool, causing
-        # tx4 to be removed (fails sequence-lock).
+        # tx4 to fail sequence lock
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
-        assert(tx4.hash not in self.nodes[0].getrawmempool())
+        assert(tx4.hash in self.nodes[0].getrawmempool())
         assert(tx3.hash in self.nodes[0].getrawmempool())
+        # txs in the mempool which fail sequence locks should not make it into blocks
+        self.nodes[0].setmocktime(cur_time+601) # increment mock time so different block is created
+        blockhash = self.nodes[0].generate(1)[0]
+        assert(tx3.hash in self.nodes[0].getblock(blockhash)["tx"])
+        assert(tx4.hash not in self.nodes[0].getblock(blockhash)["tx"])
+        self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         # Now mine 2 empty blocks to reorg out the current tip (labeled tip-1 in
         # diagram above).
         # This would cause tx2 to be added back to the mempool, which in turn causes
-        # tx3 to be removed.
+        # tx3 to fail sequence lock
         tip = int(self.nodes[0].getblockhash(self.nodes[0].getblockcount()-1), 16)
         height = self.nodes[0].getblockcount()
         for i in xrange(2):
@@ -326,8 +344,14 @@ class BIP68Test(BitcoinTestFramework):
             cur_time += 1
 
         mempool = self.nodes[0].getrawmempool()
-        assert(tx3.hash not in mempool)
+        assert(tx3.hash in mempool)
         assert(tx2.hash in mempool)
+        # txs in the mempool which fail sequence locks should not make it into blocks
+        blockhash = self.nodes[0].generate(1)[0]
+        assert(tx2.hash in self.nodes[0].getblock(blockhash)["tx"])
+        assert(tx3.hash not in self.nodes[0].getblock(blockhash)["tx"])
+        self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
+
 
         # Reset the chain and get rid of the mocktimed-blocks
         self.nodes[0].setmocktime(0)
