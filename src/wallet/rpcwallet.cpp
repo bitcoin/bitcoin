@@ -30,11 +30,11 @@ extern bool DecodeOfferTx(const CTransaction& tx, int& op, int& nOut, vector<vec
 extern bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
-extern bool CheckAliasInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
-extern bool CheckOfferInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
-extern bool CheckCertInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
-extern bool CheckMessageInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
-extern bool CheckEscrowInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
+extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
+extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
+extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
+extern bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
+extern bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
 
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
@@ -387,27 +387,27 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	CCoinsViewCache inputs(pcoinsTip);
 	if(DecodeAliasTx(wtxNew, op, nOut, vvch))
 	{
-		if(!CheckAliasInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+		if(!CheckAliasInputs(wtxNew, op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight))
 			 throw runtime_error("Error: The transaction was rejected! Alias Inputs were invalid!");
 	}
 	if(DecodeCertTx(wtxNew, op, nOut, vvch))
 	{
-		if(!CheckCertInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+		if(!CheckCertInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight))
 			throw runtime_error("Error: The transaction was rejected! Certificate Inputs were invalid!");
 	}
 	if(DecodeEscrowTx(wtxNew, op, nOut, vvch))
 	{
-		if(!CheckEscrowInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+		if(!CheckEscrowInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight))
 			throw runtime_error("Error: The transaction was rejected! Escrow Inputs were invalid!");
 	}
 	if(DecodeOfferTx(wtxNew, op, nOut, vvch))		
 	{
-		if(!CheckOfferInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+		if(!CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight))
 			throw runtime_error("Error: The transaction was rejected! Offer Inputs were invalid!");
 	}
 	if(DecodeMessageTx(wtxNew, op, nOut, vvch))
 	{
-		if(!CheckMessageInputs(wtxNew, inputs, fJustCheck, chainActive.Tip()->nHeight))
+		if(!CheckMessageInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight))
 			throw runtime_error("Error: The transaction was rejected! Message Inputs were invalid!");
 	}
 	

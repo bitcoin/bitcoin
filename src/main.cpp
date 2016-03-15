@@ -872,23 +872,23 @@ bool CheckSyscoinInputs(const CTransaction& tx, const CCoinsViewCache& inputs, i
 			bool good = true;
 			if(DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckCertInputs(tx, inputs, fJustCheck, nHeight);			
+				good = CheckCertInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);			
 			}
 			if(DecodeEscrowTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckEscrowInputs(tx, inputs, fJustCheck, nHeight);		
+				good = CheckEscrowInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);		
 			}
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckAliasInputs(tx, inputs, fJustCheck, nHeight);
+				good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);
 			}
 			if(DecodeOfferTx(tx, op, nOut, vvchArgs))
 			{	
-				good = CheckOfferInputs(tx, inputs, fJustCheck, nHeight);	 
+				good = CheckOfferInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);	 
 			}
 			if(DecodeMessageTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckMessageInputs(tx, inputs, fJustCheck, nHeight);		
+				good = CheckMessageInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight);		
 			}
 			// remove tx's that don't pass our check
 			if(!good)
@@ -919,15 +919,15 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 			bool good = true;
 			if(DecodeAliasTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckAliasInputs(tx, inputs, fJustCheck, nHeight, &block);
+				good = CheckAliasInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, &block);
 			}
 			if(DecodeCertTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckCertInputs(tx, inputs, fJustCheck, nHeight, &block);			
+				good = CheckCertInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, &block);			
 			}
 			if(DecodeEscrowTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckEscrowInputs(tx, inputs, fJustCheck, nHeight, &block);		
+				good = CheckEscrowInputs(tx,  op, nOut, vvchArgs, inputs, fJustCheck, nHeight, &block);		
 			}
 			// remove tx's that don't pass our check
 			if(!good)
@@ -947,13 +947,27 @@ bool AddSyscoinServicesToDB(const CBlock& block, const CCoinsViewCache& inputs, 
 		{
 			
 			bool good = true;
-			if(DecodeOfferTx(tx, op, nOut, vvchArgs))
+			if(DecodeOfferTx(tx, offerOp, nOut, offerVvch))
 			{	
-				good = CheckOfferInputs(tx, inputs, fJustCheck, nHeight, &block);	 
+				// go through each vout and see if we have multiple offers in this transactions... the linked offer accept needs this to group multiple accepts into one 
+				// so we can use one alias input attached which proves to the network that you are on the whitelist of the root merchant offer owner, we can only use 1 input per block, so we need to group all of the accepts in a block into one tx
+				for (unsigned int j = 0; j < tx.vout.size(); j++)
+				{
+					int offerOp;
+					vector<vector<unsigned char> > offerVvch;
+					if (IsSyscoinScript(tx.vout[j].scriptPubKey, offerOp, offerVvch))
+						continue;
+					if(!IsOfferOp(offerOp))
+						continue;
+					good = CheckOfferInputs(tx, offerOp, j, offerVvch, inputs, fJustCheck, nHeight, &block);	
+					if(!good)
+						break;
+				}
 			}
+
 			if(DecodeMessageTx(tx, op, nOut, vvchArgs))
 			{
-				good = CheckMessageInputs(tx, inputs, fJustCheck, nHeight, &block);		
+				good = CheckMessageInputs(tx, op, nOut, vvchArgs, inputs, fJustCheck, nHeight, &block);		
 			}
 			// remove tx's that don't pass our check
 			if(!good)
