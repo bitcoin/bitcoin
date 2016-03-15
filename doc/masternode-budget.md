@@ -1,42 +1,54 @@
 Masternode Budget API
 =======================
 
-Dash now supports full decentralized budgets that are paid directly from the blockchain via superblocks once per month. 
+Dash now supports full decentralized budgets that are paid directly from the blockchain via superblocks once per month.
 
 Budgets go through a series of stages before being paid:
-* prepare - create a special transaction that destroys coins in order to make a proposal
-* submit - propagate transaction to peers on network
-* voting - lobby for votes on your proposal
-* get enough votes - make it into the budget
-* finalization - at the end of each payment period, proposals are sorted then compiled into a finalized budget
-* finalized budget voting - masternodes that agree with the finalization will vote on that budget
-* payment - the winning finalized budget is paid
+ * prepare - create a special transaction that destroys coins in order to make a proposal
+ * submit - propagate transaction to peers on network
+ * voting - lobby for votes on your proposal
+ * get enough votes - make it into the budget
+ * finalization - at the end of each payment period, proposals are sorted then compiled into a finalized budget
+ * finalized budget voting - masternodes that agree with the finalization will vote on that budget
+ * payment - the winning finalized budget is paid
 
 
 1. Prepare collateral transaction
 --
 
-mnbudget prepare proposal-name url payment_count block_start dash_address monthly_payment_dash [use_ix(true|false)]
+In this transaction we prepare collateral for "_cool-project_". This proposal will pay _1200_ DASH, _12_ times over the course of a year totaling _24000_ DASH.
+
+**Warning: if you change any fields within this command, the collateral transaction will become invalid.**
+
+Format: ```mnbudget prepare proposal-name url payment-count block-start dash-address monthly-payment-dash```
 
 Example: ```mnbudget prepare cool-project http://www.cool-project/one.json 12 100000 y6R9oN12KnB9zydzTLc3LikD9cCjjQzYG7 1200 true```
 
-Output: ```464a0eb70ea91c94295214df48c47baa72b3876cfb658744aaf863c7b5bf1ff0``` - This is the collateral hash, copy this output for the next step
+Output: ```464a0eb70ea91c94295214df48c47baa72b3876cfb658744aaf863c7b5bf1ff0```
 
-In this transaction we prepare collateral for "_cool-project_". This proposal will pay _1200_ DASH, _12_ times over the course of a year totaling _24000_ DASH. 
-
-**Warning -- if you change any fields within this command, the collateral transaction will become invalid.** 
+This is the collateral hash, copy this output for the next step.
 
 2 Submit proposal to network
 --
 
-```mnbudget submit cool-project http://www.cool-project/one.json 12 100000 y6R9oN12KnB9zydzTLc3LikD9cCjjQzYG7 1200 464a0eb70ea91c94295214df48c47baa72b3876cfb658744aaf863c7b5bf1ff0```
+Now we can submit our proposal to the network.
 
-Output : ```a2b29778ae82e45a973a94309ffa6aa2e2388b8f95b39ab3739f0078835f0491``` - This is your proposal hash, which other nodes will use to vote on it
+Format: ```mnbudget submit proposal-name url payment-count block-start dash-address monthly-payment-dash fee-tx```
+
+Example: ```mnbudget submit cool-project http://www.cool-project/one.json 12 100000 y6R9oN12KnB9zydzTLc3LikD9cCjjQzYG7 1200 464a0eb70ea91c94295214df48c47baa72b3876cfb658744aaf863c7b5bf1ff0```
+
+Output : ```a2b29778ae82e45a973a94309ffa6aa2e2388b8f95b39ab3739f0078835f0491```
+
+This is your proposal hash, which other nodes will use to vote on it.
 
 3. Lobby for votes
 --
 
-Double check your information: ```mnbudget getinfo cool-project```
+Double check your information.
+
+Format: ```mnbudget getproposal proposal-hash```
+
+Example: ```mnbudget getproposal a2b29778ae82e45a973a94309ffa6aa2e2388b8f95b39ab3739f0078835f0491```
 ￼
 ```
 {
@@ -60,36 +72,38 @@ Double check your information: ```mnbudget getinfo cool-project```
 }
 ```
 
-If everything looks correct, you can ask for votes from other masternodes. To vote on a proposal, load a wallet with _masternode.conf_ file. You do not need to access your cold wallet to vote for proposals. 
+If everything looks correct, you can ask for votes from other masternodes. To vote on a proposal, load a wallet with _masternode.conf_ file. You do not need to access your cold wallet to vote for proposals.
 
-```mnbudget vote a2b29778ae82e45a973a94309ffa6aa2e2388b8f95b39ab3739f0078835f0491 yes```
+Format: ```mnbudget vote proposal-hash [yes|no]```
+
+Example: ```mnbudget vote a2b29778ae82e45a973a94309ffa6aa2e2388b8f95b39ab3739f0078835f0491 yes```
 
 4.  Make it into the budget
 --
 
-After you get enough votes, execute ```mnbudget projection``` to see if you made it into the budget. If you the budget was finalized at this moment which proposals would be in it. Note: Proposals must be active at least 1 day on the network and receive 10% of the masternode network in yes votes in order to qualify (E.g. if there is 2500 masternodes, you will need 250 yes votes.)
+After you get enough votes, execute ```mnbudget projection``` to see if you made it into the budget. If you the budget was finalized at this moment which proposals would be in it. Note: Proposals must be active at least 1 day on the network and receive 10% of the masternode network in yes votes in order to qualify (E.g. if there is 3500 masternodes, you will need 350 yes votes.)
 
 ```mnbudget projection```:￼
 ```
 {
     "cool-project" : {
-	    "Hash" : "a2b29778ae82e45a973a94309ffa6aa2e2388b8f95b39ab3739f0078835f0491",
-	    "FeeHash" : "464a0eb70ea91c94295214df48c47baa72b3876cfb658744aaf863c7b5bf1ff0",
-	    "URL" : "http://www.cool-project/one.json",
-	    "BlockStart" : 100000,
-	    "BlockEnd" : 100625,
-	    "TotalPaymentCount" : 12,
-	    "RemainingPaymentCount" : 12,
-	    "PaymentAddress" : "y6R9oN12KnB9zydzTLc3LikD9cCjjQzYG7",
-	    "Ratio" : 1.00000000,
-	    "Yeas" : 33,
-	    "Nays" : 0,
-	    "Abstains" : 0,
-	    "TotalPayment" : 14400.00000000,
-	    "MonthlyPayment" : 1200.00000000,
-	    "IsValid" : true,
-	    "fValid" : true
-	}
+        "Hash" : "a2b29778ae82e45a973a94309ffa6aa2e2388b8f95b39ab3739f0078835f0491",
+        "FeeHash" : "464a0eb70ea91c94295214df48c47baa72b3876cfb658744aaf863c7b5bf1ff0",
+        "URL" : "http://www.cool-project/one.json",
+        "BlockStart" : 100000,
+        "BlockEnd" : 100625,
+        "TotalPaymentCount" : 12,
+        "RemainingPaymentCount" : 12,
+        "PaymentAddress" : "y6R9oN12KnB9zydzTLc3LikD9cCjjQzYG7",
+        "Ratio" : 1.00000000,
+        "Yeas" : 33,
+        "Nays" : 0,
+        "Abstains" : 0,
+        "TotalPayment" : 14400.00000000,
+        "MonthlyPayment" : 1200.00000000,
+        "IsValid" : true,
+        "fValid" : true
+    }
 }
 ```
 
@@ -111,23 +125,32 @@ After you get enough votes, execute ```mnbudget projection``` to see if you made
 6. Get paid
 --
 
-When block ```1000000``` is reached you'll receive a payment for ```1200``` DASH. 
+When block ```1000000``` is reached you'll receive a payment for ```1200``` DASH to ```y6R9oN12KnB9zydzTLc3LikD9cCjjQzYG7```.
 
-The following new RPC commands are supported:
-- mnbudget "command"... ( "passphrase" )
- - prepare            - Prepare proposal for network by signing and creating tx
- - submit             - Submit proposal for network
- - vote-many          - Vote on a Dash initiative
- - vote-alias         - Vote on a Dash initiative
- - vote               - Vote on a Dash initiative/budget
- - getvotes           - Show current masternode budgets
- - getinfo            - Show current masternode budgets
- - show               - Show all budgets
- - projection         - Show the projection of which proposals will be paid the next cycle
- - check              - Scan proposals and remove invalid
-￼
-- mnfinalbudget "command"... ( "passphrase" )
- - vote-many   - Vote on a finalized budget
- - vote        - Vote on a finalized budget
- - show        - Show existing finalized budgets
+7. Command list
+--
+
+The following RPC commands are supported:
+
+ - mnbudget "command"... ( "passphrase" )
+  - check              - Scan proposals and remove invalid from proposals list
+  - prepare            - Prepare proposal by signing and creating tx
+  - submit             - Submit proposal to network
+  - getproposalhash    - Get proposal hash(es) by proposal name
+  - getproposal        - Show proposal
+  - getvotes           - Show detailed votes list for proposal
+  - list               - List all proposals
+  - nextblock          - Get info about next superblock for budget system
+  - nextsuperblocksize - Get superblock size for a given blockheight
+  - projection         - Show the projection of which proposals will be paid the next cycle
+  - vote               - Vote on a proposal by single masternode (using dash.conf setup)
+  - vote-many          - Vote on a proposal by all masternodes (using masternode.conf setup)
+  - vote-alias         - Vote on a proposal by alias
+ - mnfinalbudget "command"... ( "passphrase" )
+  - vote-many   - Vote on a finalized budget
+  - vote        - Vote on a finalized budget
+  - show        - Show existing finalized budgets
+  - getvotes    - Get vote information for each finalized budget
+  - prepare     - Manually prepare a finalized budget
+  - submit      - Manually submit a finalized budget
 

@@ -133,7 +133,7 @@ If your remote server is not running, start your remote daemon as you normally w
 
 You can confirm that remote server is on the correct block by issuing
 
-```dashd getinfo```
+```dash-cli getinfo```
 
 and comparing with the official explorer at http://explorer.dash.org/chain/Dash
 
