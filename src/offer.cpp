@@ -43,7 +43,7 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 			// so we can use one alias input attached which proves to the network that you are on the whitelist of the root merchant offer owner, we can only use 1 input per block, so we need to group all of the accepts in a block into one tx
 			for (unsigned int j = 0; j < wtx.vout.size(); j++)
 			{
-				if (IsSyscoinScript(wtx.vout[j].scriptPubKey, op, vvchArgs))
+				if (!IsSyscoinScript(wtx.vout[j].scriptPubKey, op, vvchArgs))
 					continue;
 				if(op != OP_OFFER_ACCEPT)
 					continue;
