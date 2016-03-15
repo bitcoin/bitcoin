@@ -691,11 +691,14 @@ struct CompareBlocksByHeight
 
 UniValue getchaintips(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 0)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
-            "getchaintips\n"
+            "getchaintips ( count branchlen )\n"
             "Return information about all known tips in the block tree,"
             " including the main chain as well as orphaned branches.\n"
+            "\nArguments:\n"
+            "1. count       (numeric, optional) only show this much of latest tips\n"
+            "2. branchlen   (numeric, optional) only show tips that have equal or greater length of branch\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
@@ -740,15 +743,27 @@ UniValue getchaintips(const UniValue& params, bool fHelp)
     // Always report the currently active tip.
     setTips.insert(chainActive.Tip());
 
+    int nBranchMin = -1;
+    int nCountMax = INT_MAX;
+
+    if(params.size() >= 1)
+        nCountMax = params[0].get_int();
+
+    if(params.size() == 2)
+        nBranchMin = params[1].get_int();
+
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
     BOOST_FOREACH(const CBlockIndex* block, setTips)
     {
+        const int branchLen = block->nHeight - chainActive.FindFork(block)->nHeight;
+        if(branchLen < nBranchMin) continue;
+
+        if(nCountMax-- < 1) break;
+
         UniValue obj(UniValue::VOBJ);
         obj.push_back(Pair("height", block->nHeight));
         obj.push_back(Pair("hash", block->phashBlock->GetHex()));
-
-        const int branchLen = block->nHeight - chainActive.FindFork(block)->nHeight;
         obj.push_back(Pair("branchlen", branchLen));
 
         string status;
