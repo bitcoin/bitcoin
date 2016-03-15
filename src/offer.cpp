@@ -1855,7 +1855,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
-bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend;, CAmount nTotalAmount, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
+bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nTotalAmount, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
 {
 	unsigned int size = vecSend.size();
 	vector<unsigned char> offerGUID;
