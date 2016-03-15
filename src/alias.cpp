@@ -440,7 +440,7 @@ bool IsSyscoinTxMine(const CTransaction& tx, const string &type, CSyscoinAddress
 	myAddress = address;
 	return IsMine(*pwalletMain, address.Get());
 }
-bool CheckAliasInputs(const CTransaction &tx, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
+bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 	
 	if (tx.IsCoinBase())
 		return true;
@@ -455,18 +455,18 @@ bool CheckAliasInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
-			int op;
+			int pop;
 			prevOutput = &tx.vin[i].prevout;
 			if(!prevOutput)
 				continue;
 			// ensure inputs are unspent when doing consensus check to add to block
 			if(!inputs.GetCoins(prevOutput->hash, prevCoins))
 				continue;
-			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, op, vvch))
+			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
 
-			if (IsAliasOp(op)) {
-				prevOp = op;
+			if (IsAliasOp(pop)) {
+				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
 			}
@@ -477,13 +477,6 @@ bool CheckAliasInputs(const CTransaction &tx, const CCoinsViewCache &inputs, boo
 		LogPrintf("CheckAliasInputs() : non-syscoin transaction\n");
 		return true;
 	}
-	// decode alias info from transaction
-	vector<vector<unsigned char> > vvchArgs;
-	int op, nOut;
-	if (!DecodeAliasTx(tx, op, nOut, vvchArgs))
-		return error(
-				"CheckAliasInputs() : could not decode syscoin alias info from tx %s",
-				tx.GetHash().GetHex().c_str());
 	// unserialize alias from txn, check for valid
 	CAliasIndex theAlias(tx);
 	// we need to check for cert update specially because an alias update without data is sent along with offers linked with the alias

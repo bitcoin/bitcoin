@@ -248,7 +248,7 @@ CScript RemoveCertScriptPrefix(const CScript& scriptIn) {
     return CScript(pc, scriptIn.end());
 }
 
-bool CheckCertInputs(const CTransaction &tx,
+bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs,
         const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 	
 	if (tx.IsCoinBase())
@@ -268,19 +268,19 @@ bool CheckCertInputs(const CTransaction &tx,
 		// Strict check - bug disallowed
 		for (unsigned int i = 0; i < tx.vin.size(); i++) {
 			vector<vector<unsigned char> > vvch;
-			int op;
+			int pop;
 			prevOutput = &tx.vin[i].prevout;
 			if(!prevOutput)
 				continue;
 			// ensure inputs are unspent when doing consensus check to add to block
 			if(!inputs.GetCoins(prevOutput->hash, prevCoins))
 				continue;
-			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, op, vvch))
+			if(!IsSyscoinScript(prevCoins.vout[prevOutput->n].scriptPubKey, pop, vvch))
 				continue;
 
-			if (!foundCert && IsCertOp(op)) {
+			if (!foundCert && IsCertOp(pop)) {
 				foundCert = true; 
-				prevOp = op;
+				prevOp = pop;
 				vvchPrevArgs = vvch;
 				break;
 			}
@@ -293,11 +293,6 @@ bool CheckCertInputs(const CTransaction &tx,
                     "CheckCertInputs() : a non-syscoin transaction with a syscoin input");
         return true;
     }
-    vector<vector<unsigned char> > vvchArgs;
-    int op, nOut;
-    bool good = DecodeCertTx(tx, op, nOut, vvchArgs);
-    if (!good)
-        return error("CheckCertInputs() : could not decode cert tx");
     // unserialize cert object from txn, check for valid
     CCert theCert(tx);
 	// we need to check for cert update specially because a cert update without data is sent along with offers linked with the cert
