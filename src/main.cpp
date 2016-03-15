@@ -693,7 +693,7 @@ bool CheckFinalTx(const CTransaction &tx, int flags)
 
     // CheckFinalTx() uses chainActive.Height()+1 to evaluate
     // nLockTime because when IsFinalTx() is called within
-    // CBlock::AcceptBlock(), the height of the block *being*
+    // CBlock::StoreBlock(), the height of the block *being*
     // evaluated is what is used. Thus if we want to know if a
     // transaction can be part of the *next* block, we need to call
     // IsFinalTx() with one more than chainActive.Height().
@@ -3078,7 +3078,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         return true;
 
     // Check that the header is valid (particularly PoW).  This is mostly
-    // redundant with the call in AcceptBlockHeader.
+    // redundant with the call in StoreBlockHeader.
     if (!CheckBlockHeader(block, state, fCheckPOW))
         return false;
 
@@ -3195,7 +3195,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     return true;
 }
 
-static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex=NULL)
+static bool StoreBlockHeader(const CBlockHeader& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex=NULL)
 {
     AssertLockHeld(cs_main);
     // Check for duplicate
@@ -3243,13 +3243,13 @@ static bool AcceptBlockHeader(const CBlockHeader& block, CValidationState& state
 }
 
 /** Store block on disk. If dbp is non-NULL, the file is known to already reside on disk */
-static bool AcceptBlock(const CBlock& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, CDiskBlockPos* dbp)
+static bool StoreBlock(const CBlock& block, CValidationState& state, const CChainParams& chainparams, CBlockIndex** ppindex, bool fRequested, CDiskBlockPos* dbp)
 {
     AssertLockHeld(cs_main);
 
     CBlockIndex *&pindex = *ppindex;
 
-    if (!AcceptBlockHeader(block, state, chainparams, &pindex))
+    if (!StoreBlockHeader(block, state, chainparams, &pindex))
         return false;
 
     // Try to process all requested blocks that we don't have, but only
@@ -3290,12 +3290,12 @@ static bool AcceptBlock(const CBlock& block, CValidationState& state, const CCha
         if (dbp != NULL)
             blockPos = *dbp;
         if (!FindBlockPos(state, blockPos, nBlockSize+8, nHeight, block.GetBlockTime(), dbp != NULL))
-            return error("AcceptBlock(): FindBlockPos failed");
+            return error("StoreBlock(): FindBlockPos failed");
         if (dbp == NULL)
             if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart()))
                 AbortNode(state, "Failed to write block");
         if (!ReceivedBlockTransactions(block, state, pindex, blockPos))
-            return error("AcceptBlock(): ReceivedBlockTransactions failed");
+            return error("StoreBlock(): ReceivedBlockTransactions failed");
     } catch (const std::runtime_error& e) {
         return AbortNode(state, std::string("System error: ") + e.what());
     }
@@ -3328,13 +3328,13 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
 
         // Store to disk
         CBlockIndex *pindex = NULL;
-        bool ret = AcceptBlock(*pblock, state, chainparams, &pindex, fRequested, dbp);
+        bool ret = StoreBlock(*pblock, state, chainparams, &pindex, fRequested, dbp);
         if (pindex && pfrom) {
             mapBlockSource[pindex->GetBlockHash()] = pfrom->GetId();
         }
         CheckBlockIndex(chainparams.GetConsensus());
         if (!ret)
-            return error("%s: AcceptBlock FAILED", __func__);
+            return error("%s: StoreBlock FAILED", __func__);
     }
 
     if (!ActivateBestChain(state, chainparams, pblock))
@@ -4965,7 +4965,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 Misbehaving(pfrom->GetId(), 20);
                 return error("non-continuous headers sequence");
             }
-            if (!AcceptBlockHeader(header, state, chainparams, &pindexLast)) {
+            if (!StoreBlockHeader(header, state, chainparams, &pindexLast)) {
                 int nDoS;
                 if (state.IsInvalid(nDoS)) {
                     if (nDoS > 0)
@@ -5050,7 +5050,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         // Process all blocks from whitelisted peers, even if not requested,
         // unless we're still syncing with the network.
         // Such an unrequested block may still be processed, subject to the
-        // conditions in AcceptBlock().
+        // conditions in StoreBlock().
         bool forceProcessing = pfrom->fWhitelisted && !IsInitialBlockDownload();
         ProcessNewBlock(state, chainparams, pfrom, &block, forceProcessing, NULL);
         int nDoS;
