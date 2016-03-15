@@ -1860,7 +1860,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 	unsigned int size = vecSend.size();
 	vector<unsigned char> offerGUID;
 	int op, nOut;
-	CScript scriptPubKey;
+	
 	vector<vector<unsigned char> > vvch;
 	if(!linkedAcceptBlock)
 		return false;
@@ -1874,6 +1874,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 	// add recipients to vecSend if we find any linked accepts that are trying to accept linkedOfferGUID (they can be grouped into one accept for root offer owner)
 	for (unsigned int i = 0; i < linkedAcceptBlock->vtx.size(); i++)
     {
+		CScript scriptPubKey;
         const CTransaction &tx = linkedAcceptBlock->vtx[i];
 		if(tx.nVersion != GetSyscoinTxVersion())
 			continue;
