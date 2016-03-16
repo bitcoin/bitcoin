@@ -34,21 +34,44 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
     {
 		vector<vector<unsigned char> > vvchArgs;
 		int op, nOut;
+		vector<vector<unsigned char> > vvchOfferArgs;
+		int opOffer;
         const CWalletTx& wtx = item.second;
         if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
             continue;
 		if (DecodeOfferTx(wtx, op, nOut, vvchArgs))
 		{
+			if(op != OP_OFFER_ACCEPT)
+				continue;
+			printf("Found offer accept: %s\n", stringFromVch(vvchArgs[1]).c_str());
 			// go through each vout and see if we have multiple offers in this transactions... the linked offer accept needs this to group multiple accepts into one 
 			// so we can use one alias input attached which proves to the network that you are on the whitelist of the root merchant offer owner, we can only use 1 input per block, so we need to group all of the accepts in a block into one tx
+			printf("checking %d vouts\n", wtx.vout.size());
 			for (unsigned int j = 0; j < wtx.vout.size(); j++)
 			{
-				if (!IsSyscoinScript(wtx.vout[j].scriptPubKey, op, vvchArgs))
+				if (!IsSyscoinScript(wtx.vout[j].scriptPubKey, opOffer, vvchOfferArgs))
 					continue;
-				if(op != OP_OFFER_ACCEPT)
+				if(opOffer != OP_OFFER_ACCEPT)
 					continue;
-				if(vvchArgs[0] == vchOffer && theOfferAccept.vchLinkOfferAccept == vchAcceptRandLink)
-					return true;
+				printf("Found offer accept vout: vvchOfferArgs[0]: %s vs vchOffer %s\n", stringFromVch(vvchOfferArgs[0]).c_str(), stringFromVch(vchOffer).c_str());
+				if(vvchOfferArgs[0] == vchOffer)
+				{
+					printf("offer accept vout matches\n");
+					COffer theOffer(wtx);
+					COfferAccept theOfferAccept = theOffer.accept;
+					if (theOffer.IsNull() || theOfferAccept.IsNull())
+						continue;
+					printf("offer accept accept found theOfferAccept.vchAcceptRand: %s vs vvchOfferArgs[1]: %s\n", stringFromVch(theOfferAccept.vchAcceptRand).c_str(), stringFromVch(vvchOfferArgs[1]).c_str());
+					if(theOfferAccept.vchAcceptRand == vvchOfferArgs[1])
+					{
+						printf("offer accept rand matches theOfferAccept.vchLinkOfferAccept: %s vs vchAcceptRandLink: %s\n", stringFromVch(theOfferAccept.vchLinkOfferAccept).c_str(), stringFromVch(vchAcceptRandLink).c_str());
+						if(theOfferAccept.vchLinkOfferAccept == vchAcceptRandLink)
+						{
+							printf("found!\n");
+							return true;
+						}
+					}
+				}
 			}
 		}
 	}
