@@ -108,8 +108,11 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	CPubKey newDefaultKey;
 	linkedAcceptBlock = block;
 	vector<vector<unsigned char> > vvchArgs;
+	bool foundOfferTx = false;
 	for (unsigned int i = 0; i < linkedAcceptBlock->vtx.size(); i++)
     {
+		if(foundOfferTx)
+			break;
         const CTransaction &tx = linkedAcceptBlock->vtx[i];
 		if(tx.nVersion == GetSyscoinTxVersion())
 		{
@@ -121,19 +124,18 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 			// the linked accept tx was already done (grouped all accept's together in this block)
 			if(DecodeOfferTx(tx, op, nOut, vvchArgs) && op == OP_OFFER_ACCEPT && vvchArgs[0] == vchLinkOffer)
 			{	
+				foundOfferTx = true;
 				if(foundOfferLinkInWallet(vchLinkOffer, vvchArgs[1]))
 				{
 					return "offer linked transaction already exists";
 				}
 				break;
 			}
-			else
-				vvchArgs.clear();
 		}
 	}
-	if(vvchArgs.empty())
+	if(vvchArgs.empty() || vvchArgs[0] != vchLinkOffer)
 	{
-		return "can't find offer accept tx in this block";
+		return strprintf("can't find offer accept tx in this block, vvchArgs[0] %s vs vchLinkOffer %s", stringFromVch(vvchArgs[0]), stringFromVch(vchLinkOffer));
 	}
 	if(!theOfferAccept.txBTCId.IsNull())
 	{
