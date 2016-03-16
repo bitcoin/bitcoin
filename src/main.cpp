@@ -1539,7 +1539,7 @@ int64_t GetBlockValue(int nBits, int nHeight, const CAmount& nFees)
     double dDiff = (double)0x0000ffff / (double)(nBits & 0x00ffffff);
 
     /* fixed bug caused diff to not be correctly calculated */
-    if(nHeight > 4500 || Params().NetworkID() == CBaseChainParams::TESTNET) dDiff = ConvertBitsToDouble(nBits);
+    if(nHeight > 4500 || Params().NetworkID() != CBaseChainParams::MAIN) dDiff = ConvertBitsToDouble(nBits);
 
     int64_t nSubsidy = 0;
     if(nHeight >= 5465) {

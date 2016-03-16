@@ -40,7 +40,7 @@ class EstimateFeeTest(BitcoinTestFramework):
     def run_test(self):
         # Prime the memory pool with pairs of transactions
         # (high-priority, random fee and zero-priority, random fee)
-        min_fee = Decimal("0.001")
+        min_fee = Decimal("0.00010000")
         fees_per_kb = [];
         for i in range(12):
             (txid, txhex, fee) = random_zeropri_transaction(self.nodes, Decimal("1.1"),
@@ -58,7 +58,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         print("Fee estimates, super-stingy miner: "+str([str(e) for e in all_estimates]))
 
         # Estimates should be within the bounds of what transactions fees actually were:
-        delta = 1.0e-6 # account for rounding error
+        delta = 1.0e-5 # account for rounding error
         for e in filter(lambda x: x >= 0, all_estimates):
             if float(e)+delta < min(fees_per_kb) or float(e)-delta > max(fees_per_kb):
                 raise AssertionError("Estimated fee (%f) out of range (%f,%f)"%(float(e), min_fee_kb, max_fee_kb))
