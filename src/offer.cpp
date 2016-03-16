@@ -29,7 +29,6 @@ static const CBlock *linkedAcceptBlock = NULL;
 bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchAcceptRandLink)
 {
     TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
-	LogPrintf("foundOfferLinkInWallet vchOffer %s vchAcceptRandLink %s\n", stringFromVch(vchOffer).c_str(), stringFromVch(vchAcceptRandLink).c_str());
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
 		vector<vector<unsigned char> > vvchArgs;
@@ -61,7 +60,6 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 							vchOfferAcceptLink = vvchIn[1];
 						}
 					}
-					LogPrintf("found accept vchOfferAcceptLink %s vs vchAcceptRandLink %s\n", stringFromVch(vchOfferAcceptLink).c_str(), stringFromVch(vchAcceptRandLink).c_str());
 					if(vchOfferAcceptLink == vchAcceptRandLink)
 						return true;				
 				}
