@@ -337,6 +337,7 @@ static const CRPCCommand vRPCCommands[] =
     /* Dash features */
     { "dash",               "masternode",             &masternode,             true  },
     { "dash",               "masternodelist",         &masternodelist,         true  },
+    { "dash",               "masternodebroadcast",    &masternodebroadcast,    true  },
     { "dash",               "mnbudget",               &mnbudget,               true  },
     { "dash",               "mnbudgetvoteraw",        &mnbudgetvoteraw,        true  },
     { "dash",               "mnfinalbudget",          &mnfinalbudget,          true  },

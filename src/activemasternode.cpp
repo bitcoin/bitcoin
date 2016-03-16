@@ -119,11 +119,16 @@ void CActiveMasternode::ManageStatus()
                 return;
             }
 
-            if(!Register(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage)) {
-                notCapableReason = "Error on Register: " + errorMessage;
+            CMasternodeBroadcast mnb;
+            if(!CreateBroadcast(vin, service, keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage, mnb)) {
+                notCapableReason = "Error on CreateBroadcast: " + errorMessage;
                 LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
                 return;
             }
+
+            //send to all peers
+            LogPrintf("CActiveMasternode::ManageStatus() - Relay broadcast vin = %s\n", vin.ToString());
+            mnb.Relay();
 
             LogPrintf("CActiveMasternode::ManageStatus() - Is capable master node!\n");
             status = ACTIVE_MASTERNODE_STARTED;
@@ -209,7 +214,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
 
 }
 
-bool CActiveMasternode::Register(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& errorMessage) {
+bool CActiveMasternode::CreateBroadcast(std::string strService, std::string strKeyMasternode, std::string strTxHash, std::string strOutputIndex, std::string& errorMessage, CMasternodeBroadcast &mnb, bool fOffline) {
     CTxIn vin;
     CPubKey pubKeyCollateralAddress;
     CKey keyCollateralAddress;
@@ -217,22 +222,22 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
     CKey keyMasternode;
 
     //need correct blocks to send ping
-    if(!masternodeSync.IsBlockchainSynced()) {
-        errorMessage = GetStatus();
-        LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
+    if(!fOffline && !masternodeSync.IsBlockchainSynced()) {
+        errorMessage = "Sync in progress. Must wait until sync is complete to start Masternode";
+        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
         return false;
     }
 
     if(!darkSendSigner.SetKey(strKeyMasternode, errorMessage, keyMasternode, pubKeyMasternode))
     {
         errorMessage = strprintf("Can't find keys for masternode %s - %s", strService, errorMessage);
-        LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
+        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
         return false;
     }
 
     if(!GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress, strTxHash, strOutputIndex)) {
         errorMessage = strprintf("Could not allocate vin %s:%s for masternode %s", strTxHash, strOutputIndex, strService);
-        LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
+        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
         return false;
     }
 
@@ -241,53 +246,40 @@ bool CActiveMasternode::Register(std::string strService, std::string strKeyMaste
     if(Params().NetworkIDString() == CBaseChainParams::MAIN) {
         if(service.GetPort() != mainnetDefaultPort) {
             errorMessage = strprintf("Invalid port %u for masternode %s - only %d is supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
-            LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
+            LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
             return false;
         }
     } else if(service.GetPort() == mainnetDefaultPort) {
         errorMessage = strprintf("Invalid port %u for masternode %s - %d is only supported on mainnet.", service.GetPort(), strService, mainnetDefaultPort);
-        LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
+        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
         return false;
     }
 
     addrman.Add(CAddress(service), CNetAddr("127.0.0.1"), 2*60*60);
 
-    return Register(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage);
+    return CreateBroadcast(vin, CService(strService), keyCollateralAddress, pubKeyCollateralAddress, keyMasternode, pubKeyMasternode, errorMessage, mnb);
 }
 
-bool CActiveMasternode::Register(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &errorMessage) {
-    CMasternodeBroadcast mnb;
+bool CActiveMasternode::CreateBroadcast(CTxIn vin, CService service, CKey keyCollateralAddress, CPubKey pubKeyCollateralAddress, CKey keyMasternode, CPubKey pubKeyMasternode, std::string &errorMessage, CMasternodeBroadcast &mnb) {
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;
+
     CMasternodePing mnp(vin);
     if(!mnp.Sign(keyMasternode, pubKeyMasternode)){
         errorMessage = strprintf("Failed to sign ping, vin: %s", vin.ToString());
-        LogPrintf("CActiveMasternode::Register() -  %s\n", errorMessage);
+        LogPrintf("CActiveMasternode::CreateBroadcast() -  %s\n", errorMessage);
+        mnb = CMasternodeBroadcast();
         return false;
     }
-    mnodeman.mapSeenMasternodePing.insert(make_pair(mnp.GetHash(), mnp));
 
-    LogPrintf("CActiveMasternode::Register() - Adding to Masternode list\n    service: %s\n    vin: %s\n", service.ToString(), vin.ToString());
     mnb = CMasternodeBroadcast(service, vin, pubKeyCollateralAddress, pubKeyMasternode, PROTOCOL_VERSION);
     mnb.lastPing = mnp;
     if(!mnb.Sign(keyCollateralAddress)){
         errorMessage = strprintf("Failed to sign broadcast, vin: %s", vin.ToString());
-        LogPrintf("CActiveMasternode::Register() - %s\n", errorMessage);
+        LogPrintf("CActiveMasternode::CreateBroadcast() - %s\n", errorMessage);
+        mnb = CMasternodeBroadcast();
         return false;
     }
-    mnodeman.mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
-    masternodeSync.AddedMasternodeList(mnb.GetHash());
-
-    CMasternode* pmn = mnodeman.Find(vin);
-    if(pmn == NULL)
-    {
-        CMasternode mn(mnb);
-        mnodeman.Add(mn);
-    } else {
-        pmn->UpdateFromNewBroadcast(mnb);
-    }
-
-    //send to all peers
-    LogPrintf("CActiveMasternode::Register() - RelayElectionEntry vin = %s\n", vin.ToString());
-    mnb.Relay();
 
     return true;
 }
@@ -297,6 +289,9 @@ bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secr
 }
 
 bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secretKey, std::string strTxHash, std::string strOutputIndex) {
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;
+
     // Find possible candidates
     TRY_LOCK(pwalletMain->cs_wallet, fWallet);
     if(!fWallet) return false;
@@ -339,6 +334,8 @@ bool CActiveMasternode::GetMasterNodeVin(CTxIn& vin, CPubKey& pubkey, CKey& secr
 
 // Extract Masternode vin information from output
 bool CActiveMasternode::GetVinFromOutput(COutput out, CTxIn& vin, CPubKey& pubkey, CKey& secretKey) {
+    // wait for reindex and/or import to finish
+    if (fImporting || fReindex) return false;
 
     CScript pubScript;
 
