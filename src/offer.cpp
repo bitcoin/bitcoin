@@ -133,14 +133,6 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 			}
 		}
 	}
-	if(vvchArgs.empty())
-	{
-		return "can't find offer accept tx in this block";
-	}
-	if(vvchArgs[0] != vchLinkOffer)
-	{
-		return strprintf("can't find offer accept tx in this block, vvchArgs[0] %s vs vchLinkOffer %s", stringFromVch(vvchArgs[0]), stringFromVch(vchLinkOffer));
-	}
 	if(!theOfferAccept.txBTCId.IsNull())
 	{
 		return "cannot accept a linked offer by paying in Bitcoins";
@@ -158,8 +150,6 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	params.push_back(stringFromVch(vchMessage));
 	params.push_back("");
 	params.push_back(offerAcceptLinkTxHash);
-	params.push_back(stringFromVch(vvchArgs[1]));
-	params.push_back("");
 	
     try {
         tableRPC.execute(strMethod, params);
@@ -1922,16 +1912,15 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 	return vecSend.size() != size;
 }
 UniValue offeraccept(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || params.size() > 8)
-		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [linkedguid] [linkedacceptguid] [escrowTxHash]\n"
+	if (fHelp || 1 > params.size() || params.size() > 7)
+		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [linkedacceptguidtxhash] [escrowTxHash]\n"
 				"Accept&Pay for a confirmed offer.\n"
 				"<alias> An alias of the buyer.\n"
 				"<guid> guidkey from offer.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
 				"<message> payment message to seller, 1KB max.\n"
 				"<BTC TxId> If you have paid in Bitcoin and the offer is in Bitcoin, enter the transaction ID here. Default is empty.\n"
-				"<linkedguid> guidkey from offer linking to offer accept in <linkedacceptguid>. For internal use only, leave blank\n"
-				"<linkedacceptguid> guidkey from offer accept linking to this offer accept. For internal use only, leave blank\n"
+				"<linkedacceptguidtxhash> transaction id of the linking offer accept. For internal use only, leave blank\n"
 				"<escrowTxHash> If this offer accept is done by an escrow release. For internal use only, leave blank\n"
 				+ HelpRequiringPassphrase());
 
@@ -1941,9 +1930,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchPubKey;
 	vector<unsigned char> vchBTCTxId = vchFromValue(params.size()>=5?params[4]:"");
 	vector<unsigned char> vchLinkOfferAcceptTxHash = vchFromValue(params.size()>= 6? params[5]:"");
-	vector<unsigned char> vchLinkOfferAccept = vchFromValue(params.size()>= 7? params[6]:"");
 	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:"");
-	vector<unsigned char> vchEscrowTxHash = vchFromValue(params.size()>=8?params[7]:"");
+	vector<unsigned char> vchEscrowTxHash = vchFromValue(params.size()>=7?params[6]:"");
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
@@ -1998,10 +1986,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("could not find an offer with this identifier");
 	}
-	if((vchLinkOfferAccept.empty() && !vchLinkOfferAcceptTxHash.empty()) || (vchLinkOfferAcceptTxHash.empty() && !vchLinkOfferAccept.empty()))
-		throw runtime_error("If you are accepting a linked offer you must provide the offer accept guid AND the offer accept tx hash");
-
-	if (!vchLinkOfferAccept.empty())
+	if (!vchLinkOfferAcceptTxHash.empty())
 	{
 		uint256 linkTxHash(uint256S(stringFromVch(vchLinkOfferAcceptTxHash)));
 		wtxOfferIn = pwalletMain->GetWalletTx(linkTxHash);
@@ -2117,7 +2102,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 	// if this is an accept for a linked offer, the offer is set to exclusive mode and you dont have an alias in the whitelist, you cannot accept this offer
-	if(!vchLinkOfferAccept.empty() && foundAlias.IsNull() && theOffer.linkWhitelist.bExclusiveResell)
+	if(wtxOfferIn != NULL && foundAlias.IsNull() && theOffer.linkWhitelist.bExclusiveResell)
 	{
 		throw runtime_error("cannot pay for this linked offer because you don't own an alias from its affiliate list");
 	}
@@ -2130,7 +2115,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
 	string strCipherText = "";
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
-	if(vchLinkOfferAccept.empty() && vchEscrowTxHash.empty())
+	if(wtxOfferIn == NULL && vchEscrowTxHash.empty())
 	{
 		if(!theOffer.vchLinkOffer.empty())
 		{
@@ -2151,7 +2136,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	else
 		vchPaymentMessage = vchMessage;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << OP_2DROP << OP_2DROP;
-	if(!vchLinkOfferAccept.empty() && !vchBTCTxId.empty())
+	if(wtxOfferIn != NULL && !vchBTCTxId.empty())
 		throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
 
 	if (strCipherText.size() > MAX_ENCRYPTED_VALUE_LENGTH)
