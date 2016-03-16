@@ -62,16 +62,14 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 					COfferAccept theOfferAccept = theOffer.accept;
 					if (theOffer.IsNull() || theOfferAccept.IsNull())
 						continue;
-					LogPrintf("offer accept accept found theOfferAccept.vchAcceptRand: %s vs vvchOfferArgs[1]: %s\n", stringFromVch(theOfferAccept.vchAcceptRand).c_str(), stringFromVch(vvchOfferArgs[1]).c_str());
-					if(theOfferAccept.vchAcceptRand == vvchOfferArgs[1])
+
+					LogPrintf("offer accept rand matches theOfferAccept.vchLinkOfferAccept: %s vs vchAcceptRandLink: %s\n", stringFromVch(theOfferAccept.vchLinkOfferAccept).c_str(), stringFromVch(vchAcceptRandLink).c_str());
+					if(theOfferAccept.vchLinkOfferAccept == vchAcceptRandLink)
 					{
-						LogPrintf("offer accept rand matches theOfferAccept.vchLinkOfferAccept: %s vs vchAcceptRandLink: %s\n", stringFromVch(theOfferAccept.vchLinkOfferAccept).c_str(), stringFromVch(vchAcceptRandLink).c_str());
-						if(theOfferAccept.vchLinkOfferAccept == vchAcceptRandLink)
-						{
-							LogPrintf("found!\n");
-							return true;
-						}
+						LogPrintf("found!\n");
+						return true;
 					}
+					
 				}
 			}
 		}
