@@ -21,14 +21,6 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.nodes.append(start_node(0, self.options.tmpdir, args))
         self.is_network_split = False
 
-    def create_tx(self, from_txid, to_address, amount):
-        inputs = [{ "txid" : from_txid, "vout" : 0}]
-        outputs = { to_address : amount }
-        rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
-        signresult = self.nodes[0].signrawtransaction(rawtx)
-        assert_equal(signresult["complete"], True)
-        return signresult["hex"]
-
     def run_test(self):
         node0_address = self.nodes[0].getnewaddress()
         # Spend block 1/2/3's coinbase transactions
@@ -43,13 +35,13 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         b = [ self.nodes[0].getblockhash(n) for n in range(1, 4) ]
         coinbase_txids = [ self.nodes[0].getblock(h)['tx'][0] for h in b ]
-        spends1_raw = [ self.create_tx(txid, node0_address, 49.99) for txid in coinbase_txids ]
+        spends1_raw = [ create_tx(self.nodes[0], txid, node0_address, 49.99) for txid in coinbase_txids ]
         spends1_id = [ self.nodes[0].sendrawtransaction(tx) for tx in spends1_raw ]
 
         blocks = []
         blocks.extend(self.nodes[0].generate(1))
 
-        spends2_raw = [ self.create_tx(txid, node0_address, 49.98) for txid in spends1_id ]
+        spends2_raw = [ create_tx(self.nodes[0], txid, node0_address, 49.98) for txid in spends1_id ]
         spends2_id = [ self.nodes[0].sendrawtransaction(tx) for tx in spends2_raw ]
 
         blocks.extend(self.nodes[0].generate(1))

@@ -78,8 +78,8 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         self.block_time += 1
 
         # chr(81) is OP_TRUE
-        tx1 = create_transaction(self.block1.vtx[0], 0, chr(81), 50*100000000)
-        tx2 = create_transaction(tx1, 0, chr(81), 50*100000000)
+        tx1 = create_transaction(self.block1.vtx[0], 0, chr(81), 50 * COIN)
+        tx2 = create_transaction(tx1, 0, chr(81), 50 * COIN)
 
         block2.vtx.extend([tx1, tx2])
         block2.hashMerkleRoot = block2.calc_merkle_root()
@@ -103,7 +103,7 @@ class InvalidBlockRequestTest(ComparisonTestFramework):
         '''
         block3 = create_block(self.tip, create_coinbase(height), self.block_time)
         self.block_time += 1
-        block3.vtx[0].vout[0].nValue = 100*100000000 # Too high!
+        block3.vtx[0].vout[0].nValue = 100 * COIN # Too high!
         block3.vtx[0].sha256=None
         block3.vtx[0].calc_sha256()
         block3.hashMerkleRoot = block3.calc_merkle_root()
