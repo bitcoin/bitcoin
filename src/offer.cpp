@@ -133,7 +133,11 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 			}
 		}
 	}
-	if(vvchArgs.empty() || vvchArgs[0] != vchLinkOffer)
+	if(vvchArgs.empty())
+	{
+		return "can't find offer accept tx in this block";
+	}
+	if(vvchArgs[0] != vchLinkOffer)
 	{
 		return strprintf("can't find offer accept tx in this block, vvchArgs[0] %s vs vchLinkOffer %s", stringFromVch(vvchArgs[0]), stringFromVch(vchLinkOffer));
 	}
