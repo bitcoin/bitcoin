@@ -2242,7 +2242,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
     if (!GetSyscoinTransaction(vtxPos.back().nHeight, txHash, tx, Params().GetConsensus()))
         throw runtime_error("failed to read offer transaction from disk");
     COffer theOffer;
-
+	vector<vector<unsigned char> > vvch;
+    int op, nOut;
 	UniValue oOffer(UniValue::VOBJ);
 	vector<unsigned char> vchValue;
 	UniValue aoOfferAccepts(UniValue::VARR);
@@ -2264,12 +2265,17 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			error(strprintf("failed to accept read transaction from disk: %s", txHashA.GetHex()).c_str());
 			continue;
 		}
-		vector<vector<unsigned char> > vvch;
-        int op, nOut;
-        if (!DecodeOfferTx(txA, op, nOut, vvch) 
-        	|| !IsOfferOp(op) 
-        	|| (op != OP_OFFER_ACCEPT))
-            continue;
+		for (unsigned int j = 0; j < txA.vout.size(); j++)
+		{
+			if (!IsSyscoinScript(txA.vout[j].scriptPubKey, op, vvch))
+				continue;
+			if(op != OP_OFFER_ACCEPT)
+				continue;
+			if(ca.vchAcceptRand == vvch[1])
+				break;
+		}
+		if(op != OP_OFFER_ACCEPT)
+			continue;
 		const vector<unsigned char> &vchAcceptRand = vvch[1];	
 		const vector<unsigned char> &vchMessage = vvch[2];	
 		string sTime;
