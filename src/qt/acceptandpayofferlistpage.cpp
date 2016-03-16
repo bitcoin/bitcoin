@@ -186,11 +186,6 @@ void AcceptandPayOfferListPage::OpenPayDialog()
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
-		if(this->offerPaid)
-		{
-			COffer offer;
-			setValue("", ui->offeridEdit->text(), offer, "", "");
-		}
 	}
 	updateCaption();
 }
@@ -200,11 +195,6 @@ void AcceptandPayOfferListPage::OpenBTCPayDialog()
 	if(dlg.exec())
 	{
 		this->offerPaid = dlg.getPaymentStatus();
-		if(this->offerPaid)
-		{
-			COffer offer;
-			setValue("", ui->offeridEdit->text(), offer, "", "");
-		}
 	}
 	updateCaption();
 }
