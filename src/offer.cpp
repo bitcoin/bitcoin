@@ -28,7 +28,7 @@ bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op,
 static const CBlock *linkedAcceptBlock = NULL;
 bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchAcceptRandLink)
 {
-	LogPrintf("foundOfferLinkInWallet vchOffer %s vchAcceptRandLink %s\n", stringFromVch(vchOffer).c_str(), stringFromVch(vchAcceptRandLink).c_str()););
+	LogPrintf("foundOfferLinkInWallet vchOffer %s vchAcceptRandLink %s\n", stringFromVch(vchOffer).c_str(), stringFromVch(vchAcceptRandLink).c_str());
     TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
 
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
