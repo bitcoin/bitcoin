@@ -117,7 +117,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 			// the linked accept tx was already done (grouped all accept's together in this block)
 			if(DecodeOfferTx(tx, op, nOut, vvchArgs) && op == OP_OFFER_ACCEPT && vvchArgs[0] == vchLinkOffer)
 			{	
-				if(!foundOfferLinkInWallet(vchLinkOffer, vvchArgs[1]))
+				if(foundOfferLinkInWallet(vchLinkOffer, vvchArgs[1]))
 				{
 					LogPrintf("makeOfferLinkAcceptTX() offer linked transaction already exists\n");
 					return "";
