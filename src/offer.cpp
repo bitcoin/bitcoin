@@ -45,6 +45,7 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 				if(vvchArgs[0] == vchOffer)
 				{
 					vector<unsigned char> vchOfferAcceptLink;
+					bool foundOffer = false;
 					for (unsigned int i = 0; i < wtx.vin.size(); i++) {
 						vector<vector<unsigned char> > vvchIn;
 						int opIn;
@@ -964,7 +965,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if (!DecodeOfferTx(tx, offerOp, offernOut, offerVvch) 
             		|| !IsOfferOp(offerOp) 
             		|| (offerOp != OP_OFFER_ACCEPT))
-					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX Cannot decode offer accept tx\n", strError.c_str());
+					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX Cannot decode offer accept tx\n");
 				else
 				{
 					// theOffer.vchLinkOffer is the linked offer guid
@@ -2352,7 +2353,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		string linkAccept = "";
 		if(!vchOfferAcceptLink.empty())
 			linkAccept = stringFromVch(vchOfferAcceptLink);
-		oOfferAccept.push_back(Pair("linkofferaccept", linkAccept);
+		oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
 		oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));			
 		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 		int precision = 2;
@@ -2570,7 +2571,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				string linkAccept = "";
 				if(!vchOfferAcceptLink.empty())
 					linkAccept = stringFromVch(vchOfferAcceptLink);
-				oOfferAccept.push_back(Pair("linkofferaccept", linkAccept);
+				oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
 				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 				oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 				int precision = 2;
@@ -2715,7 +2716,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			string linkAccept = "";
 			if(!vchOfferAcceptLink.empty())
 				linkAccept = stringFromVch(vchOfferAcceptLink);
-			oOfferAccept.push_back(Pair("linkofferaccept", linkAccept);
+			oOfferAccept.push_back(Pair("linkofferaccept", linkAccept));
 			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));			
 			oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 			int precision = 2;
