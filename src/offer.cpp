@@ -2447,8 +2447,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 		
         BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
         {
-
-			UniValue oOfferAccept(UniValue::VOBJ);
             // get txn hash, read txn index
             hash = item.second.GetHash();
 
@@ -2458,6 +2456,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
                 continue;
 			for (unsigned int j = 0; j < wtx.vout.size(); j++)
 			{
+				UniValue oOfferAccept(UniValue::VOBJ);
 				// decode txn, skip non-alias txns
 				vector<vector<unsigned char> > vvch;
 				int op;
