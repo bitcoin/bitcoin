@@ -107,7 +107,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	for (unsigned int i = 0; i < linkedAcceptBlock->vtx.size(); i++)
     {
         const CTransaction &tx = linkedAcceptBlock->vtx[i];
-		if(linkedAcceptBlock->nVersion == GetSyscoinTxVersion())
+		if(tx.nVersion == GetSyscoinTxVersion())
 		{
 			
 			int op, nOut;			
