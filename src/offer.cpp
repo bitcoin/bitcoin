@@ -47,18 +47,8 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 					continue;
 				if(op != OP_OFFER_ACCEPT)
 					continue;
-				if(vvchArgs.size() == 3 && vvchArgs[0] == vchOffer)
-				{
-					COffer theOffer(wtx);
-					COfferAccept theOfferAccept = theOffer.accept;
-					if (theOffer.IsNull() || theOfferAccept.IsNull())
-						continue;
-					if(theOfferAccept.vchAcceptRand == vvchArgs[1])
-					{
-						if(theOfferAccept.vchLinkOfferAccept == vchAcceptRandLink)
-							return true;
-					}
-				}
+				if(vvchArgs[0] == vchOffer && theOfferAccept.vchLinkOfferAccept == vchAcceptRandLink)
+					return true;
 			}
 		}
 	}
