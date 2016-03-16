@@ -33,7 +33,6 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
 		vector<vector<unsigned char> > vvchArgs;
-		
 		int op, nOut;
         const CWalletTx& wtx = item.second;
         if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
@@ -104,12 +103,14 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 
 	CPubKey newDefaultKey;
 	linkedAcceptBlock = block;
+	vector<vector<unsigned char> > vvchArgs;
 	for (unsigned int i = 0; i < linkedAcceptBlock->vtx.size(); i++)
     {
         const CTransaction &tx = linkedAcceptBlock->vtx[i];
 		if(linkedAcceptBlock->nVersion == GetSyscoinTxVersion())
 		{
 			
+			int op, nOut;			
 			bool good = true;
 			// find first offer accept in this block and make sure it is for the linked offer we are checking
 			// the first one is the one that is used to do the offer accept tx, so any subsequent accept tx for the same offer will also check this tx and find that
@@ -118,18 +119,23 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 			{	
 				if(!foundOfferLinkInWallet(vchLinkOffer, vvchArgs[1]))
 				{
-					if(fDebug)
-						LogPrintf("makeOfferLinkAcceptTX() offer linked transaction already exists\n");
+					LogPrintf("makeOfferLinkAcceptTX() offer linked transaction already exists\n");
 					return "";
 				}
 				break;
 			}
+			else
+				vvchArgs.clear();
 		}
+	}
+	if(vvchArgs.empty())
+	{
+		LogPrintf("makeOfferLinkAcceptTX() can't find offer accept tx in this block\n");
+		return "";
 	}
 	if(!theOfferAccept.txBTCId.IsNull())
 	{
-		if(fDebug)
-			LogPrintf("makeOfferLinkAcceptTX() cannot accept a linked offer by paying in Bitcoins\n");
+		LogPrintf("makeOfferLinkAcceptTX() cannot accept a linked offer by paying in Bitcoins\n");
 		return "";
 	}
 	CPubKey PubKey(theOffer.vchPubKey);
@@ -137,8 +143,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	address = CSyscoinAddress(address.ToString());
 	if(!address.IsValid() || !address.isAlias )
 	{
-		if(fDebug)
-			LogPrintf("makeOfferLinkAcceptTX() Invalid address or alias\n");
+		LogPrintf("makeOfferLinkAcceptTX() Invalid address or alias\n");
 		return "";
 	}
 	params.push_back(address.aliasName);
@@ -147,7 +152,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	params.push_back(stringFromVch(vchMessage));
 	params.push_back("");
 	params.push_back(offerAcceptLinkTxHash);
-	params.push_back(stringFromVch(vchOfferAcceptLink));
+	params.push_back(stringFromVch(vvchArgs[1]));
 	params.push_back("");
 	
     try {
