@@ -97,6 +97,10 @@ string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAc
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
 string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchMessage, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const COffer& theOffer, const CBlock* block)
 {
+	if(!block)
+	{
+		return "cannot accept linked offer with no linkedAcceptBlock defined";
+	}
 	string strError;
 	string strMethod = string("offeraccept");
 	UniValue params(UniValue::VARR);
@@ -119,8 +123,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 			{	
 				if(foundOfferLinkInWallet(vchLinkOffer, vvchArgs[1]))
 				{
-					LogPrintf("makeOfferLinkAcceptTX() offer linked transaction already exists\n");
-					return "";
+					return "offer linked transaction already exists";
 				}
 				break;
 			}
@@ -130,21 +133,18 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	}
 	if(vvchArgs.empty())
 	{
-		LogPrintf("makeOfferLinkAcceptTX() can't find offer accept tx in this block\n");
-		return "";
+		return "can't find offer accept tx in this block";
 	}
 	if(!theOfferAccept.txBTCId.IsNull())
 	{
-		LogPrintf("makeOfferLinkAcceptTX() cannot accept a linked offer by paying in Bitcoins\n");
-		return "";
+		return "cannot accept a linked offer by paying in Bitcoins";
 	}
 	CPubKey PubKey(theOffer.vchPubKey);
 	CSyscoinAddress address(PubKey.GetID());
 	address = CSyscoinAddress(address.ToString());
 	if(!address.IsValid() || !address.isAlias )
 	{
-		LogPrintf("makeOfferLinkAcceptTX() Invalid address or alias\n");
-		return "";
+		return "Invalid address or alias";
 	}
 	params.push_back(address.aliasName);
 	params.push_back(stringFromVch(vchLinkOffer));
