@@ -28,48 +28,39 @@ bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op,
 static const CBlock *linkedAcceptBlock = NULL;
 bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchAcceptRandLink)
 {
-	LogPrintf("foundOfferLinkInWallet vchOffer %s vchAcceptRandLink %s\n", stringFromVch(vchOffer).c_str(), stringFromVch(vchAcceptRandLink).c_str());
     TRY_LOCK(pwalletMain->cs_wallet, cs_trylock);
 
     BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, pwalletMain->mapWallet)
     {
 		vector<vector<unsigned char> > vvchArgs;
+		
 		int op, nOut;
-		vector<vector<unsigned char> > vvchOfferArgs;
-		int opOffer;
         const CWalletTx& wtx = item.second;
         if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
             continue;
 		if (DecodeOfferTx(wtx, op, nOut, vvchArgs))
 		{
-			if(op != OP_OFFER_ACCEPT)
-				continue;
-			LogPrintf("Found offer accept: %s\n", stringFromVch(vvchArgs[1]).c_str());
-			// go through each vout and see if we have multiple offers in this transactions... the linked offer accept needs this to group multiple accepts into one 
-			// so we can use one alias input attached which proves to the network that you are on the whitelist of the root merchant offer owner, we can only use 1 input per block, so we need to group all of the accepts in a block into one tx
-			LogPrintf("checking %d vouts\n", wtx.vout.size());
-			for (unsigned int j = 0; j < wtx.vout.size(); j++)
+			if(op == OP_OFFER_ACCEPT)
 			{
-				if (!IsSyscoinScript(wtx.vout[j].scriptPubKey, opOffer, vvchOfferArgs))
-					continue;
-				if(opOffer != OP_OFFER_ACCEPT)
-					continue;
-				LogPrintf("Found offer accept vout: vvchOfferArgs[0]: %s vs vchOffer %s\n", stringFromVch(vvchOfferArgs[0]).c_str(), stringFromVch(vchOffer).c_str());
-				if(vvchOfferArgs[0] == vchOffer)
+				if(vvchArgs[0] == vchOffer)
 				{
-					LogPrintf("offer accept vout matches\n");
-					COffer theOffer(wtx);
-					COfferAccept theOfferAccept = theOffer.accept;
-					if (theOffer.IsNull() || theOfferAccept.IsNull())
-						continue;
+					vector<unsigned char> vchOfferAcceptLink;
+					for (unsigned int i = 0; i < wtx.vin.size(); i++) {
+						vector<vector<unsigned char> > vvchIn;
+						int opIn;
+						const COutPoint *prevOutput = &wtx.vin[i].prevout;
+						if(!GetPreviousInput(prevOutput, opIn, vvchIn))
+							continue;
+						if(foundOffer)
+							break;
 
-					LogPrintf("offer accept rand matches theOfferAccept.vchLinkOfferAccept: %s vs vchAcceptRandLink: %s\n", stringFromVch(theOfferAccept.vchLinkOfferAccept).c_str(), stringFromVch(vchAcceptRandLink).c_str());
-					if(theOfferAccept.vchLinkOfferAccept == vchAcceptRandLink)
-					{
-						LogPrintf("found!\n");
-						return true;
+						if (!foundOffer && IsOfferOp(opIn)) {
+							foundOffer = true; 
+							vchOfferAcceptLink = vvchIn[1];
+						}
 					}
-					
+					if(vchOfferAcceptLink == vchAcceptRandLink)
+						return true;				
 				}
 			}
 		}
@@ -617,8 +608,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{
 				if(!theOfferAccept.txBTCId.IsNull())
 					return error("OP_OFFER_ACCEPT can't accept a linked offer with btc");
-				if(theOfferAccept.vchLinkOfferAccept != vvchPrevArgs[1])
-					return error("OP_OFFER_ACCEPT linked offer accept guid mismatch with input offer accept guid theOfferAccept.vchLinkOfferAccept %s vs vvchPrevArgs[1] %s", stringFromVch(theOfferAccept.vchLinkOfferAccept), stringFromVch(vvchPrevArgs[1]));
 			}
 
 
@@ -626,12 +615,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error("OP_OFFER_ACCEPT offer accept hex guid too long");
 			if (vvchArgs[2].size() > MAX_ENCRYPTED_VALUE_LENGTH)
 				return error("OP_OFFER_ACCEPT message field too big");
-			if (theOfferAccept.vchLinkOfferAccept.size() > MAX_NAME_LENGTH)
-				return error("OP_OFFER_ACCEPT offer accept link field too big");
-			if (IsEscrowOp(prevEscrowOp) && !theOfferAccept.vchLinkOfferAccept.empty())
-				return error("OP_OFFER_ACCEPT cannot accept linked offer accept using an escrow input");
-			if (!theOfferAccept.vchLinkOfferAccept.empty() && prevOp != OP_OFFER_ACCEPT)
-				return error("OP_OFFER_ACCEPT must attach linked accept as input if linking an offer accept");
+			if (IsEscrowOp(prevEscrowOp) && IsOfferOp(prevOp))
+				return error("OP_OFFER_ACCEPT offer accept cannot attach both escrow and offer inputs at the same time");
 			if (IsEscrowOp(prevEscrowOp))
 			{	
 				vector<CEscrow> escrowVtxPos;
@@ -698,7 +683,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			heightToCheckAgainst = theOfferAccept.nAcceptHeight;
 			// if this is a linked offer accept, set the height to the first height so sys_rates price will match what it was at the time of the original accept
 			// we assume previous tx still in mempool because it calls offeraccept within the eheckinputs stage (not entering a block yet)
-			if (!theOfferAccept.vchLinkOfferAccept.empty())
+			if (IsOfferOp(prevOp))
 			{
 				CTransaction acceptTx;
 				COffer theLinkedOfferAccept;
@@ -973,13 +958,22 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			}	
 			if (pwalletMain && !theOffer.vchLinkOffer.empty() && IsSyscoinTxMine(tx, "offer"))
 			{	
-				// vchPubKey is for when transfering cert after an offer accept, the pubkey is the transfer-to address and encryption key for cert data
-				// theOffer.vchLinkOffer is the linked offer guid
-				// vvchArgs[1] is this offer accept rand used to walk back up and refund offers in the linked chain
-				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
-				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[2], theOffer.vchLinkOffer, tx.GetHash().GetHex(), vvchArgs[1], theOffer, block);
-				if(strError != "")					
-					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
+				vector<vector<unsigned char> > offerVvch;
+				int offerOp;
+				int offernOut;
+				if (!DecodeOfferTx(tx, offerOp, offernOut, offerVvch) 
+            		|| !IsOfferOp(offerOp) 
+            		|| (offerOp != OP_OFFER_ACCEPT))
+					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX Cannot decode offer accept tx\n", strError.c_str());
+				else
+				{
+					// theOffer.vchLinkOffer is the linked offer guid
+					// offerVvch[1] is this offer accept rand used to detect if this linked accept already exists (don't send create link tx more than once)
+					// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
+					string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[2], theOffer.vchLinkOffer, tx.GetHash().GetHex(), offerVvch[1], theOffer, block);
+					if(strError != "")					
+						LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());
+				}
 				
 			}
 			// only if we are the root offer owner do we even consider xfering a cert					
@@ -2166,7 +2160,6 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	txAccept.vchAcceptRand = vchAccept;
 	txAccept.nQty = nQty;
 	txAccept.nPrice = theOffer.GetPrice(foundAlias);
-	txAccept.vchLinkOfferAccept = vchLinkOfferAccept;
 	// if we have a linked offer accept then use height from linked accept (the one buyer makes, not the reseller). We need to do this to make sure we convert price at the time of initial buyer's accept.
 	// in checkescrowinput we override this if its from an escrow release, just like above.
 	txAccept.nAcceptHeight = nHeight;
@@ -2297,7 +2290,6 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		}
         string sHeight = strprintf("%llu", ca.nHeight);
 		oOfferAccept.push_back(Pair("id", stringFromVch(vchAcceptRand)));
-		oOfferAccept.push_back(Pair("linkofferaccept", stringFromVch(ca.vchLinkOfferAccept)));
 		oOfferAccept.push_back(Pair("txid", ca.txHash.GetHex()));
 		string strBTCId = "";
 		if(!ca.txBTCId.IsNull())
@@ -2311,6 +2303,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		COfferLinkWhitelistEntry entry;	
 		vector<unsigned char> vchAliasLink;
 		vector<unsigned char> vchOfferLink;
+		vector<unsigned char> vchOfferAcceptLink;
 		vector<unsigned char> vchCertLink;
 		bool foundOffer = false;
 		bool foundCert = false;
@@ -2328,6 +2321,8 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 			if (!foundOffer && IsOfferOp(opIn)) {
 				foundOffer = true; 
 				vchOfferLink = vvchIn[0];
+				if(opIn == OP_OFFER_ACCEPT)
+					vchOfferAcceptLink = vvchIn[1];
 			}
 			if (!foundEscrow && IsEscrowOp(opIn)) {
 				foundEscrow = true; 
@@ -2354,6 +2349,10 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		}
 		
 		theOffer = vtxPos.back();
+		string linkAccept = "";
+		if(!vchOfferAcceptLink.empty())
+			linkAccept = stringFromVch(vchOfferAcceptLink);
+		oOfferAccept.push_back(Pair("linkofferaccept", linkAccept);
 		oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));			
 		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 		int precision = 2;
@@ -2509,7 +2508,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(!theOfferAccept.txBTCId.IsNull())
 					strBTCId = theOfferAccept.txBTCId.GetHex();
 				oOfferAccept.push_back(Pair("btctxid", strBTCId));
-				oOfferAccept.push_back(Pair("linkofferaccept", stringFromVch(theOfferAccept.vchLinkOfferAccept)));
 				CPubKey SellerPubKey(theOffer.vchPubKey);
 				CSyscoinAddress selleraddy(SellerPubKey.GetID());
 				selleraddy = CSyscoinAddress(selleraddy.ToString());
@@ -2525,6 +2523,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				vector<unsigned char> vchEscrowLink;
 				vector<unsigned char> vchCertLink;
 				vector<unsigned char> vchOfferLink;
+				vector<unsigned char> vchOfferAcceptLink;
 				vector<unsigned char> vchAliasLink;
 				bool foundOffer = false;
 				bool foundEscrow = false;
@@ -2542,6 +2541,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 					if (!foundOffer && IsOfferOp(opIn)) {
 						foundOffer = true; 
 						vchOfferLink = vvchIn[0];
+						if(opIn == OP_OFFER_ACCEPT)
+							vchOfferAcceptLink = vvchIn[1];
 					}
 					if (!foundEscrow && IsEscrowOp(opIn)) {
 						foundEscrow = true; 
@@ -2566,6 +2567,10 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 						theOffer.linkWhitelist.GetLinkEntryByHash(vtxEscrowPos.back().vchWhitelistAlias, entry);	
 						
 				}		
+				string linkAccept = "";
+				if(!vchOfferAcceptLink.empty())
+					linkAccept = stringFromVch(vchOfferAcceptLink);
+				oOfferAccept.push_back(Pair("linkofferaccept", linkAccept);
 				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 				oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 				int precision = 2;
@@ -2647,7 +2652,6 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			if(!theOfferAccept.txBTCId.IsNull())
 				strBTCId = theOfferAccept.txBTCId.GetHex();
 			oOfferAccept.push_back(Pair("btctxid", strBTCId));
-			oOfferAccept.push_back(Pair("linkofferaccept", stringFromVch(theOfferAccept.vchLinkOfferAccept)));
 			CPubKey SellerPubKey(theOffer.vchPubKey);
 			CSyscoinAddress selleraddy(SellerPubKey.GetID());
 			selleraddy = CSyscoinAddress(selleraddy.ToString());
@@ -2663,6 +2667,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			vector<unsigned char> vchEscrowLink;
 			vector<unsigned char> vchCertLink;
 			vector<unsigned char> vchOfferLink;
+			vector<unsigned char> vchOfferAcceptLink;
 			vector<unsigned char> vchAliasLink;
 			bool foundOffer = false;
 			bool foundEscrow = false;
@@ -2681,6 +2686,8 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if (!foundOffer && IsOfferOp(opIn)) {
 					foundOffer = true; 
 					vchOfferLink = vvchIn[0];
+					if(opIn == OP_OFFER_ACCEPT)
+						vchOfferAcceptLink = vvchIn[1];
 				}
 				if (!foundEscrow && IsEscrowOp(opIn)) {
 					foundEscrow = true; 
@@ -2704,7 +2711,11 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				if(!vtxEscrowPos.back().vchWhitelistAlias.empty())
 					theOffer.linkWhitelist.GetLinkEntryByHash(vtxEscrowPos.back().vchWhitelistAlias, entry);	
 					
-			}			
+			}
+			string linkAccept = "";
+			if(!vchOfferAcceptLink.empty())
+				linkAccept = stringFromVch(vchOfferAcceptLink);
+			oOfferAccept.push_back(Pair("linkofferaccept", linkAccept);
 			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));			
 			oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 			int precision = 2;
