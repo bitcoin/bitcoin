@@ -464,7 +464,9 @@ UniValue getaddresstxids(const UniValue& params, bool fHelp)
         }
     }
 
-    std::sort(vtxids.begin(), vtxids.end());
+    if (addresses.size() > 1) {
+        std::sort(vtxids.begin(), vtxids.end());
+    }
 
     UniValue result(UniValue::VARR);
     for (std::vector<std::pair<int, std::string> >::const_iterator it=vtxids.begin(); it!=vtxids.end(); it++) {
