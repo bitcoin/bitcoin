@@ -53,8 +53,8 @@ bool foundOfferLinkInWallet(const vector<unsigned char> &vchOffer, const vector<
 				if (!IsSyscoinScript(wtx.vout[j].scriptPubKey, opOffer, vvchOfferArgs))
 					continue;
 				if(opOffer != OP_OFFER_ACCEPT)
-					LogPrintf;
-				printf("Found offer accept vout: vvchOfferArgs[0]: %s vs vchOffer %s\n", stringFromVch(vvchOfferArgs[0]).c_str(), stringFromVch(vchOffer).c_str());
+					continue;
+				LogPrintf("Found offer accept vout: vvchOfferArgs[0]: %s vs vchOffer %s\n", stringFromVch(vvchOfferArgs[0]).c_str(), stringFromVch(vchOffer).c_str());
 				if(vvchOfferArgs[0] == vchOffer)
 				{
 					LogPrintf("offer accept vout matches\n");
