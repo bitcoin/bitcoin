@@ -95,7 +95,7 @@ string makeTransferCertTX(const COffer& theOffer, const COfferAccept& theOfferAc
 
 }
 // refund an offer accept by creating a transaction to send coins to offer accepter, and an offer accept back to the offer owner. 2 Step process in order to use the coins that were sent during initial accept.
-string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchMessage, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const COffer& theOffer, const CBlock* block)
+string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<unsigned char> &vchOffer, const vector<unsigned char> &vchMessage, const vector<unsigned char> &vchLinkOffer, const string &offerAcceptLinkTxHash, const COffer& theOffer, const CBlock* block)
 {
 	if(!block)
 	{
@@ -122,7 +122,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 			// find first offer accept in this block and make sure it is for the linked offer we are checking
 			// the first one is the one that is used to do the offer accept tx, so any subsequent accept tx for the same offer will also check this tx and find that
 			// the linked accept tx was already done (grouped all accept's together in this block)
-			if(DecodeOfferTx(tx, op, nOut, vvchArgs) && op == OP_OFFER_ACCEPT && vvchArgs[0] == vchLinkOffer)
+			if(DecodeOfferTx(tx, op, nOut, vvchArgs) && op == OP_OFFER_ACCEPT && vvchArgs[0] == vchOffer)
 			{	
 				foundOfferTx = true;
 				if(foundOfferLinkInWallet(vchLinkOffer, vvchArgs[1]))
@@ -133,6 +133,8 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 			}
 		}
 	}
+	if(!foundOfferTx)
+		return "cannot accept a linked offer accept in linkedAcceptBlock";
 	if(!theOfferAccept.txBTCId.IsNull())
 	{
 		return "cannot accept a linked offer by paying in Bitcoins";
@@ -981,7 +983,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			{	
 				// theOffer.vchLinkOffer is the linked offer guid
 				// theOffer is this reseller offer used to get pubkey to send to offeraccept as first parameter
-				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[2], theOffer.vchLinkOffer, tx.GetHash().GetHex(), theOffer, block);
+				string strError = makeOfferLinkAcceptTX(theOfferAccept, vvchArgs[0], vvchArgs[2], theOffer.vchLinkOffer, tx.GetHash().GetHex(), theOffer, block);
 				if(strError != "")					
 					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());			
 				
