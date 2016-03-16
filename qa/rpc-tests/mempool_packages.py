@@ -59,13 +59,12 @@ class MempoolPackagesTest(BitcoinTestFramework):
         descendant_count = 1
         descendant_fees = 0
         descendant_size = 0
-        SATOSHIS = 100000000
 
         for x in reversed(chain):
             assert_equal(mempool[x]['descendantcount'], descendant_count)
             descendant_fees += mempool[x]['fee']
             assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee'])
-            assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees)
+            assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN)
             descendant_size += mempool[x]['size']
             assert_equal(mempool[x]['descendantsize'], descendant_size)
             descendant_count += 1
@@ -78,7 +77,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         descendant_fees = 0
         for x in reversed(chain):
             descendant_fees += mempool[x]['fee']
-            assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees+1000)
+            assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 1000)
 
         # Adding one more transaction on to the chain should fail.
         try:
@@ -106,7 +105,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
             descendant_fees += mempool[x]['fee']
             if (x == chain[-1]):
                 assert_equal(mempool[x]['modifiedfee'], mempool[x]['fee']+satoshi_round(0.00002))
-            assert_equal(mempool[x]['descendantfees'], SATOSHIS*descendant_fees+2000)
+            assert_equal(mempool[x]['descendantfees'], descendant_fees * COIN + 2000)
 
         # TODO: check that node1's mempool is as expected
 
