@@ -126,6 +126,10 @@ bool CWallet::AddKeyPubKey(const CKey& secret, const CPubKey &pubkey)
     if (HaveWatchOnly(script))
         RemoveWatchOnly(script);
 
+    // Update current UTXOs to check if some of them were already being tracked
+    // but marked as unspendable.
+    UpdateUnspents();
+
     if (!fFileBacked)
         return true;
     if (!IsCrypted()) {
@@ -483,9 +487,12 @@ bool CWallet::IsSpent(const uint256& hash, unsigned int n) const
 
 void CWallet::AddToSpends(const COutPoint& outpoint, const uint256& wtxid)
 {
+    // since this output is being marked as a spent output, we remove it from the UTXO index
+    RemoveFromUnspents(outpoint);
+
     mapTxSpends.insert(make_pair(outpoint, wtxid));
 
-    pair<TxSpends::iterator, TxSpends::iterator> range;
+    std::pair<TxSpends::iterator, TxSpends::iterator> range;
     range = mapTxSpends.equal_range(outpoint);
     SyncMetaData(range);
 }
@@ -500,6 +507,47 @@ void CWallet::AddToSpends(const uint256& wtxid)
 
     BOOST_FOREACH(const CTxIn& txin, thisTx.vin)
         AddToSpends(txin.prevout, wtxid);
+}
+
+void CWallet::AddToUnspents(const CWalletTx* wtx, bool filterIsMine)
+{
+    uint256 hash = wtx->GetHash();
+
+    for (unsigned int i = 0; i < wtx->vout.size(); ++i) {
+        const COutPoint outpoint(hash, i);
+        std::pair<TxSpends::const_iterator, TxSpends::const_iterator> range;
+        range = mapTxSpends.equal_range(outpoint);
+
+        // if this output wasn't already marked as spent, we add it as a new UTXO
+        if (range.first == range.second) {
+            isminetype ismine = IsMine(wtx->vout[i]);
+            if (!filterIsMine || ismine) {
+                mapTxUnspents[outpoint] = std::make_pair(wtx, ismine);
+            }
+        }
+    }
+}
+
+void CWallet::RemoveFromUnspents(const COutPoint &outpoint)
+{
+    mapTxUnspents.erase(outpoint);
+}
+
+void CWallet::UpdateUnspents()
+{
+    for (TxUnspents::iterator uit = mapTxUnspents.begin(); uit != mapTxUnspents.end();) {
+        const COutPoint &outpoint = uit->first;
+        const CWalletTx* wtx = (uit->second).first;
+
+        isminetype isMine = IsMine(wtx->vout[outpoint.n]);
+
+        if (isMine) {
+            uit->second.second = isMine;
+            uit++;
+        } else {
+            mapTxUnspents.erase(uit++);
+        }
+    }
 }
 
 bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
@@ -627,6 +675,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
         wtx.BindWallet(this);
         wtxOrdered.insert(make_pair(wtx.nOrderPos, TxPair(&wtx, (CAccountingEntry*)0)));
         AddToSpends(hash);
+        // Add transaction outputs to the UTXO index
+        AddToUnspents(&wtx);
         BOOST_FOREACH(const CTxIn& txin, wtx.vin) {
             if (mapWallet.count(txin.prevout.hash)) {
                 CWalletTx& prevtx = mapWallet[txin.prevout.hash];
@@ -695,6 +745,8 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
                              wtxIn.hashBlock.ToString());
             }
             AddToSpends(hash);
+            // Add transaction outputs to the UTXO index
+            AddToUnspents(&wtx, true);
         }
 
         bool fUpdated = false;
@@ -3199,6 +3251,10 @@ bool CWallet::InitLoadWallet()
             }
         }
     }
+
+    // After the initializing is done, we update already tracked unspents
+    walletInstance->UpdateUnspents();
+
     walletInstance->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
     pwalletMain = walletInstance;
