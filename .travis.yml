@@ -6,7 +6,7 @@
 # - sudo/dist/group are set so as to get Blue Box VMs, necessary for [loopback]
 #   IPv6 support
 
-sudo: required
+sudo: false
 dist: precise
 group: legacy
 
@@ -27,37 +27,75 @@ env:
     - WINEDEBUG=fixme-all
 cache:
   apt: true
+  ccache: true
   directories:
-  - depends/built
-  - depends/sdk-sources
-  - $HOME/.ccache
+    - depends/built
+    - depends/sdk-sources
 matrix:
   fast_finish: true
   include:
     - compiler: ": ARM"
-      env: HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="NO_QT=1" GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+      env: HOST=arm-linux-gnueabihf DEP_OPTS="NO_QT=1" GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
+      addons:
+        apt:
+          packages:
+            - g++-arm-linux-gnueabihf
     - compiler: ": Win32"
-      env: HOST=i686-w64-mingw32 PPA="ppa:ubuntu-wine/ppa" PACKAGES="nsis gcc-mingw-w64-i686 g++-mingw-w64-i686 binutils-mingw-w64-i686 mingw-w64-dev wine1.7 bc" RUN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports" MAKEJOBS="-j2"
+      env: HOST=i686-w64-mingw32 RUN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports" MAKEJOBS="-j2" WINE=true
+      addons:
+        apt:
+          packages:
+            - nsis
+            - gcc-mingw-w64-i686
+            - g++-mingw-w64-i686
+            - binutils-mingw-w64-i686
+            - mingw-w64-dev
+            - wine
+            - bc
     - compiler: ": 32-bit + dash"
-      env: HOST=i686-pc-linux-gnu PACKAGES="g++-multilib bc python-zmq" PPA="ppa:chris-lea/zeromq" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash"
+      env: HOST=i686-pc-linux-gnu RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++" USE_SHELL="/bin/dash" PYZMQ=true
+      addons:
+        apt:
+          packages:
+            - g++-multilib
+            - bc
+            - python-pip
     - compiler: ": Win64"
-      env: HOST=x86_64-w64-mingw32 PPA="ppa:ubuntu-wine/ppa" PACKAGES="nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-dev wine1.7 bc" RUN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports" MAKEJOBS="-j2"
+      env: HOST=x86_64-w64-mingw32 RUN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports" MAKEJOBS="-j2" WINE=true
+      addons:
+        apt:
+          packages:
+            - nsis
+            - gcc-mingw-w64-x86-64
+            - g++-mingw-w64-x86-64
+            - binutils-mingw-w64-x86-64
+            - mingw-w64-dev
+            - wine
+            - bc
     - compiler: ": dashd"
-      env: HOST=x86_64-unknown-linux-gnu PACKAGES="bc python-zmq" PPA="ppa:chris-lea/zeromq" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
+      env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER" PYZMQ=true
+      addons:
+        apt:
+          packages:
+            - bc
+            - python-pip
 #    - compiler: ": No wallet"
 #      env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports"
     - compiler: ": Cross-Mac"
-      env: HOST=x86_64-apple-darwin11 PACKAGES="cmake libcap-dev libz-dev libbz2-dev" BITCOIN_CONFIG="--enable-reduce-exports" OSX_SDK=10.9 GOAL="deploy"
+      env: HOST=x86_64-apple-darwin11 BITCOIN_CONFIG="--enable-reduce-exports" OSX_SDK=10.9 GOAL="deploy"
+      addons:
+        apt:
+          packages:
+            - cmake
+            - libcap-dev
+            - libbz2-dev
   exclude:
     - compiler: gcc
 before_install:
     - git clone https://github.com/dashpay/dash_hash
 install:
-    - if [ -n "$PACKAGES" ]; then sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list; fi
-    - if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; fi
-    - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
-    - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
-    - cd dash_hash; sudo python setup.py install; cd ..;
+    - cd dash_hash && python setup.py install --user && cd ..
+    - if [ "$PYZMQ" = "true" ]; then pip install pyzmq --user ; fi
 before_script:
     - unset CC; unset CXX
     - mkdir -p depends/SDKs depends/sdk-sources
@@ -77,7 +115,8 @@ script:
     - ./configure --cache-file=../config.cache $BITCOIN_CONFIG_ALL $BITCOIN_CONFIG || ( cat config.log && false)
     - make $MAKEJOBS $GOAL || ( echo "Build failure. Verbose build follows." && make $GOAL V=1 ; false )
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
-    - if [ "$RUN_TESTS" = "true" ]; then make check; fi
+    - if [ "$RUN_TESTS" = "true" -a "$WINE" != "true" ]; then make check; fi
+    - if [ "$RUN_TESTS" = "true" -a "$WINE" = "true" ]; then wine  src/test/test_dash.exe && wine src/qt/test/test_dash-qt.exe ; fi
     - if [ "$RUN_TESTS" = "true" ]; then qa/pull-tester/rpc-tests.py --coverage; fi
 after_script:
     - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then (echo "Upload goes here. Something like: scp -r $BASE_OUTDIR server" || echo "upload failed"); fi
