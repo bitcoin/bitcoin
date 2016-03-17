@@ -206,10 +206,13 @@ public:
         return n;
     }
 
+    //supress msvc C4127: conditional expression is constant
+    inline bool check(bool value) {return value;}
+
     void setuint64(uint64_t n)
     {
         // Use BN_set_word if word size is sufficient for uint64_t
-        if (sizeof(n) <= sizeof(BN_ULONG))
+        if (check(sizeof(n) <= sizeof(BN_ULONG)))
         {
             if (!BN_set_word(this, (BN_ULONG)n))
                 throw bignum_error("CBigNum conversion from uint64_t : BN_set_word failed");
