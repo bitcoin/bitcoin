@@ -17,11 +17,11 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
-#if QT_VERSION > 0
-	#include <QNetworkAccessManager>
-	#include <QNetworkRequest>
-	#include <QNetworkReply>
-#endif
+
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+
 using namespace std;
 extern void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew);
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
@@ -1931,39 +1931,38 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 bool CheckPaymentInBTC(const COfferAccept& accept, string strBTCTxId)
 {
 	LogPrintf("CheckPaymentInBTC\n");
-	#if QT_VERSION > 0
-		LogPrintf("QNetworkAccessManager\n");
-		QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-		QUrl url("https://blockchain.info/tx/" strBTCTxId + "?format=json");
-		QNetworkReply* reply = nam->get(QNetworkRequest(url));
-		reply->ignoreSslErrors();
-		double totalTime = 0;
-		while(!reply->isFinished())
-		{
-			totalTime += 1;
-			MilliSleep(1000);
-			if(totalTime > 30)
-				throw runtime_error("Timeout connecting to blockchain.info!");
-		}
-		if(reply->error() == QNetworkReply::NoError) {
 
-			LogPrintf("response: %s\n", reply->readAll().toStdString().c_str());
-			UniValue outerValue(UniValue::VSTR);
-			bool read = outerValue.read(reply->readAll().toStdString());
-			if (read)
+	LogPrintf("QNetworkAccessManager\n");
+	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
+	QUrl url("https://blockchain.info/tx/" strBTCTxId + "?format=json");
+	QNetworkReply* reply = nam->get(QNetworkRequest(url));
+	reply->ignoreSslErrors();
+	double totalTime = 0;
+	while(!reply->isFinished())
+	{
+		totalTime += 1;
+		MilliSleep(1000);
+		if(totalTime > 30)
+			throw runtime_error("Timeout connecting to blockchain.info!");
+	}
+	if(reply->error() == QNetworkReply::NoError) {
+
+		LogPrintf("response: %s\n", reply->readAll().toStdString().c_str());
+		UniValue outerValue(UniValue::VSTR);
+		bool read = outerValue.read(reply->readAll().toStdString());
+		if (read)
+		{
+			LogPrintf("gotjson!\n");
+			UniValue outerObj = outerValue.get_obj();
+			UniValue ratesValue = find_value(outerObj, "rates");
+			if (ratesValue.isArray())
 			{
-				LogPrintf("gotjson!\n");
-				UniValue outerObj = outerValue.get_obj();
-				UniValue ratesValue = find_value(outerObj, "rates");
-				if (ratesValue.isArray())
-				{
-				}
 			}
 		}
-		delete reply;
-  #else
-    return false;
-  #endif
+	}
+	delete reply;
+	return false;
+
 
 }
 UniValue offeraccept(const UniValue& params, bool fHelp) {
