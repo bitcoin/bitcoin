@@ -169,8 +169,8 @@ bool OfferAcceptDialogBTC::lookup(const QString &lookupid, QString& address, QSt
 
 			const string &strAddress = find_value(offerObj, "address").get_str();
 			const string &strPrice = find_value(offerObj, "price").get_str();
-			address = QString(strAddress);
-			price = QString(strPrice);
+			address = QString::fromStdString(strAddress);
+			price = QString::fromStdString(strPrice);
 			return true;
 		}
 	}
