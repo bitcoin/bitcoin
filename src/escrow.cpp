@@ -671,7 +671,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	vecSend.push_back(recipientSeller);
 	CRecipient aliasRecipient;
 	CreateRecipient(scriptPubKeyAlias, aliasRecipient);
-	// if we use a cert as input to this escrow tx, we need another utxo for further cert transactions on this cert, so we create one here
+	// if we use an alias as input to this escrow tx, we need another utxo for further alias transactions on this alias, so we create one here
 	if(wtxAliasIn != NULL)
 		vecSend.push_back(aliasRecipient);
 

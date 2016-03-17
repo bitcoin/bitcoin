@@ -374,7 +374,7 @@ bool DecodeOfferScript(const CScript& script, int& op,
 
 	if ((op == OP_OFFER_ACTIVATE && vvch.size() == 1)
 		|| (op == OP_OFFER_UPDATE && vvch.size() == 1)
-		|| (op == OP_OFFER_ACCEPT && vvch.size() == 3))
+		|| (op == OP_OFFER_ACCEPT && vvch.size() == 4))
 		return true;
 	return false;
 }
@@ -617,6 +617,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		case OP_OFFER_ACCEPT:
 			// check for existence of offeraccept in txn offer obj
 			theOfferAccept = theOffer.accept;
+			theOfferAccept.nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchArgs[3]));
 			if (theOfferAccept.IsNull())
 				return error("OP_OFFER_ACCEPT null accept object");
 			if (IsEscrowOp(prevEscrowOp) && IsAliasOp(prevAliasOp))
@@ -871,6 +872,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else if (op == OP_OFFER_ACCEPT) {	
 			theOfferAccept = serializedOffer.accept;
+			theOfferAccept.nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchArgs[3]));
 			if(theOfferAccept.nQty <= 0)
 				theOfferAccept.nQty = 1;
 			if((theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty)) {
@@ -1871,7 +1873,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
-bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nTotalAmount, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
+bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nTotalAmount, unsigned int nQty, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
 {
 	unsigned int size = vecSend.size();
 	vector<unsigned char> offerGUID;
@@ -1904,7 +1906,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 		int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 		vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
 		vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
-		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvch[2] << OP_2DROP << OP_2DROP; 
+		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvch[2] << vchFromString(string(itoa(nQty))) << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKey += scriptPubKeyDestination;
 		CRecipient paymentRecipient = {scriptPubKey, nTotalAmount, false};
 		vecSend.push_back(paymentRecipient);
@@ -2135,7 +2137,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		vchPaymentMessage = vchFromString(strCipherText);
 	else
 		vchPaymentMessage = vchMessage;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << OP_2DROP << OP_2DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << vchFromString(string(itoa(nQty))) << OP_2DROP << OP_2DROP << OP_DROP;
 	if(wtxOfferIn != NULL && !vchBTCTxId.empty())
 		throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
 
@@ -2204,7 +2206,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	else if(!theOffer.bOnlyAcceptBTC)
 	{
 		// linked accept will go through the linkedAcceptBlock and find all linked accepts to same offer and group them together into vecSend so it can go into one tx (inputs can be shared, mainly the whitelist alias inputs)
-		if(!CreateLinkedOfferAcceptRecipients(vecSend, nTotalValue, wtxOfferIn, vchOffer, scriptPayment))
+		if(!CreateLinkedOfferAcceptRecipients(vecSend, nTotalValue, nQty, wtxOfferIn, vchOffer, scriptPayment))
 			vecSend.push_back(paymentRecipient);
 	}
 	else
