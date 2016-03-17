@@ -1906,7 +1906,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 		int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 		vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
 		vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
-		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvch[2] << vchFromString(string(itoa(nQty))) << OP_2DROP << OP_2DROP << OP_DROP; 
+		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvch[2] << vchFromString(boost::lexical_cast<std::string>(nQty)) << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKey += scriptPubKeyDestination;
 		CRecipient paymentRecipient = {scriptPubKey, nTotalAmount, false};
 		vecSend.push_back(paymentRecipient);
@@ -2137,7 +2137,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		vchPaymentMessage = vchFromString(strCipherText);
 	else
 		vchPaymentMessage = vchMessage;
-	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << vchFromString(string(itoa(nQty))) << OP_2DROP << OP_2DROP << OP_DROP;
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << vchFromString(boost::lexical_cast<std::string>(nQty)) << OP_2DROP << OP_2DROP << OP_DROP;
 	if(wtxOfferIn != NULL && !vchBTCTxId.empty())
 		throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
 
