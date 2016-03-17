@@ -116,19 +116,21 @@ void OfferAcceptDialogBTC::acceptPayment()
 }
 bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
 {
-	LogPrintf("CheckPaymentInBTC\n");
+	LogPrintf("CheckPaymentInBTC %s\n", "https://blockchain.info/tx/" + strBTCTxId.toStdString().c_str() + "?format=json");
 
 	LogPrintf("QNetworkAccessManager\n");
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
-	QNetworkReply* reply = nam->get(QNetworkRequest(url));
+	QNetworkRequest request(QUrl(url));
+	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+	QNetworkReply* reply = nam->get(request);
 	reply->ignoreSslErrors();
-	double totalTime = 0;
+	int totalTime = 0;
 	while(!reply->isFinished())
 	{
-		totalTime += 1;
-		MilliSleep(1000);
-		if(totalTime > 30)
+		totalTime += 100;
+		MilliSleep(100);
+		if(totalTime > 3000)
 			throw runtime_error("Timeout connecting to blockchain.info!");
 	}
 	if(reply->error() == QNetworkReply::NoError) {
@@ -146,7 +148,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			}
 		}
 	}
-	delete reply;
+	reply->deleteLater();
 	return false;
 
 
