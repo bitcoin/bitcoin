@@ -523,7 +523,7 @@ public:
 
     T median() const
     {
-        int size = vSorted.size();
+        size_t size = vSorted.size();
         assert(size>0);
         if(size & 1) // Odd number of elements
         {
