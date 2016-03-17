@@ -463,13 +463,18 @@ UniValue getaddressbalance(const UniValue& params, bool fHelp)
     }
 
     CAmount balance = 0;
+    CAmount received = 0;
 
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
+        if (it->second > 0) {
+            received += it->second;
+        }
         balance += it->second;
     }
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("balance", balance));
+    result.push_back(Pair("received", received));
 
     return result;
 
