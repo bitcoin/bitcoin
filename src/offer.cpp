@@ -2005,6 +2005,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 			throw runtime_error("offer accept passed into the function is not actually an offer accept");	
 		vchPubKey = linkOffer.accept.vchBuyerKey;
 		nHeight = linkOffer.accept.nAcceptHeight;
+		nQty = linkOffer.accept.nQty;
 	}
 	const CWalletTx *wtxEscrowIn = NULL;
 	CEscrow escrow;
