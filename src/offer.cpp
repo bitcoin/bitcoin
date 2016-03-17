@@ -17,6 +17,11 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
+#if defined(ENABLE_QT)
+	#include <QNetworkAccessManager>
+	#include <QNetworkRequest>
+	#include <QNetworkReply>
+#endif
 using namespace std;
 extern void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew);
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
@@ -1922,6 +1927,42 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 	}
 	return vecSend.size() != size;
 }
+
+bool CheckPaymentInBTC(const COfferAccept& accept, string strBTCTxId)
+{
+	#if defined(ENABLE_QT)
+		QNetworkAccessManager *nam = new QNetworkAccessManager(this);
+		QUrl url("https://blockchain.info/tx/" strBTCTxId);
+		QNetworkReply* reply = nam->get(QNetworkRequest(url));
+		reply->ignoreSslErrors();
+		double totalTime = 0;
+		while(!reply->isFinished())
+		{
+			totalTime += 1;
+			MilliSleep(1000);
+			if(totalTime > 30)
+				throw runtime_error("Timeout connecting to blockchain.info!");
+		}
+		if(reply->error() == QNetworkReply::NoError) {
+
+
+			UniValue outerValue(UniValue::VSTR);
+			bool read = outerValue.read(reply->readAll().toStdString());
+			if (read)
+			{
+				UniValue outerObj = outerValue.get_obj();
+				UniValue ratesValue = find_value(outerObj, "rates");
+				if (ratesValue.isArray())
+				{
+				}
+			}
+		}
+		delete reply;
+  #else
+    return false;
+  #endif
+
+}
 UniValue offeraccept(const UniValue& params, bool fHelp) {
 	if (fHelp || 1 > params.size() || params.size() > 7)
 		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [linkedacceptguidtxhash] [escrowTxHash]\n"
@@ -2211,7 +2252,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
 		txAccept.txBTCId = txBTCId;
 		// consult a block explorer for the btc txid and check to see if it pays offer address with correct amount
-		throw runtime_error("not implemented");
+		if(!CheckPaymentInBTC(txAccept, stringFromVch(vchBTCTxId)))
+			throw runtime_error("Bitcoin payment not found...try again later!");
 	}
 	else if(!theOffer.bOnlyAcceptBTC)
 	{
