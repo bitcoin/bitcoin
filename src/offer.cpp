@@ -1879,13 +1879,14 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
-bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nTotalAmount, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
+bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nPrice, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
 {
 	unsigned int size = vecSend.size();
 	vector<unsigned char> offerGUID;
 	int op, nOut;
 	
 	vector<vector<unsigned char> > vvch;
+	vector<vector<unsigned char> > vvchOffer;
 	if(!linkedAcceptBlock)
 		return false;
 	if(!acceptTx)
@@ -1902,19 +1903,21 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
         const CTransaction &tx = linkedAcceptBlock->vtx[i];
 		if(tx.nVersion != GetSyscoinTxVersion())
 			continue;
-		if(!DecodeAndParseSyscoinTx(tx, op, nOut, vvch))
+		if(!DecodeAndParseSyscoinTx(tx, op, nOut, vvchOffer))
 			continue;
 		if(op != OP_OFFER_ACCEPT)
 			continue;
-		if(vvch[0] != offerGUID)
+		if(vvchOffer[0] != offerGUID)
 			continue;
 		// generate offer accept identifier and hash
 		int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 		vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
 		vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
-		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvch[2] << vvch[3] << OP_2DROP << OP_2DROP << OP_DROP; 
+		unsigned int nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchOffer[3]));
+		CAmount nTotalValue = ( nPrice * nQty );
+		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvchOffer[2] << vvchOffer[3] << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKey += scriptPubKeyDestination;
-		CRecipient paymentRecipient = {scriptPubKey, nTotalAmount, false};
+		CRecipient paymentRecipient = {scriptPubKey, nTotalValue, false};
 		vecSend.push_back(paymentRecipient);
 	}
 	return vecSend.size() != size;
@@ -2213,7 +2216,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	else if(!theOffer.bOnlyAcceptBTC)
 	{
 		// linked accept will go through the linkedAcceptBlock and find all linked accepts to same offer and group them together into vecSend so it can go into one tx (inputs can be shared, mainly the whitelist alias inputs)
-		if(!CreateLinkedOfferAcceptRecipients(vecSend, nTotalValue, wtxOfferIn, vchOffer, scriptPayment))
+		if(!CreateLinkedOfferAcceptRecipients(vecSend, nPrice, wtxOfferIn, vchOffer, scriptPayment))
 			vecSend.push_back(paymentRecipient);
 	}
 	else
