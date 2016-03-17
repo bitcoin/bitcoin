@@ -315,6 +315,7 @@ static const CRPCCommand vRPCCommands[] =
 
     /* Address index */
     { "addressindex",       "getaddresstxids",        &getaddresstxids,        false },
+    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false },
 
     /* Utility functions */
     { "util",               "createmultisig",         &createmultisig,         true  },
