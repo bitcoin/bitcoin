@@ -574,7 +574,15 @@ void TorController::protocolinfo_cb(TorControlConnection& conn, const TorControl
          *   password: "password"
          */
         std::string torpassword = GetArg("-torpassword", "");
-        if (methods.count("NULL")) {
+        if (!torpassword.empty()) {
+            if (methods.count("HASHEDPASSWORD")) {
+                LogPrint("tor", "tor: Using HASHEDPASSWORD authentication\n");
+                boost::replace_all(torpassword, "\"", "\\\"");
+                conn.Command("AUTHENTICATE \"" + torpassword + "\"", boost::bind(&TorController::auth_cb, this, _1, _2));
+            } else {
+                LogPrintf("tor: Password provided with -torpassword, but HASHEDPASSWORD authentication is not available\n");
+            }
+        } else if (methods.count("NULL")) {
             LogPrint("tor", "tor: Using NULL authentication\n");
             conn.Command("AUTHENTICATE", boost::bind(&TorController::auth_cb, this, _1, _2));
         } else if (methods.count("SAFECOOKIE")) {
@@ -595,13 +603,7 @@ void TorController::protocolinfo_cb(TorControlConnection& conn, const TorControl
                 }
             }
         } else if (methods.count("HASHEDPASSWORD")) {
-            if (!torpassword.empty()) {
-                LogPrint("tor", "tor: Using HASHEDPASSWORD authentication\n");
-                boost::replace_all(torpassword, "\"", "\\\"");
-                conn.Command("AUTHENTICATE \"" + torpassword + "\"", boost::bind(&TorController::auth_cb, this, _1, _2));
-            } else {
-                LogPrintf("tor: Password authentication required, but no password provided with -torpassword\n");
-            }
+            LogPrintf("tor: The only supported authentication mechanism left is password, but no password provided with -torpassword\n");
         } else {
             LogPrintf("tor: No supported authentication method\n");
         }
