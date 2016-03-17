@@ -146,7 +146,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	}
 	params.push_back(address.aliasName);
 	params.push_back(stringFromVch(vchLinkOffer));
-	params.push_back(static_cast<ostringstream*>( &(ostringstream() << theOfferAccept.nQty) )->str());
+	params.push_back("99");
 	params.push_back(stringFromVch(vchMessage));
 	params.push_back("");
 	params.push_back(offerAcceptLinkTxHash);
@@ -616,8 +616,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			break;
 		case OP_OFFER_ACCEPT:
 			// check for existence of offeraccept in txn offer obj
-			theOfferAccept = theOffer.accept;
-			theOfferAccept.nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchArgs[3]));
+			theOfferAccept = theOffer.accept;		
+			if(IsOfferOp(prevOp))
+				theOfferAccept.nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchPrevArgs[3]));
+			else
+				theOfferAccept.nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchArgs[3]));
 			if (theOfferAccept.IsNull())
 				return error("OP_OFFER_ACCEPT null accept object");
 			if (IsEscrowOp(prevEscrowOp) && IsAliasOp(prevAliasOp))
@@ -872,7 +875,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		}
 		else if (op == OP_OFFER_ACCEPT) {	
 			theOfferAccept = serializedOffer.accept;
-			theOfferAccept.nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchArgs[3]));
+			if(IsOfferOp(prevOp))
+				theOfferAccept.nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchPrevArgs[3]));
+			else
+				theOfferAccept.nQty = boost::lexical_cast<unsigned int>(stringFromVch(vvchArgs[3]));
 			if(theOfferAccept.nQty <= 0)
 				theOfferAccept.nQty = 1;
 			if((theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty)) {
@@ -1873,7 +1879,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
-bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nTotalAmount, unsigned int nQty, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
+bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nTotalAmount, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
 {
 	unsigned int size = vecSend.size();
 	vector<unsigned char> offerGUID;
@@ -1906,7 +1912,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 		int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
 		vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
 		vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
-		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvch[2] << vchFromString(boost::lexical_cast<std::string>(nQty)) << OP_2DROP << OP_2DROP << OP_DROP; 
+		scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << linkedOfferGUID << vchAccept << vvch[2] << vvch[3] << OP_2DROP << OP_2DROP << OP_DROP; 
 		scriptPubKey += scriptPubKeyDestination;
 		CRecipient paymentRecipient = {scriptPubKey, nTotalAmount, false};
 		vecSend.push_back(paymentRecipient);
@@ -1937,7 +1943,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
-		if(atof(params[2].get_str().c_str()) < 0)
+		if(atof(params[2].get_str().c_str()) <= 0)
 			throw runtime_error("invalid quantity value, must be greator than 0");
 	
 		try {
@@ -2206,7 +2212,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	else if(!theOffer.bOnlyAcceptBTC)
 	{
 		// linked accept will go through the linkedAcceptBlock and find all linked accepts to same offer and group them together into vecSend so it can go into one tx (inputs can be shared, mainly the whitelist alias inputs)
-		if(!CreateLinkedOfferAcceptRecipients(vecSend, nTotalValue, nQty, wtxOfferIn, vchOffer, scriptPayment))
+		if(!CreateLinkedOfferAcceptRecipients(vecSend, nTotalValue, wtxOfferIn, vchOffer, scriptPayment))
 			vecSend.push_back(paymentRecipient);
 	}
 	else
