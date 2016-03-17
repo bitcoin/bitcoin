@@ -142,7 +142,6 @@ void OfferAcceptDialogBTC::acceptOffer()
 		params.push_back(this->offer.toStdString());
 		params.push_back(this->quantity.toStdString());
 		params.push_back(this->notes.toStdString());
-		params.push_back("");
 		params.push_back(ui->btctxidEdit->text().toStdString());
 
 	    try {
