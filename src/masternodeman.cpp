@@ -689,47 +689,13 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
         CMasternodeBroadcast mnb;
         vRecv >> mnb;
 
-        LogPrint("masternode", "mnb - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
-
-        if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
-            masternodeSync.AddedMasternodeList(mnb.GetHash());
-            return;
-        }
-        mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
-
-        LogPrint("masternode", "mnb - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
-
         int nDos = 0;
-        if(!mnb.CheckAndUpdate(nDos)){
 
-            if(nDos > 0)
-                Misbehaving(pfrom->GetId(), nDos);
-
-            LogPrint("masternode", "mnb - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
-
-            //failed
-            return;
-        }
-
-        // make sure the vout that was signed is related to the transaction that spawned the Masternode
-        //  - this is expensive, so it's only done once per Masternode
-        if(!darkSendSigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
-            LogPrintf("mnb - Got mismatched pubkey and vin\n");
-            Misbehaving(pfrom->GetId(), 33);
-            return;
-        }
-
-        // make sure it's still unspent
-        //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
-        if(mnb.CheckInputsAndAdd(nDos)) {
-            // use this as a peer
+        if (CheckMnbAndUpdateMasternodeList(mnb, nDos)) {
+            // use announced Masternode as a peer
             addrman.Add(CAddress(mnb.addr), pfrom->addr, 2*60*60);
-            masternodeSync.AddedMasternodeList(mnb.GetHash());
         } else {
-            LogPrintf("mnb - Rejected Masternode entry %s\n", mnb.addr.ToString());
-
-            if (nDos > 0)
-                Misbehaving(pfrom->GetId(), nDos);
+            if(nDos > 0) Misbehaving(pfrom->GetId(), nDos);
         }
     }
 
@@ -884,4 +850,41 @@ void CMasternodeMan::UpdateMasternodeList(CMasternodeBroadcast mnb) {
     } else {
         pmn->UpdateFromNewBroadcast(mnb);
     }
+}
+
+bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos) {
+    nDos = 0;
+    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s\n", mnb.vin.ToString());
+
+    if(mapSeenMasternodeBroadcast.count(mnb.GetHash())) { //seen
+        masternodeSync.AddedMasternodeList(mnb.GetHash());
+        return true;
+    }
+    mapSeenMasternodeBroadcast.insert(make_pair(mnb.GetHash(), mnb));
+
+    LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s new\n", mnb.vin.ToString());
+
+    if(!mnb.CheckAndUpdate(nDos)){
+        LogPrint("masternode", "CMasternodeMan::CheckMnbAndUpdateMasternodeList - Masternode broadcast, vin: %s CheckAndUpdate failed\n", mnb.vin.ToString());
+        return false;
+    }
+
+    // make sure the vout that was signed is related to the transaction that spawned the Masternode
+    //  - this is expensive, so it's only done once per Masternode
+    if(!darkSendSigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
+        LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - Got mismatched pubkey and vin\n");
+        nDos = 33;
+        return false;
+    }
+
+    // make sure it's still unspent
+    //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
+    if(mnb.CheckInputsAndAdd(nDos)) {
+        masternodeSync.AddedMasternodeList(mnb.GetHash());
+    } else {
+        LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - Rejected Masternode entry %s\n", mnb.addr.ToString());
+        return false;
+    }
+
+    return true;
 }

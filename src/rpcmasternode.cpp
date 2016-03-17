@@ -826,11 +826,15 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
     if (strCommand == "relay")
     {
-        if (params.size() != 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'masternodebroadcast relay \"hexstring\"'");
+        if (params.size() < 2 || params.size() > 3)
+            throw JSONRPCError(RPC_INVALID_PARAMETER,   "masternodebroadcast relay \"hexstring\" ( fast )\n"
+                                                        "\nArguments:\n"
+                                                        "1. \"hex\"      (string, required) Broadcast messages hex string\n"
+                                                        "2. fast       (string, optional) If none, using safe method\n");
 
         int successful = 0;
         int failed = 0;
+        bool fSafe = params.size() == 2;
 
         std::vector<CMasternodeBroadcast> vecMnb;
         UniValue returnObj(UniValue::VOBJ);
@@ -845,10 +849,20 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
             resultObj.push_back(Pair("vin", mnb.vin.ToString()));
             resultObj.push_back(Pair("addr", mnb.addr.ToString()));
 
-            if(mnb.VerifySignature()) {
+            int nDos = 0;
+            bool fResult;
+            if (mnb.VerifySignature()) {
+                if (fSafe) {
+                    fResult = mnodeman.CheckMnbAndUpdateMasternodeList(mnb, nDos);
+                } else {
+                    mnodeman.UpdateMasternodeList(mnb);
+                    mnb.Relay();
+                    fResult = true;
+                }
+            } else fResult = false;
+
+            if(fResult) {
                 successful++;
-                mnodeman.UpdateMasternodeList(mnb);
-                mnb.Relay();
                 resultObj.push_back(Pair(mnb.GetHash().ToString(), "successful"));
             } else {
                 failed++;
