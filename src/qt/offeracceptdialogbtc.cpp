@@ -129,6 +129,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	int totalTime = 0;
 	while(!reply->isFinished())
 	{
+		qApp->processEvents();
 		totalTime += 100;
 		MilliSleep(100);
 		if(totalTime > 30000)
