@@ -131,7 +131,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	{
 		totalTime += 100;
 		MilliSleep(100);
-		if(totalTime > 3000)
+		if(totalTime > 30000)
 			throw runtime_error("Timeout connecting to blockchain.info!");
 	}
 	if(reply->error() == QNetworkReply::NoError) {
