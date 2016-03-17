@@ -17,7 +17,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <boost/thread.hpp>
-#if defined(ENABLE_QT)
+#if QT_VERSION > 0
 	#include <QNetworkAccessManager>
 	#include <QNetworkRequest>
 	#include <QNetworkReply>
@@ -1931,7 +1931,7 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 bool CheckPaymentInBTC(const COfferAccept& accept, string strBTCTxId)
 {
 	LogPrintf("CheckPaymentInBTC\n");
-	#if defined(ENABLE_QT)
+	#if QT_VERSION > 0
 		LogPrintf("QNetworkAccessManager\n");
 		QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 		QUrl url("https://blockchain.info/tx/" strBTCTxId + "?format=json");
