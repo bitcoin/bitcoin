@@ -177,7 +177,7 @@ bool OfferAcceptDialogBTC::lookup(const QString &lookupid, QString& address, QSt
 	catch (UniValue& objError)
 	{
 		QMessageBox::critical(this, windowTitle(),
-			tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + id,
+			tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + lookupid,
 				QMessageBox::Ok, QMessageBox::Ok);
 		return true;
 
