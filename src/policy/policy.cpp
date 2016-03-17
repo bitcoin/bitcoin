@@ -101,7 +101,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason)
         if (whichType == TX_NULL_DATA)
 		{
 			// SYSCOIN if not syscoin tx and opreturn size is bigger than maxcarrier bytes, return false
-			// we need this because if it is a sys tx then we allow 20x maxcarrier bytes.
+			// we need this because if it is a sys tx then we allow 40x maxcarrier bytes.
 			if(tx.nVersion != GetSyscoinTxVersion() && txout.scriptPubKey.size() > nMaxDatacarrierBytes)
 			{
 				reason = "scriptpubkey";
