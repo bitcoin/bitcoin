@@ -1934,7 +1934,7 @@ bool CheckPaymentInBTC(const COfferAccept& accept, string strBTCTxId)
 	#if defined(ENABLE_QT)
 		LogPrintf("QNetworkAccessManager\n");
 		QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-		QUrl url("https://blockchain.info/tx/" strBTCTxId);
+		QUrl url("https://blockchain.info/tx/" strBTCTxId + "?format=json");
 		QNetworkReply* reply = nam->get(QNetworkRequest(url));
 		reply->ignoreSslErrors();
 		double totalTime = 0;
