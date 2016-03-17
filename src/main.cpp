@@ -2442,11 +2442,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 			nSysBlockTx++;
 			if(nSysBlockTx >= 5)
 			{
-				LogPrintf("gen\n");
 				int nOut = GetSyscoinDataOutput(tx);
 				if (nOut != -1)
 					nSysRegenFees += tx.vout[nOut].nValue*2;
-				LogPrintf("gen1\n");
 			}
 		}
         nInputs += tx.vin.size();
