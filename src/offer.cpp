@@ -1952,6 +1952,7 @@ bool CheckPaymentInBTC(const COfferAccept& accept, string strBTCTxId)
 			bool read = outerValue.read(reply->readAll().toStdString());
 			if (read)
 			{
+				LogPrintf("gotjson!\n");
 				UniValue outerObj = outerValue.get_obj();
 				UniValue ratesValue = find_value(outerObj, "rates");
 				if (ratesValue.isArray())
