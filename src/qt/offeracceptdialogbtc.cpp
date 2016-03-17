@@ -27,6 +27,9 @@
 #include <qrencode.h>
 #endif
 using namespace std;
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 
 extern const CRPCTable tableRPC;
 OfferAcceptDialogBTC::OfferAcceptDialogBTC(const PlatformStyle *platformStyle, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QString sellerAlias, QString address, QWidget *parent) :
@@ -111,16 +114,111 @@ void OfferAcceptDialogBTC::acceptPayment()
 {
 	acceptOffer();
 }
+bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
+{
+	LogPrintf("CheckPaymentInBTC\n");
+
+	LogPrintf("QNetworkAccessManager\n");
+	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
+	QUrl url("https://blockchain.info/tx/" strBTCTxId.toStdString() + "?format=json");
+	QNetworkReply* reply = nam->get(QNetworkRequest(url));
+	reply->ignoreSslErrors();
+	double totalTime = 0;
+	while(!reply->isFinished())
+	{
+		totalTime += 1;
+		MilliSleep(1000);
+		if(totalTime > 30)
+			throw runtime_error("Timeout connecting to blockchain.info!");
+	}
+	if(reply->error() == QNetworkReply::NoError) {
+
+		LogPrintf("response: %s\n", reply->readAll().toStdString().c_str());
+		UniValue outerValue(UniValue::VSTR);
+		bool read = outerValue.read(reply->readAll().toStdString());
+		if (read)
+		{
+			LogPrintf("gotjson!\n");
+			UniValue outerObj = outerValue.get_obj();
+			UniValue ratesValue = find_value(outerObj, "rates");
+			if (ratesValue.isArray())
+			{
+			}
+		}
+	}
+	delete reply;
+	return false;
+
+
+}
+
+bool OfferAcceptDialogBTC::lookup(const QString &lookupid, QString& address, QString& price)
+{
+	string strError;
+	string strMethod = string("offerinfo");
+	UniValue params(UniValue::VARR);
+	UniValue result;
+	params.push_back(lookupid.toStdString());
+
+    try {
+        result = tableRPC.execute(strMethod, params);
+
+		if (result.type() == UniValue::VOBJ)
+		{
+			const UniValue &offerObj = result.get_obj();
+
+			const string &strAddress = find_value(offerObj, "address").get_str();
+			const string &strPrice = find_value(offerObj, "price").get_str();
+			address = QString(strAddress);
+			price = QString(strPrice);
+			return true;
+		}
+	}
+	catch (UniValue& objError)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + id,
+				QMessageBox::Ok, QMessageBox::Ok);
+		return true;
+
+	}
+	catch(std::exception& e)
+	{
+		QMessageBox::critical(this, windowTitle(),
+			tr("There was an exception trying to locate this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
+				QMessageBox::Ok, QMessageBox::Ok);
+		return true;
+	}
+	return false;
+
+
+}
 // send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
 void OfferAcceptDialogBTC::acceptOffer()
 {
-        if (ui->btctxidEdit->text().trimmed().isEmpty()) {
+		QString address, price;
+		if (ui->btctxidEdit->text().trimmed().isEmpty()) {
             ui->btctxidEdit->setText("");
             QMessageBox::information(this, windowTitle(),
             tr("Please enter a valid Bitcoin Transaction ID into the input box and try again"),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
+		if(!lookup(this->offer, address, price))
+		{
+            QMessageBox::information(this, windowTitle(),
+            tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + this->offer,
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+		}
+		if(!CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), address, price))
+		{
+            QMessageBox::information(this, windowTitle(),
+            tr("Could not find this payment, please check the Transaction ID and that it has been confirmed by the Bitcoin blockchain: ") + ui->btctxidEdit->text().trimmed(),
+                QMessageBox::Ok, QMessageBox::Ok);
+            return;
+		}
+
 		UniValue params(UniValue::VARR);
 		UniValue valError;
 		UniValue valResult;
