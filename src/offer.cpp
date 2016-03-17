@@ -1930,7 +1930,9 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 
 bool CheckPaymentInBTC(const COfferAccept& accept, string strBTCTxId)
 {
+	LogPrintf("CheckPaymentInBTC\n");
 	#if defined(ENABLE_QT)
+		LogPrintf("QNetworkAccessManager\n");
 		QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 		QUrl url("https://blockchain.info/tx/" strBTCTxId);
 		QNetworkReply* reply = nam->get(QNetworkRequest(url));
@@ -1945,7 +1947,7 @@ bool CheckPaymentInBTC(const COfferAccept& accept, string strBTCTxId)
 		}
 		if(reply->error() == QNetworkReply::NoError) {
 
-
+			LogPrintf("response: %s\n", reply->readAll().toStdString().c_str());
 			UniValue outerValue(UniValue::VSTR);
 			bool read = outerValue.read(reply->readAll().toStdString());
 			if (read)
