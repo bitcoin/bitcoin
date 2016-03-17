@@ -83,6 +83,12 @@ class AbandonConflictTest(BitcoinTestFramework):
         # inputs are still spent, but change not received
         newbalance = self.nodes[0].getbalance()
         assert(newbalance == balance - Decimal("24.9996"))
+        # Unconfirmed received funds that are not in mempool, also shouldn't show
+        # up in unconfirmed balance
+        unconfbalance = self.nodes[0].getunconfirmedbalance() + self.nodes[0].getbalance()
+        assert(unconfbalance == newbalance)
+        # Also shouldn't show up in listunspent
+        assert(not txABC2 in [utxo["txid"] for utxo in self.nodes[0].listunspent(0)])
         balance = newbalance
 
         # Abandon original transaction and verify inputs are available again
