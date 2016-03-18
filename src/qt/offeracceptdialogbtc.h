@@ -38,7 +38,7 @@ private Q_SLOTS:
 	void on_cancelButton_clicked();
     void acceptOffer();
 	void openBTCWallet();
-	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price);
+	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time);
 	bool lookup(const QString &lookupid, QString& address, QString& price);
 };
 
