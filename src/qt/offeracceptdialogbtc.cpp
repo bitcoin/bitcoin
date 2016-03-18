@@ -122,6 +122,11 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 	QNetworkReply* reply = nam->get(request);
 	reply->ignoreSslErrors();
+	CAmount value;
+	CAmount price;
+	if(!ParseMoney(price.toStdString(), price))
+		return false;
+	LogPrintf("price: %lld\n", price);
 	int totalTime = 0;
 	while(!reply->isFinished())
 	{
@@ -131,6 +136,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 		if(totalTime > 30000)
 			throw runtime_error("Timeout connecting to blockchain.info!");
 	}
+	bool doubleSpend = false;
 	if(reply->error() == QNetworkReply::NoError) {
 
 		UniValue outerValue;
@@ -139,9 +145,38 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 		{
 			LogPrintf("gotjson!\n");
 			UniValue outerObj = outerValue.get_obj();
-			UniValue ratesValue = find_value(outerObj, "rates");
-			if (ratesValue.isArray())
+			UniValue doubleSpendValue = find_value(outerObj, "double_spend");
+			if (doubleSpendValue.isBool())
 			{
+				doubleSpend = doubleSpendValue.get_bool();
+				if(!doubleSpend)
+					return false;
+			}
+			UniValue outputsValue = find_value(outerObj, "out");
+			if (outputsValue.isArray())
+			{
+				UniValue outputs = outputsValue.get_array();
+				for (unsigned int idx = 0; idx < outputs.size(); idx++) {
+					const UniValue& output = outputs[idx];	
+					UniValue addressValue = find_value(output, "addr");
+					if(addressValue.isStr())
+					{
+						LogPrintf("address: %s\n", address.toStdString().c_str());
+						if(addressValue.get_str() == address.toStdString())
+						{
+							UniValue paymentValue = find_value(output, "value");
+							LogPrintf("value: %lld\n", paymentValue.get_int64());
+							if(paymentValue.isNum())
+							{
+								value += paymentValue.get_int64();
+								if(value >= price)
+									return true;
+							}
+						}
+							
+					}
+
+				}
 			}
 		}
 	}
