@@ -150,7 +150,6 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			UniValue timeValue = find_value(outerObj, "time");
 			if (timeValue.isNum())
 				time = timeValue.get_int64();
-			LogPrintf("height: %d time: %lld\n",height, time);
 			UniValue doubleSpendValue = find_value(outerObj, "double_spend");
 			if (doubleSpendValue.isBool())
 			{
@@ -167,11 +166,9 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 					UniValue addressValue = find_value(output, "addr");
 					if(addressValue.isStr())
 					{
-						LogPrintf("address: %s\n", address.toStdString().c_str());
 						if(addressValue.get_str() == address.toStdString())
 						{
 							UniValue paymentValue = find_value(output, "value");
-							LogPrintf("value: %lld\n", paymentValue.get_int64());
 							if(paymentValue.isNum())
 							{
 								valueAmount += paymentValue.get_int64();
@@ -238,14 +235,14 @@ void OfferAcceptDialogBTC::acceptOffer()
 		QString address, price;
 		if (ui->btctxidEdit->text().trimmed().isEmpty()) {
             ui->btctxidEdit->setText("");
-            QMessageBox::information(this, windowTitle(),
+            QMessageBox::critical(this, windowTitle(),
             tr("Please enter a valid Bitcoin Transaction ID into the input box and try again"),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
 		if(!lookup(this->offer, address, price))
 		{
-            QMessageBox::information(this, windowTitle(),
+            QMessageBox::critical(this, windowTitle(),
             tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + this->offer,
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
@@ -254,10 +251,10 @@ void OfferAcceptDialogBTC::acceptOffer()
 		long time;
 		if(!CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), address, price, height, time))
 		{
-            QMessageBox::information(this, windowTitle(),
-            tr("Could not find this payment, please check the Transaction ID and that it has been confirmed by the Bitcoin blockchain: ") + ui->btctxidEdit->text().trimmed(),
-                QMessageBox::Ok, QMessageBox::Ok);
-            return;
+			QMessageBox::critical(this, windowTitle(),
+				tr("Could not find a payment of %1 BTC at address: %2, please check the Transaction ID %3 has been confirmed by the Bitcoin blockchain: ").arg(price).arg(address).arg(ui->btctxidEdit->text().trimmed()),
+				QMessageBox::Ok, QMessageBox::Ok);
+			return;
 		}
 
 		UniValue params(UniValue::VARR);

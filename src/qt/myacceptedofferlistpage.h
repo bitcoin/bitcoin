@@ -34,6 +34,7 @@ public:
     void setOptionsModel(ClientModel* clientmodel, OptionsModel *optionsModel);
     const QString &getReturnValue() const { return returnValue; }
 	void showEvent ( QShowEvent * event );
+	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time);
 public Q_SLOTS:
     void done(int retval);
 
