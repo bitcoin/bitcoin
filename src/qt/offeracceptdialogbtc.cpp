@@ -116,10 +116,6 @@ void OfferAcceptDialogBTC::acceptPayment()
 }
 bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
 {
-	string msg = "https://blockchain.info/tx/" + strBTCTxId.toStdString() + "?format=json";
-	LogPrintf("CheckPaymentInBTC %s\n", msg);
-
-	LogPrintf("QNetworkAccessManager\n");
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
@@ -137,8 +133,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	}
 	if(reply->error() == QNetworkReply::NoError) {
 
-		LogPrintf("response: %s\n", reply->readAll().toStdString().c_str());
-		UniValue outerValue(UniValue::VSTR);
+		UniValue outerValue;
 		bool read = outerValue.read(reply->readAll().toStdString());
 		if (read)
 		{
