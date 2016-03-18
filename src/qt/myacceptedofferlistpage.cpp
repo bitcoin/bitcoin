@@ -227,7 +227,7 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
     {
         return;
     }
-	QString address, price;
+	QString address, price, btcTxId;
 	QString offerid = selection.at(0).data(OfferAcceptTableModel::Name).toString();
 	QString acceptid = selection.at(0).data(OfferAcceptTableModel::GUID).toString();
 	
