@@ -60,6 +60,7 @@ private Q_SLOTS:
     void on_exportButton_clicked();
 	void on_refreshButton_clicked();
 	void on_messageButton_clicked();
+	void on_btcButton_clicked();
     void selectionChanged();
     void contextualMenu(const QPoint &point);
     void selectNewOffer(const QModelIndex &parent, int begin, int /*end*/);
