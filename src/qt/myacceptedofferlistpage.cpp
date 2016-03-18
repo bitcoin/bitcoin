@@ -22,6 +22,9 @@ extern const CRPCTable tableRPC;
 #include <QClipboard>
 #include <QMessageBox>
 #include <QMenu>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 MyAcceptedOfferListPage::MyAcceptedOfferListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyAcceptedOfferListPage),
@@ -140,7 +143,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, QString& address, 
 
 
 }
-bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time)
+bool MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time)
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
