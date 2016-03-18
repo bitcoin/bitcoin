@@ -59,6 +59,15 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
+        # Exercise locking of unspent outputs
+        unspent_0 = self.nodes[2].listunspent()[0]
+        unspent_0 = {"txid": unspent_0["txid"], "vout": unspent_0["vout"]}
+        self.nodes[2].lockunspent(False, [unspent_0])
+        assert_raises(JSONRPCException, self.nodes[2].sendtoaddress, self.nodes[2].getnewaddress(), 20)
+        assert_equal([unspent_0], self.nodes[2].listlockunspent())
+        self.nodes[2].lockunspent(True, [unspent_0])
+        assert_equal(len(self.nodes[2].listlockunspent()), 0)
+
         # Have node1 generate 100 blocks (so node0 can recover the fee)
         self.nodes[1].generate(100)
         self.sync_all()
@@ -147,6 +156,10 @@ class WalletTest (BitcoinTestFramework):
         sync_mempools(self.nodes)
 
         assert(txid1 in self.nodes[3].getrawmempool())
+
+        # Exercise balance rpcs
+        assert_equal(self.nodes[0].getwalletinfo()["unconfirmed_balance"], 1)
+        assert_equal(self.nodes[0].getunconfirmedbalance(), 1)
 
         #check if we can list zero value tx as available coins
         #1. create rawtx
@@ -251,7 +264,7 @@ class WalletTest (BitcoinTestFramework):
 
         #check if wallet or blochchain maintenance changes the balance
         self.sync_all()
-        self.nodes[0].generate(1)
+        blocks = self.nodes[0].generate(2)
         self.sync_all()
         balance_nodes = [self.nodes[i].getbalance() for i in range(3)]
 
@@ -269,6 +282,12 @@ class WalletTest (BitcoinTestFramework):
             self.nodes = start_nodes(3, self.options.tmpdir, [[m]] * 3)
             assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
 
+        # Exercise listsinceblock with the last two blocks
+        coinbase_tx_1 = self.nodes[0].listsinceblock(blocks[0])
+        assert_equal(coinbase_tx_1["lastblock"], blocks[1])
+        assert_equal(len(coinbase_tx_1["transactions"]), 1)
+        assert_equal(coinbase_tx_1["transactions"][0]["blockhash"], blocks[1])
+        assert_equal(len(self.nodes[0].listsinceblock(blocks[1])["transactions"]), 0)
 
 if __name__ == '__main__':
     WalletTest ().main ()
