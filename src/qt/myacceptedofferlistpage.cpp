@@ -241,7 +241,7 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
 	if(btcTxId.isEmpty())
 	{
         QMessageBox::critical(this, windowTitle(),
-        tr("This payment was not done using Bitcoin, please select an offer that was accepted by paying with Bitcoins.") + offerid,
+        tr("This payment was not done using Bitcoin, please select an offer that was accepted by paying with Bitcoins."),
             QMessageBox::Ok, QMessageBox::Ok);
         return;
 	}
@@ -250,7 +250,7 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
 	if(!CheckPaymentInBTC(btcTxId, address, price, height, time))
 	{
         QMessageBox::critical(this, windowTitle(),
-			tr("Could not find a payment of %1 BTC at address: %2, please check the Transaction ID %3 has been confirmed by the Bitcoin blockchain: ").arg(price).arg(address).arg(btcTxId),
+			tr("Could not find a payment of %1 BTC at address %2, please check the Transaction ID %3 has been confirmed by the Bitcoin blockchain: ").arg(price).arg(address).arg(btcTxId),
             QMessageBox::Ok, QMessageBox::Ok);
         return;
 	}

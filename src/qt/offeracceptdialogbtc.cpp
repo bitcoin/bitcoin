@@ -252,7 +252,7 @@ void OfferAcceptDialogBTC::acceptOffer()
 		if(!CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), address, price, height, time))
 		{
 			QMessageBox::critical(this, windowTitle(),
-				tr("Could not find a payment of %1 BTC at address: %2, please check the Transaction ID %3 has been confirmed by the Bitcoin blockchain: ").arg(price).arg(address).arg(ui->btctxidEdit->text().trimmed()),
+				tr("Could not find a payment of %1 BTC at address %2, please check the Transaction ID %3 has been confirmed by the Bitcoin blockchain: ").arg(price).arg(address).arg(ui->btctxidEdit->text().trimmed()),
 				QMessageBox::Ok, QMessageBox::Ok);
 			return;
 		}
