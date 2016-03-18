@@ -453,6 +453,8 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
 /** Check whether witness commitments are required for block. */
 bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
+bool RewindBlockIndex(const Consensus::Params& params);
+
 void UpdateUncommitedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams);
 
 /** Update uncommitted block structures (currently: only the witness nonce). This is safe for submitted blocks. */
