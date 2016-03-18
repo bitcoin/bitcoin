@@ -315,8 +315,9 @@ public:
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << sigTime;
+        ss << vin;
         ss << pubkey;
+        ss << sigTime;
         return ss.GetHash();
     }
 
