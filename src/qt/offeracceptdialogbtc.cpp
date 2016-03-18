@@ -146,12 +146,11 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			UniValue outerObj = outerValue.get_obj();
 			UniValue heightValue = find_value(outerObj, "block_height");
 			if (heightValue.isNum())
-				height = heightValue.get_num();
+				height = heightValue.get_int();
 			UniValue timeValue = find_value(outerObj, "time");
 			if (timeValue.isNum())
-				time = timeValue.get_num();
-
-			UniValue outerObj = outerValue.get_obj();
+				time = timeValue.get_int64();
+			LogPrintf("height: %d time: %lld\n",height, time);
 			UniValue doubleSpendValue = find_value(outerObj, "double_spend");
 			if (doubleSpendValue.isBool())
 			{
