@@ -125,7 +125,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	reply->ignoreSslErrors();
 	CAmount valueAmount = 0;
 	CAmount priceAmount = 0;
-	if(!ParseMoney(price.toStdString(), price))
+	if(!ParseMoney(price.toStdString(), priceAmount))
 		return false;
 	LogPrintf("price: %lld\n", priceAmount);
 	int totalTime = 0;
