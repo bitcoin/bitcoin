@@ -28,6 +28,7 @@ class BlockchainTest(BitcoinTestFramework):
     Test blockchain-related RPC calls:
 
         - gettxoutsetinfo
+        - verifychain
 
     """
 
@@ -44,6 +45,7 @@ class BlockchainTest(BitcoinTestFramework):
     def run_test(self):
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
+        self.nodes[0].verifychain(4, 0)
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
