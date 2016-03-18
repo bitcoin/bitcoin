@@ -51,6 +51,8 @@ The following outputs are affected by this change:
 
 ### P2P protocol and network code
 
+The p2p alert system has been removed in #7692 and the 'alert' message is no longer supported.
+
 ### Validation
 
 ### Build system
