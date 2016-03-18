@@ -241,7 +241,7 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
 	if(btcTxId.isEmpty())
 	{
         QMessageBox::critical(this, windowTitle(),
-        tr("This payment was not done using Bitcoin, please select an offer that was accepted by paying with Bitcoins.") + this->offer,
+        tr("This payment was not done using Bitcoin, please select an offer that was accepted by paying with Bitcoins.") + offerid,
             QMessageBox::Ok, QMessageBox::Ok);
         return;
 	}
