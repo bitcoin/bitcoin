@@ -14,6 +14,8 @@
 #include "csvmodelwriter.h"
 #include "guiutil.h"
 #include "rpcserver.h"
+#include "util.h"
+#include "utilmoneystr.h"
 using namespace std;
 
 extern const CRPCTable tableRPC;
