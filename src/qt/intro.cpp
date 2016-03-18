@@ -169,7 +169,7 @@ void Intro::pickDataDirectory()
         intro.setDataDirectory(dataDir);
         intro.setWindowIcon(QIcon(":icons/bitcoin"));
 
-        while(true)
+        for ( ; ; )
         {
             if(!intro.exec())
             {

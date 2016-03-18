@@ -398,7 +398,7 @@ CAddress CAddrMan::Select_(int nUnkBias)
     {
         // use a tried node
         double fChanceFactor = 1.0;
-        while(1)
+        for ( ; ; )
         {
             int nKBucket = GetRandInt(vvTried.size());
             std::vector<int> &vTried = vvTried[nKBucket];
@@ -413,7 +413,7 @@ CAddress CAddrMan::Select_(int nUnkBias)
     } else {
         // use a new node
         double fChanceFactor = 1.0;
-        while(1)
+        for ( ; ; )
         {
             int nUBucket = GetRandInt(vvNew.size());
             std::set<int> &vNew = vvNew[nUBucket];
