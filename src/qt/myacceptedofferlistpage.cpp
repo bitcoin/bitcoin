@@ -86,7 +86,7 @@ MyAcceptedOfferListPage::MyAcceptedOfferListPage(const PlatformStyle *platformSt
 
 }
 	
-bool MyAcceptedOfferListPage::lookup(const QString &lookupid, QString& address, QString& price, QString& btcTxId)
+bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acceptid, QString& address, QString& price, QString& btcTxId)
 {
 	string strError;
 	string strMethod = string("offerinfo");
@@ -104,13 +104,12 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, QString& address, 
 				return false;
 			const UniValue &offerObj = result.get_obj();
 			const UniValue &offerAccepts = offerAcceptsValue.get_array();
-			COfferAccept myAccept;
 			QDateTime timestamp;
 		    for (unsigned int idx = 0; idx < offerAccepts.size(); idx++) {
 			    const UniValue& accept = offerAccepts[idx];				
 				const UniValue& acceptObj = accept.get_obj();
 				QString offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
-				if(offerAcceptHash != offerAcceptGUID)
+				if(offerAcceptHash != acceptid)
 					continue;
 				QString currencyStr = QString::fromStdString(find_value(acceptObj, "currency").get_str());
 				if(currencyStr == "BTC")
