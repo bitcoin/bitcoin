@@ -287,9 +287,9 @@ BOOST_AUTO_TEST_CASE(test_GetThrow)
     t.vin.resize(3);
     t.vin[0].prevout.hash = dummyTransactions[0].GetHash();
     t.vin[0].prevout.n = 0;
-    t.vin[1].prevout.hash = dummyTransactions[1].GetHash();;
+    t.vin[1].prevout.hash = dummyTransactions[1].GetHash();
     t.vin[1].prevout.n = 0;
-    t.vin[2].prevout.hash = dummyTransactions[1].GetHash();;
+    t.vin[2].prevout.hash = dummyTransactions[1].GetHash();
     t.vin[2].prevout.n = 1;
     t.vout.resize(2);
     t.vout[0].nValue = 90*CENT;
