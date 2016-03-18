@@ -115,7 +115,7 @@ void OfferAcceptDialogBTC::acceptPayment()
 {
 	acceptOffer();
 }
-bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
+bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time)
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
@@ -127,7 +127,6 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	CAmount priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), priceAmount))
 		return false;
-	LogPrintf("price: %lld\n", priceAmount);
 	int totalTime = 0;
 	while(!reply->isFinished())
 	{
@@ -144,13 +143,20 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 		bool read = outerValue.read(reply->readAll().toStdString());
 		if (read)
 		{
-			LogPrintf("gotjson!\n");
+			UniValue outerObj = outerValue.get_obj();
+			UniValue heightValue = find_value(outerObj, "block_height");
+			if (heightValue.isNum())
+				height = heightValue.get_num();
+			UniValue timeValue = find_value(outerObj, "time");
+			if (timeValue.isNum())
+				time = timeValue.get_num();
+
 			UniValue outerObj = outerValue.get_obj();
 			UniValue doubleSpendValue = find_value(outerObj, "double_spend");
 			if (doubleSpendValue.isBool())
 			{
 				doubleSpend = doubleSpendValue.get_bool();
-				if(!doubleSpend)
+				if(doubleSpend)
 					return false;
 			}
 			UniValue outputsValue = find_value(outerObj, "out");
@@ -176,7 +182,6 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 						}
 							
 					}
-
 				}
 			}
 		}
@@ -246,7 +251,9 @@ void OfferAcceptDialogBTC::acceptOffer()
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
 		}
-		if(!CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), address, price))
+		int height;
+		long time;
+		if(!CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), address, price, height, time))
 		{
             QMessageBox::information(this, windowTitle(),
             tr("Could not find this payment, please check the Transaction ID and that it has been confirmed by the Bitcoin blockchain: ") + ui->btctxidEdit->text().trimmed(),
