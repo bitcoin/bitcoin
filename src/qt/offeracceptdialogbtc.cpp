@@ -12,6 +12,7 @@
 #include "pubkey.h"
 #include "wallet/wallet.h"
 #include "main.h"
+#include "utilmoneystr.h"
 #include <QDesktopServices>
 #if QT_VERSION < 0x050000
 #include <QUrl>
@@ -122,11 +123,11 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 	QNetworkReply* reply = nam->get(request);
 	reply->ignoreSslErrors();
-	CAmount value;
-	CAmount price;
+	CAmount valueAmount = 0;
+	CAmount priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), price))
 		return false;
-	LogPrintf("price: %lld\n", price);
+	LogPrintf("price: %lld\n", priceAmount);
 	int totalTime = 0;
 	while(!reply->isFinished())
 	{
@@ -168,8 +169,8 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 							LogPrintf("value: %lld\n", paymentValue.get_int64());
 							if(paymentValue.isNum())
 							{
-								value += paymentValue.get_int64();
-								if(value >= price)
+								valueAmount += paymentValue.get_int64();
+								if(valueAmount >= priceAmount)
 									return true;
 							}
 						}
