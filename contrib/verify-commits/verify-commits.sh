@@ -5,9 +5,6 @@
 DIR=$(dirname "$0")
 [ "/${DIR#/}" != "$DIR" ] && DIR=$(dirname "$(pwd)/$0")
 
-echo "Please verify all commits in the following list are not evil:"
-git log "$DIR"
-
 VERIFIED_ROOT=$(cat "${DIR}/trusted-git-root")
 REVSIG_ALLOWED=$(cat "${DIR}/allow-revsig-commits")
 
