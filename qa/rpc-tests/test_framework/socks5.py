@@ -117,7 +117,7 @@ class Socks5Connection(object):
             self.serv.queue.put(cmdin)
             print('Proxy: ', cmdin)
             # Fall through to disconnect
-        except Exception,e:
+        except Exception as e:
             traceback.print_exc(file=sys.stderr)
             self.serv.queue.put(e)
         finally:

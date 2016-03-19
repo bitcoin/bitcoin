@@ -26,7 +26,7 @@ from .util import (
     check_json_precision,
     initialize_chain_clean,
 )
-from authproxy import AuthServiceProxy, JSONRPCException
+from .authproxy import AuthServiceProxy, JSONRPCException
 
 
 class BitcoinTestFramework(object):

@@ -3,7 +3,7 @@
 #             and for constructing a getheaders message
 #
 
-from mininode import *
+from .mininode import *
 import dbm
 
 class BlockStore(object):
