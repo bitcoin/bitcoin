@@ -24,7 +24,8 @@ import binascii
 import time
 import sys
 import random
-import cStringIO
+from io import BytesIO
+from codecs import encode
 import hashlib
 from threading import RLock
 from threading import Thread
@@ -75,12 +76,12 @@ def deser_string(f):
 
 def ser_string(s):
     if len(s) < 253:
-        return chr(len(s)) + s
+        return struct.pack("B", len(s)) + s
     elif len(s) < 0x10000:
-        return chr(253) + struct.pack("<H", len(s)) + s
+        return struct.pack("B", 253) + struct.pack("<H", len(s)) + s
     elif len(s) < 0x100000000L:
-        return chr(254) + struct.pack("<I", len(s)) + s
-    return chr(255) + struct.pack("<Q", len(s)) + s
+        return struct.pack("B", 254) + struct.pack("<I", len(s)) + s
+    return struct.pack("B", 255) + struct.pack("<Q", len(s)) + s
 
 
 def deser_uint256(f):
@@ -132,13 +133,13 @@ def deser_vector(f, c):
 def ser_vector(l):
     r = ""
     if len(l) < 253:
-        r = chr(len(l))
+        r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
-        r = chr(253) + struct.pack("<H", len(l))
+        r = struct.pack("B", 253) + struct.pack("<H", len(l))
     elif len(l) < 0x100000000L:
-        r = chr(254) + struct.pack("<I", len(l))
+        r = struct.pack("B", 254) + struct.pack("<I", len(l))
     else:
-        r = chr(255) + struct.pack("<Q", len(l))
+        r = struct.pack("B", 255) + struct.pack("<Q", len(l))
     for i in l:
         r += i.serialize()
     return r
@@ -162,13 +163,13 @@ def deser_uint256_vector(f):
 def ser_uint256_vector(l):
     r = ""
     if len(l) < 253:
-        r = chr(len(l))
+        r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
-        r = chr(253) + struct.pack("<H", len(l))
+        r = struct.pack("B", 253) + struct.pack("<H", len(l))
     elif len(l) < 0x100000000L:
-        r = chr(254) + struct.pack("<I", len(l))
+        r = struct.pack("B", 254) + struct.pack("<I", len(l))
     else:
-        r = chr(255) + struct.pack("<Q", len(l))
+        r = struct.pack("B", 255) + struct.pack("<Q", len(l))
     for i in l:
         r += ser_uint256(i)
     return r
@@ -192,13 +193,13 @@ def deser_string_vector(f):
 def ser_string_vector(l):
     r = ""
     if len(l) < 253:
-        r = chr(len(l))
+        r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
-        r = chr(253) + struct.pack("<H", len(l))
+        r = struct.pack("B", 253) + struct.pack("<H", len(l))
     elif len(l) < 0x100000000L:
-        r = chr(254) + struct.pack("<I", len(l))
+        r = struct.pack("B", 254) + struct.pack("<I", len(l))
     else:
-        r = chr(255) + struct.pack("<Q", len(l))
+        r = struct.pack("B", 255) + struct.pack("<Q", len(l))
     for sv in l:
         r += ser_string(sv)
     return r
@@ -222,20 +223,20 @@ def deser_int_vector(f):
 def ser_int_vector(l):
     r = ""
     if len(l) < 253:
-        r = chr(len(l))
+        r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
-        r = chr(253) + struct.pack("<H", len(l))
+        r = struct.pack("B", 253) + struct.pack("<H", len(l))
     elif len(l) < 0x100000000L:
-        r = chr(254) + struct.pack("<I", len(l))
+        r = struct.pack("B", 254) + struct.pack("<I", len(l))
     else:
-        r = chr(255) + struct.pack("<Q", len(l))
+        r = struct.pack("B", 255) + struct.pack("<Q", len(l))
     for i in l:
         r += struct.pack("<i", i)
     return r
 
 # Deserialize from a hex string representation (eg from RPC)
 def FromHex(obj, hex_string):
-    obj.deserialize(cStringIO.StringIO(binascii.unhexlify(hex_string)))
+    obj.deserialize(BytesIO(binascii.unhexlify(hex_string)))
     return obj
 
 # Convert a binary-serializable object to hex (eg for submission via RPC)
@@ -423,7 +424,7 @@ class CTransaction(object):
     def calc_sha256(self):
         if self.sha256 is None:
             self.sha256 = uint256_from_str(hash256(self.serialize()))
-        self.hash = hash256(self.serialize())[::-1].encode('hex_codec')
+        self.hash = encode(hash256(self.serialize())[::-1], 'hex')
 
     def is_valid(self):
         self.calc_sha256()
@@ -492,7 +493,7 @@ class CBlockHeader(object):
             r += struct.pack("<I", self.nBits)
             r += struct.pack("<I", self.nNonce)
             self.sha256 = uint256_from_str(hash256(r))
-            self.hash = hash256(r)[::-1].encode('hex_codec')
+            self.hash = encode(hash256(r)[::-1], 'hex')
 
     def rehash(self):
         self.sha256 = None
@@ -1281,7 +1282,7 @@ class NodeConn(asyncore.dispatcher):
                     raise ValueError("got bad checksum " + repr(self.recvbuf))
                 self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
             if command in self.messagemap:
-                f = cStringIO.StringIO(msg)
+                f = BytesIO(msg)
                 t = self.messagemap[command]()
                 t.deserialize(f)
                 self.got_message(t)
