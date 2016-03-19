@@ -29,7 +29,7 @@
 #   and this notice are preserved. This file is offered as-is, without any
 #   warranty.
 
-#serial 22
+#serial 24
 
 AC_DEFUN([AX_BOOST_PROGRAM_OPTIONS],
 [
@@ -63,9 +63,9 @@ AC_DEFUN([AX_BOOST_PROGRAM_OPTIONS],
 		AC_CACHE_CHECK([whether the Boost::Program_Options library is available],
 					   ax_cv_boost_program_options,
 					   [AC_LANG_PUSH(C++)
-				AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <boost/program_options.hpp>
+				AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[@%:@include <boost/program_options/errors.hpp>
                                                           ]],
-                                  [[boost::program_options::options_description generic("Generic options");
+                                  [[boost::program_options::error err("Error message");
                                    return 0;]])],
                            ax_cv_boost_program_options=yes, ax_cv_boost_program_options=no)
 					AC_LANG_POP([C++])
@@ -74,7 +74,6 @@ AC_DEFUN([AX_BOOST_PROGRAM_OPTIONS],
 				AC_DEFINE(HAVE_BOOST_PROGRAM_OPTIONS,,[define if the Boost::PROGRAM_OPTIONS library is available])
                   BOOSTLIBDIR=`echo $BOOST_LDFLAGS | sed -e 's/@<:@^\/@:>@*//'`
                 if test "x$ax_boost_user_program_options_lib" = "x"; then
-                ax_lib=
                 for libextension in `ls $BOOSTLIBDIR/libboost_program_options*.so* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_program_options.*\)\.so.*$;\1;'` `ls $BOOSTLIBDIR/libboost_program_options*.dylib* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_program_options.*\)\.dylib.*$;\1;'` `ls $BOOSTLIBDIR/libboost_program_options*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_program_options.*\)\.a.*$;\1;'` ; do
                      ax_lib=${libextension}
 				    AC_CHECK_LIB($ax_lib, exit,
