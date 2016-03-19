@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,14 +10,8 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
-try:
-    import http.client as httplib
-except ImportError:
-    import httplib
-try:
-    import urllib.parse as urlparse
-except ImportError:
-    import urlparse
+import http.client
+import urllib.parse
 
 class NodeHandlingTest (BitcoinTestFramework):
     def run_test(self):
@@ -69,7 +63,7 @@ class NodeHandlingTest (BitcoinTestFramework):
         ###########################
         # RPC disconnectnode test #
         ###########################
-        url = urlparse.urlparse(self.nodes[1].url)
+        url = urllib.parse.urlparse(self.nodes[1].url)
         self.nodes[0].disconnectnode(url.hostname+":"+str(p2p_port(1)))
         time.sleep(2) #disconnecting a node needs a little bit of time
         for node in self.nodes[0].getpeerinfo():
