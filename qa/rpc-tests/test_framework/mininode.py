@@ -1046,8 +1046,8 @@ class NodeConnCB(object):
             try:
                 getattr(self, 'on_' + message.command)(conn, message)
             except:
-                print "ERROR delivering %s (%s)" % (repr(message),
-                                                    sys.exc_info()[0])
+                print("ERROR delivering %s (%s)" % (repr(message),
+                                                    sys.exc_info()[0]))
 
     def on_version(self, conn, message):
         if message.nVersion >= 209:
@@ -1137,8 +1137,8 @@ class NodeConn(asyncore.dispatcher):
         vt.addrFrom.ip = "0.0.0.0"
         vt.addrFrom.port = 0
         self.send_message(vt, True)
-        print 'MiniNode: Connecting to Bitcoin Node IP # ' + dstaddr + ':' \
-            + str(dstport)
+        print('MiniNode: Connecting to Bitcoin Node IP # ' + dstaddr + ':' \
+            + str(dstport))
 
         try:
             self.connect((dstaddr, dstport))

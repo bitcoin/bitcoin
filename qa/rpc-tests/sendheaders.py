@@ -266,7 +266,7 @@ class SendHeadersTest(BitcoinTestFramework):
 
         # PART 1
         # 1. Mine a block; expect inv announcements each time
-        print "Part 1: headers don't start before sendheaders message..."
+        print("Part 1: headers don't start before sendheaders message...")
         for i in xrange(4):
             old_tip = tip
             tip = self.mine_blocks(1)
@@ -297,8 +297,8 @@ class SendHeadersTest(BitcoinTestFramework):
                 inv_node.clear_last_announcement()
                 test_node.clear_last_announcement()
 
-        print "Part 1: success!"
-        print "Part 2: announce blocks with headers after sendheaders message..."
+        print("Part 1: success!")
+        print("Part 2: announce blocks with headers after sendheaders message...")
         # PART 2
         # 2. Send a sendheaders message and test that headers announcements
         # commence and keep working.
@@ -360,9 +360,9 @@ class SendHeadersTest(BitcoinTestFramework):
                 height += 1
                 block_time += 1
 
-        print "Part 2: success!"
+        print("Part 2: success!")
 
-        print "Part 3: headers announcements can stop after large reorg, and resume after headers/inv from peer..."
+        print("Part 3: headers announcements can stop after large reorg, and resume after headers/inv from peer...")
 
         # PART 3.  Headers announcements can stop after large reorg, and resume after
         # getheaders or inv from peer.
@@ -424,9 +424,9 @@ class SendHeadersTest(BitcoinTestFramework):
             assert_equal(inv_node.check_last_announcement(inv=[tip]), True)
             assert_equal(test_node.check_last_announcement(headers=[tip]), True)
 
-        print "Part 3: success!"
+        print("Part 3: success!")
 
-        print "Part 4: Testing direct fetch behavior..."
+        print("Part 4: Testing direct fetch behavior...")
         tip = self.mine_blocks(1)
         height = self.nodes[0].getblockcount() + 1
         last_time = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['time']
@@ -507,7 +507,7 @@ class SendHeadersTest(BitcoinTestFramework):
         with mininode_lock:
             assert_equal(test_node.last_getdata, None)
 
-        print "Part 4: success!"
+        print("Part 4: success!")
 
         # Finally, check that the inv node never received a getdata request,
         # throughout the test
