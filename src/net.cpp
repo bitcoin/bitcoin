@@ -1128,6 +1128,7 @@ void ThreadSocketHandler()
                     ipv6Nodes++;
                 if(pnode->addr.IsTor())
                     torNodes++;
+                statsClient.timing("peers.ping_us", pnode->nPingUsecTime, 1.0f);
             }
             statsClient.gauge("peers.spvNodeConnections", spvNodes, 1.0f);
             statsClient.gauge("peers.fullNodeConnections", fullNodes, 1.0f);
