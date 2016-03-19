@@ -1,8 +1,8 @@
+#!/usr/bin/env python3
 # blocktools.py - utilities for manipulating blocks and transactions
-# Copyright (c) 2015 The Bitcoin Core developers
-# Distributed under the MIT/X11 software license, see the accompanying
+# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
 
 from .mininode import *
 from .script import CScript, OP_TRUE, OP_CHECKSIG
