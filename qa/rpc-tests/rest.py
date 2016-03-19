@@ -11,8 +11,9 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from struct import *
+from io import BytesIO
+from codecs import encode
 import binascii
-import StringIO
 
 try:
     import http.client as httplib
@@ -146,7 +147,7 @@ class RESTTest (BitcoinTestFramework):
         binaryRequest += pack("i", 0)
 
         bin_response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'bin', binaryRequest)
-        output = StringIO.StringIO()
+        output = BytesIO()
         output.write(bin_response)
         output.seek(0)
         chainHeight = unpack("i", output.read(4))[0]
@@ -233,7 +234,7 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(response_hex.status, 200)
         assert_greater_than(int(response_hex.getheader('content-length')), 160)
         response_hex_str = response_hex.read()
-        assert_equal(response_str.encode("hex")[0:160], response_hex_str[0:160])
+        assert_equal(encode(response_str, "hex")[0:160], response_hex_str[0:160])
 
         # compare with hex block header
         response_header_hex = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"hex", True)
@@ -241,7 +242,7 @@ class RESTTest (BitcoinTestFramework):
         assert_greater_than(int(response_header_hex.getheader('content-length')), 160)
         response_header_hex_str = response_header_hex.read()
         assert_equal(response_hex_str[0:160], response_header_hex_str[0:160])
-        assert_equal(response_header_str.encode("hex")[0:160], response_header_hex_str[0:160])
+        assert_equal(encode(response_header_str, "hex")[0:160], response_header_hex_str[0:160])
 
         # check json format
         block_json_string = http_get_call(url.hostname, url.port, '/rest/block/'+bb_hash+self.FORMAT_SEPARATOR+'json')

@@ -4,9 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
-from mininode import *
-from blockstore import BlockStore, TxStore
-from util import p2p_port
+from .mininode import *
+from .blockstore import BlockStore, TxStore
+from .util import p2p_port
 
 '''
 This is a tool for comparing two or more bitcoinds to each other
