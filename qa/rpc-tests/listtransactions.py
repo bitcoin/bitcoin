@@ -8,12 +8,12 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import CTransaction, COIN
-import cStringIO
+from io import BytesIO
 import binascii
 
 def txFromHex(hexstring):
     tx = CTransaction()
-    f = cStringIO.StringIO(binascii.unhexlify(hexstring))
+    f = BytesIO(binascii.unhexlify(hexstring))
     tx.deserialize(f)
     return tx
 

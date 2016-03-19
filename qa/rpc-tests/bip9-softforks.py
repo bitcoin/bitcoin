@@ -11,7 +11,7 @@ from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_NOP3, OP_DROP
 from binascii import hexlify, unhexlify
-import cStringIO
+from io import BytesIO
 import time
 import itertools
 
@@ -53,7 +53,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         outputs = { to_address : amount }
         rawtx = node.createrawtransaction(inputs, outputs)
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(rawtx))
+        f = BytesIO(unhexlify(rawtx))
         tx.deserialize(f)
         tx.nVersion = 2
         return tx
@@ -61,7 +61,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
     def sign_transaction(self, node, tx):
         signresult = node.signrawtransaction(hexlify(tx.serialize()))
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(signresult['hex']))
+        f = BytesIO(unhexlify(signresult['hex']))
         tx.deserialize(f)
         return tx
 

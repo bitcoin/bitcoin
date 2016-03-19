@@ -82,7 +82,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         #Import with no affiliated address
         try:
             result1 = self.nodes[1].importprunedfunds(rawtxn1, proof1, "")
-        except JSONRPCException,e:
+        except JSONRPCException as e:
             errorString = e.error['message']
 
         assert('No addresses' in errorString)
@@ -119,7 +119,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         try:
             self.nodes[1].removeprunedfunds(txnid1)
-        except JSONRPCException,e:
+        except JSONRPCException as e:
             errorString = e.error['message']
 
         assert('does not exist' in errorString)
