@@ -651,6 +651,7 @@ UniValue submitblock(const UniValue& params, bool fHelp)
 
     CValidationState state;
     submitblock_StateCatcher sc(block.GetHash());
+    LogPrint("rpc", "Received block %s via RPC.\n", block.GetHash().ToString());
     RegisterValidationInterface(&sc);
     bool fAccepted = ProcessNewBlock(state, Params(), NULL, &block, true, NULL);
     UnregisterValidationInterface(&sc);

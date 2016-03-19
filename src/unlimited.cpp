@@ -59,6 +59,12 @@ CStatMap statistics __attribute__((init_priority(102)));
 CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
 CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
 
+std::vector<CNode*> xpeditedBlk(256,NULL);
+std::vector<CNode*> xpeditedTxn(256,NULL);
+
+#define NUM_XPEDITED_STORE 5
+uint256 xpeditedBlkSent[NUM_XPEDITED_STORE];  // Just save the last few expedited sent blocks so we don't resend (uint256 zeros on construction)
+int xpeditedBlkSendPos=0;
 
 void UnlimitedPushTxns(CNode* dest);
 
@@ -67,6 +73,172 @@ std::map<uint256, uint64_t> mapThinBlockTimer;
 
 //! The largest block size that we have seen since startup
 uint64_t nLargestBlockSeen=BLOCKSTREAM_CORE_MAX_BLOCK_SIZE; // BU - Xtreme Thinblocks
+
+void HandleExpeditedRequest(CDataStream& vRecv,CNode* pfrom)
+{
+  // TODO locks
+  uint64_t options;
+  vRecv >> options;
+  bool stop = ((options & EXPEDITED_STOP) != 0);  // Are we starting or stopping expedited service?
+  if (options & EXPEDITED_BLOCKS)
+    {
+      if (stop)  // If stopping, find the array element and clear it.
+	{
+          LogPrint("thin", "Stopping expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+	  std::vector<CNode*>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),pfrom);  
+          if (it != xpeditedBlk.end())
+	    {
+            *it = NULL;
+	    pfrom->Release();
+	    }
+	}
+      else  // Otherwise, add the new node to the end
+	{
+	  std::vector<CNode*>::iterator it1 = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),pfrom); 
+          if (it1 == xpeditedBlk.end())  // don't add it twice
+	    {
+            LogPrint("thin", "Starting expedited blocks to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+            std::vector<CNode*>::iterator it = std::find(xpeditedBlk.begin(), xpeditedBlk.end(),((CNode*)NULL));
+            if (it != xpeditedBlk.end())
+              *it = pfrom;
+            else
+              xpeditedBlk.push_back(pfrom);
+            pfrom->AddRef();
+	    }
+	}
+    }
+  if (options & EXPEDITED_TXNS)
+    {
+      if (stop) // If stopping, find the array element and clear it.
+	{
+          LogPrint("thin", "Stopping expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+	  std::vector<CNode*>::iterator it = std::find(xpeditedTxn.begin(), xpeditedTxn.end(),pfrom);
+          if (it != xpeditedTxn.end())
+	    {
+            *it = NULL;
+	    pfrom->Release();
+	    }
+	}
+      else // Otherwise, add the new node to the end
+	{
+	  std::vector<CNode*>::iterator it1 = std::find(xpeditedTxn.begin(), xpeditedTxn.end(),pfrom);
+          if (it1 == xpeditedBlk.end())  // don't add it twice
+	    {
+              LogPrint("thin", "Starting expedited transactions to peer %s (%d).\n", pfrom->addrName.c_str(),pfrom->id);
+	      std::vector<CNode*>::iterator it = std::find(xpeditedTxn.begin(), xpeditedTxn.end(),((CNode*)NULL));
+	      if (it != xpeditedTxn.end())
+		*it = pfrom;
+	      else
+		xpeditedTxn.push_back(pfrom);
+              pfrom->AddRef();
+	    }
+	}
+    }
+}
+
+bool IsRecentlyExpeditedAndStore(const uint256& hash)
+{
+  for (int i=0;i<NUM_XPEDITED_STORE;i++)
+    if (xpeditedBlkSent[i]==hash) return true;
+  xpeditedBlkSent[xpeditedBlkSendPos] = hash;
+  xpeditedBlkSendPos++;
+  if (xpeditedBlkSendPos >=NUM_XPEDITED_STORE)  xpeditedBlkSendPos = 0;
+  return false;
+}
+
+void HandleExpeditedBlock(CDataStream& vRecv,CNode* pfrom)
+{
+  unsigned char hops;
+  unsigned char msgType;
+  vRecv >> msgType >> hops;
+
+  if (msgType == EXPEDITED_MSG_XTHIN)
+    {
+      CXThinBlock thinBlock;
+      vRecv >> thinBlock;
+
+      CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
+
+      BlockMap::iterator mapEntry = mapBlockIndex.find(thinBlock.header.GetHash());
+      CBlockIndex *blkidx = NULL;
+      unsigned int status = 0;
+      if (mapEntry != mapBlockIndex.end())
+	{
+	  blkidx = mapEntry->second;
+	  status = blkidx->nStatus;
+	}
+      bool newBlock = ((blkidx == NULL) || (!(blkidx->nStatus & BLOCK_HAVE_DATA)));  // If I have never seen the block or just seen an INV, treat the block as new
+      int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);  // TODO replace with size of vRecv for efficiency
+      LogPrint("thin", "Received %s expedited thinblock %s from peer %s (%d). Hop %d. Size %d bytes. (status %d,0x%x)\n", newBlock ? "new":"repeated", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, hops, nSizeThinBlock,status,status);
+
+      // Skip if we've already seen this block
+      // TODO move thes above the print, once we ensure no unexpected dups.
+      if (IsRecentlyExpeditedAndStore(thinBlock.header.GetHash())) return;
+      if (!newBlock) 
+	{
+	  // TODO determine if we have the block or just have an INV to it.
+	  return;
+	}
+
+      CValidationState state;
+      if (!CheckBlockHeader(thinBlock.header, state, true))  // block header is bad
+	{
+	  // demerit the sender
+	  return;
+	}
+      // TODO:  Start headers-only mining now
+
+      SendExpeditedBlock(thinBlock,hops+1, pfrom); // I should push the vRecv rather than reserialize
+      pfrom->nSizeThinBlock = nSizeThinBlock;
+      LOCK(cs_main);
+      thinBlock.process(pfrom);
+    }
+  else
+    {
+      LogPrint("thin", "Received unknown (0x%x) expedited message from peer %s (%d). Hop %d.\n", msgType, pfrom->addrName.c_str(),pfrom->id, hops);
+
+    }
+}
+
+void SendExpeditedBlock(CXThinBlock& thinBlock,unsigned char hops,const CNode* skip)
+  {
+  std::vector<CNode*>::iterator end = xpeditedBlk.end();
+  for (std::vector<CNode*>::iterator it = xpeditedBlk.begin(); it != end; it++)
+    {
+      CNode* n = *it;
+      if ((n != skip)&&(n != NULL)) // Don't send it back in case there is a forwarding loop
+	{
+          if (n->fDisconnect)
+	    {
+	      *it = NULL;
+              n->Release();
+	    }
+	  else
+	    {
+	      LogPrint("thin", "Sending expedited block %s to %s.\n", thinBlock.header.GetHash().ToString(),n->addrName.c_str());
+              n->PushMessage(NetMsgType::XPEDITEDBLK, (unsigned char) EXPEDITED_MSG_XTHIN, hops, thinBlock);  // I should push the vRecv rather than reserialize
+	    }
+	}
+    }
+  }
+
+void SendExpeditedBlock(const CBlock& block,const CNode* skip)
+{
+  // If we've already put the block in our hash table, we've already sent it out
+  //BlockMap::iterator it = mapBlockIndex.find(block.GetHash());
+  //if (it != mapBlockIndex.end()) return;
+
+  
+  if (!IsRecentlyExpeditedAndStore(block.GetHash()))
+    {
+    CXThinBlock thinBlock(block);
+    SendExpeditedBlock(thinBlock,0, skip);
+    }
+  else
+    {
+      LogPrint("thin", "Already sent expedited block %s\n", block.GetHash().ToString());
+    }
+}
 
 std::string UnlimitedCmdLineHelp()
 {
@@ -99,6 +271,57 @@ std::string FormatCoinbaseMessage(const std::vector<std::string>& comments,const
     std::string ret = ss.str() + minerComment;
     return ret;
 }
+
+CNode* FindLikelyNode(const std::string& addrName)
+{
+    LOCK(cs_vNodes);
+    BOOST_FOREACH (CNode* pnode, vNodes)
+      if (pnode->addrName.find(addrName) != std::string::npos)
+            return (pnode);
+    return NULL;
+}
+
+UniValue expedited(const UniValue& params, bool fHelp)
+{
+    string strCommand;
+    if (fHelp || params.size() < 2)
+        throw runtime_error(
+            "expedited block|tx \"node\" on|off\n"
+            "\nRequest expedited blocks and/or transactions from a node\n"
+            "\nArguments:\n"
+            "1. \"node\"     (string, required) The node (see getpeerinfo for nodes)\n"
+            "\nExamples:\n" +
+            HelpExampleCli("pushtx", "\"192.168.0.6:8333\" ") + HelpExampleRpc("pushtx", "\"192.168.0.6:8333\", "));
+
+    string obj = params[0].get_str();
+    string strNode = params[1].get_str();
+
+    CNode* node = FindLikelyNode(strNode);
+    if (!node) {
+        throw runtime_error("Unknown node");
+    }
+
+    uint64_t flags=0;
+    if (obj.find("block")!= std::string::npos) flags |= EXPEDITED_BLOCKS;
+    if (obj.find("blk")!= std::string::npos) flags |= EXPEDITED_BLOCKS;
+    if (obj.find("tx")!= std::string::npos) flags |= EXPEDITED_TXNS;
+    if (obj.find("transaction")!= std::string::npos) flags |= EXPEDITED_TXNS;
+    if ((flags & (EXPEDITED_BLOCKS|EXPEDITED_TXNS))==0)
+      {
+        throw runtime_error("Unknown object, give 'block' or 'transaction'");
+      }
+
+    if (params.size() >= 3)
+      {
+      string onoff = params[2].get_str();    
+      if (onoff == "off") flags |= EXPEDITED_STOP;
+      if (onoff == "OFF") flags |= EXPEDITED_STOP;
+      }
+
+    node->PushMessage(NetMsgType::XPEDITEDREQUEST,flags);
+    return NullUniValue;
+}
+
 
 UniValue pushtx(const UniValue& params, bool fHelp)
 {
@@ -675,12 +898,15 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     int nDoS;
     if (state.IsInvalid(nDoS)) {
         LogPrintf("Invalid block due to %s\n", state.GetRejectReason().c_str());
-        pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
+        if (!strCommand.empty())
+	  {
+          pfrom->PushMessage("reject", strCommand, state.GetRejectCode(),
                            state.GetRejectReason().substr(0, MAX_REJECT_MESSAGE_LENGTH), inv.hash);
-        if (nDoS > 0) {
+          if (nDoS > 0) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), nDoS);
-        }
+          }
+	}
     }
     else 
         nLargestBlockSeen = std::max(nSizeBlock, nLargestBlockSeen);

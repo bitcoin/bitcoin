@@ -240,6 +240,24 @@ extern const char *REJECT;
  */
 extern const char *SENDHEADERS;
 
+/**
+ * Indicates that a node prefers to receive new block announcements 
+ * and transactions directly without INVs
+ * @since protocol version 80000.
+ */
+extern const char *XPEDITEDREQUEST;
+
+/**
+ * Block or transactions sent without explicit solicitation 
+ * @since protocol version 80000.
+ */
+extern const char *XPEDITEDBLK;
+/**
+ * Block or transactions sent without explicit solicitation 
+ * @since protocol version 80000.
+ */
+extern const char *XPEDITEDTXN;
+
 };
 
 /* Get a vector of all valid message types (see above) */

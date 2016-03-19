@@ -282,6 +282,7 @@ static const CRPCCommand vRPCCommands[] =
     { "network",            "pushtx",                 &pushtx,                 true  },  // BU
     { "network",            "getexcessiveblock",      &getexcessiveblock,      true  },  // BU
     { "network",            "setexcessiveblock",      &setexcessiveblock,      true  },  // BU
+    { "network",            "expedited",              &expedited,              true  },  // BU
 
     /* Block chain and UTXO */
     { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },

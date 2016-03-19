@@ -86,10 +86,7 @@ CFeeRate minRelayTxFee = CFeeRate(DEFAULT_MIN_RELAY_TX_FEE);
 
 CTxMemPool mempool(::minRelayTxFee);
 
-struct COrphanTx {
-    CTransaction tx;
-    NodeId fromPeer;
-};
+
 map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
 map<uint256, set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -632,7 +629,7 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
     return true;
 }
 
-void static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
     if (it == mapOrphanTransactions.end())
@@ -1060,7 +1057,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             LogPrint("mempool", "Rate limit dFreeCount: %g => %g\n", dFreeCount, dFreeCount+nSize);
             if ((dFreeCount + nSize) >= (nFreeLimit*10*1000 * nLargestBlockSeen / BLOCKSTREAM_CORE_MAX_BLOCK_SIZE))
                 return state.DoS(0, 
-                       error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
+				 false, // spams the log: error("AcceptToMemoryPool : free transaction rejected by rate limiter"),
                        REJECT_INSUFFICIENTFEE, "rate limited free transaction");
             dFreeCount += nSize;
         }
@@ -3340,6 +3337,7 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
         int byteLen = ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrintf("Invalid block: ver:%x time:%d Tx size:%d len:%d\n", pblock->nVersion, pblock->nTime, pblock->vtx.size(),byteLen);
       }
+    SendExpeditedBlock(*pblock,pfrom);
     
     {
         LOCK(cs_main);
@@ -5148,16 +5146,35 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), inv);
         ProcessGetData(pfrom, chainparams.GetConsensus());
     }
-    else if (strCommand == NetMsgType::XTHINBLOCK  && !fImporting && !fReindex) // Ignore blocks received while importing
+    else if (strCommand == NetMsgType::XPEDITEDREQUEST)  // BU
+      {
+	HandleExpeditedRequest(vRecv,pfrom);
+      }
+    else if (strCommand == NetMsgType::XPEDITEDBLK)  // BU
+      {
+	HandleExpeditedBlock(vRecv,pfrom);
+      }
+    else if (strCommand == NetMsgType::XTHINBLOCK  && !fImporting && !fReindex) // BU received extreme thin block -- but ignore blocks received while importing
     {
         CXThinBlock thinBlock;
         vRecv >> thinBlock;
+
+        // Send expedited ASAP
+        CValidationState state;
+        if (!CheckBlockHeader(thinBlock.header, state, true)) { // block header is bad
+            LogPrint("thin", "Thinblock %s received with bad header from peer %s (%d)\n",thinBlock.header.GetHash().ToString(), pfrom->addrName.c_str(), pfrom->id);
+            Misbehaving(pfrom->GetId(), 20);
+            return false;
+	  }
+        else {
+          if (!IsRecentlyExpeditedAndStore(thinBlock.header.GetHash())) SendExpeditedBlock(thinBlock,0,pfrom);
+	  }
 
         CInv inv(MSG_BLOCK, thinBlock.header.GetHash());
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         LogPrint("thin", "Received thinblock %s from peer %s (%d). Size %d bytes.\n", inv.hash.ToString(), pfrom->addrName.c_str(),pfrom->id, nSizeThinBlock);
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
-            LogPrint("thin", "Thinblock received but not requested %s from peer %s (%d)\n",inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->addrName.c_str(), pfrom->id);
+            LogPrint("thin", "Thinblock received but not requested %s from peer %s (%d)\n",inv.hash.ToString(), pfrom->addrName.c_str(), pfrom->id);
             Misbehaving(pfrom->GetId(), 20);
         }
 
@@ -5404,8 +5421,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         LogPrint("net", "received blocktxs for %s peer=%d\n", inv.hash.ToString(), pfrom->id);
         if (!pfrom->mapThinBlocksInFlight.count(inv.hash)) {
             LogPrint("thin", "ThinblockTx received but not requested %s  peer=%d\n",inv.hash.ToString(), pfrom->id);
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 20);
+            //LOCK(cs_main);
+            //Misbehaving(pfrom->GetId(), 20);
         }
 
         // Create the mapMissingTx from all the supplied tx's in the xthinblock
@@ -5413,13 +5430,21 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         BOOST_FOREACH(CTransaction tx, thinBlockTx.vMissingTx) 
             mapMissingTx[tx.GetHash().GetCheapHash()] = tx;
 
-        for (size_t i = 0; i < pfrom->thinBlock.vtx.size(); i++) {
+        int count=0;
+        size_t i;
+        for (i = 0; i < pfrom->thinBlock.vtx.size(); i++) {
              if (pfrom->thinBlock.vtx[i].IsNull()) {
-                 pfrom->thinBlock.vtx[i] = mapMissingTx[pfrom->xThinBlockHashes[i]];
-                 pfrom->thinBlockWaitingForTxns--;
-                 LogPrint("thin", "Got Re-requested tx ==> 8 byte hash %d\n", pfrom->xThinBlockHashes[i]);
+	         std::map<uint64_t, CTransaction>::iterator val = mapMissingTx.find(pfrom->xThinBlockHashes[i]);
+                 if (val != mapMissingTx.end())
+		   {
+                   pfrom->thinBlock.vtx[i] = val->second;
+                   pfrom->thinBlockWaitingForTxns--;
+		   }
+                 count++;
              }
         }
+        LogPrint("thin", "Got %d Re-requested txs, needed %d of them\n", thinBlockTx.vMissingTx.size(), count);
+
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
             pfrom->thinBlockWaitingForTxns = -1;
@@ -5447,9 +5472,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                 EraseOrphanTx(vTx[i].GetHash());
         }
         else {
-            LogPrint("thin", "Failed to retrieve all transactions for block - DOS Banned\n");
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
+            LogPrint("thin", "Failed to retrieve all transactions for block\n");
+            // An expedited block may request transactions that we don't have
+            //LOCK(cs_main);
+            //Misbehaving(pfrom->GetId(), 100);
         }
     }
 
@@ -5483,20 +5509,30 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         {
         LOCK(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-        CBlock block;
-        const Consensus::Params& consensusParams = Params().GetConsensus();
-        if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
-            assert(!"cannot load block from disk");
-        
         std::vector<CTransaction> vTx;
-        for (unsigned int i = 0; i < block.vtx.size(); i++)
-        { 
-            uint64_t cheapHash = block.vtx[i].GetHash().GetCheapHash();
-            if(thinRequestBlockTx.setCheapHashesToRequest.count(cheapHash))
-                vTx.push_back(block.vtx[i]);
-        }
-
+        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+        if (mi == mapBlockIndex.end())
+	  {
+	    LogPrint("thin", "Requested block is not available");          
+	  }
+        else
+	  {
+	    CBlock block;
+	    const Consensus::Params& consensusParams = Params().GetConsensus();
+	    if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
+	      {
+		LogPrint("thin", "Cannot load block from disk -- Block txn request before assembled");
+	      }
+            else
+	      {
+		for (unsigned int i = 0; i < block.vtx.size(); i++)
+		  { 
+		    uint64_t cheapHash = block.vtx[i].GetHash().GetCheapHash();
+		    if(thinRequestBlockTx.setCheapHashesToRequest.count(cheapHash))
+		      vTx.push_back(block.vtx[i]);
+		  }
+	      }
+	  }
         pfrom->AddInventoryKnown(inv);
         CXThinBlockTx thinBlockTx(thinRequestBlockTx.blockhash, vTx);
         pfrom->PushMessage(NetMsgType::XBLOCKTX, thinBlockTx);
@@ -5516,6 +5552,8 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
 
         pfrom->AddInventoryKnown(inv);
 
+        // BU send as unsolicited txns and block
+        SendExpeditedBlock(block);
         // BUIP010 Extreme Thinblocks: Handle Block Message
         HandleBlockMessage(pfrom, strCommand, block, inv);
         for (unsigned int i = 0; i < block.vtx.size(); i++)

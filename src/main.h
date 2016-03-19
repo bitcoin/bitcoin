@@ -539,4 +539,13 @@ static const unsigned int REJECT_ALREADY_KNOWN = 0x101;
 /** Transaction conflicts with a transaction already known */
 static const unsigned int REJECT_CONFLICT = 0x102;
 
+struct COrphanTx {
+    CTransaction tx;
+    NodeId fromPeer;
+};
+extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(cs_main);;
+extern std::map<uint256, std::set<uint256> > mapOrphanTransactionsByPrev GUARDED_BY(cs_main);;
+
+void EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
 #endif // BITCOIN_MAIN_H
