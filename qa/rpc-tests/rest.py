@@ -67,7 +67,7 @@ class RESTTest (BitcoinTestFramework):
 
     def run_test(self):
         url = urlparse.urlparse(self.nodes[0].url)
-        print "Mining blocks..."
+        print("Mining blocks...")
 
         self.nodes[0].generate(1)
         self.sync_all()

@@ -78,7 +78,7 @@ if "BITCOINCLI" not in os.environ:
 
 #Disable Windows tests by default
 if EXEEXT == ".exe" and "-win" not in opts:
-    print "Win tests currently disabled.  Use -win option to enable"
+    print("Win tests currently disabled.  Use -win option to enable")
     sys.exit(0)
 
 #Tests
@@ -197,7 +197,7 @@ def runtests():
             coverage.cleanup()
 
     else:
-        print "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
+        print("No rpc tests to run. Wallet, utils, and bitcoind must all be enabled")
 
 
 class RPCCoverage(object):
