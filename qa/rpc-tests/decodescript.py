@@ -7,7 +7,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.mininode import *
 from binascii import hexlify, unhexlify
-from cStringIO import StringIO
+from io import BytesIO
 
 class DecodeScriptTest(BitcoinTestFramework):
     """Tests decoding scripts via RPC command "decodescript"."""
@@ -131,7 +131,7 @@ class DecodeScriptTest(BitcoinTestFramework):
         assert_equal('OP_DUP OP_HASH160 dc863734a218bfe83ef770ee9d41a27f824a6e56 OP_EQUALVERIFY OP_CHECKSIG', rpc_result['vout'][0]['scriptPubKey']['asm'])
         assert_equal('OP_HASH160 2a5edea39971049a540474c6a99edf0aa4074c58 OP_EQUAL', rpc_result['vout'][1]['scriptPubKey']['asm'])
         txSave = CTransaction()
-        txSave.deserialize(StringIO(unhexlify(tx)))
+        txSave.deserialize(BytesIO(unhexlify(tx)))
 
         # make sure that a specifically crafted op_return value will not pass all the IsDERSignature checks and then get decoded as a sighash type
         tx = '01000000015ded05872fdbda629c7d3d02b194763ce3b9b1535ea884e3c8e765d42e316724020000006b48304502204c10d4064885c42638cbff3585915b322de33762598321145ba033fc796971e2022100bb153ad3baa8b757e30a2175bd32852d2e1cb9080f84d7e32fcdfd667934ef1b012103163c0ff73511ea1743fb5b98384a2ff09dd06949488028fd819f4d83f56264efffffffff0200000000000000000b6a0930060201000201000180380100000000001976a9141cabd296e753837c086da7a45a6c2fe0d49d7b7b88ac00000000'

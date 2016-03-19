@@ -11,7 +11,7 @@ from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript
 from binascii import unhexlify
-import cStringIO
+from io import BytesIO
 import time
 
 # A canonical signature consists of: 
@@ -68,7 +68,7 @@ class BIP66Test(ComparisonTestFramework):
         rawtx = node.createrawtransaction(inputs, outputs)
         signresult = node.signrawtransaction(rawtx)
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(signresult['hex']))
+        f = BytesIO(unhexlify(signresult['hex']))
         tx.deserialize(f)
         return tx
 
@@ -78,7 +78,7 @@ class BIP66Test(ComparisonTestFramework):
         height = 3  # height of the next block to build
         self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
-        self.last_block_time = time.time()
+        self.last_block_time = int(time.time())
 
         ''' 98 more version 2 blocks '''
         test_blocks = []

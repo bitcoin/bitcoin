@@ -15,7 +15,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
 def calc_usage(blockdir):
-    return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f))/(1024*1024)
+    return sum(os.path.getsize(blockdir+f) for f in os.listdir(blockdir) if os.path.isfile(blockdir+f)) / (1024. * 1024.)
 
 class PruneTest(BitcoinTestFramework):
 
@@ -56,7 +56,7 @@ class PruneTest(BitcoinTestFramework):
         self.nodes[1].generate(200)
         sync_blocks(self.nodes[0:2])
         self.nodes[0].generate(150)
-        # Then mine enough full blocks to create more than 550MB of data
+        # Then mine enough full blocks to create more than 550MiB of data
         for i in xrange(645):
             self.mine_full_block(self.nodes[0], self.address[0])
 
@@ -66,7 +66,7 @@ class PruneTest(BitcoinTestFramework):
         if not os.path.isfile(self.prunedir+"blk00000.dat"):
             raise AssertionError("blk00000.dat is missing, pruning too early")
         print "Success"
-        print "Though we're already using more than 550MB, current usage:", calc_usage(self.prunedir)
+        print "Though we're already using more than 550MiB, current usage:", calc_usage(self.prunedir)
         print "Mining 25 more blocks should cause the first block file to be pruned"
         # Pruning doesn't run until we're allocating another chunk, 20 full blocks past the height cutoff will ensure this
         for i in xrange(25):
