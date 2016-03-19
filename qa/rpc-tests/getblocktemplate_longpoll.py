@@ -49,7 +49,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
     '''
 
     def run_test(self):
-        print "Warning: this test will take about 70 seconds in the best case. Be patient."
+        print("Warning: this test will take about 70 seconds in the best case. Be patient.")
         self.nodes[0].generate(10)
         templat = self.nodes[0].getblocktemplate()
         longpollid = templat['longpollid']

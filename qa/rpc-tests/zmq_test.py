@@ -44,7 +44,7 @@ class ZMQTest (BitcoinTestFramework):
         genhashes = self.nodes[0].generate(1)
         self.sync_all()
 
-        print "listen..."
+        print("listen...")
         msg = self.zmqSubSocket.recv_multipart()
         topic = str(msg[0])
         body = msg[1]
