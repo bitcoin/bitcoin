@@ -192,7 +192,7 @@ class ListTransactionsTest(BitcoinTestFramework):
 
         # Replace tx3, and check that tx4 becomes unknown
         tx3_b = tx3_modified
-        tx3_b.vout[0].nValue -= 0.004 * COIN # bump the fee
+        tx3_b.vout[0].nValue -= int(Decimal("0.004") * COIN) # bump the fee
         tx3_b = binascii.hexlify(tx3_b.serialize()).decode('utf-8')
         tx3_b_signed = self.nodes[0].signrawtransaction(tx3_b)['hex']
         txid_3b = self.nodes[0].sendrawtransaction(tx3_b_signed, True)
