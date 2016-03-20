@@ -37,6 +37,7 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 SYSCOIN_TESTS =\
   test/syscoin_snapshot_tests.cpp \
   test/syscoin_alias_tests.cpp \
+  test/syscoin_offer_tests.cpp \
   test/syscoin_cert_tests.cpp \
   test/syscoin_message_tests.cpp \
   test/syscoin_escrow_tests.cpp \
