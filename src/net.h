@@ -379,13 +379,13 @@ protected:
     static std::vector<CSubNet> vWhitelistedRange;
     static CCriticalSection cs_vWhitelistedRange;
 
-    mapMsgCmdSize mapSendBytesPerMsgCmd;
-    mapMsgCmdSize mapRecvBytesPerMsgCmd;
-
     // Basic fuzz-testing
     void Fuzz(int nChance); // modifies ssSend
 
 public:
+    mapMsgCmdSize mapSendBytesPerMsgCmd;
+    mapMsgCmdSize mapRecvBytesPerMsgCmd;
+
     uint256 hashContinue;
     int nStartingHeight;
 
