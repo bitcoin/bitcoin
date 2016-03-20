@@ -46,12 +46,18 @@ public:
     CFeeRate(const CFeeRate& other) { nSatoshisPerK = other.nSatoshisPerK; }
     /**
      * Return the fee in satoshis for the given size in bytes.
+     * @param nPerByteDivisor Can be different from PRECISION_MULTIPLIER to get
+     * bigger numbers (for example) Default: KB.
      */
-    CAmount GetFee(size_t size) const;
+    CAmount GetFee(size_t size, size_t nPerByteDivisor=KB) const;
     /**
      * Return the fee in satoshis for a size of 1000 bytes
      */
-    CAmount GetFeePerK() const { return GetFee(KB); }
+    CAmount GetFeePerK() const { return GetFee(KB, KB); }
+    /**
+     * Return the fee in satoshis for a size of PRECISION_MULTIPLIER bytes
+     */
+    CAmount GetInternalRate() const { return GetFee(KB, PRECISION_MULTIPLIER); }
     friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
     friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
     friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
