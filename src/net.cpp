@@ -700,6 +700,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes)
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
             assert(i != mapRecvBytesPerMsgCmd.end());
             i->second += msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+            statsClient.count("bandwidth.message." + std::string(msg.hdr.pchCommand) + ".bytesReceived", msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE, 1.0f);
 
             msg.nTime = GetTimeMicros();
             messageHandlerCondition.notify_one();
@@ -1102,8 +1103,6 @@ void ThreadSocketHandler()
             nPrevNodeCount = vNodes.size();
             uiInterface.NotifyNumConnectionsChanged(nPrevNodeCount);
             
-            statsClient.gauge("peers.totalConnections", nPrevNodeCount, 1.0f);
-            
             // count various node attributes
             int fullNodes = 0;
             int spvNodes = 0;
@@ -1112,8 +1111,21 @@ void ThreadSocketHandler()
             int ipv4Nodes = 0;
             int ipv6Nodes = 0;
             int torNodes = 0;
+            mapMsgCmdSize mapRecvBytesMsgStats;
+            mapMsgCmdSize mapSentBytesMsgStats;
+            BOOST_FOREACH(const std::string &msg, getAllNetMessageTypes())
+            {
+                mapRecvBytesMsgStats[msg] = 0;
+                mapSentBytesMsgStats[msg] = 0;
+            }
+            mapRecvBytesMsgStats[NET_MESSAGE_COMMAND_OTHER] = 0;
+            mapSentBytesMsgStats[NET_MESSAGE_COMMAND_OTHER] = 0;
             BOOST_FOREACH(CNode* pnode, vNodes)
             {
+                BOOST_FOREACH(const mapMsgCmdSize::value_type &i, pnode->mapRecvBytesPerMsgCmd)
+                    mapRecvBytesMsgStats[i.first] += i.second;
+                BOOST_FOREACH(const mapMsgCmdSize::value_type &i, pnode->mapSendBytesPerMsgCmd)
+                    mapSentBytesMsgStats[i.first] += i.second;
                 if(pnode->fClient)
                     spvNodes++;
                 else
@@ -1130,6 +1142,12 @@ void ThreadSocketHandler()
                     torNodes++;
                 statsClient.timing("peers.ping_us", pnode->nPingUsecTime, 1.0f);
             }
+            BOOST_FOREACH(const std::string &msg, getAllNetMessageTypes())
+            {
+                statsClient.gauge("bandwidth.message." + msg + ".totalBytesReceived", mapRecvBytesMsgStats[msg], 1.0f);
+                statsClient.gauge("bandwidth.message." + msg + ".totalBytesSent", mapSentBytesMsgStats[msg], 1.0f);
+            }
+            statsClient.gauge("peers.totalConnections", nPrevNodeCount, 1.0f);
             statsClient.gauge("peers.spvNodeConnections", spvNodes, 1.0f);
             statsClient.gauge("peers.fullNodeConnections", fullNodes, 1.0f);
             statsClient.gauge("peers.inboundConnections", inboundNodes, 1.0f);
@@ -2543,6 +2561,7 @@ void CNode::EndMessage(const char* pszCommand) UNLOCK_FUNCTION(cs_vSend)
 
     //log total amount of bytes per command
     mapSendBytesPerMsgCmd[std::string(pszCommand)] += nSize + CMessageHeader::HEADER_SIZE;
+    statsClient.count("bandwidth.message." + std::string(pszCommand) + ".bytesSent", nSize + CMessageHeader::HEADER_SIZE, 1.0f);
 
     // Set the checksum
     uint256 hash = Hash(ssSend.begin() + CMessageHeader::HEADER_SIZE, ssSend.end());
