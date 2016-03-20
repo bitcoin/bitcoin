@@ -96,6 +96,7 @@ void StartNode(const string &dataDir, bool regTest)
 	while (1)
 	{
 		try{
+			printf("Calling getinfo!\n");
 			CallRPC(dataDir, "getinfo", regTest);
 		}
 		catch(const runtime_error& error)
