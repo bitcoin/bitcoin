@@ -15,6 +15,8 @@ typedef int64_t CAmount;
 
 static const CAmount COIN = 100000000;
 static const CAmount CENT = 1000000;
+static const size_t KB = 1000;
+static const size_t PRECISION_MULTIPLIER = KB;
 
 extern const std::string CURRENCY_UNIT;
 
@@ -36,7 +38,7 @@ inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <=
 class CFeeRate
 {
 private:
-    CAmount nSatoshisPerK; // unit is satoshis-per-1,000-bytes
+    CAmount nSatoshisPerK; //! unit is satoshis-per-PRECISION_MULTIPLIER-bytes
 public:
     CFeeRate() : nSatoshisPerK(0) { }
     explicit CFeeRate(const CAmount& _nSatoshisPerK): nSatoshisPerK(_nSatoshisPerK) { }
@@ -49,7 +51,7 @@ public:
     /**
      * Return the fee in satoshis for a size of 1000 bytes
      */
-    CAmount GetFeePerK() const { return GetFee(1000); }
+    CAmount GetFeePerK() const { return GetFee(KB); }
     friend bool operator<(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK < b.nSatoshisPerK; }
     friend bool operator>(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK > b.nSatoshisPerK; }
     friend bool operator==(const CFeeRate& a, const CFeeRate& b) { return a.nSatoshisPerK == b.nSatoshisPerK; }
