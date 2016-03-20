@@ -61,7 +61,7 @@ class BIP68Test(BitcoinTestFramework):
         utxo = utxos[0]
 
         tx1 = CTransaction()
-        value = satoshi_round(utxo["amount"] - self.relayfee)*COIN
+        value = int(satoshi_round(utxo["amount"] - self.relayfee)*COIN)
 
         # Check that the disable flag disables relative locktime.
         # If sequence locks were used, this would require 1 block for the
@@ -179,8 +179,8 @@ class BIP68Test(BitcoinTestFramework):
                 tx.vin.append(CTxIn(COutPoint(int(utxos[j]["txid"], 16), utxos[j]["vout"]), nSequence=sequence_value))
                 value += utxos[j]["amount"]*COIN
             # Overestimate the size of the tx - signatures should be less than 120 bytes, and leave 50 for the output
-            tx_size = len(ToHex(tx))/2 + 120*num_inputs + 50
-            tx.vout.append(CTxOut(value-self.relayfee*tx_size*COIN/1000, CScript([b'a'])))
+            tx_size = len(ToHex(tx))//2 + 120*num_inputs + 50
+            tx.vout.append(CTxOut(int(value-self.relayfee*tx_size*COIN/1000), CScript([b'a'])))
             rawtx = self.nodes[0].signrawtransaction(ToHex(tx))["hex"]
 
             try:

@@ -91,7 +91,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         self.height = 3  # height of the next block to build
         self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
-        self.last_block_time = time.time()
+        self.last_block_time = int(time.time())
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
 

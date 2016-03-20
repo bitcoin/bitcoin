@@ -219,7 +219,7 @@ class EstimateFeeTest(BitcoinTestFramework):
                 from_index = random.randint(1,2)
                 (txhex, fee) = small_txpuzzle_randfee(self.nodes[from_index], self.confutxo,
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
-                tx_kbytes = (len(txhex)/2)/1000.0
+                tx_kbytes = (len(txhex) // 2) / 1000.0
                 self.fees_per_kb.append(float(fee)/tx_kbytes)
             sync_mempools(self.nodes[0:3],.1)
             mined = mining_node.getblock(mining_node.generate(1)[0],True)["tx"]
