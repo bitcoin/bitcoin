@@ -682,26 +682,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				CCert theCert;
 				// make sure this cert is still valid
 				if (GetTxOfCert( theOffer.vchCert, theCert, txCert))
-				{
-					// if we do an offeraccept based on an escrow release, it's assumed that the cert has already been transferred manually so buyer releases funds which can invalidate this accept
-					// so in that case the escrow is attached to the accept and we skip this check
-					// if the escrow is not attached means the buyer didnt use escrow, so ensure cert didn't get transferred since vendor created the offer in that case.
-					// also ensure its not a linked offer we are accepting, that check is done below
-					if(!IsEscrowOp(prevEscrowOp))
-					{
-						if(theOffer.vchLinkOffer.empty())
-						{
-							if(theCert.vchPubKey != theOffer.vchPubKey)
-								return error("CheckOfferInputs() OP_OFFER_ACCEPT: cannot purchase this offer because the certificate has been transferred since it offer was created or it is linked to another offer. Cert pubkey %s vs Offer pubkey %s", HexStr(theCert.vchPubKey).c_str(), HexStr(theOffer.vchPubKey).c_str());
-						}
-						else
-						{
-							if(theCert.vchPubKey != linkOffer.vchPubKey)
-								return error("CheckOfferInputs() OP_OFFER_ACCEPT: cannot purchase this linked offer because the certificate has been transferred since it offer was created or it is linked to another offer. Cert pubkey %s vs Offer pubkey %s", HexStr(theCert.vchPubKey).c_str(), HexStr(theOffer.vchPubKey).c_str());
-						}
-					}
 					theOfferAccept.nQty = 1;
-				}
+				else
+					return error("CheckOfferInputs() OP_OFFER_ACCEPT: purchasing a cert that doesn't exist");
 			}
 			if(stringFromVch(theOffer.sCurrencyCode) != "BTC" && !theOfferAccept.txBTCId.IsNull())
 				return error("CheckOfferInputs() OP_OFFER_ACCEPT: can't accept an offer for BTC that isn't specified in BTC by owner");								
@@ -785,6 +768,22 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		
 			if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
 				return error("CheckOfferInputs() OP_OFFER_ACCEPT: txn %s rejected because desired qty %u is more than available qty %u\n", tx.GetHash().GetHex().c_str(), theOfferAccept.nQty, theOffer.nQty);
+			
+			// only if we are the root offer owner do we even consider xfering a cert					
+			// purchased a cert so xfer it
+			if(!theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
+			{
+				if(pwalletMain && IsSyscoinTxMine(tx, "offer"))
+				{
+					string strError = makeTransferCertTX(theOffer, theOfferAccept);
+					if(strError != "")
+						return error("CheckOfferInputs() - OP_OFFER_ACCEPT - makeTransferCert %s\n", strError.c_str());	
+				}
+
+				if(theCert.vchPubKey != theOfferAccept.vchBuyerKey)
+						return error("CheckOfferInputs() OP_OFFER_ACCEPT: cannot purchase this offer because the certificate has not been transferred to the buyer, cert pubkey %s vs buyer pubkey %s", HexStr(theCert.vchPubKey).c_str(), HexStr(theOfferAccept.vchBuyerKey).c_str());
+				
+			}			
 			break;
 
 		default:
@@ -994,16 +993,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(strError != "")					
 					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeOfferLinkAcceptTX %s\n", strError.c_str());			
 				
-			}
-			// only if we are the root offer owner do we even consider xfering a cert					
-			// purchased a cert so xfer it
-			if(pwalletMain && IsSyscoinTxMine(tx, "offer") && !theOffer.vchCert.empty() && theOffer.vchLinkOffer.empty())
-			{
-				string strError = makeTransferCertTX(theOffer, theOfferAccept);
-				if(strError != "")
-					LogPrintf("CheckOfferInputs() - OP_OFFER_ACCEPT - makeTransferCert %s\n", strError.c_str());						
-				
-			}  
+			} 
 		}
 		// debug
 		if (fDebug)
