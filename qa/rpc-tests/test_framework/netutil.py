@@ -45,7 +45,7 @@ def _convert_ip_port(array):
     # convert host from mangled-per-four-bytes form as used by kernel
     host = binascii.unhexlify(host)
     host_out = ''
-    for x in range(0, len(host)/4):
+    for x in range(0, len(host) // 4):
         (val,) = struct.unpack('=I', host[x*4:(x+1)*4])
         host_out += '%08x' % val
 
