@@ -525,6 +525,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	uint64_t heightToCheckAgainst;
 	COfferLinkWhitelistEntry entry;
 	vector<unsigned char> vchWhitelistAlias;
+	CCert theCert;
 	vector<COffer> vtxPos;
 	bool linkAccept = false;
 	bool escrowAccept = false;
@@ -542,7 +543,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(!theOffer.vchCert.empty())
 			{
 				CTransaction txCert;
-				CCert theCert;
 				// make sure this cert is still valid
 				if (GetTxOfCert( theOffer.vchCert, theCert, txCert))
 				{
@@ -601,7 +601,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return error("cannot sell a cert as a linked offer");
 				
 				CTransaction txCert;
-				CCert theCert;
 				// make sure this cert is still valid
 				if (GetTxOfCert( theOffer.vchCert, theCert, txCert))
 				{
@@ -616,7 +615,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			
 			break;
 		case OP_OFFER_ACCEPT:
-			CCert theCert;
 			// check for existence of offeraccept in txn offer obj
 			theOfferAccept = theOffer.accept;		
 			if(IsOfferOp(prevOp))
