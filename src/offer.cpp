@@ -616,6 +616,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			
 			break;
 		case OP_OFFER_ACCEPT:
+			CCert theCert;
 			// check for existence of offeraccept in txn offer obj
 			theOfferAccept = theOffer.accept;		
 			if(IsOfferOp(prevOp))
@@ -679,7 +680,6 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if(!theOffer.vchCert.empty())
 			{
 				CTransaction txCert;
-				CCert theCert;
 				// make sure this cert is still valid
 				if (GetTxOfCert( theOffer.vchCert, theCert, txCert))
 					theOfferAccept.nQty = 1;
