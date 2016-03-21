@@ -4,6 +4,7 @@
 #include "amount.h"
 #include "rpcserver.h"
 #include <memory>
+#include <string>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/test/unit_test.hpp>
@@ -705,6 +706,54 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 	BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
 	BOOST_CHECK(find_value(r.get_obj(), "price").get_str() == price);
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
+}
+
+// offeraccept <alias> <guid> [quantity] [message]
+const string OfferAccept(const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& message) {
+
+	string otherNode1 = "node2";
+	string otherNode2 = "node3";
+	if(node == "node2") {
+		otherNode1 = "node3";
+		otherNode2 = "node1";
+	} else if(node == "node3") {
+		otherNode1 = "node1";
+		otherNode2 = "node2";
+	}
+	
+	CreateSysRatesIfNotExist();
+
+	UniValue r;
+	
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
+	int nCurrentQty = atoi(find_value(r.get_obj(), "quantity").get_str().c_str());
+	int nQtyToAccept = atoi(qty.c_str());
+	string sTargetQty = std::to_string(nCurrentQty - nQtyToAccept);
+
+	string offeracceptstr = "offeraccept " + aliasname + " " + offerguid + " " + qty + " " + message;
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, offeracceptstr));
+	const UniValue &arr = r.get_array();
+	string guid = arr[1].get_str();
+
+	GenerateBlocks(10, node);
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
+	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
+	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
+	
+	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + offerguid));
+	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
+	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
+	
+	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "offerinfo " + offerguid));
+	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
+	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
+
+	return guid;
 }
 
 const string EscrowNew(const string& node, const string& buyeralias, const string& offerguid, const string& qty, const string& message, const string& arbiteralias, const string& selleralias)
