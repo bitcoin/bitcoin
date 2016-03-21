@@ -10,7 +10,11 @@ BOOST_FIXTURE_TEST_SUITE (syscoin_offer_tests, BasicSyscoinTestingSetup)
 BOOST_AUTO_TEST_CASE (generate_offernew)
 {
 	UniValue r;
+	
 	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
 	AliasNew("node1", "selleralias", "changeddata1");
 
 	// generate a good offer
@@ -21,6 +25,9 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 
 	// should fail: generate an offer with negative quantity
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew selleralias category title -1 0.05 description USD"), runtime_error);
+
+	// should fail: generate an offer with zero quantity
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew selleralias category title 0 0.05 description USD"), runtime_error);
 
 	// should fail: generate an offer with zero price
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew selleralias category title 100 0 description USD"), runtime_error);
