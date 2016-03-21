@@ -741,7 +741,7 @@ const string OfferAccept(const string& node, const string& aliasname, const stri
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
 	
 	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + offerguid));
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
@@ -751,7 +751,7 @@ const string OfferAccept(const string& node, const string& aliasname, const stri
 	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "offerinfo " + offerguid));
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
 
 	return guid;
 }
