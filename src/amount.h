@@ -16,7 +16,7 @@ typedef int64_t CAmount;
 static const CAmount COIN = 100000000;
 static const CAmount CENT = 1000000;
 static const size_t KB = 1000;
-static const size_t PRECISION_MULTIPLIER = KB;
+static const size_t PRECISION_MULTIPLIER = KB*2;
 
 extern const std::string CURRENCY_UNIT;
 
