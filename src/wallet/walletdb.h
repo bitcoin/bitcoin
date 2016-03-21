@@ -162,6 +162,7 @@ public:
     bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
+    bool EraseAccount(const std::string& strAccount);
 
     bool ReadPrivateSendSalt(uint256& salt);
     bool WritePrivateSendSalt(const uint256& salt);

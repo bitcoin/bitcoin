@@ -144,7 +144,7 @@ class ReceivedByTest(BitcoinTestFramework):
         assert_equal(balance, balance_by_label + Decimal("0.1"))
 
         # Create a new label named "mynewlabel" that has a 0 balance
-        self.nodes[1].getlabeladdress("mynewlabel")
+        self.nodes[1].getlabeladdress("mynewlabel", force=True)
         received_by_label_json = [r for r in self.nodes[1].listreceivedbylabel(0, False, True) if r["label"] == "mynewlabel"][0]
 
         # Test includeempty of listreceivedbylabel
