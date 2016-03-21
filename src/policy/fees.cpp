@@ -8,6 +8,7 @@
 
 #include "amount.h"
 #include "primitives/transaction.h"
+#include "random.h"
 #include "streams.h"
 #include "txmempool.h"
 #include "util.h"
@@ -577,4 +578,22 @@ void CBlockPolicyEstimator::Read(CAutoFile& filein)
     feeStats.Read(filein);
     priStats.Read(filein);
     nBestSeenHeight = nFileBestSeenHeight;
+}
+
+FeeFilterRounder::FeeFilterRounder(const CFeeRate& minIncrementalFee)
+{
+    CAmount minFeeLimit = minIncrementalFee.GetFeePerK() / 2;
+    feeset.insert(0);
+    for (double bucketBoundary = minFeeLimit; bucketBoundary <= MAX_FEERATE; bucketBoundary *= FEE_SPACING) {
+        feeset.insert(bucketBoundary);
+    }
+}
+
+CAmount FeeFilterRounder::round(CAmount currentMinFee)
+{
+    std::set<double>::iterator it = feeset.lower_bound(currentMinFee);
+    if ((it != feeset.begin() && insecure_rand() % 3 != 0) || it == feeset.end()) {
+        it--;
+    }
+    return *it;
 }

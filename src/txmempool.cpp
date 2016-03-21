@@ -907,6 +907,16 @@ bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
     return true;
 }
 
+bool CTxMemPool::lookupFeeRate(const uint256& hash, CFeeRate& feeRate) const
+{
+    LOCK(cs);
+    indexed_transaction_set::const_iterator i = mapTx.find(hash);
+    if (i == mapTx.end())
+        return false;
+    feeRate = CFeeRate(i->GetFee(), i->GetTxSize());
+    return true;
+}
+
 CFeeRate CTxMemPool::estimateFee(int nBlocks) const
 {
     LOCK(cs);

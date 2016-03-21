@@ -1759,12 +1759,14 @@ bool CWalletTx::RelayWalletTransaction(CConnman* connman, std::string strCommand
         if (GetDepthInMainChain() == 0 && !isAbandoned() && InMempool()) {
             uint256 hash = GetHash();
             LogPrintf("Relaying wtx %s\n", hash.ToString());
+            CFeeRate feeRate;
+            mempool.lookupFeeRate(GetHash(), feeRate);
 
             if(strCommand == NetMsgType::TXLOCKREQUEST) {
                 instantsend.ProcessTxLockRequest(((CTxLockRequest)*this), *connman);
             }
             if (connman) {
-                connman->RelayTransaction((CTransaction)*this);
+                connman->RelayTransaction((CTransaction)*this, feeRate);
                 return true;
             }
         }
@@ -4695,5 +4697,5 @@ int CMerkleTx::GetBlocksToMaturity() const
 bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, CAmount nAbsurdFee)
 {
     CValidationState state;
-    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, false, nAbsurdFee);
+    return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, NULL, false, nAbsurdFee);
 }
