@@ -127,7 +127,6 @@ testScriptsExt = [
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
-    'pruning.py',
     'forknotify.py',
     'invalidateblock.py',
 #    'rpcbind_test.py', #temporary, bug in libevent, see #6655
@@ -137,6 +136,8 @@ testScriptsExt = [
     'mempool_packages.py',
     'maxuploadtarget.py',
     'replace-by-fee.py',
+    'p2p-feefilter.py',
+    'pruning.py', # leave pruning last as it takes a REALLY long time
 ]
 
 #Enable ZMQ tests
