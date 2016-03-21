@@ -252,7 +252,7 @@ class WalletTest (BitcoinTestFramework):
         except JSONRPCException,e:
             errorString = e.error['message']
 
-        assert_equal("Invalid amount" in errorString, True)
+        assert("Invalid amount" in errorString)
 
         errorString = ""
         try:
@@ -260,7 +260,7 @@ class WalletTest (BitcoinTestFramework):
         except JSONRPCException,e:
             errorString = e.error['message']
 
-        assert_equal("not an integer" in errorString, True)
+        assert("not an integer" in errorString)
 
         #check if wallet or blochchain maintenance changes the balance
         self.sync_all()
