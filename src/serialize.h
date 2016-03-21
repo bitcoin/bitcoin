@@ -270,7 +270,7 @@ template<typename I>
 inline unsigned int GetSizeOfVarInt(I n)
 {
     int nRet = 0;
-    while(true) {
+    for ( ; ; ) {
         nRet++;
         if (n <= 0x7F)
             break;
@@ -284,7 +284,7 @@ void WriteVarInt(Stream& os, I n)
 {
     unsigned char tmp[(sizeof(n)*8+6)/7];
     int len=0;
-    while(true) {
+    for ( ; ; ) {
         tmp[len] = (n & 0x7F) | (len ? 0x80 : 0x00);
         if (n <= 0x7F)
             break;
@@ -300,7 +300,7 @@ template<typename Stream, typename I>
 I ReadVarInt(Stream& is)
 {
     I n = 0;
-    while(true) {
+    for ( ; ; ) {
         unsigned char chData;
         READDATA(is, chData);
         n = (n << 7) | (chData & 0x7F);

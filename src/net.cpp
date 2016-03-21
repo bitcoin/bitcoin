@@ -1760,7 +1760,7 @@ bool StopNode()
     if (semOutbound)
         for (int i=0; i<MAX_OUTBOUND_CONNECTIONS; i++)
             semOutbound->post();
-    do
+    for ( ; ; )
     {
         int nThreadsRunning = 0;
         for (int n = 0; n < THREAD_MAX; n++)
@@ -1770,7 +1770,7 @@ bool StopNode()
         if (GetTime() - nStart > 20)
             break;
         Sleep(20);
-    } while(true);
+    };
     if (vnThreadsRunning[THREAD_SOCKETHANDLER] > 0) printf("ThreadSocketHandler still running\n");
     if (vnThreadsRunning[THREAD_OPENCONNECTIONS] > 0) printf("ThreadOpenConnections still running\n");
     if (vnThreadsRunning[THREAD_MESSAGEHANDLER] > 0) printf("ThreadMessageHandler still running\n");
