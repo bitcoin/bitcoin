@@ -3,6 +3,7 @@
 #             and for constructing a getheaders message
 #
 
+from __future__ import division, print_function
 from .mininode import *
 import dbm
 
