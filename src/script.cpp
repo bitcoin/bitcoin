@@ -1333,11 +1333,8 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
         // Standard tx, sender provides pubkey, receiver adds signature
         mTemplates.insert(make_pair(TX_PUBKEY, CScript() << OP_PUBKEY << OP_CHECKSIG));
 
-        if (fTestNet || GetTime() > SMALLDATA_SWITCH_TIME)
-        {
-            // Malleable pubkey tx hack, sender provides generated pubkey combined with R parameter. The R parameter is dropped before checking a signature.
-            mTemplates.insert(make_pair(TX_PUBKEY_DROP, CScript() << OP_PUBKEY << OP_PUBKEY << OP_DROP << OP_CHECKSIG));
-        }
+        // Malleable pubkey tx hack, sender provides generated pubkey combined with R parameter. The R parameter is dropped before checking a signature.
+        mTemplates.insert(make_pair(TX_PUBKEY_DROP, CScript() << OP_PUBKEY << OP_PUBKEY << OP_DROP << OP_CHECKSIG));
 
         // Bitcoin address tx, sender provides hash of pubkey, receiver provides signature and pubkey
         mTemplates.insert(make_pair(TX_PUBKEYHASH, CScript() << OP_DUP << OP_HASH160 << OP_PUBKEYHASH << OP_EQUALVERIFY << OP_CHECKSIG));
@@ -1460,7 +1457,7 @@ bool Solver(const CScript& scriptPubKey, txnouttype& typeRet, vector<vector<unsi
             else if (opcode2 == OP_SMALLDATA)
             {
                 // small pushdata, <= 1024 bytes
-                if (vch1.size() > (GetTime() > SMALLDATA_SWITCH_TIME ? 1024 : 80))
+                if (vch1.size() > 1024)
                     break;
             }
             else if (opcode1 != opcode2 || vch1 != vch2)

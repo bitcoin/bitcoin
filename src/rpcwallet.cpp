@@ -1898,9 +1898,6 @@ Value newmalleablekey(const Array& params, bool fHelp)
             "newmalleablekey\n"
             "Make a malleable public/private key pair.\n");
 
-    if (!(fDebug || fTestNet) && GetTime() < SMALLDATA_SWITCH_TIME)
-        throw runtime_error("This feature has been disabled for mainNet clients");
-
     // Parse the account first so we don't generate a key if there's an error
     string strAccount;
     if (params.size() > 0)
