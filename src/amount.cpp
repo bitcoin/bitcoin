@@ -12,7 +12,7 @@ const std::string CURRENCY_UNIT = "BTC";
 CFeeRate::CFeeRate(const CAmount& nFeePaid, size_t nSize)
 {
     if (nSize > 0)
-        nSatoshisPerK = nFeePaid*1000/nSize;
+        nSatoshisPerK = nFeePaid*1004/nSize;
     else
         nSatoshisPerK = 0;
 }
