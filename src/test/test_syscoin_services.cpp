@@ -709,18 +709,8 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 }
 
 // offeraccept <alias> <guid> [quantity] [message]
-const string OfferAccept(const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& message) {
+const string OfferAccept(const string& ownernode, const string& node, const string& aliasname, const string& offerguid, const string& qty, const string& message) {
 
-	string otherNode1 = "node2";
-	string otherNode2 = "node3";
-	if(node == "node2") {
-		otherNode1 = "node3";
-		otherNode2 = "node1";
-	} else if(node == "node3") {
-		otherNode1 = "node1";
-		otherNode2 = "node2";
-	}
-	
 	CreateSysRatesIfNotExist();
 
 	UniValue r;
@@ -738,20 +728,15 @@ const string OfferAccept(const string& node, const string& aliasname, const stri
 
 	GenerateBlocks(10, node);
 
+	BOOST_CHECK_NO_THROW(r = CallRPC(ownernode, "offerinfo " + offerguid));
+	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
+	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
+	
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
 	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
-	
-	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + offerguid));
-	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
-	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
-	
-	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "offerinfo " + offerguid));
-	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
-	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == sTargetQty);
-	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
 
 	return guid;
 }
