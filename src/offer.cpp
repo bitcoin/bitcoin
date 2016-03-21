@@ -398,7 +398,7 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 	return CScript(pc, scriptIn.end());
 }
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block, bool walletCheck) {
 		
 	if (tx.IsCoinBase())
 		return true;
@@ -673,6 +673,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
 				if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), vvchArgs[0]) == linkOffer.offerLinks.end())
 					return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer does not exist in the root offerLinks table, are you sure you are allowed to link to the offer and take payments?");
+			
+				// check linked offer if its a cert offer, if so check to make sure root owner owns the cert hes about to xfer to buyer
+				if(!linkOffer.vchCert.empty())
+				{
+					if(theCert.vchPubKey != linkOffer.vchPubKey)
+						return error("CheckOfferInputs() OP_OFFER_ACCEPT: root offer owner doesn't own this certificate so you cannot accept this linked offer");
+				}			
 			}
 			// trying to purchase a cert
 			if(!theOffer.vchCert.empty())
@@ -778,7 +785,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						return error("CheckOfferInputs() - OP_OFFER_ACCEPT - makeTransferCert %s\n", strError.c_str());	
 				}
 
-				if(theCert.vchPubKey != theOfferAccept.vchBuyerKey)
+				if(theCert.vchPubKey != theOfferAccept.vchBuyerKey && !walletCheck)
 						return error("CheckOfferInputs() OP_OFFER_ACCEPT: cannot purchase this offer because the certificate has not been transferred to the buyer, cert pubkey %s vs buyer pubkey %s", HexStr(theCert.vchPubKey).c_str(), HexStr(theOfferAccept.vchBuyerKey).c_str());
 				
 			}			
