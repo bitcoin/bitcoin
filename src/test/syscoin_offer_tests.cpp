@@ -24,10 +24,7 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew fooalias category title 100 0.05 description USD"), runtime_error);
 
 	// should fail: generate an offer with negative quantity
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew selleralias category title -1 0.05 description USD"), runtime_error);
-
-	// should fail: generate an offer with zero quantity
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew selleralias category title 0 0.05 description USD"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew selleralias category title -2 0.05 description USD"), runtime_error);
 
 	// should fail: generate an offer with zero price
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew selleralias category title 100 0 description USD"), runtime_error);
@@ -68,12 +65,6 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate)
 
 	// should fail: generate an offer with unknown alias
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
-
-	// should fail: generate an offer with negative quantity
-	//BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate selleralias2 " + offerguid + " category title -1 0.05 description"), runtime_error);
-
-	// should fail: generate an offer with zero quantity
-	//BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate selleralias2 " + offerguid + " category title 0 0.05 description"), runtime_error);
 
 	// should fail: generate an offer with zero price
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate selleralias2 " + offerguid + " category title 90 0 description"), runtime_error);
