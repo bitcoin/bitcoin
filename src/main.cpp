@@ -4394,17 +4394,9 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                    mapOrphanTransactions.count(inv.hash) ||
                    pcoinsTip->HaveCoins(inv.hash);
         }
-    case MSG_DSTX:
-        return mapDarksendBroadcastTxes.count(inv.hash);
+
     case MSG_BLOCK:
         return mapBlockIndex.count(inv.hash);
-    case MSG_TXLOCK_REQUEST:
-        return mapTxLockReq.count(inv.hash) ||
-               mapTxLockReqRejected.count(inv.hash);
-    case MSG_TXLOCK_VOTE:
-        return mapTxLockVote.count(inv.hash);
-    case MSG_SPORK:
-        return mapSporks.count(inv.hash);
 
     /* 
         Dash Related Inventory Messages
@@ -4415,44 +4407,38 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         We're going to be asking many nodes upfront for the full inventory list, so we'll get duplicates of these.
         We want to only update the time on new hits, so that we can time out appropriately if needed.
     */
+    case MSG_TXLOCK_REQUEST:
+        return mapTxLockReq.count(inv.hash) || mapTxLockReqRejected.count(inv.hash);
+
+    case MSG_TXLOCK_VOTE:
+        return mapTxLockVote.count(inv.hash);
+
+    case MSG_SPORK:
+        return mapSporks.count(inv.hash);
+
     case MSG_MASTERNODE_WINNER:
-        if(mnpayments.mapMasternodePayeeVotes.count(inv.hash)) {
-            //masternodeSync.AddedMasternodeWinner(inv.hash);
-            return true;
-        }
-        return false;
+        return mnpayments.mapMasternodePayeeVotes.count(inv.hash);
+
     case MSG_BUDGET_VOTE:
-        if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)) {
-            //masternodeSync.AddedBudgetItem(inv.hash);
-            return true;
-        }
-        return false;
+        return budget.mapSeenMasternodeBudgetVotes.count(inv.hash);
+
     case MSG_BUDGET_PROPOSAL:
-        if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)) {
-            //masternodeSync.AddedBudgetItem(inv.hash);
-            return true;
-        }
-        return false;
-    case MSG_BUDGET_FINALIZED_VOTE:
-        if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)) {
-            //masternodeSync.AddedBudgetItem(inv.hash);
-            return true;
-        }
-        return false;
+        return budget.mapSeenMasternodeBudgetProposals.count(inv.hash);
+
     case MSG_BUDGET_FINALIZED:
-        if(budget.mapSeenFinalizedBudgets.count(inv.hash)) {
-            //masternodeSync.AddedBudgetItem(inv.hash);
-            return true;
-        }
-        return false;
+        return budget.mapSeenFinalizedBudgets.count(inv.hash);
+
+    case MSG_BUDGET_FINALIZED_VOTE:
+        return budget.mapSeenFinalizedBudgetVotes.count(inv.hash);
+
     case MSG_MASTERNODE_ANNOUNCE:
-        if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)) {
-            //masternodeSync.AddedMasternodeList(inv.hash);
-            return true;
-        }
-        return false;
+        return mnodeman.mapSeenMasternodeBroadcast.count(inv.hash);
+
     case MSG_MASTERNODE_PING:
         return mnodeman.mapSeenMasternodePing.count(inv.hash);
+
+    case MSG_DSTX:
+        return mapDarksendBroadcastTxes.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -5317,11 +5303,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                     LogPrintf("Not relaying invalid transaction %s from whitelisted peer=%d (%s)\n", tx.GetHash().ToString(), pfrom->id, FormatStateMessage(state));
                 }
             }
-        }
-
-        if(strCommand == NetMsgType::DSTX){
-            CInv inv(MSG_DSTX, tx.GetHash());
-            RelayInv(inv);
         }
 
         int nDoS = 0;

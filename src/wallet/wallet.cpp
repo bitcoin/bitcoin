@@ -1485,10 +1485,8 @@ bool CWalletTx::RelayWalletTransaction(std::string strCommand)
             if(strCommand == NetMsgType::IX){
                 mapTxLockReq.insert(make_pair(hash, (CTransaction)*this));
                 CreateNewLock(((CTransaction)*this));
-                RelayTransactionLockReq((CTransaction)*this, true);
-            } else {
-                RelayTransaction((CTransaction)*this);
             }
+            RelayTransaction((CTransaction)*this);
             return true;
         }
     }
@@ -2845,7 +2843,9 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
     // enough, that fee sniping isn't a problem yet, but by implementing a fix
     // now we ensure code won't be written that makes assumptions about
     // nLockTime that preclude a fix later.
-    txNew.nLockTime = chainActive.Height();
+
+    // FIXME: "compatibility mode" for 12.0 IX, make it "txNew.nLockTime = chainActive.Height();" again in 12.2
+    txNew.nLockTime = useIX ? 0 : chainActive.Height();
 
     // Secondly occasionally randomly pick a nLockTime even further back, so
     // that transactions that are delayed after signing for whatever reason,
@@ -4055,33 +4055,33 @@ int CMerkleTx::SetMerkleBranch(const CBlock& block)
 
 int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX) const
 {
+    int nResult;
+
     if (hashUnset())
-        return 0;
+        nResult = 0;
+    else {
+        AssertLockHeld(cs_main);
 
-    AssertLockHeld(cs_main);
+        // Find the block it claims to be in
+        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
+        if (mi == mapBlockIndex.end())
+            nResult = 0;
+        else {
+            CBlockIndex* pindex = (*mi).second;
+            if (!pindex || !chainActive.Contains(pindex))
+                nResult = 0;
+            else {
+                pindexRet = pindex;
+                nResult = ((nIndex == -1) ? (-1) : 1) * (chainActive.Height() - pindex->nHeight + 1);
 
-    // Find the block it claims to be in
-    BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-    if (mi == mapBlockIndex.end())
-        return 0;
-    CBlockIndex* pindex = (*mi).second;
-    if (!pindex || !chainActive.Contains(pindex))
-        return 0;
-
-    pindexRet = pindex;
-    int nResult = ((nIndex == -1) ? (-1) : 1) * (chainActive.Height() - pindex->nHeight + 1);
-
-    if (nResult == 0 && !mempool.exists(GetHash()))
-        return -1; // Not in chain, not in mempool
-
-    if(enableIX){
-        if (nResult < 6){
-            int signatures = GetTransactionLockSignatures();
-            if(signatures >= INSTANTX_SIGNATURES_REQUIRED){
-                return nInstantXDepth+nResult;
+                if (nResult == 0 && !mempool.exists(GetHash()))
+                    return -1; // Not in chain, not in mempool
             }
         }
     }
+
+    if(enableIX && nResult < 6 && GetTransactionLockSignatures() >= INSTANTX_SIGNATURES_REQUIRED)
+        return nInstantXDepth + nResult;
 
     return nResult;
 }

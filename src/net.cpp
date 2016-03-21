@@ -20,6 +20,7 @@
 #include "scheduler.h"
 #include "ui_interface.h"
 #include "darksend.h"
+#include "instantx.h"
 #include "wallet/wallet.h"
 #include "utilstrencodings.h"
 
@@ -2075,7 +2076,9 @@ void RelayTransaction(const CTransaction& tx)
 
 void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
 {
-    CInv inv(MSG_TX, tx.GetHash());
+    int nInv = mapDarksendBroadcastTxes.count(tx.GetHash()) ? MSG_DSTX :
+                (mapTxLockReq.count(tx.GetHash()) ? MSG_TXLOCK_REQUEST : MSG_TX);
+    CInv inv(nInv, tx.GetHash());
     {
         LOCK(cs_mapRelay);
         // Expire old relay messages
@@ -2101,21 +2104,6 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
                 pnode->PushInventory(inv);
         } else
             pnode->PushInventory(inv);
-    }
-}
-
-void RelayTransactionLockReq(const CTransaction& tx, bool relayToAll)
-{
-    CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
-
-    //broadcast the new lock
-    LOCK(cs_vNodes);
-    BOOST_FOREACH(CNode* pnode, vNodes)
-    {
-        if(!relayToAll && !pnode->fRelayTxes)
-            continue;
-
-        pnode->PushMessage(NetMsgType::IX, tx);
     }
 }
 
