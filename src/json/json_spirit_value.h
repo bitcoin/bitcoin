@@ -64,8 +64,8 @@ namespace json_spirit
         const Array&       get_array()  const;
         bool               get_bool()   const;
         int                get_int()    const;
-        boost::int64_t     get_int64()  const;
-        boost::uint64_t    get_uint64() const;
+        int64_t            get_int64()  const;
+        uint64_t           get_uint64() const;
         double             get_real()   const;
 
         Object& get_obj();
@@ -273,7 +273,7 @@ namespace json_spirit
     template< class Config >
     Value_impl< Config >::Value_impl( uint64_t value )
     :   type_( int_type )
-    ,   v_( static_cast< boost::int64_t >( value ) )
+    ,   v_( static_cast< int64_t >( value ) )
     ,   is_uint64_( true )
     {
     }
