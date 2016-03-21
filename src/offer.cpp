@@ -677,7 +677,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// check linked offer if its a cert offer, if so check to make sure root owner owns the cert hes about to xfer to buyer
 				if(!linkOffer.vchCert.empty())
 				{
-					if(theCert.vchPubKey != linkOffer.vchBuyerKey)
+					if(theCert.vchPubKey != linkOffer.vchPubKey)
 						return error("CheckOfferInputs() OP_OFFER_ACCEPT: root offer owner doesn't own this certificate so you cannot accept this linked offer");
 				}			
 			}
