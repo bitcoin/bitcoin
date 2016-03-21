@@ -84,5 +84,27 @@ BOOST_AUTO_TEST_CASE (generate_offerupdate)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate selleralias2 " + offerguid + " category title 90 0.15 " + s1024bytes), runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE (generate_offeraccept)
+{
+	UniValue r;
+	
+	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
+	AliasNew("node1", "selleralias3", "somedata");
+
+	// generate a good offer
+	string offerguid = OfferNew("node1", "selleralias3", "category", "title", "100", "0.05", "description", "USD");
+
+	// perform a valid accept
+	string acceptguid = OfferAccept("node2", "selleralias3", offerguid, "90", "message");
+
+	// should fail: generate an offer accept with too-large message
+	string s1024bytes =   "asdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept selleralias3 " + offerguid + " 5 " + s1024bytes), runtime_error);
+
+}
+
 
 BOOST_AUTO_TEST_SUITE_END ()
