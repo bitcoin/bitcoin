@@ -728,7 +728,7 @@ const string OfferAccept(const string& node, const string& aliasname, const stri
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
 	int nCurrentQty = atoi(find_value(r.get_obj(), "quantity").get_str().c_str());
 	int nQtyToAccept = atoi(qty.c_str());
-	string sTargetQty = std::to_string(nCurrentQty - nQtyToAccept);
+	string sTargetQty = boost::to_string(nCurrentQty - nQtyToAccept);
 
 	string offeracceptstr = "offeraccept " + aliasname + " " + offerguid + " " + qty + " " + message;
 
