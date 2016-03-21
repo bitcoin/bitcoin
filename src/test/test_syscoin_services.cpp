@@ -642,6 +642,71 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
 	return guid;
 }
+
+void OfferUpdate(const string& node, const string& aliasname, const string& offerguid, const string& category, const string& title, const string& qty, const string& price, const string& description, const bool isPrivate, const string& certguid, const bool exclusiveResell) {
+
+	string otherNode1 = "node2";
+	string otherNode2 = "node3";
+	if(node == "node2") {
+		otherNode1 = "node3";
+		otherNode2 = "node1";
+	} else if(node == "node3") {
+		otherNode1 = "node1";
+		otherNode2 = "node2";
+	}
+	
+	CreateSysRatesIfNotExist();
+
+	UniValue r;
+	string certguidtmp = !certguid.empty() ? certguid : "0";	
+	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + (isPrivate ? "1" : "0")  + " " + certguidtmp;
+	
+	if(exclusiveResell == false) {
+		offerupdatestr += " 0";
+	}
+
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, offerupdatestr));
+	
+	GenerateBlocks(10, node);
+
+	string exmode = "ON";
+	if(!exclusiveResell)
+		exmode = "OFF";
+		
+	BOOST_CHECK_NO_THROW(r = CallRPC(node, "offerinfo " + offerguid));
+	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
+	BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == certguid);
+	BOOST_CHECK(find_value(r.get_obj(), "exclusive_resell").get_str() == exmode);
+	BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
+	BOOST_CHECK(find_value(r.get_obj(), "category").get_str() == category);
+	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == qty);
+	BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
+	BOOST_CHECK(find_value(r.get_obj(), "price").get_str() == price);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "true");
+	
+	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode1, "offerinfo " + offerguid));
+	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
+	BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == certguid);
+	BOOST_CHECK(find_value(r.get_obj(), "exclusive_resell").get_str() == exmode);
+	BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
+	BOOST_CHECK(find_value(r.get_obj(), "category").get_str() == category);
+	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == qty);
+	BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
+	BOOST_CHECK(find_value(r.get_obj(), "price").get_str() == price);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
+	
+	BOOST_CHECK_NO_THROW(r = CallRPC(otherNode2, "offerinfo " + offerguid));
+	BOOST_CHECK(find_value(r.get_obj(), "offer").get_str() == offerguid);
+	BOOST_CHECK(find_value(r.get_obj(), "cert").get_str() == certguid);
+	BOOST_CHECK(find_value(r.get_obj(), "exclusive_resell").get_str() == exmode);
+	BOOST_CHECK(find_value(r.get_obj(), "title").get_str() == title);
+	BOOST_CHECK(find_value(r.get_obj(), "category").get_str() == category);
+	BOOST_CHECK(find_value(r.get_obj(), "quantity").get_str() == qty);
+	BOOST_CHECK(find_value(r.get_obj(), "description").get_str() == description);
+	BOOST_CHECK(find_value(r.get_obj(), "price").get_str() == price);
+	BOOST_CHECK(find_value(r.get_obj(), "ismine").get_str() == "false");
+}
+
 const string EscrowNew(const string& node, const string& buyeralias, const string& offerguid, const string& qty, const string& message, const string& arbiteralias, const string& selleralias)
 {
 	string otherNode1 = "node2";
