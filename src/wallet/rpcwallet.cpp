@@ -402,7 +402,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	}
 	if(DecodeOfferTx(wtxNew, op, nOut, vvch))		
 	{
-		if(!CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight, true))
+		if(!CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight, NULL, true))
 			throw runtime_error("Error: The transaction was rejected! Offer Inputs were invalid!");
 	}
 	if(DecodeMessageTx(wtxNew, op, nOut, vvch))
