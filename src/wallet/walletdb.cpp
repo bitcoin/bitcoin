@@ -161,6 +161,11 @@ bool CWalletDB::WriteAccount(const std::string& strAccount, const CAccount& acco
     return WriteIC(std::make_pair(std::string("acc"), strAccount), account);
 }
 
+bool CWalletDB::EraseAccount(const std::string& strAccount)
+{
+    return EraseIC(std::make_pair(std::string("acc"), strAccount));
+}
+
 bool CWalletDB::WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry)
 {
     return WriteIC(std::make_pair(std::string("acentry"), std::make_pair(acentry.strAccount, nAccEntryNum)), acentry);

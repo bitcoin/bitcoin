@@ -15,6 +15,7 @@ RPCs tested are:
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
+from collections import defaultdict
 
 class WalletLabelsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -81,6 +82,9 @@ class WalletLabelsTest(BitcoinTestFramework):
             label.add_receive_address(node.getlabeladdress(label.name))
             label.verify(node)
 
+        # Check all labels are returned by listlabels.
+        assert_equal(node.listlabels(), [label.name for label in labels])
+
         # Send a transaction to each label, and make sure this forces
         # getlabeladdress to generate a new receiving address.
         for label in labels:
@@ -128,6 +132,7 @@ class WalletLabelsTest(BitcoinTestFramework):
                 addresses.append(node.getnewaddress())
             multisig_address = node.addmultisigaddress(5, addresses, label.name)['address']
             label.add_address(multisig_address)
+            label.purpose[multisig_address] = "send"
             label.verify(node)
             node.sendfrom("", multisig_address, 50)
         node.generate(101)
@@ -160,6 +165,8 @@ class Label:
         self.receive_address = None
         # List of all addresses assigned with this label
         self.addresses = []
+        # Map of address to address purpose
+        self.purpose = defaultdict(lambda: "receive")
 
     def add_address(self, address):
         assert_equal(address not in self.addresses, True)
@@ -175,8 +182,19 @@ class Label:
             assert_equal(node.getlabeladdress(self.name), self.receive_address)
 
         for address in self.addresses:
+            assert_equal(
+                node.getlabel(address),
+                {"name": self.name,
+                 "purpose": self.purpose[address],
+                 "destdata": {}})
             assert_equal(node.getaccount(address), self.name)
 
+        assert_equal(
+            node.getaddressesbylabel(self.name),
+            {address: {
+                "purpose": self.purpose[address]
+            }
+             for address in self.addresses})
         assert_equal(
             set(node.getaddressesbyaccount(self.name)), set(self.addresses))
 
