@@ -580,9 +580,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!IsOfferOp(prevOp) )
 				return error("CheckOfferInputs() :offerupdate previous op is invalid");	
 			if(prevOp == OP_OFFER_ACCEPT)
-				return error("CheckOfferInputs(): cannot use offeraccept as input to an update");
-			if (!IsOfferOp(prevOp) && !IsCertOp(prevCertOp))
-				return error("CheckOfferInputs() :offerupdate previous op is invalid");			
+				return error("CheckOfferInputs(): cannot use offeraccept as input to an update");	
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offerupdate offer mismatch");	
 
@@ -673,13 +671,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// make sure that linked offer exists in root offerlinks (offers that are linked to the root offer)
 				if(std::find(linkOffer.offerLinks.begin(), linkOffer.offerLinks.end(), vvchArgs[0]) == linkOffer.offerLinks.end())
 					return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer does not exist in the root offerLinks table, are you sure you are allowed to link to the offer and take payments?");
-			
-				// check linked offer if its a cert offer, if so check to make sure root owner owns the cert hes about to xfer to buyer
-				if(!linkOffer.vchCert.empty())
-				{
-					if(theCert.vchPubKey != linkOffer.vchPubKey)
-						return error("CheckOfferInputs() OP_OFFER_ACCEPT: root offer owner doesn't own this certificate so you cannot accept this linked offer");
-				}			
+						
 			}
 			// trying to purchase a cert
 			if(!theOffer.vchCert.empty())
