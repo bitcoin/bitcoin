@@ -610,7 +610,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
     return obj;
 }
 
-bool DecodeHexMnb(CMasternodeBroadcast& mnb, std::string strHexMnb) {
+bool DecodeHexVecMnb(std::vector<CMasternodeBroadcast>& vecMnb, std::string strHexMnb) {
 
     if (!IsHex(strHexMnb))
         return false;
@@ -618,7 +618,7 @@ bool DecodeHexMnb(CMasternodeBroadcast& mnb, std::string strHexMnb) {
     vector<unsigned char> mnbData(ParseHex(strHexMnb));
     CDataStream ssData(mnbData, SER_NETWORK, PROTOCOL_VERSION);
     try {
-        ssData >> mnb;
+        ssData >> vecMnb;
     }
     catch (const std::exception&) {
         return false;
@@ -677,6 +677,8 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         bool found = false;
 
         UniValue statusObj(UniValue::VOBJ);
+        std::vector<CMasternodeBroadcast> vecMnb;
+
         statusObj.push_back(Pair("alias", alias));
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
@@ -689,9 +691,10 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
                 statusObj.push_back(Pair("result", result ? "successful" : "failed"));
                 if(result) {
-                    CDataStream ssMnb(SER_NETWORK, PROTOCOL_VERSION);
-                    ssMnb << mnb;
-                    statusObj.push_back(Pair("hex", HexStr(ssMnb.begin(), ssMnb.end())));
+                    vecMnb.push_back(mnb);
+                    CDataStream ssVecMnb(SER_NETWORK, PROTOCOL_VERSION);
+                    ssVecMnb << vecMnb;
+                    statusObj.push_back(Pair("hex", HexStr(ssVecMnb.begin(), ssVecMnb.end())));
                 } else {
                     statusObj.push_back(Pair("errorMessage", errorMessage));
                 }
@@ -700,7 +703,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         }
 
         if(!found) {
-            statusObj.push_back(Pair("result", "failed"));
+            statusObj.push_back(Pair("result", "not found"));
             statusObj.push_back(Pair("errorMessage", "Could not find alias in config. Verify with list-conf."));
         }
 
@@ -737,6 +740,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         int failed = 0;
 
         UniValue resultsObj(UniValue::VOBJ);
+        std::vector<CMasternodeBroadcast> vecMnb;
 
         BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             std::string errorMessage;
@@ -752,9 +756,7 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
 
             if(result) {
                 successful++;
-                CDataStream ssMnb(SER_NETWORK, PROTOCOL_VERSION);
-                ssMnb << mnb;
-                statusObj.push_back(Pair("hex", HexStr(ssMnb.begin(), ssMnb.end())));
+                vecMnb.push_back(mnb);
             } else {
                 failed++;
                 statusObj.push_back(Pair("errorMessage", errorMessage));
@@ -764,9 +766,12 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         }
         pwalletMain->Lock();
 
+        CDataStream ssVecMnb(SER_NETWORK, PROTOCOL_VERSION);
+        ssVecMnb << vecMnb;
         UniValue returnObj(UniValue::VOBJ);
         returnObj.push_back(Pair("overall", strprintf("Successfully created broadcast messages for %d masternodes, failed to create %d, total %d", successful, failed, successful + failed)));
         returnObj.push_back(Pair("detail", resultsObj));
+        returnObj.push_back(Pair("hex", HexStr(ssVecMnb.begin(), ssVecMnb.end())));
 
         return returnObj;
     }
@@ -776,53 +781,100 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         if (params.size() != 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'masternodebroadcast decode \"hexstring\"'");
 
-        CMasternodeBroadcast mnb;
+        int successful = 0;
+        int failed = 0;
 
-        if (!DecodeHexMnb(mnb, params[1].get_str()))
+        std::vector<CMasternodeBroadcast> vecMnb;
+        UniValue returnObj(UniValue::VOBJ);
+
+        if (!DecodeHexVecMnb(vecMnb, params[1].get_str()))
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Masternode broadcast message decode failed");
 
-        if(!mnb.VerifySignature())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Masternode broadcast signature verification failed");
+        BOOST_FOREACH(CMasternodeBroadcast& mnb, vecMnb) {
+            UniValue resultObj(UniValue::VOBJ);
 
-        UniValue resultObj(UniValue::VOBJ);
+            if(mnb.VerifySignature()) {
+                successful++;
+                resultObj.push_back(Pair("vin", mnb.vin.ToString()));
+                resultObj.push_back(Pair("addr", mnb.addr.ToString()));
+                resultObj.push_back(Pair("pubkey", CBitcoinAddress(mnb.pubkey.GetID()).ToString()));
+                resultObj.push_back(Pair("pubkey2", CBitcoinAddress(mnb.pubkey2.GetID()).ToString()));
+                resultObj.push_back(Pair("vchSig", EncodeBase64(&mnb.vchSig[0], mnb.vchSig.size())));
+                resultObj.push_back(Pair("sigTime", mnb.sigTime));
+                resultObj.push_back(Pair("protocolVersion", mnb.protocolVersion));
+                resultObj.push_back(Pair("nLastDsq", mnb.nLastDsq));
 
-        resultObj.push_back(Pair("vin", mnb.vin.ToString()));
-        resultObj.push_back(Pair("addr", mnb.addr.ToString()));
-        resultObj.push_back(Pair("pubkey", CBitcoinAddress(mnb.pubkey.GetID()).ToString()));
-        resultObj.push_back(Pair("pubkey2", CBitcoinAddress(mnb.pubkey2.GetID()).ToString()));
-        resultObj.push_back(Pair("vchSig", EncodeBase64(&mnb.vchSig[0], mnb.vchSig.size())));
-        resultObj.push_back(Pair("sigTime", mnb.sigTime));
-        resultObj.push_back(Pair("protocolVersion", mnb.protocolVersion));
-        resultObj.push_back(Pair("nLastDsq", mnb.nLastDsq));
+                UniValue lastPingObj(UniValue::VOBJ);
+                lastPingObj.push_back(Pair("vin", mnb.lastPing.vin.ToString()));
+                lastPingObj.push_back(Pair("blockHash", mnb.lastPing.blockHash.ToString()));
+                lastPingObj.push_back(Pair("sigTime", mnb.lastPing.sigTime));
+                lastPingObj.push_back(Pair("vchSig", EncodeBase64(&mnb.lastPing.vchSig[0], mnb.lastPing.vchSig.size())));
 
-        UniValue lastPingObj(UniValue::VOBJ);
-        lastPingObj.push_back(Pair("vin", mnb.lastPing.vin.ToString()));
-        lastPingObj.push_back(Pair("blockHash", mnb.lastPing.blockHash.ToString()));
-        lastPingObj.push_back(Pair("sigTime", mnb.lastPing.sigTime));
-        lastPingObj.push_back(Pair("vchSig", EncodeBase64(&mnb.lastPing.vchSig[0], mnb.lastPing.vchSig.size())));
+                resultObj.push_back(Pair("lastPing", lastPingObj));
+            } else {
+                failed++;
+                resultObj.push_back(Pair("errorMessage", "Masternode broadcast signature verification failed"));
+            }
 
-        resultObj.push_back(Pair("lastPing", lastPingObj));
+            returnObj.push_back(Pair(mnb.GetHash().ToString(), resultObj));
+        }
 
-        return resultObj;
+        returnObj.push_back(Pair("overall", strprintf("Successfully decoded broadcast messages for %d masternodes, failed to decode %d, total %d", successful, failed, successful + failed)));
+
+        return returnObj;
     }
 
     if (strCommand == "relay")
     {
-        if (params.size() != 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'masternodebroadcast relay \"hexstring\"'");
+        if (params.size() < 2 || params.size() > 3)
+            throw JSONRPCError(RPC_INVALID_PARAMETER,   "masternodebroadcast relay \"hexstring\" ( fast )\n"
+                                                        "\nArguments:\n"
+                                                        "1. \"hex\"      (string, required) Broadcast messages hex string\n"
+                                                        "2. fast       (string, optional) If none, using safe method\n");
 
-        CMasternodeBroadcast mnb;
+        int successful = 0;
+        int failed = 0;
+        bool fSafe = params.size() == 2;
 
-        if (!DecodeHexMnb(mnb, params[1].get_str()))
+        std::vector<CMasternodeBroadcast> vecMnb;
+        UniValue returnObj(UniValue::VOBJ);
+
+        if (!DecodeHexVecMnb(vecMnb, params[1].get_str()))
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Masternode broadcast message decode failed");
 
-        if(!mnb.VerifySignature())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Masternode broadcast signature verification failed");
+        // verify all signatures first, bailout if any of them broken
+        BOOST_FOREACH(CMasternodeBroadcast& mnb, vecMnb) {
+            UniValue resultObj(UniValue::VOBJ);
 
-        mnodeman.UpdateMasternodeList(mnb);
-        mnb.Relay();
+            resultObj.push_back(Pair("vin", mnb.vin.ToString()));
+            resultObj.push_back(Pair("addr", mnb.addr.ToString()));
 
-        return strprintf("Masternode broadcast sent (service %s, vin %s)", mnb.addr.ToString(), mnb.vin.ToString());
+            int nDos = 0;
+            bool fResult;
+            if (mnb.VerifySignature()) {
+                if (fSafe) {
+                    fResult = mnodeman.CheckMnbAndUpdateMasternodeList(mnb, nDos);
+                } else {
+                    mnodeman.UpdateMasternodeList(mnb);
+                    mnb.Relay();
+                    fResult = true;
+                }
+            } else fResult = false;
+
+            if(fResult) {
+                successful++;
+                resultObj.push_back(Pair(mnb.GetHash().ToString(), "successful"));
+            } else {
+                failed++;
+                resultObj.push_back(Pair("errorMessage", "Masternode broadcast signature verification failed"));
+            }
+
+            returnObj.push_back(Pair(mnb.GetHash().ToString(), resultObj));
+        }
+
+        returnObj.push_back(Pair("overall", strprintf("Successfully relayed broadcast messages for %d masternodes, failed to relay %d, total %d", successful, failed, successful + failed)));
+
+        return returnObj;
     }
 
     return NullUniValue;
