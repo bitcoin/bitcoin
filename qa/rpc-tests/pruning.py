@@ -23,6 +23,7 @@ class PruneTest(BitcoinTestFramework):
         self.utxo = []
         self.address = ["",""]
         self.txouts = gen_return_txouts()
+        self.block_time = 1388534400 # 1 Jan 2014
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
@@ -33,11 +34,11 @@ class PruneTest(BitcoinTestFramework):
         self.is_network_split = False
 
         # Create nodes 0 and 1 to mine
-        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
-        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900))
+        self.nodes.append(start_node(0, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=2000000", "-checkblocks=5"], timewait=900))
+        self.nodes.append(start_node(1, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=2000000", "-checkblocks=5"], timewait=900))
 
         # Create node 2 to test pruning
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-prune=550"], timewait=900))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-prune=950"], timewait=900))
         self.prunedir = self.options.tmpdir+"/node2/regtest/blocks/"
 
         self.address[0] = self.nodes[0].getnewaddress()
@@ -51,12 +52,27 @@ class PruneTest(BitcoinTestFramework):
         connect_nodes(self.nodes[2], 0)
         sync_blocks(self.nodes[0:3])
 
+    def sync_block_time(self):
+        for node in self.nodes:
+            node.setmocktime(self.block_time)
+        
     def create_big_chain(self):
         # Start by creating some coinbases we can spend later
-        self.nodes[1].generate(200)
+        # Advance time to activate 2MB max blocksize
+
+        for i in range(20):
+            self.sync_block_time()
+            self.nodes[1].generate(10)
+            self.block_time += 10*60*20
+
         sync_blocks(self.nodes[0:2])
-        self.nodes[0].generate(150)
-        # Then mine enough full blocks to create more than 550MB of data
+        
+        for i in range(15):
+            self.sync_block_time()
+            self.nodes[0].generate(10)
+            self.block_time += 10*60*15
+
+        # Then mine enough full blocks to create more than 950MB of data
         for i in xrange(645):
             self.mine_full_block(self.nodes[0], self.address[0])
 
@@ -66,7 +82,7 @@ class PruneTest(BitcoinTestFramework):
         if not os.path.isfile(self.prunedir+"blk00000.dat"):
             raise AssertionError("blk00000.dat is missing, pruning too early")
         print "Success"
-        print "Though we're already using more than 550MB, current usage:", calc_usage(self.prunedir)
+        print "Though we're already using more than 950MB, current usage:", calc_usage(self.prunedir)
         print "Mining 25 more blocks should cause the first block file to be pruned"
         # Pruning doesn't run until we're allocating another chunk, 20 full blocks past the height cutoff will ensure this
         for i in xrange(25):
@@ -81,7 +97,7 @@ class PruneTest(BitcoinTestFramework):
         print "Success"
         usage = calc_usage(self.prunedir)
         print "Usage should be below target:", usage
-        if (usage > 550):
+        if (usage > 950):
             raise AssertionError("Pruning target not being met")
 
     def create_chain_with_staleblocks(self):
@@ -93,7 +109,8 @@ class PruneTest(BitcoinTestFramework):
             # Node 2 stays connected, so it hears about the stale blocks and then reorg's when node0 reconnects
             # Stopping node 0 also clears its mempool, so it doesn't have node1's transactions to accidentally mine
             stop_node(self.nodes[0],0)
-            self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=999000", "-checkblocks=5"], timewait=900)
+            self.nodes[0]=start_node(0, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=2000000", "-checkblocks=5"], timewait=900)
+            self.sync_block_time()
             # Mine 24 blocks in node 1
             self.utxo = self.nodes[1].listunspent()
             for i in xrange(24):
@@ -121,6 +138,7 @@ class PruneTest(BitcoinTestFramework):
         # Lower the block max size so we don't keep mining all our big mempool transactions (from disconnected blocks)
         stop_node(self.nodes[1],1)
         self.nodes[1]=start_node(1, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"], timewait=900)
+        self.sync_block_time()
 
         height = self.nodes[1].getblockcount()
         print "Current block height:", height
@@ -144,6 +162,7 @@ class PruneTest(BitcoinTestFramework):
         # Reboot node1 to clear those giant tx's from mempool
         stop_node(self.nodes[1],1)
         self.nodes[1]=start_node(1, self.options.tmpdir, ["-debug","-maxreceivebuffer=20000","-blockmaxsize=5000", "-checkblocks=5", "-disablesafemode"], timewait=900)
+        self.sync_block_time()
 
         print "Generating new longer chain of 300 more blocks"
         self.nodes[1].generate(300)
@@ -162,7 +181,7 @@ class PruneTest(BitcoinTestFramework):
 
         usage = calc_usage(self.prunedir)
         print "Usage should be below target:", usage
-        if (usage > 550):
+        if (usage > 950):
             raise AssertionError("Pruning target not being met")
 
         return invalidheight,badhash
@@ -216,8 +235,8 @@ class PruneTest(BitcoinTestFramework):
 
     def mine_full_block(self, node, address):
         # Want to create a full block
-        # We'll generate a 66k transaction below, and 14 of them is close to the 1MB block limit
-        for j in xrange(14):
+        # We'll generate a 66k transaction below, and 28 of them is close to the 2MB block limit
+        for j in xrange(28):
             if len(self.utxo) < 14:
                 self.utxo = node.listunspent()
             inputs=[]
