@@ -1140,7 +1140,8 @@ void ThreadSocketHandler()
                     ipv6Nodes++;
                 if(pnode->addr.IsTor())
                     torNodes++;
-                statsClient.timing("peers.ping_us", pnode->nPingUsecTime, 1.0f);
+                if(pnode->nPingUsecTime > 0)
+                    statsClient.timing("peers.ping_us", pnode->nPingUsecTime, 1.0f);
             }
             BOOST_FOREACH(const std::string &msg, getAllNetMessageTypes())
             {
