@@ -265,6 +265,8 @@ extern UniValue offerhistory(const UniValue& params, bool fHelp);
 extern UniValue offerfilter(const UniValue& params, bool fHelp);
 extern UniValue offerscan(const UniValue& params, bool fHelp);
 
+extern UniValue offernew_nocheck(const UniValue& params, bool fHelp);
+
 extern UniValue certupdate(const UniValue& params, bool fHelp);
 extern UniValue certnew(const UniValue& params, bool fHelp);
 extern UniValue certtransfer(const UniValue& params, bool fHelp);
