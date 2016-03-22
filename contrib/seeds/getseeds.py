@@ -81,7 +81,7 @@ rpclisten = '127.0.0.1'
 if b'rpcport' in contents.keys():
     rpcport = contents[b'rpcport'].decode()
 if b'rpclisten' in contents.keys():
-    rpcuser = contents[b'rpclisten'].decode()
+    rpclisten = contents[b'rpclisten'].decode()
 
 access = AuthServiceProxy("http://"+rpcuser+":"+rpcpassword+"@"+rpclisten+":"+rpcport+"/")
 
