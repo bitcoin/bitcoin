@@ -3,7 +3,6 @@
 #include <cstdio>
 
 #include "net.h"
-#include "ui_interface.h"
 
 #ifdef WIN32
 #define popen    _popen

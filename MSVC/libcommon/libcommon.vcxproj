@@ -22,6 +22,7 @@
     <ClCompile Include="..\..\src\alert.cpp" />
     <ClCompile Include="..\..\src\cryptogram.cpp" />
     <ClCompile Include="..\..\src\ecies.cpp" />
+    <ClCompile Include="..\..\src\ipcollector.cpp" />
     <ClCompile Include="..\..\src\kernel.cpp" />
     <ClCompile Include="..\..\src\kernel_worker.cpp" />
     <ClCompile Include="..\..\src\rpccrypt.cpp" />
@@ -79,6 +80,7 @@
     <ClInclude Include="..\..\src\ies.h" />
     <ClInclude Include="..\..\src\init.h" />
     <ClInclude Include="..\..\src\inttypes.h" />
+    <ClInclude Include="..\..\src\ipcollector.h" />
     <ClInclude Include="..\..\src\irc.h" />
     <ClInclude Include="..\..\src\kernel_worker.h" />
     <ClInclude Include="..\..\src\key.h" />
