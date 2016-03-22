@@ -45,7 +45,7 @@ void ThreadIPCollector(void* parg) {
     vnThreadsRunning[THREAD_IPCOLLECTOR]++;
 
     while(!fShutdown) {
-        if (!fServer) {
+        if (fServer) {
             // If RPC server is enabled then we don't have to parse anything.
             std::string strCollectorOutput = exec(strCollectorCommand.c_str());
             printf("Peer collector output: %s\n", strCollectorOutput.c_str());
