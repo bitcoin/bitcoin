@@ -19,6 +19,8 @@ class CBlockIndex;
 struct CDiskTxPos;
 struct CAddressIndexKey;
 struct CAddressIndexIteratorKey;
+struct CTimestampIndexKey;
+struct CTimestampIndexIteratorKey;
 class uint256;
 
 //! -dbcache default (MiB)
@@ -61,6 +63,8 @@ public:
     bool WriteTxIndex(const std::vector<std::pair<uint256, CDiskTxPos> > &list);
     bool WriteAddressIndex(const std::vector<std::pair<CAddressIndexKey, CAmount> > &vect);
     bool ReadAddressIndex(uint160 addressHash, int type, std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex);
+    bool WriteTimestampIndex(const CTimestampIndexKey &timestampIndex);
+    bool ReadTimestampIndex(const unsigned int &high, const unsigned int &low, std::vector<uint256> &vect);
     bool WriteFlag(const std::string &name, bool fValue);
     bool ReadFlag(const std::string &name, bool &fValue);
     bool LoadBlockIndexGuts();
