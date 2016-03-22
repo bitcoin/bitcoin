@@ -842,43 +842,42 @@ UniValue sendrawtransaction(const UniValue& params, bool fHelp)
 
 static bool VerifyTransaction(const CTransaction& tx, CValidationState& state, CCoinsViewCache &view, bool checkFinal, bool checkStandard)
 {
-    if (state.IsValid())
-        CheckTransaction(tx, state);
-    if (state.IsValid() && checkStandard) {
+    if (!CheckTransaction(tx, state))
+        return false; // CheckTransaction fills in state
+    if (checkStandard) {
         std::string reason;
         if (!IsStandardTx(tx, reason)) {
-            state.Invalid(false, REJECT_NONSTANDARD, reason);
+            return state.Invalid(false, REJECT_NONSTANDARD, reason);
         }
     }
-    if (state.IsValid() && tx.IsCoinBase()) {
-        state.Invalid(false, REJECT_INVALID, "coinbase");
+    if (tx.IsCoinBase()) {
+        return state.Invalid(false, REJECT_INVALID, "coinbase");
     }
     // Only accept nLockTime-using transactions that can be mined in the next
     // block
-    if (state.IsValid() && checkFinal && !CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
-        state.Invalid(false, REJECT_NONSTANDARD, "non-final");
+    if (checkFinal && !CheckFinalTx(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
+        return state.Invalid(false, REJECT_NONSTANDARD, "non-final");
     }
     // Do this check separately because CheckInputs will set code 0 and no reason for missing inputs
-    if (state.IsValid() && !view.HaveInputs(tx)) {
-        state.Invalid(false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
+    if (!view.HaveInputs(tx)) {
+        return state.Invalid(false, REJECT_INVALID, "bad-txns-inputs-missingorspent");
     }
     // Only accept BIP68 sequence locked transactions that can be mined in the next
     // block
     // This check is done after HaveInputs because CheckSequenceLocks looks up the inputs.
     // TODO: pass in the view into CheckSequenceLocks
-    if (state.IsValid() && checkFinal && !CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
-        state.Invalid(false, REJECT_NONSTANDARD, "non-BIP68-final");
+    if (checkFinal && !CheckSequenceLocks(tx, STANDARD_LOCKTIME_VERIFY_FLAGS)) {
+        return state.Invalid(false, REJECT_NONSTANDARD, "non-BIP68-final");
     }
     // Check for non-standard pay-to-script-hash in inputs
-    if (state.IsValid() && checkStandard && !AreInputsStandard(tx, view)) {
-        state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
+    if (checkStandard && !AreInputsStandard(tx, view)) {
+        return state.Invalid(false, REJECT_NONSTANDARD, "bad-txns-nonstandard-inputs");
     }
-    if (state.IsValid()) {
-        CheckInputs(tx, state, view, true,
-            checkStandard ? STANDARD_SCRIPT_VERIFY_FLAGS : MANDATORY_SCRIPT_VERIFY_FLAGS,
-            true);
-    }
-    return state.IsValid();
+    if (!CheckInputs(tx, state, view, true,
+        checkStandard ? STANDARD_SCRIPT_VERIFY_FLAGS : MANDATORY_SCRIPT_VERIFY_FLAGS,
+        true))
+        return false; // CheckInputs fills in state
+    return true;
 }
 
 UniValue verifyrawtransactions(const UniValue& params, bool fHelp)
