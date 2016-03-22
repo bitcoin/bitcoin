@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 ###
 ###  Automatic seeding over HTTP
@@ -11,16 +11,15 @@ import os
 import sys
 import json
 import random
-import urllib2
 import platform
-
+import urllib.request
 
 sources = ['http://dalexhz1.cloudapp.net', 'http://dalexhz2.cloudapp.net', 'http://dalexhz4.cloudapp.net', 'http://dalexhz5.cloudapp.net']
-data = urllib2.urlopen(random.choice(sources))
+data = urllib.request.urlopen(random.choice(sources)).readall();
 
 if 'norpc' in sys.argv:
-    for node in json.load(data):
-        print node
+    for node in json.loads(data.decode()):
+        print (node)
     sys.exit()
 
 ###  This module is required to function properly: 
@@ -57,45 +56,45 @@ conf = open(conf_path, 'rb').read()
 contents = {}
 
 for line in conf.splitlines(True):
-    if '#' in line:
+    if line.startswith(b'#'):
         line = line[:line.index('#')]
-    if '=' not in line:
+    if not line.__contains__(b'='):
         continue
-    k, v = line.split('=', 1)
+    k, v = line.split(b'=', 1)
     contents[k.strip()] = v.strip()
 
-if 'rpcpassword' not in contents.keys():
-    parser.error(
-        '''RPC password is not found in the %s file.''' % (conf_path))
+print(contents)
 
-rpcuser = 'novacoin'
-rpcpassword = contents['rpcpassword']
+if b'rpcpassword' not in contents.keys():
+    print('''RPC password is not found in the %s file.''' % (conf_path))
+    sys.exit()
+
+if b'rpcuser' not in contents.keys():
+    print('''RPC user is not found in the %s file.''' % (conf_path))
+    sys.exit()
+
+rpcuser = contents[b'rpcuser'].decode()
+rpcpassword = contents[b'rpcpassword'].decode()
 rpcport = 8344
 rpclisten = '127.0.0.1'
 
-if 'rpcport' in contents.keys():
-    rpcport = contents['rpcport']
+if b'rpcport' in contents.keys():
+    rpcport = contents[b'rpcport'].decode()
+if b'rpclisten' in contents.keys():
+    rpcuser = contents[b'rpclisten'].decode()
 
-if 'rpcuser' in contents.keys():
-    rpcuser = contents['rpcuser']
+access = AuthServiceProxy("http://"+rpcuser+":"+rpcpassword+"@"+rpclisten+":"+rpcport+"/")
 
-if 'rpclisten' in contents.keys():
-    rpcuser = contents['rpclisten']
-
-url = "http://"+rpcuser+":"+rpcpassword+"@"+rpclisten+":"+rpcport+"/"
-
-access = AuthServiceProxy(url)
-
-for node in json.load(data):
-    print 'Adding', node
+for node in json.loads(data.decode()):
+    print ('Adding', node)
     try:
         access.addnode(node, 'add')
-    except socket_error, e:
+    except socket_error as e:
         if e.errno == errno.ECONNREFUSED:
-            print 'Unable to communicate with Novacoin RPC'
+            print ('Unable to communicate with Novacoin RPC')
         break
-    except JSONRPCException, e:
+    except JSONRPCException as e:
         if e.code == -23:
-            print 'Already added'
+            print ('Already added')
             continue
         break
