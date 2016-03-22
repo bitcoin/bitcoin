@@ -381,6 +381,9 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (data retrieval)",         "omni_getseedblocks",              &omni_getseedblocks,              false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getmetadexhash",             &omni_getmetadexhash,             false,      true,       false },
     { "omni layer (data retrieval)",         "omni_getfeecache",                &omni_getfeecache,                false,      true,       false },
+    { "omni layer (data retrieval)",         "omni_getfeetrigger",              &omni_getfeetrigger,              false,      true,       false },
+    { "omni layer (data retrieval)",         "omni_getfeedistribution",         &omni_getfeedistribution,         false,      true,       false },
+    { "omni layer (data retrieval)",         "omni_getfeedistributions",        &omni_getfeedistributions,        false,      true,       false },
 #ifdef ENABLE_WALLET
     { "omni layer (data retrieval)",         "omni_listtransactions",           &omni_listtransactions,           false,      true,       true },
     { "omni layer (data retrieval)",         "omni_getfeeshare",                &omni_getfeeshare,                false,      true,       true },

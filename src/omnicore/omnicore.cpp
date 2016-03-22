@@ -137,6 +137,7 @@ CMPTradeList *mastercore::t_tradelistdb;
 CMPSTOList *mastercore::s_stolistdb;
 COmniTransactionDB *mastercore::p_OmniTXDB;
 COmniFeeCache *mastercore::p_feecache;
+COmniFeeHistory *mastercore::p_feehistory;
 
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
@@ -2048,6 +2049,7 @@ void clear_all_state()
     t_tradelistdb->Clear();
     p_OmniTXDB->Clear();
     p_feecache->Clear();
+    p_feehistory->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
@@ -2098,6 +2100,7 @@ int mastercore_init()
             boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
             boost::filesystem::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
             boost::filesystem::path feesPath = GetDataDir() / "OMNI_feecache";
+            boost::filesystem::path feeHistoryPath = GetDataDir() / "OMNI_feehistory";
             if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
             if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
             if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
@@ -2105,6 +2108,7 @@ int mastercore_init()
             if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
             if (boost::filesystem::exists(omniTXDBPath)) boost::filesystem::remove_all(omniTXDBPath);
             if (boost::filesystem::exists(feesPath)) boost::filesystem::remove_all(feesPath);
+            if (boost::filesystem::exists(feeHistoryPath)) boost::filesystem::remove_all(feeHistoryPath);
             PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
             startClean = true;
         } catch (const boost::filesystem::filesystem_error& e) {
@@ -2119,6 +2123,7 @@ int mastercore_init()
     _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
     p_OmniTXDB = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
     p_feecache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
+    p_feehistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
@@ -2223,6 +2228,10 @@ int mastercore_shutdown()
     if (p_feecache) {
         delete p_feecache;
         p_feecache = NULL;
+    }
+    if (p_feehistory) {
+        delete p_feehistory;
+        p_feehistory = NULL;
     }
 
     PrintToLog("\nOmni Core shutdown completed\n");
@@ -3612,7 +3621,8 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
         p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
         t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
         s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight);
-        p_feecache->RollBackCache(pBlockIndex->nHeight - 1);
+        p_feecache->RollBackCache(pBlockIndex->nHeight);
+        p_feehistory->RollBackHistory(pBlockIndex->nHeight);
         reorgRecoveryMaxHeight = 0;
 
         nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
@@ -3682,6 +3692,9 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 
     // transactions were found in the block, signal the UI accordingly
     if (countMP > 0) CheckWalletUpdate(true);
+
+    // total tokens for properties may have changed, recalculate distribution thresholds for MetaDEx fees
+    p_feecache->UpdateDistributionThresholds();
 
     // calculate and print a consensus hash if required
     if (msc_debug_consensus_hash_every_block) {

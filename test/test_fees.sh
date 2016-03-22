@@ -4,6 +4,8 @@
 ## DISABLE DEV OMNI FOR THESE TESTS!!! ##
 #########################################
 
+PASS=0
+FAIL=0
 clear
 printf "Preparing a test environment...\n"
 printf "   * Starting a fresh regtest daemon\n"
@@ -25,7 +27,7 @@ printf "   * Creating an indivisible test property\n"
 ./src/omnicore-cli --regtest omni_sendissuancefixed $ADDR 1 1 0 "Z_TestCat" "Z_TestSubCat" "Z_IndivisTestProperty" "Z_TestURL" "Z_TestData" 10000000 >null
 ./src/omnicore-cli --regtest setgenerate true 1 >null
 printf "   * Creating a divisible test property\n"
-./src/omnicore-cli --regtest omni_sendissuancefixed $ADDR 1 2 0 "Z_TestCat" "Z_TestSubCat" "Z_DivisTestProperty" "Z_TestURL" "Z_TestData" 100 >null
+./src/omnicore-cli --regtest omni_sendissuancefixed $ADDR 1 2 0 "Z_TestCat" "Z_TestSubCat" "Z_DivisTestProperty" "Z_TestURL" "Z_TestData" 10000 >null
 ./src/omnicore-cli --regtest setgenerate true 1 >null
 printf "   * Generating addresses to use as fee recipients (OMNI holders)\n"
 ADDRESS=()
@@ -52,40 +54,50 @@ FEESHARE=$(./src/omnicore-cli --regtest omni_getfeeshare ${ADDRESS[1]} | grep fe
 if [ $FEESHARE == "5.0000%" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $FEESHARE
+    FAIL=$((FAIL+1))
 fi
 printf "   * Checking %s has a 10 percent share of fees... " ${ADDRESS[2]}
 FEESHARE=$(./src/omnicore-cli --regtest omni_getfeeshare ${ADDRESS[2]} | grep feeshare | cut -d '"' -f4)
 if [ $FEESHARE == "10.0000%" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $FEESHARE
+    FAIL=$((FAIL+1))
 fi
 printf "   * Checking %s has a 15 percent share of fees... " ${ADDRESS[3]}
 FEESHARE=$(./src/omnicore-cli --regtest omni_getfeeshare ${ADDRESS[3]} | grep feeshare | cut -d '"' -f4)
 if [ $FEESHARE == "15.0000%" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $FEESHARE
+    FAIL=$((FAIL+1))
 fi
 printf "   * Checking %s has a 20 percent share of fees... " ${ADDRESS[4]}
 FEESHARE=$(./src/omnicore-cli --regtest omni_getfeeshare ${ADDRESS[4]} | grep feeshare | cut -d '"' -f4)
 if [ $FEESHARE == "20.0000%" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $FEESHARE
+    FAIL=$((FAIL+1))
 fi
 printf "   * Checking %s has a 50 percent share of fees... " $ADDR
 FEESHARE=$(./src/omnicore-cli --regtest omni_getfeeshare $ADDR | grep feeshare | cut -d '"' -f4)
 if [ $FEESHARE == "50.0000%" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $FEESHARE
+    FAIL=$((FAIL+1))
 fi
 printf "\nTesting a trade against self that results in a 1 willet fee for property 3 (1.0 OMNI for 2000 #3)\n"
 printf "   * Executing the trade\n"
@@ -99,16 +111,20 @@ CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 3 | grep cachedfee | c
 if [ $CACHEDFEE == "1" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
 fi
 printf "      # Checking the trading address now owns 9999999 of property 3..."
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 3 | grep balance | cut -d '"' -f4)
 if [ $BALANCE == "9999999" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "\nTesting another trade against self that results in a 5 willet fee for property 3 (1.0 OMNI for 10000 #3)\n"
 printf "   * Executing the trade\n"
@@ -122,16 +138,20 @@ CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 3 | grep cachedfee | c
 if [ $CACHEDFEE == "6" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
 fi
 printf "      # Checking the trading address now owns 9999994 instead of property 3... "
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 3 | grep balance | cut -d '"' -f4)
 if [ $BALANCE == "9999994" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "\nTesting a trade against self that results in a 1 willet fee for property 4 (1.0 OMNI for 0.00002 #4)\n"
 printf "   * Executing the trade\n"
@@ -145,16 +165,20 @@ CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | c
 if [ $CACHEDFEE == "0.00000001" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
 fi
-printf "      # Checking the trading address now owns 99.99999999 of property 4... "
+printf "      # Checking the trading address now owns 9999.99999999 of property 4... "
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 4 | grep balance | cut -d '"' -f4)
-if [ $BALANCE == "99.99999999" ]
+if [ $BALANCE == "9999.99999999" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "\nTesting a trade against self that results in a 5000 willet fee for property 4 (1.0 OMNI for 0.1 #4)\n"
 printf "   * Executing the trade\n"
@@ -168,16 +192,20 @@ CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | c
 if [ $CACHEDFEE == "0.00005001" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
 fi
-printf "      # Checking the trading address now owns 99.99994999 of property 4... "
+printf "      # Checking the trading address now owns 9999.99994999 of property 4... "
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 4 | grep balance | cut -d '"' -f4)
-if [ $BALANCE == "99.99994999" ]
+if [ $BALANCE == "9999.99994999" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "\nIncreasing volume to get close to 10000000 fee trigger point for property 4\n"
 printf "   * Executing the trades\n"
@@ -194,16 +222,20 @@ CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | c
 if [ $CACHEDFEE == "0.09995001" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
 fi
-printf "      # Checking the trading address now owns 99.90004999 of property 4... "
+printf "      # Checking the trading address now owns 9999.90004999 of property 4... "
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 4 | grep balance | cut -d '"' -f4)
-if [ $BALANCE == "99.90004999" ]
+if [ $BALANCE == "9999.90004999" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "\nPerforming a small trade to take fee cache to 0.1 and trigger distribution for property 4\n"
 printf "   * Executing the trade\n"
@@ -217,49 +249,208 @@ CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | c
 if [ $CACHEDFEE == "0.00000000" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
 fi
 printf "      # Checking %s received 0.00500000 fee share... " ${ADDRESS[1]}
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance ${ADDRESS[1]} 4 | grep balance | cut -d '"' -f4)
 if [ $BALANCE == "0.00500000" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "      # Checking %s received 0.01000000 fee share... " ${ADDRESS[2]}
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance ${ADDRESS[2]} 4 | grep balance | cut -d '"' -f4)
 if [ $BALANCE == "0.01000000" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "      # Checking %s received 0.01500000 fee share... " ${ADDRESS[3]}
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance ${ADDRESS[3]} 4 | grep balance | cut -d '"' -f4)
 if [ $BALANCE == "0.01500000" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "      # Checking %s received 0.02000000 fee share... " ${ADDRESS[4]}
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance ${ADDRESS[4]} 4 | grep balance | cut -d '"' -f4)
 if [ $BALANCE == "0.02000000" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
 printf "      # Checking %s received 0.05000000 fee share... " $ADDR
 BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 4 | grep balance | cut -d '"' -f4)
-if [ $BALANCE == "99.95000000" ]
+if [ $BALANCE == "9999.95000000" ]
   then
     printf "PASS\n"
+    PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
 fi
+printf "\nTesting a trade against self that results in a 1 willet fee for property 4 (1.0 OMNI for 0.00002 #4)\n"
+printf "   * Executing the trade\n"
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 4 0.00002000 1 1.0 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 1 1.0 4 0.00002000 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "   * Verifiying the results\n"
+printf "      # Checking the fee cache now has 0.00000001 fee cached for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.00000001" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "\nTesting another trade against self that results in a 1 willet fee for property 4 (1.0 OMNI for 0.00002 #4)\n"
+printf "   * Executing the trade\n"
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 4 0.00002000 1 1.0 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 1 1.0 4 0.00002000 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "   * Verifiying the results\n"
+printf "      # Checking the fee cache now has 0.00000002 fee cached for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.00000002" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "\nRolling back the chain to orphan a block (disconnecting 1 block from tip and mining a replacement)\n"
+printf "   * Executing the rollback\n"
+BLOCK=$(./src/omnicore-cli --regtest getblockcount)
+BLOCKHASH=$(./src/omnicore-cli --regtest getblockhash $(($BLOCK)))
+./src/omnicore-cli --regtest invalidateblock $BLOCKHASH >null
+PREVBLOCK=$(./src/omnicore-cli --regtest getblockcount)
+printf "   * Clearing the mempool\n"
+./src/omnicore-cli --regtest clearmempool >null
+printf "   * Verifiying the results\n"
+printf "      # Checking the block count has been reduced by 1... "
+EXPBLOCK=$((BLOCK-1))
+if [ $EXPBLOCK == $PREVBLOCK ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $PREVBLOCK
+    FAIL=$((FAIL+1))
+fi
+printf "   * Mining a replacement block\n"
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "   * Verifiying the results\n"
+NEWBLOCK=$(./src/omnicore-cli --regtest getblockcount)
+NEWBLOCKHASH=$(./src/omnicore-cli --regtest getblockhash $(($BLOCK)))
+printf "      # Checking the block count is the same as before the rollback... "
+if [ $BLOCK == $NEWBLOCK ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $NEWBLOCK
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking the block hash is different from before the rollback... "
+if [ $BLOCKHASH == $NEWBLOCKHASH ]
+  then
+    printf "FAIL (result:%s)\n" $NEWBLOCKHASH
+    FAIL=$((FAIL+1))
+  else
+    printf "PASS\n"
+    PASS=$((PASS+1))
+fi
+printf "      # Checking the fee cache has been rolled back to 0.00000001 for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.00000001" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "\nMining 51 blocks to test that fee cache is not affected by fee pruning\n"
+printf "   * Verifiying the results\n"
+printf "      # Checking the fee cache is 0.00000001 for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.00000001" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "   * Mining the blocks...\n"
+./src/omnicore-cli --regtest setgenerate true 51 >null
+printf "      # Checking the fee cache is still 0.00000001 for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.00000001" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "   * Executing a trade to generate 1 willet fee\n"
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 4 0.00002000 1 1.0 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 1 1.0 4 0.00002000 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "      # Checking the fee cache now has 0.00000002 fee cached for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.00000002" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "   * Executing a trade to generate 1 willet fee\n"
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 4 0.00002000 1 1.0 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 1 1.0 4 0.00002000 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "      # Checking the fee cache now has 0.00000003 fee cached for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.00000003" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "\n"
+printf "####################\n"
+printf "#  Summary:        #\n"
+printf "#    Passed = %d   #\n" $PASS
+printf "#    Failed = %d    #\n" $FAIL
+printf "####################\n"
+printf "\n"
 
 ./src/omnicore-cli --regtest stop
 

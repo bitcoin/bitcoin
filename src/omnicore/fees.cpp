@@ -8,6 +8,7 @@
 
 #include "omnicore/omnicore.h"
 #include "omnicore/log.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/sto.h"
 
@@ -20,14 +21,31 @@
 
 using namespace mastercore;
 
-// Arbitrary value used for testing - TODO: how are we calculating the threshold for distribution?
-int64_t feeDistributionThreshold = 10000000;
+std::map<uint32_t, int64_t> distributionThresholds;
+
+// Returns the distribution threshold for a property
+int64_t COmniFeeCache::GetDistributionThreshold(const uint32_t &propertyId)
+{
+    return distributionThresholds[propertyId];
+}
+
+// Sets the distribution thresholds to total tokens for a property / OMNI_FEE_THRESHOLD
+void COmniFeeCache::UpdateDistributionThresholds()
+{
+    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
+        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
+        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
+            int64_t distributionThreshold = getTotalTokens(itPropertyId) / OMNI_FEE_THRESHOLD;
+            distributionThresholds[itPropertyId] = distributionThreshold;
+        }
+    }
+
+}
 
 // Gets the current amount of the fee cache for a property
 int64_t COmniFeeCache::GetCachedAmount(const uint32_t &propertyId)
 {
     assert(pdb);
-
     // Get the fee history, set is sorted by block so last entry is most recent
     std::set<feeCacheItem> sCacheHistoryItems = GetCacheHistory(propertyId);
     if (!sCacheHistoryItems.empty()) {
@@ -43,6 +61,8 @@ int64_t COmniFeeCache::GetCachedAmount(const uint32_t &propertyId)
 // Zeros a property in the fee cache
 void COmniFeeCache::ClearCache(const uint32_t &propertyId)
 {
+//TODO: this needs to be re-written.  In the scenario that a rollback occurs immediately after a distribution, the cache cannot be rolled back from its empty state
+
     const std::string key = strprintf("%010d", propertyId);
     leveldb::Status status = pdb->Delete(writeoptions, key);
     assert(status.ok());
@@ -88,7 +108,7 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t
     PruneCache(propertyId, block);
 
     // Call for cache evaluation (we only need to do this each time a fee cache is increased)
-    EvalCache(propertyId);
+    EvalCache(propertyId, block);
 
     return;
 }
@@ -96,11 +116,7 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t
 // Rolls back the cache to an earlier state (eg in event of a reorg) - block is *inclusive* (ie entries=block will get deleted)
 void COmniFeeCache::RollBackCache(int block)
 {
-/*
-    !!draft code, not yet tested!!
-
     assert(pdb);
-
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
         for (uint32_t propertyId = startPropertyId; propertyId < mastercore::_my_sps->peekNextSPID(ecosystem); propertyId++) {
@@ -109,8 +125,9 @@ void COmniFeeCache::RollBackCache(int block)
             if (!sCacheHistoryItems.empty()) {
                 std::set<feeCacheItem>::iterator mostRecentIt = sCacheHistoryItems.end();
                 std::string newValue;
+                --mostRecentIt;
                 feeCacheItem mostRecentItem = *mostRecentIt;
-                if (mostRecentItem.first < block) return; // all entries are unaffected by this rollback, nothing to do
+                if (mostRecentItem.first < block) continue; // all entries are unaffected by this rollback, nothing to do
                 for (std::set<feeCacheItem>::iterator it = sCacheHistoryItems.begin(); it != sCacheHistoryItems.end(); it++) {
                     feeCacheItem tempItem = *it;
                     if (tempItem.first >= block) continue; // discard this entry
@@ -123,19 +140,18 @@ void COmniFeeCache::RollBackCache(int block)
             }
         }
     }
-*/
 }
 
 // Evaluates fee caches for the property against threshold and executes distribution if threshold met
-void COmniFeeCache::EvalCache(const uint32_t &propertyId)
+void COmniFeeCache::EvalCache(const uint32_t &propertyId, int block)
 {
-    if (GetCachedAmount(propertyId) >= feeDistributionThreshold) {
-        DistributeCache(propertyId);
+    if (GetCachedAmount(propertyId) >= distributionThresholds[propertyId]) {
+        DistributeCache(propertyId, block);
     }
 }
 
 // Performs distribution of fees
-void COmniFeeCache::DistributeCache(const uint32_t &propertyId)
+void COmniFeeCache::DistributeCache(const uint32_t &propertyId, int block)
 {
     LOCK(cs_tally);
 
@@ -146,20 +162,21 @@ void COmniFeeCache::DistributeCache(const uint32_t &propertyId)
     PrintToLog("Starting fee distribution for property %d to %d recipients...\n", propertyId, numberOfReceivers);
 
     int64_t sent_so_far = 0;
+    std::set<feeHistoryItem> historyItems;
     for (OwnerAddrType::reverse_iterator it = receiversSet.rbegin(); it != receiversSet.rend(); ++it) {
         const std::string& address = it->second;
         int64_t will_really_receive = it->first;
         sent_so_far += will_really_receive;
         if (msc_debug_fees) PrintToLog("  %s receives %d (running total %d of %d)\n", address, will_really_receive, sent_so_far, cachedAmount);
         assert(update_tally_map(address, propertyId, will_really_receive, BALANCE));
-
-        // TODO
-        // * Do we need to record these fee distributions for retrieval at a later date?
-        // * Do we need to make fee distribution information available over the RPC interface?
-        // * If so, do we want to reuse STOlistDB for this (same schema) or something new?
+        feeHistoryItem recipient(address, will_really_receive);
+        historyItems.insert(recipient);
     }
 
     PrintToLog("Fee distribution completed, distributed %d out of %d\n", sent_so_far, cachedAmount);
+
+    // store the fee distribution
+    p_feehistory->RecordFeeDistribution(propertyId, block, sent_so_far, historyItems);
 
     // final check to ensure the entire fee cache was distributed, then empty the cache
     assert(sent_so_far == cachedAmount);
@@ -200,6 +217,7 @@ void COmniFeeCache::PruneCache(const uint32_t &propertyId, int block)
         // make sure the pruned cache isn't completely empty, if it is, prune down to just the most recent entry
         if (newValue.empty()) {
             std::set<feeCacheItem>::iterator mostRecentIt = sCacheHistoryItems.end();
+            --mostRecentIt;
             feeCacheItem mostRecentItem = *mostRecentIt;
             newValue = strprintf("%d:%d", mostRecentItem.first, mostRecentItem.second);
             if (msc_debug_fees) PrintToLog("   All entries matured and pruned - readding most recent entry: block %d amount %d\n", mostRecentItem.first, mostRecentItem.second);
@@ -215,7 +233,7 @@ void COmniFeeCache::PruneCache(const uint32_t &propertyId, int block)
 // Show Fee Cache DB statistics
 void COmniFeeCache::printStats()
 {
-    PrintToLog("COmniFeeCache stats: nWritten= %d , nRead= %d\n", nWritten, nRead);
+    PrintToConsole("COmniFeeCache stats: nWritten= %d , nRead= %d\n", nWritten, nRead);
 }
 
 // Show Fee Cache DB records
@@ -262,4 +280,155 @@ std::set<feeCacheItem> COmniFeeCache::GetCacheHistory(const uint32_t &propertyId
     return sCacheHistoryItems;
 }
 
+// Show Fee History DB statistics
+void COmniFeeHistory::printStats()
+{
+    PrintToConsole("COmniFeeHistory stats: nWritten= %d , nRead= %d\n", nWritten, nRead);
+}
+
+// Show Fee History DB records
+void COmniFeeHistory::printAll()
+{
+    int count = 0;
+    leveldb::Iterator* it = NewIterator();
+    for(it->SeekToFirst(); it->Valid(); it->Next()) {
+        ++count;
+        PrintToConsole("entry #%8d= %s-%s\n", count, it->key().ToString(), it->value().ToString());
+        PrintToLog("entry #%8d= %s-%s\n", count, it->key().ToString(), it->value().ToString());
+    }
+    delete it;
+}
+
+// Count Fee History DB records
+int COmniFeeHistory::CountRecords()
+{
+    // TODO: research if there is a faster way to get the total number of records in levelDB
+
+    int count = 0;
+    leveldb::Iterator* it = NewIterator();
+    for(it->SeekToFirst(); it->Valid(); it->Next()) {
+        ++count;
+    }
+    delete it;
+    return count;
+}
+
+// Roll back history in event of reorg
+void COmniFeeHistory::RollBackHistory(int block)
+{
+//TODO
+}
+
+// Retrieve fee distributions for a property
+std::set<int> COmniFeeHistory::GetDistributionsForProperty(const uint32_t &propertyId)
+{
+    assert(pdb);
+
+    std::set<int> sDistributions;
+    leveldb::Iterator* it = NewIterator();
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string strValue = it->value().ToString();
+        std::vector<std::string> vFeeHistoryDetail;
+        boost::split(vFeeHistoryDetail, strValue, boost::is_any_of(":"), boost::token_compress_on);
+        if (4 != vFeeHistoryDetail.size()) {
+            PrintToConsole("ERROR: vFeeHistoryDetail has unexpected number of elements: %d !\n", vFeeHistoryDetail.size());
+            printAll();
+            continue; // bad data
+        }
+        uint32_t prop = boost::lexical_cast<uint32_t>(vFeeHistoryDetail[1]);
+        if (prop == propertyId) {
+            std::string key = it->key().ToString();
+            int id = boost::lexical_cast<int>(key);
+            sDistributions.insert(id);
+        }
+    }
+    delete it;
+    return sDistributions;
+}
+
+// Populate data about a fee distribution
+bool COmniFeeHistory::GetDistributionData(int id, uint32_t *propertyId, int *block, int64_t *total)
+{
+    assert(pdb);
+
+    const std::string key = strprintf("%d", id);
+    std::string strValue;
+    leveldb::Status status = pdb->Get(readoptions, key, &strValue);
+    if (status.IsNotFound()) {
+        return false; // fee distribution not found
+    }
+    assert(status.ok());
+    std::vector<std::string> vFeeHistoryDetail;
+    boost::split(vFeeHistoryDetail, strValue, boost::is_any_of(":"), boost::token_compress_on);
+    if (4 != vFeeHistoryDetail.size()) {
+        PrintToConsole("ERROR: vFeeHistoryDetail has unexpected number of elements: %d !\n", vFeeHistoryDetail.size());
+        printAll();
+        return false; // bad data
+    }
+    *block = boost::lexical_cast<int>(vFeeHistoryDetail[0]);
+    *propertyId = boost::lexical_cast<uint32_t>(vFeeHistoryDetail[1]);
+    *total = boost::lexical_cast<int64_t>(vFeeHistoryDetail[2]);
+    return true;
+}
+
+// Retrieve the recipients for a fee distribution
+std::set<feeHistoryItem> COmniFeeHistory::GetFeeDistribution(int id)
+{
+    assert(pdb);
+
+    const std::string key = strprintf("%d", id);
+    std::set<feeHistoryItem> sFeeHistoryItems;
+    std::string strValue;
+    leveldb::Status status = pdb->Get(readoptions, key, &strValue);
+    if (status.IsNotFound()) {
+        return sFeeHistoryItems; // fee distribution not found, return empty set
+    }
+    assert(status.ok());
+    std::vector<std::string> vFeeHistoryDetail;
+    boost::split(vFeeHistoryDetail, strValue, boost::is_any_of(":"), boost::token_compress_on);
+    if (4 != vFeeHistoryDetail.size()) {
+        PrintToConsole("ERROR: vFeeHistoryDetail has unexpected number of elements: %d !\n", vFeeHistoryDetail.size());
+        printAll();
+        return sFeeHistoryItems; // bad data, return empty set
+    }
+    std::vector<std::string> vFeeHistoryItems;
+    boost::split(vFeeHistoryItems, vFeeHistoryDetail[3], boost::is_any_of(","), boost::token_compress_on);
+    for (std::vector<std::string>::iterator it = vFeeHistoryItems.begin(); it != vFeeHistoryItems.end(); ++it) {
+        std::vector<std::string> vFeeHistoryItem;
+        boost::split(vFeeHistoryItem, *it, boost::is_any_of("="), boost::token_compress_on);
+        if (2 != vFeeHistoryItem.size()) {
+            PrintToConsole("ERROR: vFeeHistoryItem has unexpected number of elements: %d (raw %s)!\n", vFeeHistoryItem.size(), *it);
+            printAll();
+            continue;
+        }
+        int64_t feeHistoryItemAmount = boost::lexical_cast<int64_t>(vFeeHistoryItem[1]);
+        sFeeHistoryItems.insert(std::make_pair(vFeeHistoryItem[0], feeHistoryItemAmount));
+    }
+
+    return sFeeHistoryItems;
+}
+
+// Record a fee distribution
+void COmniFeeHistory::RecordFeeDistribution(const uint32_t &propertyId, int block, int64_t total, std::set<feeHistoryItem> feeRecipients)
+{
+    assert(pdb);
+
+    int count = CountRecords() + 1;
+    std::string key = strprintf("%d", count);
+    std::string feeRecipientsStr;
+
+    if (!feeRecipients.empty()) {
+        for (std::set<feeHistoryItem>::iterator it = feeRecipients.begin(); it != feeRecipients.end(); it++) {
+            feeHistoryItem tempRecipient = *it;
+            feeRecipientsStr += strprintf("%s=%d,", tempRecipient.first, tempRecipient.second);
+        }
+        if (feeRecipientsStr.size() > 0) {
+            feeRecipientsStr.resize(feeRecipientsStr.size() - 1);
+        }
+    }
+
+    std::string value = strprintf("%d:%d:%d:%s", block, propertyId, total, feeRecipientsStr);
+    leveldb::Status status = pdb->Put(writeoptions, key, value);
+    if (msc_debug_fees) PrintToLog("Added fee distribution to feeCacheHistory - key=%s value=%s [%s]\n", key, value, status.ToString());
+}
 

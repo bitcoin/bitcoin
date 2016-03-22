@@ -31,6 +31,9 @@ const uint16_t FEATURE_SPCROWDCROSSOVER = 7;
 //! Feature identifier to enable non-Omni pairs on the distributed exchange
 const uint16_t FEATURE_TRADEALLPAIRS = 8;
 
+//! When (propertyTotalTokens / OMNI_FEE_THRESHOLD) is reached fee distribution will occur
+const int64_t OMNI_FEE_THRESHOLD = 100000; // 0.001%
+
 /** A structure to represent transaction restrictions.
  */
 struct TransactionRestriction
