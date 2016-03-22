@@ -101,7 +101,8 @@ OBJS= \
     obj/kernel.o \
     obj/kernel_worker.o \
     obj/ecies.o \
-    obj/cryptogram.o
+    obj/cryptogram.o \
+    obj/ipcollector.o
 
 all: novacoind.exe
 

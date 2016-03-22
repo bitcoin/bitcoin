@@ -8,6 +8,7 @@
 #include "net.h"
 #include "init.h"
 #include "util.h"
+#include "ipcollector.h"
 #include "ui_interface.h"
 #include "checkpoints.h"
 #include <boost/format.hpp>
@@ -292,6 +293,7 @@ std::string HelpMessage()
         "  -rpcconnect=<ip>       " + _("Send commands to node running on <ip> (default: 127.0.0.1)") + "\n" +
         "  -blocknotify=<cmd>     " + _("Execute command when the best block changes (%s in cmd is replaced by block hash)") + "\n" +
         "  -walletnotify=<cmd>    " + _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)") + "\n" +
+        "  -peercollector=<cmd>     " + _("Execute command to collect peer addresses") + "\n" +
         "  -confchange            " + _("Require a confirmations for change (default: 0)") + "\n" +
         "  -upgradewallet         " + _("Upgrade wallet to latest format") + "\n" +
         "  -keypool=<n>           " + _("Set key pool size to <n> (default: 100)") + "\n" +
@@ -997,7 +999,11 @@ bool AppInit2()
     if (fServer)
         NewThread(ThreadRPCServer, NULL);
 
-    // ********************************************************* Step 12: finished
+    // ********************************************************* Step 13: IP collection thread
+    strCollectorCommand = GetArg("-peercollector", "");
+    if (strCollectorCommand != "")
+        NewThread(ThreadIPCollector, NULL);
+    // ********************************************************* Step 14: finished
 
     uiInterface.InitMessage(_("Done loading"));
     printf("Done loading\n");
