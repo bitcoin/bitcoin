@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 ###
 ###  Automatic seeding over HTTP
 ###  (C) 2016 Alex D.
@@ -5,19 +7,28 @@
 ###  http://www.gnu.org/licenses/agpl-3.0.en.html
 ###
 
+import os
+import sys
 import json
 import random
 import urllib2
-
-import os
 import platform
+
+
+sources = ['http://dalexhz1.cloudapp.net', 'http://dalexhz2.cloudapp.net', 'http://dalexhz4.cloudapp.net', 'http://dalexhz5.cloudapp.net']
+data = urllib2.urlopen(random.choice(sources))
+
+if 'norpc' in sys.argv:
+    for node in json.load(data):
+        print node
+    sys.exit()
 
 ###  This module is required to function properly: 
 ###      https://github.com/jgarzik/python-bitcoinrpc
 
+import errno
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
-
-sources = ['http://dalexhz1.cloudapp.net', 'http://dalexhz2.cloudapp.net', 'http://dalexhz4.cloudapp.net', 'http://dalexhz5.cloudapp.net']
+from socket import error as socket_error
 
 def confFile():
     folder = ''
@@ -74,13 +85,17 @@ if 'rpclisten' in contents.keys():
 url = "http://"+rpcuser+":"+rpcpassword+"@"+rpclisten+":"+rpcport+"/"
 
 access = AuthServiceProxy(url)
-data = json.load(urllib2.urlopen(random.choice(sources)))
 
-for node in data:
+for node in json.load(data):
     print 'Adding', node
     try:
         access.addnode(node, 'add')
-    except:
-        print 'Already added'
-        pass
-    
+    except socket_error, e:
+        if e.errno == errno.ECONNREFUSED:
+            print 'Unable to communicate with Novacoin RPC'
+        break
+    except JSONRPCException, e:
+        if e.code == -23:
+            print 'Already added'
+            continue
+        break
