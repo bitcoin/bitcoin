@@ -1207,6 +1207,153 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	return res;
 }
 
+UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
+	if (fHelp || params.size() < 7 || params.size() > 10)
+		throw runtime_error(
+		"offernew_nocheck <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0]\n"
+						"<alias> An alias you own.\n"
+						"<category> category\n"
+						"<title> title.\n"
+						"<quantity> quantity\n"
+						"<price> price in <currency>\n"
+						"<description> description, 1 KB max.\n"
+						"<currency> The currency code that you want your offer to be in ie: USD.\n"
+						"<cert. guid> Set this to the guid of a certificate you wish to sell\n"
+						"<exclusive resell> set to 1 if you only want those who control the affiliate's who are able to resell this offer via offerlink. Defaults to 1.\n"
+						"<accept btc only> set to 1 if you only want accept Bitcoins for payment and your currency is set to BTC, note you cannot resell or sell a cert in this mode. Defaults to 0.\n"
+						+ HelpRequiringPassphrase());
+	// gather inputs
+	string baSig;
+	float nPrice;
+	bool bExclusiveResell = true;
+
+	vector<unsigned char> vchAlias = vchFromValue(params[0]);
+	CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
+	if (!aliasAddress.IsValid()) throw runtime_error("Invalid syscoin address");
+	if (!aliasAddress.isAlias) throw runtime_error("Offer must be a valid alias");
+	CTransaction aliastx;
+	CAliasIndex alias;
+	if (!GetTxOfAlias(vchAlias, alias, aliastx))
+		throw runtime_error("could not find an alias with this name");
+
+	vector<unsigned char> vchCat = vchFromValue(params[1]);
+	vector<unsigned char> vchTitle = vchFromValue(params[2]);
+	vector<unsigned char> vchCurrency = vchFromValue(params[6]);
+	vector<unsigned char> vchDesc;
+	vector<unsigned char> vchCert;
+	bool bOnlyAcceptBTC = false;
+	int nQty;
+
+	try {
+		nQty = atoi(params[3].get_str());
+	} catch (std::exception &e) {
+		throw runtime_error("invalid quantity value, must be less than 4294967296 and greater than or equal to -1");
+	}
+
+	nPrice = atof(params[4].get_str().c_str());
+	vchDesc = vchFromValue(params[5]);
+
+	CScript scriptPubKeyOrig, scriptPubKeyCertOrig;
+	CScript scriptPubKey, scriptPubKeyCert;
+	const CWalletTx *wtxCertIn = NULL;
+	CCert theCert;
+
+	if(params.size() >= 8) {
+		vchCert = vchFromValue(params[7]);
+		CTransaction txCert;
+		
+		// make sure this cert is still valid
+		if (GetTxOfCert( vchCert, theCert, txCert)) {
+			CPubKey currentCertKey(theCert.vchPubKey);
+			scriptPubKeyCertOrig = GetScriptForDestination(currentCertKey.GetID());
+			scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << OP_2DROP;
+			scriptPubKeyCert += scriptPubKeyCertOrig;		
+		}
+		else vchCert.clear();
+	}
+
+	if(params.size() >= 9)
+		bExclusiveResell = atoi(params[8].get_str().c_str()) == 1? true: false;
+
+	if(params.size() >= 10) 
+		bOnlyAcceptBTC = atoi(params[9].get_str().c_str()) == 1? true: false;
+	
+	CAmount nRate;
+	vector<string> rateList;
+	int precision;
+	
+	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, chainActive.Tip()->nHeight, rateList,precision) != "") {
+		string err = strprintf("Could not find currency %s in the SYS_RATES alias!\n", stringFromVch(vchCurrency));
+		throw runtime_error(err.c_str());
+	}
+	
+	double minPrice = pow(10.0,-precision);
+	double price = nPrice;
+	if(price < minPrice)
+		price = minPrice; 
+	
+	// this is a syscoin transaction
+	CWalletTx wtx;
+
+	// generate rand identifier
+	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchRand = CScriptNum(rand).getvch();
+	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
+
+	EnsureWalletIsUnlocked();
+
+	// unserialize offer from txn, serialize back
+	// build offer
+	COffer newOffer;
+	// if we sell a cert always use cert pubkey otherwise use alias
+	if(wtxCertIn == NULL)
+		newOffer.vchPubKey = alias.vchPubKey;
+	else
+		newOffer.vchPubKey = theCert.vchPubKey;
+	newOffer.sCategory = vchCat;
+	newOffer.sTitle = vchTitle;
+	newOffer.sDescription = vchDesc;
+	newOffer.nQty = nQty;
+	newOffer.nHeight = chainActive.Tip()->nHeight;
+	newOffer.SetPrice(price);
+	newOffer.vchCert = vchCert;
+	newOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
+	newOffer.sCurrencyCode = vchCurrency;
+	newOffer.bPrivate = true;
+	newOffer.bOnlyAcceptBTC = bOnlyAcceptBTC;
+
+	CPubKey currentOfferKey(newOffer.vchPubKey);
+	scriptPubKeyOrig= GetScriptForDestination(currentOfferKey.GetID());
+	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACTIVATE) << vchOffer << OP_2DROP;
+	scriptPubKey += scriptPubKeyOrig;
+
+	vector<CRecipient> vecSend;
+	CRecipient recipient;
+	CreateRecipient(scriptPubKey, recipient);
+	vecSend.push_back(recipient);
+	CRecipient certRecipient;
+	CreateRecipient(scriptPubKeyCert, certRecipient);
+
+	// if we use a cert as input to this offer tx, we need another utxo for further cert transactions on this cert, so we create one here
+	if(wtxCertIn != NULL)
+		vecSend.push_back(certRecipient);
+
+	const vector<unsigned char> &data = newOffer.Serialize();
+	CScript scriptData;
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, data, fee);
+	vecSend.push_back(fee);
+	const CWalletTx * wtxInAlias=NULL;
+	const CWalletTx * wtxInOffer=NULL;
+	const CWalletTx * wtxInEscrow=NULL;
+	SendMoneySyscoin(vecSend, recipient.nAmount+fee.nAmount, false, wtx, wtxInOffer, wtxCertIn, wtxInAlias, wtxInEscrow);
+	UniValue res(UniValue::VARR);
+	res.push_back(wtx.GetHash().GetHex());
+	res.push_back(HexStr(vchRand));
+	return res;
+}
+
 UniValue offerlink(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 3 || params.size() > 4)
 		throw runtime_error(

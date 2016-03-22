@@ -87,6 +87,12 @@ AC_ARG_ENABLE([upnp-default],
   [use_upnp_default=$enableval],
   [use_upnp_default=no])
 
+AC_ARG_ENABLE([debugrpc],
+  [AS_HELP_STRING([--enable-debugrpc],
+  [Enable debug RPC methods (default is no)])],
+  [use_debugrpc=$enableval],
+  [use_debugrpc=no])
+
 AC_ARG_ENABLE(tests,
     AS_HELP_STRING([--disable-tests],[do not compile tests (default is to compile)]),
     [use_tests=$enableval],
@@ -824,6 +830,16 @@ else
   AC_MSG_RESULT(no)
 fi
 
+dnl enable debug rpc
+AC_MSG_CHECKING([if debug rpc should be enabled])
+if test x$use_debugrpc != xno; then
+  AC_MSG_RESULT(yes)
+  AC_DEFINE_UNQUOTED([ENABLE_DEBUGRPC],[1],[Define to 1 to enable debug RPC functions])
+
+else
+  AC_MSG_RESULT(no)
+fi
+
 dnl enable upnp support
 AC_MSG_CHECKING([whether to build with support for UPnP])
 if test x$have_miniupnpc = xno; then
@@ -916,6 +932,7 @@ AM_CONDITIONAL([TARGET_DARWIN], [test x$TARGET_OS = xdarwin])
 AM_CONDITIONAL([BUILD_DARWIN], [test x$BUILD_OS = xdarwin])
 AM_CONDITIONAL([TARGET_WINDOWS], [test x$TARGET_OS = xwindows])
 AM_CONDITIONAL([ENABLE_WALLET],[test x$enable_wallet = xyes])
+AM_CONDITIONAL([ENABLE_DEBUGRPC],[test x$use_debugrpc = xyes])
 AM_CONDITIONAL([ENABLE_TESTS],[test x$use_tests = xyes])
 AM_CONDITIONAL([ENABLE_QT],[test x$syscoin_enable_qt = xyes])
 AM_CONDITIONAL([ENABLE_QT_TESTS],[test x$use_tests$syscoin_enable_qt_test = xyesyes])
