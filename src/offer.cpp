@@ -1315,7 +1315,7 @@ UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
 
 	CAmount nRate;
 	vector<string> rateList;
-	int precision;
+	int precision=8;
 	
 
 	
