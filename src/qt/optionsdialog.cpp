@@ -359,7 +359,7 @@ void OptionsDialog::on_chooseSeeder_clicked()
 #if QT_VERSION < 0x050000
     QString openDir = QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation);
 #else
-    QString openDir = QStandardPaths::ApplicationsLocation(QStandardPaths::ApplicationsLocation);
+    QString openDir = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation);
 #endif
 
     QString filename = QFileDialog::getOpenFileName(this, tr("Choose peer collector application"), openDir, tr("Applications (*.*)"));
