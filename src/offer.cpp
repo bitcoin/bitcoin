@@ -584,7 +584,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// check for valid alias peg
 				if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(), theOffer.nHeight, rateList,precision) != "")
 				{
-					return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", theOffer.sCurrencyCode, stringFromVch(vchAliasPeg));
+					return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", stringFromVch(theOffer.sCurrencyCode).c_str(), stringFromVch(vchAliasPeg).c_str());
 				}
 			}
 			
@@ -606,7 +606,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// check for valid alias peg
 			if(!theOffer.vchAliasPeg.empty() && getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, myOffer.sCurrencyCode, theOffer.GetPrice(), theOffer.nHeight, rateList,precision) != "")
 			{
-				return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", myOffer.sCurrencyCode, stringFromVch(theOffer.vchAliasPeg));
+				return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", stringFromVch(myOffer.sCurrencyCode).c_str(), stringFromVch(theOffer.vchAliasPeg));
 			}
 			// if we are selling a cert ensure it exists and pubkey's match (to ensure it doesnt get transferred prior to accepting by user)
 			// also only do this if whitelist isn't being modified, because if it is, update just falls through and offer is stored as whats in the db, plus any whitelist changes
@@ -2170,7 +2170,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		vchAliasPeg = offerCopy.vchAliasPeg;
 	if(getCurrencyToSYSFromAlias(vchAliasPeg, offerCopy.sCurrencyCode, offerCopy.GetPrice(), chainActive.Tip()->nHeight, rateList,precision) != "")
 	{
-		string err = strprintf("Could not find currency %s in the %s alias!\n", offerCopy.sCurrencyCode, stringFromVch(vchAliasPeg));
+		string err = strprintf("Could not find currency %s in the %s alias!\n", stringFromVch(offerCopy.sCurrencyCode), stringFromVch(vchAliasPeg));
 		throw runtime_error(err.c_str());
 	}
 
