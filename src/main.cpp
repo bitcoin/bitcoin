@@ -769,35 +769,20 @@ int GetInputAge(CTxIn& vin)
 }
 
 int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
-{    
-    int sigs = 0;
+{
     int nResult = GetInputAge(vin);
-    if(nResult < 0) nResult = 0;
+    if(nResult < 0) return -1;
 
-    if (nResult < 6){
-        std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
-        if (i != mapTxLocks.end()){
-            sigs = (*i).second.CountSignatures();
-        }
-        if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
-            return nInstantXDepth+nResult;
-        }
-    }
+    if (nResult < 6 && IsLockedIXTransaction(nTXHash))
+        return nInstantXDepth + nResult;
 
-    return -1;
+    return nResult;
 }
 
 int GetIXConfirmations(uint256 nTXHash)
-{    
-    int sigs = 0;
-
-    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(nTXHash);
-    if (i != mapTxLocks.end()){
-        sigs = (*i).second.CountSignatures();
-    }
-    if(sigs >= INSTANTX_SIGNATURES_REQUIRED){
+{
+    if (IsLockedIXTransaction(nTXHash))
         return nInstantXDepth;
-    }
 
     return 0;
 }

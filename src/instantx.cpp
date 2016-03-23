@@ -107,18 +107,12 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             }
 
             // resolve conflicts
-            std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(tx.GetHash());
-            if (i != mapTxLocks.end()){
-                //we only care if we have a complete tx lock
-                if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-                    if(!CheckForConflictingLocks(tx)){
-                        LogPrintf("ProcessMessageInstantX::ix - Found Existing Complete IX Lock\n");
+            if (IsLockedIXTransaction(tx.GetHash()) && !CheckForConflictingLocks(tx)){
+                LogPrintf("ProcessMessageInstantX::ix - Found Existing Complete IX Lock\n");
 
-                        //reprocess the last 15 blocks
-                        ReprocessBlocks(15);
-                        mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
-                    }
-                }
+                //reprocess the last 15 blocks
+                ReprocessBlocks(15);
+                mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
             }
 
             return;
@@ -467,6 +461,37 @@ void CleanTransactionLocksList()
             it++;
         }
     }
+}
+
+bool IsLockedIXTransaction(uint256 txHash) {
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(txHash);
+    return i != mapTxLocks.end() && (*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED;
+}
+
+int GetTransactionLockSignatures(uint256 txHash)
+{
+    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
+    if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
+    if(!fEnableInstantX) return -1;
+
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(txHash);
+    if (i != mapTxLocks.end()){
+        return (*i).second.CountSignatures();
+    }
+
+    return -1;
+}
+
+bool IsTransactionLockTimedOut(uint256 txHash)
+{
+    if(!fEnableInstantX) return 0;
+
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(txHash);
+    if (i != mapTxLocks.end()){
+        return GetTime() > (*i).second.nTimeout;
+    }
+
+    return false;
 }
 
 uint256 CConsensusVote::GetHash() const

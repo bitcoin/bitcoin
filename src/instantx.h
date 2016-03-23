@@ -37,7 +37,6 @@ static const int MIN_INSTANTX_PROTO_VERSION = 70103;
 extern map<uint256, CTransaction> mapTxLockReq;
 extern map<uint256, CTransaction> mapTxLockReqRejected;
 extern map<uint256, CConsensusVote> mapTxLockVote;
-extern map<uint256, CTransactionLock> mapTxLocks;
 extern std::map<COutPoint, uint256> mapLockedInputs;
 extern int nCompleteTXLocks;
 
@@ -59,6 +58,15 @@ bool ProcessConsensusVote(CNode *pnode, CConsensusVote& ctx);
 
 // keep transaction locks in memory for an hour
 void CleanTransactionLocksList();
+
+// verify if transaction is currently locked
+bool IsLockedIXTransaction(uint256 txHash);
+
+// get the actual uber og accepted lock signatures
+int GetTransactionLockSignatures(uint256 txHash);
+
+// verify if transaction lock timed out
+bool IsTransactionLockTimedOut(uint256 txHash);
 
 int64_t GetAverageVoteTime();
 
