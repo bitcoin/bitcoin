@@ -30,6 +30,7 @@ private:
 	QString currency;
 	QString seller;
 	QString address;
+	QString aliaspeg;
 	bool offerPaid; 
 	
 
