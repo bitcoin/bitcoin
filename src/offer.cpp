@@ -535,6 +535,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	bool escrowAccept = false;
 	vector<string> rateList;
 	int precision = 2;
+	CAmount nRate;
 	// just check is for the memory pool inclusion, here we can stop bad transactions from entering before we get to include them in a block	
 	if(fJustCheck)
 	{
@@ -582,9 +583,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			else
 			{
 				// check for valid alias peg
-				if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(), theOffer.nHeight, rateList,precision) != "")
+				if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
 				{
-					return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", stringFromVch(theOffer.sCurrencyCode).c_str(), stringFromVch(vchAliasPeg).c_str());
+					return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", stringFromVch(theOffer.sCurrencyCode).c_str(), stringFromVch(theOffer.vchAliasPeg).c_str());
 				}
 			}
 			
@@ -603,8 +604,9 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							"CheckOfferInputs() : failed to read from offer DB");
 			}
 			COffer myOffer = vtxPos.back();
+
 			// check for valid alias peg
-			if(!theOffer.vchAliasPeg.empty() && getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, myOffer.sCurrencyCode, theOffer.GetPrice(), theOffer.nHeight, rateList,precision) != "")
+			if(!theOffer.vchAliasPeg.empty() && getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, myOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
 			{
 				return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", stringFromVch(myOffer.sCurrencyCode).c_str(), stringFromVch(theOffer.vchAliasPeg));
 			}
@@ -794,7 +796,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 				int precision = 2;
 				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
-				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
+				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
 				if(tx.vout[nOut].nValue != nPrice)
 					return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %ld, currency %s, value found %ld\n", nPrice, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue);											
 			}						
@@ -2164,11 +2166,13 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.ClearOffer();	
 	CAmount nRate;
 	vector<string> rateList;
-	// get precision & check for valid alias peg
+	// get precision &
+	check for valid alias peg
 	int precision = 2;
+	CAmount nRate;
 	if(vchAliasPeg.size() == 0)
 		vchAliasPeg = offerCopy.vchAliasPeg;
-	if(getCurrencyToSYSFromAlias(vchAliasPeg, offerCopy.sCurrencyCode, offerCopy.GetPrice(), chainActive.Tip()->nHeight, rateList,precision) != "")
+	if(getCurrencyToSYSFromAlias(vchAliasPeg, offerCopy.sCurrencyCode, nRate, chainActive.Tip()->nHeight, rateList,precision) != "")
 	{
 		string err = strprintf("Could not find currency %s in the %s alias!\n", stringFromVch(offerCopy.sCurrencyCode), stringFromVch(vchAliasPeg));
 		throw runtime_error(err.c_str());
