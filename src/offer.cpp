@@ -1314,10 +1314,7 @@ UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
 	vector<string> rateList;
 	int precision;
 	
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, chainActive.Tip()->nHeight, rateList,precision) != "") {
-		string err = strprintf("Could not find currency %s in the SYS_RATES alias!\n", stringFromVch(vchCurrency));
-		throw runtime_error(err.c_str());
-	}
+
 	
 	double minPrice = pow(10.0,-precision);
 	double price = nPrice;
