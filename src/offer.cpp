@@ -398,7 +398,7 @@ CScript RemoveOfferScriptPrefix(const CScript& scriptIn) {
 	return CScript(pc, scriptIn.end());
 }
 
-bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block, bool walletCheck) {
+bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock* block) {
 		
 	if (tx.IsCoinBase())
 		return true;

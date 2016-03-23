@@ -31,7 +31,7 @@ extern bool DecodeCertTx(const CTransaction& tx, int& op, int& nOut, vector<vect
 extern bool DecodeMessageTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool DecodeEscrowTx(const CTransaction& tx, int& op, int& nOut, vector<vector<unsigned char> >& vvch);
 extern bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
-extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL, bool walletCheck = false);
+extern bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
 extern bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
 extern bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
 extern bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<vector<unsigned char> > &vvchArgs, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock *block = NULL);
@@ -402,7 +402,7 @@ void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fS
 	}
 	if(DecodeOfferTx(wtxNew, op, nOut, vvch))		
 	{
-		if(!CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight, NULL, true))
+		if(!CheckOfferInputs(wtxNew,  op, nOut, vvch, inputs, fJustCheck, chainActive.Tip()->nHeight))
 			throw runtime_error("Error: The transaction was rejected! Offer Inputs were invalid!");
 	}
 	if(DecodeMessageTx(wtxNew, op, nOut, vvch))
