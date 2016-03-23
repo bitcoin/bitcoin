@@ -1,8 +1,8 @@
 #! /bin/sh
 # Configuration validation subroutine script.
-#   Copyright 1992-2015 Free Software Foundation, Inc.
+#   Copyright 1992-2016 Free Software Foundation, Inc.
 
-timestamp='2015-11-22'
+timestamp='2016-01-01'
 
 # This file is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ timestamp='2015-11-22'
 # Otherwise, we print the canonical config type on stdout and succeed.
 
 # You can get the latest version of this script from:
-# http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=HEAD
+# http://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub
 
 # This file is supposed to be the same for all GNU packages
 # and recognize all the CPU types, system types and aliases
@@ -67,7 +67,7 @@ Report bugs and patches to <config-patches@gnu.org>."
 version="\
 GNU config.sub ($timestamp)
 
-Copyright 1992-2015 Free Software Foundation, Inc.
+Copyright 1992-2016 Free Software Foundation, Inc.
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
@@ -520,7 +520,7 @@ case $basic_machine in
 		basic_machine=i386-pc
 		os=-aros
 		;;
-        asmjs)
+	asmjs)
 		basic_machine=asmjs-unknown
 		;;
 	aux)
@@ -1382,7 +1382,7 @@ case $os in
 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
 	      | -hiux* | -386bsd* | -knetbsd* | -mirbsd* | -netbsd* \
-	      | -bitrig* | -openbsd* | -solidbsd* \
+	      | -bitrig* | -openbsd* | -solidbsd* | -libertybsd* \
 	      | -ekkobsd* | -kfreebsd* | -freebsd* | -riscix* | -lynxos* \
 	      | -bosx* | -nextstep* | -cxux* | -aout* | -elf* | -oabi* \
 	      | -ptx* | -coff* | -ecoff* | -winnt* | -domain* | -vsta* \
