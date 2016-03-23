@@ -201,6 +201,7 @@ public:
 	std::vector<unsigned char> vchLinkOffer;
 	std::vector<unsigned char> sCurrencyCode;
 	std::vector<unsigned char> vchCert;
+	std::vector<unsigned char> vchAliasPeg;
 	COfferLinkWhitelist linkWhitelist;
 	std::vector<std::vector<unsigned char> > offerLinks;
 	bool bPrivate;
@@ -226,6 +227,7 @@ public:
 		sCurrencyCode.clear();
 		vchLinkOffer.clear();
 		vchCert.clear();
+		vchAliasPeg.clear();
 	}
 
  	ADD_SERIALIZE_METHODS;
@@ -247,6 +249,7 @@ public:
 		READWRITE(vchPubKey);
 		READWRITE(vchCert);
 		READWRITE(bPrivate);
+		READWRITE(vchAliasPeg);
 		READWRITE(bOnlyAcceptBTC);
 		
 		
@@ -315,6 +318,7 @@ public:
 		&& a.vchCert == b.vchCert
 		&& a.bPrivate == b.bPrivate
 		&& a.bOnlyAcceptBTC == b.bOnlyAcceptBTC
+		&& a.vchAliasPeg == b.vchAliasPeg
 		
         );
     }
@@ -337,6 +341,7 @@ public:
 		vchCert = b.vchCert;
 		bPrivate = b.bPrivate;
 		bOnlyAcceptBTC = b.bOnlyAcceptBTC;
+		vchAliasPeg = b.vchAliasPeg;
         return *this;
     }
 
@@ -344,8 +349,8 @@ public:
         return !(a == b);
     }
     
-    void SetNull() { nHeight = nPrice = nQty = 0; txHash.SetNull(); bPrivate = false; bOnlyAcceptBTC = false; accept.SetNull(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchPubKey.clear();vchCert.clear();}
-    bool IsNull() const { return (vchPubKey.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull() && offerLinks.empty() && nCommission == 0 && bPrivate == false && bOnlyAcceptBTC == false); }
+    void SetNull() { nHeight = nPrice = nQty = 0; txHash.SetNull(); bPrivate = false; bOnlyAcceptBTC = false; accept.SetNull(); vchAliasPeg.clear(); sTitle.clear(); sDescription.clear();vchLinkOffer.clear();linkWhitelist.SetNull();sCurrencyCode.clear();offerLinks.clear();nCommission=0;vchPubKey.clear();vchCert.clear();}
+    bool IsNull() const { return (vchPubKey.empty() && txHash.IsNull() && nHeight == 0 && nPrice == 0 && nQty == 0 &&  linkWhitelist.IsNull() && vchAliasPeg.empty() && offerLinks.empty() && nCommission == 0 && bPrivate == false && bOnlyAcceptBTC == false); }
 
     bool UnserializeFromTx(const CTransaction &tx);
 	const std::vector<unsigned char> Serialize();
