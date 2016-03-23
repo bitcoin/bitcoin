@@ -2099,16 +2099,17 @@ UniValue lockunspent(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "lockunspent unlock [{\"txid\":\"txid\",\"vout\":n},...]\n"
+            "lockunspent unlock ([{\"txid\":\"txid\",\"vout\":n},...])\n"
             "\nUpdates list of temporarily unspendable outputs.\n"
             "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
+            "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
             "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
             "Locks are stored in memory only. Nodes start with zero locked outputs, and the locked output list\n"
             "is always cleared (by virtue of process exit) when a node stops or fails.\n"
             "Also see the listunspent call\n"
             "\nArguments:\n"
             "1. unlock            (boolean, required) Whether to unlock (true) or lock (false) the specified transactions\n"
-            "2. \"transactions\"  (string, required) A json array of objects. Each object the txid (string) vout (numeric)\n"
+            "2. \"transactions\"  (string, optional) A json array of objects. Each object the txid (string) vout (numeric)\n"
             "     [           (json array of json objects)\n"
             "       {\n"
             "         \"txid\":\"id\",    (string) The transaction id\n"
