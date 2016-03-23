@@ -36,6 +36,7 @@ public:
         DetachDatabases,   // bool
         Language,          // QString
         CoinControlFeatures, // bool
+        ExternalSeeder,    // QString
         OptionIDRowCount,
     };
 

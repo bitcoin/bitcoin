@@ -99,6 +99,10 @@ void OptionsModel::Init()
         }
     }
 
+    if (!fTestNet && settings.contains("externalSeeder") && settings.value("externalSeeder").toString() != "") {
+        SoftSetArg("-peercollector", settings.value("externalSeeder").toString().toStdString());
+    }
+
     if (settings.contains("detachDB"))
         SoftSetBoolArg("-detachdb", settings.value("detachDB").toBool());
     if (!language.isEmpty())
@@ -161,6 +165,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("fTorOnly", false);
         case TorName:
             return settings.value("TorName", "");
+        case ExternalSeeder:
+            return settings.value("externalSeeder", "");
         case Fee:
             return QVariant(static_cast<qlonglong>(nTransactionFee));
         case DisplayUnit:
@@ -269,6 +275,9 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
         case TorName: {
             settings.setValue("TorName", value.toString());
         }
+        break;
+        case ExternalSeeder:
+            settings.setValue("externalSeeder", value.toString());
         break;
         case Fee:
             nTransactionFee = value.toLongLong();

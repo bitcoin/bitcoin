@@ -14,6 +14,13 @@
 #include <QRegExp>
 #include <QRegExpValidator>
 #include <QKeyEvent>
+#include <QFileDialog>
+
+#if QT_VERSION < 0x050000
+#include <QDesktopServices>
+#else
+#include <QStandardPaths>
+#endif
 
 OptionsDialog::OptionsDialog(QWidget *parent) :
     QWidget(parent, DIALOGWINDOWHINTS),
@@ -164,6 +171,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->torPort, OptionsModel::TorPort);
     mapper->addMapping(ui->TorOnly, OptionsModel::TorOnly);
     mapper->addMapping(ui->torName, OptionsModel::TorName);
+    mapper->addMapping(ui->externalSeederCommand, OptionsModel::ExternalSeeder);
 
 
     /* Window */
@@ -345,4 +353,17 @@ void OptionsDialog::keyPressEvent(QKeyEvent *event)
         close();
     }
 #endif
+}
+void OptionsDialog::on_chooseSeeder_clicked()
+{
+#if QT_VERSION < 0x050000
+    QString openDir = QDesktopServices::storageLocation(QDesktopServices::ApplicationsLocation);
+#else
+    QString openDir = QStandardPaths::ApplicationsLocation(QStandardPaths::ApplicationsLocation);
+#endif
+
+    QString filename = QFileDialog::getOpenFileName(this, tr("Choose peer collector application"), openDir, tr("Applications (*.*)"));
+    if(!filename.isEmpty()) {
+        ui->externalSeederCommand->setText(filename);
+    }
 }

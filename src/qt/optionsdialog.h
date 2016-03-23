@@ -49,6 +49,8 @@ private slots:
     void handleProxyIpValid(QValidatedLineEdit *object, bool fState);
     void handleTorIpValid(QValidatedLineEdit *object, bool fState);
 
+    void on_chooseSeeder_clicked();
+
 signals:
     void proxyIpValid(QValidatedLineEdit *object, bool fValid);
     void torIpValid(QValidatedLineEdit *object, bool fValid);

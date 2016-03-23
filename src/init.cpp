@@ -1001,7 +1001,7 @@ bool AppInit2()
 
     // ********************************************************* Step 13: IP collection thread
     strCollectorCommand = GetArg("-peercollector", "");
-    if (strCollectorCommand != "")
+    if (!fTestNet && strCollectorCommand != "")
         NewThread(ThreadIPCollector, NULL);
     // ********************************************************* Step 14: finished
 

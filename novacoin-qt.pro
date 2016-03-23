@@ -11,6 +11,7 @@ CONFIG += static
 
 # QMAKE_CC=clang
 # QMAKE_CXX=clang++
+# QMAKE_LINK=clang++
 
 freebsd-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch
 linux-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch

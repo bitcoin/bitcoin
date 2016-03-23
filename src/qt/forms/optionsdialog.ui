@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>550</width>
+    <width>595</width>
     <height>380</height>
    </rect>
   </property>
@@ -324,7 +324,28 @@
         </layout>
        </item>
        <item>
-        <spacer name="verticalSpacer_Network">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QLabel" name="externalSeederLabel">
+           <property name="text">
+            <string>Seeder command:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="externalSeederCommand"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="chooseSeeder">
+           <property name="text">
+            <string>Choose ...</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>
