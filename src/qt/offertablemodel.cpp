@@ -602,7 +602,7 @@ QModelIndex OfferTableModel::index(int row, int column, const QModelIndex &paren
 void OfferTableModel::updateEntry(const QString &offer, const QString &cert, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, const QString &private_str, const QString &alias, const QString& acceptBTCOnly, const QString& alias_peg, OfferModelType type, int status)
 {
     // Update alias book model from Syscoin core
-    priv->updateEntry(offer, cert, value, description, category, price, currency, qty, expired, exclusive_resell,private_str, alias, acceptBTCOnly, aliasPeg, type, status);
+    priv->updateEntry(offer, cert, value, description, category, price, currency, qty, expired, exclusive_resell,private_str, alias, acceptBTCOnly, alias_peg, type, status);
 }
 
 QString OfferTableModel::addRow(const QString &type, const QString &offer, const QString &cert, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, const QString &private_str, const QString &alias, const QString &acceptBTCOnly, const QString &alias_peg)
