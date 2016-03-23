@@ -1239,7 +1239,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 }
 
 UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 7 || params.size() > 10)
+	if (fHelp || params.size() < 7 || params.size() > 11)
 		throw runtime_error(
 		"offernew_nocheck <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0]\n"
 						"<alias> An alias you own.\n"
