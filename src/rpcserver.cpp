@@ -387,24 +387,27 @@ static const CRPCCommand vRPCCommands[] =
 	{ "wallet", "generatepublickey", &generatepublickey, false },
 
     // use the blockchain as a distributed marketplace
-    { "wallet", "offernew",         &offernew,       false },
-    { "wallet", "offerupdate",      &offerupdate,    false },
-    { "wallet", "offeraccept",      &offeraccept,    false },
-	{ "wallet", "offerlink",		  &offerlink,      false },
-	{ "wallet", "offeraddwhitelist",				&offeraddwhitelist,			false },
-	{ "wallet", "offerremovewhitelist",			&offerremovewhitelist,      false },
-	{ "wallet", "offerclearwhitelist",			&offerclearwhitelist,		false },
-	{ "wallet", "offerwhitelist",			&offerwhitelist,		false },
-    { "wallet", "offerlist",        &offerlist,      false },
-	{ "wallet", "offeracceptlist",        &offeracceptlist,      false },
-    { "wallet", "offerinfo",        &offerinfo,      false },
-    { "wallet", "offerhistory",     &offerhistory,   false },
-    { "wallet", "offerscan",        &offerscan,      false },
-    { "wallet", "offerfilter",      &offerfilter,    false },
+    { "wallet", "offernew",             &offernew,             false },
+    { "wallet", "offerupdate",          &offerupdate,          false },
+    { "wallet", "offeraccept",          &offeraccept,          false },
+	{ "wallet", "offerlink",		    &offerlink,            false },
+	{ "wallet", "offeraddwhitelist",    &offeraddwhitelist,	   false },
+	{ "wallet", "offerremovewhitelist",	&offerremovewhitelist, false },
+	{ "wallet", "offerclearwhitelist",	&offerclearwhitelist,  false },
+	{ "wallet", "offerwhitelist",		&offerwhitelist,	   false },
+    { "wallet", "offerlist",            &offerlist,            false },
+	{ "wallet", "offeracceptlist",      &offeracceptlist,      false },
+    { "wallet", "offerinfo",            &offerinfo,            false },
+    { "wallet", "offerhistory",         &offerhistory,         false },
+    { "wallet", "offerscan",            &offerscan,            false },
+    { "wallet", "offerfilter",          &offerfilter,          false },
 
 // SYSCOIN
 #ifdef ENABLE_DEBUGRPC
-    { "wallet",    "offernew_nocheck",     &offernew_nocheck,     false },
+    { "wallet", "offernew_nocheck",    &offernew_nocheck,    false },
+    { "wallet", "offerlink_nocheck",   &offerlink_nocheck,   false },
+    { "wallet", "offerupdate_nocheck", &offerupdate_nocheck, false },
+    { "wallet", "offeraccept_nocheck", &offeraccept_nocheck, false },
 #endif
 
   // use the blockchain as a certificate issuance platform
