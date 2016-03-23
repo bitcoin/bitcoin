@@ -145,7 +145,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.vin = [CTxIn(COutPoint(int(spending_txid, 16), 0))]
         send_amount = 1 * 100000000 + 12840
         change_amount = amount - send_amount - 10000
-        tx.vout = [CTxOut(send_amount, scriptPubKey), CTxOut(change_amount, scriptPubKey2)]
+        tx.vout = [CTxOut(change_amount, scriptPubKey2), CTxOut(send_amount, scriptPubKey)]
         tx.rehash()
 
         signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
