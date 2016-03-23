@@ -35,9 +35,10 @@ struct OfferTableEntry
 	QString private_str;
 	QString alias;
 	QString acceptBTCOnly;
+	QString alias_peg;
     OfferTableEntry() {}
-    OfferTableEntry(Type type,const QString &cert,  const QString &title, const QString &offer, const QString &description, const QString &category,const QString &price, const QString &currency,const QString &qty,const QString &expired, const QString &exclusive_resell, const QString &private_str,const QString &alias, const QString &acceptBTCOnly):
-        type(type), cert(cert), title(title), offer(offer), description(description), category(category),price(price), currency(currency),qty(qty), expired(expired), exclusive_resell(exclusive_resell), private_str(private_str), alias(alias), acceptBTCOnly(acceptBTCOnly) {}
+    OfferTableEntry(Type type,const QString &cert,  const QString &title, const QString &offer, const QString &description, const QString &category,const QString &price, const QString &currency,const QString &qty,const QString &expired, const QString &exclusive_resell, const QString &private_str,const QString &alias, const QString &acceptBTCOnly, , const QString &alias_peg):
+        type(type), cert(cert), title(title), offer(offer), description(description), category(category),price(price), currency(currency),qty(qty), expired(expired), exclusive_resell(exclusive_resell), private_str(private_str), alias(alias), acceptBTCOnly(acceptBTCOnly),alias_peg(alias_peg) {}
 };
 
 struct OfferTableEntryLessThan
@@ -87,6 +88,7 @@ public:
 			string private_str;
 			string alias_str;
 			string acceptBTCOnly_str;
+			string alias_peg_str;
 			int expired = 0;
 
 			
@@ -116,8 +118,9 @@ public:
 						private_str = "";
 						alias_str = "";
 						acceptBTCOnly_str = "";
+						alias_peg_str = "";
 						expired = 0;
-
+			
 
 				
 						const UniValue& name_value = find_value(o, "offer");
@@ -159,6 +162,9 @@ public:
 						const UniValue& btconly_value = find_value(o, "btconly");
 						if (btconly_value.type() == UniValue::VSTR)
 							acceptBTCOnly_str = btconly_value.get_str();
+						const UniValue& alias_peg_value = find_value(o, "alias_peg");
+						if (alias_peg_value.type() == UniValue::VSTR)
+							alias_peg_str = alias_peg_value.get_str();
 						const UniValue& pending_value = find_value(o, "pending");
 						int pending = 0;
 						if (pending_value.type() == UniValue::VNUM)
@@ -177,7 +183,7 @@ public:
 							expired_str = "Valid";
 						}
 
-						updateEntry( QString::fromStdString(name_str), QString::fromStdString(cert_str), QString::fromStdString(value_str), QString::fromStdString(desc_str), QString::fromStdString(category_str), QString::fromStdString(price_str), QString::fromStdString(currency_str), QString::fromStdString(qty_str), QString::fromStdString(expired_str),QString::fromStdString(exclusive_resell_str), QString::fromStdString(private_str),QString::fromStdString(alias_str), QString::fromStdString(acceptBTCOnly_str), type, CT_NEW); 
+						updateEntry( QString::fromStdString(name_str), QString::fromStdString(cert_str), QString::fromStdString(value_str), QString::fromStdString(desc_str), QString::fromStdString(category_str), QString::fromStdString(price_str), QString::fromStdString(currency_str), QString::fromStdString(qty_str), QString::fromStdString(expired_str),QString::fromStdString(exclusive_resell_str), QString::fromStdString(private_str),QString::fromStdString(alias_str), QString::fromStdString(acceptBTCOnly_str), QString::fromStdString(alias_peg_str), type, CT_NEW); 
 					}
 				}
    			}
@@ -195,7 +201,7 @@ public:
         qSort(cachedOfferTable.begin(), cachedOfferTable.end(), OfferTableEntryLessThan());
     }
 
-    void updateEntry(const QString &offer, const QString &cert, const QString &title,  const QString &description, const QString &category,const QString &price, const QString &currency,const QString &qty,const QString &expired, const QString &exclusive_resell, const QString &private_str, const QString &alias, const QString &acceptBTCOnly, OfferModelType type, int status)
+    void updateEntry(const QString &offer, const QString &cert, const QString &title,  const QString &description, const QString &category,const QString &price, const QString &currency,const QString &qty,const QString &expired, const QString &exclusive_resell, const QString &private_str, const QString &alias, const QString &acceptBTCOnly, const QString &alias_peg, OfferModelType type, int status)
     {
 		if(!parent || parent->modelType != type)
 		{
@@ -219,7 +225,7 @@ public:
                 break;
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedOfferTable.insert(lowerIndex, OfferTableEntry(newEntryType, cert, title, offer, description, category, price, currency, qty, expired, exclusive_resell, private_str, alias, acceptBTCOnly));
+            cachedOfferTable.insert(lowerIndex, OfferTableEntry(newEntryType, cert, title, offer, description, category, price, currency, qty, expired, exclusive_resell, private_str, alias, acceptBTCOnly, alias_peg));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -240,6 +246,7 @@ public:
 			lower->private_str = private_str;
 			lower->alias = alias;
 			lower->acceptBTCOnly = acceptBTCOnly;
+			lower->alias_peg = alias_peg;
             parent->emitDataChanged(lowerIndex);
             break;
         case CT_DELETED:
@@ -340,6 +347,8 @@ QVariant OfferTableModel::data(const QModelIndex &index, int role) const
             return rec->alias;
 		case AcceptBTCOnly:
 			return rec->acceptBTCOnly;
+		case AliasPeg:
+			return rec->alias_peg;
         }
     }
     else if (role == NameRole)
@@ -398,6 +407,10 @@ QVariant OfferTableModel::data(const QModelIndex &index, int role) const
 	else if(role == BTCOnlyRole)
 	{
 		return rec->acceptBTCOnly;
+	}
+	else if(role == AliasPegRole)
+	{
+		return rec->alias_peg;
 	}
     return QVariant();
 }
@@ -519,6 +532,14 @@ bool OfferTableModel::setData(const QModelIndex &index, const QVariant &value, i
                 return false;
             }
             break;
+       case AliasPeg:
+            // Do nothing, if old value == new value
+            if(rec->alias_peg == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+            break;
         case Name:
             // Do nothing, if old offer == new offer
             if(rec->offer == value.toString())
@@ -578,13 +599,13 @@ QModelIndex OfferTableModel::index(int row, int column, const QModelIndex &paren
     }
 }
 
-void OfferTableModel::updateEntry(const QString &offer, const QString &cert, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, const QString &private_str, const QString &alias, const QString& acceptBTCOnly, OfferModelType type, int status)
+void OfferTableModel::updateEntry(const QString &offer, const QString &cert, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, const QString &private_str, const QString &alias, const QString& acceptBTCOnly, const QString& alias_peg, OfferModelType type, int status)
 {
     // Update alias book model from Syscoin core
-    priv->updateEntry(offer, cert, value, description, category, price, currency, qty, expired, exclusive_resell,private_str, alias, acceptBTCOnly, type, status);
+    priv->updateEntry(offer, cert, value, description, category, price, currency, qty, expired, exclusive_resell,private_str, alias, acceptBTCOnly, aliasPeg, type, status);
 }
 
-QString OfferTableModel::addRow(const QString &type, const QString &offer, const QString &cert, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, const QString &private_str, const QString &alias, const QString &acceptBTCOnly)
+QString OfferTableModel::addRow(const QString &type, const QString &offer, const QString &cert, const QString &value, const QString &description, const QString &category,const QString &price, const QString &currency, const QString &qty, const QString &expired, const QString &exclusive_resell, const QString &private_str, const QString &alias, const QString &acceptBTCOnly, const QString &alias_peg)
 {
     std::string strOffer = offer.toStdString();
     editStatus = OK;

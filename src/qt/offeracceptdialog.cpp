@@ -18,9 +18,9 @@
 using namespace std;
 
 extern const CRPCTable tableRPC;
-OfferAcceptDialog::OfferAcceptDialog(const PlatformStyle *platformStyle, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QString sellerAlias, QString address, QWidget *parent) :
+OfferAcceptDialog::OfferAcceptDialog(const PlatformStyle *platformStyle, QString aliaspeg, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString qstrPrice, QString sellerAlias, QString address, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::OfferAcceptDialog), platformStyle(platformStyle), alias(alias), offer(offer), notes(notes), quantity(quantity), title(title), currency(currencyCode), seller(sellerAlias), address(address)
+    ui(new Ui::OfferAcceptDialog), platformStyle(platformStyle), aliaspeg(aliaspeg), alias(alias), offer(offer), notes(notes), quantity(quantity), title(title), currency(currencyCode), seller(sellerAlias), address(address)
 {
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();  
@@ -41,10 +41,11 @@ OfferAcceptDialog::OfferAcceptDialog(const PlatformStyle *platformStyle, QString
 	int precision, sysprecision;
 	double dblPrice = qstrPrice.toDouble();
 	string strCurrencyCode = currencyCode.toStdString();
+	string strAliasPeg = aliaspeg.toStdString();
 	ui->acceptBtcButton->setEnabled(false);
 	ui->acceptBtcButton->setVisible(false);
-	convertCurrencyCodeToSyscoin(vchFromString("SYS"), 0, chainActive.Tip()->nHeight, sysprecision);
-	CAmount iPrice = convertCurrencyCodeToSyscoin(vchFromString(strCurrencyCode), dblPrice, chainActive.Tip()->nHeight, precision);
+	convertCurrencyCodeToSyscoin(vchFromString(strAliasPeg), vchFromString("SYS"), 0, chainActive.Tip()->nHeight, sysprecision);
+	CAmount iPrice = convertCurrencyCodeToSyscoin(vchFromString(strAliasPeg), vchFromString(strCurrencyCode), dblPrice, chainActive.Tip()->nHeight, precision);
 	string strPrice = strprintf("%.*f", sysprecision, ValueFromAmount(iPrice).get_real()*quantity.toUInt() );
 	price = QString::fromStdString(strPrice);
 	if(strCurrencyCode == "BTC")

@@ -502,6 +502,10 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	{
 		return error("offer currency code too big");
 	}
+	if(theOffer.vchAliasPeg.size() > MAX_NAME_LENGTH)
+	{
+		return error("offer alias peg too big");
+	}
 	if(theOffer.offerLinks.size() > 0)
 	{
 		return error("offer links are not allowed in tx data");
@@ -529,6 +533,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<COffer> vtxPos;
 	bool linkAccept = false;
 	bool escrowAccept = false;
+	vector<string> rateList;
+	int precision = 2;
 	// just check is for the memory pool inclusion, here we can stop bad transactions from entering before we get to include them in a block	
 	if(fJustCheck)
 	{
@@ -537,8 +543,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			if (!theOffer.vchCert.empty() && !IsCertOp(prevCertOp))
 				return error("CheckOfferInputs() : you must own a cert you wish to sell");
 			if (IsCertOp(prevCertOp) && !theOffer.vchCert.empty() && theOffer.vchCert != vvchPrevCertArgs[0])
-				return error("CheckOfferInputs() : cert input and offer cert guid mismatch");
-			
+				return error("CheckOfferInputs() : cert input and offer cert guid mismatch");		
 			// if we are selling a cert ensure it exists and pubkey's match (to ensure it doesnt get transferred prior to accepting by user)
 			if(!theOffer.vchCert.empty())
 			{
@@ -574,6 +579,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				else
 					return error("CheckOfferInputs() OP_OFFER_ACTIVATE: invalid linked offer guid");
 			}
+			else
+			{
+				// check for valid alias peg
+				if(getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(), theOffer.nHeight, rateList,precision) != "")
+				{
+					return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", theOffer.sCurrencyCode, stringFromVch(vchAliasPeg));
+				}
+			}
 			
 			break;
 		case OP_OFFER_UPDATE:
@@ -583,18 +596,22 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				return error("CheckOfferInputs(): cannot use offeraccept as input to an update");	
 			if (vvchPrevArgs[0] != vvchArgs[0])
 				return error("CheckOfferInputs() : offerupdate offer mismatch");	
-
+			// load the offer data from the DB
+			if (pofferdb->ExistsOffer(vvchArgs[0])) {
+				if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos) || vtxPos.empty())
+					return error(
+							"CheckOfferInputs() : failed to read from offer DB");
+			}
+			COffer myOffer = vtxPos.back();
+			// check for valid alias peg
+			if(!theOffer.vchAliasPeg.empty() && getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, myOffer.sCurrencyCode, theOffer.GetPrice(), theOffer.nHeight, rateList,precision) != "")
+			{
+				return error("CheckOfferInputs() : could not find currency %s in the %s alias!\n", myOffer.sCurrencyCode, stringFromVch(theOffer.vchAliasPeg));
+			}
 			// if we are selling a cert ensure it exists and pubkey's match (to ensure it doesnt get transferred prior to accepting by user)
 			// also only do this if whitelist isn't being modified, because if it is, update just falls through and offer is stored as whats in the db, plus any whitelist changes
 			if(!theOffer.vchCert.empty())
 			{
-				// load the offer data from the DB
-				if (pofferdb->ExistsOffer(vvchArgs[0])) {
-					if (!pofferdb->ReadOffer(vvchArgs[0], vtxPos) || vtxPos.empty())
-						return error(
-								"CheckOfferInputs() : failed to read from offer DB");
-				}
-				COffer myOffer = vtxPos.back();
 				if(!myOffer.vchLinkOffer.empty())
 					return error("cannot sell a cert as a linked offer");
 				
@@ -777,7 +794,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 				int precision = 2;
 				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
-				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
+				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
 				if(tx.vout[nOut].nValue != nPrice)
 					return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %ld, currency %s, value found %ld\n", nPrice, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue);											
 			}						
@@ -835,6 +852,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.sTitle = dbOffer.sTitle;
 					if(serializedOffer.sDescription.empty())
 						theOffer.sDescription = dbOffer.sDescription;
+					if(serializedOffer.vchAliasPeg.empty())
+						theOffer.vchAliasPeg = dbOffer.vchAliasPeg;
 				}
 			}
 			if(!theOffer.vchCert.empty())						
@@ -863,6 +882,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						theOffer.linkWhitelist.bExclusiveResell = true;
 						theOffer.sCurrencyCode = myParentOffer.sCurrencyCode;
 						theOffer.vchCert = myParentOffer.vchCert;
+						theOffer.vchAliasPeg = myParentOffer.vchAliasPeg;
 
 						myParentOffer.offerLinks.push_back(vvchArgs[0]);							
 						myParentOffer.PutToOfferList(myVtxPos);
@@ -932,6 +952,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						{
 							COffer myLinkOffer = myVtxPos.back();
 							theOffer.nQty = myLinkOffer.nQty;	
+							theOffer.vchAliasPeg = myLinkOffer.vchAliasPeg;	
 							theOffer.SetPrice(myLinkOffer.nPrice);
 							
 						}
@@ -948,6 +969,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							{
 								COffer myLinkOffer = myVtxPos.back();
 								myLinkOffer.nQty = theOffer.nQty;	
+								myLinkOffer.vchAliasPeg = theOffer.vchAliasPeg;	
 								myLinkOffer.SetPrice(theOffer.nPrice);
 								myLinkOffer.PutToOfferList(myVtxPos);
 								// write offer
@@ -1020,7 +1042,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 UniValue offernew(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 7 || params.size() > 10)
 		throw runtime_error(
-		"offernew <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0]\n"
+		"offernew <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0]\n"
+						"<aliaspeg> Alias peg you wish to use, leave blank to use SYS_RATES.\n"	
 						"<alias> An alias you own.\n"
 						"<category> category, 255 chars max.\n"
 						"<title> title, 255 chars max.\n"
@@ -1036,7 +1059,11 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	string baSig;
 	float nPrice;
 	bool bExclusiveResell = true;
-	vector<unsigned char> vchAlias = vchFromValue(params[0]);
+	vector<unsigned char> vchAliasPeg = vchFromValue(params[0]);
+	CSyscoinAddress aliasPegAddress = CSyscoinAddress(stringFromVch(vchAliasPeg));
+	if (!aliasPegAddress.IsValid() || !aliasPegAddress.isAlias)
+		throw runtime_error("Invalid alias peg");
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
 	CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
 	if (!aliasAddress.IsValid())
 		throw runtime_error("Invalid syscoin address");
@@ -1052,27 +1079,27 @@ UniValue offernew(const UniValue& params, bool fHelp) {
     }
 	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
 		throw runtime_error("this alias is not in your wallet");
-	vector<unsigned char> vchCat = vchFromValue(params[1]);
-	vector<unsigned char> vchTitle = vchFromValue(params[2]);
-	vector<unsigned char> vchCurrency = vchFromValue(params[6]);
+	vector<unsigned char> vchCat = vchFromValue(params[2]);
+	vector<unsigned char> vchTitle = vchFromValue(params[3]);
+	vector<unsigned char> vchCurrency = vchFromValue(params[7]);
 	vector<unsigned char> vchDesc;
 	vector<unsigned char> vchCert;
 	bool bOnlyAcceptBTC = false;
 	int nQty;
 
 	try {
-		nQty = atoi(params[3].get_str());
+		nQty = atoi(params[4].get_str());
 	} catch (std::exception &e) {
 		throw runtime_error("invalid quantity value, must be less than 4294967296 and greater than or equal to -1");
 	}
 	if(nQty < -1)
 		throw runtime_error("qty must be greater than or equal to -1");
-	nPrice = atof(params[4].get_str().c_str());
+	nPrice = atof(params[5].get_str().c_str());
 	if(nPrice <= 0)
 	{
 		throw runtime_error("offer price must be greater than 0!");
 	}
-	vchDesc = vchFromValue(params[5]);
+	vchDesc = vchFromValue(params[6]);
 	if(vchCat.size() < 1)
         throw runtime_error("offer category cannot be empty!");
 	if(vchTitle.size() < 1)
@@ -1088,10 +1115,10 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CScript scriptPubKey, scriptPubKeyCert;
 	const CWalletTx *wtxCertIn = NULL;
 	CCert theCert;
-	if(params.size() >= 8)
+	if(params.size() >= 9)
 	{
 		
-		vchCert = vchFromValue(params[7]);
+		vchCert = vchFromValue(params[8]);
 		CTransaction txCert;
 		
 		
@@ -1112,19 +1139,19 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 			else
 				throw runtime_error("You must own this cert to sell it");
 			scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << OP_2DROP;
-			scriptPubKeyCert += scriptPubKeyCertOrig;		
+			scriptPubKeyCert += scriptPubKeyCertOrig;
 		}
 		else
 			vchCert.clear();
 	}
 
-	if(params.size() >= 9)
-	{
-		bExclusiveResell = atoi(params[8].get_str().c_str()) == 1? true: false;
-	}
 	if(params.size() >= 10)
 	{
-		bOnlyAcceptBTC = atoi(params[9].get_str().c_str()) == 1? true: false;
+		bExclusiveResell = atoi(params[9].get_str().c_str()) == 1? true: false;
+	}
+	if(params.size() >= 11)
+	{
+		bOnlyAcceptBTC = atoi(params[10].get_str().c_str()) == 1? true: false;
 		if(bOnlyAcceptBTC && !vchCert.empty())
 			throw runtime_error("Cannot sell a certificate accepting only Bitcoins");
 		if(bOnlyAcceptBTC && stringFromVch(vchCurrency) != "BTC")
@@ -1134,9 +1161,9 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	CAmount nRate;
 	vector<string> rateList;
 	int precision;
-	if(getCurrencyToSYSFromAlias(vchCurrency, nRate, chainActive.Tip()->nHeight, rateList,precision) != "")
+	if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrency, nRate, chainActive.Tip()->nHeight, rateList,precision) != "")
 	{
-		string err = strprintf("Could not find currency %s in the SYS_RATES alias!\n", stringFromVch(vchCurrency));
+		string err = strprintf("Could not find currency %s in the %s alias!\n", stringFromVch(vchCurrency), stringFromVch(vchAliasPeg));
 		throw runtime_error(err.c_str());
 	}
 	double minPrice = pow(10.0,-precision);
@@ -1173,6 +1200,7 @@ UniValue offernew(const UniValue& params, bool fHelp) {
 	newOffer.sCurrencyCode = vchCurrency;
 	newOffer.bPrivate = true;
 	newOffer.bOnlyAcceptBTC = bOnlyAcceptBTC;
+	newOffer.vchAliasPeg = vchAliasPeg;
 
 	CPubKey currentOfferKey(newOffer.vchPubKey);
 	scriptPubKeyOrig= GetScriptForDestination(currentOfferKey.GetID());
@@ -1474,7 +1502,7 @@ UniValue offerlink(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 	int precision = 2;
 	// get precision
-	convertCurrencyCodeToSyscoin(linkOffer.sCurrencyCode, linkOffer.GetPrice(), chainActive.Tip()->nHeight, precision);
+	convertCurrencyCodeToSyscoin(linkOffer.vchAliasPeg, linkOffer.sCurrencyCode, linkOffer.GetPrice(), chainActive.Tip()->nHeight, precision);
 	double minPrice = pow(10.0,-precision);
 	double price = linkOffer.GetPrice();
 	if(price < minPrice)
@@ -1645,7 +1673,7 @@ UniValue offerlink_nocheck(const UniValue& params, bool fHelp) {
 	vector<unsigned char> vchOffer = vchFromString(HexStr(vchRand));
 	int precision = 2;
 	// get precision
-	convertCurrencyCodeToSyscoin(linkOffer.sCurrencyCode, linkOffer.GetPrice(), chainActive.Tip()->nHeight, precision);
+	convertCurrencyCodeToSyscoin(linkOffer.vchAliasPeg, linkOffer.sCurrencyCode, linkOffer.GetPrice(), chainActive.Tip()->nHeight, precision);
 	double minPrice = pow(10.0,-precision);
 	double price = linkOffer.GetPrice();
 	if(price < minPrice)
@@ -1996,35 +2024,39 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 UniValue offerupdate(const UniValue& params, bool fHelp) {
 	if (fHelp || params.size() < 5 || params.size() > 10)
 		throw runtime_error(
-		"offerupdate <alias> <guid> <category> <title> <quantity> <price> [description] [private=0] [cert. guid] [exclusive resell=1]\n"
+		"offerupdate <aliaspeg> <alias> <guid> <category> <title> <quantity> <price> [description] [private=0] [cert. guid] [exclusive resell=1]\n"
 						"Perform an update on an offer you control.\n"
 						+ HelpRequiringPassphrase());
 	// gather & validate inputs
-	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	vector<unsigned char> vchOffer = vchFromValue(params[1]);
-	vector<unsigned char> vchCat = vchFromValue(params[2]);
-	vector<unsigned char> vchTitle = vchFromValue(params[3]);
+	vector<unsigned char> vchAliasPeg = vchFromValue(params[0]);
+	CSyscoinAddress aliasPegAddress = CSyscoinAddress(stringFromVch(vchAliasPeg));
+	if (vchAliasPeg.size() > 0 && (!aliasPegAddress.IsValid() || !aliasPegAddress.isAlias))
+		throw runtime_error("Invalid alias peg");
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
+	vector<unsigned char> vchOffer = vchFromValue(params[2]);
+	vector<unsigned char> vchCat = vchFromValue(params[3]);
+	vector<unsigned char> vchTitle = vchFromValue(params[4]);
 	vector<unsigned char> vchDesc;
 	vector<unsigned char> vchCert;
 	bool bExclusiveResell = true;
 	int bPrivate = false;
 	int nQty;
 	double price;
-	if (params.size() >= 7) vchDesc = vchFromValue(params[6]);
-	if (params.size() >= 8) bPrivate = atoi(params[7].get_str().c_str()) == 1? true: false;
-	if (params.size() >= 9) vchCert = vchFromValue(params[8]);
-	if(params.size() >= 10) bExclusiveResell = atoi(params[9].get_str().c_str()) == 1? true: false;
+	if (params.size() >= 8) vchDesc = vchFromValue(params[7]);
+	if (params.size() >= 8) bPrivate = atoi(params[8].get_str().c_str()) == 1? true: false;
+	if (params.size() >= 10) vchCert = vchFromValue(params[9]);
+	if(params.size() >= 11) bExclusiveResell = atoi(params[10].get_str().c_str()) == 1? true: false;
 
 	try {
-		nQty = atoi(params[4].get_str());
-		price = atof(params[5].get_str().c_str());
+		nQty = atoi(params[5].get_str());
+		price = atof(params[6].get_str().c_str());
 
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values. Quantity must be less than 4294967296 and greater than or equal to -1.");
 	}
 	if(nQty < -1)
 		throw runtime_error("qty must be greater than or equal to -1");
-	if (params.size() >= 7) vchDesc = vchFromValue(params[6]);
+	if (params.size() >= 8) vchDesc = vchFromValue(params[7]);
 	if(price <= 0)
 	{
 		throw runtime_error("offer price must be greater than 0!");
@@ -2133,15 +2165,26 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer = vtxPos.back();
 	COffer offerCopy = theOffer;
 	theOffer.ClearOffer();	
+	CAmount nRate;
+	vector<string> rateList;
+	// get precision & check for valid alias peg
 	int precision = 2;
-	// get precision
-	convertCurrencyCodeToSyscoin(offerCopy.sCurrencyCode, offerCopy.GetPrice(), chainActive.Tip()->nHeight, precision);
+	if(vchAliasPeg.size() == 0)
+		vchAliasPeg = offerCopy.vchAliasPeg;
+	if(getCurrencyToSYSFromAlias(vchAliasPeg, offerCopy.sCurrencyCode, offerCopy.GetPrice(), chainActive.Tip()->nHeight, rateList,precision) != "")
+	{
+		string err = strprintf("Could not find currency %s in the %s alias!\n", offerCopy.sCurrencyCode, stringFromVch(vchAliasPeg));
+		throw runtime_error(err.c_str());
+	}
+
 	double minPrice = pow(10.0,-precision);
 	if(price < minPrice)
 		price = minPrice;
 	// update offer values
 	if(offerCopy.sCategory != vchCat)
 		theOffer.sCategory = vchCat;
+	if(offerCopy.vchAliasPeg != vchAliasPeg)
+		theOffer.vchAliasPeg = vchAliasPeg;
 	if(offerCopy.sTitle != vchTitle)
 		theOffer.sTitle = vchTitle;
 	if(offerCopy.sDescription != vchDesc)
@@ -2168,14 +2211,14 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("Could not detect alias from provided pub key. Check to make sure you are not trying to sell a transferred certificate.");
 	
 	theOffer.nQty = nQty;
-	if (params.size() >= 8)
+	if (params.size() >= 9)
 		theOffer.bPrivate = bPrivate;
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
 	if(nQty != -1 && (nQty-memPoolQty) < 0)
 		throw runtime_error("not enough remaining quantity to fulfill this offerupdate");
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 	theOffer.SetPrice(price);
-	if(params.size() >= 10)
+	if(params.size() >= 11)
 		theOffer.linkWhitelist.bExclusiveResell = bExclusiveResell;
 
 
@@ -2347,7 +2390,7 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	theOffer.ClearOffer();	
 	int precision = 2;
 	// get precision
-	convertCurrencyCodeToSyscoin(offerCopy.sCurrencyCode, offerCopy.GetPrice(), chainActive.Tip()->nHeight, precision);
+	convertCurrencyCodeToSyscoin(offerCopy.vchAliasPeg, offerCopy.sCurrencyCode, offerCopy.GetPrice(), chainActive.Tip()->nHeight, precision);
 	double minPrice = pow(10.0,-precision);
 	if(price < minPrice)
 		price = minPrice;
@@ -2664,7 +2707,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 		throw runtime_error(strprintf("not enough remaining quantity to fulfill this orderaccept, qty remaining %u, qty desired %u,  qty waiting to be accepted by the network %d", vtxPos.back().nQty, nQty, memPoolQty));
 
 	int precision = 2;
-	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
+	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
 	string strCipherText = "";
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
 	if(wtxOfferIn == NULL && vchEscrowTxHash.empty())
@@ -2983,7 +3026,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		throw runtime_error(strprintf("not enough remaining quantity to fulfill this orderaccept, qty remaining %u, qty desired %u,  qty waiting to be accepted by the network %d", vtxPos.back().nQty, nQty, memPoolQty));
 
 	int precision = 2;
-	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
+	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
 	string strCipherText = "";
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
 	if(wtxOfferIn == NULL && vchEscrowTxHash.empty())
@@ -3230,7 +3273,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));			
 		oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 		int precision = 2;
-		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, ca.nPrice, ca.nAcceptHeight, precision);
+		CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, ca.nPrice, ca.nAcceptHeight, precision);
 		oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * ca.nQty)));
 		oOfferAccept.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
 		oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, ca.nPrice ))); 	
@@ -3292,7 +3335,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	
 	
 	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(), nHeight, precision);
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(), nHeight, precision);
 	oOffer.push_back(Pair("sysprice", ValueFromAmount(nPricePerUnit)));
 	oOffer.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
 	
@@ -3311,6 +3354,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 	oOffer.push_back(Pair("exclusive_resell", theOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 	oOffer.push_back(Pair("private", theOffer.bPrivate ? "Yes" : "No"));
 	oOffer.push_back(Pair("btconly", theOffer.bOnlyAcceptBTC ? "Yes" : "No"));
+	oOffer.push_back(Pair("alias_peg", stringFromVch(theOffer.vchAliasPeg)));
 	oOffer.push_back(Pair("description", stringFromVch(theOffer.sDescription)));
 	oOffer.push_back(Pair("alias", selleraddy.aliasName));
 	oOffer.push_back(Pair("accepts", aoOfferAccepts));
@@ -3448,7 +3492,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));
 				oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 				int precision = 2;
-				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight, precision);
+				CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight, precision);
 				oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
 				
 				oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOffer.GetPrice() ))); 
@@ -3593,7 +3637,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			oOfferAccept.push_back(Pair("offer_discount_percentage", strprintf("%d%%", entry.nDiscountPct)));			
 			oOfferAccept.push_back(Pair("escrowlink", stringFromVch(vchEscrowLink)));
 			int precision = 2;
-			CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight, precision);
+			CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOfferAccept.nPrice, theOfferAccept.nAcceptHeight, precision);
 			oOfferAccept.push_back(Pair("systotal", ValueFromAmount(nPricePerUnit * theOfferAccept.nQty)));
 			oOfferAccept.push_back(Pair("price", strprintf("%.*f", precision, theOfferAccept.nPrice ))); 
 			oOfferAccept.push_back(Pair("total", strprintf("%.*f", precision, theOfferAccept.nPrice * theOfferAccept.nQty ))); 
@@ -3709,7 +3753,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
             oName.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oName.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
 			int precision = 2;
-			convertCurrencyCodeToSyscoin(theOfferA.sCurrencyCode, 0, chainActive.Tip()->nHeight, precision);
+			convertCurrencyCodeToSyscoin(theOfferA.vchAliasPeg, theOfferA.sCurrencyCode, 0, chainActive.Tip()->nHeight, precision);
 			oName.push_back(Pair("price", strprintf("%.*f", precision, theOfferA.GetPrice() ))); 	
 
 			oName.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
@@ -3724,6 +3768,7 @@ UniValue offerlist(const UniValue& params, bool fHelp) {
 			oName.push_back(Pair("address", selleraddy.ToString()));
 			oName.push_back(Pair("exclusive_resell", theOfferA.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 			oName.push_back(Pair("btconly", theOfferA.bOnlyAcceptBTC ? "Yes" : "No"));
+			oName.push_back(Pair("alias_peg", stringFromVch(theOfferA.vchAliasPeg)));
 			oName.push_back(Pair("private", theOfferA.bPrivate ? "Yes" : "No"));
 			expired_block = nHeight + GetOfferExpirationDepth();
             if(pending == 0 && (nHeight + GetOfferExpirationDepth() - chainActive.Tip()->nHeight <= 0))
@@ -3805,7 +3850,7 @@ UniValue offerhistory(const UniValue& params, bool fHelp) {
             oOffer.push_back(Pair("category", stringFromVch(theOfferA.sCategory)));
             oOffer.push_back(Pair("description", stringFromVch(theOfferA.sDescription)));
 			int precision = 2;
-			convertCurrencyCodeToSyscoin(theOfferA.sCurrencyCode, 0, chainActive.Tip()->nHeight, precision);
+			convertCurrencyCodeToSyscoin(theOfferA.vchAliasPeg, theOfferA.sCurrencyCode, 0, chainActive.Tip()->nHeight, precision);
 			oOffer.push_back(Pair("price", strprintf("%.*f", precision, theOfferA.GetPrice() ))); 	
 
 			oOffer.push_back(Pair("currency", stringFromVch(theOfferA.sCurrencyCode) ) );
@@ -3942,7 +3987,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 		oOffer.push_back(Pair("description", stringFromVch(txOffer.sDescription)));
         oOffer.push_back(Pair("category", stringFromVch(txOffer.sCategory)));
 		int precision = 2;
-		convertCurrencyCodeToSyscoin(txOffer.sCurrencyCode, 0, chainActive.Tip()->nHeight, precision);
+		convertCurrencyCodeToSyscoin(txOffer.vchAliasPeg, txOffer.sCurrencyCode, 0, chainActive.Tip()->nHeight, precision);
 		COffer foundOffer = txOffer;	
 		oOffer.push_back(Pair("price", strprintf("%.*f", precision, foundOffer.GetPrice() ))); 	
 		oOffer.push_back(Pair("currency", stringFromVch(txOffer.sCurrencyCode)));
@@ -3953,6 +3998,7 @@ UniValue offerfilter(const UniValue& params, bool fHelp) {
 			oOffer.push_back(Pair("quantity", strprintf("%d", txOffer.nQty)));
 		oOffer.push_back(Pair("exclusive_resell", txOffer.linkWhitelist.bExclusiveResell ? "ON" : "OFF"));
 		oOffer.push_back(Pair("btconly", txOffer.bOnlyAcceptBTC ? "Yes" : "No"));
+		oOffer.push_back(Pair("alias_peg", stringFromVch(txOffer.vchAliasPeg)));
 		expired_block = nHeight + GetOfferExpirationDepth();
 		if(nHeight + GetOfferExpirationDepth() - chainActive.Tip()->nHeight <= 0)
 		{

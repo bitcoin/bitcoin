@@ -631,7 +631,7 @@ UniValue escrownew(const UniValue& params, bool fHelp) {
 	// send to escrow address
 
 	int precision = 2;
-	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), chainActive.Tip()->nHeight, precision);
+	CAmount nPricePerUnit = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), chainActive.Tip()->nHeight, precision);
 	CAmount nTotal = nPricePerUnit*nQty;
 
 	CAmount nEscrowFee = GetEscrowArbiterFee(nTotal);
