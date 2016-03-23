@@ -1346,6 +1346,7 @@ UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
 	newOffer.sTitle = vchTitle;
 	newOffer.sDescription = vchDesc;
 	newOffer.nQty = nQty;
+	newOffer.vchAliasPeg = vchFromString("SYS_RATES");
 	newOffer.nHeight = chainActive.Tip()->nHeight;
 	newOffer.SetPrice(price);
 	newOffer.vchCert = vchCert;
