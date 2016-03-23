@@ -230,25 +230,24 @@ bool ExistsInMempool(const std::vector<unsigned char> &vchToFind, opcodetype typ
 
 }
 
-CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchCurrencyCode, const float &nPrice, const unsigned int &nHeight, int &precision)
+CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrencyCode, const float &nPrice, const unsigned int &nHeight, int &precision)
 {
 	CAmount sysPrice = 0;
 	CAmount nRate;
 	vector<string> rateList;
-	if(getCurrencyToSYSFromAlias(vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
+	if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
 	{
 		float price = nPrice*(float)nRate;
 		sysPrice = CAmount(price);
 	}
 	return sysPrice;
 }
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
 {
-	vector<unsigned char> vchName = vchFromString("SYS_RATES");
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchName, vtxPos) || vtxPos.empty())
+	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 	{
 		if(fDebug)
 			LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");

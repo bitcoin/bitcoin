@@ -24,12 +24,13 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 	CAmount nFee;
 	vector<string> rateList;
 	int precision;
-	if(getCurrencyToSYSFromAlias(vchFromString("USD"), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
+	if(getCurrencyToSYSFromAlias(vchFromString("SYS_RATES"), vchFromString("USD"), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
 	{
 		QMessageBox::warning(this, windowTitle(),
 			tr("Warning: SYS_RATES alias not found. No currency information available!"),
 				QMessageBox::Ok, QMessageBox::Ok);
 	}
+	ui->aliasPegDisclaimer->setText(tr("<font color='blue'>Choose an alias which has peg information to allow exchange of currencies into SYS amounts based on the pegged values. Consumers will pay amounts based on this peg, the alias must be managed effectively or you may end up selling your offers for unexpected amounts.</font>"));
 	ui->aliasDisclaimer->setText(tr("<font color='blue'>Select an alias to own this offer</font>"));
 	ui->privateDisclaimer->setText(tr("<font color='blue'>All offers are first listed as private. If you would like your offer to be public, please edit it after it is created.</font>"));
 	ui->offerLabel->setVisible(true);
@@ -63,6 +64,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
     case NewOffer:
 		ui->offerLabel->setVisible(false);
 		ui->offerEdit->setVisible(false);
+		ui->aliasPegEdit->setText(tr("SYS_RATES"));
 		ui->privateEdit->setCurrentIndex(ui->privateEdit->findText("Yes"));
 		ui->privateEdit->setEnabled(false);
         setWindowTitle(tr("New Offer"));
@@ -277,6 +279,7 @@ void EditOfferDialog::setModel(WalletModel* walletModel, OfferTableModel *model)
     mapper->addMapping(ui->priceEdit, OfferTableModel::Price);
 	mapper->addMapping(ui->qtyEdit, OfferTableModel::Qty);	
 	mapper->addMapping(ui->descriptionEdit, OfferTableModel::Description);		
+	mapper->addMapping(ui->aliasPegEdit, OfferTableModel::AliasPeg);	
     
 }
 
@@ -346,7 +349,16 @@ bool EditOfferDialog::saveCurrentRow()
                 QMessageBox::Ok, QMessageBox::Ok);
             return false;
         }
+		 if (ui->aliasPegEdit->text() != "SYS_RATES") {
+			QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Alias Peg"),
+                 tr("Warning: By default the system peg is <b>SYS_RATES</b>. You have chosen a peg managed by someone other than the Syscoin team!") + "<br><br>" + tr("Are you sure you wish to choose this alias as your offer peg?"),
+                 QMessageBox::Yes|QMessageBox::Cancel,
+                 QMessageBox::Cancel);
+			if(retval == QMessageBox::Cancel)
+				return false;
+		}
 		strMethod = string("offernew");
+		params.push_back(ui->aliasPegEdit->text().toStdString());
 		params.push_back(ui->aliasEdit->currentText().toStdString());
 		params.push_back(ui->categoryEdit->text().toStdString());
 		params.push_back(ui->nameEdit->text().toStdString());
@@ -385,9 +397,18 @@ bool EditOfferDialog::saveCurrentRow()
 
         break;
     case EditOffer:
+		 if (ui->aliasPegEdit->text() != "SYS_RATES") {
+			QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm Alias Peg"),
+                 tr("Warning: By default the system peg is <b>SYS_RATES</b>. You have chosen a peg managed by someone other than the Syscoin team!") + "<br><br>" + tr("Are you sure you wish to choose this alias as your offer peg?"),
+                 QMessageBox::Yes|QMessageBox::Cancel,
+                 QMessageBox::Cancel);
+			if(retval == QMessageBox::Cancel)
+				return false;
+		}
         if(mapper->submit())
         {
 			strMethod = string("offerupdate");
+			params.push_back(ui->aliasPegEdit->text().toStdString());
 			params.push_back(ui->aliasEdit->currentText().toStdString());
 			params.push_back(ui->offerEdit->text().toStdString());
 			params.push_back(ui->categoryEdit->text().toStdString());

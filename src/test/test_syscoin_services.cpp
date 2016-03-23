@@ -596,7 +596,7 @@ const string OfferNew(const string& node, const string& aliasname, const string&
 	string certguidtmp = "0";
 	if(!certguid.empty())
 		certguidtmp = certguid;
-	string offercreatestr = "offernew " + aliasname + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency  + " " + certguidtmp;
+	string offercreatestr = "offernew SYS_RATES " + aliasname + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + currency  + " " + certguidtmp;
 	if(exclusiveResell == false)
 	{
 		offercreatestr += " 0";
@@ -660,7 +660,7 @@ void OfferUpdate(const string& node, const string& aliasname, const string& offe
 
 	UniValue r;
 	string certguidtmp = !certguid.empty() ? certguid : "0";	
-	string offerupdatestr = "offerupdate " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + (isPrivate ? "1" : "0")  + " " + certguidtmp;
+	string offerupdatestr = "offerupdate SYS_RATES " + aliasname + " " + offerguid + " " + category + " " + title + " " + qty + " " + price + " " + description + " " + (isPrivate ? "1" : "0")  + " " + certguidtmp;
 	
 	if(exclusiveResell == false) {
 		offerupdatestr += " 0";
