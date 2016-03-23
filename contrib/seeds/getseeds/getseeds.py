@@ -57,13 +57,11 @@ contents = {}
 
 for line in conf.splitlines(True):
     if line.startswith(b'#'):
-        line = line[:line.index('#')]
+        line = line[:line.index(b'#')]
     if not line.__contains__(b'='):
         continue
     k, v = line.split(b'=', 1)
     contents[k.strip()] = v.strip()
-
-print(contents)
 
 if b'rpcpassword' not in contents.keys():
     print('''RPC password is not found in the %s file.''' % (conf_path))
