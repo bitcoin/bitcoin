@@ -14,7 +14,7 @@
 using namespace std;
 
 extern const CRPCTable tableRPC;
-string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
+string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision);
 extern vector<unsigned char> vchFromString(const std::string &str);
 EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *parent) :
     QDialog(parent),
