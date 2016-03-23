@@ -46,7 +46,7 @@ class AddressIndexTest(BitcoinTestFramework):
 
         # Check that balances are correct
         balance0 = self.nodes[1].getaddressbalance("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br")
-        assert_equal(balance0['balance'], 0);
+        assert_equal(balance0["balance"], 0)
 
         # Check p2pkh and p2sh address indexes
         print "Testing p2pkh and p2sh address index..."
@@ -71,31 +71,31 @@ class AddressIndexTest(BitcoinTestFramework):
 
         self.sync_all()
 
-        txids = self.nodes[1].getaddresstxids("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs");
-        assert_equal(len(txids), 3);
-        assert_equal(txids[0], txid0);
-        assert_equal(txids[1], txid1);
-        assert_equal(txids[2], txid2);
+        txids = self.nodes[1].getaddresstxids("mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs")
+        assert_equal(len(txids), 3)
+        assert_equal(txids[0], txid0)
+        assert_equal(txids[1], txid1)
+        assert_equal(txids[2], txid2)
 
-        txidsb = self.nodes[1].getaddresstxids("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br");
-        assert_equal(len(txidsb), 3);
-        assert_equal(txidsb[0], txidb0);
-        assert_equal(txidsb[1], txidb1);
-        assert_equal(txidsb[2], txidb2);
+        txidsb = self.nodes[1].getaddresstxids("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br")
+        assert_equal(len(txidsb), 3)
+        assert_equal(txidsb[0], txidb0)
+        assert_equal(txidsb[1], txidb1)
+        assert_equal(txidsb[2], txidb2)
 
         # Check that multiple addresses works
-        multitxids = self.nodes[1].getaddresstxids({"addresses": ["2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", "mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs"]});
-        assert_equal(len(multitxids), 6);
-        assert_equal(multitxids[0], txid0);
-        assert_equal(multitxids[1], txidb0);
-        assert_equal(multitxids[2], txid1);
-        assert_equal(multitxids[3], txidb1);
-        assert_equal(multitxids[4], txid2);
-        assert_equal(multitxids[5], txidb2);
+        multitxids = self.nodes[1].getaddresstxids({"addresses": ["2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", "mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs"]})
+        assert_equal(len(multitxids), 6)
+        assert_equal(multitxids[0], txid0)
+        assert_equal(multitxids[1], txidb0)
+        assert_equal(multitxids[2], txid1)
+        assert_equal(multitxids[3], txidb1)
+        assert_equal(multitxids[4], txid2)
+        assert_equal(multitxids[5], txidb2)
 
         # Check that balances are correct
         balance0 = self.nodes[1].getaddressbalance("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br")
-        assert_equal(balance0['balance'], 45 * 100000000);
+        assert_equal(balance0["balance"], 45 * 100000000)
 
         # Check that outputs with the same address will only return one txid
         print "Testing for txid uniqueness..."
@@ -107,19 +107,54 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(10, scriptPubKey), CTxOut(11, scriptPubKey)]
         tx.rehash()
 
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode('utf-8'))
-        sent_txid = self.nodes[0].sendrawtransaction(signed_tx['hex'], True)
+        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
 
         self.nodes[0].generate(1)
         self.sync_all()
 
-        txidsmany = self.nodes[1].getaddresstxids("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br");
-        assert_equal(len(txidsmany), 4);
-        assert_equal(txidsmany[3], sent_txid);
+        txidsmany = self.nodes[1].getaddresstxids("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br")
+        assert_equal(len(txidsmany), 4)
+        assert_equal(txidsmany[3], sent_txid)
 
         # Check that balances are correct
         balance0 = self.nodes[1].getaddressbalance("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br")
-        assert_equal(balance0['balance'], 45 * 100000000 + 21);
+        assert_equal(balance0["balance"], 45 * 100000000 + 21)
+
+        # Check that balances are correct after spending
+        privkey2 = "cSdkPxkAjA4HDr5VHgsebAPDEh9Gyub4HK8UJr2DFGGqKKy4K5sG"
+        address2 = "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW"
+        addressHash2 = "0b2f0a0c31bfe0406b0ccc1381fdbe311946dadc".decode("hex")
+        scriptPubKey2 = CScript([OP_DUP, OP_HASH160, addressHash2, OP_EQUALVERIFY, OP_CHECKSIG])
+        self.nodes[0].importprivkey(privkey2)
+
+        unspent = self.nodes[0].listunspent()
+        tx = CTransaction()
+        tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
+        amount = unspent[0]["amount"] * 100000000
+        tx.vout = [CTxOut(amount, scriptPubKey2)]
+        tx.rehash()
+        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        spending_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        self.nodes[0].generate(1)
+        self.sync_all()
+        balance1 = self.nodes[1].getaddressbalance(address2)
+        assert_equal(balance1["balance"], amount)
+
+        tx = CTransaction()
+        tx.vin = [CTxIn(COutPoint(int(spending_txid, 16), 0))]
+        send_amount = 1 * 100000000 + 12840
+        change_amount = amount - send_amount - 10000
+        tx.vout = [CTxOut(send_amount, scriptPubKey), CTxOut(change_amount, scriptPubKey2)]
+        tx.rehash()
+
+        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
+        self.nodes[0].generate(1)
+        self.sync_all()
+
+        balance2 = self.nodes[1].getaddressbalance(address2)
+        assert_equal(balance2["balance"], change_amount)
 
         print "Passed\n"
 
