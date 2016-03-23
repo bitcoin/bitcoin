@@ -525,6 +525,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 	vector<CAliasIndex> vtxAliasPos;
 	COffer linkOffer;
 	COffer myPriceOffer;
+	COffer myOffer;
 	CTransaction linkedTx;
 	uint64_t heightToCheckAgainst;
 	COfferLinkWhitelistEntry entry;
@@ -603,7 +604,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					return error(
 							"CheckOfferInputs() : failed to read from offer DB");
 			}
-			COffer myOffer = vtxPos.back();
+			myOffer = vtxPos.back();
 
 			// check for valid alias peg
 			if(!theOffer.vchAliasPeg.empty() && getCurrencyToSYSFromAlias(theOffer.vchAliasPeg, myOffer.sCurrencyCode, nRate, theOffer.nHeight, rateList,precision) != "")
