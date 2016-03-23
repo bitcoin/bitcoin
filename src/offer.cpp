@@ -2169,7 +2169,6 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	vector<string> rateList;
 	// get precision & check for valid alias peg
 	int precision = 2;
-	CAmount nRate;
 	if(vchAliasPeg.size() == 0)
 		vchAliasPeg = offerCopy.vchAliasPeg;
 	if(getCurrencyToSYSFromAlias(vchAliasPeg, offerCopy.sCurrencyCode, nRate, chainActive.Tip()->nHeight, rateList,precision) != "")
