@@ -2166,8 +2166,7 @@ UniValue offerupdate(const UniValue& params, bool fHelp) {
 	theOffer.ClearOffer();	
 	CAmount nRate;
 	vector<string> rateList;
-	// get precision &
-	check for valid alias peg
+	// get precision & check for valid alias peg
 	int precision = 2;
 	CAmount nRate;
 	if(vchAliasPeg.size() == 0)
