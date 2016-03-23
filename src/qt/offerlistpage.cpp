@@ -347,6 +347,7 @@ void OfferListPage::on_searchOffer_clicked()
 		string exclusive_resell_str;
 		string private_str;
 		string acceptBTCOnly_str;
+		string alias_peg_str;
 		string alias_str;
 		int expired = 0;
         params.push_back(ui->lineEditOfferSearch->text().toStdString());
@@ -393,6 +394,7 @@ void OfferListPage::on_searchOffer_clicked()
 				exclusive_resell_str = "";
 				alias_str = "";
 				acceptBTCOnly_str = "";
+				alias_peg_str = "";
 				expired = 0;
 
 
