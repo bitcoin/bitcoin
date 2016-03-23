@@ -51,13 +51,10 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 
-        if(mapTxLockReq.count(tx.GetHash()) || mapTxLockReqRejected.count(tx.GetHash())){
-            return;
-        }
-
-        if(!IsIXTXValid(tx)){
-            return;
-        }
+        // have we seen it already?
+        if(mapTxLockReq.count(inv.hash) || mapTxLockReqRejected.count(inv.hash)) return;
+        // is it a valid one?
+        if(!IsIXTXValid(tx)) return;
 
         BOOST_FOREACH(const CTxOut o, tx.vout){
             // IX supports normal scripts and unspendable scripts (used in DS collateral and Budget collateral).
@@ -110,18 +107,12 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
             }
 
             // resolve conflicts
-            std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(tx.GetHash());
-            if (i != mapTxLocks.end()){
-                //we only care if we have a complete tx lock
-                if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-                    if(!CheckForConflictingLocks(tx)){
-                        LogPrintf("ProcessMessageInstantX::ix - Found Existing Complete IX Lock\n");
+            if (IsLockedIXTransaction(tx.GetHash()) && !CheckForConflictingLocks(tx)){
+                LogPrintf("ProcessMessageInstantX::ix - Found Existing Complete IX Lock\n");
 
-                        //reprocess the last 15 blocks
-                        ReprocessBlocks(15);
-                        mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
-                    }
-                }
+                //reprocess the last 15 blocks
+                ReprocessBlocks(15);
+                mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
             }
 
             return;
@@ -173,7 +164,11 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
 
 bool IsIXTXValid(const CTransaction& txCollateral){
     if(txCollateral.vout.size() < 1) return false;
-    if(txCollateral.nLockTime != 0) return false;
+
+    if(!CheckFinalTx(txCollateral)) {
+        LogPrint("instantx", "IsIXTXValid - Transaction is not final - %s\n", txCollateral.ToString());
+        return false;
+    }
 
     int64_t nValueIn = 0;
     int64_t nValueOut = 0;
@@ -360,17 +355,19 @@ bool ProcessConsensusVote(CNode* pnode, CConsensusVote& ctx)
         }
 #endif
 
-        LogPrint("instantx", "InstantX::ProcessConsensusVote - Transaction Lock Votes %d - %s !\n", (*i).second.CountSignatures(), ctx.GetHash().ToString());
+        int nSignatures = (*i).second.CountSignatures();
+        LogPrint("instantx", "InstantX::ProcessConsensusVote - Transaction Lock Votes %d - %s !\n", nSignatures, ctx.GetHash().ToString());
 
-        if((*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED){
-            LogPrint("instantx", "InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", (*i).second.GetHash().ToString());
+        if(nSignatures >= INSTANTX_SIGNATURES_REQUIRED){
+            LogPrint("instantx", "InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", ctx.txHash.ToString());
 
             CTransaction& tx = mapTxLockReq[ctx.txHash];
             if(!CheckForConflictingLocks(tx)){
 
 #ifdef ENABLE_WALLET
                 if(pwalletMain){
-                    if(pwalletMain->UpdatedTransaction((*i).second.txHash)){
+                    if(pwalletMain->UpdatedTransaction(ctx.txHash)){
+                        // bumping this to update UI
                         nCompleteTXLocks++;
                     }
                 }
@@ -387,7 +384,7 @@ bool ProcessConsensusVote(CNode* pnode, CConsensusVote& ctx)
                 // resolve conflicts
 
                 //if this tx lock was rejected, we need to remove the conflicting blocks
-                if(mapTxLockReqRejected.count((*i).second.txHash)){
+                if(mapTxLockReqRejected.count(ctx.txHash)){
                     //reprocess the last 15 blocks
                     ReprocessBlocks(15);
                 }
@@ -464,6 +461,37 @@ void CleanTransactionLocksList()
             it++;
         }
     }
+}
+
+bool IsLockedIXTransaction(uint256 txHash) {
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(txHash);
+    return i != mapTxLocks.end() && (*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED;
+}
+
+int GetTransactionLockSignatures(uint256 txHash)
+{
+    if(fLargeWorkForkFound || fLargeWorkInvalidChainFound) return -2;
+    if(!IsSporkActive(SPORK_2_INSTANTX)) return -3;
+    if(!fEnableInstantX) return -1;
+
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(txHash);
+    if (i != mapTxLocks.end()){
+        return (*i).second.CountSignatures();
+    }
+
+    return -1;
+}
+
+bool IsTransactionLockTimedOut(uint256 txHash)
+{
+    if(!fEnableInstantX) return 0;
+
+    std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(txHash);
+    if (i != mapTxLocks.end()){
+        return GetTime() > (*i).second.nTimeout;
+    }
+
+    return false;
 }
 
 uint256 CConsensusVote::GetHash() const

@@ -34,7 +34,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
     }
     else
     {
-        int signatures = wtx.GetTransactionLockSignatures();
+        int signatures = GetTransactionLockSignatures(wtx.GetHash());
         QString strUsingIX = "";
         if(signatures >= 0){
 
@@ -49,7 +49,7 @@ QString TransactionDesc::FormatTxStatus(const CWalletTx& wtx)
                 else
                     return tr("%1 confirmations (verified via instantx)").arg(nDepth);
             } else {
-                if(!wtx.IsTransactionLockTimedOut()){
+                if(!IsTransactionLockTimedOut(wtx.GetHash())){
                     int nDepth = wtx.GetDepthInMainChain();
                     if (nDepth < 0)
                         return tr("conflicted");
