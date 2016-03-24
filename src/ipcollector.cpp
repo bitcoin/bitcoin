@@ -34,34 +34,55 @@ bool AddPeer(std::string &strIpAddr) {
     if (it != vAddedNodes.end())
         return false;
 
+    printf("Adding node %s\n", strIpAddr.c_str());
     vAddedNodes.push_back(strIpAddr);
+
     return true;
 }
-
 
 void ThreadIPCollector(void* parg) {
     printf("ThreadIPCollector started\n");
     vnThreadsRunning[THREAD_IPCOLLECTOR]++;
 
-    while(!fShutdown) {
-        if (fServer) {
-            // If RPC server is enabled then we don't have to parse anything.
-            std::string strCollectorOutput = exec(strCollectorCommand.c_str());
-            printf("Peer collector output: %s\n", strCollectorOutput.c_str());
-        } else {
-            // Otherwise, there is a work to be done.
-            std::string strCollectorOutput = exec((strCollectorCommand + " norpc").c_str());
-            std::istringstream collectorStream(strCollectorOutput);
+    std::string strExecutableFilePath = "";
+#ifdef MAC_OSX
+    size_t nameEnd = strCollectorCommand.rfind(".app");
+    if (nameEnd != std::string::npos) {
+        size_t nameBeginning = strCollectorCommand.rfind("/");
+        if (nameBeginning == std::string::npos)
+            nameBeginning = 0;
 
-            std::string strIpAddr;
-            while (std::getline(collectorStream, strIpAddr)) {
-                AddPeer(strIpAddr);
+        std::string strFileName = strCollectorCommand.substr(nameBeginning, nameEnd - nameBeginning);
+        strExecutableFilePath = strCollectorCommand + "/Contents/MacOS/" + strFileName;
+    }
+    else
+        strExecutableFilePath = strCollectorCommand;
+#else
+        strExecutableFilePath = strCollectorCommand;
+#endif
+
+    if (strExecutableFilePath != "")
+    {
+        while(!fShutdown) {
+            if (fServer) {
+                // If RPC server is enabled then we don't have to parse anything.
+                std::string strCollectorOutput = exec(strExecutableFilePath.c_str());
+                printf("Peer collector output: %s\n", strCollectorOutput.c_str());
+            } else {
+                // Otherwise, there is a work to be done.
+                std::string strCollectorOutput = exec((strExecutableFilePath + " norpc").c_str());
+                std::istringstream collectorStream(strCollectorOutput);
+
+                std::string strIpAddr;
+                while (std::getline(collectorStream, strIpAddr)) {
+                    AddPeer(strIpAddr);
+                }
             }
-        }
 
-        int nSleepHours = 1 + GetRandInt(5); // Sleep for 1-6 hours.
-        for (int i = 0; i < nSleepHours * 3600 && !fShutdown; i++)
-            Sleep(1000);
+            int nSleepHours = 1 + GetRandInt(5); // Sleep for 1-6 hours.
+            for (int i = 0; i < nSleepHours * 3600 && !fShutdown; i++)
+                Sleep(1000);
+        }
     }
 
     printf("ThreadIPCollector stopped\n");
