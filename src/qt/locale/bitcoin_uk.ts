@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="uk_UA">
+<TS version="2.0" language="uk_UA">
+<defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
     <message>
@@ -105,32 +106,32 @@ Copyright © 2012-2016 The NovaCoin developers</source>
         <translation>&amp;Видалити</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="65"/>
+        <location filename="../addressbookpage.cpp" line="61"/>
         <source>Copy &amp;Label</source>
         <translation>Скопіювати &amp;мітку</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="67"/>
+        <location filename="../addressbookpage.cpp" line="63"/>
         <source>&amp;Edit</source>
         <translation>&amp;Редагувати</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="327"/>
+        <location filename="../addressbookpage.cpp" line="317"/>
         <source>Export Address Book Data</source>
         <translation>Експортувати адресну книгу</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="328"/>
+        <location filename="../addressbookpage.cpp" line="318"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Файли відділені комами (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="341"/>
+        <location filename="../addressbookpage.cpp" line="331"/>
         <source>Error exporting</source>
         <translation>Помилка при експортуванні</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="341"/>
+        <location filename="../addressbookpage.cpp" line="331"/>
         <source>Could not write to file %1.</source>
         <translation>Неможливо записати у файл %1.</translation>
     </message>
@@ -952,7 +953,7 @@ Some or all keys from:
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="262"/>
-        <location filename="../coincontroldialog.cpp" line="543"/>
+        <location filename="../coincontroldialog.cpp" line="549"/>
         <source>no</source>
         <translation>ні</translation>
     </message>
@@ -1022,108 +1023,108 @@ Some or all keys from:
         <translation>Пріоритет</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="38"/>
+        <location filename="../coincontroldialog.cpp" line="40"/>
         <source>Copy address</source>
         <translation>Скопіювати адресу</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="39"/>
+        <location filename="../coincontroldialog.cpp" line="41"/>
         <source>Copy label</source>
         <translation>Скопіювати мітку</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="40"/>
-        <location filename="../coincontroldialog.cpp" line="66"/>
+        <location filename="../coincontroldialog.cpp" line="42"/>
+        <location filename="../coincontroldialog.cpp" line="68"/>
         <source>Copy amount</source>
         <translation>Скопіювати суму</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="41"/>
+        <location filename="../coincontroldialog.cpp" line="43"/>
         <source>Copy transaction ID</source>
         <translation>Скопіювати ID транзакції</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="65"/>
+        <location filename="../coincontroldialog.cpp" line="67"/>
         <source>Copy quantity</source>
         <translation>Скопіювати кількість</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="67"/>
+        <location filename="../coincontroldialog.cpp" line="69"/>
         <source>Copy fee</source>
         <translation>Скопіювати комісію</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="68"/>
+        <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy after fee</source>
         <translation>Скопіювати після комісії</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="69"/>
+        <location filename="../coincontroldialog.cpp" line="71"/>
         <source>Copy bytes</source>
         <translation>Скопіювати байти</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="70"/>
+        <location filename="../coincontroldialog.cpp" line="72"/>
         <source>Copy priority</source>
         <translation>Скопіювати пріорітет</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="71"/>
+        <location filename="../coincontroldialog.cpp" line="73"/>
         <source>Copy low output</source>
         <translation>Скопіювати маленькі виходи</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="72"/>
+        <location filename="../coincontroldialog.cpp" line="74"/>
         <source>Copy change</source>
         <translation>Скопіювати решту</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="392"/>
+        <location filename="../coincontroldialog.cpp" line="394"/>
         <source>highest</source>
         <translation>найвищий</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="393"/>
+        <location filename="../coincontroldialog.cpp" line="395"/>
         <source>high</source>
         <translation>високий</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="394"/>
+        <location filename="../coincontroldialog.cpp" line="396"/>
         <source>medium-high</source>
         <translation>вище за середній</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="395"/>
+        <location filename="../coincontroldialog.cpp" line="397"/>
         <source>medium</source>
         <translation>середній</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="399"/>
+        <location filename="../coincontroldialog.cpp" line="401"/>
         <source>low-medium</source>
         <translation>нижче за середній</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="400"/>
+        <location filename="../coincontroldialog.cpp" line="402"/>
         <source>low</source>
         <translation>низький</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="401"/>
+        <location filename="../coincontroldialog.cpp" line="403"/>
         <source>lowest</source>
         <translation>найнижчий</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="543"/>
+        <location filename="../coincontroldialog.cpp" line="549"/>
         <source>DUST</source>
         <translation>ПИЛ</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="543"/>
+        <location filename="../coincontroldialog.cpp" line="549"/>
         <source>yes</source>
         <translation>так</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="553"/>
+        <location filename="../coincontroldialog.cpp" line="559"/>
         <source>This label turns red, if the transaction size is bigger than 1000 bytes.
 
  This means a fee of at least %1 per kb is required.
@@ -1136,7 +1137,7 @@ Some or all keys from:
 Може відрізнятися на +/- 1 байт за вхід.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="554"/>
+        <location filename="../coincontroldialog.cpp" line="560"/>
         <source>Transactions with higher priority get more likely into a block.
 
 This label turns red, if the priority is smaller than &quot;medium&quot;.
@@ -1149,7 +1150,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 Це означає, що необхідно внести комісію (щонайменше %1 за КБ).</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="555"/>
+        <location filename="../coincontroldialog.cpp" line="561"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.
 
  This means a fee of at least %2 is required. 
@@ -1162,7 +1163,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 Суми нижче мінімальної комісії показані як &quot;ПИЛ&quot;.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="556"/>
+        <location filename="../coincontroldialog.cpp" line="562"/>
         <source>This label turns red, if the change is smaller than %1.
 
  This means a fee of at least %2 is required.</source>
@@ -1171,18 +1172,18 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
 Це означає, що необхідно внести комісію (щонайменше %2).</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="593"/>
-        <location filename="../coincontroldialog.cpp" line="662"/>
+        <location filename="../coincontroldialog.cpp" line="599"/>
+        <location filename="../coincontroldialog.cpp" line="672"/>
         <source>(no label)</source>
         <translation>(немає назви)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="653"/>
+        <location filename="../coincontroldialog.cpp" line="663"/>
         <source>change from %1 (%2)</source>
         <translation>здача з %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="654"/>
+        <location filename="../coincontroldialog.cpp" line="664"/>
         <source>(change)</source>
         <translation>(решта)</translation>
     </message>
@@ -2008,196 +2009,216 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>&amp;Мережа</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="136"/>
+        <location filename="../forms/optionsdialog.ui" line="126"/>
         <source>Connect to the NovaCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
         <translation>Підключення до мережі через SOCKS5 проксі (напр. при підключенні через Tor).</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="139"/>
+        <location filename="../forms/optionsdialog.ui" line="129"/>
         <source>&amp;Connect through SOCKS proxy:</source>
         <translation>&amp;Підключення через SOCKS проксі:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="148"/>
+        <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>Proxy &amp;IP:</source>
         <translation>&amp;IP проксі:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="167"/>
+        <location filename="../forms/optionsdialog.ui" line="157"/>
         <source>IP address of the proxy (e.g. 127.0.0.1)</source>
         <translation>IP-адреса проксі-сервера (наприклад, 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="174"/>
+        <location filename="../forms/optionsdialog.ui" line="164"/>
         <source>&amp;Port:</source>
         <translation>&amp;Порт:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="193"/>
+        <location filename="../forms/optionsdialog.ui" line="183"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Порт проксі-сервера (наприклад 9050)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="200"/>
+        <location filename="../forms/optionsdialog.ui" line="190"/>
         <source>SOCKS &amp;Version:</source>
         <translation>SOCKS &amp;версія:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="213"/>
+        <location filename="../forms/optionsdialog.ui" line="203"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
         <translation>SOCKS версія проксі (наприклад, 5)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="235"/>
+        <location filename="../forms/optionsdialog.ui" line="225"/>
         <source>Connect through &amp;Tor:</source>
         <translation>З&apos;єднання через &amp;Тор:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="250"/>
+        <location filename="../forms/optionsdialog.ui" line="240"/>
         <source>Tor IP:</source>
         <translation>Тор IP:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="267"/>
+        <location filename="../forms/optionsdialog.ui" line="257"/>
         <source>Port:</source>
         <translation>Порт:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="284"/>
+        <location filename="../forms/optionsdialog.ui" line="274"/>
         <source>Use Tor only</source>
         <translation>Використовувати тільки Tor</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="308"/>
+        <location filename="../forms/optionsdialog.ui" line="298"/>
         <source>Tor name:</source>
         <translation>Тор ім&apos;я:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="353"/>
+        <location filename="../forms/optionsdialog.ui" line="331"/>
+        <source>Seeder command:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="341"/>
+        <source>Choose ...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="364"/>
         <source>&amp;Window</source>
         <translation>&amp;Вікно</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="359"/>
+        <location filename="../forms/optionsdialog.ui" line="370"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Показувати лише іконку в треї після згортання вікна.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="362"/>
+        <location filename="../forms/optionsdialog.ui" line="373"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>Мінімізувати &amp;у трей</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="369"/>
+        <location filename="../forms/optionsdialog.ui" line="380"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Згортати замість закриття. Якщо ця опція включена, програма закриється лише після вибору відповідного пункту в меню.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="372"/>
+        <location filename="../forms/optionsdialog.ui" line="383"/>
         <source>M&amp;inimize on close</source>
         <translation>Згортати замість закритт&amp;я</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="393"/>
+        <location filename="../forms/optionsdialog.ui" line="404"/>
         <source>&amp;Display</source>
         <translation>&amp;Відображення</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="401"/>
+        <location filename="../forms/optionsdialog.ui" line="412"/>
         <source>User Interface &amp;language:</source>
         <translation>Мов&amp;а інтерфейсу користувача:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="414"/>
+        <location filename="../forms/optionsdialog.ui" line="425"/>
         <source>The user interface language can be set here. This setting will take effect after restarting NovaCoin.</source>
         <translation>Встановлює мову інтерфейсу. Зміни набудуть чинності після перезапуску NovaCoin.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="425"/>
+        <location filename="../forms/optionsdialog.ui" line="436"/>
         <source>&amp;Unit to show amounts in:</source>
         <translation>В&amp;имірювати суми в:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="438"/>
+        <location filename="../forms/optionsdialog.ui" line="449"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation>Виберіть одиницю вимірювання монет, яка буде відображатись в гаманці та при відправленні.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="447"/>
+        <location filename="../forms/optionsdialog.ui" line="458"/>
         <source>Whether to show NovaCoin addresses in the transaction list or not.</source>
         <translation>Відображати адреси NovaCoin у списку транзакцій чи ні.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="450"/>
+        <location filename="../forms/optionsdialog.ui" line="461"/>
         <source>&amp;Display addresses in transaction list</source>
         <translation>&amp;Відображати адреси у листі транзакцій</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="457"/>
+        <location filename="../forms/optionsdialog.ui" line="468"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Показати або сховати керування входами.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="460"/>
+        <location filename="../forms/optionsdialog.ui" line="471"/>
         <source>Display coin &amp;control features (experts only!)</source>
         <translation>Управління входами (тільки для експертів!)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="469"/>
-        <location filename="../forms/optionsdialog.ui" line="482"/>
+        <location filename="../forms/optionsdialog.ui" line="480"/>
+        <location filename="../forms/optionsdialog.ui" line="493"/>
         <source>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Сторонні URL (наприклад explorer.novaco.in), які відображаються на вкладці транзакцій як пункти контекстного меню. %s в URL замінюється хешем транзакції. URL відокремлюються один від одного вертикальною рискою |.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="472"/>
+        <location filename="../forms/optionsdialog.ui" line="483"/>
         <source>Third party transaction URLs</source>
         <translation>Сторонні URL транзакцій</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="555"/>
+        <location filename="../forms/optionsdialog.ui" line="566"/>
         <source>&amp;OK</source>
         <translation>&amp;Гаразд</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="562"/>
+        <location filename="../forms/optionsdialog.ui" line="573"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Скасувати</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="572"/>
+        <location filename="../forms/optionsdialog.ui" line="583"/>
         <source>&amp;Apply</source>
         <translation>&amp;Застосувати</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="74"/>
+        <location filename="../optionsdialog.cpp" line="77"/>
         <source>default</source>
         <translation>типово</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="240"/>
-        <location filename="../optionsdialog.cpp" line="249"/>
-        <location filename="../optionsdialog.cpp" line="258"/>
-        <location filename="../optionsdialog.cpp" line="267"/>
+        <location filename="../optionsdialog.cpp" line="242"/>
+        <location filename="../optionsdialog.cpp" line="251"/>
+        <location filename="../optionsdialog.cpp" line="260"/>
+        <location filename="../optionsdialog.cpp" line="269"/>
         <source>Warning</source>
         <translation>Попередження</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="240"/>
-        <location filename="../optionsdialog.cpp" line="249"/>
-        <location filename="../optionsdialog.cpp" line="258"/>
-        <location filename="../optionsdialog.cpp" line="267"/>
+        <location filename="../optionsdialog.cpp" line="242"/>
+        <location filename="../optionsdialog.cpp" line="251"/>
+        <location filename="../optionsdialog.cpp" line="260"/>
+        <location filename="../optionsdialog.cpp" line="269"/>
         <source>This setting will take effect after restarting NovaCoin.</source>
         <translation>Цей параметр набуде чинності після перезавантаження NovaCoin.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="297"/>
+        <location filename="../optionsdialog.cpp" line="299"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>Надана адреса проксі-сервера недійсна.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="316"/>
+        <location filename="../optionsdialog.cpp" line="318"/>
         <source>The supplied tor address is invalid.</source>
         <translation>Надана адреса тор недійсна.</translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="365"/>
+        <source>Choose peer collector application</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="365"/>
+        <source>Applications (*.*)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2663,7 +2684,7 @@ Reduce the number of addresses involved in the address creation.</source>
     </message>
     <message>
         <location filename="../forms/secondauthdialog.ui" line="17"/>
-        <source>Second Authentication</source>
+        <source>Second Authentification</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2776,13 +2797,13 @@ Reduce the number of addresses involved in the address creation.</source>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="204"/>
-        <location filename="../sendcoinsdialog.cpp" line="209"/>
-        <location filename="../sendcoinsdialog.cpp" line="214"/>
-        <location filename="../sendcoinsdialog.cpp" line="219"/>
-        <location filename="../sendcoinsdialog.cpp" line="225"/>
-        <location filename="../sendcoinsdialog.cpp" line="230"/>
-        <location filename="../sendcoinsdialog.cpp" line="235"/>
+        <location filename="../sendcoinsdialog.cpp" line="205"/>
+        <location filename="../sendcoinsdialog.cpp" line="210"/>
+        <location filename="../sendcoinsdialog.cpp" line="215"/>
+        <location filename="../sendcoinsdialog.cpp" line="220"/>
+        <location filename="../sendcoinsdialog.cpp" line="226"/>
+        <location filename="../sendcoinsdialog.cpp" line="231"/>
+        <location filename="../sendcoinsdialog.cpp" line="236"/>
         <source>Send Coins</source>
         <translation>Відправити</translation>
     </message>
@@ -2929,103 +2950,103 @@ Reduce the number of addresses involved in the address creation.</source>
         <translation>&amp;Відправити</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="42"/>
+        <location filename="../sendcoinsdialog.cpp" line="43"/>
         <source>Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
         <translation>Введіть адресу NovaCoin (наприклад 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="56"/>
+        <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy quantity</source>
         <translation>Скопіювати кількість</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="57"/>
+        <location filename="../sendcoinsdialog.cpp" line="58"/>
         <source>Copy amount</source>
         <translation>Скопіювати суму</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="58"/>
+        <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy fee</source>
         <translation>Скопіювати комісію</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="59"/>
+        <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy after fee</source>
         <translation>Скопіювати після комісії</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="60"/>
+        <location filename="../sendcoinsdialog.cpp" line="61"/>
         <source>Copy bytes</source>
         <translation>Скопіювати байти</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="61"/>
+        <location filename="../sendcoinsdialog.cpp" line="62"/>
         <source>Copy priority</source>
         <translation>Скопіювати пріорітет</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="62"/>
+        <location filename="../sendcoinsdialog.cpp" line="63"/>
         <source>Copy low output</source>
         <translation>Скопіювати маленькі виходи</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="63"/>
+        <location filename="../sendcoinsdialog.cpp" line="64"/>
         <source>Copy change</source>
         <translation>Скопіювати решту</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="167"/>
-        <location filename="../sendcoinsdialog.cpp" line="169"/>
+        <location filename="../sendcoinsdialog.cpp" line="168"/>
+        <location filename="../sendcoinsdialog.cpp" line="170"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
         <translation>&lt;b&gt;%1&lt;/b&gt; адресату %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="175"/>
+        <location filename="../sendcoinsdialog.cpp" line="176"/>
         <source>Confirm send coins</source>
         <translation>Підтвердіть відправлення</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="176"/>
+        <location filename="../sendcoinsdialog.cpp" line="177"/>
         <source>Are you sure you want to send %1?</source>
         <translation>Ви впевнені що хочете відправити %1</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="176"/>
+        <location filename="../sendcoinsdialog.cpp" line="177"/>
         <source> and </source>
         <translation> і </translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="205"/>
+        <location filename="../sendcoinsdialog.cpp" line="206"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>Адреса отримувача невірна, будь ласка перепровірте.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="210"/>
+        <location filename="../sendcoinsdialog.cpp" line="211"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>Сума монет для відправлення повинна бути більшою 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="215"/>
+        <location filename="../sendcoinsdialog.cpp" line="216"/>
         <source>The amount exceeds your balance.</source>
         <translation>Кількість монет для відправлення перевищує ваш баланс.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="220"/>
+        <location filename="../sendcoinsdialog.cpp" line="221"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>Сума перевищить ваш баланс, якщо комісія %1 буде додана до вашої транзакції.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="226"/>
+        <location filename="../sendcoinsdialog.cpp" line="227"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Знайдено адресу що дублюється. Відправлення на кожну адресу дозволяється лише один раз на кожну операцію переказу.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="231"/>
+        <location filename="../sendcoinsdialog.cpp" line="232"/>
         <source>Error: Transaction creation failed.</source>
         <translation>Помилка: Не вдалося створити транзакцію!</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="236"/>
+        <location filename="../sendcoinsdialog.cpp" line="237"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Помилка: Транзакцію відхилено! Це може статись, якщо декілька монет з вашого гаманця вже використані, наприклад, якщо ви використовуєте одну копію гаманця, а монети були використані з іншої копії, але не позначені як використані в цій.</translation>
     </message>
@@ -4386,89 +4407,89 @@ If the file does not exist, create it with owner-readable-only file permissions.
 </translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="167"/>
+        <location filename="../bitcoinstrings.cpp" line="165"/>
         <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
         <translation>Використовувати окремий проксі для з&apos;єднання з учасниками через приховані сервіси Tor (типово: так само, як -proxy)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="168"/>
+        <location filename="../bitcoinstrings.cpp" line="166"/>
         <source>Use the test network</source>
         <translation>Використовувати тестову мережу
 </translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="169"/>
+        <location filename="../bitcoinstrings.cpp" line="167"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Ім’я користувача для JSON-RPC-з’єднань
 </translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="170"/>
+        <location filename="../bitcoinstrings.cpp" line="168"/>
         <source>Verifying database integrity...</source>
         <translation>Перевірка цілісності бази даних...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="171"/>
+        <location filename="../bitcoinstrings.cpp" line="169"/>
         <source>Wallet needed to be rewritten: restart NovaCoin to complete</source>
         <translation>Потрібно перезаписати гаманець: перезапустіть NovaCoin для завершення</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="172"/>
+        <location filename="../bitcoinstrings.cpp" line="170"/>
         <source>Warning: Disk space is low!</source>
         <translation>Увага: Мало вільного місця на диску!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="173"/>
+        <location filename="../bitcoinstrings.cpp" line="171"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Увага: Поточна версія застаріла, необхідне оновлення!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="174"/>
+        <location filename="../bitcoinstrings.cpp" line="172"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat пошкоджено, відновлення не вдалося</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="175"/>
+        <location filename="../bitcoinstrings.cpp" line="173"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Вкажіть файл гаманця (в межах каталогу даних)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="176"/>
+        <location filename="../bitcoinstrings.cpp" line="174"/>
         <source>Use in-memory logging for block index database (default: 1)</source>
         <translation>Використовувати ведення журналу у пам&apos;яті для індексу бази даних блоків (за замовчуванням: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="177"/>
+        <location filename="../bitcoinstrings.cpp" line="175"/>
         <source>Find peers using DNS lookup (default: 1)</source>
         <translation>Шукати вузли за допомогою DNS (за замовчуванням: 0) {1)?}</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="178"/>
+        <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Sync checkpoints policy (default: strict)</source>
         <translation>Політика синхронізованих міток (за замовчуванням: strict)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="179"/>
+        <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Виконати команду, коли транзакція гаманця зміниться (замість %s в команді буде підставлено ідентифікатор транзакції)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="180"/>
+        <location filename="../bitcoinstrings.cpp" line="178"/>
         <source>Require a confirmations for change (default: 0)</source>
         <translation>Вимагати підтвердження для решти (типово: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="181"/>
+        <location filename="../bitcoinstrings.cpp" line="179"/>
         <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
         <translation>Вимагати від скриптів використання стандартних PUSH операторів (за замовчуванням: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="182"/>
+        <location filename="../bitcoinstrings.cpp" line="180"/>
         <source>Set the number of script verification threads (1-16, 0=auto, default: 0)</source>
         <translation>Встановити кількість потоків скрипту перевірки (1-16, 0=автоматично, типово: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="183"/>
+        <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>When creating transactions, ignore inputs with value less than this (default: %s)</source>
         <translation>При створенні транзакцій, ігнорувати входи з сумою меншу за цю (за замовчуванням:  %s)</translation>
     </message>

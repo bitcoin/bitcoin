@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="en">
+<TS version="2.0" language="en">
+<defaultcodec>UTF-8</defaultcodec>
 <context>
     <name>AboutDialog</name>
     <message>
@@ -109,32 +110,32 @@ Copyright © 2012-2016 The NovaCoin developers</translation>
         <translation>&amp;Delete</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="65"/>
+        <location filename="../addressbookpage.cpp" line="61"/>
         <source>Copy &amp;Label</source>
         <translation>Copy &amp;Label</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="67"/>
+        <location filename="../addressbookpage.cpp" line="63"/>
         <source>&amp;Edit</source>
         <translation>&amp;Edit</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="327"/>
+        <location filename="../addressbookpage.cpp" line="317"/>
         <source>Export Address Book Data</source>
         <translation>Export Address Book Data</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="328"/>
+        <location filename="../addressbookpage.cpp" line="318"/>
         <source>Comma separated file (*.csv)</source>
         <translation>Comma separated file (*.csv)</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="341"/>
+        <location filename="../addressbookpage.cpp" line="331"/>
         <source>Error exporting</source>
         <translation>Error exporting</translation>
     </message>
     <message>
-        <location filename="../addressbookpage.cpp" line="341"/>
+        <location filename="../addressbookpage.cpp" line="331"/>
         <source>Could not write to file %1.</source>
         <translation>Could not write to file %1.</translation>
     </message>
@@ -949,7 +950,7 @@ Some or all keys from:
     </message>
     <message>
         <location filename="../forms/coincontroldialog.ui" line="262"/>
-        <location filename="../coincontroldialog.cpp" line="543"/>
+        <location filename="../coincontroldialog.cpp" line="549"/>
         <source>no</source>
         <translation>no</translation>
     </message>
@@ -1019,108 +1020,108 @@ Some or all keys from:
         <translation>Priority</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="38"/>
+        <location filename="../coincontroldialog.cpp" line="40"/>
         <source>Copy address</source>
         <translation>Copy address</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="39"/>
+        <location filename="../coincontroldialog.cpp" line="41"/>
         <source>Copy label</source>
         <translation>Copy label</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="40"/>
-        <location filename="../coincontroldialog.cpp" line="66"/>
+        <location filename="../coincontroldialog.cpp" line="42"/>
+        <location filename="../coincontroldialog.cpp" line="68"/>
         <source>Copy amount</source>
         <translation>Copy amount</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="41"/>
+        <location filename="../coincontroldialog.cpp" line="43"/>
         <source>Copy transaction ID</source>
         <translation>Copy transaction ID</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="65"/>
+        <location filename="../coincontroldialog.cpp" line="67"/>
         <source>Copy quantity</source>
         <translation>Copy quantity</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="67"/>
+        <location filename="../coincontroldialog.cpp" line="69"/>
         <source>Copy fee</source>
         <translation>Copy fee</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="68"/>
+        <location filename="../coincontroldialog.cpp" line="70"/>
         <source>Copy after fee</source>
         <translation>Copy after fee</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="69"/>
+        <location filename="../coincontroldialog.cpp" line="71"/>
         <source>Copy bytes</source>
         <translation>Copy bytes</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="70"/>
+        <location filename="../coincontroldialog.cpp" line="72"/>
         <source>Copy priority</source>
         <translation>Copy priority</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="71"/>
+        <location filename="../coincontroldialog.cpp" line="73"/>
         <source>Copy low output</source>
         <translation>Copy low output</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="72"/>
+        <location filename="../coincontroldialog.cpp" line="74"/>
         <source>Copy change</source>
         <translation>Copy change</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="392"/>
+        <location filename="../coincontroldialog.cpp" line="394"/>
         <source>highest</source>
         <translation>highest</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="393"/>
+        <location filename="../coincontroldialog.cpp" line="395"/>
         <source>high</source>
         <translation>high</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="394"/>
+        <location filename="../coincontroldialog.cpp" line="396"/>
         <source>medium-high</source>
         <translation>medium-high</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="395"/>
+        <location filename="../coincontroldialog.cpp" line="397"/>
         <source>medium</source>
         <translation>medium</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="399"/>
+        <location filename="../coincontroldialog.cpp" line="401"/>
         <source>low-medium</source>
         <translation>low-medium</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="400"/>
+        <location filename="../coincontroldialog.cpp" line="402"/>
         <source>low</source>
         <translation>low</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="401"/>
+        <location filename="../coincontroldialog.cpp" line="403"/>
         <source>lowest</source>
         <translation>lowest</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="543"/>
+        <location filename="../coincontroldialog.cpp" line="549"/>
         <source>DUST</source>
         <translation>DUST</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="543"/>
+        <location filename="../coincontroldialog.cpp" line="549"/>
         <source>yes</source>
         <translation>yes</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="553"/>
+        <location filename="../coincontroldialog.cpp" line="559"/>
         <source>This label turns red, if the transaction size is bigger than 1000 bytes.
 
  This means a fee of at least %1 per kb is required.
@@ -1133,7 +1134,7 @@ Some or all keys from:
  Can vary +/- 1 Byte per input.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="554"/>
+        <location filename="../coincontroldialog.cpp" line="560"/>
         <source>Transactions with higher priority get more likely into a block.
 
 This label turns red, if the priority is smaller than &quot;medium&quot;.
@@ -1146,7 +1147,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
  This means a fee of at least %1 per kb is required.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="555"/>
+        <location filename="../coincontroldialog.cpp" line="561"/>
         <source>This label turns red, if any recipient receives an amount smaller than %1.
 
  This means a fee of at least %2 is required. 
@@ -1159,7 +1160,7 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
  Amounts below the minimum fee are shown as DUST.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="556"/>
+        <location filename="../coincontroldialog.cpp" line="562"/>
         <source>This label turns red, if the change is smaller than %1.
 
  This means a fee of at least %2 is required.</source>
@@ -1168,18 +1169,18 @@ This label turns red, if the priority is smaller than &quot;medium&quot;.
  This means a fee of at least %2 is required.</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="593"/>
-        <location filename="../coincontroldialog.cpp" line="662"/>
+        <location filename="../coincontroldialog.cpp" line="599"/>
+        <location filename="../coincontroldialog.cpp" line="672"/>
         <source>(no label)</source>
         <translation>(no label)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="653"/>
+        <location filename="../coincontroldialog.cpp" line="663"/>
         <source>change from %1 (%2)</source>
         <translation>change from %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../coincontroldialog.cpp" line="654"/>
+        <location filename="../coincontroldialog.cpp" line="664"/>
         <source>(change)</source>
         <translation>(change)</translation>
     </message>
@@ -2003,196 +2004,216 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>&amp;Network</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="136"/>
+        <location filename="../forms/optionsdialog.ui" line="126"/>
         <source>Connect to the NovaCoin network through a SOCKS proxy (e.g. when connecting through Tor).</source>
         <translation>Connect to the NovaCoin network through a SOCKS proxy (e.g. when connecting through Tor).</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="139"/>
+        <location filename="../forms/optionsdialog.ui" line="129"/>
         <source>&amp;Connect through SOCKS proxy:</source>
         <translation>&amp;Connect through SOCKS proxy:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="148"/>
+        <location filename="../forms/optionsdialog.ui" line="138"/>
         <source>Proxy &amp;IP:</source>
         <translation>Proxy &amp;IP:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="167"/>
+        <location filename="../forms/optionsdialog.ui" line="157"/>
         <source>IP address of the proxy (e.g. 127.0.0.1)</source>
         <translation>IP address of the proxy (e.g. 127.0.0.1)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="174"/>
+        <location filename="../forms/optionsdialog.ui" line="164"/>
         <source>&amp;Port:</source>
         <translation>&amp;Port:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="193"/>
+        <location filename="../forms/optionsdialog.ui" line="183"/>
         <source>Port of the proxy (e.g. 9050)</source>
         <translation>Port of the proxy (e.g. 9050)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="200"/>
+        <location filename="../forms/optionsdialog.ui" line="190"/>
         <source>SOCKS &amp;Version:</source>
         <translation>SOCKS &amp;Version:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="213"/>
+        <location filename="../forms/optionsdialog.ui" line="203"/>
         <source>SOCKS version of the proxy (e.g. 5)</source>
         <translation>SOCKS version of the proxy (e.g. 5)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="235"/>
+        <location filename="../forms/optionsdialog.ui" line="225"/>
         <source>Connect through &amp;Tor:</source>
         <translation>Connect through &amp;Tor:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="250"/>
+        <location filename="../forms/optionsdialog.ui" line="240"/>
         <source>Tor IP:</source>
         <translation>Tor IP:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="267"/>
+        <location filename="../forms/optionsdialog.ui" line="257"/>
         <source>Port:</source>
         <translation>Port:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="284"/>
+        <location filename="../forms/optionsdialog.ui" line="274"/>
         <source>Use Tor only</source>
         <translation>Use Tor only</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="308"/>
+        <location filename="../forms/optionsdialog.ui" line="298"/>
         <source>Tor name:</source>
         <translation>Tor name:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="353"/>
+        <location filename="../forms/optionsdialog.ui" line="331"/>
+        <source>Seeder command:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="341"/>
+        <source>Choose ...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../forms/optionsdialog.ui" line="364"/>
         <source>&amp;Window</source>
         <translation>&amp;Window</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="359"/>
+        <location filename="../forms/optionsdialog.ui" line="370"/>
         <source>Show only a tray icon after minimizing the window.</source>
         <translation>Show only a tray icon after minimizing the window.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="362"/>
+        <location filename="../forms/optionsdialog.ui" line="373"/>
         <source>&amp;Minimize to the tray instead of the taskbar</source>
         <translation>&amp;Minimize to the tray instead of the taskbar</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="369"/>
+        <location filename="../forms/optionsdialog.ui" line="380"/>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="372"/>
+        <location filename="../forms/optionsdialog.ui" line="383"/>
         <source>M&amp;inimize on close</source>
         <translation>M&amp;inimize on close</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="393"/>
+        <location filename="../forms/optionsdialog.ui" line="404"/>
         <source>&amp;Display</source>
         <translation>&amp;Display</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="401"/>
+        <location filename="../forms/optionsdialog.ui" line="412"/>
         <source>User Interface &amp;language:</source>
         <translation>User Interface &amp;language:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="414"/>
+        <location filename="../forms/optionsdialog.ui" line="425"/>
         <source>The user interface language can be set here. This setting will take effect after restarting NovaCoin.</source>
         <translation>The user interface language can be set here. This setting will take effect after restarting NovaCoin.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="425"/>
+        <location filename="../forms/optionsdialog.ui" line="436"/>
         <source>&amp;Unit to show amounts in:</source>
         <translation>&amp;Unit to show amounts in:</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="438"/>
+        <location filename="../forms/optionsdialog.ui" line="449"/>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
         <translation>Choose the default subdivision unit to show in the interface and when sending coins.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="447"/>
+        <location filename="../forms/optionsdialog.ui" line="458"/>
         <source>Whether to show NovaCoin addresses in the transaction list or not.</source>
         <translation>Whether to show NovaCoin addresses in the transaction list or not.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="450"/>
+        <location filename="../forms/optionsdialog.ui" line="461"/>
         <source>&amp;Display addresses in transaction list</source>
         <translation>&amp;Display addresses in transaction list</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="457"/>
+        <location filename="../forms/optionsdialog.ui" line="468"/>
         <source>Whether to show coin control features or not.</source>
         <translation>Whether to show coin control features or not.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="460"/>
+        <location filename="../forms/optionsdialog.ui" line="471"/>
         <source>Display coin &amp;control features (experts only!)</source>
         <translation>Display coin &amp;control features (experts only!)</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="469"/>
-        <location filename="../forms/optionsdialog.ui" line="482"/>
+        <location filename="../forms/optionsdialog.ui" line="480"/>
+        <location filename="../forms/optionsdialog.ui" line="493"/>
         <source>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>Third party URLs (e.g. explorer.novaco.in) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="472"/>
+        <location filename="../forms/optionsdialog.ui" line="483"/>
         <source>Third party transaction URLs</source>
         <translation>Third party transaction URLs</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="555"/>
+        <location filename="../forms/optionsdialog.ui" line="566"/>
         <source>&amp;OK</source>
         <translation>&amp;OK</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="562"/>
+        <location filename="../forms/optionsdialog.ui" line="573"/>
         <source>&amp;Cancel</source>
         <translation>&amp;Cancel</translation>
     </message>
     <message>
-        <location filename="../forms/optionsdialog.ui" line="572"/>
+        <location filename="../forms/optionsdialog.ui" line="583"/>
         <source>&amp;Apply</source>
         <translation>&amp;Apply</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="74"/>
+        <location filename="../optionsdialog.cpp" line="77"/>
         <source>default</source>
         <translation>default</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="240"/>
-        <location filename="../optionsdialog.cpp" line="249"/>
-        <location filename="../optionsdialog.cpp" line="258"/>
-        <location filename="../optionsdialog.cpp" line="267"/>
+        <location filename="../optionsdialog.cpp" line="242"/>
+        <location filename="../optionsdialog.cpp" line="251"/>
+        <location filename="../optionsdialog.cpp" line="260"/>
+        <location filename="../optionsdialog.cpp" line="269"/>
         <source>Warning</source>
         <translation>Warning</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="240"/>
-        <location filename="../optionsdialog.cpp" line="249"/>
-        <location filename="../optionsdialog.cpp" line="258"/>
-        <location filename="../optionsdialog.cpp" line="267"/>
+        <location filename="../optionsdialog.cpp" line="242"/>
+        <location filename="../optionsdialog.cpp" line="251"/>
+        <location filename="../optionsdialog.cpp" line="260"/>
+        <location filename="../optionsdialog.cpp" line="269"/>
         <source>This setting will take effect after restarting NovaCoin.</source>
         <translation>This setting will take effect after restarting NovaCoin.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="297"/>
+        <location filename="../optionsdialog.cpp" line="299"/>
         <source>The supplied proxy address is invalid.</source>
         <translation>The supplied proxy address is invalid.</translation>
     </message>
     <message>
-        <location filename="../optionsdialog.cpp" line="316"/>
+        <location filename="../optionsdialog.cpp" line="318"/>
         <source>The supplied tor address is invalid.</source>
         <translation>The supplied tor address is invalid.</translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="365"/>
+        <source>Choose peer collector application</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../optionsdialog.cpp" line="365"/>
+        <source>Applications (*.*)</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -2662,7 +2683,7 @@ Reduce the number of addresses involved in the address creation.</translation>
     </message>
     <message>
         <location filename="../forms/secondauthdialog.ui" line="17"/>
-        <source>Second Authentication</source>
+        <source>Second Authentification</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2775,13 +2796,13 @@ Reduce the number of addresses involved in the address creation.</translation>
     <name>SendCoinsDialog</name>
     <message>
         <location filename="../forms/sendcoinsdialog.ui" line="14"/>
-        <location filename="../sendcoinsdialog.cpp" line="204"/>
-        <location filename="../sendcoinsdialog.cpp" line="209"/>
-        <location filename="../sendcoinsdialog.cpp" line="214"/>
-        <location filename="../sendcoinsdialog.cpp" line="219"/>
-        <location filename="../sendcoinsdialog.cpp" line="225"/>
-        <location filename="../sendcoinsdialog.cpp" line="230"/>
-        <location filename="../sendcoinsdialog.cpp" line="235"/>
+        <location filename="../sendcoinsdialog.cpp" line="205"/>
+        <location filename="../sendcoinsdialog.cpp" line="210"/>
+        <location filename="../sendcoinsdialog.cpp" line="215"/>
+        <location filename="../sendcoinsdialog.cpp" line="220"/>
+        <location filename="../sendcoinsdialog.cpp" line="226"/>
+        <location filename="../sendcoinsdialog.cpp" line="231"/>
+        <location filename="../sendcoinsdialog.cpp" line="236"/>
         <source>Send Coins</source>
         <translation>Send Coins</translation>
     </message>
@@ -2928,103 +2949,103 @@ Reduce the number of addresses involved in the address creation.</translation>
         <translation>S&amp;end</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="42"/>
+        <location filename="../sendcoinsdialog.cpp" line="43"/>
         <source>Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</source>
         <translation>Enter a NovaCoin address (e.g. 4Zo1ga6xuKuQ7JV7M9rGDoxdbYwV5zgQJ5)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="56"/>
+        <location filename="../sendcoinsdialog.cpp" line="57"/>
         <source>Copy quantity</source>
         <translation>Copy quantity</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="57"/>
+        <location filename="../sendcoinsdialog.cpp" line="58"/>
         <source>Copy amount</source>
         <translation>Copy amount</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="58"/>
+        <location filename="../sendcoinsdialog.cpp" line="59"/>
         <source>Copy fee</source>
         <translation>Copy fee</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="59"/>
+        <location filename="../sendcoinsdialog.cpp" line="60"/>
         <source>Copy after fee</source>
         <translation>Copy after fee</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="60"/>
+        <location filename="../sendcoinsdialog.cpp" line="61"/>
         <source>Copy bytes</source>
         <translation>Copy bytes</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="61"/>
+        <location filename="../sendcoinsdialog.cpp" line="62"/>
         <source>Copy priority</source>
         <translation>Copy priority</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="62"/>
+        <location filename="../sendcoinsdialog.cpp" line="63"/>
         <source>Copy low output</source>
         <translation>Copy low output</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="63"/>
+        <location filename="../sendcoinsdialog.cpp" line="64"/>
         <source>Copy change</source>
         <translation>Copy change</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="167"/>
-        <location filename="../sendcoinsdialog.cpp" line="169"/>
+        <location filename="../sendcoinsdialog.cpp" line="168"/>
+        <location filename="../sendcoinsdialog.cpp" line="170"/>
         <source>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</source>
         <translation>&lt;b&gt;%1&lt;/b&gt; to %2 (%3)</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="175"/>
+        <location filename="../sendcoinsdialog.cpp" line="176"/>
         <source>Confirm send coins</source>
         <translation>Confirm send coins</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="176"/>
+        <location filename="../sendcoinsdialog.cpp" line="177"/>
         <source>Are you sure you want to send %1?</source>
         <translation>Are you sure you want to send %1?</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="176"/>
+        <location filename="../sendcoinsdialog.cpp" line="177"/>
         <source> and </source>
         <translation> and </translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="205"/>
+        <location filename="../sendcoinsdialog.cpp" line="206"/>
         <source>The recipient address is not valid, please recheck.</source>
         <translation>The recipient address is not valid, please recheck.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="210"/>
+        <location filename="../sendcoinsdialog.cpp" line="211"/>
         <source>The amount to pay must be larger than 0.</source>
         <translation>The amount to pay must be larger than 0.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="215"/>
+        <location filename="../sendcoinsdialog.cpp" line="216"/>
         <source>The amount exceeds your balance.</source>
         <translation>The amount exceeds your balance.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="220"/>
+        <location filename="../sendcoinsdialog.cpp" line="221"/>
         <source>The total exceeds your balance when the %1 transaction fee is included.</source>
         <translation>The total exceeds your balance when the %1 transaction fee is included.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="226"/>
+        <location filename="../sendcoinsdialog.cpp" line="227"/>
         <source>Duplicate address found, can only send to each address once per send operation.</source>
         <translation>Duplicate address found, can only send to each address once per send operation.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="231"/>
+        <location filename="../sendcoinsdialog.cpp" line="232"/>
         <source>Error: Transaction creation failed.</source>
         <translation>Error: Transaction creation failed.</translation>
     </message>
     <message>
-        <location filename="../sendcoinsdialog.cpp" line="236"/>
+        <location filename="../sendcoinsdialog.cpp" line="237"/>
         <source>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
         <translation>Error: The transaction was rejected. This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</translation>
     </message>
@@ -4359,87 +4380,87 @@ If the file does not exist, create it with owner-readable-only file permissions.
         <translation>Use OpenSSL (https) for JSON-RPC connections</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="167"/>
+        <location filename="../bitcoinstrings.cpp" line="165"/>
         <source>Use proxy to reach tor hidden services (default: same as -proxy)</source>
         <translation>Use proxy to reach tor hidden services (default: same as -proxy)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="168"/>
+        <location filename="../bitcoinstrings.cpp" line="166"/>
         <source>Use the test network</source>
         <translation>Use the test network</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="169"/>
+        <location filename="../bitcoinstrings.cpp" line="167"/>
         <source>Username for JSON-RPC connections</source>
         <translation>Username for JSON-RPC connections</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="170"/>
+        <location filename="../bitcoinstrings.cpp" line="168"/>
         <source>Verifying database integrity...</source>
         <translation>Verifying database integrity...</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="171"/>
+        <location filename="../bitcoinstrings.cpp" line="169"/>
         <source>Wallet needed to be rewritten: restart NovaCoin to complete</source>
         <translation>Wallet needed to be rewritten: restart NovaCoin to complete</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="172"/>
+        <location filename="../bitcoinstrings.cpp" line="170"/>
         <source>Warning: Disk space is low!</source>
         <translation>Warning: Disk space is low!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="173"/>
+        <location filename="../bitcoinstrings.cpp" line="171"/>
         <source>Warning: This version is obsolete, upgrade required!</source>
         <translation>Warning: This version is obsolete, upgrade required!</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="174"/>
+        <location filename="../bitcoinstrings.cpp" line="172"/>
         <source>wallet.dat corrupt, salvage failed</source>
         <translation>wallet.dat corrupt, salvage failed</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="175"/>
+        <location filename="../bitcoinstrings.cpp" line="173"/>
         <source>Specify wallet file (within data directory)</source>
         <translation>Specify wallet file (within data directory)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="176"/>
+        <location filename="../bitcoinstrings.cpp" line="174"/>
         <source>Use in-memory logging for block index database (default: 1)</source>
         <translation>Use in-memory logging for block index database (default: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="177"/>
+        <location filename="../bitcoinstrings.cpp" line="175"/>
         <source>Find peers using DNS lookup (default: 1)</source>
         <translation>Find peers using DNS lookup (default: 0) {1)?}</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="178"/>
+        <location filename="../bitcoinstrings.cpp" line="176"/>
         <source>Sync checkpoints policy (default: strict)</source>
         <translation>Sync checkpoints policy (default: strict)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="179"/>
+        <location filename="../bitcoinstrings.cpp" line="177"/>
         <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
         <translation>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="180"/>
+        <location filename="../bitcoinstrings.cpp" line="178"/>
         <source>Require a confirmations for change (default: 0)</source>
         <translation>Require a confirmations for change (default: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="181"/>
+        <location filename="../bitcoinstrings.cpp" line="179"/>
         <source>Enforce transaction scripts to use canonical PUSH operators (default: 1)</source>
         <translation>Enforce transaction scripts to use canonical PUSH operators (default: 1)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="182"/>
+        <location filename="../bitcoinstrings.cpp" line="180"/>
         <source>Set the number of script verification threads (1-16, 0=auto, default: 0)</source>
         <translation>Set the number of script verification threads (1-16, 0=auto, default: 0)</translation>
     </message>
     <message>
-        <location filename="../bitcoinstrings.cpp" line="183"/>
+        <location filename="../bitcoinstrings.cpp" line="181"/>
         <source>When creating transactions, ignore inputs with value less than this (default: %s)</source>
         <translation>When creating transactions, ignore inputs with value less than this (default: %s)</translation>
     </message>
