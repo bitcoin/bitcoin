@@ -48,6 +48,11 @@ known problems when downgrading from 0.11.x to 0.10.x.
 Notable changes since 0.11.2
 ============================
 
+Alert system
+--------------
+
+The P2P alert system is off by default. To turn on, use `-alert` with startup
+configuration.
 
 0.11.3 Change log
 =================
