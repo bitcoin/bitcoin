@@ -300,7 +300,7 @@ bool LogAcceptCategory(const char* category)
 /**
  * fStartedNewLine is a state variable held by the calling context that will
  * suppress printing of the timestamp when multiple calls are made that don't
- * end in a newline. Initialize it to true, and hold it, in the calling context.
+ * end in a newline. Initialize it to true, and hold/manage it, in the calling context.
  */
 static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine)
 {
@@ -318,18 +318,13 @@ static std::string LogTimestampStr(const std::string &str, bool *fStartedNewLine
     } else
         strStamped = str;
 
-    if (!str.empty() && str[str.size()-1] == '\n')
-        *fStartedNewLine = true;
-    else
-        *fStartedNewLine = false;
-
     return strStamped;
 }
 
 /**
  * fStartedNewLine is a state variable held by the calling context that will
  * suppress printing of the thread name when multiple calls are made that don't
- * end in a newline. Initialize it to true, and hold it, in the calling context.
+ * end in a newline. Initialize it to true, and hold/manage it, in the calling context.
  */
 static std::string LogThreadNameStr(const std::string &str, bool *fStartedNewLine)
 {
@@ -355,6 +350,11 @@ int LogPrintStr(const std::string &str)
 
     std::string strThreadLogged = LogThreadNameStr(str, &fStartedNewLine);
     std::string strTimestamped = LogTimestampStr(strThreadLogged, &fStartedNewLine);
+
+    if (!str.empty() && str[str.size()-1] == '\n')
+        fStartedNewLine = true;
+    else
+        fStartedNewLine = false;
 
     if (fPrintToConsole)
     {
