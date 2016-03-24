@@ -1451,13 +1451,14 @@ bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::v
     return true;
 }
 
-bool GetAddressIndex(uint160 addressHash, int type, std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex)
+bool GetAddressIndex(uint160 addressHash, int type,
+                     std::vector<std::pair<CAddressIndexKey, CAmount> > &addressIndex, int start, int end)
 {
     if (!fAddressIndex)
-        return error("%s: address index not enabled");
+        return error("address index not enabled");
 
-    if (!pblocktree->ReadAddressIndex(addressHash, type, addressIndex))
-        return error("%s: unable to get txids for address");
+    if (!pblocktree->ReadAddressIndex(addressHash, type, addressIndex, start, end))
+        return error("unable to get txids for address");
 
     return true;
 }
