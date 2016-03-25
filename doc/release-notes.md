@@ -21,6 +21,11 @@ It is recommended to use this for sensitive information such as wallet
 passphrases, as command-line arguments can usually be read from the process
 table by any user on the system.
 
+New RPC functionality
+----------------------
+
+- `verifyrawtransactions` Verifies one or more raw transactions (serialized, hex-encoded). If transactions depend on each other, they must be provided in order.
+
 0.13.0 Change log
 =================
 
