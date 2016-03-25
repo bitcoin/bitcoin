@@ -203,7 +203,7 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
         double interestRatePerBlock=pow(((0.0+matureValue)/termDeposit.nValue),1.0/term);
         double interestRate=(pow(interestRatePerBlock,365*561)-1)*100;
         if(curHeight>=releaseBlock){
-            ui->hodlTable->setItem(i, 0, new QTableWidgetItem(QString("Matured (Unproductive)")));
+            ui->hodlTable->setItem(i, 0, new QTableWidgetItem(QString("Matured (Warning: this amount is no longer earning interest of any kind)")));
         }else{
             ui->hodlTable->setItem(i, 0, new QTableWidgetItem(QString("HOdled")));
         }
