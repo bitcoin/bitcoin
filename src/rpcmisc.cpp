@@ -567,24 +567,26 @@ UniValue getaddresstxids(const UniValue& params, bool fHelp)
         }
     }
 
-    std::set<std::string> txids;
-    std::vector<std::pair<int, std::string> > vtxids;
+    std::set<std::pair<int, std::string> > txids;
+    UniValue result(UniValue::VARR);
 
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
         int height = it->first.blockHeight;
         std::string txid = it->first.txhash.GetHex();
-        if (txids.insert(txid).second) {
-            vtxids.push_back(std::make_pair(height, txid));
+
+        if (addresses.size() > 1) {
+            txids.insert(std::make_pair(height, txid));
+        } else {
+            if (txids.insert(std::make_pair(height, txid)).second) {
+                result.push_back(txid);
+            }
         }
     }
 
     if (addresses.size() > 1) {
-        std::sort(vtxids.begin(), vtxids.end());
-    }
-
-    UniValue result(UniValue::VARR);
-    for (std::vector<std::pair<int, std::string> >::const_iterator it=vtxids.begin(); it!=vtxids.end(); it++) {
-        result.push_back(it->second);
+        for (std::set<std::pair<int, std::string> >::const_iterator it=txids.begin(); it!=txids.end(); it++) {
+            result.push_back(it->second);
+        }
     }
 
     return result;
