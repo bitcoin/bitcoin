@@ -2974,7 +2974,7 @@ bool LoadExternalBlockFile(FILE* fileIn)
                 unsigned char pchData[65536];
                 do {
                     fseek(blkdat, nPos, SEEK_SET);
-                    int nRead = fread(pchData, 1, sizeof(pchData), blkdat);
+                    size_t nRead = fread(pchData, 1, sizeof(pchData), blkdat);
                     if (nRead <= 8)
                     {
                         nPos = std::numeric_limits<uint32_t>::max();
@@ -3362,15 +3362,15 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv)
         }
 
         // find last block in inv vector
-        unsigned int nLastBlock = std::numeric_limits<uint32_t>::max();
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++) {
+        size_t nLastBlock = std::numeric_limits<size_t>::max();
+        for (size_t nInv = 0; nInv < vInv.size(); nInv++) {
             if (vInv[vInv.size() - 1 - nInv].type == MSG_BLOCK) {
                 nLastBlock = vInv.size() - 1 - nInv;
                 break;
             }
         }
         CTxDB txdb("r");
-        for (unsigned int nInv = 0; nInv < vInv.size(); nInv++)
+        for (size_t nInv = 0; nInv < vInv.size(); nInv++)
         {
             const CInv &inv = vInv[nInv];
 
