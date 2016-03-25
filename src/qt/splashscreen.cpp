@@ -51,7 +51,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
         "Help! I'm being HOdled against my will.",
         "Plan for profit. Step 1:HODL, Step 2:HODL, Step 3:HODL",
         "HOdl your horses.",
-        "I'm screwing this cat, you're just HOdling it.",
+        "Let us Hodl each other.",
         "What would Jesus HOdl?",
         "Turn on, tune in, HOdl out.",
         "Winter is Coming.",
@@ -62,7 +62,7 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
     };
 
     srand(time(NULL)+clock());
-    QString inspirationalText  = QString(inspirationals[rand() % sizeof(15)]);
+    QString inspirationalText  = QString(inspirationals[rand() % 15]);
     QString authorText = QString("                        - Nutoshi Sakamoto");
 
     QString titleAddText    = networkStyle->getTitleAddText();
