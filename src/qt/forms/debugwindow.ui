@@ -141,12 +141,12 @@
        <item row="5" column="0">
         <widget class="QLabel" name="label_12">
          <property name="text">
-          <string>Build date</string>
+          <string>Datadir</string>
          </property>
         </widget>
        </item>
        <item row="5" column="1" colspan="2">
-        <widget class="QLabel" name="buildDate">
+        <widget class="QLabel" name="dataDir">
          <property name="cursor">
           <cursorShape>IBeamCursor</cursorShape>
          </property>
@@ -155,6 +155,9 @@
          </property>
          <property name="textFormat">
           <enum>Qt::PlainText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
