@@ -29,30 +29,30 @@ CZMQNotificationInterface::~CZMQNotificationInterface()
     }
 }
 
+/** Conditionally add notifier, if the right arguments are provided */
+static void addNotifier(const std::map<std::string, std::string> &args, std::list<CZMQAbstractNotifier*> &notifiers, const std::string &name, CZMQAbstractNotifier* notifier)
+{
+    std::map<std::string, std::string>::const_iterator j = args.find("-zmq" + name);
+    if (j!=args.end())
+    {
+        std::string address = j->second;
+        notifier->SetType(name);
+        notifier->SetAddress(address);
+        notifiers.push_back(notifier);
+    } else {
+        delete notifier;
+    }
+}
+
 CZMQNotificationInterface* CZMQNotificationInterface::CreateWithArguments(const std::map<std::string, std::string> &args)
 {
     CZMQNotificationInterface* notificationInterface = NULL;
-    std::map<std::string, CZMQNotifierFactory> factories;
     std::list<CZMQAbstractNotifier*> notifiers;
 
-    factories["pubhashblock"] = CZMQAbstractNotifier::Create<CZMQPublishHashBlockNotifier>;
-    factories["pubhashtx"] = CZMQAbstractNotifier::Create<CZMQPublishHashTransactionNotifier>;
-    factories["pubrawblock"] = CZMQAbstractNotifier::Create<CZMQPublishRawBlockNotifier>;
-    factories["pubrawtx"] = CZMQAbstractNotifier::Create<CZMQPublishRawTransactionNotifier>;
-
-    for (std::map<std::string, CZMQNotifierFactory>::const_iterator i=factories.begin(); i!=factories.end(); ++i)
-    {
-        std::map<std::string, std::string>::const_iterator j = args.find("-zmq" + i->first);
-        if (j!=args.end())
-        {
-            CZMQNotifierFactory factory = i->second;
-            std::string address = j->second;
-            CZMQAbstractNotifier *notifier = factory();
-            notifier->SetType(i->first);
-            notifier->SetAddress(address);
-            notifiers.push_back(notifier);
-        }
-    }
+    addNotifier(args, notifiers, "pubhashblock", new CZMQPublishHashBlockNotifier());
+    addNotifier(args, notifiers, "pubhashtx", new CZMQPublishHashTransactionNotifier());
+    addNotifier(args, notifiers, "pubrawblock", new CZMQPublishRawBlockNotifier());
+    addNotifier(args, notifiers, "pubrawtx", new CZMQPublishRawTransactionNotifier());
 
     if (!notifiers.empty())
     {
