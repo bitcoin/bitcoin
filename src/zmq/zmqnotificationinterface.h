@@ -11,13 +11,14 @@
 
 class CBlockIndex;
 class CZMQAbstractNotifier;
+class CTxMemPool;
 
 class CZMQNotificationInterface : public CValidationInterface
 {
 public:
     virtual ~CZMQNotificationInterface();
 
-    static CZMQNotificationInterface* CreateWithArguments(const std::map<std::string, std::string> &args);
+    static CZMQNotificationInterface* CreateWithArguments(const std::map<std::string, std::string> &args, CTxMemPool *mempool);
 
 protected:
     bool Initialize();

@@ -44,7 +44,7 @@ static void addNotifier(const std::map<std::string, std::string> &args, std::lis
     }
 }
 
-CZMQNotificationInterface* CZMQNotificationInterface::CreateWithArguments(const std::map<std::string, std::string> &args)
+CZMQNotificationInterface* CZMQNotificationInterface::CreateWithArguments(const std::map<std::string, std::string> &args, CTxMemPool *mempool)
 {
     CZMQNotificationInterface* notificationInterface = NULL;
     std::list<CZMQAbstractNotifier*> notifiers;
@@ -53,6 +53,8 @@ CZMQNotificationInterface* CZMQNotificationInterface::CreateWithArguments(const 
     addNotifier(args, notifiers, "pubhashtx", new CZMQPublishHashTransactionNotifier());
     addNotifier(args, notifiers, "pubrawblock", new CZMQPublishRawBlockNotifier());
     addNotifier(args, notifiers, "pubrawtx", new CZMQPublishRawTransactionNotifier());
+    if (mempool)
+        addNotifier(args, notifiers, "pubmempool", new CZMQPublishMempoolNotifier(mempool));
 
     if (!notifiers.empty())
     {
