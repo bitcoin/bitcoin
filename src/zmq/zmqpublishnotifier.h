@@ -6,6 +6,7 @@
 #define BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
 
 #include "zmqabstractnotifier.h"
+#include "txmempool.h"
 
 class CBlockIndex;
 
@@ -50,6 +51,19 @@ class CZMQPublishRawTransactionNotifier : public CZMQAbstractPublishNotifier
 {
 public:
     bool NotifyTransaction(const CTransaction &transaction);
+};
+
+class CZMQPublishMempoolNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    CZMQPublishMempoolNotifier(CTxMemPool *mempoolIn);
+    ~CZMQPublishMempoolNotifier();
+
+    void NotifyEntryAdded(const CTxMemPoolEntry &entry);
+    void NotifyEntryRemoved(const CTxMemPoolEntry &entry, MemPoolRemovalReason reason);
+
+private:
+    CTxMemPool *mempool;
 };
 
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
