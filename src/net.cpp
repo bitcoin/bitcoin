@@ -570,10 +570,9 @@ void CNode::copyStats(CNodeStats &stats)
 }
 #undef X
 
-
-
-
-
+void Release(CNode* node) {
+    node->Release();
+}
 
 
 
@@ -925,8 +924,7 @@ void ThreadSocketHandler2(void* parg)
         }
         {
             LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodesCopy)
-                pnode->Release();
+            for_each(vNodesCopy.begin(), vNodesCopy.end(), Release);
         }
 
         Sleep(10);
@@ -1507,8 +1505,7 @@ void ThreadMessageHandler2(void* parg)
 
         {
             LOCK(cs_vNodes);
-            BOOST_FOREACH(CNode* pnode, vNodesCopy)
-                pnode->Release();
+            for_each(vNodesCopy.begin(), vNodesCopy.end(), Release);
         }
 
         // Wait and allow messages to bunch up.
