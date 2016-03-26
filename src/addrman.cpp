@@ -502,6 +502,24 @@ void CAddrMan::Connected_(const CService& addr, int64_t nTime)
         info.nTime = nTime;
 }
 
+void CAddrMan::SetServices_(const CService& addr, uint64_t nServices)
+{
+    CAddrInfo* pinfo = Find(addr);
+
+    // if not found, bail out
+    if (!pinfo)
+        return;
+
+    CAddrInfo& info = *pinfo;
+
+    // check whether we are talking about the exact same CService (including same port)
+    if (info != addr)
+        return;
+
+    // update info
+    info.nServices = nServices;
+}
+
 int CAddrMan::RandomInt(int nMax){
     return GetRandInt(nMax);
 }
