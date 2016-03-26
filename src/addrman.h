@@ -246,6 +246,9 @@ protected:
     //! Mark an entry as currently-connected-to.
     void Connected_(const CService &addr, int64_t nTime);
 
+    //! Update an entry's service bits.
+    void SetServices_(const CService &addr, uint64_t nServices);
+
 public:
     /**
      * serialized format:
@@ -573,6 +576,14 @@ public:
     //! Ensure that bucket placement is always the same for testing purposes.
     void MakeDeterministic(){
         nKey.SetNull(); //Do not use outside of tests.
+    }
+
+    void SetServices(const CService &addr, uint64_t nServices)
+    {
+        LOCK(cs);
+        Check();
+        SetServices_(addr, nServices);
+        Check();
     }
 
 };
