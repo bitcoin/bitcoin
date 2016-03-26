@@ -1402,7 +1402,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                     FormatMoney(nModifiedFees - nConflictingFees),
                     (int)nSize - (int)nConflictingSize);
         }
-        pool.RemoveStaged(allConflicting, false);
+        pool.RemoveStaged(allConflicting, false, MemPoolRemovalReason::REPLACED);
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
@@ -2652,7 +2652,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         list<CTransaction> removed;
         CValidationState stateDummy;
         if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, tx, false, NULL, NULL, true)) {
-            mempool.removeRecursive(tx, removed);
+            mempool.removeRecursive(tx, removed, MemPoolRemovalReason::REORG);
         } else if (mempool.exists(tx.GetHash())) {
             vHashUpdate.push_back(tx.GetHash());
         }
