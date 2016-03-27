@@ -48,17 +48,13 @@ SplashScreen::SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle) 
 
     pixmap     = networkStyle->getSplashImage();
 
+    QPixmap fixedScalePixmap = pixmap.scaled(QSize(352*devicePixelRatio,146*devicePixelRatio),  Qt::KeepAspectRatio);
+    pixmap = fixedScalePixmap;
+
     #if QT_VERSION > 0x050100
         // change to HiDPI if it makes sense
         pixmap.setDevicePixelRatio(devicePixelRatio);
     #endif
-
-//    //make window background invisible
-//    setWindowFlags(Qt::Widget | Qt::FramelessWindowHint);
-//    setParent(0); // Create TopLevel-Widget
-//    setAttribute(Qt::WA_NoSystemBackground, true);
-//    setAttribute(Qt::WA_TranslucentBackground, true);
-//    setAttribute(Qt::WA_PaintOnScreen); // not needed in Qt 5.2 and up
 
     // Resize window and move to center of desktop, disallow resizing
     QRect r(QPoint(), QSize(pixmap.size().width()/devicePixelRatio,pixmap.size().height()/devicePixelRatio));
