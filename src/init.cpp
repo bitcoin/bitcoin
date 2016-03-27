@@ -376,7 +376,7 @@ bool AppInit2()
 
     // ********************************************************* Step 2: parameter interactions
 
-    nNodeLifespan = (unsigned int)(GetArg("-addrlifespan", 7));
+    nNodeLifespan = GetArgUInt("-addrlifespan", 7);
     fUseFastIndex = GetBoolArg("-fastindex", true);
     fUseMemoryLog = GetBoolArg("-memorylog", true);
 

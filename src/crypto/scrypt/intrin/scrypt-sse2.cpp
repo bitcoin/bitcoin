@@ -48,18 +48,14 @@ static inline void le32enc(void *pp, uint32_t x)
 
 static inline void xor_salsa8_sse2(__m128i B[4], const __m128i Bx[4])
 {
-    __m128i X0, X1, X2, X3;
-    __m128i T;
-    int i;
+    __m128i X0 = B[0] = _mm_xor_si128(B[0], Bx[0]);
+    __m128i X1 = B[1] = _mm_xor_si128(B[1], Bx[1]);
+    __m128i X2 = B[2] = _mm_xor_si128(B[2], Bx[2]);
+    __m128i X3 = B[3] = _mm_xor_si128(B[3], Bx[3]);
 
-    X0 = B[0] = _mm_xor_si128(B[0], Bx[0]);
-    X1 = B[1] = _mm_xor_si128(B[1], Bx[1]);
-    X2 = B[2] = _mm_xor_si128(B[2], Bx[2]);
-    X3 = B[3] = _mm_xor_si128(B[3], Bx[3]);
-
-    for (i = 0; i < 8; i += 2) {
+    for (uint32_t i = 0; i < 8; i += 2) {
         /* Operate on "columns". */
-        T = _mm_add_epi32(X0, X3);
+        __m128i T = _mm_add_epi32(X0, X3);
         X1 = _mm_xor_si128(X1, _mm_slli_epi32(T, 7));
         X1 = _mm_xor_si128(X1, _mm_srli_epi32(T, 25));
         T = _mm_add_epi32(X1, X0);
@@ -105,21 +101,18 @@ static inline void xor_salsa8_sse2(__m128i B[4], const __m128i Bx[4])
 
 uint256 scrypt_blockhash(const uint8_t* input)
 {
-    uint256 result = 0;
     uint8_t scratchpad[SCRYPT_BUFFER_SIZE];
+    __m128i *V = (__m128i *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
+
     uint8_t B[128];
+    void *const tmp = const_cast<uint8_t*>(input);
+    PKCS5_PBKDF2_HMAC(static_cast<const char*>(tmp), 80, input, 80, 1, EVP_sha256(), 128, B);
+
     union {
         __m128i i128[8];
         uint32_t u32[32];
     } X;
-    __m128i *V;
-    uint32_t i, j, k;
-
-    V = (__m128i *)(((uintptr_t)(scratchpad) + 63) & ~ (uintptr_t)(63));
-
-    void *const tmp = const_cast<uint8_t*>(input);
-    PKCS5_PBKDF2_HMAC(static_cast<const char*>(tmp), 80, input, 80, 1, EVP_sha256(), 128, B);
-
+    uint32_t i, k;
     for (k = 0; k < 2; k++) {
         for (i = 0; i < 16; i++) {
             X.u32[k * 16 + i] = le32dec(&B[(k * 16 + (i * 5 % 16)) * 4]);
@@ -133,7 +126,7 @@ uint256 scrypt_blockhash(const uint8_t* input)
         xor_salsa8_sse2(&X.i128[4], &X.i128[0]);
     }
     for (i = 0; i < 1024; i++) {
-        j = 8 * (X.u32[16] & 1023);
+        uint32_t j = 8 * (X.u32[16] & 1023);
         for (k = 0; k < 8; k++)
             X.i128[k] = _mm_xor_si128(X.i128[k], V[j + k]);
         xor_salsa8_sse2(&X.i128[0], &X.i128[4]);
@@ -146,6 +139,7 @@ uint256 scrypt_blockhash(const uint8_t* input)
         }
     }
 
+    uint256 result = 0;
     PKCS5_PBKDF2_HMAC(static_cast<const char*>(tmp), 80, B, 128, 1, EVP_sha256(), 32, (unsigned char*)&result);
 
     return result;

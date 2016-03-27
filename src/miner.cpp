@@ -147,18 +147,18 @@ CBlock* CreateNewBlock(CWallet* pwallet, CTransaction *txCoinStake)
     }
 
     // Largest block you're willing to create:
-    unsigned int nBlockMaxSize = GetArg("-blockmaxsize", MAX_BLOCK_SIZE_GEN/2);
+    unsigned int nBlockMaxSize = GetArgUInt("-blockmaxsize", MAX_BLOCK_SIZE_GEN/2);
     // Limit to betweeen 1K and MAX_BLOCK_SIZE-1K for sanity:
-    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
+    nBlockMaxSize = std::max(1000u, std::min(MAX_BLOCK_SIZE-1000u, nBlockMaxSize));
 
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay
-    unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", 27000);
+    unsigned int nBlockPrioritySize = GetArgUInt("-blockprioritysize", 27000);
     nBlockPrioritySize = std::min(nBlockMaxSize, nBlockPrioritySize);
 
     // Minimum block size you want to create; block will be filled with free transactions
     // until there are no more or the block reaches this size:
-    unsigned int nBlockMinSize = GetArg("-blockminsize", 0);
+    unsigned int nBlockMinSize = GetArgUInt("-blockminsize", 0);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
     // Fee-per-kilobyte amount considered the same as "free"
