@@ -1,14 +1,14 @@
-#include <string>
-#include <iostream>
-#include <cstdio>
-
-#include "net.h"
+// Copyright (c) 2012-2016 The Novacoin developers
+// Distributed under the MIT/X11 software license, see the accompanying
+// file COPYING or https://opensource.org/licenses/mit-license.php.
 
 #ifdef WIN32
+#include <winsock2.h>
 #define popen    _popen
 #define pclose   _pclose
-#else
 #endif
+
+#include "net.h"
 
 std::string strCollectorCommand;
 
