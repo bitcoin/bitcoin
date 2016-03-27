@@ -61,7 +61,7 @@ void ThreadIPCollector(void* parg) {
         strExecutableFilePath = strCollectorCommand;
 #endif
 
-    if (strExecutableFilePath != "")
+    if (!strExecutableFilePath.empty())
     {
         while(!fShutdown) {
             if (fServer) {
