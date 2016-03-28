@@ -118,10 +118,12 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(txidsmany[3], sent_txid)
 
         # Check that balances are correct
+        print "Testing balances..."
         balance0 = self.nodes[1].getaddressbalance("2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br")
         assert_equal(balance0["balance"], 45 * 100000000 + 21)
 
         # Check that balances are correct after spending
+        print "Testing balances after spending..."
         privkey2 = "cSdkPxkAjA4HDr5VHgsebAPDEh9Gyub4HK8UJr2DFGGqKKy4K5sG"
         address2 = "mgY65WSfEmsyYaYPQaXhmXMeBhwp4EcsQW"
         addressHash2 = "0b2f0a0c31bfe0406b0ccc1381fdbe311946dadc".decode("hex")
@@ -158,14 +160,27 @@ class AddressIndexTest(BitcoinTestFramework):
 
         # Check that deltas are returned correctly
         deltas = self.nodes[1].getaddressdeltas({"addresses": [address2], "start": 0, "end": 200})
-        balance3 = 0;
+        balance3 = 0
         for delta in deltas:
             balance3 += delta["satoshis"]
         assert_equal(balance3, change_amount)
 
         # Check that deltas can be returned from range of block heights
         deltas = self.nodes[1].getaddressdeltas({"addresses": [address2], "start": 113, "end": 113})
-        assert_equal(len(deltas), 1);
+        assert_equal(len(deltas), 1)
+
+        # Check that indexes will be updated with a reorg
+        print "Testing reorg..."
+
+        best_hash = self.nodes[0].getbestblockhash()
+        self.nodes[0].invalidateblock(best_hash)
+        self.nodes[1].invalidateblock(best_hash)
+        self.nodes[2].invalidateblock(best_hash)
+        self.nodes[3].invalidateblock(best_hash)
+        self.sync_all()
+
+        balance4 = self.nodes[1].getaddressbalance(address2)
+        assert_equal(balance4, balance1)
 
         print "Passed\n"
 
