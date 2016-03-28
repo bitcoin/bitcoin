@@ -1043,7 +1043,7 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 }
 
 UniValue offernew(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 7 || params.size() > 10)
+	if (fHelp || params.size() < 7 || params.size() > 11)
 		throw runtime_error(
 		"offernew <aliaspeg> <alias> <category> <title> <quantity> <price> <description> <currency> [cert. guid] [exclusive resell=1] [accept btc only=0]\n"
 						"<aliaspeg> Alias peg you wish to use, leave blank to use SYS_RATES.\n"	
