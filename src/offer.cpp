@@ -2709,6 +2709,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 
 	int precision = 2;
 	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
+	if(nPrice == 0)
+		throw runtime_error(strprintf("%s currency not found in offer's alias peg %s", theOffer.sCurrencyCode, stringFromVch(theOffer.vchAliasPeg)));
 	string strCipherText = "";
 	// encryption should only happen once even when not a resell or not an escrow accept. It is already encrypted in both cases.
 	if(wtxOfferIn == NULL && vchEscrowTxHash.empty())
