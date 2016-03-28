@@ -1581,11 +1581,11 @@ UniValue offerlink_nocheck(const UniValue& params, bool fHelp) {
 	CAliasIndex alias;
 	if (!GetTxOfAlias(vchAlias, alias, aliastx))
 		throw runtime_error("could not find an alias with this name");
-    if(!IsSyscoinTxMine(aliastx, "alias")) {
-		throw runtime_error("This alias is not yours.");
-    }
-	if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
-		throw runtime_error("this alias is not in your wallet");
+  //   if(!IsSyscoinTxMine(aliastx, "alias")) {
+		// throw runtime_error("This alias is not yours.");
+  //   }
+	// if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
+	// 	throw runtime_error("this alias is not in your wallet");
 	vector<unsigned char> vchLinkOffer = vchFromValue(params[1]);
 	vector<unsigned char> vchDesc;
 	// look for a transaction with this key
@@ -1594,16 +1594,16 @@ UniValue offerlink_nocheck(const UniValue& params, bool fHelp) {
 	if (!GetTxOfOffer( vchLinkOffer, linkOffer, tx) || vchLinkOffer.empty())
 		throw runtime_error("could not find an offer with this name");
 
-	if(!linkOffer.vchLinkOffer.empty())
-	{
-		throw runtime_error("cannot link to an offer that is already linked to another offer");
-	}
+	// if(!linkOffer.vchLinkOffer.empty())
+	// {
+	// 	throw runtime_error("cannot link to an offer that is already linked to another offer");
+	// }
 
 	int commissionInteger = atoi(params[2].get_str().c_str());
-	if(commissionInteger > 255)
-	{
-		throw runtime_error("markup must be less than 256!");
-	}
+	// if(commissionInteger > 255)
+	// {
+	// 	throw runtime_error("markup must be less than 256!");
+	// }
 	
 	if(params.size() >= 4)
 	{
@@ -1611,9 +1611,9 @@ UniValue offerlink_nocheck(const UniValue& params, bool fHelp) {
 		vchDesc = vchFromValue(params[3]);
 		if(vchDesc.size() > 0)
 		{
-			// 1kbyte offer desc. maxlen
-			if (vchDesc.size() > MAX_VALUE_LENGTH)
-				throw runtime_error("offer description cannot exceed 1023 bytes!");
+			// // 1kbyte offer desc. maxlen
+			// if (vchDesc.size() > MAX_VALUE_LENGTH)
+			// 	throw runtime_error("offer description cannot exceed 1023 bytes!");
 		}
 		else
 		{
@@ -1632,38 +1632,38 @@ UniValue offerlink_nocheck(const UniValue& params, bool fHelp) {
 	const CWalletTx *wtxAliasIn = NULL;
 
 	// go through the whitelist and see if you own any of the aliases to apply to this offer for a discount
-	for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {
-		CTransaction txAlias;
-		CAliasIndex theAlias;
-		COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
-		// make sure this alias is still valid
-		if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
-		{
-			// make sure its in your wallet (you control this alias)		
-			if (IsSyscoinTxMine(txAlias, "alias")) 
-			{
-				wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());
-				foundEntry = entry;
-				CPubKey currentAliasKey(theAlias.vchPubKey);
-				scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
-				if(commissionInteger <= -foundEntry.nDiscountPct)
-						throw runtime_error(strprintf("You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
+	// for(unsigned int i=0;i<linkOffer.linkWhitelist.entries.size();i++) {
+	// 	CTransaction txAlias;
+	// 	CAliasIndex theAlias;
+	// 	COfferLinkWhitelistEntry& entry = linkOffer.linkWhitelist.entries[i];
+	// 	// make sure this alias is still valid
+	// 	if (GetTxOfAlias(entry.aliasLinkVchRand, theAlias, txAlias))
+	// 	{
+	// 		// make sure its in your wallet (you control this alias)		
+	// 		if (IsSyscoinTxMine(txAlias, "alias")) 
+	// 		{
+	// 			wtxAliasIn = pwalletMain->GetWalletTx(txAlias.GetHash());
+	// 			foundEntry = entry;
+	// 			CPubKey currentAliasKey(theAlias.vchPubKey);
+	// 			scriptPubKeyAliasOrig = GetScriptForDestination(currentAliasKey.GetID());
+	// 			if(commissionInteger <= -foundEntry.nDiscountPct)
+	// 					throw runtime_error(strprintf("You cannot re-sell at a lower price than the discount you received as an affiliate (current discount received: %d%%)", foundEntry.nDiscountPct));
 
-			}
-		}
+	// 		}
+	// 	}
 		
-		scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << foundEntry.aliasLinkVchRand << OP_2DROP;
-		scriptPubKeyAlias += scriptPubKeyAliasOrig;
-	}
-	// if the whitelist exclusive mode is on and you dont have an alias in the whitelist, you cannot link to this offer
-	if(foundEntry.IsNull() && linkOffer.linkWhitelist.bExclusiveResell)
-	{
-		throw runtime_error("Cannot link to this offer because you don't own an alias from its affiliate list (the offer is in exclusive mode)");
-	}
-	if(linkOffer.bOnlyAcceptBTC)
-	{
-		throw runtime_error("Cannot link to an offer that only accepts Bitcoins as payment");
-	}
+	// 	scriptPubKeyAlias << CScript::EncodeOP_N(OP_ALIAS_UPDATE) << foundEntry.aliasLinkVchRand << OP_2DROP;
+	// 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
+	// }
+	// // if the whitelist exclusive mode is on and you dont have an alias in the whitelist, you cannot link to this offer
+	// if(foundEntry.IsNull() && linkOffer.linkWhitelist.bExclusiveResell)
+	// {
+	// 	throw runtime_error("Cannot link to this offer because you don't own an alias from its affiliate list (the offer is in exclusive mode)");
+	// }
+	// if(linkOffer.bOnlyAcceptBTC)
+	// {
+	// 	throw runtime_error("Cannot link to an offer that only accepts Bitcoins as payment");
+	// }
 	// this is a syscoin transaction
 	CWalletTx wtx;
 
