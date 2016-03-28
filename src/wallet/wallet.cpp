@@ -1713,39 +1713,53 @@ void CWallet::AvailableCoins(vector<COutput>& vCoins, bool fOnlyConfirmed, const
 
     {
         LOCK2(cs_main, cs_wallet);
-        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
-        {
-            const uint256& wtxid = it->first;
-            const CWalletTx* pcoin = &(*it).second;
 
-            if (!CheckFinalTx(*pcoin))
+        std::set<const CWalletTx*> rejectedCoins;
+        for (TxUnspents::const_iterator uit = mapTxUnspents.begin(); uit != mapTxUnspents.end(); ++uit) {
+            const COutPoint& outpoint = uit->first;
+            const uint256& wtxid = outpoint.hash;
+            const CWalletTx* pcoin = (uit->second).first;
+
+            if (!(pcoin->vout[outpoint.n].nValue > 0 || fIncludeZeroValue))
                 continue;
 
-            if (fOnlyConfirmed && !pcoin->IsTrusted())
+            if (IsLockedCoin(wtxid, outpoint.n))
                 continue;
 
-            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0)
+            if (rejectedCoins.find(pcoin) != rejectedCoins.end())
                 continue;
+
+            if (!CheckFinalTx(*pcoin)) {
+                rejectedCoins.insert(pcoin);
+                continue;
+            }
+
+            if (fOnlyConfirmed && !pcoin->IsTrusted()) {
+                rejectedCoins.insert(pcoin);
+                continue;
+            }
+
+            if (pcoin->IsCoinBase() && pcoin->GetBlocksToMaturity() > 0) {
+                rejectedCoins.insert(pcoin);
+                continue;
+            }
 
             int nDepth = pcoin->GetDepthInMainChain();
-            if (nDepth < 0)
-                continue;
 
             // We should not consider coins which aren't at least in our mempool
             // It's possible for these to be conflicted via ancestors which we may never be able to detect
-            if (nDepth == 0 && !pcoin->InMempool())
+            if (nDepth < 0 || (nDepth == 0 && !pcoin->InMempool())) {
+                rejectedCoins.insert(pcoin);
+                continue;
+            }
+
+            if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(outpoint))
                 continue;
 
-            for (unsigned int i = 0; i < pcoin->vout.size(); i++) {
-                isminetype mine = IsMine(pcoin->vout[i]);
-                if (!(IsSpent(wtxid, i)) && mine != ISMINE_NO &&
-                    !IsLockedCoin((*it).first, i) && (pcoin->vout[i].nValue > 0 || fIncludeZeroValue) &&
-                    (!coinControl || !coinControl->HasSelected() || coinControl->fAllowOtherInputs || coinControl->IsSelected(COutPoint((*it).first, i))))
-                        vCoins.push_back(COutput(pcoin, i, nDepth,
-                                                 ((mine & ISMINE_SPENDABLE) != ISMINE_NO) ||
-                                                  (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO),
-                                                 (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO));
-            }
+            isminetype mine = (uit->second).second;
+            vCoins.push_back(COutput(pcoin, outpoint.n, nDepth,
+                                     ((mine & ISMINE_SPENDABLE) != ISMINE_NO) ||
+                                     (coinControl && coinControl->fAllowWatchOnly && (mine & ISMINE_WATCH_SOLVABLE) != ISMINE_NO), (mine & (ISMINE_SPENDABLE | ISMINE_WATCH_SOLVABLE)) != ISMINE_NO));
         }
     }
 }
