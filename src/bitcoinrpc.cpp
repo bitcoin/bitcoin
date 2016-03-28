@@ -466,7 +466,7 @@ int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHea
 int ReadHTTP(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet, string& strMessageRet)
 {
     mapHeadersRet.clear();
-    strMessageRet = "";
+    strMessageRet.clear();
 
     // Read status
     int nProto = 0;
@@ -1299,7 +1299,7 @@ int CommandLineRPC(int argc, char *argv[])
         {
             // Result
             if (result.type() == null_type)
-                strPrint = "";
+                strPrint.clear();
             else if (result.type() == str_type)
                 strPrint = result.get_str();
             else

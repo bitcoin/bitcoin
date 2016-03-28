@@ -238,7 +238,7 @@ public:
         addr = addrIn;
         addrName = addrNameIn.empty() ? addr.ToStringIPPort() : addrNameIn;
         nVersion = 0;
-        strSubVer = "";
+        strSubVer.clear();
         fOneShot = false;
         fClient = false; // set by version message
         fInbound = fInboundIn;
