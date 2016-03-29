@@ -437,7 +437,7 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
 
 UniValue getaddressutxos(const UniValue& params, bool fHelp)
 {
-    if (fHelp || params.size() != 1 || !params[0].isObject())
+    if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaddressutxos\n"
             "\nReturns all unspent outputs for an address (requires addressindex to be enabled).\n"
