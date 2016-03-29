@@ -288,7 +288,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
                 delete pdb;
                 pdb = NULL;
                 --bitdb.mapFileUseCount[strFile];
-                strFile = "";
+                strFile.clear();
                 throw runtime_error(strprintf("CDB() : can't open database file %s, error %d", pszFile, ret));
             }
 

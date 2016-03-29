@@ -173,7 +173,7 @@ string CRPCTable::help(string strCommand) const
         // We already filter duplicates, but these deprecated screw up the sort order
         if (strMethod.find("label") != string::npos)
             continue;
-        if (strCommand != "" && strMethod != strCommand)
+        if (!strCommand.empty() && strMethod != strCommand)
             continue;
         try
         {
@@ -186,13 +186,13 @@ string CRPCTable::help(string strCommand) const
         {
             // Help text is returned in an exception
             string strHelp = string(e.what());
-            if (strCommand == "")
+            if (strCommand.empty())
                 if (strHelp.find('\n') != string::npos)
                     strHelp = strHelp.substr(0, strHelp.find('\n'));
             strRet += strHelp + "\n";
         }
     }
-    if (strRet == "")
+    if (strRet.empty())
         strRet = strprintf("help: unknown command: %s\n", strCommand.c_str());
     strRet = strRet.substr(0,strRet.size()-1);
     return strRet;
@@ -467,7 +467,7 @@ int ReadHTTPHeader(std::basic_istream<char>& stream, map<string, string>& mapHea
 int ReadHTTP(std::basic_istream<char>& stream, map<string, string>& mapHeadersRet, string& strMessageRet)
 {
     mapHeadersRet.clear();
-    strMessageRet = "";
+    strMessageRet.clear();
 
     // Read status
     int nProto = 0;
@@ -783,7 +783,7 @@ void ThreadRPCServer2(void* parg)
     printf("ThreadRPCServer started\n");
 
     strRPCUserColonPass = mapArgs["-rpcuser"] + ":" + mapArgs["-rpcpassword"];
-    if (mapArgs["-rpcpassword"] == "")
+    if (mapArgs["-rpcpassword"].empty())
     {
         unsigned char rand_pwd[32];
         RAND_bytes(rand_pwd, 32);
@@ -1086,7 +1086,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
 
     // Observe safe mode
     string strWarning = GetWarnings("rpc");
-    if (strWarning != "" && !GetBoolArg("-disablesafemode") &&
+    if (!strWarning.empty() && !GetBoolArg("-disablesafemode") &&
         !pcmd->okSafeMode)
         throw JSONRPCError(RPC_FORBIDDEN_BY_SAFE_MODE, string("Safe mode: ") + strWarning);
 
@@ -1113,7 +1113,7 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
 
 Object CallRPC(const string& strMethod, const Array& params)
 {
-    if (mapArgs["-rpcuser"] == "" && mapArgs["-rpcpassword"] == "")
+    if (mapArgs["-rpcuser"].empty() && mapArgs["-rpcpassword"].empty())
         throw runtime_error(strprintf(
             _("You must set rpcpassword=<password> in the configuration file:\n%s\n"
               "If the file does not exist, create it with owner-readable-only file permissions."),
@@ -1300,7 +1300,7 @@ int CommandLineRPC(int argc, char *argv[])
         {
             // Result
             if (result.type() == null_type)
-                strPrint = "";
+                strPrint.clear();
             else if (result.type() == str_type)
                 strPrint = result.get_str();
             else
@@ -1317,7 +1317,7 @@ int CommandLineRPC(int argc, char *argv[])
         PrintException(NULL, "CommandLineRPC()");
     }
 
-    if (strPrint != "")
+    if (!strPrint.empty())
     {
         fprintf((nRet == 0 ? stdout : stderr), "%s\n", strPrint.c_str());
     }

@@ -260,7 +260,7 @@ void ThreadIRCSeed2(void* parg)
         // or if it keeps failing because the nick is already in use.
         if (!fNoListen && GetLocal(addrLocal, &addrIPv4) && nNameRetry<3)
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
-        if (strMyName == "")
+        if (strMyName.empty())
             strMyName = strprintf("x%" PRIu64 "", GetRand(1000000000));
 
         Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());

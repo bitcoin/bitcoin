@@ -956,7 +956,7 @@ void CWalletTx::GetAccountAmounts(const string& strAccount, int64_t& nGenerated,
     list<pair<CBitcoinAddress, int64_t> > listSent;
     GetAmounts(allGeneratedImmature, allGeneratedMature, listReceived, listSent, allFee, strSentAccount, filter);
 
-    if (strAccount == "")
+    if (strAccount.empty())
         nGenerated = allGeneratedMature;
     if (strAccount == strSentAccount)
     {

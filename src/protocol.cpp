@@ -11,12 +11,8 @@
 # include <arpa/inet.h>
 #endif
 
-static const char* ppszTypeName[] =
-{
-    "ERROR",
-    "tx",
-    "block",
-};
+static const std::string forfill[] = { "ERROR", "tx", "block" }; //TODO: Replace with initializer list constructor when c++11 comes
+static const std::vector<std::string> vpszTypeName(forfill, forfill + 3);
 
 CMessageHeader::CMessageHeader() : nMessageSize(std::numeric_limits<uint32_t>::max()), nChecksum(0)
 {
@@ -76,15 +72,14 @@ CInv::CInv(int typeIn, const uint256& hashIn) : type(typeIn), hash(hashIn) { }
 CInv::CInv(const std::string& strType, const uint256& hashIn) : hash(hashIn)
 {
     unsigned int i;
-    for (i = 1; i < ARRAYLEN(ppszTypeName); i++)
+    for (i = 1; i < vpszTypeName.size(); ++i)
     {
-        if (strType == ppszTypeName[i])
-        {
+        if (strType.compare(vpszTypeName[i]) == 0) {
             type = i;
             break;
         }
     }
-    if (i == ARRAYLEN(ppszTypeName))
+    if (i == vpszTypeName.size())
         throw std::out_of_range(strprintf("CInv::CInv(string, uint256) : unknown type '%s'", strType.c_str()));
 }
 
@@ -95,14 +90,14 @@ bool operator<(const CInv& a, const CInv& b)
 
 bool CInv::IsKnownType() const
 {
-    return (type >= 1 && type < (int)ARRAYLEN(ppszTypeName));
+    return (type >= 1 && type < (int)vpszTypeName.size());
 }
 
 const char* CInv::GetCommand() const
 {
     if (!IsKnownType())
         throw std::out_of_range(strprintf("CInv::GetCommand() : type=%d unknown type", type));
-    return ppszTypeName[type];
+    return vpszTypeName[type].c_str();
 }
 
 std::string CInv::ToString() const
