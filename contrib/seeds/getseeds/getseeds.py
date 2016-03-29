@@ -81,7 +81,7 @@ if b'rpcport' in contents.keys():
 if b'rpclisten' in contents.keys():
     rpclisten = contents[b'rpclisten'].decode()
 
-access = AuthServiceProxy("http://"+rpcuser+":"+rpcpassword+"@"+rpclisten+":"+rpcport+"/")
+access = AuthServiceProxy('http://%s:%s@%s:%d/' % (rpcuser, rpcpassword, rpclisten, int(rpcport)))
 
 for node in json.loads(data.decode()):
     print ('Adding', node)
