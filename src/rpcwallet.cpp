@@ -350,7 +350,7 @@ Value sendtoaddress(const Array& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
 
     string strError = pwalletMain->SendMoney(scriptPubKey, nAmount, wtx);
-    if (strError != "")
+    if (!strError.empty())
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
     return wtx.GetHash().GetHex();
@@ -738,7 +738,7 @@ Value sendfrom(const Array& params, bool fHelp)
 
     // Send
     string strError = pwalletMain->SendMoney(scriptPubKey, nAmount, wtx);
-    if (strError != "")
+    if (!strError.empty())
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
     return wtx.GetHash().GetHex();
@@ -1067,7 +1067,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     bool involvesWatchonly = wtx.IsFromMe(MINE_WATCH_ONLY);
 
     // Generated blocks assigned to account ""
-    if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount == ""))
+    if ((nGeneratedMature+nGeneratedImmature) != 0 && (fAllAccounts || strAccount.empty()))
     {
         Object entry;
         entry.push_back(Pair("account", string("")));
