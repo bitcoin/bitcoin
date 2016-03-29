@@ -62,47 +62,154 @@ public:
     CScriptID(const uint160 &in) : uint160(in) { }
 };
 
-/** An encapsulated public key. */
-class CPubKey {
+/** An encapsulated OpenSSL Elliptic Curve key (public) */
+class CPubKey
+{
 private:
-    std::vector<unsigned char> vchPubKey;
-    friend class CKey;
+
+    /**
+     * Just store the serialized data.
+     * Its length can very cheaply be computed from the first byte.
+     */
+    unsigned char vbytes[65];
+
+    //! Compute the length of a pubkey with a given first byte.
+    unsigned int static GetLen(unsigned char chHeader)
+    {
+        if (chHeader == 2 || chHeader == 3)
+            return 33;
+        if (chHeader == 4 || chHeader == 6 || chHeader == 7)
+            return 65;
+        return 0;
+    }
+
+    // Set this key data to be invalid
+    void Invalidate()
+    {
+        vbytes[0] = 0xFF;
+    }
 
 public:
-    CPubKey() { }
-    CPubKey(const std::vector<unsigned char> &vchPubKeyIn) : vchPubKey(vchPubKeyIn) { }
-    friend bool operator==(const CPubKey &a, const CPubKey &b) { return a.vchPubKey == b.vchPubKey; }
-    friend bool operator!=(const CPubKey &a, const CPubKey &b) { return a.vchPubKey != b.vchPubKey; }
-    friend bool operator<(const CPubKey &a, const CPubKey &b) { return a.vchPubKey < b.vchPubKey; }
-
-    IMPLEMENT_SERIALIZE(
-        READWRITE(vchPubKey);
-    )
-
-    CKeyID GetID() const {
-        return CKeyID(Hash160(vchPubKey));
+    // Construct an invalid public key.
+    CPubKey()
+    {
+        Invalidate();
     }
 
-    uint256 GetHash() const {
-        return Hash(vchPubKey.begin(), vchPubKey.end());
+    // Initialize a public key using begin/end iterators to byte data.
+    template <typename T>
+    void Set(const T pbegin, const T pend)
+    {
+        int len = pend == pbegin ? 0 : GetLen(pbegin[0]);
+        if (len && len == (pend - pbegin))
+            memcpy(vbytes, (unsigned char*)&pbegin[0], len);
+        else
+            Invalidate();
     }
 
-    bool IsValid() const {
-        return vchPubKey.size() == 33 || vchPubKey.size() == 65;
+    void Set(const std::vector<unsigned char>& vch)
+    {
+        Set(vch.begin(), vch.end());
     }
 
-    bool IsCompressed() const {
-        return vchPubKey.size() == 33;
+    template <typename T>
+    CPubKey(const T pbegin, const T pend)
+    {
+        Set(pbegin, pend);
     }
 
-    std::vector<unsigned char> Raw() const {
-        return vchPubKey;
+    CPubKey(const std::vector<unsigned char>& vch)
+    {
+        Set(vch.begin(), vch.end());
     }
+
+    // Read-only vector-like interface to the data.
+    unsigned int size() const { return GetLen(vbytes[0]); }
+    const unsigned char* begin() const { return vbytes; }
+    const unsigned char* end() const { return vbytes + size(); }
+    const unsigned char& operator[](unsigned int pos) const { return vbytes[pos]; }
+
+    friend bool operator==(const CPubKey& a, const CPubKey& b) { return a.vbytes[0] == b.vbytes[0] && memcmp(a.vbytes, b.vbytes, a.size()) == 0; }
+    friend bool operator!=(const CPubKey& a, const CPubKey& b) { return !(a == b); }
+    friend bool operator<(const CPubKey& a, const CPubKey& b)  { return a.vbytes[0] < b.vbytes[0] || (a.vbytes[0] == b.vbytes[0] && memcmp(a.vbytes, b.vbytes, a.size()) < 0); }
+
+    //! Implement serialization, as if this was a byte vector.
+    unsigned int GetSerializeSize(int nType, int nVersion) const
+    {
+        return size() + 1;
+    }
+    template <typename Stream>
+    void Serialize(Stream& s, int nType, int nVersion) const
+    {
+        unsigned int len = size();
+        ::WriteCompactSize(s, len);
+        s.write((char*)vbytes, len);
+    }
+    template <typename Stream>
+    void Unserialize(Stream& s, int nType, int nVersion)
+    {
+        unsigned int len = ::ReadCompactSize(s);
+        if (len <= 65) {
+            s.read((char*)vbytes, len);
+        } else {
+            // invalid pubkey, skip available data
+            char dummy;
+            while (len--)
+                s.read(&dummy, 1);
+            Invalidate();
+        }
+    }
+
+    CKeyID GetID() const
+    {
+        return CKeyID(Hash160(vbytes, vbytes + size()));
+    }
+
+    uint256 GetHash() const
+    {
+        return Hash(vbytes, vbytes + size());
+    }
+
+    /*
+     * Check syntactic correctness.
+     *
+     * Note that this is consensus critical as CheckSig() calls it!
+     */
+    bool IsValid() const
+    {
+        return size() > 0;
+    }
+
+    //! fully validate whether this is a valid public key (more expensive than IsValid())
+    bool IsFullyValid() const
+    {
+        const unsigned char* pbegin = &vbytes[0];
+        EC_KEY *pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+        if (o2i_ECPublicKey(&pkey, &pbegin, size()))
+        {
+            EC_KEY_free(pkey);
+            return true;
+        }
+        return false;
+    }
+
+    //! Check whether this is a compressed public key.
+    bool IsCompressed() const
+    {
+        return size() == 33;
+    }
+
+    bool Verify(const uint256& hash, const std::vector<unsigned char>& vchSig) const;
+    bool VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig);
+
+    bool SetCompactSignature(uint256 hash, const std::vector<unsigned char>& vchSig);
+
+    // Reserialize to DER
+    static bool ReserealizeSignature(std::vector<unsigned char>& vchSig);
 
     // Encrypt data
     void EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted);
 };
-
 
 // secure_allocator is defined in allocators.h
 // CPrivKey is a serialized private key, with all parameters included (279 bytes)
@@ -110,15 +217,13 @@ typedef std::vector<unsigned char, secure_allocator<unsigned char> > CPrivKey;
 // CSecret is a serialization of just the secret parameter (32 bytes)
 typedef std::vector<unsigned char, secure_allocator<unsigned char> > CSecret;
 
-/** An encapsulated OpenSSL Elliptic Curve key (public and/or private) */
+/** An encapsulated OpenSSL Elliptic Curve key (private) */
 class CKey
 {
 protected:
     EC_KEY* pkey;
     bool fSet;
     bool fCompressedPubKey;
-
-    void SetCompressedPubKey();
 
 public:
 
@@ -135,14 +240,15 @@ public:
     bool IsNull() const;
     bool IsCompressed() const;
 
+    void SetCompressedPubKey();
     void MakeNewKey(bool fCompressed=true);
     bool SetPrivKey(const CPrivKey& vchPrivKey);
     bool SetSecret(const CSecret& vchSecret, bool fCompressed = true);
     CSecret GetSecret(bool &fCompressed) const;
     CSecret GetSecret() const;
     CPrivKey GetPrivKey() const;
-    bool SetPubKey(const CPubKey& vchPubKey);
     CPubKey GetPubKey() const;
+    bool WritePEM(BIO *streamObj, const SecureString &strPassKey) const;
 
     bool Sign(uint256 hash, std::vector<unsigned char>& vchSig);
 
@@ -152,27 +258,10 @@ public:
     //                  0x1D = second key with even y, 0x1E = second key with odd y
     bool SignCompact(uint256 hash, std::vector<unsigned char>& vchSig);
 
-    // reconstruct public key from a compact signature
-    // This is only slightly more CPU intensive than just verifying it.
-    // If this function succeeds, the recovered public key is guaranteed to be valid
-    // (the signature is a valid signature of the given data for that key)
-    bool SetCompactSignature(uint256 hash, const std::vector<unsigned char>& vchSig);
-
-    bool Verify(uint256 hash, const std::vector<unsigned char>& vchSig);
-
-    // Verify a compact signature
-    bool VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig);
-
     bool IsValid();
 
     // Check whether an element of a signature (r or s) is valid.
     static bool CheckSignatureElement(const unsigned char *vch, int len, bool half);
-
-    // Reserialize to DER
-    static bool ReserealizeSignature(std::vector<unsigned char>& vchSig);
-
-    // Encrypt data
-    void EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted);
 
     // Decrypt data
     void DecryptData(const std::vector<unsigned char>& encrypted, std::vector<unsigned char>& data);

@@ -5,6 +5,7 @@
 #include <map>
 
 #include <openssl/ecdsa.h>
+#include <openssl/evp.h>
 #include <openssl/obj_mac.h>
 
 #include "key.h"
@@ -164,8 +165,6 @@ const unsigned char vchMaxModHalfOrder[32] = {
 
 const unsigned char *vchZero = NULL;
 
-
-
 void CKey::SetCompressedPubKey()
 {
     EC_KEY_set_conv_form(pkey, POINT_CONVERSION_COMPRESSED);
@@ -174,13 +173,12 @@ void CKey::SetCompressedPubKey()
 
 void CKey::Reset()
 {
-    fCompressedPubKey = false;
+    fCompressedPubKey = fSet = false;
     if (pkey != NULL)
         EC_KEY_free(pkey);
     pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
     if (pkey == NULL)
         throw key_error("CKey::CKey() : EC_KEY_new_by_curve_name failed");
-    fSet = false;
 }
 
 CKey::CKey()
@@ -217,7 +215,8 @@ CKey& CKey::operator=(const CKey& b)
 
 CKey::~CKey()
 {
-    EC_KEY_free(pkey);
+    if (pkey != NULL)
+        EC_KEY_free(pkey);
 }
 
 bool CKey::IsNull() const
@@ -235,7 +234,7 @@ bool CKey::CheckSignatureElement(const unsigned char *vch, int len, bool half) {
         CompareBigEndian(vch, len, half ? vchMaxModHalfOrder : vchMaxModOrder, 32) <= 0;
 }
 
-bool CKey::ReserealizeSignature(std::vector<unsigned char>& vchSig)
+bool CPubKey::ReserealizeSignature(std::vector<unsigned char>& vchSig)
 {
     if (vchSig.empty())
         return false;
@@ -299,6 +298,7 @@ bool CKey::SetSecret(const CSecret& vchSecret, bool fCompressed)
     pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
     if (pkey == NULL)
         throw key_error("CKey::SetSecret() : EC_KEY_new_by_curve_name failed");
+
     if (vchSecret.size() != 32)
         throw key_error("CKey::SetSecret() : secret must be 32 bytes");
     BIGNUM *bn = BN_bin2bn(&vchSecret[0],32,BN_new());
@@ -331,6 +331,37 @@ CSecret CKey::GetSecret(bool &fCompressed) const
     return vchRet;
 }
 
+bool CKey::WritePEM(BIO *streamObj, const SecureString &strPassKey) const // dumppem 4KJLA99FyqMMhjjDe7KnRXK4sjtv9cCtNS /tmp/test.pem 123
+{
+    EVP_PKEY *evpKey = EVP_PKEY_new();
+    bool result = true;
+
+    do
+    {
+        if (!EVP_PKEY_assign_EC_KEY(evpKey, pkey))
+        {
+            result = error("CKey::WritePEM() : Error initializing EVP_PKEY instance.");
+            break;
+        }
+
+        if(!PEM_write_bio_PKCS8PrivateKey(streamObj, evpKey, EVP_aes_256_cbc(), (char *)&strPassKey[0], strPassKey.size(), NULL, NULL))
+        {
+            result = error("CKey::WritePEM() : Error writing private key data to stream object");
+            break;
+        }
+
+        if(!PEM_write_bio_PUBKEY(streamObj, evpKey))
+        {
+            result = error("CKey::WritePEM() : Error writing public key data to stream object");
+            break;
+        }
+    }
+    while(false);
+
+    EVP_PKEY_free(evpKey);
+    return result;
+}
+
 CSecret CKey::GetSecret() const
 {
     bool fCompressed;
@@ -347,21 +378,6 @@ CPrivKey CKey::GetPrivKey() const
     if (i2d_ECPrivateKey(pkey, &pbegin) != nSize)
         throw key_error("CKey::GetPrivKey() : i2d_ECPrivateKey returned unexpected size");
     return vchPrivKey;
-}
-
-bool CKey::SetPubKey(const CPubKey& vchPubKey)
-{
-    const unsigned char* pbegin = &vchPubKey.vchPubKey[0];
-    if (o2i_ECPublicKey(&pkey, &pbegin, vchPubKey.vchPubKey.size()))
-    {
-        fSet = true;
-        if (vchPubKey.vchPubKey.size() == 33)
-            SetCompressedPubKey();
-        return true;
-    }
-    pkey = NULL;
-    Reset();
-    return false;
 }
 
 CPubKey CKey::GetPubKey() const
@@ -462,7 +478,7 @@ bool CKey::SignCompact(uint256 hash, std::vector<unsigned char>& vchSig)
 // This is only slightly more CPU intensive than just verifying it.
 // If this function succeeds, the recovered public key is guaranteed to be valid
 // (the signature is a valid signature of the given data for that key)
-bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& vchSig)
+bool CPubKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& vchSig)
 {
     if (vchSig.size() != 65)
         return false;
@@ -473,27 +489,45 @@ bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& v
     BN_bin2bn(&vchSig[1],32,sig->r);
     BN_bin2bn(&vchSig[33],32,sig->s);
 
-    EC_KEY_free(pkey);
-    pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+    EC_KEY* pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
     if (nV >= 31)
     {
-        SetCompressedPubKey();
         nV -= 4;
+        EC_KEY_set_conv_form(pkey, POINT_CONVERSION_COMPRESSED);
     }
-    if (ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) == 1)
+
+    do
     {
-        fSet = true;
+        if (ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) != 1)
+            break;
         ECDSA_SIG_free(sig);
-        return true;
-    }
+
+        int nSize = i2o_ECPublicKey(pkey, NULL);
+        if (!nSize)
+            break;
+        std::vector<unsigned char> vchPubKey(nSize, 0);
+        unsigned char* pbegin = &vchPubKey[0];
+        if (i2o_ECPublicKey(pkey, &pbegin) != nSize)
+            break;
+        Set(vchPubKey.begin(), vchPubKey.end());
+        return IsValid();
+
+    } while (false);
+
     ECDSA_SIG_free(sig);
+    Invalidate();
     return false;
 }
 
-bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
+bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const
 {
-    if (vchSig.empty())
+    if (vchSig.empty() || !IsValid())
         return false;
+
+    const unsigned char* pbegin = &vbytes[0];
+    EC_KEY *pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+    if (!o2i_ECPublicKey(&pkey, &pbegin, size()))
+        return false; // Unable to parse public key
 
     // New versions of OpenSSL will reject non-canonical DER signatures. de/re-serialize first.
     unsigned char *norm_der = NULL;
@@ -522,14 +556,13 @@ bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSig)
     return ret;
 }
 
-bool CKey::VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig)
+bool CPubKey::VerifyCompact(uint256 hash, const std::vector<unsigned char>& vchSig)
 {
-    CKey key;
+    CPubKey key;
     if (!key.SetCompactSignature(hash, vchSig))
         return false;
-    if (GetPubKey() != key.GetPubKey())
+    if ((*this) != key)
         return false;
-
     return true;
 }
 
@@ -545,6 +578,7 @@ bool CKey::IsValid()
     CSecret secret = GetSecret(fCompr);
     CKey key2;
     key2.SetSecret(secret, fCompr);
+
     return GetPubKey() == key2.GetPubKey();
 }
 
@@ -604,9 +638,10 @@ bool CPoint::setBytes(const std::vector<unsigned char> &vchBytes)
 }
 
 // Initialize from octets stream
-bool CPoint::setPubKey(const CPubKey &vchPubKey)
+bool CPoint::setPubKey(const CPubKey &key)
 {
-    return setBytes(vchPubKey.Raw());
+    std::vector<uint8_t> vchPubKey(key.begin(), key.end());
+    return setBytes(vchPubKey);
 }
 
 // Serialize to octets stream
@@ -824,7 +859,7 @@ bool CMalleableKey::SetSecrets(const CSecret &pvchSecretL, const CSecret &pvchSe
 CMalleablePubKey CMalleableKey::GetMalleablePubKey() const
 {
     CKey L(vchSecretL), H(vchSecretH);
-    return CMalleablePubKey(L.GetPubKey().Raw(), H.GetPubKey().Raw());
+    return CMalleablePubKey(L.GetPubKey(), H.GetPubKey());
 }
 
 // Check ownership
@@ -851,7 +886,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
     }
 
     CKey H(vchSecretH);
-    std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
+    CPubKey vchPubKeyH = H.GetPubKey();
 
     CPoint point_H;
     if (!point_H.setPubKey(vchPubKeyH)) {
@@ -928,7 +963,7 @@ bool CMalleableKey::CheckKeyVariant(const CPubKey &R, const CPubKey &vchPubKeyVa
     }
 
     CKey H(vchSecretH);
-    std::vector<unsigned char> vchPubKeyH = H.GetPubKey().Raw();
+    CPubKey vchPubKeyH = H.GetPubKey();
 
     CPoint point_H;
     if (!point_H.setPubKey(vchPubKeyH)) {
@@ -1040,7 +1075,7 @@ CMalleableKeyView::CMalleableKeyView(const CMalleableKey &b)
     vchSecretL = b.vchSecretL;
 
     CKey H(b.vchSecretH);
-    vchPubKeyH = H.GetPubKey().Raw();
+    vchPubKeyH = H.GetPubKey();
 }
 
 CMalleableKeyView::CMalleableKeyView(const CMalleableKeyView &b)
@@ -1054,7 +1089,7 @@ CMalleableKeyView& CMalleableKeyView::operator=(const CMalleableKey &b)
     vchSecretL = b.vchSecretL;
 
     CKey H(b.vchSecretH);
-    vchPubKeyH = H.GetPubKey().Raw();
+    vchPubKeyH = H.GetPubKey();
 
     return (*this);
 }
@@ -1184,17 +1219,14 @@ bool CMalleableKeyView::IsValid() const
 
 void CPubKey::EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted)
 {
-    CKey key;
-    key.SetPubKey(*this);
-
-    key.EncryptData(data, encrypted);
-}
-
-void CKey::EncryptData(const std::vector<unsigned char>& data, std::vector<unsigned char>& encrypted)
-{
     ies_ctx_t *ctx;
     char error[1024] = "Unknown error";
     cryptogram_t *cryptogram;
+
+    const unsigned char* pbegin = &vbytes[0];
+    EC_KEY *pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
+    if (!o2i_ECPublicKey(&pkey, &pbegin, size()))
+        throw key_error("Unable to parse EC key");
 
     ctx = create_context(pkey);
     if (!EC_KEY_get0_public_key(ctx->user_key))

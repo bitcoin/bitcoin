@@ -83,13 +83,13 @@ public:
         return Erase(std::make_pair(std::string("tx"), hash));
     }
 
-    bool WriteKey(const CPubKey& vchPubKey, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta)
+    bool WriteKey(const CPubKey& key, const CPrivKey& vchPrivKey, const CKeyMetadata &keyMeta)
     {
         nWalletDBUpdated++;
-        if(!Write(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta))
+        if(!Write(std::make_pair(std::string("keymeta"), key), keyMeta))
             return false;
 
-        if(!Write(std::make_pair(std::string("key"), vchPubKey.Raw()), vchPrivKey, false))
+        if(!Write(std::make_pair(std::string("key"), key), vchPrivKey, false))
             return false;
 
         return true;
@@ -122,20 +122,20 @@ public:
     }
 
 
-    bool WriteCryptedKey(const CPubKey& vchPubKey, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta)
+    bool WriteCryptedKey(const CPubKey& key, const std::vector<unsigned char>& vchCryptedSecret, const CKeyMetadata &keyMeta)
     {
         nWalletDBUpdated++;
         bool fEraseUnencryptedKey = true;
 
-        if(!Write(std::make_pair(std::string("keymeta"), vchPubKey), keyMeta))
+        if(!Write(std::make_pair(std::string("keymeta"), key), keyMeta))
             return false;
 
-        if (!Write(std::make_pair(std::string("ckey"), vchPubKey.Raw()), vchCryptedSecret, false))
+        if (!Write(std::make_pair(std::string("ckey"), key), vchCryptedSecret, false))
             return false;
         if (fEraseUnencryptedKey)
         {
-            Erase(std::make_pair(std::string("key"), vchPubKey.Raw()));
-            Erase(std::make_pair(std::string("wkey"), vchPubKey.Raw()));
+            Erase(std::make_pair(std::string("key"), key));
+            Erase(std::make_pair(std::string("wkey"), key));
         }
         return true;
     }
@@ -152,9 +152,9 @@ public:
         return Erase(std::make_pair(std::string("mkey"), nID));
     }
 
-    bool EraseCryptedKey(const CPubKey& vchPubKey)
+    bool EraseCryptedKey(const CPubKey& key)
     {
-        return Erase(std::make_pair(std::string("ckey"), vchPubKey.Raw()));
+        return Erase(std::make_pair(std::string("ckey"), key));
     }
 
     bool EraseCryptedMalleableKey(const CMalleableKeyView& keyView)
@@ -197,10 +197,10 @@ public:
         return Write(std::string("orderposnext"), nOrderPosNext);
     }
 
-    bool WriteDefaultKey(const CPubKey& vchPubKey)
+    bool WriteDefaultKey(const CPubKey& key)
     {
         nWalletDBUpdated++;
-        return Write(std::string("defaultkey"), vchPubKey.Raw());
+        return Write(std::string("defaultkey"), key);
     }
 
     bool ReadPool(int64_t nPool, CKeyPool& keypool)

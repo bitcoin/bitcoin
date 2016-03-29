@@ -132,7 +132,6 @@ public:
             KeyMap::const_iterator mi = mapKeys.find(address);
             if (mi != mapKeys.end())
             {
-                keyOut.Reset();
                 keyOut.SetSecret((*mi).second.first, (*mi).second.second);
                 return true;
             }

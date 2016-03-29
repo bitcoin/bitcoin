@@ -12,6 +12,7 @@
 #include "kernel.h"
 #include "coincontrol.h"
 #include <boost/algorithm/string/replace.hpp>
+#include <openssl/bio.h>
 
 #include "main.h"
 
@@ -514,6 +515,19 @@ bool CWallet::DecryptWallet(const SecureString& strWalletPassphrase)
     NotifyStatusChanged(this);
 
     return true;
+}
+
+bool CWallet::GetPEM(const CKeyID &keyID, const std::string &fileName, const SecureString &strPassKey) const
+{
+    BIO *pemOut = BIO_new_file(fileName.c_str(), "w");
+    if (pemOut == NULL)
+        return error("GetPEM() : failed to create file %s\n", fileName.c_str());
+    CKey key;
+    if (!GetKey(keyID, key))
+        return error("GetPEM() : failed to get key for address=%s\n", CBitcoinAddress(keyID).ToString().c_str());
+    bool result = key.WritePEM(pemOut, strPassKey);
+    BIO_free(pemOut);
+    return result;
 }
 
 int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb)

@@ -1284,10 +1284,7 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubK
 {
     static CSignatureCache signatureCache;
 
-    CKey key;
-    if (!key.SetPubKey(vchPubKey))
-         return false;
-    CPubKey pubkey = key.GetPubKey();
+    CPubKey pubkey(vchPubKey);
     if (!pubkey.IsValid())
         return false;
 
@@ -1305,7 +1302,7 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubK
     if (signatureCache.Get(sighash, vchSig, pubkey))
         return true;
 
-    if (!key.Verify(sighash, vchSig))
+    if (!pubkey.Verify(sighash, vchSig))
         return false;
 
     if (!(flags & SCRIPT_VERIFY_NOCACHE))
@@ -1313,12 +1310,6 @@ bool CheckSig(vector<unsigned char> vchSig, const vector<unsigned char> &vchPubK
 
     return true;
 }
-
-
-
-
-
-
 
 
 //
@@ -2196,12 +2187,12 @@ void CScript::SetAddress(const CBitcoinAddress& dest)
     }
 }
 
-void CScript::SetMultisig(int nRequired, const std::vector<CKey>& keys)
+void CScript::SetMultisig(int nRequired, const std::vector<CPubKey>& keys)
 {
     this->clear();
 
     *this << EncodeOP_N(nRequired);
-    BOOST_FOREACH(const CKey& key, keys)
-        *this << key.GetPubKey();
+    BOOST_FOREACH(const CPubKey& key, keys)
+        *this << key;
     *this << EncodeOP_N((int)(keys.size())) << OP_CHECKMULTISIG;
 }

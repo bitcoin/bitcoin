@@ -451,11 +451,11 @@ Value verifymessage(const Array& params, bool fHelp)
     ss << strMessageMagic;
     ss << strMessage;
 
-    CKey key;
+    CPubKey key;
     if (!key.SetCompactSignature(Hash(ss.begin(), ss.end()), vchSig))
         return false;
 
-    return (key.GetPubKey().GetID() == keyID);
+    return (key.GetID() == keyID);
 }
 
 
@@ -843,7 +843,7 @@ Value addmultisigaddress(const Array& params, bool fHelp)
                       "(got %" PRIszu " keys, but need at least %d to redeem)", keys.size(), nRequired));
     if (keys.size() > 16)
         throw runtime_error("Number of addresses involved in the multisignature address creation > 16\nReduce the number");
-    std::vector<CKey> pubkeys;
+    std::vector<CPubKey> pubkeys;
     pubkeys.resize(keys.size());
     for (unsigned int i = 0; i < keys.size(); i++)
     {
@@ -861,16 +861,18 @@ Value addmultisigaddress(const Array& params, bool fHelp)
             if (!pwalletMain->GetPubKey(keyID, vchPubKey))
                 throw runtime_error(
                     strprintf("no full public key for address %s",ks.c_str()));
-            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
+            if (!vchPubKey.IsValid())
                 throw runtime_error(" Invalid public key: "+ks);
+            pubkeys[i] = vchPubKey;
         }
 
         // Case 2: hex public key
         else if (IsHex(ks))
         {
             CPubKey vchPubKey(ParseHex(ks));
-            if (!vchPubKey.IsValid() || !pubkeys[i].SetPubKey(vchPubKey))
+            if (!vchPubKey.IsValid())
                 throw runtime_error(" Invalid public key: "+ks);
+             pubkeys[i] = vchPubKey;
         }
         else
         {
@@ -1690,7 +1692,7 @@ public:
         obj.push_back(Pair("isscript", false));
         if (mine == MINE_SPENDABLE) {
             pwalletMain->GetPubKey(keyID, vchPubKey);
-            obj.push_back(Pair("pubkey", HexStr(vchPubKey.Raw())));
+            obj.push_back(Pair("pubkey", HexStr(vchPubKey.begin(), vchPubKey.end())));
             obj.push_back(Pair("iscompressed", vchPubKey.IsCompressed()));
         }
         return obj;
@@ -1886,8 +1888,9 @@ Value makekeypair(const Array& params, bool fHelp)
 
     bool fCompressed;
     CSecret vchSecret = key.GetSecret(fCompressed);
+    CPubKey vchPubKey = key.GetPubKey();
     result.push_back(Pair("Secret", HexStr<CSecret::iterator>(vchSecret.begin(), vchSecret.end())));
-    result.push_back(Pair("PublicKey", HexStr(key.GetPubKey().Raw())));
+    result.push_back(Pair("PublicKey", HexStr(vchPubKey.begin(), vchPubKey.end())));
     return result;
 }
 
@@ -1970,8 +1973,8 @@ Value adjustmalleablepubkey(const Array& params, bool fHelp)
     malleablePubKey.GetVariant(R, vchPubKeyVariant);
 
     Object result;
-    result.push_back(Pair("R", HexStr(R.Raw())));
-    result.push_back(Pair("PubkeyVariant", HexStr(vchPubKeyVariant.Raw())));
+    result.push_back(Pair("R", HexStr(R.begin(), R.end())));
+    result.push_back(Pair("PubkeyVariant", HexStr(vchPubKeyVariant.begin(), vchPubKeyVariant.end())));
     result.push_back(Pair("KeyVariantID", CBitcoinAddress(vchPubKeyVariant.GetID()).ToString()));
 
     return result;

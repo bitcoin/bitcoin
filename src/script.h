@@ -380,7 +380,7 @@ public:
 
     CScript& operator<<(const CPubKey& key)
     {
-        std::vector<uint8_t> vchKey = key.Raw();
+        std::vector<uint8_t> vchKey(key.begin(), key.end());
         return (*this) << vchKey;
     }
 
@@ -586,7 +586,7 @@ public:
 
     void SetDestination(const CTxDestination& address);
     void SetAddress(const CBitcoinAddress& dest);
-    void SetMultisig(int nRequired, const std::vector<CKey>& keys);
+    void SetMultisig(int nRequired, const std::vector<CPubKey>& keys);
 
 
     void PrintHex() const

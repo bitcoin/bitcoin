@@ -108,7 +108,7 @@ void MultisigAddressEntry::on_address_textChanged(const QString &address)
     {
         CPubKey vchPubKey;
         model->getPubKey(keyID, vchPubKey);
-        std::string pubkey = HexStr(vchPubKey.Raw());
+        std::string pubkey = HexStr(vchPubKey.begin(), vchPubKey.end());
         if(!pubkey.empty())
             ui->pubkey->setText(pubkey.c_str());
     }

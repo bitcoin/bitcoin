@@ -2508,7 +2508,7 @@ bool static ReserealizeBlockSignature(CBlock* pblock)
         return true;
     }
 
-    return CKey::ReserealizeSignature(pblock->vchBlockSig);
+    return CPubKey::ReserealizeSignature(pblock->vchBlockSig);
 }
 
 bool static IsCanonicalBlockSignature(CBlock* pblock)
@@ -2667,8 +2667,8 @@ bool CBlock::CheckBlockSignature() const
     if (whichType == TX_PUBKEY)
     {
         valtype& vchPubKey = vSolutions[0];
-        CKey key;
-        if (!key.SetPubKey(vchPubKey))
+        CPubKey key(vchPubKey);
+        if (!key.IsValid())
             return false;
         return key.Verify(GetHash(), vchBlockSig);
     }
