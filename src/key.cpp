@@ -334,32 +334,16 @@ CSecret CKey::GetSecret(bool &fCompressed) const
 bool CKey::WritePEM(BIO *streamObj, const SecureString &strPassKey) const // dumppem 4KJLA99FyqMMhjjDe7KnRXK4sjtv9cCtNS /tmp/test.pem 123
 {
     EVP_PKEY *evpKey = EVP_PKEY_new();
-    bool result = true;
+    if (!EVP_PKEY_assign_EC_KEY(evpKey, pkey))
+        return error("CKey::WritePEM() : Error initializing EVP_PKEY instance.");
 
-    do
-    {
-        if (!EVP_PKEY_assign_EC_KEY(evpKey, pkey))
-        {
-            result = error("CKey::WritePEM() : Error initializing EVP_PKEY instance.");
-            break;
-        }
+    if(!PEM_write_bio_PKCS8PrivateKey(streamObj, evpKey, EVP_aes_256_cbc(), (char *)&strPassKey[0], strPassKey.size(), NULL, NULL))
+        return error("CKey::WritePEM() : Error writing private key data to stream object");
 
-        if(!PEM_write_bio_PKCS8PrivateKey(streamObj, evpKey, EVP_aes_256_cbc(), (char *)&strPassKey[0], strPassKey.size(), NULL, NULL))
-        {
-            result = error("CKey::WritePEM() : Error writing private key data to stream object");
-            break;
-        }
+    if(!PEM_write_bio_PUBKEY(streamObj, evpKey))
+        return error("CKey::WritePEM() : Error writing public key data to stream object");
 
-        if(!PEM_write_bio_PUBKEY(streamObj, evpKey))
-        {
-            result = error("CKey::WritePEM() : Error writing public key data to stream object");
-            break;
-        }
-    }
-    while(false);
-
-    EVP_PKEY_free(evpKey);
-    return result;
+    return true;
 }
 
 CSecret CKey::GetSecret() const
