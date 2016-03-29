@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+from __future__ import division,print_function
 
 #
 # Test BIP68 implementation (mempool only)
@@ -33,20 +35,20 @@ class BIP68Test(BitcoinTestFramework):
         # Generate some coins
         self.nodes[0].generate(110)
 
-        print "Running test disable flag"
+        print("Running test disable flag")
         self.test_disable_flag()
 
-        print "Running test sequence-lock-confirmed-inputs"
+        print("Running test sequence-lock-confirmed-inputs")
         self.test_sequence_lock_confirmed_inputs()
 
-        print "Running test sequence-lock-unconfirmed-inputs"
+        print("Running test sequence-lock-unconfirmed-inputs")
         self.test_sequence_lock_unconfirmed_inputs()
 
         # This test needs to change when BIP68 becomes consensus
-        print "Running test BIP68 not consensus"
+        print("Running test BIP68 not consensus")
         self.test_bip68_not_consensus()
 
-        print "Passed\n"
+        print("Passed\n")
 
     # Test that BIP68 is not in effect if tx version is 1, or if
     # the first sequence bit is set.
@@ -179,7 +181,7 @@ class BIP68Test(BitcoinTestFramework):
                 tx.vin.append(CTxIn(COutPoint(int(utxos[j]["txid"], 16), utxos[j]["vout"]), nSequence=sequence_value))
                 value += utxos[j]["amount"]*COIN
             # Overestimate the size of the tx - signatures should be less than 120 bytes, and leave 50 for the output
-            tx_size = len(ToHex(tx))/2 + 120*num_inputs + 50
+            tx_size = len(ToHex(tx))//2 + 120*num_inputs + 50
             tx.vout.append(CTxOut(value-self.relayfee*tx_size*COIN/1000, CScript([b'a'])))
             rawtx = self.nodes[0].signrawtransaction(ToHex(tx))["hex"]
 

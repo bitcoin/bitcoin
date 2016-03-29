@@ -3,7 +3,8 @@
 #             and for constructing a getheaders message
 #
 
-from mininode import *
+from __future__ import division, print_function
+from .mininode import *
 import dbm
 
 class BlockStore(object):
@@ -66,7 +67,7 @@ class BlockStore(object):
         try:
             self.blockDB[repr(block.sha256)] = bytes(block.serialize())
         except TypeError as e:
-            print "Unexpected error: ", sys.exc_info()[0], e.args
+            print("Unexpected error: ", sys.exc_info()[0], e.args)
         self.currentBlock = block.sha256
         self.headers_map[block.sha256] = CBlockHeader(block)
 
@@ -126,7 +127,7 @@ class TxStore(object):
         try:
             self.txDB[repr(tx.sha256)] = bytes(tx.serialize())
         except TypeError as e:
-            print "Unexpected error: ", sys.exc_info()[0], e.args
+            print("Unexpected error: ", sys.exc_info()[0], e.args)
 
     def get_transactions(self, inv):
         responses = []

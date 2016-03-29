@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+from __future__ import division,print_function
 
 # Linux network utilities
 import sys
@@ -45,7 +47,7 @@ def _convert_ip_port(array):
     # convert host from mangled-per-four-bytes form as used by kernel
     host = binascii.unhexlify(host)
     host_out = ''
-    for x in range(0, len(host)/4):
+    for x in range(0, len(host) // 4):
         (val,) = struct.unpack('=I', host[x*4:(x+1)*4])
         host_out += '%08x' % val
 

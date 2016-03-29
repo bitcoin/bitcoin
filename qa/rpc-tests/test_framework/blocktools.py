@@ -1,11 +1,12 @@
 # blocktools.py - utilities for manipulating blocks and transactions
-# Copyright (c) 2015 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
 
-from mininode import *
-from script import CScript, OP_TRUE, OP_CHECKSIG
+from __future__ import division,print_function
+
+from .mininode import *
+from .script import CScript, OP_TRUE, OP_CHECKSIG
 
 # Create a block (with regtest difficulty)
 def create_block(hashprev, coinbase, nTime=None):

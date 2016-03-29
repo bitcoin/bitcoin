@@ -1,8 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2015 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
+
+from __future__ import division,print_function
 
 from test_framework.test_framework import ComparisonTestFramework
 from test_framework.util import *
@@ -269,7 +270,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                      \-> b3 (1) -> b4 (2)
         
         # Test that a block with a lot of checksigs is okay
-        lots_of_checksigs = CScript([OP_CHECKSIG] * (1000000 / 50 - 1))
+        lots_of_checksigs = CScript([OP_CHECKSIG] * (1000000 // 50 - 1))
         tip(13)
         block(15, spend=out5, script=lots_of_checksigs)
         yield accepted()
@@ -277,7 +278,7 @@ class FullBlockTest(ComparisonTestFramework):
 
         # Test that a block with too many checksigs is rejected
         out6 = get_spendable_output()
-        too_many_checksigs = CScript([OP_CHECKSIG] * (1000000 / 50))
+        too_many_checksigs = CScript([OP_CHECKSIG] * (1000000 // 50))
         block(16, spend=out6, script=too_many_checksigs)
         yield rejected(RejectResult(16, 'bad-blk-sigops'))
 

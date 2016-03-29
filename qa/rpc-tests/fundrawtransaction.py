@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+from __future__ import division,print_function
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -25,7 +27,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.sync_all()
 
     def run_test(self):
-        print "Mining blocks..."
+        print("Mining blocks...")
 
         min_relay_tx_fee = self.nodes[0].getnetworkinfo()['relayfee']
         # This test is not meant to test fee estimation and we'd like
@@ -48,7 +50,7 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         watchonly_address = self.nodes[0].getnewaddress()
         watchonly_pubkey = self.nodes[0].validateaddress(watchonly_address)["pubkey"]
-        watchonly_amount = 200
+        watchonly_amount = Decimal(200)
         self.nodes[3].importpubkey(watchonly_pubkey, "", True)
         watchonly_txid = self.nodes[0].sendtoaddress(watchonly_address, watchonly_amount)
         self.nodes[0].sendtoaddress(self.nodes[3].getnewaddress(), watchonly_amount / 10)
@@ -209,7 +211,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         matchingOuts = 0
         for i, out in enumerate(dec_tx['vout']):
             totalOut += out['value']
-            if outputs.has_key(out['scriptPubKey']['addresses'][0]):
+            if out['scriptPubKey']['addresses'][0] in outputs:
                 matchingOuts+=1
             else:
                 assert_equal(i, rawtxfund['changepos'])
@@ -249,7 +251,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         matchingOuts = 0
         for out in dec_tx['vout']:
             totalOut += out['value']
-            if outputs.has_key(out['scriptPubKey']['addresses'][0]):
+            if out['scriptPubKey']['addresses'][0] in outputs:
                 matchingOuts+=1
 
         assert_equal(matchingOuts, 1)
@@ -291,7 +293,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         matchingOuts = 0
         for out in dec_tx['vout']:
             totalOut += out['value']
-            if outputs.has_key(out['scriptPubKey']['addresses'][0]):
+            if out['scriptPubKey']['addresses'][0] in outputs:
                 matchingOuts+=1
 
         assert_equal(matchingOuts, 2)

@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+from __future__ import division,print_function
 
 # Exercise the wallet keypool, and interaction with wallet encryption/locking
 
@@ -46,7 +48,7 @@ class KeyPoolTest(BitcoinTestFramework):
         try:
             addr = nodes[0].getnewaddress()
             raise AssertionError('Keypool should be exhausted after one address')
-        except JSONRPCException,e:
+        except JSONRPCException as e:
             assert(e.error['code']==-12)
 
         # put three new keys in the keypool
@@ -66,7 +68,7 @@ class KeyPoolTest(BitcoinTestFramework):
         try:
             addr = nodes[0].getrawchangeaddress()
             raise AssertionError('Keypool should be exhausted after three addresses')
-        except JSONRPCException,e:
+        except JSONRPCException as e:
             assert(e.error['code']==-12)
 
         # refill keypool with three new addresses
@@ -84,7 +86,7 @@ class KeyPoolTest(BitcoinTestFramework):
         try:
             nodes[0].generate(1)
             raise AssertionError('Keypool should be exhausted after three addesses')
-        except JSONRPCException,e:
+        except JSONRPCException as e:
             assert(e.error['code']==-12)
 
     def setup_chain(self):

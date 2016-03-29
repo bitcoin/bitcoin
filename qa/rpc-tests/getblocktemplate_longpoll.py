@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+from __future__ import division,print_function
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
@@ -49,7 +51,7 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
     '''
 
     def run_test(self):
-        print "Warning: this test will take about 70 seconds in the best case. Be patient."
+        print("Warning: this test will take about 70 seconds in the best case. Be patient.")
         self.nodes[0].generate(10)
         templat = self.nodes[0].getblocktemplate()
         longpollid = templat['longpollid']

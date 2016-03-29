@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+from __future__ import division,print_function
 
 #
 # Test REST interface
@@ -67,7 +69,7 @@ class RESTTest (BitcoinTestFramework):
 
     def run_test(self):
         url = urlparse.urlparse(self.nodes[0].url)
-        print "Mining blocks..."
+        print("Mining blocks...")
 
         self.nodes[0].generate(1)
         self.sync_all()

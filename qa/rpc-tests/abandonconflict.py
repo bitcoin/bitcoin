@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+from __future__ import division,print_function
 
 
 from test_framework.test_framework import BitcoinTestFramework
@@ -151,9 +153,9 @@ class AbandonConflictTest(BitcoinTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         newbalance = self.nodes[0].getbalance()
         #assert(newbalance == balance - Decimal("10"))
-        print "If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer"
-        print "conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315"
-        print balance , " -> " , newbalance , " ?"
+        print("If balance has not declined after invalidateblock then out of mempool wallet tx which is no longer")
+        print("conflicted has not resumed causing its inputs to be seen as spent.  See Issue #7315")
+        print(str(balance) + " -> " + str(newbalance) + " ?")
 
 if __name__ == '__main__':
     AbandonConflictTest().main()

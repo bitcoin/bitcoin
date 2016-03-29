@@ -2,7 +2,8 @@
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#
+
+from __future__ import division,print_function
 
 from test_framework.mininode import *
 from test_framework.test_framework import BitcoinTestFramework

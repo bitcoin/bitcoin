@@ -1,7 +1,9 @@
 #!/usr/bin/env python2
-# Copyright (c) 2015 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+from __future__ import division,print_function
 
 #
 # Test PrioritiseTransaction code
@@ -61,7 +63,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
 
         mempool = self.nodes[0].getrawmempool()
-        print "Assert that prioritised transaction was mined"
+        print("Assert that prioritised transaction was mined")
         assert(txids[0][0] not in mempool)
         assert(txids[0][1] in mempool)
 
@@ -93,7 +95,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # High fee transaction should not have been mined, but other high fee rate
         # transactions should have been.
         mempool = self.nodes[0].getrawmempool()
-        print "Assert that de-prioritised transaction is still in mempool"
+        print("Assert that de-prioritised transaction is still in mempool")
         assert(high_fee_tx in mempool)
         for x in txids[2]:
             if (x != high_fee_tx):
@@ -135,7 +137,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # accepted.
         self.nodes[0].prioritisetransaction(tx2_id, 0, int(self.relayfee*COIN))
 
-        print "Assert that prioritised free transaction is accepted to mempool"
+        print("Assert that prioritised free transaction is accepted to mempool")
         assert_equal(self.nodes[0].sendrawtransaction(tx2_hex), tx2_id)
         assert(tx2_id in self.nodes[0].getrawmempool())
 
