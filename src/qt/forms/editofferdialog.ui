@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>457</width>
-    <height>604</height>
+    <height>595</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -28,6 +28,16 @@
      </item>
      <item row="2" column="1">
       <widget class="QComboBox" name="aliasEdit"/>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLabel" name="aliasDisclaimer">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
      <item row="4" column="0">
       <widget class="QLabel" name="offerLabel">
@@ -176,8 +186,8 @@
        </item>
       </layout>
      </item>
-     <item row="3" column="1">
-      <widget class="QLabel" name="aliasDisclaimer">
+     <item row="23" column="1">
+      <widget class="QLabel" name="privateDisclaimer">
        <property name="text">
         <string/>
        </property>
@@ -196,38 +206,28 @@
      <item row="24" column="1">
       <widget class="QComboBox" name="acceptBTCOnlyEdit"/>
      </item>
-     <item row="25" column="1">
-      <widget class="QLabel" name="btcOnlyDisclaimer">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="23" column="1">
-      <widget class="QLabel" name="privateDisclaimer">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="wordWrap">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
+     <item row="26" column="0">
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>Alias Peg:</string>
+        <string>Alias for Exchange Rate Peg:</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
+     <item row="26" column="1">
       <widget class="QLineEdit" name="aliasPegEdit"/>
      </item>
-     <item row="1" column="1">
+     <item row="27" column="1">
       <widget class="QLabel" name="aliasPegDisclaimer">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="25" column="1">
+      <widget class="QLabel" name="btcOnlyDisclaimer">
        <property name="text">
         <string/>
        </property>
