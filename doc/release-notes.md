@@ -35,10 +35,7 @@ earlier.
 Notable changes
 ===============
 
-Example item
----------------------------------------
-
-Example text.
+The p2p alert system is off by default. To turn on, use `-alert` with startup configuration.
 
 0.12.1 Change log
 =================
