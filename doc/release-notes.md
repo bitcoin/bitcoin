@@ -45,6 +45,15 @@ The following outputs are affected by this change:
 - REST `/rest/block/` (JSON format when including extended tx details)
 - `bitcoin-tx -json`
 
+### ZMQ
+
+Each ZMQ notification now contains an up-counting sequence number that allows
+listeners to detect lost notifications.
+The sequence number is always the last element in a multi-part ZMQ notification and
+therefore backward compatible.
+Each message type has its own counter.
+(https://github.com/bitcoin/bitcoin/pull/7762)
+
 ### Configuration and command-line options
 
 ### Block and transaction handling
