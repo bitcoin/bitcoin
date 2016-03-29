@@ -1,6 +1,6 @@
 Bitcoin Classic version 0.12.0 is now available from:
 
-  <https://>
+  <https://github.com/bitcoinclassic/bitcoinclassic/releases/tag/v0.12.0cl1>
 
 This is a new major version release, bringing new features and other improvements.
 
