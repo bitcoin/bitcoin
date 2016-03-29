@@ -21,6 +21,8 @@ from test_framework.util import (
     start_nodes,
     connect_nodes_bi,
 )
+from test_framework.mininode import CBlock
+from io import StringIO
 
 
 class BlockchainTest(BitcoinTestFramework):
@@ -46,6 +48,8 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_gettxoutsetinfo()
         self._test_getblockheader()
         self.nodes[0].verifychain(4, 0)
+
+        CBlock().deserialize(StringIO(self.nodes[0].getblock(self.nodes[0].getbestblockhash(), False)))
 
     def _test_gettxoutsetinfo(self):
         node = self.nodes[0]
