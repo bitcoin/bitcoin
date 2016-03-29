@@ -169,6 +169,12 @@ class AddressIndexTest(BitcoinTestFramework):
         deltas = self.nodes[1].getaddressdeltas({"addresses": [address2], "start": 113, "end": 113})
         assert_equal(len(deltas), 1)
 
+        # Check that unspent outputs can be queried
+        print "Testing utxos..."
+        utxos = self.nodes[1].getaddressutxos({"addresses": [address2]})
+        assert_equal(len(utxos), 2)
+        assert_equal(utxos[0]["satoshis"], 5000000000)
+
         # Check that indexes will be updated with a reorg
         print "Testing reorg..."
 
