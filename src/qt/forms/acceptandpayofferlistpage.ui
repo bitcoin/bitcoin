@@ -354,7 +354,7 @@
      <item row="14" column="0">
       <widget class="QLabel" name="label_10">
        <property name="text">
-        <string>Alias Peg:</string>
+        <string>Alias for Exchange Rate Peg:</string>
        </property>
       </widget>
      </item>
