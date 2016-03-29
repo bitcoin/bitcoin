@@ -137,6 +137,7 @@ testScripts = [
     'invalidtxrequest.py', # NOTE: needs dash_hash to pass
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
+    'importprunedfunds.py',
 ]
 if ENABLE_ZMQ:
     testScripts.append('zmq_test.py')
@@ -152,6 +153,7 @@ testScriptsExt = [
     'getblocktemplate_proposals.py',
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
+    'pruning.py',
     'forknotify.py',
     'invalidateblock.py',
 #    'rpcbind_test.py', #temporary, bug in libevent, see #6655
