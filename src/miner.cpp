@@ -194,13 +194,17 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn)
                     }
                     mapDependers[txin.prevout.hash].push_back(porphan);
                     porphan->setDependsOn.insert(txin.prevout.hash);
-                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].GetValueWithInterest(view.AccessCoins(txin.prevout.hash)->nHeight, nHeight);
+                    //This line intended to correct transaction prioritizating, but may have been causing crashes
+                    //nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].GetValueWithInterest(view.AccessCoins(txin.prevout.hash)->nHeight, nHeight);
+                    nTotalIn += mempool.mapTx[txin.prevout.hash].GetTx().vout[txin.prevout.n].nValue;
                     continue;
                 }
                 const CCoins* coins = view.AccessCoins(txin.prevout.hash);
                 assert(coins);
 
-                CAmount nValueIn = coins->vout[txin.prevout.n].GetValueWithInterest(coins->nHeight, nHeight);
+                //This line intended to correct transaction prioritizating, but may have been causing crashes
+                //CAmount nValueIn = coins->vout[txin.prevout.n].GetValueWithInterest(coins->nHeight, nHeight);
+                CAmount nValueIn = coins->vout[txin.prevout.n].nValue;
                 nTotalIn += nValueIn;
 
                 int nConf = nHeight - coins->nHeight;
