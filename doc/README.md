@@ -1,5 +1,4 @@
-Bitcoin Classic 0.12.0
-=====================
+Bitcoin Classic 0.12.1
 
 Setup
 ---------------------
