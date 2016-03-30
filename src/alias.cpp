@@ -247,11 +247,14 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 	{
-		if(fDebug)
-			LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
-		return "1";
+		TRY_LOCK(cs_main, cs_trymain);
+		if (!cs_trymain || !paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
+		{
+			if(fDebug)
+				LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
+			return "1";
+		}
 	}
 	if (vtxPos.size() < 1)
 	{
@@ -559,8 +562,11 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		PutToAliasList(vtxPos, theAlias);
 		CPubKey PubKey(theAlias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
-		if (!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
+		{
+		TRY_LOCK(cs_main, cs_trymain);
+		if (!!cs_trymain || paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 			return error( "CheckAliasInputs() :  failed to write to alias DB");
+		}
 		if(fDebug)
 			LogPrintf(
 				"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
@@ -885,7 +891,7 @@ void CreateFeeRecipient(const CScript& scriptPubKey, const vector<unsigned char>
 	script += CScript() << data;
 	CTxOut txout(defaultamt,script);
 	CRecipient recipienttmp = {scriptPubKey, defaultamt, false};
-	recipienttmp.nAmount = txout.GetDustThreshold(::minRelayTxFee);
+	recipienttmp.nAmount = 0.02;
 	recipient = recipienttmp;
 }
 UniValue aliasnew(const UniValue& params, bool fHelp) {

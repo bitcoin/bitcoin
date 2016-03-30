@@ -890,8 +890,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						myParentOffer.offerLinks.push_back(vvchArgs[0]);							
 						myParentOffer.PutToOfferList(myVtxPos);
 						// write parent offer
-						if (!pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
+						{
+						TRY_LOCK(cs_main, cs_trymain);
+						if (!cs_trymain || !pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
 							return error( "CheckOfferInputs() : failed to write to offer link to DB");
+						}
 					}
 				}
 				
@@ -976,8 +979,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 								myLinkOffer.SetPrice(theOffer.nPrice);
 								myLinkOffer.PutToOfferList(myVtxPos);
 								// write offer
-								if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
-									return error( "CheckOfferInputs() : failed to write to offer link to DB");
+								{
+								TRY_LOCK(cs_main, cs_trymain);
+								if (!cs_trymain || !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+											return error( "CheckOfferInputs() : failed to write to offer link to DB");
+								}
 							}
 						}
 					}
@@ -989,8 +995,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theOffer.txHash = tx.GetHash();
 		theOffer.PutToOfferList(vtxPos);
 		// write offer
-		if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+		{
+		TRY_LOCK(cs_main, cs_trymain);
+		if (!cs_trymain || !pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 			return error( "CheckOfferInputs() : failed to write to offer DB");
+		}
 		if(op == OP_OFFER_ACCEPT)
 		{
  			if(theOffer.vchLinkOffer.empty())
@@ -1005,8 +1014,11 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							myLinkOffer.nQty = theOffer.nQty;	
 							myLinkOffer.PutToOfferList(myVtxPos);
 							// write offer
-							if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
-								return error( "CheckOfferInputs() : failed to write to offer link to DB");
+							{
+							TRY_LOCK(cs_main, cs_trymain);
+							if (!cs_trymain || !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+									return error( "CheckOfferInputs() : failed to write to offer link to DB");
+							}
 						}
 					}
 				}

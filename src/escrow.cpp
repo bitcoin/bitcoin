@@ -429,8 +429,11 @@ bool CheckEscrowInputs(const CTransaction &tx, int op, int nOut, const vector<ve
 		theEscrow.nHeight = nHeight;
 		PutToEscrowList(vtxPos, theEscrow);
         // write escrow  
-        if (!pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
+		{
+		TRY_LOCK(cs_main, cs_trymain);
+        if (!cs_trymain || !pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
             return error( "CheckEscrowInputs() : failed to write to escrow DB");
+		}
 
       			
         // debug
