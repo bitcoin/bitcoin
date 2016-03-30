@@ -891,8 +891,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 						myParentOffer.PutToOfferList(myVtxPos);
 						// write parent offer
 						{
-						TRY_LOCK(cs_sys, cs_trysys);
-						if (!cs_trysys || !pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
+						LOCK(cs_sys);
+						if (!pofferdb->WriteOffer(theOffer.vchLinkOffer, myVtxPos))
 							return error( "CheckOfferInputs() : failed to write to offer link to DB");
 						}
 					}
@@ -980,8 +980,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 								myLinkOffer.PutToOfferList(myVtxPos);
 								// write offer
 								{
-								TRY_LOCK(cs_sys, cs_trysys);
-								if (!cs_trysys || !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+								LOCK(cs_sys);
+								if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
 											return error( "CheckOfferInputs() : failed to write to offer link to DB");
 								}
 							}
@@ -996,8 +996,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theOffer.PutToOfferList(vtxPos);
 		// write offer
 		{
-		TRY_LOCK(cs_sys, cs_trysys);
-		if (!cs_trysys || !pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+		LOCK(cs_sys);
+		if (!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 			return error( "CheckOfferInputs() : failed to write to offer DB");
 		}
 		if(op == OP_OFFER_ACCEPT)
@@ -1015,8 +1015,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 							myLinkOffer.PutToOfferList(myVtxPos);
 							// write offer
 							{
-							TRY_LOCK(cs_sys, cs_trysys);
-							if (!cs_trysys || !pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
+							LOCK(cs_sys);
+							if (!pofferdb->WriteOffer(theOffer.offerLinks[i], myVtxPos))
 									return error( "CheckOfferInputs() : failed to write to offer link to DB");
 							}
 						}
