@@ -371,8 +371,8 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		PutToCertList(vtxPos, theCert);
         // write cert  
 		{
-		TRY_LOCK(cs_main, cs_trymain);
-        if (!cs_trymain || !pcertdb->WriteCert(vvchArgs[0], vtxPos))
+		TRY_LOCK(cs_sys, cs_trysys);
+        if (!cs_trysys || !pcertdb->WriteCert(vvchArgs[0], vtxPos))
             return error( "CheckCertInputs() : failed to write to cert DB");
 		}
 
