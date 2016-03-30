@@ -1426,10 +1426,17 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     StartNode(threadGroup, scheduler);
 
     // Monitor the chain, and alert if we get blocks much quicker or slower than expected
-    int64_t nPowTargetSpacing = Params().GetConsensus().nPowTargetSpacing;
-    CScheduler::Function f = boost::bind(&PartitionCheck, &IsInitialBlockDownload,
-                                         boost::ref(cs_main), boost::cref(pindexBestHeader), nPowTargetSpacing);
-    scheduler.scheduleEvery(f, nPowTargetSpacing);
+    // The "bad chain alert" scheduler has been disabled because the current system gives far
+    // too many false positives, such that users are starting to ignore them.
+    // This code will be disabled while a fix is deliberated in #7568
+    // this was discussed in the IRC meeting on 2016-03-31.
+    //
+    // --- disabled ---
+    //int64_t nPowTargetSpacing = Params().GetConsensus().nPowTargetSpacing;
+    //CScheduler::Function f = boost::bind(&PartitionCheck, &IsInitialBlockDownload,
+    //                                     boost::ref(cs_main), boost::cref(pindexBestHeader), nPowTargetSpacing);
+    //scheduler.scheduleEvery(f, nPowTargetSpacing);
+    // --- end disabled ---
 
     // ********************************************************* Step 12: finished
 
