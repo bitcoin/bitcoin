@@ -383,9 +383,9 @@ class BIP68_112_113Test(ComparisonTestFramework):
         for bip113tx in [bip113signed1, bip113signed2]:
             yield TestInstance([[self.create_test_block([bip113tx]), False]]) # 9,10
         # BIP 113 tests should now pass if the locktime is < MTP
-        bip113tx_v1.nLockTime = self.last_block_time - 600 * 5 - 1 # = MTP of prior block (not <) but < time put on current block
+        bip113tx_v1.nLockTime = self.last_block_time - 600 * 5 - 1 # < MTP of prior block
         bip113signed1 = self.sign_transaction(self.nodes[0], bip113tx_v1)
-        bip113tx_v2.nLockTime = self.last_block_time - 600 * 5 - 1 # = MTP of prior block (not <) but < time put on current block
+        bip113tx_v2.nLockTime = self.last_block_time - 600 * 5 - 1 # < MTP of prior block
         bip113signed2 = self.sign_transaction(self.nodes[0], bip113tx_v2)
         for bip113tx in [bip113signed1, bip113signed2]:
             yield TestInstance([[self.create_test_block([bip113tx]), True]]) # 11,12
@@ -490,7 +490,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
 
         ## SEQUENCE_LOCKTIME_DISABLE_FLAG is unset in argument to OP_CSV for all remaining txs ##
-        # All txs with nSequence 11 should fail either due to earlier mismatch or failing the CSV check
+        # All txs with nSequence 9 should fail either due to earlier mismatch or failing the CSV check
         fail_txs = []
         fail_txs.extend(all_rlt_txs(bip112txs_vary_nSequence_9_v2)) # 16/16 of vary_nSequence_9
         for b25 in xrange(2):
