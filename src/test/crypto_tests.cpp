@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "crypto/aes.h"
 #include "crypto/ripemd160.h"
 #include "crypto/sha1.h"
 #include "crypto/sha256.h"
@@ -61,6 +62,45 @@ void TestHMACSHA256(const std::string &hexkey, const std::string &hexin, const s
 void TestHMACSHA512(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
     std::vector<unsigned char> key = ParseHex(hexkey);
     TestVector(CHMAC_SHA512(&key[0], key.size()), ParseHex(hexin), ParseHex(hexout));
+}
+
+void TestAES128(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
+{
+    std::vector<unsigned char> key = ParseHex(hexkey);
+    std::vector<unsigned char> in = ParseHex(hexin);
+    std::vector<unsigned char> correctout = ParseHex(hexout);
+    std::vector<unsigned char> buf, buf2;
+
+    assert(key.size() == 16);
+    assert(in.size() == 16);
+    assert(correctout.size() == 16);
+    AES128Encrypt enc(&key[0]);
+    buf.resize(correctout.size());
+    buf2.resize(correctout.size());
+    enc.Encrypt(&buf[0], &in[0]);
+    BOOST_CHECK_EQUAL(HexStr(buf), HexStr(correctout));
+    AES128Decrypt dec(&key[0]);
+    dec.Decrypt(&buf2[0], &buf[0]);
+    BOOST_CHECK_EQUAL(HexStr(buf2), HexStr(in));
+}
+
+void TestAES256(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
+{
+    std::vector<unsigned char> key = ParseHex(hexkey);
+    std::vector<unsigned char> in = ParseHex(hexin);
+    std::vector<unsigned char> correctout = ParseHex(hexout);
+    std::vector<unsigned char> buf;
+
+    assert(key.size() == 32);
+    assert(in.size() == 16);
+    assert(correctout.size() == 16);
+    AES256Encrypt enc(&key[0]);
+    buf.resize(correctout.size());
+    enc.Encrypt(&buf[0], &in[0]);
+    BOOST_CHECK(buf == correctout);
+    AES256Decrypt dec(&key[0]);
+    dec.Decrypt(&buf[0], &buf[0]);
+    BOOST_CHECK(buf == in);
 }
 
 std::string LongTestString(void) {
@@ -246,6 +286,22 @@ BOOST_AUTO_TEST_CASE(hmac_sha512_testvectors) {
                    "642062792074686520484d414320616c676f726974686d2e",
                    "e37b6a775dc87dbaa4dfa9f96e5e3ffddebd71f8867289865df5a32d20cdc944"
                    "b6022cac3c4982b10d5eeb55c3e4de15134676fb6de0446065c97440fa8c6a58");
+}
+
+BOOST_AUTO_TEST_CASE(aes_testvectors) {
+    // AES test vectors from FIPS 197.
+    TestAES128("000102030405060708090a0b0c0d0e0f", "00112233445566778899aabbccddeeff", "69c4e0d86a7b0430d8cdb78070b4c55a");
+    TestAES256("000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f", "00112233445566778899aabbccddeeff", "8ea2b7ca516745bfeafc49904b496089");
+
+    // AES-ECB test vectors from NIST sp800-38a.
+    TestAES128("2b7e151628aed2a6abf7158809cf4f3c", "6bc1bee22e409f96e93d7e117393172a", "3ad77bb40d7a3660a89ecaf32466ef97");
+    TestAES128("2b7e151628aed2a6abf7158809cf4f3c", "ae2d8a571e03ac9c9eb76fac45af8e51", "f5d3d58503b9699de785895a96fdbaaf");
+    TestAES128("2b7e151628aed2a6abf7158809cf4f3c", "30c81c46a35ce411e5fbc1191a0a52ef", "43b1cd7f598ece23881b00e3ed030688");
+    TestAES128("2b7e151628aed2a6abf7158809cf4f3c", "f69f2445df4f9b17ad2b417be66c3710", "7b0c785e27e8ad3f8223207104725dd4");
+    TestAES256("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "6bc1bee22e409f96e93d7e117393172a", "f3eed1bdb5d2a03c064b5a7e3db181f8");
+    TestAES256("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "ae2d8a571e03ac9c9eb76fac45af8e51", "591ccb10d410ed26dc5ba74a31362870");
+    TestAES256("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "30c81c46a35ce411e5fbc1191a0a52ef", "b6ed21b99ca6f4f9f153e7b1beafed1d");
+    TestAES256("603deb1015ca71be2b73aef0857d77811f352c073b6108d72d9810a30914dff4", "f69f2445df4f9b17ad2b417be66c3710", "23304b7a39f9f3ff067d8d8f9e24ecc7");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
