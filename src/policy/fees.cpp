@@ -453,8 +453,8 @@ void CBlockPolicyEstimator::processBlock(unsigned int nBlockHeight,
         return;
 
     // Update the dynamic cutoffs
-    // a fee/priority is "likely" the reason your tx was included in a block if >85% of such tx's
-    // were confirmed in 2 blocks and is "unlikely" if <50% were confirmed in 10 blocks
+    // a fee/priority is "likely" the reason your tx was included in a block if > MIN_SUCCESS_PCT of such tx's
+    // were confirmed in 2 blocks and is "unlikely" if < UNLIKELY_PCT were confirmed in 10 blocks
     LogPrint("estimatefee", "Blockpolicy recalculating dynamic cutoffs:\n");
     priLikely = priStats.EstimateMedianVal(2, SUFFICIENT_PRITXS, MIN_SUCCESS_PCT, true, nBlockHeight);
     if (priLikely == -1)
