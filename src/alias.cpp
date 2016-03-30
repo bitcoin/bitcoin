@@ -564,7 +564,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		CSyscoinAddress address(PubKey.GetID());
 		{
 		TRY_LOCK(cs_main, cs_trymain);
-		if (!!cs_trymain || paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
+		if (!cs_trymain || paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 			return error( "CheckAliasInputs() :  failed to write to alias DB");
 		}
 		if(fDebug)
