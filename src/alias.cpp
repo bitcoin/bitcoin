@@ -249,24 +249,13 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-	
-	int count = 0;
-	while(count < 5 && vtxPos.empty())
 	{
-		MilliSleep(0);
-		count++;
+		LOCK(cs_sys);
+		if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 		{
-			TRY_LOCK(cs_sys, cs_trysys);
-			if(cs_trysys)
-			{
-				if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
-				{
-					if(fDebug)
-						LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
-					return "1";
-				}
-				break;
-			}
+			if(fDebug)
+				LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
+			return "1";
 		}
 	}
 	
@@ -577,8 +566,8 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		CPubKey PubKey(theAlias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
 		{
-		TRY_LOCK(cs_sys, cs_trysys);
-		if (!cs_trysys || !paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
+		LOCK(cs_sys);
+		if (!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 			return error( "CheckAliasInputs() :  failed to write to alias DB");
 		}
 		if(fDebug)

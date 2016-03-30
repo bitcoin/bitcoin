@@ -2040,8 +2040,8 @@ bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 	CPubKey PubKey(foundAlias.vchPubKey);
 	CSyscoinAddress address(PubKey.GetID());
 	{
-	TRY_LOCK(cs_sys, cs_trysys);
-	if(!cs_trysys || !paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
+	LOCK(cs_sys);
+	if(!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 		return error("DisconnectBlock() : failed to write to alias DB");
 	}
 	if(fDebug)
@@ -2070,8 +2070,8 @@ bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 
     // write new offer state to db
 	{
-	TRY_LOCK(cs_sys, cs_trysys);
-	if(!cs_trysys || !pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+	LOCK(cs_sys);
+	if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 		return error("DisconnectOffer() : failed to write to offer DB");
 	}
 	
@@ -2099,8 +2099,8 @@ bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, in
 
 	// write new offer state to db
 	{
-	TRY_LOCK(cs_sys, cs_trysys);
-	if(!cs_trysys || !pcertdb->WriteCert(vvchArgs[0], vtxPos))
+	LOCK(cs_sys);
+	if(!pcertdb->WriteCert(vvchArgs[0], vtxPos))
 		return error("DisconnectCertificate() : failed to write to offer DB");
 	}
 	if(fDebug)
@@ -2126,8 +2126,8 @@ bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op,
 
 	// write new escrow state to db
 	{
-	TRY_LOCK(cs_sys, cs_trysys);
-	if(!cs_trysys || !pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
+	LOCK(cs_sys);
+	if(!pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
 		return error("DisconnectEscrow() : failed to write to escrow DB");
 	}
 	if(fDebug)
@@ -2153,8 +2153,8 @@ bool DisconnectMessage(const CBlockIndex *pindex, const CTransaction &tx, int op
 
 	// write new message state to db
 	{
-	TRY_LOCK(cs_sys, cs_trysys);
-	if(!cs_trysys || !pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
+	LOCK(cs_sys);
+	if(!pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
 		return error("DisconnectMessage() : failed to write to message DB");
 	}
 	if(fDebug)
