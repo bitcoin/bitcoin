@@ -321,21 +321,29 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							
 								nFee = AmountFromValue(currencyAmountValue.get_real());
 							}
-							catch(...)
+							catch(std::runtime_error& err)
 							{
 								try
 								{
 								
 									nFee = currencyAmountValue.get_int()*COIN;
 								}
-								catch(...)
+								catch(std::runtime_error& err)
 								{
 								
 									if(fDebug)
 										printf("getCurrencyToSYSFromAlias() Failed to get currency amount from value\n");
 									return "1";
 								}
-							}								
+							}
+							catch(...)
+							{
+								double val = currencyAmountValue.get_real();
+								double roundPrecision = pow(10,precision);
+								double roundedVal = round(val * roundPrecision)/roundPrecision;
+								nFee = AmountFromValue(roundedVal);
+								LogPrintf("roundedVal: %f\n", roundedVal);
+							}
 						}
 					}
 				}
