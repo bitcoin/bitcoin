@@ -103,9 +103,9 @@ CCriticalSection cs_nLastNodeId;
 static CSemaphore *semOutbound = NULL;
 
 bool churnNode=false;
-void setChurnMode(){
+void setChurnMode(int outboundconnections){
     churnNode=true;
-    MAX_OUTBOUND_CONNECTIONS = 50;
+    MAX_OUTBOUND_CONNECTIONS = outboundconnections;
 }
 
 boost::condition_variable messageHandlerCondition;

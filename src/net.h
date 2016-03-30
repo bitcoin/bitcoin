@@ -620,7 +620,7 @@ public:
     static uint64_t GetTotalBytesSent();
 };
 
-void setChurnMode();
+void setChurnMode(int outboundconnections);
 
 class CTransaction;
 void RelayTransaction(const CTransaction& tx);

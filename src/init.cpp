@@ -754,7 +754,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     int isChurn = GetArg("-churn", 0);
     if(isChurn){
-        setChurnMode();
+        int outboundconnections = GetArg("-outboundconnections", 50);
+        setChurnMode(outboundconnections);
     }
 
     // ********************************************************* Step 3: parameter-to-internal-flags
