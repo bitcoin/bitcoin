@@ -339,7 +339,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							catch(...)
 							{
 								double val = currencyAmountValue.get_real();
-								double roundPrecision = pow(10,precision);
+								double roundPrecision = 100000000;
 								double roundedVal = round(val * roundPrecision)/roundPrecision;
 								nFee = AmountFromValue(roundedVal);
 								LogPrintf("roundedVal: %f\n", roundedVal);
