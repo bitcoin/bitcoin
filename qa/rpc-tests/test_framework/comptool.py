@@ -179,6 +179,10 @@ class TestManager(object):
             # associated NodeConn
             test_node.add_connection(self.connections[-1])
 
+    def clear_all_connections(self):
+        self.connections    = []
+        self.test_nodes     = []
+
     def wait_for_disconnections(self):
         def disconnected():
             return all(node.closed for node in self.test_nodes)
