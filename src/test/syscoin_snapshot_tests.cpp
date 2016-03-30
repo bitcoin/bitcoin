@@ -67,13 +67,16 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
         }
 		PaymentAmount payment;
         payment.address  = test[0].get_str();
-		CAmount amountInSys1 = test[1].get_int64();
-		// don't transfer less than 1 coin utxo's
-		if(amountInSys1 <= 1)
+		try
+		{
+			CAmount amountInSys1 = AmountFromValue(test[1]);
+			payment.amount = ValueFromAmount(amountInSys1).write();
+			paymentAmounts.push_back(payment);
+		}
+		catch(...)
+		{
 			continue;
-		CAmount amountInSys2 = amountInSys1 / 299.4f;
-        payment.amount = ValueFromAmount(amountInSys2).write();
-		paymentAmounts.push_back(payment);
+		}
     }
 }
 bool IsMainNetAlreadyCreated()
