@@ -43,6 +43,7 @@ using namespace std;
 // transactions that depend on transactions that aren't yet in the block.
 
 uint64_t nLastBlockTx = 0;
+uint64_t nLastBlockSize = 0;
 uint64_t nLastBlockCost = 0;
 
 class ScoreCompare
@@ -92,19 +93,23 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
     // Largest block you're willing to create:
-    unsigned int nBlockMaxCost = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE) * WITNESS_SCALE_FACTOR;
+    unsigned int nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
+    // Limit to between 1K and MAX_BLOCK_SERIALIZED_SIZE-1K for sanity:
+    nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SERIALIZED_SIZE-1000), nBlockMaxSize));
+
+    unsigned int nBlockMaxCost = GetArg("-blockmaxcost", DEFAULT_BLOCK_MAX_COST);
     // Limit cost to between 4K and MAX_BLOCK_COST-4K for sanity:
     nBlockMaxCost = std::max((unsigned int)4000, std::min((unsigned int)(MAX_BLOCK_COST-4000), nBlockMaxCost));
 
     // How much of the block should be dedicated to high-priority transactions,
     // included regardless of the fees they pay
-    unsigned int nBlockPriorityCost = GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE) * WITNESS_SCALE_FACTOR;
-    nBlockPriorityCost = std::min(nBlockMaxCost, nBlockPriorityCost);
+    unsigned int nBlockPrioritySize = GetArg("-blockprioritysize", DEFAULT_BLOCK_PRIORITY_SIZE);
+    nBlockPrioritySize = std::min(nBlockMaxSize, nBlockPrioritySize);
 
     // Minimum block size you want to create; block will be filled with free transactions
     // until there are no more or the block reaches this size:
-    unsigned int nBlockMinCost = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE) * WITNESS_SCALE_FACTOR;
-    nBlockMinCost = std::min(nBlockMaxCost, nBlockMinCost);
+    unsigned int nBlockMinSize = GetArg("-blockminsize", DEFAULT_BLOCK_MIN_SIZE);
+    nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
     // Collect memory pool transactions into the block
     CTxMemPool::setEntries inBlock;
@@ -119,7 +124,8 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
 
     std::priority_queue<CTxMemPool::txiter, std::vector<CTxMemPool::txiter>, ScoreCompare> clearedTxs;
     bool fPrintPriority = GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
-    uint64_t nBlockCost = 4000;
+    uint64_t nBlockSize = 1000;
+    uint64_t nBlockCost = nBlockSize * WITNESS_SCALE_FACTOR;
     uint64_t nBlockTx = 0;
     int64_t nBlockSigOpsCost = 400;
     int lastFewTxs = 0;
@@ -150,7 +156,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
                                 ? nMedianTimePast
                                 : pblock->GetBlockTime();
 
-        bool fPriorityBlock = nBlockPriorityCost > 0;
+        bool fPriorityBlock = nBlockPrioritySize > 0;
         if (fPriorityBlock) {
             vecPriority.reserve(mempool.mapTx.size());
             for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
@@ -211,23 +217,23 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             }
 
             unsigned int nTxSize = iter->GetTxSize();
-            unsigned int nTxCost = nTxSize * WITNESS_SCALE_FACTOR; /* TODO: more accurate version using GetTransactionCost */
+            int64_t nTxCost = GetTransactionCost(tx);
             if (fPriorityBlock &&
-                (nBlockCost + nTxCost >= nBlockPriorityCost || !AllowFree(actualPriority))) {
+                (nBlockSize + nTxSize >= nBlockPrioritySize || !AllowFree(actualPriority))) {
                 fPriorityBlock = false;
                 waitPriMap.clear();
             }
             if (!priorityTx &&
-                (iter->GetModifiedFee() < ::minRelayTxFee.GetFee(nTxSize) && nBlockCost >= nBlockMinCost)) {
+                (iter->GetModifiedFee() < ::minRelayTxFee.GetFee(nTxSize) && nBlockSize >= nBlockMinSize)) {
                 break;
             }
-            if (nBlockCost + nTxCost >= nBlockMaxCost) {
-                if (nBlockCost >  nBlockMaxCost - 400 || lastFewTxs > 50) {
+            if (nBlockSize + nTxSize >= nBlockMaxSize || nBlockCost + nTxCost > nBlockMaxCost) {
+                if (nBlockSize > nBlockMaxSize - 100 || nBlockCost > nBlockMaxCost - 400 || lastFewTxs > 50) {
                     break;
                 }
-                // Once we're within 1000 bytes of a full block, only look at 50 more txs
-                // to try to fill the remaining space.
-                if (nBlockCost > nBlockMaxCost - 4000) {
+                // Once we're within 1000 bytes (or 4000 cost) of a full block,
+                // only look at 50 more txs to try to fill the remaining space.
+                if (nBlockSize > nBlockMaxSize - 1000 || nBlockCost > nBlockMaxCost - 4000) {
                     lastFewTxs++;
                 }
                 continue;
@@ -249,6 +255,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             pblock->vtx.push_back(tx);
             pblocktemplate->vTxFees.push_back(nTxFees);
             pblocktemplate->vTxSigOpsCost.push_back(nTxSigOpsCost);
+            nBlockSize += nTxSize;
             nBlockCost += nTxCost;
             ++nBlockTx;
             nBlockSigOpsCost += nTxSigOpsCost;
@@ -285,8 +292,9 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             }
         }
         nLastBlockTx = nBlockTx;
+        nLastBlockSize = nBlockSize;
         nLastBlockCost = nBlockCost;
-        LogPrintf("CreateNewBlock(): total cost %u txs: %u fees: %ld sigopscost %d\n", nBlockCost, nBlockTx, nFees, nBlockSigOpsCost);
+        LogPrintf("CreateNewBlock(): total size %u cost %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockCost, nBlockTx, nFees, nBlockSigOpsCost);
 
         // Compute final coinbase transaction.
         txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
