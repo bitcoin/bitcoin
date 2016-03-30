@@ -258,7 +258,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-	LogPrintf("getCurrencyToSYSFromAlias\n");
+
 	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 	{
 		if(fDebug)
@@ -266,7 +266,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 		return "1";
 	}
 	
-	LogPrintf("ReadAlias\n");
+	
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
@@ -284,7 +284,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
     }
 	if(foundAlias.IsNull())
 		foundAlias = vtxPos.back();
-	LogPrintf("foundAlias\n");
+
 
 	bool found = false;
 	string value = stringFromVch(foundAlias.vchPublicValue);
@@ -293,50 +293,44 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	bool read = outerValue.read(value);
 	if (read)
 	{
-		LogPrintf("read\n");
 		UniValue outerObj = outerValue.get_obj();
 		UniValue ratesValue = find_value(outerObj, "rates");
 		if (ratesValue.isArray())
 		{
-			LogPrintf("rates\n");
 			UniValue codes = ratesValue.get_array();
 			for (unsigned int idx = 0; idx < codes.size(); idx++) {
-				LogPrintf("rate\n");
 				const UniValue& code = codes[idx];					
 				UniValue codeObj = code.get_obj();					
 				UniValue currencyNameValue = find_value(codeObj, "currency");
 				UniValue currencyAmountValue = find_value(codeObj, "rate");
 				if (currencyNameValue.isStr())
 				{		
-					LogPrintf("currencyNameValue\n");
 					string currencyCode = currencyNameValue.get_str();
 					rateList.push_back(currencyCode);
 					if(currencyCodeToFind == currencyCode)
 					{
-						LogPrintf("currencyCodeToFind\n");
 						UniValue precisionValue = find_value(codeObj, "precision");
 						if(precisionValue.isNum())
 						{
 							precision = precisionValue.get_int();
 						}
-						LogPrintf("currencyCodeToFind1\n");
 						if(currencyAmountValue.isNum())
 						{
 							found = true;
 							try{
-								LogPrintf("trying to get real\n");
+							
 								nFee = AmountFromValue(currencyAmountValue.get_real());
 							}
-							catch(std::runtime_error& err)
+							catch(...)
 							{
 								try
 								{
-									LogPrintf("trying to get int\n");
+								
 									nFee = currencyAmountValue.get_int()*COIN;
 								}
-								catch(std::runtime_error& err)
+								catch(...)
 								{
-									LogPrintf("error!\n");
+								
 									if(fDebug)
 										printf("getCurrencyToSYSFromAlias() Failed to get currency amount from value\n");
 									return "1";
