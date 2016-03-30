@@ -312,7 +312,14 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							}
 							catch(std::runtime_error& err)
 							{
-								nFee = currencyAmountValue.get_int()*COIN;
+								try
+								{
+									nFee = currencyAmountValue.get_int()*COIN;
+								}
+								catch(std::runtime_error& err)
+								{
+									nFee = 0;
+								}
 							}								
 						}
 					}
