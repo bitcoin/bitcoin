@@ -248,7 +248,13 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
 	{
-		TRY_LOCK(cs_main, cs_trymain);
+		int count = 0;
+		do{
+			TRY_LOCK(cs_main, cs_trymain);
+			count++;
+			if(cs_trymain)
+				break;
+		}while(count < 5)
 		if (!cs_trymain || !paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 		{
 			if(fDebug)
