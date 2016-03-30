@@ -113,7 +113,7 @@ extern COfferDB *pofferdb;
 extern CCertDB *pcertdb;
 extern CEscrowDB *pescrowdb;
 extern CMessageDB *pmessagedb;
-extern CCriticalSection cs_sys;
+
 
 
 std::string stringFromVch(const std::vector<unsigned char> &vch);
