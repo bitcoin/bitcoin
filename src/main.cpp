@@ -1584,7 +1584,6 @@ bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, con
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    // SYSCOIN shade genesis, old sys snapshot block 700k
 	if(nHeight == 0)
 		return 2.5*COIN;
 	if(nHeight == 1)
@@ -1592,26 +1591,20 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 		std::string chain = ChainNameFromCommandLine();
 		if (chain == CBaseChainParams::MAIN || chain == CBaseChainParams::REGTEST)
 		{
-			// SYSCOIN snapshot for old chain based on block 800k
-			return 1505000 * COIN;
+			// SYSCOIN snapshot for old chain based on block 850k + 15 mill dev fund
+			return 456760086 * COIN + 15000000 * COIN;
 		}
 	}
-    int initialHalving = nHeight / consensusParams.nSubsidyHalvingInitialInterval;
-	int annualHalving = nHeight / consensusParams.nSubsidyHalvingAnnualInterval;
-	if(annualHalving > 2)
-		annualHalving = 2;
-	double nSubsidy = 0.545*COIN;
-	if(initialHalving == 1)
-		return 0.272*COIN;
-	else if (initialHalving == 2)
-		return 0.136*COIN;
-	else if(initialHalving > 2)
-	{
-		nSubsidy = 0.157*COIN;
-		if(nHeight >= 32479525)
-			return 0;
-	}
-  
+	CAmount nSubsidy = 50 * COIN;
+    if(nHeight >= consensus.nSubsidyHalvingInterval4)
+		nSubsidy = 0;
+    else if(nHeight >= consensus.nSubsidyHalvingInterval3)
+		nSubsidy >>= 4;  
+    else if(nHeight >= consensus.nSubsidyHalvingInterval2)
+		nSubsidy >>= 3; 
+    else if(nHeight >= consensus.nSubsidyHalvingInterval1)
+		nSubsidy >>= 2; 
+
 	return nSubsidy;
 
 }
@@ -2046,8 +2039,11 @@ bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 	
 	CPubKey PubKey(foundAlias.vchPubKey);
 	CSyscoinAddress address(PubKey.GetID());
-	if(!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
+	{
+	TRY_LOCK(cs_main, cs_trymain);
+	if(!cs_trymain || !paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 		return error("DisconnectBlock() : failed to write to alias DB");
+	}
 	if(fDebug)
 		LogPrintf("DISCONNECTED ALIAS TXN: alias=%s op=%s hash=%s  height=%d\n",
 		stringFromVch(vvchArgs[0]).c_str(),
@@ -2073,8 +2069,11 @@ bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 		
 
     // write new offer state to db
-	if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
+	{
+	TRY_LOCK(cs_main, cs_trymain);
+	if(!cs_trymain || !pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 		return error("DisconnectOffer() : failed to write to offer DB");
+	}
 	
 	if(fDebug)
 		LogPrintf("DISCONNECTED offer TXN: offer=%s op=%s hash=%s  height=%d\n",
@@ -2099,8 +2098,11 @@ bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, in
 
 
 	// write new offer state to db
-	if(!pcertdb->WriteCert(vvchArgs[0], vtxPos))
+	{
+	TRY_LOCK(cs_main, cs_trymain);
+	if(!cs_trymain || !pcertdb->WriteCert(vvchArgs[0], vtxPos))
 		return error("DisconnectCertificate() : failed to write to offer DB");
+	}
 	if(fDebug)
 		LogPrintf("DISCONNECTED CERT TXN: cert=%s op=%s hash=%s height=%d\n",
 		   stringFromVch(vvchArgs[0]).c_str(),
@@ -2123,8 +2125,11 @@ bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op,
 
 
 	// write new escrow state to db
-	if(!pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
+	{
+	TRY_LOCK(cs_main, cs_trymain);
+	if(!cs_trymain || !pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
 		return error("DisconnectEscrow() : failed to write to escrow DB");
+	}
 	if(fDebug)
 		LogPrintf("DISCONNECTED ESCROW TXN: escrow=%s op=%s hash=%s height=%d\n",
 		   stringFromVch(vvchArgs[0]).c_str(),
@@ -2147,8 +2152,11 @@ bool DisconnectMessage(const CBlockIndex *pindex, const CTransaction &tx, int op
 
 
 	// write new message state to db
-	if(!pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
+	{
+	TRY_LOCK(cs_main, cs_trymain);
+	if(!cs_trymain || !pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
 		return error("DisconnectMessage() : failed to write to message DB");
+	}
 	if(fDebug)
 		LogPrintf("DISCONNECTED MESSAGE TXN: message=%s op=%s hash=%s height=%d\n",
 		   stringFromVch(vvchArgs[0]).c_str(),

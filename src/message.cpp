@@ -323,8 +323,11 @@ bool CheckMessageInputs(const CTransaction &tx, int op, int nOut, const vector<v
 		theMessage.nHeight = nHeight;
 		PutToMessageList(vtxPos, theMessage);
         // write message  
-        if (!pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
+	{
+	TRY_LOCK(cs_main, cs_trymain);
+	if(!cs_trymain || !pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
             return error( "CheckMessageInputs() : failed to write to message DB");
+	}
 		
       			
         // debug

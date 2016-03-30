@@ -35,9 +35,7 @@ BOOST_FIXTURE_TEST_SUITE(pmt_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(pmt_test1)
 {
     seed_insecure_rand(false);
-	// SYSCOIN 4096 tx's too large for a 1 min block set to 100k bytes max, set to 1000
-    static const unsigned int nTxCounts[] = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 1000};
-
+	static const unsigned int nTxCounts[] = {1, 4, 7, 17, 56, 100, 127, 256, 312, 513, 1000, 4095};
     for (int n = 0; n < 12; n++) {
         unsigned int nTx = nTxCounts[n];
 
