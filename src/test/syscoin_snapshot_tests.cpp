@@ -75,7 +75,8 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 		}
 		catch(...)
 		{
-			continue;
+			BOOST_ERROR("Invalid amount: " << payment.amount);
+            continue;
 		}
     }
 }
