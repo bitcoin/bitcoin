@@ -261,7 +261,7 @@ bool SyscoinApplication::notify(QObject* receiver, QEvent* event) {
   try {
     done = QApplication::notify(receiver, event);
   } catch (const std::exception& ex) {
-    PrintExceptionContinue(ex, "notify exception");
+    PrintExceptionContinue(&ex, "notify exception");
   } catch (...) {
     
   }
