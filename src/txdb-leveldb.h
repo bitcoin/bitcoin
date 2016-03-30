@@ -91,8 +91,7 @@ protected:
                                 SER_DISK, CLIENT_VERSION);
             ssValue >> value;
         }
-        catch (std::exception &e) {
-            (void)e;
+        catch (const std::exception&) {
             return false;
         }
         return true;

@@ -620,8 +620,7 @@ public:
         try {
             filein >> *this;
         }
-        catch (std::exception &e) {
-            (void)e;
+        catch (const std::exception&) {
             return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 
@@ -1096,8 +1095,7 @@ public:
         try {
             filein >> *this;
         }
-        catch (std::exception &e) {
-            (void)e;
+        catch (const std::exception&) {
             return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 

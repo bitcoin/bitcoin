@@ -347,9 +347,8 @@ void MultisigDialog::on_transaction_textChanged()
     {
         ss >> tx;
     }
-    catch(std::exception &e)
+    catch(const std::exception&)
     {
-        (void)e;
         return;
     }
 
@@ -418,9 +417,8 @@ void MultisigDialog::on_signTransactionButton_clicked()
     {
         ss >> tx;
     }
-    catch(std::exception &e)
+    catch(const std::exception&)
     {
-        (void)e;
         return;
     }
     CTransaction mergedTx(tx);
@@ -538,9 +536,8 @@ void MultisigDialog::on_sendTransactionButton_clicked()
     {
         ssData >> tx;
     }
-    catch(std::exception &e)
+    catch(const std::exception&)
     {
-        (void)e;
         return;
     }
     uint256 txHash = tx.GetHash();
