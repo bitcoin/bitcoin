@@ -70,14 +70,6 @@ public:
         ptx = ptxIn;
         dPriority = dFeePerKb = 0;
     }
-
-    void print() const
-    {
-        printf("COrphan(hash=%s, dPriority=%.1f, dFeePerKb=%.1f)\n",
-               ptx->GetHash().ToString().substr(0,10).c_str(), dPriority, dFeePerKb);
-        BOOST_FOREACH(uint256 hash, setDependsOn)
-            printf("   setDependsOn %s\n", hash.ToString().substr(0,10).c_str());
-    }
 };
 
 

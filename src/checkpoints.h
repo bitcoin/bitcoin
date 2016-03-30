@@ -100,11 +100,6 @@ public:
             nVersion,
             hashCheckpoint.ToString().c_str());
     }
-
-    void print() const
-    {
-        printf("%s", ToString().c_str());
-    }
 };
 
 class CSyncCheckpoint : public CUnsignedSyncCheckpoint

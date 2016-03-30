@@ -71,7 +71,6 @@ class CNetAddr
         bool GetInAddr(struct in_addr* pipv4Addr) const;
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;
-        void print() const;
 
 #ifdef USE_IPV6
         CNetAddr(const struct in6_addr& pipv6Addr);
@@ -115,7 +114,6 @@ class CService : public CNetAddr
         std::string ToString() const;
         std::string ToStringPort() const;
         std::string ToStringIPPort() const;
-        void print() const;
 
 #ifdef USE_IPV6
         CService(const struct in6_addr& ipv6Addr, uint16_t port);
