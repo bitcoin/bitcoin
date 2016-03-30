@@ -32,7 +32,6 @@ COfferDB *pofferdb = NULL;
 CCertDB *pcertdb = NULL;
 CEscrowDB *pescrowdb = NULL;
 CMessageDB *pmessagedb = NULL;
-CCriticalSection cs_sys;
 extern void SendMoneySyscoin(const vector<CRecipient> &vecSend, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew, const CWalletTx* wtxInOffer=NULL, const CWalletTx* wtxInCert=NULL, const CWalletTx* wtxInAlias=NULL, const CWalletTx* wtxInEscrow=NULL, bool syscoinTx=true);
 bool IsCompressedOrUncompressedPubKey(const vector<unsigned char> &vchPubKey) {
     if (vchPubKey.size() < 33) {
@@ -249,15 +248,14 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
+
+	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 	{
-		LOCK(cs_sys);
-		if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
-		{
-			if(fDebug)
-				LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
-			return "1";
-		}
+		if(fDebug)
+			LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
+		return "1";
 	}
+	
 	
 	if (vtxPos.size() < 1)
 	{
@@ -565,11 +563,10 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		PutToAliasList(vtxPos, theAlias);
 		CPubKey PubKey(theAlias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
-		{
-		LOCK(cs_sys);
+
 		if (!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 			return error( "CheckAliasInputs() :  failed to write to alias DB");
-		}
+		
 		if(fDebug)
 			LogPrintf(
 				"CONNECTED ALIAS: name=%s  op=%s  hash=%s  height=%d\n",
