@@ -196,7 +196,7 @@ class SyscoinApplication: public QApplication
 public:
     explicit SyscoinApplication(int &argc, char **argv);
     ~SyscoinApplication();
-
+	virtual bool notify(QObject * receiver, QEvent * event);
 #ifdef ENABLE_WALLET
     /// Create payment server
     void createPaymentServer();
@@ -255,7 +255,18 @@ SyscoinCore::SyscoinCore():
     QObject()
 {
 }
-
+// SYSCOIN catch exceptions
+bool SyscoinCore::notify(QObject* receiver, QEvent* event) {
+  bool done = true;
+  try {
+    done = QApplication::notify(receiver, event);
+  } catch (const std::exception& ex) {
+    PrintExceptionContinue(ex, "notify exception");
+  } catch (...) {
+    
+  }
+  return done;
+} 
 void SyscoinCore::handleRunawayException(const std::exception *e)
 {
     PrintExceptionContinue(e, "Runaway exception");
