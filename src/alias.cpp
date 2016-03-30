@@ -320,7 +320,9 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 								}
 								catch(std::runtime_error& err)
 								{
-									nFee = 0;
+									if(fDebug)
+										printf("getCurrencyToSYSFromAlias() Failed to get currency amount from value\n");
+									return "1";
 								}
 							}								
 						}
