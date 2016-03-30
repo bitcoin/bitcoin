@@ -241,6 +241,8 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 		float price = nPrice*(float)nRate;
 		sysPrice = CAmount(price);
 	}
+	if(precision > 8)
+		sysPrice = 0;
 	return sysPrice;
 }
 string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const vector<unsigned char> &vchCurrency, CAmount &nFee, const unsigned int &nHeightToFind, vector<string>& rateList, int &precision)
