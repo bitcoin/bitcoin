@@ -2029,7 +2029,8 @@ static bool ApplyTxInUndo(const CTxInUndo& undo, CCoinsViewCache& view, const CO
 // SYSCOIN disconnect service related blocks
 bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
 	
-	TRY_LOCK(cs_main, cs_maintry);
+	{
+	LOCK(cs_sys);
 	string opName = aliasFromOp(op);
 	vector<CAliasIndex> vtxPos;
 	paliasdb->ReadAlias(vvchArgs[0], vtxPos);
@@ -2039,8 +2040,7 @@ bool DisconnectAlias(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 	
 	CPubKey PubKey(foundAlias.vchPubKey);
 	CSyscoinAddress address(PubKey.GetID());
-	{
-	LOCK(cs_sys);
+
 	if(!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 		return error("DisconnectBlock() : failed to write to alias DB");
 	}
@@ -2061,7 +2061,8 @@ bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 	if (theOffer.IsNull())
 		return false;
 
-	TRY_LOCK(cs_main, cs_maintry);
+	{
+	LOCK(cs_sys);
     vector<COffer> vtxPos;
     pofferdb->ReadOffer(vvchArgs[0], vtxPos);  
 	while (vtxPos.back().txHash == tx.GetHash())	
@@ -2069,8 +2070,7 @@ bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 		
 
     // write new offer state to db
-	{
-	LOCK(cs_sys);
+
 	if(!pofferdb->WriteOffer(vvchArgs[0], vtxPos))
 		return error("DisconnectOffer() : failed to write to offer DB");
 	}
@@ -2088,7 +2088,8 @@ bool DisconnectOffer(const CBlockIndex *pindex, const CTransaction &tx, int op, 
 bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
 	string opName = certFromOp(op);
 	
-	TRY_LOCK(cs_main, cs_maintry);
+	{
+	LOCK(cs_sys);
 	// make sure a DB record exists for this cert
 	vector<CCert> vtxPos;
 	pcertdb->ReadCert(vvchArgs[0], vtxPos);
@@ -2098,8 +2099,7 @@ bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, in
 
 
 	// write new offer state to db
-	{
-	LOCK(cs_sys);
+
 	if(!pcertdb->WriteCert(vvchArgs[0], vtxPos))
 		return error("DisconnectCertificate() : failed to write to offer DB");
 	}
@@ -2116,7 +2116,8 @@ bool DisconnectCertificate(const CBlockIndex *pindex, const CTransaction &tx, in
 bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
 	string opName = escrowFromOp(op);
 	
-	TRY_LOCK(cs_main, cs_maintry);
+	{
+	LOCK(cs_sys);
 	// make sure a DB record exists for this cert
 	vector<CEscrow> vtxPos;
 	pescrowdb->ReadEscrow(vvchArgs[0], vtxPos);
@@ -2125,8 +2126,7 @@ bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op,
 
 
 	// write new escrow state to db
-	{
-	LOCK(cs_sys);
+
 	if(!pescrowdb->WriteEscrow(vvchArgs[0], vtxPos))
 		return error("DisconnectEscrow() : failed to write to escrow DB");
 	}
@@ -2142,8 +2142,8 @@ bool DisconnectEscrow(const CBlockIndex *pindex, const CTransaction &tx, int op,
 
 bool DisconnectMessage(const CBlockIndex *pindex, const CTransaction &tx, int op, vector<vector<unsigned char> > &vvchArgs ) {
 	string opName = messageFromOp(op);
-	
-	TRY_LOCK(cs_main, cs_maintry);
+	{
+	LOCK(cs_sys);
 	// make sure a DB record exists for this cert
 	vector<CMessage> vtxPos;
 	pmessagedb->ReadMessage(vvchArgs[0], vtxPos);
@@ -2152,8 +2152,7 @@ bool DisconnectMessage(const CBlockIndex *pindex, const CTransaction &tx, int op
 
 
 	// write new message state to db
-	{
-	LOCK(cs_sys);
+
 	if(!pmessagedb->WriteMessage(vvchArgs[0], vtxPos))
 		return error("DisconnectMessage() : failed to write to message DB");
 	}
