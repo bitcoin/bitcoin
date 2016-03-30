@@ -172,9 +172,8 @@ class AddressIndexTest(BitcoinTestFramework):
         # Check that unspent outputs can be queried
         print "Testing utxos..."
         utxos = self.nodes[1].getaddressutxos({"addresses": [address2]})
-        assert_equal(len(utxos), 2)
-        assert_equal(utxos[0]["satoshis"], 5000000000)
-        assert_equal(utxos[1]["satoshis"], 4899977160)
+        assert_equal(len(utxos), 1)
+        assert_equal(utxos[0]["satoshis"], change_amount)
 
         # Check that indexes will be updated with a reorg
         print "Testing reorg..."
@@ -190,9 +189,8 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(balance4, balance1)
 
         utxos2 = self.nodes[1].getaddressutxos({"addresses": [address2]})
-        assert_equal(len(utxos2), 2)
+        assert_equal(len(utxos2), 1)
         assert_equal(utxos2[0]["satoshis"], 5000000000)
-        assert_equal(utxos2[1]["satoshis"], 5000000000)
 
         print "Passed\n"
 

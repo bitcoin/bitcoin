@@ -475,7 +475,6 @@ UniValue getaddressutxos(const UniValue& params, bool fHelp)
         output.push_back(Pair("addressType", (int)it->first.type));
         output.push_back(Pair("addressHash", it->first.hashBytes.GetHex()));
         output.push_back(Pair("txid", it->first.txhash.GetHex()));
-        output.push_back(Pair("height", it->first.blockHeight));
         output.push_back(Pair("outputIndex", it->first.index));
         output.push_back(Pair("script", HexStr(it->second.script.begin(), it->second.script.end())));
         output.push_back(Pair("satoshis", it->second.satoshis));
