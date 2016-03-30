@@ -19,6 +19,7 @@
 #include "txdb.h"
 #include "chainparams.h"
 #include "policy/policy.h"
+#include "utiltime.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -247,21 +248,27 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
+	
+	int count = 0;
+	while(count < 5 && vtxPos.empty())
 	{
-		int count = 0;
-		do{
-			TRY_LOCK(cs_main, cs_trymain);
-			count++;
-			if(cs_trymain)
-				break;
-		}while(count < 5)
-		if (!cs_trymain || !paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
+		MilliSleep(0);
+		count++;
 		{
-			if(fDebug)
-				LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
-			return "1";
+			TRY_LOCK(cs_main, cs_trymain);
+			if(cs_trymain)
+			{
+				if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
+				{
+					if(fDebug)
+						LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
+					return "1";
+				}
+				break;
+			}
 		}
 	}
+	
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
