@@ -236,10 +236,18 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 	CAmount sysPrice = 0;
 	CAmount nRate;
 	vector<string> rateList;
-	if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
+	try
 	{
-		float price = nPrice*(float)nRate;
-		sysPrice = CAmount(price);
+		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
+		{
+			float price = nPrice*(float)nRate;
+			sysPrice = CAmount(price);
+		}
+	}
+	catch(...)
+	{
+		if(fDebug)
+			LogPrintf("convertCurrencyCodeToSyscoin() Exception caught getting rate alias information\n");
 	}
 	if(precision > 8)
 		sysPrice = 0;
@@ -254,7 +262,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 	{
 		if(fDebug)
-			LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias\n");
+			LogPrintf("getCurrencyToSYSFromAlias() Could not find %s alias\n", stringFromVch(vchAliasPeg).c_str());
 		return "1";
 	}
 	
@@ -262,7 +270,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
-			LogPrintf("getCurrencyToSYSFromAlias() Could not find SYS_RATES alias (vtxPos.size() == 0)\n");
+			LogPrintf("getCurrencyToSYSFromAlias() Could not find %s alias (vtxPos.size() == 0)\n", stringFromVch(vchAliasPeg).c_str());
 		return "1";
 	}
 	CAliasIndex foundAlias;
@@ -310,16 +318,19 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 						{
 							found = true;
 							try{
+								printf("trying to get real\n");
 								nFee = AmountFromValue(currencyAmountValue.get_real());
 							}
 							catch(std::runtime_error& err)
 							{
 								try
 								{
+									printf("trying to get int\n");
 									nFee = currencyAmountValue.get_int()*COIN;
 								}
 								catch(std::runtime_error& err)
 								{
+									printf("error!\n");
 									if(fDebug)
 										printf("getCurrencyToSYSFromAlias() Failed to get currency amount from value\n");
 									return "1";
@@ -341,7 +352,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	if(!found)
 	{
 		if(fDebug)
-			LogPrintf("getCurrencyToSYSFromAlias() currency %s not found in SYS_RATES alias\n", stringFromVch(vchCurrency).c_str());
+			LogPrintf("getCurrencyToSYSFromAlias() currency %s not found in %s alias\n", stringFromVch(vchCurrency).c_str(), stringFromVch(vchAliasPeg).c_str());
 		return "0";
 	}
 	return "";
