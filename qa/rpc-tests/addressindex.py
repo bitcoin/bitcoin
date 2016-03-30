@@ -192,6 +192,21 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(len(utxos2), 1)
         assert_equal(utxos2[0]["satoshis"], 5000000000)
 
+        # Check sorting of utxos
+        self.nodes[2].generate(150)
+
+        txidsort1 = self.nodes[2].sendtoaddress(address2, 50)
+        self.nodes[2].generate(1)
+        txidsort2 = self.nodes[2].sendtoaddress(address2, 50)
+        self.nodes[2].generate(1)
+        self.sync_all()
+
+        utxos3 = self.nodes[1].getaddressutxos({"addresses": [address2]})
+        assert_equal(len(utxos3), 3)
+        assert_equal(utxos3[0]["height"], 114)
+        assert_equal(utxos3[1]["height"], 264)
+        assert_equal(utxos3[2]["height"], 265)
+
         print "Passed\n"
 
 
