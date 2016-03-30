@@ -256,7 +256,7 @@ SyscoinCore::SyscoinCore():
 {
 }
 // SYSCOIN catch exceptions
-bool SyscoinCore::notify(QObject* receiver, QEvent* event) {
+bool SyscoinApplication::notify(QObject* receiver, QEvent* event) {
   bool done = true;
   try {
     done = QApplication::notify(receiver, event);
