@@ -370,11 +370,10 @@ bool CheckCertInputs(const CTransaction &tx, int op, int nOut, const vector<vect
 		theCert.txHash = tx.GetHash();
 		PutToCertList(vtxPos, theCert);
         // write cert  
-		{
-		LOCK(cs_sys);
+
         if (!pcertdb->WriteCert(vvchArgs[0], vtxPos))
             return error( "CheckCertInputs() : failed to write to cert DB");
-		}
+		
 
       			
         // debug
