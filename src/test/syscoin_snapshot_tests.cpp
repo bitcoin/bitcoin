@@ -69,7 +69,7 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
         payment.address  = test[0].get_str();
 		CAmount amountInSys1 = test[1].get_int64();
 		// don't transfer less than 1 coin utxo's
-		if(amountInSys1 <= 1)
+		if(ValueFromAmount(amountInSys1) <= 1)
 			continue;
         payment.amount = ValueFromAmount(amountInSys1).write();
 		paymentAmounts.push_back(payment);
