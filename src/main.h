@@ -113,7 +113,7 @@ bool LoadBlockIndex(bool fAllowNew=true);
 void PrintBlockTree();
 CBlockIndex* FindBlockByHeight(int nHeight);
 bool ProcessMessages(CNode* pfrom);
-bool SendMessages(CNode* pto, bool fSendTrickle);
+bool SendMessages(CNode* pto);
 bool LoadExternalBlockFile(FILE* fileIn);
 
 // Run an instance of the script checking thread
