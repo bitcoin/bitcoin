@@ -3942,7 +3942,7 @@ bool SendMessages(CNode* pto, bool fSendTrickle)
         // Address refresh broadcast
         if (!IsInitialBlockDownload() && pto->nNextLocalAddrSend < nNow) {
             AdvertiseLocal(pto);
-            pto->nNextLocalAddrSend = PoissonNextSend(nNow, 14 * 60 * 60);
+            pto->nNextLocalAddrSend = PoissonNextSend(nNow, nOneDay);
         }
 
         //
