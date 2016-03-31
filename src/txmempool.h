@@ -21,6 +21,9 @@
 class CAutoFile;
 class CBlockIndex;
 
+/** Default for -maxmempool, maximum megabytes of mempool memory usage */
+static const unsigned int DEFAULT_MAX_MEMPOOL_SIZE = 300;
+
 inline double AllowFreeThreshold()
 {
     return COIN * 144 / 250;
@@ -476,6 +479,8 @@ private:
     void UpdateParent(txiter entry, txiter parent, bool add);
     void UpdateChild(txiter entry, txiter child, bool add);
 
+    size_t lastTrimmedSize;
+
 public:
     std::map<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
@@ -570,7 +575,7 @@ public:
       *  takes the fee rate to go back down all the way to 0. When the feerate
       *  would otherwise be half of this, it is set to 0 instead.
       */
-    CFeeRate GetMinFee(size_t sizelimit) const;
+    CFeeRate GetMinFee() const;
 
     /** Remove transactions from the mempool until its dynamic size is <= sizelimit.
       *  pvNoSpendsRemaining, if set, will be populated with the list of transactions
