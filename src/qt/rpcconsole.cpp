@@ -459,6 +459,8 @@ void RPCConsole::setClientModel(ClientModel *model)
         autoCompleter = new QCompleter(wordList, this);
         ui->lineEdit->setCompleter(autoCompleter);
 
+	// clear the lineEdit after activating from QCompleter
+	connect(autoCompleter, SIGNAL(activated(const QString&)), ui->lineEdit, SLOT(clear()), Qt::QueuedConnection);
     }
 }
 
