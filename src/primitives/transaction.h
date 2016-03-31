@@ -7,6 +7,7 @@
 #define BITCOIN_PRIMITIVES_TRANSACTION_H
 
 #include "amount.h"
+#include "policy/feerate.h"
 #include "script/script.h"
 #include "serialize.h"
 #include "uint256.h"

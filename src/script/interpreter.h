@@ -6,6 +6,7 @@
 #ifndef BITCOIN_SCRIPT_INTERPRETER_H
 #define BITCOIN_SCRIPT_INTERPRETER_H
 
+#include "amount.h"
 #include "script_error.h"
 #include "primitives/transaction.h"
 

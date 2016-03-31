@@ -5,7 +5,6 @@
 
 #include "miner.h"
 
-#include "amount.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "coins.h"
@@ -15,6 +14,7 @@
 #include "hash.h"
 #include "main.h"
 #include "net.h"
+#include "policy/feerate.h"
 #include "policy/policy.h"
 #include "pow.h"
 #include "primitives/transaction.h"

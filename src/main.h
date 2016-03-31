@@ -14,6 +14,7 @@
 #include "chain.h"
 #include "coins.h"
 #include "net.h"
+#include "policy/feerate.h"
 #include "script/script_error.h"
 #include "sync.h"
 #include "validationinterface.h"
