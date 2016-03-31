@@ -67,17 +67,9 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
         }
 		PaymentAmount payment;
         payment.address  = test[0].get_str();
-		try
-		{
-			CAmount amountInSys1 = AmountFromValue(test[1]);
-			payment.amount = ValueFromAmount(amountInSys1).write();
-			paymentAmounts.push_back(payment);
-		}
-		catch(...)
-		{
-			BOOST_ERROR("Invalid amount: " << payment.amount);
-            continue;
-		}
+		CAmount amountInSys1 = test[1].get_int64();
+        payment.amount = ValueFromAmount(amountInSys1).write();
+		paymentAmounts.push_back(payment);
     }
 }
 bool IsMainNetAlreadyCreated()
