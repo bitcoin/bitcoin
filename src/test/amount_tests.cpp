@@ -66,6 +66,31 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(27), 789) == CFeeRate(34));
     // Maximum size in bytes, should not crash
     CFeeRate(MAX_MONEY, std::numeric_limits<size_t>::max() >> 1).GetFeePerK();
+
+    // With full constructor (allows to test internal precission)
+    feeRate = CFeeRate(1000, KB * 2);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1), 1);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB - 1), 499);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB), 500);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB + 1), 500);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB * 2), 1000);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB * 10), 5000);
+
+    feeRate = CFeeRate(1000 * 1000, KB * KB * KB);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1), 1);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB - 1), 1);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB), 1);
+    BOOST_CHECK_EQUAL(feeRate.GetFee((KB * 2) - 1), 1); // Lost precision
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB * 2), 2);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB * 10), 10);
+    BOOST_CHECK_EQUAL(feeRate.GetFee((KB * 10) - 1), 9);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB * 100), 100);
+    BOOST_CHECK_EQUAL(feeRate.GetFee((KB * KB) - 1), 999);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB * KB), 1000);
+    BOOST_CHECK_EQUAL(feeRate.GetFee((KB * KB * KB) - 1), 999999);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(KB * KB * KB), 1000000);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
