@@ -1252,43 +1252,46 @@ class NodeConn(asyncore.dispatcher):
             self.sendbuf = self.sendbuf[sent:]
 
     def got_data(self):
-        while True:
-            if len(self.recvbuf) < 4:
-                return
-            if self.recvbuf[:4] != self.MAGIC_BYTES[self.network]:
-                raise ValueError("got garbage %s" % repr(self.recvbuf))
-            if self.ver_recv < 209:
-                if len(self.recvbuf) < 4 + 12 + 4:
+        try:
+            while True:
+                if len(self.recvbuf) < 4:
                     return
-                command = self.recvbuf[4:4+12].split("\x00", 1)[0]
-                msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                checksum = None
-                if len(self.recvbuf) < 4 + 12 + 4 + msglen:
-                    return
-                msg = self.recvbuf[4+12+4:4+12+4+msglen]
-                self.recvbuf = self.recvbuf[4+12+4+msglen:]
-            else:
-                if len(self.recvbuf) < 4 + 12 + 4 + 4:
-                    return
-                command = self.recvbuf[4:4+12].split("\x00", 1)[0]
-                msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                checksum = self.recvbuf[4+12+4:4+12+4+4]
-                if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
-                    return
-                msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
-                th = sha256(msg)
-                h = sha256(th)
-                if checksum != h[:4]:
-                    raise ValueError("got bad checksum " + repr(self.recvbuf))
-                self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
-            if command in self.messagemap:
-                f = BytesIO(msg)
-                t = self.messagemap[command]()
-                t.deserialize(f)
-                self.got_message(t)
-            else:
-                self.show_debug_msg("Unknown command: '" + command + "' " +
-                                    repr(msg))
+                if self.recvbuf[:4] != self.MAGIC_BYTES[self.network]:
+                    raise ValueError("got garbage %s" % repr(self.recvbuf))
+                if self.ver_recv < 209:
+                    if len(self.recvbuf) < 4 + 12 + 4:
+                        return
+                    command = self.recvbuf[4:4+12].split("\x00", 1)[0]
+                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
+                    checksum = None
+                    if len(self.recvbuf) < 4 + 12 + 4 + msglen:
+                        return
+                    msg = self.recvbuf[4+12+4:4+12+4+msglen]
+                    self.recvbuf = self.recvbuf[4+12+4+msglen:]
+                else:
+                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
+                        return
+                    command = self.recvbuf[4:4+12].split("\x00", 1)[0]
+                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
+                    checksum = self.recvbuf[4+12+4:4+12+4+4]
+                    if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
+                        return
+                    msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
+                    th = sha256(msg)
+                    h = sha256(th)
+                    if checksum != h[:4]:
+                        raise ValueError("got bad checksum " + repr(self.recvbuf))
+                    self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
+                if command in self.messagemap:
+                    f = BytesIO(msg)
+                    t = self.messagemap[command]()
+                    t.deserialize(f)
+                    self.got_message(t)
+                else:
+                    self.show_debug_msg("Unknown command: '" + command + "' " +
+                                        repr(msg))
+        except Exception as e:
+            print 'got_data:', repr(e)
 
     def send_message(self, message, pushbuf=False):
         if self.state != "connected" and not pushbuf:
