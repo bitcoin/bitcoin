@@ -12,6 +12,7 @@
 #include "wallet/coincontrol.h"
 #include "validation.h"
 #include "net.h"
+#include "policy/feerate.h"
 #include "policy/fees.h"
 #include "policy/policy.h"
 #include "policy/rbf.h"
