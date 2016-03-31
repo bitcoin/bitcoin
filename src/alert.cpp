@@ -79,11 +79,6 @@ std::string CUnsignedAlert::ToString() const
         strStatusBar.c_str());
 }
 
-void CUnsignedAlert::print() const
-{
-    printf("%s", ToString().c_str());
-}
-
 void CAlert::SetNull()
 {
     CUnsignedAlert::SetNull();

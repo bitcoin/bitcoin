@@ -104,9 +104,3 @@ std::string CInv::ToString() const
 {
     return strprintf("%s %s", GetCommand(), hash.ToString().substr(0,20).c_str());
 }
-
-void CInv::print() const
-{
-    printf("CInv(%s)\n", ToString().c_str());
-}
-
