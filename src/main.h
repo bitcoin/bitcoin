@@ -794,7 +794,7 @@ public:
     )
 
 
-    int SetMerkleBranch(const CBlock* pblock=NULL);
+    int SetMerkleBranch(const CBlock* pblock);
     int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
     int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }

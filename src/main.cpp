@@ -445,7 +445,6 @@ CTransaction::GetLegacySigOpCount() const
     return nSigOps;
 }
 
-
 int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
 {
     if (fClient)
@@ -456,16 +455,6 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
     else
     {
         CBlock blockTmp;
-        if (pblock == NULL)
-        {
-            // Load the block this tx is in
-            CTxIndex txindex;
-            if (!CTxDB("r").ReadTxIndex(GetHash(), txindex))
-                return 0;
-            if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos))
-                return 0;
-            pblock = &blockTmp;
-        }
 
         // Update the tx's hashBlock
         hashBlock = pblock->GetHash();
@@ -490,18 +479,12 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
     map<uint256, CBlockIndex*>::iterator mi = mapBlockIndex.find(hashBlock);
     if (mi == mapBlockIndex.end())
         return 0;
-    CBlockIndex* pindex = (*mi).second;
+    const CBlockIndex* pindex = (*mi).second;
     if (!pindex || !pindex->IsInMainChain())
         return 0;
 
     return pindexBest->nHeight - pindex->nHeight + 1;
 }
-
-
-
-
-
-
 
 bool CTransaction::CheckTransaction() const
 {
