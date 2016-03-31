@@ -210,7 +210,7 @@ public:
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn);
-    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false, bool fFindBlock = false);
+    bool AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pblock, bool fUpdate = false);
     bool EraseFromWallet(uint256 hash);
     void ClearOrphans();
     void WalletUpdateSpent(const CTransaction& prevout, bool fBlock = false);
