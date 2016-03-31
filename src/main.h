@@ -620,8 +620,7 @@ public:
         try {
             filein >> *this;
         }
-        catch (std::exception &e) {
-            (void)e;
+        catch (const std::exception&) {
             return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 
@@ -795,7 +794,7 @@ public:
     )
 
 
-    int SetMerkleBranch(const CBlock* pblock=NULL);
+    int SetMerkleBranch(const CBlock* pblock);
     int GetDepthInMainChain(CBlockIndex* &pindexRet) const;
     int GetDepthInMainChain() const { CBlockIndex *pindexRet; return GetDepthInMainChain(pindexRet); }
     bool IsInMainChain() const { return GetDepthInMainChain() > 0; }
@@ -1096,8 +1095,7 @@ public:
         try {
             filein >> *this;
         }
-        catch (std::exception &e) {
-            (void)e;
+        catch (const std::exception&) {
             return error("%s() : deserialize or I/O error", BOOST_CURRENT_FUNCTION);
         }
 

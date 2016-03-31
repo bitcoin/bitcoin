@@ -891,11 +891,6 @@ public:
     {
         return strprintf("COutput(%s, %d, %d, %d) [%s]", tx->GetHash().ToString().substr(0,10).c_str(), i, fSpendable, nDepth, FormatMoney(tx->vout[i].nValue).c_str());
     }
-
-    void print() const
-    {
-        printf("%s\n", ToString().c_str());
-    }
 };
 
 
