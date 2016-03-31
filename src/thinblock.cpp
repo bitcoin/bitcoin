@@ -118,7 +118,7 @@ std::string CThinBlockStats::ToString()
 
 	std::ostringstream ss;
 	ss << std::fixed << std::setprecision(2);
-	ss << CThinBlockStats::nBlocks() << " thin " << ((CThinBlockStats::nBlocks()>1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
+	ss << CThinBlockStats::nBlocks() << " thin " << ((CThinBlockStats::nBlocks()!=1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
 	std::string s = ss.str();
 	return s;
 }
