@@ -103,7 +103,7 @@ def check_estimates(node, fees_seen, max_invalid, print_estimates = True):
     all_estimates = [ node.estimatefee(i) for i in range(1,26) ]
     if print_estimates:
         print([str(all_estimates[e-1]) for e in [1,2,3,6,15,25]])
-    delta = 1.0e-6 # account for rounding error
+    delta = (1.0e-6) / TIMES_GREATER_PRECISION # account for rounding error
     last_e = max(fees_seen)
     for e in filter(lambda x: x >= 0, all_estimates):
         # Estimates should be within the bounds of what transactions fees actually were:
@@ -219,7 +219,7 @@ class EstimateFeeTest(BitcoinTestFramework):
                 from_index = random.randint(1,2)
                 (txhex, fee) = small_txpuzzle_randfee(self.nodes[from_index], self.confutxo,
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
-                tx_kbytes = (len(txhex)/2)/1000.0
+                tx_kbytes = (len(txhex)/2)/(1000.0 * TIMES_GREATER_PRECISION)
                 self.fees_per_kb.append(float(fee)/tx_kbytes)
             sync_mempools(self.nodes[0:3],.1)
             mined = mining_node.getblock(mining_node.generate(1)[0],True)["tx"]

@@ -10,12 +10,13 @@ class WalletTest (BitcoinTestFramework):
 
     def check_fee_amount(self, curr_balance, balance_with_fee, fee_per_byte, tx_size):
         """Return curr_balance after asserting the fee was in range"""
+        precision_fee = fee_per_byte * TIMES_GREATER_PRECISION
         fee = balance_with_fee - curr_balance
-        target_fee = fee_per_byte * tx_size
+        target_fee = precision_fee * tx_size
         if fee < target_fee:
             raise AssertionError("Fee of %s BTC too low! (Should be %s BTC)"%(str(fee), str(target_fee)))
         # allow the node's estimation to be at most 2 bytes off
-        if fee > fee_per_byte * (tx_size + 2):
+        if fee > precision_fee * (tx_size + 2):
             raise AssertionError("Fee of %s BTC too high! (Should be %s BTC)"%(str(fee), str(target_fee)))
         return curr_balance
 
@@ -107,8 +108,8 @@ class WalletTest (BitcoinTestFramework):
 
         # Send 10 BTC normal
         address = self.nodes[0].getnewaddress("test")
-        fee_per_byte = Decimal('0.001') / 1000
-        self.nodes[2].settxfee(fee_per_byte * 1000)
+        fee_per_byte = Decimal('0.001') / KB
+        self.nodes[2].settxfee(fee_per_byte * KB)
         txid = self.nodes[2].sendtoaddress(address, 10, "", "", False)
         self.nodes[2].generate(1)
         self.sync_all()

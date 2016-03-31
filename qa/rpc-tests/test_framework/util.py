@@ -21,6 +21,12 @@ import errno
 from . import coverage
 from .authproxy import AuthServiceProxy, JSONRPCException
 
+KB = 1000
+# TODO inline the next two lines in PRECISION_MULTIPLIER
+TIMES_GREATER_PRECISION = 2
+DEPRECATED_IMPLICIT_CALLER_PRECISSION = KB
+PRECISION_MULTIPLIER = DEPRECATED_IMPLICIT_CALLER_PRECISSION * TIMES_GREATER_PRECISION
+
 COVERAGE_DIR = None
 
 #Set Mocktime default to OFF.
