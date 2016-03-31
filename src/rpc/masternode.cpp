@@ -26,6 +26,8 @@
 #ifdef ENABLE_WALLET
 void EnsureWalletIsUnlocked();
 
+UniValue masternodelist(const UniValue& params, bool fHelp);
+
 UniValue privatesend(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
@@ -848,4 +850,21 @@ UniValue sentinelping(const UniValue& params, bool fHelp)
 
     activeMasternode.UpdateSentinelPing(StringVersionToInt(params[0].get_str()));
     return true;
+}
+
+static const CRPCCommand commands[] =
+{ //  category              name                      actor (function)         okSafeMode
+    /* Dash features */
+    { "dash",               "masternode",             &masternode,             true  },
+    { "dash",               "masternodelist",         &masternodelist,         true  },
+    { "dash",               "masternodebroadcast",    &masternodebroadcast,    true  },
+    { "dash",               "getpoolinfo",            &getpoolinfo,            true  },
+    { "dash",               "sentinelping",           &sentinelping,           true  },
+    { "dash",               "privatesend",            &privatesend,            false },
+};
+
+void RegisterMasternodeRPCCommands(CRPCTable &tableRPC)
+{
+    for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
+        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
 }
