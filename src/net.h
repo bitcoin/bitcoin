@@ -60,6 +60,9 @@ enum
     LOCAL_MAX
 };
 
+
+bool IsPeerAddrLocalGood(CNode *pnode);
+void AdvertiseLocal(CNode *pnode);
 void SetLimited(enum Network net, bool fLimited = true);
 bool IsLimited(enum Network net);
 bool IsLimited(const CNetAddr& addr);
@@ -118,6 +121,9 @@ enum threadId
 };
 
 extern bool fClient;
+extern bool fDiscover;
+extern bool fNoListen;
+
 extern bool fDiscover;
 extern uint64_t nLocalServices;
 extern uint64_t nLocalHostNonce;
@@ -216,6 +222,9 @@ public:
     bool fGetAddr;
     std::set<uint256> setKnown;
     uint256 hashCheckpointKnown; // ppcoin: known sent sync-checkpoint
+    int64_t nNextAddrSend;
+    int64_t nNextLocalAddrSend;
+    int64_t nNextInvSend;
 
     // inventory based relay
     mruset<CInv> setInventoryKnown;
@@ -251,6 +260,9 @@ public:
         pindexLastGetBlocksBegin = 0;
         hashLastGetBlocksEnd = 0;
         nStartingHeight = -1;
+        nNextLocalAddrSend = 0;
+        nNextAddrSend = 0;
+        nNextInvSend = 0;
         fStartSync = false;
         fGetAddr = false;
         nMisbehavior = 0;
@@ -683,5 +695,8 @@ class CTransaction;
 void RelayTransaction(const CTransaction& tx, const uint256& hash);
 void RelayTransaction(const CTransaction& tx, const uint256& hash, const CDataStream& ss);
 
+
+/** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
+int64_t PoissonNextSend(int64_t nNow, int average_interval_seconds);
 
 #endif

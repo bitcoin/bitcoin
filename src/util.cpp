@@ -1315,7 +1315,9 @@ void ShrinkDebugFile()
 // System clock
 int64_t GetTime()
 {
-    return time(NULL);
+    int64_t now = time(NULL);
+    assert(now > 0);
+    return now;
 }
 
 // Trusted NTP offset or median of NTP samples.

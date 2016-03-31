@@ -38,7 +38,6 @@ enum Checkpoints::CPMode CheckpointsMode;
 
 // Ping and address broadcast intervals
 extern int64_t nPingInterval;
-extern int64_t nBroadcastInterval;
 extern int64_t nReserveBalance;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -382,7 +381,6 @@ bool AppInit2()
 
     // Ping and address broadcast intervals
     nPingInterval = max<int64_t>(10 * 60, GetArg("-keepalive", 30 * 60));
-    nBroadcastInterval = max<int64_t>(6 * nOneHour, GetArg("-addrsetlifetime", nOneDay));
 
     CheckpointsMode = Checkpoints::STRICT;
     std::string strCpMode = GetArg("-cppolicy", "strict");
