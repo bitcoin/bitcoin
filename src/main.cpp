@@ -446,6 +446,17 @@ int CMerkleTx::SetMerkleBranch(const CBlock* pblock)
     {
         CBlock blockTmp;
 
+        if (pblock == NULL)
+        {
+            // Load the block this tx is in
+            CTxIndex txindex;
+            if (!CTxDB("r").ReadTxIndex(GetHash(), txindex))
+                return 0;
+            if (!blockTmp.ReadFromDisk(txindex.pos.nFile, txindex.pos.nBlockPos))
+                return 0;
+            pblock = &blockTmp;
+        }
+
         // Update the tx's hashBlock
         hashBlock = pblock->GetHash();
 
