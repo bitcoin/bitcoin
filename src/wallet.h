@@ -114,7 +114,7 @@ public:
     CWallet(std::string strWalletFileIn)
     {
         SetNull();
-        
+
         strWalletFile = strWalletFileIn;
         fFileBacked = true;
     }
@@ -141,6 +141,8 @@ public:
 
     CPubKey vchDefaultKey;
     int64_t nTimeFirstKey;
+
+    const CWalletTx* GetWalletTx(const uint256& hash) const;
 
     // check whether we are allowed to upgrade (or already support) to the named feature
     bool CanSupportFeature(enum WalletFeature wf) { return nWalletMaxVersion >= wf; }
@@ -253,81 +255,24 @@ public:
 
     isminetype IsMine(const CTxIn& txin) const;
     int64_t GetDebit(const CTxIn& txin, const isminefilter& filter) const;
-    isminetype IsMine(const CTxOut& txout) const
-    {
-        return ::IsMine(*this, txout.scriptPubKey);
-    }
-    int64_t GetCredit(const CTxOut& txout, const isminefilter& filter) const
-    {
-        if (!MoneyRange(txout.nValue))
-            throw std::runtime_error("CWallet::GetCredit() : value out of range");
-        return (IsMine(txout) & filter ? txout.nValue : 0);
-    }
+    isminetype IsMine(const CTxOut& txout) const;
+    int64_t GetCredit(const CTxOut& txout, const isminefilter& filter) const;
     bool IsChange(const CTxOut& txout) const;
-    int64_t GetChange(const CTxOut& txout) const
-    {
-        if (!MoneyRange(txout.nValue))
-            throw std::runtime_error("CWallet::GetChange() : value out of range");
-        return (IsChange(txout) ? txout.nValue : 0);
-    }
-    bool IsMine(const CTransaction& tx) const
-    {
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-            if (IsMine(txout) && txout.nValue >= nMinimumInputValue)
-                return true;
-        return false;
-    }
-    bool IsFromMe(const CTransaction& tx) const
-    {
-        return (GetDebit(tx, MINE_ALL) > 0);
-    }
-    int64_t GetDebit(const CTransaction& tx, const isminefilter& filter) const
-    {
-        int64_t nDebit = 0;
-        BOOST_FOREACH(const CTxIn& txin, tx.vin)
-        {
-            nDebit += GetDebit(txin, filter);
-            if (!MoneyRange(nDebit))
-                throw std::runtime_error("CWallet::GetDebit() : value out of range");
-        }
-        return nDebit;
-    }
-    int64_t GetCredit(const CTransaction& tx, const isminefilter& filter) const
-    {
-        int64_t nCredit = 0;
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-        {
-            nCredit += GetCredit(txout, filter);
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error("CWallet::GetCredit() : value out of range");
-        }
-        return nCredit;
-    }
-    int64_t GetChange(const CTransaction& tx) const
-    {
-        int64_t nChange = 0;
-        BOOST_FOREACH(const CTxOut& txout, tx.vout)
-        {
-            nChange += GetChange(txout);
-            if (!MoneyRange(nChange))
-                throw std::runtime_error("CWallet::GetChange() : value out of range");
-        }
-        return nChange;
-    }
+    int64_t GetChange(const CTxOut& txout) const;
+    bool IsMine(const CTransaction& tx) const;
+    bool IsFromMe(const CTransaction& tx) const;
+    int64_t GetDebit(const CTransaction& tx, const isminefilter& filter) const;
+    int64_t GetCredit(const CTransaction& tx, const isminefilter& filter) const;
+    int64_t GetChange(const CTransaction& tx) const;
     void SetBestChain(const CBlockLocator& loc);
 
     DBErrors LoadWallet(bool& fFirstRunRet);
-
     DBErrors ZapWalletTx();
 
     bool SetAddressBookName(const CTxDestination& address, const std::string& strName);
-
     bool SetAddressBookName(const CBitcoinAddress& address, const std::string& strName);
-
     bool DelAddressBookName(const CBitcoinAddress& address);
-
     void UpdatedTransaction(const uint256 &hashTx);
-
     void PrintWallet(const CBlock& block);
 
     void Inventory(const uint256 &hash)
@@ -346,7 +291,6 @@ public:
     }
 
     bool GetTransaction(const uint256 &hashTx, CWalletTx& wtx);
-
     bool SetDefaultKey(const CPubKey &vchPubKey);
 
     // signify that a particular wallet feature is now used. this may change nWalletVersion and nWalletMaxVersion if those are lower
@@ -641,166 +585,13 @@ public:
         return (!!vfSpent[nOut]);
     }
 
-    int64_t GetDebit(const isminefilter& filter) const
-    {
-        if (vin.empty())
-            return 0;
-
-        int64_t nDebit = 0;
-        if (filter & MINE_SPENDABLE)
-        {
-            if (fDebitCached)
-                nDebit += nDebitCached;
-            else
-            {
-                nDebitCached = pwallet->GetDebit(*this, MINE_SPENDABLE);
-                fDebitCached = true;
-                nDebit += nDebitCached;
-            }
-        }
-        if (filter & MINE_WATCH_ONLY)
-        {
-            if (fWatchDebitCached)
-                nDebit += nWatchDebitCached;
-            else
-            {
-                nWatchDebitCached = pwallet->GetDebit(*this, MINE_WATCH_ONLY);
-                fWatchDebitCached = true;
-                nDebit += nWatchDebitCached;
-            }
-        }
-
-        return nDebit;
-    }
-
-    int64_t GetCredit(const isminefilter& filter) const
-    {
-        // Must wait until coinbase is safely deep enough in the chain before valuing it
-        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
-            return 0;
-
-        int64_t credit = 0;
-        if (filter & MINE_SPENDABLE)
-        {
-            // GetBalance can assume transactions in mapWallet won't change
-            if (fCreditCached)
-                credit += nCreditCached;
-            else
-            {
-                nCreditCached = pwallet->GetCredit(*this, MINE_SPENDABLE);
-                fCreditCached = true;
-                credit += nCreditCached;
-            }
-        }
-        if (filter & MINE_WATCH_ONLY)
-        {
-            if (fWatchCreditCached)
-                credit += nWatchCreditCached;
-            else
-            {
-                nWatchCreditCached = pwallet->GetCredit(*this, MINE_WATCH_ONLY);
-                fWatchCreditCached = true;
-                credit += nWatchCreditCached;
-            }
-        }
-        return credit;
-    }
-
-    int64_t GetImmatureCredit(bool fUseCache=true) const
-    {
-        if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
-        {
-            if (fUseCache && fImmatureCreditCached)
-                return nImmatureCreditCached;
-            nImmatureCreditCached = pwallet->GetCredit(*this, MINE_SPENDABLE);
-            fImmatureCreditCached = true;
-            return nImmatureCreditCached;
-        }
-
-        return 0;
-    }
-
-    int64_t GetImmatureWatchOnlyCredit(bool fUseCache=true) const
-    {
-        if (IsCoinBase() && GetBlocksToMaturity() > 0 && IsInMainChain())
-        {
-            if (fUseCache && fImmatureWatchCreditCached)
-                return nImmatureWatchCreditCached;
-            nImmatureWatchCreditCached = pwallet->GetCredit(*this, MINE_WATCH_ONLY);
-            fImmatureWatchCreditCached = true;
-            return nImmatureWatchCreditCached;
-        }
-
-        return 0;
-    }
-
-
-    int64_t GetAvailableCredit(bool fUseCache=true) const
-    {
-        // Must wait until coinbase is safely deep enough in the chain before valuing it
-        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
-            return 0;
-
-        if (fUseCache) {
-            if (fAvailableCreditCached)
-                return nAvailableCreditCached;
-        }
-
-        int64_t nCredit = 0;
-        for (unsigned int i = 0; i < vout.size(); i++)
-        {
-            if (!IsSpent(i))
-            {
-                const CTxOut &txout = vout[i];
-                nCredit += pwallet->GetCredit(txout, MINE_SPENDABLE);
-                if (!MoneyRange(nCredit))
-                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
-            }
-        }
-
-        nAvailableCreditCached = nCredit;
-        fAvailableCreditCached = true;
-
-        return nCredit;
-    }
-
-    int64_t GetAvailableWatchCredit(bool fUseCache=true) const
-    {
-        // Must wait until coinbase is safely deep enough in the chain before valuing it
-        if ((IsCoinBase() || IsCoinStake()) && GetBlocksToMaturity() > 0)
-            return 0;
-
-        if (fUseCache) {
-            if (fAvailableWatchCreditCached)
-                return nAvailableWatchCreditCached;
-        }
-
-        int64_t nCredit = 0;
-        for (unsigned int i = 0; i < vout.size(); i++)
-        {
-            if (!IsSpent(i))
-            {
-                const CTxOut &txout = vout[i];
-                nCredit += pwallet->GetCredit(txout, MINE_WATCH_ONLY);
-                if (!MoneyRange(nCredit))
-                    throw std::runtime_error("CWalletTx::GetAvailableCredit() : value out of range");
-            }
-        }
-
-        nAvailableWatchCreditCached = nCredit;
-        fAvailableWatchCreditCached = true;
-
-        return nCredit;
-    }
-
-    int64_t GetChange() const
-    {
-        if (fChangeCached)
-            return nChangeCached;
-        nChangeCached = pwallet->GetChange(*this);
-        fChangeCached = true;
-        return nChangeCached;
-    }
+    int64_t GetDebit(const isminefilter& filter) const;
+    int64_t GetCredit(const isminefilter& filter) const;
+    int64_t GetImmatureCredit(bool fUseCache=true) const;
+    int64_t GetImmatureWatchOnlyCredit(bool fUseCache=true) const;
+    int64_t GetAvailableCredit(bool fUseCache=true) const;
+    int64_t GetAvailableWatchCredit(bool fUseCache=true) const;
+    int64_t GetChange() const;
 
     void GetAmounts(int64_t& nGeneratedImmature, int64_t& nGeneratedMature, std::list<std::pair<CBitcoinAddress, int64_t> >& listReceived,
                     std::list<std::pair<CBitcoinAddress, int64_t> >& listSent, int64_t& nFee, std::string& strSentAccount, const isminefilter& filter) const;
@@ -813,49 +604,8 @@ public:
         return (GetDebit(filter) > 0);
     }
 
-    bool IsTrusted() const
-    {
-        // Quick answer in most cases
-        if (!IsFinal())
-            return false;
-        if (GetDepthInMainChain() >= 1)
-            return true;
-        if (fConfChange || !IsFromMe(MINE_ALL)) // using wtx's cached debit
-            return false;
-
-        // If no confirmations but it's from us, we can still
-        // consider it confirmed if all dependencies are confirmed
-        std::map<uint256, const CMerkleTx*> mapPrev;
-        std::vector<const CMerkleTx*> vWorkQueue;
-        vWorkQueue.reserve(vtxPrev.size()+1);
-        vWorkQueue.push_back(this);
-        for (unsigned int i = 0; i < vWorkQueue.size(); i++)
-        {
-            const CMerkleTx* ptx = vWorkQueue[i];
-
-            if (!ptx->IsFinal())
-                return false;
-            if (ptx->GetDepthInMainChain() >= 1)
-                continue;
-            if (!pwallet->IsFromMe(*ptx))
-                return false;
-
-            if (mapPrev.empty())
-            {
-                BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
-                    mapPrev[tx.GetHash()] = &tx;
-            }
-
-            BOOST_FOREACH(const CTxIn& txin, ptx->vin)
-            {
-                if (!mapPrev.count(txin.prevout.hash))
-                    return false;
-                vWorkQueue.push_back(mapPrev[txin.prevout.hash]);
-            }
-        }
-
-        return true;
-    }
+    bool InMempool() const;
+    bool IsTrusted() const;
 
     bool WriteToDisk();
 
