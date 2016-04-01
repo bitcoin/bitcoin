@@ -85,6 +85,9 @@ private:
     // the maximum wallet format version: memory-only variable that specifies to what version this wallet may be upgraded
     int nWalletMaxVersion;
 
+    int64_t nNextResend;
+    int64_t nLastResend;
+
     // stake mining statistics
     uint64_t nKernelsTried;
     uint64_t nCoinDaysTried;
@@ -126,6 +129,8 @@ public:
         nMasterKeyMaxID = 0;
         pwalletdbEncryption = NULL;
         pwalletdbDecryption = NULL;
+        nNextResend = 0;
+        nLastResend = 0;
         nOrderPosNext = 0;
         nKernelsTried = 0;
         nCoinDaysTried = 0;
@@ -219,7 +224,8 @@ public:
     int ScanForWalletTransactions(CBlockIndex* pindexStart, bool fUpdate = false);
     int ScanForWalletTransaction(const uint256& hashTx);
     void ReacceptWalletTransactions();
-    void ResendWalletTransactions(bool fForceResend=false);
+    void ResendWalletTransactions(int64_t nBestBlockTime);
+    std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime);
     int64_t GetBalance() const;
     int64_t GetWatchOnlyBalance() const;
     int64_t GetUnconfirmedBalance() const;
@@ -560,8 +566,8 @@ public:
     bool AcceptWalletTransaction(CTxDB& txdb, bool fCheckInputs=true);
     bool AcceptWalletTransaction();
 
-    void RelayWalletTransaction(CTxDB& txdb);
-    void RelayWalletTransaction();
+    bool RelayWalletTransaction(CTxDB& txdb);
+    bool RelayWalletTransaction();
 };
 
 

@@ -1485,83 +1485,83 @@ void CWallet::ReacceptWalletTransactions()
     }
 }
 
-void CWalletTx::RelayWalletTransaction(CTxDB& txdb)
+bool CWalletTx::RelayWalletTransaction(CTxDB& txdb)
 {
-    BOOST_FOREACH(const CMerkleTx& tx, vtxPrev)
+    uint256 hash = GetHash();
+    if (IsCoinBase() || IsCoinStake() || txdb.ContainsTx(hash) || !InMempool())
+        return false;
+
+    for(std::vector<CMerkleTx>::const_iterator it = vtxPrev.begin(); it != vtxPrev.end(); it++)
     {
-        if (!(tx.IsCoinBase() || tx.IsCoinStake()))
-        {
-            uint256 hash = tx.GetHash();
-            if (!txdb.ContainsTx(hash))
-                RelayTransaction((CTransaction)tx, hash);
-        }
-    }
-    if (!(IsCoinBase() || IsCoinStake()))
-    {
-        uint256 hash = GetHash();
+        const CMerkleTx& tx = *it;
+        uint256 hash = tx.GetHash();
+
+        if (tx.IsCoinBase() || tx.IsCoinStake())
+            continue;
+
         if (!txdb.ContainsTx(hash))
-        {
-            printf("Relaying wtx %s\n", hash.ToString().substr(0,10).c_str());
-            RelayTransaction((CTransaction)*this, hash);
-        }
+            RelayTransaction((CTransaction)tx, hash);
     }
+
+    printf("Relaying wtx %s\n", hash.ToString().substr(0,10).c_str());
+    RelayTransaction((CTransaction)*this, hash);
+    return true;
 }
 
-void CWalletTx::RelayWalletTransaction()
+bool CWalletTx::RelayWalletTransaction()
 {
    CTxDB txdb("r");
-   RelayWalletTransaction(txdb);
+   return RelayWalletTransaction(txdb);
 }
 
-void CWallet::ResendWalletTransactions(bool fForceResend)
+std::vector<uint256> CWallet::ResendWalletTransactionsBefore(int64_t nTime)
 {
-    if (!fForceResend) {
-        // Do this infrequently and randomly to avoid giving away
-        // that these are our transactions.
-        static int64_t nNextTime = GetRand(GetTime() + 30 * 60);
-        if (GetTime() < nNextTime)
-            return;
-        bool fFirst = (nNextTime == 0);
-        nNextTime = GetTime() + GetRand(30 * 60);
-        if (fFirst)
-            return;
+    std::vector<uint256> result;
 
-        // Only do it if there's been a new block since last time
-        static int64_t nLastTime = 0;
-        if (nTimeBestReceived < nLastTime)
-            return;
-        nLastTime = GetTime();
-    }
-
-    // Rebroadcast any of our txes that aren't in a block yet
-    printf("ResendWalletTransactions()\n");
-    CTxDB txdb("r");
+    LOCK(cs_wallet);
+    // Sort them in chronological order
+    map<unsigned int, CWalletTx*> mapSorted;
+    BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
     {
-        LOCK(cs_wallet);
-        // Sort them in chronological order
-        multimap<unsigned int, CWalletTx*> mapSorted;
-        BOOST_FOREACH(PAIRTYPE(const uint256, CWalletTx)& item, mapWallet)
-        {
-            CWalletTx& wtx = item.second;
-            // Don't rebroadcast until it's had plenty of time that
-            // it should have gotten in already by now.
-            if (fForceResend || nTimeBestReceived - (int64_t)wtx.nTimeReceived > 5 * 60)
-                mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
-        }
-        BOOST_FOREACH(PAIRTYPE(const unsigned int, CWalletTx*)& item, mapSorted)
-        {
-            CWalletTx& wtx = *item.second;
-            if (wtx.CheckTransaction())
-                wtx.RelayWalletTransaction(txdb);
-            else
-                printf("ResendWalletTransactions() : CheckTransaction failed for transaction %s\n", wtx.GetHash().ToString().c_str());
-        }
+        CWalletTx& wtx = item.second;
+        // Don't rebroadcast if newer than nTime:
+        if (wtx.nTimeReceived > nTime)
+            continue;
+        mapSorted.insert(make_pair(wtx.nTimeReceived, &wtx));
     }
+    BOOST_FOREACH(PAIRTYPE(const unsigned int, CWalletTx*)& item, mapSorted)
+    {
+        CWalletTx& wtx = *item.second;
+        if (wtx.RelayWalletTransaction())
+            result.push_back(wtx.GetHash());
+    }
+    return result;
 }
 
+void CWallet::ResendWalletTransactions(int64_t nBestBlockTime)
+{
+    int64_t nNow = GetTime();
 
+    // Do this infrequently and randomly to avoid giving away
+    // that these are our transactions.
+    if (nNow < nNextResend)
+        return;
+    bool fFirst = (nNextResend == 0);
+    nNextResend = PoissonNextSend(nNow, 5*60);
+    if (fFirst)
+        return;
 
+    // Only do it if there's been a new block since last time
+    if (nBestBlockTime < nLastResend)
+        return;
+    nLastResend = nNow;
 
+    // Rebroadcast unconfirmed txes older than 5 minutes before the last
+    // block was found:
+    std::vector<uint256> relayed = ResendWalletTransactionsBefore(nBestBlockTime - 5*60);
+    if (!relayed.empty())
+        printf("CWallet::ResendWalletTransactions: rebroadcast %" PRIszu " unconfirmed transactions\n", relayed.size());
+}
 
 
 //////////////////////////////////////////////////////////////////////////////
