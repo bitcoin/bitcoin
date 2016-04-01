@@ -1744,6 +1744,7 @@ Value validateaddress(const Array& params, bool fHelp)
             CMalleableKeyView view;
             bool isMine = pwalletMain->GetMalleableView(mpk, view);
             ret.push_back(Pair("ismine", isMine));
+            ret.push_back(Pair("PubkeyPair", mpk.ToString()));
 
             if (isMine)
                 ret.push_back(Pair("KeyView", view.ToString()));
@@ -1981,16 +1982,34 @@ Value adjustmalleablepubkey(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2 || params.size() == 0)
         throw runtime_error(
-            "adjustmalleablepubkey <Malleable public key data>\n"
-            "Calculate new public key using provided malleable public key data.\n");
+            "adjustmalleablepubkey <Malleable address, key view or public key pair>\n"
+            "Calculate new public key using provided data.\n");
 
-    string pubKeyPair = params[0].get_str();
+    string strData = params[0].get_str();
     CMalleablePubKey malleablePubKey;
 
-    if (pubKeyPair.size() == 136) {
-        malleablePubKey.setvch(ParseHex(pubKeyPair));
-    } else
-        malleablePubKey.SetString(pubKeyPair);
+    do
+    {
+        CBitcoinAddress addr(strData);
+        if (addr.IsValid() && addr.IsPair())
+        {
+            // Initialize malleable pubkey with address data
+            malleablePubKey = CMalleablePubKey(addr.GetData());
+            break;
+        }
+        CMalleableKeyView viewTmp(strData);
+        if (viewTmp.IsValid())
+        {
+            // Shazaam, we have a valid key view here.
+            malleablePubKey = viewTmp.GetMalleablePubKey();
+            break;
+        }
+        if (malleablePubKey.SetString(strData))
+            break; // A valid public key pair
+
+        throw runtime_error("Though your data seems a valid Base58 string, we were unable to recognize it.");
+    }
+    while(false);
 
     CPubKey R, vchPubKeyVariant;
     malleablePubKey.GetVariant(R, vchPubKeyVariant);

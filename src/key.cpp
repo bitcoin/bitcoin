@@ -761,6 +761,8 @@ bool CMalleablePubKey::SetString(const std::string& strMalleablePubKey)
     if (!DecodeBase58Check(strMalleablePubKey, vchTemp)) {
         throw key_error("CMalleablePubKey::SetString() : Provided key data seems corrupted.");
     }
+    if (vchTemp.size() != 68)
+        return false;
 
     CDataStream ssKey(vchTemp, SER_NETWORK, PROTOCOL_VERSION);
     ssKey >> *this;
@@ -1028,7 +1030,8 @@ bool CMalleableKey::SetString(const std::string& strMutableKey)
     if (!DecodeBase58Check(strMutableKey, vchTemp)) {
         throw key_error("CMalleableKey::SetString() : Provided key data seems corrupted.");
     }
-
+    if (vchTemp.size() != 66)
+        return false;
     CDataStream ssKey(vchTemp, SER_NETWORK, PROTOCOL_VERSION);
     ssKey >> *this;
 
@@ -1171,6 +1174,9 @@ bool CMalleableKeyView::SetString(const std::string& strMutableKey)
     if (!DecodeBase58Check(strMutableKey, vchTemp)) {
         throw key_error("CMalleableKeyView::SetString() : Provided key data seems corrupted.");
     }
+
+    if (vchTemp.size() != 67)
+        return false;
 
     CDataStream ssKey(vchTemp, SER_NETWORK, PROTOCOL_VERSION);
     ssKey >> *this;
