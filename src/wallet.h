@@ -519,71 +519,14 @@ public:
 
     // marks certain txout's as spent
     // returns true if any update took place
-    bool UpdateSpent(const std::vector<char>& vfNewSpent)
-    {
-        bool fReturn = false;
-        for (unsigned int i = 0; i < vfNewSpent.size(); i++)
-        {
-            if (i == vfSpent.size())
-                break;
-
-            if (vfNewSpent[i] && !vfSpent[i])
-            {
-                vfSpent[i] = true;
-                fReturn = true;
-                fAvailableCreditCached = fAvailableWatchCreditCached = false;
-            }
-        }
-        return fReturn;
-    }
+    bool UpdateSpent(const std::vector<char>& vfNewSpent);
 
     // make sure balances are recalculated
-    void MarkDirty()
-    {
-        fCreditCached = false;
-        fAvailableCreditCached = fAvailableWatchCreditCached = false;
-        fDebitCached = fWatchDebitCached = false;
-        fChangeCached = false;
-    }
-
-    void BindWallet(CWallet *pwalletIn)
-    {
-        pwallet = pwalletIn;
-        MarkDirty();
-    }
-
-    void MarkSpent(unsigned int nOut)
-    {
-        if (nOut >= vout.size())
-            throw std::runtime_error("CWalletTx::MarkSpent() : nOut out of range");
-        vfSpent.resize(vout.size());
-        if (!vfSpent[nOut])
-        {
-            vfSpent[nOut] = true;
-            fAvailableCreditCached = fAvailableWatchCreditCached = false;
-        }
-    }
-
-    void MarkUnspent(unsigned int nOut)
-    {
-        if (nOut >= vout.size())
-            throw std::runtime_error("CWalletTx::MarkUnspent() : nOut out of range");
-        vfSpent.resize(vout.size());
-        if (vfSpent[nOut])
-        {
-            vfSpent[nOut] = false;
-            fAvailableCreditCached = fAvailableWatchCreditCached = false;
-        }
-    }
-
-    bool IsSpent(unsigned int nOut) const
-    {
-        if (nOut >= vout.size())
-            throw std::runtime_error("CWalletTx::IsSpent() : nOut out of range");
-        if (nOut >= vfSpent.size())
-            return false;
-        return (!!vfSpent[nOut]);
-    }
+    void MarkDirty();
+    void BindWallet(CWallet *pwalletIn);
+    void MarkSpent(unsigned int nOut);
+    void MarkUnspent(unsigned int nOut);
+    bool IsSpent(unsigned int nOut) const;
 
     int64_t GetDebit(const isminefilter& filter) const;
     int64_t GetCredit(const isminefilter& filter) const;

@@ -810,6 +810,74 @@ isminetype CWallet::IsMine(const CTxIn &txin) const
     return MINE_NO;
 }
 
+// marks certain txout's as spent
+// returns true if any update took place
+bool CWalletTx::UpdateSpent(const std::vector<char>& vfNewSpent)
+{
+    bool fReturn = false;
+    for (unsigned int i = 0; i < vfNewSpent.size(); i++)
+    {
+        if (i == vfSpent.size())
+            break;
+
+        if (vfNewSpent[i] && !vfSpent[i])
+        {
+            vfSpent[i] = true;
+            fReturn = true;
+            fAvailableCreditCached = fAvailableWatchCreditCached = false;
+        }
+    }
+    return fReturn;
+}
+
+// make sure balances are recalculated
+void CWalletTx::MarkDirty()
+{
+    fCreditCached = false;
+    fAvailableCreditCached = fAvailableWatchCreditCached = false;
+    fDebitCached = fWatchDebitCached = false;
+    fChangeCached = false;
+}
+
+void CWalletTx::BindWallet(CWallet *pwalletIn)
+{
+    pwallet = pwalletIn;
+    MarkDirty();
+}
+
+void CWalletTx::MarkSpent(unsigned int nOut)
+{
+    if (nOut >= vout.size())
+        throw std::runtime_error("CWalletTx::MarkSpent() : nOut out of range");
+    vfSpent.resize(vout.size());
+    if (!vfSpent[nOut])
+    {
+        vfSpent[nOut] = true;
+        fAvailableCreditCached = fAvailableWatchCreditCached = false;
+    }
+}
+
+void CWalletTx::MarkUnspent(unsigned int nOut)
+{
+    if (nOut >= vout.size())
+        throw std::runtime_error("CWalletTx::MarkUnspent() : nOut out of range");
+    vfSpent.resize(vout.size());
+    if (vfSpent[nOut])
+    {
+        vfSpent[nOut] = false;
+        fAvailableCreditCached = fAvailableWatchCreditCached = false;
+    }
+}
+
+bool CWalletTx::IsSpent(unsigned int nOut) const
+{
+    if (nOut >= vout.size())
+        throw std::runtime_error("CWalletTx::IsSpent() : nOut out of range");
+    if (nOut >= vfSpent.size())
+        return false;
+    return (!!vfSpent[nOut]);
+}
+
 int64_t CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 {
     {
