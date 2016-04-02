@@ -1970,10 +1970,10 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
         }
 
         // Connect further blocks
-        BOOST_REVERSE_FOREACH(CBlockIndex *pindex, vpindexSecondary)
+        for (std::vector<CBlockIndex*>::reverse_iterator rit = vpindexSecondary.rbegin(); rit != vpindexSecondary.rend(); ++rit)
         {
             CBlock block;
-            if (!block.ReadFromDisk(pindex))
+            if (!block.ReadFromDisk(*rit))
             {
                 printf("SetBestChain() : ReadFromDisk failed\n");
                 break;
@@ -1983,7 +1983,7 @@ bool CBlock::SetBestChain(CTxDB& txdb, CBlockIndex* pindexNew)
                 break;
             }
             // errors now are not fatal, we still did a reorganisation to a new chain in a valid way
-            if (!block.SetBestChainInner(txdb, pindex))
+            if (!block.SetBestChainInner(txdb, *rit))
                 break;
         }
     }
@@ -2775,12 +2775,12 @@ bool LoadBlockIndex(bool fAllowNew)
         //    CTxOut(empty)
         //  vMerkleTree: 4cb33b3b6a
 
-        const char* pszTimestamp = "https://bitcointalk.org/index.php?topic=134179.msg1502196#msg1502196";
+        const string strTimestamp = "https://bitcointalk.org/index.php?topic=134179.msg1502196#msg1502196";
         CTransaction txNew;
         txNew.nTime = 1360105017;
         txNew.vin.resize(1);
         txNew.vout.resize(1);
-        txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(9999) << vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+        txNew.vin[0].scriptSig = CScript() << 486604799 << CBigNum(9999) << vector<unsigned char>(strTimestamp.begin(), strTimestamp.end());
         txNew.vout[0].SetEmpty();
         CBlock block;
         block.vtx.push_back(txNew);
