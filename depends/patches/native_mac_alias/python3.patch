@@ -1,0 +1,72 @@
+diff -dur a/mac_alias/alias.py b/mac_alias/alias.py
+--- a/mac_alias/alias.py	2015-10-19 12:12:48.000000000 +0200
++++ b/mac_alias/alias.py	2016-04-03 12:13:12.037159417 +0200
+@@ -243,10 +243,10 @@
+         alias = Alias()
+         alias.appinfo = appinfo
+             
+-        alias.volume = VolumeInfo (volname.replace('/',':'),
++        alias.volume = VolumeInfo (volname.decode().replace('/',':'),
+                                    voldate, fstype, disktype,
+                                    volattrs, volfsid)
+-        alias.target = TargetInfo (kind, filename.replace('/',':'),
++        alias.target = TargetInfo (kind, filename.decode().replace('/',':'),
+                                    folder_cnid, cnid,
+                                    crdate, creator_code, type_code)
+         alias.target.levels_from = levels_from
+@@ -261,9 +261,9 @@
+                 b.read(1)
+ 
+             if tag == TAG_CARBON_FOLDER_NAME:
+-                alias.target.folder_name = value.replace('/',':')
++                alias.target.folder_name = value.decode().replace('/',':')
+             elif tag == TAG_CNID_PATH:
+-                alias.target.cnid_path = struct.unpack(b'>%uI' % (length // 4),
++                alias.target.cnid_path = struct.unpack('>%uI' % (length // 4),
+                                                            value)
+             elif tag == TAG_CARBON_PATH:
+                 alias.target.carbon_path = value
+@@ -298,9 +298,9 @@
+                 alias.target.creation_date \
+                     = mac_epoch + datetime.timedelta(seconds=seconds)
+             elif tag == TAG_POSIX_PATH:
+-                alias.target.posix_path = value
++                alias.target.posix_path = value.decode()
+             elif tag == TAG_POSIX_PATH_TO_MOUNTPOINT:
+-                alias.volume.posix_path = value
++                alias.volume.posix_path = value.decode()
+             elif tag == TAG_RECURSIVE_ALIAS_OF_DISK_IMAGE:
+                 alias.volume.disk_image_alias = Alias.from_bytes(value)
+             elif tag == TAG_USER_HOME_LENGTH_PREFIX:
+@@ -422,13 +422,13 @@
+         #       (so doing so is ridiculous, and nothing could rely on it).
+         b.write(struct.pack(b'>h28pI2shI64pII4s4shhI2s10s',
+                             self.target.kind,
+-                            carbon_volname, voldate,
++                            carbon_volname, int(voldate),
+                             self.volume.fs_type,
+                             self.volume.disk_type,
+                             self.target.folder_cnid,
+                             carbon_filename,
+                             self.target.cnid,
+-                            crdate,
++                            int(crdate),
+                             self.target.creator_code,
+                             self.target.type_code,
+                             self.target.levels_from,
+@@ -449,12 +449,12 @@
+ 
+         b.write(struct.pack(b'>hhQhhQ',
+                 TAG_HIGH_RES_VOLUME_CREATION_DATE,
+-                8, long(voldate * 65536),
++                8, int(voldate * 65536),
+                 TAG_HIGH_RES_CREATION_DATE,
+-                8, long(crdate * 65536)))
++                8, int(crdate * 65536)))
+ 
+         if self.target.cnid_path:
+-            cnid_path = struct.pack(b'>%uI' % len(self.target.cnid_path),
++            cnid_path = struct.pack('>%uI' % len(self.target.cnid_path),
+                                     *self.target.cnid_path)
+             b.write(struct.pack(b'>hh', TAG_CNID_PATH,
+                                  len(cnid_path)))

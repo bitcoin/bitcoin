@@ -211,7 +211,7 @@ def getFrameworks(binaryPath, verbose):
             sys.stderr.flush()
             raise RuntimeError("otool failed with return code %d" % otool.returncode)
 
-    otoolLines = o_stdout.split("\n")
+    otoolLines = o_stdout.decode().split("\n")
     otoolLines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
         otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
@@ -676,7 +676,7 @@ if verbose >= 2:
     print("+ Installing qt.conf +")
 
 f = open(os.path.join(applicationBundle.resourcesPath, "qt.conf"), "wb")
-f.write(qt_conf)
+f.write(qt_conf.encode())
 f.close()
 
 # ------------------------------------------------
