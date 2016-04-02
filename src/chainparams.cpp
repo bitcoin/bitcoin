@@ -113,7 +113,9 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
-        vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
+        // BITCOINUNLIMITED START
+        vFixedSeeds = std::vector<SeedSpec6>();
+        // BITCOINUNLIMITED END
 
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
