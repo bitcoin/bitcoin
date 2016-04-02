@@ -223,7 +223,6 @@ class CKey
 protected:
     EC_KEY* pkey;
     bool fSet;
-    bool fCompressedPubKey;
 
 public:
 
@@ -243,7 +242,7 @@ public:
     void SetCompressedPubKey(bool fCompressed=true);
     void MakeNewKey(bool fCompressed=true);
     bool SetPrivKey(const CPrivKey& vchPrivKey);
-    bool SetSecret(const CSecret& vchSecret, bool fCompressed = false);
+    bool SetSecret(const CSecret& vchSecret, bool fCompressed = true);
     CSecret GetSecret(bool &fCompressed) const;
     CSecret GetSecret() const;
     CPrivKey GetPrivKey() const;

@@ -168,12 +168,11 @@ const unsigned char *vchZero = NULL;
 void CKey::SetCompressedPubKey(bool fCompressed)
 {
     EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
-    fCompressedPubKey = fCompressed;
 }
 
 void CKey::Reset()
 {
-    fCompressedPubKey = fSet = false;
+    fSet = false;
     if (pkey != NULL)
         EC_KEY_free(pkey);
     pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
@@ -193,7 +192,6 @@ CKey::CKey(const CKey& b)
     if (pkey == NULL)
         throw key_error("CKey::CKey(const CKey&) : EC_KEY_dup failed");
     fSet = b.fSet;
-    fCompressedPubKey = b.fCompressedPubKey;
 }
 
 CKey::CKey(const CSecret& b, bool fCompressed)
@@ -209,7 +207,6 @@ CKey& CKey::operator=(const CKey& b)
     if (!EC_KEY_copy(pkey, b.pkey))
         throw key_error("CKey::operator=(const CKey&) : EC_KEY_copy failed");
     fSet = b.fSet;
-    fCompressedPubKey = b.fCompressedPubKey;
     return (*this);
 }
 
@@ -226,7 +223,7 @@ bool CKey::IsNull() const
 
 bool CKey::IsCompressed() const
 {
-    return fCompressedPubKey;
+    return (EC_KEY_get_conv_form(pkey) == POINT_CONVERSION_COMPRESSED);
 }
 
 bool CKey::CheckSignatureElement(const unsigned char *vch, int len, bool half) {
@@ -325,7 +322,7 @@ CSecret CKey::GetSecret(bool &fCompressed) const
     int n=BN_bn2bin(bn,&vchRet[32 - nBytes]);
     if (n != nBytes)
         throw key_error("CKey::GetSecret(): BN_bn2bin failed");
-    fCompressed = fCompressedPubKey;
+    fCompressed = IsCompressed();
     return vchRet;
 }
 
@@ -420,6 +417,7 @@ bool CKey::SignCompact(uint256 hash, std::vector<unsigned char>& vchSig)
     vchSig.resize(65,0);
     int nBitsR = BN_num_bits(sig->r);
     int nBitsS = BN_num_bits(sig->s);
+    bool fCompressedPubKey = IsCompressed();
     if (nBitsR <= 256 && nBitsS <= 256)
     {
         int8_t nRecId = -1;
