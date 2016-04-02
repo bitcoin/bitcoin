@@ -5,6 +5,11 @@ $(package)_download_file=v$($(package)_version).tar.bz2
 $(package)_file_name=$(package)-$($(package)_version).tar.bz2
 $(package)_sha256_hash=87ad827e66790028361e43fc754f68ed041a9bdb214cca03c853f079b04fb120
 $(package)_install_libdir=$(build_prefix)/lib/python/dist-packages
+$(package)_patches=python3.patch
+
+define $(package)_preprocess_cmds
+  patch -p1 < $($(package)_patch_dir)/python3.patch
+endef
 
 define $(package)_build_cmds
     python setup.py build
