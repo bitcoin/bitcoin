@@ -41,6 +41,8 @@
 
 #include <math.h>
 
+#include <bitnodes.h>
+
 // Dump addresses to peers.dat every 15 minutes (900s)
 #define DUMP_ADDRESSES_INTERVAL 900
 
@@ -1391,6 +1393,42 @@ void MapPort(bool)
 }
 #endif
 
+// BITCOINUNLIMITED START
+void ThreadBitnodesAddressSeed()
+{
+    // Get nodes from websites offering Bitnodes API
+    if ((addrman.size() > 0) &&
+        (!GetBoolArg("-forcebitnodes", DEFAULT_FORCEBITNODES))) {
+        MilliSleep(11 * 1000);
+        LOCK(cs_vNodes);
+        if (vNodes.size() >= 2) {
+            LogPrintf("P2P peers available. Skipped Bitnodes seeding.\n");
+            return;
+        }
+    }
+
+    LogPrintf("Loading addresses from Bitnodes API\n");
+
+    vector<string> vIPs;
+    vector<CAddress> vAdd;
+    bool success = GetLeaderboardFromBitnodes(vIPs);
+    if (success) {
+        int portOut;
+        std::string hostOut = "";
+        BOOST_FOREACH(const string &seed, vIPs) {
+            SplitHostPort(seed, portOut, hostOut);
+            CNetAddr ip(hostOut, false);
+            CAddress addr = CAddress(CService(ip, portOut));
+            addr.nTime = GetTime();
+            vAdd.push_back(addr);
+        }
+        addrman.Add(vAdd, CNetAddr("bitnodes.21.co", true));
+    }
+
+    LogPrintf("%d addresses found from Bitnodes API\n", vAdd.size());
+}
+// BITCOINUNLIMITED END
+
 
 void ThreadDNSAddressSeed()
 {
@@ -1918,6 +1956,13 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     //
     // Start threads
     //
+
+    // BITCOINUNLIMITED START
+    if (!GetBoolArg("-bitnodes", true))
+        LogPrintf("Bitnodes API seeding disabled\n");
+    else
+        threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "bitnodes", &ThreadBitnodesAddressSeed));
+    // BITCOINUNLIMITED END
 
     if (!GetBoolArg("-dnsseed", true))
         LogPrintf("DNS seeding disabled\n");
