@@ -84,6 +84,7 @@ std::string UnlimitedCmdLineHelp()
     strUsage += HelpMessageOpt("-maxlimitertxfee=<amt>", strprintf(_("Fees (in satoshi/byte) larger than this are always relayed (default: %s)"), DEFAULT_MAXLIMITERTXFEE));
     strUsage += HelpMessageOpt("-bitnodes", _("Query for peer addresses via Bitnodes API, if low on addresses (default: 1 unless -connect)"));    
     strUsage += HelpMessageOpt("-forcebitnodes", strprintf(_("Always query for peer addresses via Bitnodes API (default: %u)"), DEFAULT_FORCEBITNODES));
+    strUsage += HelpMessageOpt("-usednsseed=<host>", _("Add a custom DNS seed to use.  If at least one custom DNS seed is set, the default DNS seeds will be ignored."));
     return strUsage;
 }
 

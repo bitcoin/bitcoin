@@ -107,6 +107,11 @@ CCriticalSection cs_setservAddNodeAddresses;
 vector<std::string> vAddedNodes;
 CCriticalSection cs_vAddedNodes;
 
+// BITCOINUNLIMITED START
+vector<std::string> vUseDNSSeeds;
+CCriticalSection cs_vUseDNSSeeds;
+// BITCOINUNLIMITED END
+
 NodeId nLastNodeId = 0;
 CCriticalSection cs_nLastNodeId;
 
@@ -1444,7 +1449,24 @@ void ThreadDNSAddressSeed()
         }
     }
 
-    const vector<CDNSSeedData> &vSeeds = Params().DNSSeeds();
+    // BITCOINUNLIMITED START
+    // If user specifies custom DNS seeds, do not use hard-coded defaults.
+    vector<CDNSSeedData> vSeeds;
+    {
+        LOCK(cs_vUseDNSSeeds);
+        vUseDNSSeeds = mapMultiArgs["-usednsseed"];
+    }
+    if (vUseDNSSeeds.size() == 0) {
+        vSeeds = Params().DNSSeeds();
+        LogPrintf("Using default DNS seeds.\n");
+    } else {
+        BOOST_FOREACH(const string &seed, vUseDNSSeeds) {
+            vSeeds.push_back(CDNSSeedData(seed,seed));
+        }
+        LogPrintf("Using %d user defined DNS seeds.\n", vSeeds.size());
+    }
+    // BITCOINUNLIMITED END
+    
     int found = 0;
 
     LogPrintf("Loading addresses from DNS seeds (could take a while)\n");
