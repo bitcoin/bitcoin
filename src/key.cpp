@@ -165,10 +165,10 @@ const unsigned char vchMaxModHalfOrder[32] = {
 
 const unsigned char *vchZero = NULL;
 
-void CKey::SetCompressedPubKey()
+void CKey::SetCompressedPubKey(bool fCompressed)
 {
-    EC_KEY_set_conv_form(pkey, POINT_CONVERSION_COMPRESSED);
-    fCompressedPubKey = true;
+    EC_KEY_set_conv_form(pkey, fCompressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED);
+    fCompressedPubKey = fCompressed;
 }
 
 void CKey::Reset()
@@ -264,8 +264,7 @@ void CKey::MakeNewKey(bool fCompressed)
 {
     if (!EC_KEY_generate_key(pkey))
         throw key_error("CKey::MakeNewKey() : EC_KEY_generate_key failed");
-    if (fCompressed)
-        SetCompressedPubKey();
+    SetCompressedPubKey(fCompressed);
     fSet = true;
 }
 
@@ -311,8 +310,7 @@ bool CKey::SetSecret(const CSecret& vchSecret, bool fCompressed)
     }
     BN_clear_free(bn);
     fSet = true;
-    if (fCompressed)
-        SetCompressedPubKey();
+    SetCompressedPubKey(fCompressed);
     return true;
 }
 
@@ -429,8 +427,7 @@ bool CKey::SignCompact(uint256 hash, std::vector<unsigned char>& vchSig)
         {
             CKey keyRec;
             keyRec.fSet = true;
-            if (fCompressedPubKey)
-                keyRec.SetCompressedPubKey();
+            keyRec.SetCompressedPubKey(fCompressedPubKey);
             if (ECDSA_SIG_recover_key_GFp(keyRec.pkey, sig, (unsigned char*)&hash, sizeof(hash), i, 1) == 1)
                 if (keyRec.GetPubKey() == this->GetPubKey())
                 {

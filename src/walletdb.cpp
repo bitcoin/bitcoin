@@ -352,9 +352,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                     strErr = "Error reading wallet database: CPrivKey pubkey inconsistency";
                     return false;
                 }
-                if (vchPubKey.size() == 33) {
-                    key.SetCompressedPubKey();
-                }
+                key.SetCompressedPubKey(vchPubKey.IsCompressed());
                 if (!key.IsValid())
                 {
                     strErr = "Error reading wallet database: invalid CPrivKey";
@@ -375,9 +373,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                     strErr = "Error reading wallet database: CWalletKey pubkey inconsistency";
                     return false;
                 }
-                if (vchPubKey.size() == 33) {
-                    key.SetCompressedPubKey();
-                }
+                key.SetCompressedPubKey(vchPubKey.IsCompressed());
                 if (!key.IsValid())
                 {
                     strErr = "Error reading wallet database: invalid CWalletKey";

@@ -240,10 +240,10 @@ public:
     bool IsNull() const;
     bool IsCompressed() const;
 
-    void SetCompressedPubKey();
+    void SetCompressedPubKey(bool fCompressed=true);
     void MakeNewKey(bool fCompressed=true);
     bool SetPrivKey(const CPrivKey& vchPrivKey);
-    bool SetSecret(const CSecret& vchSecret, bool fCompressed = true);
+    bool SetSecret(const CSecret& vchSecret, bool fCompressed = false);
     CSecret GetSecret(bool &fCompressed) const;
     CSecret GetSecret() const;
     CPrivKey GetPrivKey() const;
