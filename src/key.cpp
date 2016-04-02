@@ -311,7 +311,7 @@ bool CKey::SetSecret(const CSecret& vchSecret, bool fCompressed)
     }
     BN_clear_free(bn);
     fSet = true;
-    if (fCompressed || fCompressedPubKey)
+    if (fCompressed)
         SetCompressedPubKey();
     return true;
 }
