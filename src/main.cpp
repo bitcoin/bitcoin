@@ -40,6 +40,7 @@
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/join.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/math/distributions/poisson.hpp>
@@ -2555,16 +2556,10 @@ void static UpdateTip(CBlockIndex *pindexNew) {
     nTimeBestReceived = GetTime();
     mempool.AddTransactionsUpdated(1);
 
-    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utx)\n", __func__,
-      chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion,
-      log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
-      DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
-      Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
-
     cvBlockChange.notify_all();
 
-    // Check the version of the last 100 blocks to see if we need to upgrade:
     static bool fWarned = false;
+    std::vector<std::string> warningMessages;
     if (!IsInitialBlockDownload())
     {
         int nUpgraded = 0;
@@ -2580,10 +2575,11 @@ void static UpdateTip(CBlockIndex *pindexNew) {
                         fWarned = true;
                     }
                 } else {
-                    LogPrintf("%s: unknown new rules are about to activate (versionbit %i)\n", __func__, bit);
+                    warningMessages.push_back(strprintf("unknown new rules are about to activate (versionbit %i)", bit));
                 }
             }
         }
+        // Check the version of the last 100 blocks to see if we need to upgrade:
         for (int i = 0; i < 100 && pindex != NULL; i++)
         {
             int32_t nExpectedVersion = ComputeBlockVersion(pindex->pprev, chainParams.GetConsensus());
@@ -2592,7 +2588,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             pindex = pindex->pprev;
         }
         if (nUpgraded > 0)
-            LogPrintf("%s: %d of last 100 blocks have unexpected version\n", __func__, nUpgraded);
+            warningMessages.push_back(strprintf("%d of last 100 blocks have unexpected version", nUpgraded));
         if (nUpgraded > 100/2)
         {
             // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
@@ -2603,6 +2599,15 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             }
         }
     }
+    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utx)", __func__,
+      chainActive.Tip()->GetBlockHash().ToString(), chainActive.Height(), chainActive.Tip()->nVersion,
+      log(chainActive.Tip()->nChainWork.getdouble())/log(2.0), (unsigned long)chainActive.Tip()->nChainTx,
+      DateTimeStrFormat("%Y-%m-%d %H:%M:%S", chainActive.Tip()->GetBlockTime()),
+      Checkpoints::GuessVerificationProgress(chainParams.Checkpoints(), chainActive.Tip()), pcoinsTip->DynamicMemoryUsage() * (1.0 / (1<<20)), pcoinsTip->GetCacheSize());
+    if (!warningMessages.empty())
+        LogPrintf(" warning='%s'", boost::algorithm::join(warningMessages, ", "));
+    LogPrintf("\n");
+
 }
 
 /** Disconnect chainActive's tip. You probably want to call mempool.removeForReorg and manually re-limit mempool size after this, with cs_main held. */
