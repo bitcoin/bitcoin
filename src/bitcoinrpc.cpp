@@ -1256,6 +1256,7 @@ Array RPCConvertValues(const std::string &strMethod, const std::vector<std::stri
     if (strMethod == "keypoolrefill"          && n > 0) ConvertTo<int64_t>(params[0]);
     if (strMethod == "keypoolreset"           && n > 0) ConvertTo<int64_t>(params[0]);
     if (strMethod == "importaddress"          && n > 2) ConvertTo<bool>(params[2]);
+    if (strMethod == "importprivkey"          && n > 2) ConvertTo<bool>(params[2]);
 
     return params;
 }
