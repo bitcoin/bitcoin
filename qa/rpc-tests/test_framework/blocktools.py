@@ -4,8 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
-from mininode import *
-from script import CScript, OP_TRUE, OP_CHECKSIG
+from .mininode import *
+from .script import CScript, OP_TRUE, OP_CHECKSIG
 
 # Create a block (with regtest difficulty)
 def create_block(hashprev, coinbase, nTime=None):
@@ -29,7 +29,7 @@ def serialize_script_num(value):
     neg = value < 0
     absvalue = -value if neg else value
     while (absvalue):
-        r.append(chr(absvalue & 0xff))
+        r.append(int(absvalue & 0xff))
         absvalue >>= 8
     if r[-1] & 0x80:
         r.append(0x80 if neg else 0)

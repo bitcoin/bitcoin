@@ -11,7 +11,7 @@ from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript, OP_1NEGATE, OP_NOP3, OP_DROP
 from binascii import hexlify, unhexlify
-import cStringIO
+from io import BytesIO
 import time
 import itertools
 
@@ -53,7 +53,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         outputs = { to_address : amount }
         rawtx = node.createrawtransaction(inputs, outputs)
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(rawtx))
+        f = BytesIO(unhexlify(rawtx))
         tx.deserialize(f)
         tx.nVersion = 2
         return tx
@@ -61,7 +61,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
     def sign_transaction(self, node, tx):
         signresult = node.signrawtransaction(hexlify(tx.serialize()))
         tx = CTransaction()
-        f = cStringIO.StringIO(unhexlify(signresult['hex']))
+        f = BytesIO(unhexlify(signresult['hex']))
         tx.deserialize(f)
         return tx
 
@@ -91,7 +91,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         self.height = 3  # height of the next block to build
         self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
-        self.last_block_time = time.time()
+        self.last_block_time = int(time.time())
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
 
