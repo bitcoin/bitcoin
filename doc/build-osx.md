@@ -1,6 +1,6 @@
 Mac OS X Build Instructions and Notes
 ====================================
-This guide will show you how to build dashd (headless client) for OSX.
+This guide will show you how to build Dash Core for OS X.
 
 Notes
 -----
@@ -117,3 +117,13 @@ Other commands:
     ./dashd -daemon # to start the dash daemon.
     ./dash-cli --help  # for a list of command-line options.
     ./dash-cli help    # When the daemon is running, to get a list of RPC commands
+
+Using Qt official installer while building
+------------------------------------------
+
+If you prefer to use the latest Qt installed from the official binary
+installer over the brew version, you have to make several changes to
+the installed tree and its binaries (all these changes are contained
+in the brew version already). The changes needed are described in
+[#7714](https://github.com/bitcoin/bitcoin/issues/7714). We do not
+support building Dash Core this way though.
