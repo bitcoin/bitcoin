@@ -169,7 +169,7 @@ bool MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 	if(reply->error() == QNetworkReply::NoError) {
 
 		UniValue outerValue;
-		bool read = outerValue.read(reply->readAll().toStdString());
+		bool read = outerValue.read(reply->readAll().trimmed());
 		if (read)
 		{
 			UniValue outerObj = outerValue.get_obj();
