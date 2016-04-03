@@ -71,6 +71,12 @@ To describe a member or variable use:
 int var; //!< Detailed description after the member
 ```
 
+or
+```cpp
+//! Description before the member
+int var;
+```
+
 Also OK:
 ```c++
 ///
