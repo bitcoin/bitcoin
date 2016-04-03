@@ -273,6 +273,94 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedoffer_nocheck)
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink_nocheck selleralias7 " + offerguid + " 5 " + s1024bytes), runtime_error);
 }
 
+BOOST_AUTO_TEST_CASE (generate_offernew_linkedofferexmode)
+{
+	UniValue r;
 
+	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
+	AliasNew("node1", "selleralias8", "changeddata1");
+	AliasNew("node2", "selleralias9", "changeddata1");
+
+	// generate a good offer in exclusive mode
+	string offerguid = OfferNew("node1", "selleralias8", "category", "title", "100", "0.05", "description", "USD", "", true);
+
+	// should fail: attempt to create a linked offer for an exclusive mode product without being on the whitelist
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink selleralias9 " + offerguid + " 5 newdescription"), runtime_error);
+
+	// should succeed: offer seller adds affiliate to whitelist
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offeraddwhitelist " + offerguid + " selleralias9 10"));
+	GenerateBlocks(10, "node1");
+
+	// should succeed: attempt to create a linked offer for an exclusive mode product while being on the whitelist
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerlink selleralias9 " + offerguid + " 5 newdescription"));
+}
+
+BOOST_AUTO_TEST_CASE (generate_offernew_linkedofferexmode_nocheck)
+{
+	UniValue r;
+
+	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
+	AliasNew("node1", "selleralias10", "changeddata1");
+	AliasNew("node2", "selleralias11", "changeddata1");
+
+	// generate a good offer in exclusive mode
+	string offerguid = OfferNew("node1", "selleralias10", "category", "title", "100", "0.05", "description", "USD", "", true);
+
+	// should fail: attempt to create a linked offer for an exclusive mode product without being on the whitelist
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink_nocheck selleralias11 " + offerguid + " 5 newdescription"), runtime_error);
+
+	// should succeed: offer seller adds affiliate to whitelist
+	BOOST_CHECK_NO_THROW(r = CallRPC("node1", "offeraddwhitelist " + offerguid + " selleralias11 10"));
+	GenerateBlocks(10);
+
+	// should succeed: attempt to create a linked offer for an exclusive mode product while being on the whitelist
+	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "offerlink_nocheck selleralias11 " + offerguid + " 5 newdescription"));
+}
+
+BOOST_AUTO_TEST_CASE (generate_offernew_linkedlinkedoffer)
+{
+	UniValue r;
+
+	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
+	AliasNew("node1", "selleralias12", "changeddata1");
+	AliasNew("node2", "selleralias13", "changeddata1");
+	AliasNew("node3", "selleralias14", "changeddata1");
+
+	// generate a good offer
+	string offerguid = OfferNew("node1", "selleralias12", "category", "title", "100", "0.05", "description", "USD");
+	string lofferguid = OfferLink("node2", "selleralias13", offerguid, "5", "newdescription");
+
+	// should fail: try to generate a linked offer with a linked offer
+	BOOST_CHECK_THROW(r = CallRPC("node3", "offerlink selleralias14 " + lofferguid + " 5 newdescription"), runtime_error);	
+}
+
+BOOST_AUTO_TEST_CASE (generate_offernew_linkedlinkedoffer_nocheck)
+{
+	UniValue r;
+
+	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
+	AliasNew("node1", "selleralias15", "changeddata1");
+	AliasNew("node2", "selleralias16", "changeddata1");
+	AliasNew("node3", "selleralias17", "changeddata1");
+
+	// generate a good offer
+	string offerguid = OfferNew("node1", "selleralias15", "category", "title", "100", "0.05", "description", "USD");
+	string lofferguid = OfferLink("node2", "selleralias16", offerguid, "5", "newdescription");
+
+	// should fail: try to generate a linked offer with a linked offer
+	BOOST_CHECK_THROW(r = CallRPC("node3", "offerlink_nocheck selleralias17 " + lofferguid + " 5 newdescription"), runtime_error);	
+}
 
 BOOST_AUTO_TEST_SUITE_END ()
