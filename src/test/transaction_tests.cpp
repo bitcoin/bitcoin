@@ -50,7 +50,9 @@ static std::map<string, unsigned int> mapFlagNames = boost::assign::map_list_of
     (string("DISCOURAGE_UPGRADABLE_NOPS"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS)
     (string("CLEANSTACK"), (unsigned int)SCRIPT_VERIFY_CLEANSTACK)
     (string("CHECKLOCKTIMEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY)
-    (string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY);
+    (string("CHECKSEQUENCEVERIFY"), (unsigned int)SCRIPT_VERIFY_CHECKSEQUENCEVERIFY)
+    (string("WITNESS"), (unsigned int)SCRIPT_VERIFY_WITNESS)
+    (string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM);
 
 unsigned int ParseScriptFlags(string strFlags)
 {
@@ -113,6 +115,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             }
 
             map<COutPoint, CScript> mapprevOutScriptPubKeys;
+            map<COutPoint, int64_t> mapprevOutValues;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
 	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
@@ -123,13 +126,17 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     break;
                 }
                 UniValue vinput = input.get_array();
-                if (vinput.size() != 3)
+                if (vinput.size() < 3 || vinput.size() > 4)
                 {
                     fValid = false;
                     break;
                 }
-
-                mapprevOutScriptPubKeys[COutPoint(uint256S(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
+                COutPoint outpoint(uint256S(vinput[0].get_str()), vinput[1].get_int());
+                mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
+                if (vinput.size() >= 4)
+                {
+                    mapprevOutValues[outpoint] = vinput[3].get_int64();
+                }
             }
             if (!fValid)
             {
@@ -155,9 +162,13 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 }
 
                 CAmount amount = 0;
+                if (mapprevOutValues.count(tx.vin[i].prevout)) {
+                    amount = mapprevOutValues[tx.vin[i].prevout];
+                }
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+                const CScriptWitness *witness = (i < tx.wit.vtxinwit.size()) ? &tx.wit.vtxinwit[i].scriptWitness : NULL;
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                                 NULL, verify_flags, TransactionSignatureChecker(&tx, i, amount), &err),
+                                                 witness, verify_flags, TransactionSignatureChecker(&tx, i, amount), &err),
                                     strTest);
                 BOOST_CHECK_MESSAGE(err == SCRIPT_ERR_OK, ScriptErrorString(err));
             }
@@ -189,6 +200,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             }
 
             map<COutPoint, CScript> mapprevOutScriptPubKeys;
+            map<COutPoint, int64_t> mapprevOutValues;
             UniValue inputs = test[0].get_array();
             bool fValid = true;
 	    for (unsigned int inpIdx = 0; inpIdx < inputs.size(); inpIdx++) {
@@ -199,13 +211,17 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     break;
                 }
                 UniValue vinput = input.get_array();
-                if (vinput.size() != 3)
+                if (vinput.size() < 3 || vinput.size() > 4)
                 {
                     fValid = false;
                     break;
                 }
-
-                mapprevOutScriptPubKeys[COutPoint(uint256S(vinput[0].get_str()), vinput[1].get_int())] = ParseScript(vinput[2].get_str());
+                COutPoint outpoint(uint256S(vinput[0].get_str()), vinput[1].get_int());
+                mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
+                if (vinput.size() >= 4)
+                {
+                    mapprevOutValues[outpoint] = vinput[3].get_int64();
+                }
             }
             if (!fValid)
             {
@@ -231,8 +247,12 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
 
                 unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
                 CAmount amount = 0;
+                if (mapprevOutValues.count(tx.vin[i].prevout)) {
+                    amount = mapprevOutValues[tx.vin[i].prevout];
+                }
+                const CScriptWitness *witness = (i < tx.wit.vtxinwit.size()) ? &tx.wit.vtxinwit[i].scriptWitness : NULL;
                 fValid = VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
-                                      NULL, verify_flags, TransactionSignatureChecker(&tx, i, amount), &err);
+                                      witness, verify_flags, TransactionSignatureChecker(&tx, i, amount), &err);
             }
             BOOST_CHECK_MESSAGE(!fValid, strTest);
             BOOST_CHECK_MESSAGE(err != SCRIPT_ERR_OK, ScriptErrorString(err));
@@ -422,7 +442,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     scriptPubkey1 << ToByteVector(pubkey1) << OP_CHECKSIG;
     scriptPubkey2 << ToByteVector(pubkey2) << OP_CHECKSIG;
     scriptPubkey1L << ToByteVector(pubkey1L) << OP_CHECKSIG;
-    scriptPubkey2L << ToByteVector(pubkey2L) << OP_CHECKSIG; 
+    scriptPubkey2L << ToByteVector(pubkey2L) << OP_CHECKSIG;
     std::vector<CPubKey> oneandthree;
     oneandthree.push_back(pubkey1);
     oneandthree.push_back(pubkey3);
