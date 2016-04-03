@@ -83,9 +83,10 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         try:
             result1 = self.nodes[1].importprunedfunds(rawtxn1, proof1, "")
         except JSONRPCException as e:
-            errorString = e.error['message']
+            assert('No addresses' in e.error['message'])
+        else:
+            assert(False)
 
-        assert('No addresses' in errorString)
 
         balance1 = self.nodes[1].getbalance("", 0, True)
         assert_equal(balance1, Decimal(0))
@@ -120,9 +121,10 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         try:
             self.nodes[1].removeprunedfunds(txnid1)
         except JSONRPCException as e:
-            errorString = e.error['message']
+            assert('does not exist' in e.error['message'])
+        else:
+            assert(False)
 
-        assert('does not exist' in errorString)
 
         balance1 = Decimal(self.nodes[1].getbalance("", 0, True))
         assert_equal(balance1, Decimal('0.075'))
