@@ -30,17 +30,26 @@ Value decryptdata(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "decryptdata <novacoin address> <encrypted stream>\n"
+            "decryptdata <novacoin address or private key> <encrypted stream>\n"
             "Decrypt octet stream.\n");
 
     EnsureWalletIsUnlocked();
-    CBitcoinAddress addr(params[0].get_str());
-
-    CKeyID keyID;
-    addr.GetKeyID(keyID);
-
     CKey key;
-    pwalletMain->GetKey(keyID, key);
+    CBitcoinAddress addr(params[0].get_str());
+    if (addr.IsValid()) {
+        CKeyID keyID;
+        addr.GetKeyID(keyID);
+        if (!pwalletMain->GetKey(keyID, key))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "We have no private key for this address");
+    }
+    else {
+        CBitcoinSecret vchSecret;
+        if (!vchSecret.SetString(params[0].get_str()))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Provided private key is inconsistent.");
+        bool fCompressed;
+        CSecret secret = vchSecret.GetSecret(fCompressed);
+        key.SetSecret(secret, fCompressed);
+    }
 
     vector<unsigned char> vchDecrypted;
     key.DecryptData(ParseHex(params[1].get_str()), vchDecrypted);
@@ -68,17 +77,27 @@ Value decryptmessage(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "decryptmessage <novacoin address> <encrypted message>\n"
+            "decryptmessage <novacoin address or private key> <encrypted message>\n"
             "Decrypt message string.\n");
 
     EnsureWalletIsUnlocked();
-    CBitcoinAddress addr(params[0].get_str());
-
-    CKeyID keyID;
-    addr.GetKeyID(keyID);
 
     CKey key;
-    pwalletMain->GetKey(keyID, key);
+    CBitcoinAddress addr(params[0].get_str());
+    if (addr.IsValid()) {
+        CKeyID keyID;
+        addr.GetKeyID(keyID);
+        if (!pwalletMain->GetKey(keyID, key))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "We have no private key for this address");
+    }
+    else {
+        CBitcoinSecret vchSecret;
+        if (!vchSecret.SetString(params[0].get_str()))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Provided private key is inconsistent.");
+        bool fCompressed;
+        CSecret secret = vchSecret.GetSecret(fCompressed);
+        key.SetSecret(secret, fCompressed);
+    }
 
     vector<unsigned char> vchEncrypted;
     if (!DecodeBase58Check(params[1].get_str(), vchEncrypted))
