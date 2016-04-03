@@ -24,7 +24,8 @@ import binascii
 import time
 import sys
 import random
-import cStringIO
+from io import BytesIO
+from codecs import encode
 import hashlib
 from threading import RLock
 from threading import Thread
@@ -75,12 +76,12 @@ def deser_string(f):
 
 def ser_string(s):
     if len(s) < 253:
-        return chr(len(s)) + s
+        return struct.pack("B", len(s)) + s
     elif len(s) < 0x10000:
-        return chr(253) + struct.pack("<H", len(s)) + s
+        return struct.pack("<BH", 253, len(s)) + s
     elif len(s) < 0x100000000L:
-        return chr(254) + struct.pack("<I", len(s)) + s
-    return chr(255) + struct.pack("<Q", len(s)) + s
+        return struct.pack("<BI", 254, len(s)) + s
+    return struct.pack("<BQ", 255, len(s)) + s
 
 
 def deser_uint256(f):
@@ -132,13 +133,13 @@ def deser_vector(f, c):
 def ser_vector(l):
     r = ""
     if len(l) < 253:
-        r = chr(len(l))
+        r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
-        r = chr(253) + struct.pack("<H", len(l))
+        r = struct.pack("<BH", 253, len(l))
     elif len(l) < 0x100000000L:
-        r = chr(254) + struct.pack("<I", len(l))
+        r = struct.pack("<BI", 254, len(l))
     else:
-        r = chr(255) + struct.pack("<Q", len(l))
+        r = struct.pack("<BQ", 255, len(l))
     for i in l:
         r += i.serialize()
     return r
@@ -162,13 +163,13 @@ def deser_uint256_vector(f):
 def ser_uint256_vector(l):
     r = ""
     if len(l) < 253:
-        r = chr(len(l))
+        r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
-        r = chr(253) + struct.pack("<H", len(l))
+        r = struct.pack("<BH", 253, len(l))
     elif len(l) < 0x100000000L:
-        r = chr(254) + struct.pack("<I", len(l))
+        r = struct.pack("<BI", 254, len(l))
     else:
-        r = chr(255) + struct.pack("<Q", len(l))
+        r = struct.pack("<BQ", 255, len(l))
     for i in l:
         r += ser_uint256(i)
     return r
@@ -192,13 +193,13 @@ def deser_string_vector(f):
 def ser_string_vector(l):
     r = ""
     if len(l) < 253:
-        r = chr(len(l))
+        r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
-        r = chr(253) + struct.pack("<H", len(l))
+        r = struct.pack("<BH", 253, len(l))
     elif len(l) < 0x100000000L:
-        r = chr(254) + struct.pack("<I", len(l))
+        r = struct.pack("<BI", 254, len(l))
     else:
-        r = chr(255) + struct.pack("<Q", len(l))
+        r = struct.pack("<BQ", 255, len(l))
     for sv in l:
         r += ser_string(sv)
     return r
@@ -222,20 +223,20 @@ def deser_int_vector(f):
 def ser_int_vector(l):
     r = ""
     if len(l) < 253:
-        r = chr(len(l))
+        r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
-        r = chr(253) + struct.pack("<H", len(l))
+        r = struct.pack("<BH", 253, len(l))
     elif len(l) < 0x100000000L:
-        r = chr(254) + struct.pack("<I", len(l))
+        r = struct.pack("<BI", 254, len(l))
     else:
-        r = chr(255) + struct.pack("<Q", len(l))
+        r = struct.pack("<BQ", 255, len(l))
     for i in l:
         r += struct.pack("<i", i)
     return r
 
 # Deserialize from a hex string representation (eg from RPC)
 def FromHex(obj, hex_string):
-    obj.deserialize(cStringIO.StringIO(binascii.unhexlify(hex_string)))
+    obj.deserialize(BytesIO(binascii.unhexlify(hex_string)))
     return obj
 
 # Convert a binary-serializable object to hex (eg for submission via RPC)
@@ -423,7 +424,7 @@ class CTransaction(object):
     def calc_sha256(self):
         if self.sha256 is None:
             self.sha256 = uint256_from_str(hash256(self.serialize()))
-        self.hash = hash256(self.serialize())[::-1].encode('hex_codec')
+        self.hash = encode(hash256(self.serialize())[::-1], 'hex')
 
     def is_valid(self):
         self.calc_sha256()
@@ -492,7 +493,7 @@ class CBlockHeader(object):
             r += struct.pack("<I", self.nBits)
             r += struct.pack("<I", self.nNonce)
             self.sha256 = uint256_from_str(hash256(r))
-            self.hash = hash256(r)[::-1].encode('hex_codec')
+            self.hash = encode(hash256(r)[::-1], 'hex')
 
     def rehash(self):
         self.sha256 = None
@@ -640,7 +641,7 @@ class msg_version(object):
     def __init__(self):
         self.nVersion = MY_VERSION
         self.nServices = 1
-        self.nTime = time.time()
+        self.nTime = int(time.time())
         self.addrTo = CAddress()
         self.addrFrom = CAddress()
         self.nNonce = random.getrandbits(64)
@@ -985,7 +986,7 @@ class msg_reject(object):
 
     def __init__(self):
         self.message = ""
-        self.code = ""
+        self.code = 0
         self.reason = ""
         self.data = 0L
 
@@ -1251,43 +1252,46 @@ class NodeConn(asyncore.dispatcher):
             self.sendbuf = self.sendbuf[sent:]
 
     def got_data(self):
-        while True:
-            if len(self.recvbuf) < 4:
-                return
-            if self.recvbuf[:4] != self.MAGIC_BYTES[self.network]:
-                raise ValueError("got garbage %s" % repr(self.recvbuf))
-            if self.ver_recv < 209:
-                if len(self.recvbuf) < 4 + 12 + 4:
+        try:
+            while True:
+                if len(self.recvbuf) < 4:
                     return
-                command = self.recvbuf[4:4+12].split("\x00", 1)[0]
-                msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                checksum = None
-                if len(self.recvbuf) < 4 + 12 + 4 + msglen:
-                    return
-                msg = self.recvbuf[4+12+4:4+12+4+msglen]
-                self.recvbuf = self.recvbuf[4+12+4+msglen:]
-            else:
-                if len(self.recvbuf) < 4 + 12 + 4 + 4:
-                    return
-                command = self.recvbuf[4:4+12].split("\x00", 1)[0]
-                msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
-                checksum = self.recvbuf[4+12+4:4+12+4+4]
-                if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
-                    return
-                msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
-                th = sha256(msg)
-                h = sha256(th)
-                if checksum != h[:4]:
-                    raise ValueError("got bad checksum " + repr(self.recvbuf))
-                self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
-            if command in self.messagemap:
-                f = cStringIO.StringIO(msg)
-                t = self.messagemap[command]()
-                t.deserialize(f)
-                self.got_message(t)
-            else:
-                self.show_debug_msg("Unknown command: '" + command + "' " +
-                                    repr(msg))
+                if self.recvbuf[:4] != self.MAGIC_BYTES[self.network]:
+                    raise ValueError("got garbage %s" % repr(self.recvbuf))
+                if self.ver_recv < 209:
+                    if len(self.recvbuf) < 4 + 12 + 4:
+                        return
+                    command = self.recvbuf[4:4+12].split("\x00", 1)[0]
+                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
+                    checksum = None
+                    if len(self.recvbuf) < 4 + 12 + 4 + msglen:
+                        return
+                    msg = self.recvbuf[4+12+4:4+12+4+msglen]
+                    self.recvbuf = self.recvbuf[4+12+4+msglen:]
+                else:
+                    if len(self.recvbuf) < 4 + 12 + 4 + 4:
+                        return
+                    command = self.recvbuf[4:4+12].split("\x00", 1)[0]
+                    msglen = struct.unpack("<i", self.recvbuf[4+12:4+12+4])[0]
+                    checksum = self.recvbuf[4+12+4:4+12+4+4]
+                    if len(self.recvbuf) < 4 + 12 + 4 + 4 + msglen:
+                        return
+                    msg = self.recvbuf[4+12+4+4:4+12+4+4+msglen]
+                    th = sha256(msg)
+                    h = sha256(th)
+                    if checksum != h[:4]:
+                        raise ValueError("got bad checksum " + repr(self.recvbuf))
+                    self.recvbuf = self.recvbuf[4+12+4+4+msglen:]
+                if command in self.messagemap:
+                    f = BytesIO(msg)
+                    t = self.messagemap[command]()
+                    t.deserialize(f)
+                    self.got_message(t)
+                else:
+                    self.show_debug_msg("Unknown command: '" + command + "' " +
+                                        repr(msg))
+        except Exception as e:
+            print 'got_data:', repr(e)
 
     def send_message(self, message, pushbuf=False):
         if self.state != "connected" and not pushbuf:
