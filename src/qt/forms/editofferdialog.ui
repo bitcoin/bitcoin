@@ -118,21 +118,21 @@
      <item row="15" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_6"/>
      </item>
-     <item row="16" column="0">
+     <item row="19" column="0">
       <widget class="QLabel" name="currencyLabel">
        <property name="text">
         <string>Currency:</string>
        </property>
       </widget>
      </item>
-     <item row="16" column="1">
+     <item row="19" column="1">
       <widget class="QComboBox" name="currencyEdit">
        <property name="editable">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="17" column="1">
+     <item row="20" column="1">
       <widget class="QLabel" name="currencyDisclaimer">
        <property name="text">
         <string/>
@@ -142,51 +142,51 @@
        </property>
       </widget>
      </item>
-     <item row="18" column="0">
+     <item row="21" column="0">
       <widget class="QLabel" name="certLabel">
        <property name="text">
         <string>Certificate:</string>
        </property>
       </widget>
      </item>
-     <item row="18" column="1">
+     <item row="21" column="1">
       <widget class="QComboBox" name="certEdit"/>
      </item>
-     <item row="19" column="1">
+     <item row="22" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_8"/>
      </item>
-     <item row="22" column="0">
+     <item row="25" column="0">
       <widget class="QLabel" name="descriptionLabel">
        <property name="text">
         <string>Description:</string>
        </property>
       </widget>
      </item>
-     <item row="22" column="1">
+     <item row="25" column="1">
       <widget class="QPlainTextEdit" name="descriptionEdit">
        <property name="tabChangesFocus">
         <bool>true</bool>
        </property>
       </widget>
      </item>
-     <item row="23" column="0">
+     <item row="26" column="0">
       <layout class="QVBoxLayout" name="verticalLayout_10"/>
      </item>
-     <item row="24" column="0">
+     <item row="27" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
         <string>Private:</string>
        </property>
       </widget>
      </item>
-     <item row="24" column="1">
+     <item row="27" column="1">
       <layout class="QVBoxLayout" name="verticalLayout_9">
        <item>
         <widget class="QComboBox" name="privateEdit"/>
        </item>
       </layout>
      </item>
-     <item row="25" column="1">
+     <item row="28" column="1">
       <widget class="QLabel" name="privateDisclaimer">
        <property name="text">
         <string/>
@@ -196,17 +196,17 @@
        </property>
       </widget>
      </item>
-     <item row="26" column="0">
+     <item row="29" column="0">
       <widget class="QLabel" name="label_3">
        <property name="text">
         <string>Accept BTC Only:</string>
        </property>
       </widget>
      </item>
-     <item row="26" column="1">
+     <item row="29" column="1">
       <widget class="QComboBox" name="acceptBTCOnlyEdit"/>
      </item>
-     <item row="27" column="1">
+     <item row="30" column="1">
       <widget class="QLabel" name="btcOnlyDisclaimer">
        <property name="text">
         <string/>
@@ -216,23 +216,23 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Alias for Exchange Rate Peg:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QLineEdit" name="aliasPegEdit"/>
-     </item>
-     <item row="3" column="1">
+     <item row="18" column="1">
       <widget class="QLabel" name="aliasPegDisclaimer">
        <property name="text">
         <string/>
        </property>
        <property name="wordWrap">
         <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="16" column="1">
+      <widget class="QLineEdit" name="aliasPegEdit"/>
+     </item>
+     <item row="16" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Alias for Exchange Rate Peg:</string>
        </property>
       </widget>
      </item>
