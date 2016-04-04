@@ -78,12 +78,12 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
-void EditOfferDialog::on_aliasPegEdit_editingFinished(const QString& text)
+void EditOfferDialog::on_aliasPegEdit_editingFinished()
 {
 	CAmount nFee;
 	vector<string> rateList;
 	int precision;
-	if(getCurrencyToSYSFromAlias(vchFromString(text.toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
+	if(getCurrencyToSYSFromAlias(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
 	{
 		QMessageBox::warning(this, windowTitle(),
 			tr("Warning: %1 alias not found. No currency information available for %2!").arg(text).arg(ui->currencyEdit->currentText()),
