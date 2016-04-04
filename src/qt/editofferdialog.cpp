@@ -34,7 +34,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 	ui->privateEdit->clear();
 	ui->privateEdit->addItem(QString("Yes"));
 	ui->privateEdit->addItem(QString("No"));
-	
+	ui->currencyEdit->addItem(QString("USD"));
 	ui->acceptBTCOnlyEdit->clear();
 	ui->acceptBTCOnlyEdit->addItem(QString("No"));
 	ui->acceptBTCOnlyEdit->addItem(QString("Yes"));
@@ -45,7 +45,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 	connect(ui->certEdit, SIGNAL(currentIndexChanged(int)), this, SLOT(certChanged(int)));
 	loadAliases();
 	loadCerts();
-	connect(ui->aliasPegEdit, SIGNAL(editingFinished(QString)), this, SLOT(onTextChanged(QString)))
+	connect(ui->aliasPegEdit, SIGNAL(editingFinished(QString)), this, SLOT(onTextChanged(QString)));
 	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
     {
@@ -87,10 +87,10 @@ QMessageBox::warning(this, windowTitle(),
 	CAmount nFee;
 	vector<string> rateList;
 	int precision;
-	if(getCurrencyToSYSFromAlias(vchFromString(text.toStdString()), vchFromString("USD"), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
+	if(getCurrencyToSYSFromAlias(vchFromString(text.toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
 	{
 		QMessageBox::warning(this, windowTitle(),
-			tr("Warning: %1 alias not found. No currency information available!").arg(text),
+			tr("Warning: %1 alias not found. No currency information available for %2!").arg(text).arg(ui->currencyEdit->currentText()),
 				QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
