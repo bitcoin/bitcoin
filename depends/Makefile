@@ -15,6 +15,8 @@ BASEDIR = $(CURDIR)
 HASH_LENGTH:=11
 DOWNLOAD_CONNECT_TIMEOUT:=10
 DOWNLOAD_RETRIES:=3
+HOST_ID_SALT ?= salt
+BUILD_ID_SALT ?= salt
 
 host:=$(BUILD)
 ifneq ($(HOST),)
@@ -73,6 +75,20 @@ include builders/$(build_os).mk
 include builders/default.mk
 include packages/packages.mk
 
+build_id_string:=$(BUILD_ID_SALT)
+build_id_string+=$(shell $(build_CC) --version 2>/dev/null)
+build_id_string+=$(shell $(build_AR) --version 2>/dev/null)
+build_id_string+=$(shell $(build_CXX) --version 2>/dev/null)
+build_id_string+=$(shell $(build_RANLIB) --version 2>/dev/null)
+build_id_string+=$(shell $(build_STRIP) --version 2>/dev/null)
+
+$(host_arch)_$(host_os)_id_string:=$(HOST_ID_SALT)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_CC) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_AR) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_CXX) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_RANLIB) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_STRIP) --version 2>/dev/null)
+
 qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages)
 qt_native_packages_$(NO_QT) = $(qt_native_packages)
 wallet_packages_$(NO_WALLET) = $(wallet_packages)
@@ -90,7 +106,7 @@ include funcs.mk
 
 toolchain_path=$($($(host_arch)_$(host_os)_native_toolchain)_prefixbin)
 final_build_id_long+=$(shell $(build_SHA256SUM) config.site.in)
-final_build_id+=$(shell echo -n $(final_build_id_long) | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
+final_build_id+=$(shell echo -n "$(final_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
 $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 	$(AT)rm -rf $(@D)
 	$(AT)mkdir -p $(@D)
