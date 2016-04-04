@@ -15,8 +15,8 @@
 
 #include "wallet/coincontrol.h"
 #include "init.h"
-#include "main.h"
-#include "policy/policy.h"
+#include "main.h" // For globalPolicy
+#include "policy/interface.h"
 #include "wallet/wallet.h"
 
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
@@ -418,6 +418,7 @@ void CoinControlDialog::updateLabelLocked()
 
 void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
 {
+    const CPolicy& policy = *globalPolicy;
     if (!model)
         return;
 
@@ -433,7 +434,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
         {
             CTxOut txout(amount, (CScript)std::vector<unsigned char>(24, 0));
             txDummy.vout.push_back(txout);
-            if (IsDust(txout))
+            if (!policy.AcceptDust(txout))
                fDust = true;
         }
     }
@@ -546,10 +547,10 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog)
             if (nChange > 0 && nChange < MIN_CHANGE)
             {
                 CTxOut txout(nChange, (CScript)std::vector<unsigned char>(24, 0));
-                if (IsDust(txout))
+                if (!policy.AcceptDust(txout))
                 {
                     if (CoinControlDialog::fSubtractFeeFromAmount) // dust-change will be raised until no dust
-                        nChange = GetDustThreshold(txout);
+                        nChange = policy.GetDustThreshold(txout);
                     else
                     {
                         nPayFee += nChange;

@@ -7,7 +7,7 @@
 
 #include "policy/policy.h"
 
-#include "main.h"
+#include "main.h" // TODO decouple from main
 #include "tinyformat.h"
 #include "util.h"
 #include "utilmoneystr.h"
@@ -15,20 +15,20 @@
 
 #include <boost/foreach.hpp>
 
-CAmount GetDustThreshold(const CTxOut& txout)
+CAmount CDefaultPolicy::GetDustThreshold(const CTxOut& txout) const
 {
-    // "Dust" is defined in terms of minRelayTxFee,
+    // "Dust" is defined in terms of CBlockPolicyEstimator::minRelayFee,
     // which has units satoshis-per-kilobyte.
     // If you'd pay more than 1/3 in fees
     // to spend something, then we consider it dust.
     // A typical spendable non-segwit txout is 34 bytes big, and will
     // need a CTxIn of at least 148 bytes to spend:
     // so dust is a spendable txout less than
-    // 546*minRelayTxFee/1000 (in satoshis).
+    // 546*minRelayFee/1000 (in satoshis).
     // A typical spendable segwit txout is 31 bytes big, and will
     // need a CTxIn of at least 67 bytes to spend:
     // so dust is a spendable txout less than
-    // 294*minRelayTxFee/1000 (in satoshis).
+    // 294*minRelayFee/1000 (in satoshis).
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
@@ -44,12 +44,12 @@ CAmount GetDustThreshold(const CTxOut& txout)
         nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
     }
 
-    return 3 * ::minRelayTxFee.GetFee(nSize);
+    return 3 * minRelayFee.GetFee(nSize);
 }
 
-bool IsDust(const CTxOut& txout)
+bool CDefaultPolicy::AcceptDust(const CTxOut& txout) const
 {
-    return (txout.nValue < GetDustThreshold(txout));
+    return txout.nValue >= GetDustThreshold(txout);
 }
 
     /**
@@ -143,7 +143,7 @@ bool IsStandardTx(const CTransaction& tx, std::string& reason, const bool witnes
         else if ((whichType == TX_MULTISIG) && (!fIsBareMultisigStd)) {
             reason = "bare-multisig";
             return false;
-        } else if (IsDust(txout)) {
+        } else if (!globalPolicy->AcceptDust(txout)) {
             reason = "dust";
             return false;
         }

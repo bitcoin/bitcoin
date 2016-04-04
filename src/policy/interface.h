@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+class CTxOut;
+
 /**
  * Abstract interface for extensible policy.
  */
@@ -17,6 +19,10 @@ class CPolicy
 {
 public:
     virtual ~CPolicy() {}; // Extend before instantiate, this is an interface
+
+    //! Some policies forbid output amounts below the dust threshold, defined internally.
+    virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
+    virtual bool AcceptDust(const CTxOut& txout) const = 0;
 
     /**
      * @return a vector with strings {"option", "description"} pairs, with the policy options.

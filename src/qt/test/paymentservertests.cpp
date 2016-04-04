@@ -8,6 +8,8 @@
 #include "paymentrequestdata.h"
 
 #include "amount.h"
+#include "main.h" // For globalPolicy
+#include "policy/policy.h"
 #include "random.h"
 #include "script/script.h"
 #include "script/standard.h"
@@ -65,6 +67,7 @@ static SendCoinsRecipient handleRequest(PaymentServer* server, std::vector<unsig
 void PaymentServerTests::paymentServerTests()
 {
     SelectParams(CBaseChainParams::MAIN);
+    globalPolicy.reset(Policy::Factory(Policy::STANDARD)); // TODO remove
     OptionsModel optionsModel;
     PaymentServer* server = new PaymentServer(NULL, false);
     X509_STORE* caStore = X509_STORE_new();
