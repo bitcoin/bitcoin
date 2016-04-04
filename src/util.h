@@ -14,6 +14,7 @@
 #include "config/bitcoin-config.h"
 #endif
 
+#include "amount.h"
 #include "compat.h"
 #include "tinyformat.h"
 #include "utiltime.h"
@@ -131,6 +132,7 @@ inline bool IsSwitchChar(char c)
  * @return command-line argument or default value
  */
 std::string GetArg(const std::string& strArg, const std::string& strDefault);
+std::string GetArg(const std::string& strArg, const std::string& strDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**
  * Return integer argument or default value
@@ -140,6 +142,7 @@ std::string GetArg(const std::string& strArg, const std::string& strDefault);
  * @return command-line argument (0 if invalid number) or default value
  */
 int64_t GetArg(const std::string& strArg, int64_t nDefault);
+int64_t GetArg(const std::string& strArg, int64_t nDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**
  * Return boolean argument or default value
@@ -149,6 +152,24 @@ int64_t GetArg(const std::string& strArg, int64_t nDefault);
  * @return command-line argument or default value
  */
 bool GetBoolArg(const std::string& strArg, bool fDefault);
+bool GetBoolArg(const std::string& strArg, bool fDefault, const std::map<std::string, std::string>& mapArgs);
+
+/**
+ * @param strUsage a string where the options' help with me appended
+ * @param optionsHelp a vector of string pairs to iteratively call HelpMessageOpt
+ */
+void AppendMessagesOpt(std::string& strUsage, const std::vector<std::pair<std::string, std::string> >& optionsHelp);
+
+/**
+ * Return an CAmount argument or default value
+ *
+ * @param strArg Argument to get (e.g. "-foo")
+ * @param default a string with an amount
+ * @param map with the arguments and their values.
+ * @return command-line argument or default value
+ * @throw std::runtime_error if there's a parsing error.
+ */
+CAmount ParseAmountFromArgs(const std::string& strArg, CAmount nDefault, const std::map<std::string, std::string>& mapArgs);
 
 /**
  * Set an argument if it doesn't already have a value
