@@ -78,11 +78,8 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
-void EditOfferDialog::on_aliasPegEdit_textChanged(const QString& text)
+void EditOfferDialog::on_aliasPegEdit_editingFinished(const QString& text)
 {
-QMessageBox::warning(this, windowTitle(),
-			tr("Warning: %1 alias!").arg(text),
-				QMessageBox::Ok, QMessageBox::Ok);
 	CAmount nFee;
 	vector<string> rateList;
 	int precision;
