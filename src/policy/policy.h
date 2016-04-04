@@ -98,6 +98,7 @@ protected:
 public:
     CDefaultPolicy(const CFeeRate& minRelayFeeIn=CFeeRate(DEFAULT_MIN_RELAY_TX_FEE)) : minRelayFee(minRelayFeeIn) {};
 
+    virtual CFeeRate GetMinRelayFee() const { return minRelayFee; };
     virtual CAmount GetDustThreshold(const CTxOut& txout) const;
     virtual bool AcceptDust(const CTxOut& txout) const;
 

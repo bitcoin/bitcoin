@@ -9,6 +9,7 @@
 #include "main.h"
 #include "net.h"
 #include "netbase.h"
+#include "policy/interface.h"
 #include "protocol.h"
 #include "sync.h"
 #include "timedata.h"
@@ -441,7 +442,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
         obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
     }
     obj.push_back(Pair("networks",      GetNetworksInfo()));
-    obj.push_back(Pair("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    obj.push_back(Pair("relayfee",      ValueFromAmount(globalPolicy->GetMinRelayFee().GetFeePerK())));
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(cs_mapLocalHost);

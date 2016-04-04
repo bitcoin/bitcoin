@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+class CFeeRate;
 class CTxOut;
 
 /**
@@ -20,6 +21,8 @@ class CPolicy
 public:
     virtual ~CPolicy() {}; // Extend before instantiate, this is an interface
 
+    /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
+    virtual CFeeRate GetMinRelayFee() const = 0;
     //! Some policies forbid output amounts below the dust threshold, defined internally.
     virtual CAmount GetDustThreshold(const CTxOut& txout) const = 0;
     virtual bool AcceptDust(const CTxOut& txout) const = 0;

@@ -957,6 +957,7 @@ bool AppInitParameterInteraction()
     } catch(const std::exception& e) {
         return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
     }
+    const CPolicy& policy = *globalPolicy;
 
     fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
     if (chainparams.RequireStandard() && !fRequireStandard)
@@ -964,7 +965,7 @@ bool AppInitParameterInteraction()
     nBytesPerSigOp = GetArg("-bytespersigop", nBytesPerSigOp);
 
 #ifdef ENABLE_WALLET
-    if (!CWallet::ParameterInteraction())
+    if (!CWallet::ParameterInteraction(policy))
         return false;
 #endif
 

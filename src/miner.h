@@ -156,13 +156,14 @@ private:
     int nHeight;
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
+    const CPolicy& policy;
 
     // Variables used for addPriorityTxs
     int lastFewTxs;
     bool blockFinished;
 
 public:
-    BlockAssembler(const CChainParams& chainparams);
+    BlockAssembler(const CChainParams& chainparams, const CPolicy& policy);
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
 
