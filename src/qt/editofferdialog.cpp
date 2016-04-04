@@ -328,6 +328,7 @@ void EditOfferDialog::loadRow(int row)
 				ui->qtyEdit->setText(qtyStr);
 		}
 	}
+	on_aliasPegEdit_editingFinished();
 }
 
 bool EditOfferDialog::saveCurrentRow()
