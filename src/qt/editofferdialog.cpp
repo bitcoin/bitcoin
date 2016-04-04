@@ -52,6 +52,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 		ui->offerLabel->setVisible(false);
 		ui->offerEdit->setVisible(false);
 		ui->aliasPegEdit->setText(tr("SYS_RATES"));
+		on_aliasPegEdit_editingFinished();
 		ui->privateEdit->setCurrentIndex(ui->privateEdit->findText("Yes"));
 		ui->privateEdit->setEnabled(false);
         setWindowTitle(tr("New Offer"));
@@ -65,6 +66,8 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
     case NewCertOffer:
 		ui->aliasEdit->setEnabled(false);
 		ui->offerLabel->setVisible(false);
+		ui->aliasPegEdit->setText(tr("SYS_RATES"));
+		on_aliasPegEdit_editingFinished();
 		ui->privateEdit->setCurrentIndex(ui->privateEdit->findText("Yes"));
 		ui->privateEdit->setEnabled(false);
 		ui->offerEdit->setVisible(false);
