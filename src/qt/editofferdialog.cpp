@@ -86,7 +86,7 @@ void EditOfferDialog::on_aliasPegEdit_editingFinished()
 	if(getCurrencyToSYSFromAlias(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
 	{
 		QMessageBox::warning(this, windowTitle(),
-			tr("Warning: %1 alias not found. No currency information available for %2!").arg(text).arg(ui->currencyEdit->currentText()),
+			tr("Warning: %1 alias not found. No currency information available for %2!").arg(ui->aliasPegEdit->text()).arg(ui->currencyEdit->currentText()),
 				QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
