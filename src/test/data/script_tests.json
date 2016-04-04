@@ -1,5 +1,5 @@
 [
-["Format is: [scriptSig, scriptPubKey, flags, expected_scripterror, ... comments]"],
+["Format is: [[wit...]?, scriptSig, scriptPubKey, flags, expected_scripterror, ... comments]"],
 ["It is evaluated as if there was a crediting coinbase transaction with two 0"],
 ["pushes as scriptSig, and one output of 0 satoshi and given scriptPubKey,"],
 ["followed by a spending transaction which spends this output as only input (and"],
@@ -1252,6 +1252,12 @@
 ["0x17 0x3014020002107777777777777777777777777777777701", "0 CHECKSIG NOT", "DERSIG", "SIG_DER", "Zero-length R is incorrectly encoded for DERSIG"],
 ["0x17 0x3014021077777777777777777777777777777777020001", "0 CHECKSIG NOT", "DERSIG", "SIG_DER", "Zero-length S is incorrectly encoded for DERSIG"],
 ["0x27 0x302402107777777777777777777777777777777702108777777777777777777777777777777701", "0 CHECKSIG NOT", "DERSIG", "SIG_DER", "Negative S is incorrectly encoded for DERSIG"],
+
+["Some basic segwit checks"],
+[["00"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "EVAL_FALSE", "Invalid witness script"],
+[["51"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "WITNESS_PROGRAM_MISMATCH", "Witness script hash mismatch"],
+[["00"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Invalid witness script without WITNESS"],
+[["51"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Witness script hash mismatch without WITNESS"],
 
 ["Automatically generated test cases"],
 [
