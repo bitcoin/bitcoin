@@ -21,15 +21,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
     ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);
-	CAmount nFee;
-	vector<string> rateList;
-	int precision;
-	if(getCurrencyToSYSFromAlias(vchFromString("SYS_RATES"), vchFromString("USD"), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
-	{
-		QMessageBox::warning(this, windowTitle(),
-			tr("Warning: SYS_RATES alias not found. No currency information available!"),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
+
 	ui->aliasPegDisclaimer->setText(tr("<font color='blue'>Choose an alias which has peg information to allow exchange of currencies into SYS amounts based on the pegged values. Consumers will pay amounts based on this peg, the alias must be managed effectively or you may end up selling your offers for unexpected amounts.</font>"));
 	ui->aliasDisclaimer->setText(tr("<font color='blue'>Select an alias to own this offer</font>"));
 	ui->privateDisclaimer->setText(tr("<font color='blue'>All offers are first listed as private. If you would like your offer to be public, please edit it after it is created.</font>"));
@@ -47,17 +39,13 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 	ui->acceptBTCOnlyEdit->addItem(QString("No"));
 	ui->acceptBTCOnlyEdit->addItem(QString("Yes"));
 	ui->btcOnlyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Bitcoin if you have selected <b>Yes</b> to this option and <b>BTC</b> as the currency for the offer.</font>"));
-	for(int i =0;i<rateList.size();i++)
-	{
-		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
-	}
 	cert = strCert;
 	ui->certEdit->clear();
 	ui->certEdit->addItem(tr("Select Certificate (optional)"));
 	connect(ui->certEdit, SIGNAL(currentIndexChanged(int)), this, SLOT(certChanged(int)));
 	loadAliases();
 	loadCerts();
-	
+	connect(ui->aliasPegEdit, SIGNAL(editingFinished(QString)), this, SLOT(onTextChanged(QString)))
 	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
     {
@@ -90,6 +78,27 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 	}
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
+}
+void EditOfferDialog::onTextChanged(const QString& text)
+{
+QMessageBox::warning(this, windowTitle(),
+			tr("Warning: %1 alias!").arg(text),
+				QMessageBox::Ok, QMessageBox::Ok);
+	CAmount nFee;
+	vector<string> rateList;
+	int precision;
+	if(getCurrencyToSYSFromAlias(vchFromString(text.toStdString()), vchFromString("USD"), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
+	{
+		QMessageBox::warning(this, windowTitle(),
+			tr("Warning: %1 alias not found. No currency information available!").arg(text),
+				QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+	ui->currencyEdit->clear();
+	for(int i =0;i<rateList.size();i++)
+	{
+		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
+	}
 }
 void EditOfferDialog::certChanged(int index)
 {
