@@ -6,6 +6,7 @@
 #ifndef BITCOIN_POLICY_POLICY_H
 #define BITCOIN_POLICY_POLICY_H
 
+#include "amount.h"
 #include "consensus/consensus.h"
 #include "feerate.h"
 #include "interface.h"
@@ -91,8 +92,11 @@ static const std::string STANDARD = "standard";
  */
 class CDefaultPolicy : public CPolicy
 {
+protected:
+    /** A fee rate smaller than this is considered zero fee (for relaying, mining and transaction creation) */
+    CFeeRate minRelayFee;
 public:
-    CDefaultPolicy() {};
+    CDefaultPolicy(const CFeeRate& minRelayFeeIn=CFeeRate(DEFAULT_MIN_RELAY_TX_FEE)) : minRelayFee(minRelayFeeIn) {};
 
     virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
     virtual void InitFromArgs(const std::map<std::string, std::string>& argMap);

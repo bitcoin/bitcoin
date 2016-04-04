@@ -447,8 +447,6 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-maxsigcachesize=<n>", strprintf("Limit size of signature cache to <n> MiB (default: %u)", DEFAULT_MAX_SIG_CACHE_SIZE));
         strUsage += HelpMessageOpt("-maxtipage=<n>", strprintf("Maximum tip age in seconds to consider node in initial block download (default: %u)", DEFAULT_MAX_TIP_AGE));
     }
-    strUsage += HelpMessageOpt("-minrelaytxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)"),
-        CURRENCY_UNIT, FormatMoney(DEFAULT_MIN_RELAY_TX_FEE)));
     strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)"),
         CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MAXFEE)));
     strUsage += HelpMessageOpt("-printtoconsole", _("Send trace/debug info to console instead of debug.log file"));
@@ -958,21 +956,6 @@ bool AppInitParameterInteraction()
         globalPolicy.reset(pPolicy);
     } catch(const std::exception& e) {
         return InitError(strprintf(_("Error while initializing policy: %s"), e.what()));
-    }
-
-    // Fee-per-kilobyte amount considered the same as "free"
-    // If you are mining, be careful setting this:
-    // if you set it to zero then
-    // a transaction spammer can cheaply fill blocks using
-    // 1-satoshi-fee transactions. It should be set above the real
-    // cost to you of processing a transaction.
-    if (mapArgs.count("-minrelaytxfee"))
-    {
-        CAmount n = 0;
-        if (!ParseMoney(mapArgs["-minrelaytxfee"], n) || 0 == n)
-            return InitError(AmountErrMsg("minrelaytxfee", mapArgs["-minrelaytxfee"]));
-        // High fee check is done afterward in CWallet::ParameterInteraction()
-        ::minRelayTxFee = CFeeRate(n);
     }
 
     fRequireStandard = !GetBoolArg("-acceptnonstdtxn", !chainparams.RequireStandard());
