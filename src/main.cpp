@@ -5560,6 +5560,29 @@ bool ProcessMessages(CNode* pfrom)
     return fOk;
 }
 
+class CompareInvMempoolOrder
+{
+    CTxMemPool *mp;
+public:
+    CompareInvMempoolOrder(CTxMemPool *mempool)
+    {
+        mp = mempool;
+    }
+
+    bool operator()(const CInv &a, const CInv &b)
+    {
+        if (a.type != MSG_TX && b.type != MSG_TX) {
+            return false;
+        } else {
+            if (a.type != MSG_TX) {
+                return true;
+            } else if (b.type != MSG_TX) {
+                return false;
+            }
+            return mp->CompareDepthAndScore(a.hash, b.hash);
+        }
+    }
+};
 
 bool SendMessages(CNode* pto)
 {
@@ -5790,42 +5813,31 @@ bool SendMessages(CNode* pto)
             bool fSendTrickle = pto->fWhitelisted;
             if (pto->nNextInvSend < nNow) {
                 fSendTrickle = true;
-                pto->nNextInvSend = PoissonNextSend(nNow, AVG_INVENTORY_BROADCAST_INTERVAL);
+                // Use half the delay for outbound peers, as their is less privacy concern for them.
+                pto->nNextInvSend = PoissonNextSend(nNow, INVENTORY_BROADCAST_INTERVAL >> !pto->fInbound);
             }
             LOCK(pto->cs_inventory);
-            vInv.reserve(std::min<size_t>(1000, pto->vInventoryToSend.size()));
+            if (fSendTrickle && pto->vInventoryToSend.size() > 1) {
+                // Topologically and fee-rate sort the inventory we send for privacy and priority reasons.
+                CompareInvMempoolOrder compareInvMempoolOrder(&mempool);
+                std::stable_sort(pto->vInventoryToSend.begin(), pto->vInventoryToSend.end(), compareInvMempoolOrder);
+            }
+            vInv.reserve(std::min<size_t>(INVENTORY_BROADCAST_MAX, pto->vInventoryToSend.size()));
             vInvWait.reserve(pto->vInventoryToSend.size());
             BOOST_FOREACH(const CInv& inv, pto->vInventoryToSend)
             {
                 if (inv.type == MSG_TX && pto->filterInventoryKnown.contains(inv.hash))
                     continue;
-
-                // trickle out tx inv to protect privacy
-                if (inv.type == MSG_TX && !fSendTrickle)
-                {
-                    // 1/4 of tx invs blast to all immediately
-                    static uint256 hashSalt;
-                    if (hashSalt.IsNull())
-                        hashSalt = GetRandHash();
-                    uint256 hashRand = ArithToUint256(UintToArith256(inv.hash) ^ UintToArith256(hashSalt));
-                    hashRand = Hash(BEGIN(hashRand), END(hashRand));
-                    bool fTrickleWait = ((UintToArith256(hashRand) & 3) != 0);
-
-                    if (fTrickleWait)
-                    {
-                        vInvWait.push_back(inv);
-                        continue;
-                    }
+                // No reason to drain out at many times the network's capacity,
+                // especially since we have many peers and some will draw much shorter delays.
+                if (vInv.size() >= INVENTORY_BROADCAST_MAX || (inv.type == MSG_TX && !fSendTrickle)) {
+                    vInvWait.push_back(inv);
+                    continue;
                 }
 
                 pto->filterInventoryKnown.insert(inv.hash);
 
                 vInv.push_back(inv);
-                if (vInv.size() >= 1000)
-                {
-                    pto->PushMessage(NetMsgType::INV, vInv);
-                    vInv.clear();
-                }
             }
             pto->vInventoryToSend = vInvWait;
         }
