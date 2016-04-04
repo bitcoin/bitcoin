@@ -93,11 +93,19 @@ void EditOfferDialog::on_aliasPegEdit_editingFinished()
 				QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
+	bool disabled = false;
+	if(!ui->currencyEdit->isEnabled())
+	{
+		disabled = true;
+		ui->currencyEdit->setEnabled(true);
+	}
 	ui->currencyEdit->clear();
 	for(int i =0;i<rateList.size();i++)
 	{
 		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
 	}
+	if(disabled)
+		ui->currencyEdit->setEnabled(false);
 }
 void EditOfferDialog::certChanged(int index)
 {
