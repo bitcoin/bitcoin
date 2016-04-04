@@ -8,6 +8,7 @@
 
 #include "consensus/consensus.h"
 #include "feerate.h"
+#include "interface.h"
 #include "script/interpreter.h"
 #include "script/standard.h"
 
@@ -65,6 +66,35 @@ static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_
 /** Used as the flags parameter to sequence and nLocktime checks in non-consensus code. */
 static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_VERIFY_SEQUENCE |
                                                            LOCKTIME_MEDIAN_TIME_PAST;
+namespace Policy {
+
+/**
+ * Append a help string for the options of the selected policy.
+ * @param strUsage a formatted HelpMessage string with policy options
+ * is appended to this string
+ */
+void AppendHelpMessages(std::string& strUsage, bool showDebug);
+/**
+ * Factory for the interface from a string.
+ */
+CPolicy* Factory(const std::string& name);
+
+/** Supported policies */
+static const std::string STANDARD = "standard";
+
+} // namespace Policy
+
+/**
+ * Standard implementation 
+ */
+class CDefaultPolicy : public CPolicy
+{
+public:
+    CDefaultPolicy() {};
+
+    virtual std::vector<std::pair<std::string, std::string> > GetOptionsHelp() const;
+    virtual void InitFromArgs(const std::map<std::string, std::string>& argMap);
+};
 
 CAmount GetDustThreshold(const CTxOut& txout);
 

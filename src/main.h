@@ -37,6 +37,7 @@ class CBloomFilter;
 class CChainParams;
 class CInv;
 class CConnman;
+class CPolicy;
 class CScriptCheck;
 class CTxMemPool;
 class CValidationInterface;
@@ -157,6 +158,7 @@ struct BlockHasher
 
 extern CScript COINBASE_FLAGS;
 extern CCriticalSection cs_main;
+extern std::unique_ptr<CPolicy> globalPolicy;
 extern CTxMemPool mempool;
 typedef boost::unordered_map<uint256, CBlockIndex*, BlockHasher> BlockMap;
 extern BlockMap mapBlockIndex;

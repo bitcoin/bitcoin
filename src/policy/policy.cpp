@@ -254,3 +254,31 @@ int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOpCost)
 {
     return GetVirtualTransactionSize(GetTransactionWeight(tx), nSigOpCost);
 }
+
+/** CDefaultPolicy initialization */
+
+std::vector<std::pair<std::string, std::string> > CDefaultPolicy::GetOptionsHelp() const
+{
+    std::vector<std::pair<std::string, std::string> > optionsHelp;
+    return optionsHelp;
+}
+
+void CDefaultPolicy::InitFromArgs(const std::map<std::string, std::string>& mapArgs)
+{
+}
+
+/** Factory and init help */
+
+void Policy::AppendHelpMessages(std::string& strUsage, bool showDebug)
+{
+    const std::unique_ptr<CPolicy> defaultPolicy(Policy::Factory(Policy::STANDARD));
+    strUsage += HelpMessageGroup(strprintf(_("Policy options: (for policy: %s)"), Policy::STANDARD));
+    AppendMessagesOpt(strUsage, defaultPolicy->GetOptionsHelp());
+}
+
+CPolicy* Policy::Factory(const std::string& name)
+{
+    if (name == Policy::STANDARD)
+        return new CDefaultPolicy();
+    return NULL;
+}
