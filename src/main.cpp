@@ -1414,6 +1414,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+        if (fAddressIndex) {
+            pool.addAddressIndex(entry, view);
+        }
 
         // trim mempool and check if tx was trimmed
         if (!fOverrideMempoolLimit) {

@@ -7,6 +7,7 @@
 # Test addressindex generation and fetching
 #
 
+import time
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
@@ -25,7 +26,7 @@ class AddressIndexTest(BitcoinTestFramework):
         self.nodes.append(start_node(0, self.options.tmpdir, ["-debug"]))
         self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-addressindex"]))
         # Nodes 2/3 are used for testing
-        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug"]))
+        self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-addressindex"]))
         self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-addressindex"]))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
@@ -206,6 +207,43 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(utxos3[0]["height"], 114)
         assert_equal(utxos3[1]["height"], 264)
         assert_equal(utxos3[2]["height"], 265)
+
+        # Check mempool indexing
+        print "Testing mempool indexing..."
+
+        privKey3 = "cVfUn53hAbRrDEuMexyfgDpZPhF7KqXpS8UZevsyTDaugB7HZ3CD"
+        address3 = "mw4ynwhS7MmrQ27hr82kgqu7zryNDK26JB"
+        addressHash3 = "aa9872b5bbcdb511d89e0e11aa27da73fd2c3f50".decode("hex")
+        scriptPubKey3 = CScript([OP_DUP, OP_HASH160, addressHash3, OP_EQUALVERIFY, OP_CHECKSIG])
+        unspent = self.nodes[2].listunspent()
+
+        tx = CTransaction()
+        tx.vin = [CTxIn(COutPoint(int(unspent[0]["txid"], 16), unspent[0]["vout"]))]
+        amount = unspent[0]["amount"] * 100000000
+        tx.vout = [CTxOut(amount, scriptPubKey3)]
+        tx.rehash()
+        signed_tx = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], True)
+        time.sleep(2)
+
+        tx2 = CTransaction()
+        tx2.vin = [CTxIn(COutPoint(int(unspent[1]["txid"], 16), unspent[1]["vout"]))]
+        amount = unspent[1]["amount"] * 100000000
+        tx2.vout = [CTxOut(amount, scriptPubKey3)]
+        tx2.rehash()
+        signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
+        memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
+        time.sleep(2)
+
+        mempool = self.nodes[2].getaddressmempool({"addresses": [address3]})
+        assert_equal(len(mempool), 2)
+        assert_equal(mempool[0]["txid"], memtxid1)
+        assert_equal(mempool[1]["txid"], memtxid2)
+
+        self.nodes[2].generate(1);
+        self.sync_all();
+        mempool2 = self.nodes[2].getaddressmempool({"addresses": [address3]})
+        assert_equal(len(mempool2), 0)
 
         print "Passed\n"
 

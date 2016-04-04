@@ -11,6 +11,7 @@
 #include "netbase.h"
 #include "rpcserver.h"
 #include "timedata.h"
+#include "txmempool.h"
 #include "util.h"
 #include "utilstrencodings.h"
 #ifdef ENABLE_WALLET
@@ -436,6 +437,51 @@ bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint16
 bool heightSort(std::pair<CAddressUnspentKey, CAddressUnspentValue> a,
                 std::pair<CAddressUnspentKey, CAddressUnspentValue> b) {
     return a.second.blockHeight < b.second.blockHeight;
+}
+
+bool timestampSort(std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> a,
+                   std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> b) {
+    return a.second.time < b.second.time;
+}
+
+UniValue getaddressmempool(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "getaddressmempool\n"
+            "\nReturns all mempool deltas for an address (requires addressindex to be enabled).\n"
+            );
+
+    std::vector<std::pair<uint160, int> > addresses;
+
+    if (!getAddressesFromParams(params, addresses)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+
+    std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> > indexes;
+
+    if (!mempool.getAddressIndex(addresses, indexes)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+    }
+
+    std::sort(indexes.begin(), indexes.end(), timestampSort);
+
+    UniValue result(UniValue::VARR);
+
+    for (std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> >::iterator it = indexes.begin();
+         it != indexes.end(); it++) {
+
+        UniValue delta(UniValue::VOBJ);
+        delta.push_back(Pair("addressType", (int)it->first.type));
+        delta.push_back(Pair("addressHash", it->first.addressBytes.GetHex()));
+        delta.push_back(Pair("txid", it->first.txhash.GetHex()));
+        delta.push_back(Pair("index", (int)it->first.index));
+        delta.push_back(Pair("satoshis", it->second.amount));
+        delta.push_back(Pair("timestamp", it->second.time));
+        result.push_back(delta);
+    }
+
+    return result;
 }
 
 UniValue getaddressutxos(const UniValue& params, bool fHelp)
