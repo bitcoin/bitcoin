@@ -38,7 +38,7 @@ public:
 public Q_SLOTS:
     void accept();
 	void certChanged(int);
-	void onTextChanged(const QString& text);
+	void on_aliasPegEdit_textChanged(const QString& text);
 private:
     bool saveCurrentRow();
 	void loadCerts();
