@@ -45,7 +45,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 	connect(ui->certEdit, SIGNAL(currentIndexChanged(int)), this, SLOT(certChanged(int)));
 	loadAliases();
 	loadCerts();
-	connect(ui->aliasPegEdit, SIGNAL(editingFinished(QString)), this, SLOT(onTextChanged(QString)));
+	connect(ui->aliasPegEdit, SIGNAL(editingFinished(const QString &)), this, SLOT(onTextChanged(const QString &)));
 	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
     {
