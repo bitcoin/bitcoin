@@ -264,7 +264,7 @@ class FeeFilterRounder
 {
 public:
     /** Create new FeeFilterRounder */
-    FeeFilterRounder(const CFeeRate& minIncrementalFee);
+    FeeFilterRounder();
 
     /** Quantize a minimum fee for privacy purpose before broadcast **/
     CAmount round(CAmount currentMinFee);
