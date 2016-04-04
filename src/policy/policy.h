@@ -40,13 +40,15 @@ static const unsigned int STANDARD_SCRIPT_VERIFY_FLAGS = MANDATORY_SCRIPT_VERIFY
                                                          SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_NOPS |
                                                          SCRIPT_VERIFY_CLEANSTACK |
                                                          SCRIPT_VERIFY_CHECKLOCKTIMEVERIFY |
+                                                         SCRIPT_VERIFY_CHECKSEQUENCEVERIFY |
                                                          SCRIPT_VERIFY_LOW_S;
 
 /** For convenience, standard but not mandatory verify flags. */
 static const unsigned int STANDARD_NOT_MANDATORY_VERIFY_FLAGS = STANDARD_SCRIPT_VERIFY_FLAGS & ~MANDATORY_SCRIPT_VERIFY_FLAGS;
 
-/** Used as the flags parameter to CheckFinalTx() in non-consensus code */
-static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_MEDIAN_TIME_PAST;
+/** Used as the flags parameter to sequence and nLocktime checks in non-consensus code. */
+static const unsigned int STANDARD_LOCKTIME_VERIFY_FLAGS = LOCKTIME_VERIFY_SEQUENCE |
+                                                           LOCKTIME_MEDIAN_TIME_PAST;
 
 bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType);
     /**
