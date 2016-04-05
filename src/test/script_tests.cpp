@@ -381,6 +381,18 @@ public:
         return creditTx.vout[0].scriptPubKey;
     }
 };
+
+std::string JSONPrettyPrint(const UniValue& univalue)
+{
+    std::string ret = univalue.write(4);
+    // Workaround for libunivalue pretty printer, which puts a space between comma's and newlines
+    size_t pos = 0;
+    while ((pos = ret.find(" \n", pos)) != std::string::npos) {
+        ret.replace(pos, 2, "\n");
+        pos++;
+    }
+    return ret;
+}
 }
 
 BOOST_AUTO_TEST_CASE(script_build)
@@ -651,11 +663,11 @@ BOOST_AUTO_TEST_CASE(script_build)
 
         for (unsigned int idx = 0; idx < json_good.size(); idx++) {
             const UniValue& tv = json_good[idx];
-            tests_good.insert(tv.get_array().write(1,4));
+            tests_good.insert(JSONPrettyPrint(tv.get_array()));
         }
         for (unsigned int idx = 0; idx < json_bad.size(); idx++) {
             const UniValue& tv = json_bad[idx];
-            tests_bad.insert(tv.get_array().write(1,4));
+            tests_bad.insert(JSONPrettyPrint(tv.get_array()));
         }
     }
 
@@ -664,7 +676,7 @@ BOOST_AUTO_TEST_CASE(script_build)
 
     BOOST_FOREACH(TestBuilder& test, good) {
         test.Test(true);
-        std::string str = test.GetJSON().write(1,4);
+        std::string str = JSONPrettyPrint(test.GetJSON());
 #ifndef UPDATE_JSON_TESTS
         if (tests_good.count(str) == 0) {
             BOOST_CHECK_MESSAGE(false, "Missing auto script_valid test: " + test.GetComment());
@@ -674,7 +686,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     }
     BOOST_FOREACH(TestBuilder& test, bad) {
         test.Test(false);
-        std::string str = test.GetJSON().write(1,4);
+        std::string str = JSONPrettyPrint(test.GetJSON());
 #ifndef UPDATE_JSON_TESTS
         if (tests_bad.count(str) == 0) {
             BOOST_CHECK_MESSAGE(false, "Missing auto script_invalid test: " + test.GetComment());
