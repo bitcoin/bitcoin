@@ -791,6 +791,7 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
             int nSizeThinBlock = ::GetSerializeSize(xThinBlock, SER_NETWORK, PROTOCOL_VERSION);
             if (nSizeThinBlock < nSizeBlock) {
                 pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
+                CThinBlockStats::UpdateOutBound(nSizeThinBlock, nSizeBlock);
                 LogPrint("thin", "TX HASH COLLISION: Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(), pfrom->id);
             }
             else {
@@ -803,6 +804,7 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
             // Only send a thinblock if smaller than a regular block
             int nSizeThinBlock = ::GetSerializeSize(xThinBlock, SER_NETWORK, PROTOCOL_VERSION);
             if (nSizeThinBlock < nSizeBlock) {
+                CThinBlockStats::UpdateOutBound(nSizeThinBlock, nSizeBlock);
                 pfrom->PushMessage(NetMsgType::XTHINBLOCK, xThinBlock);
                 LogPrint("thin", "Sent xthinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, xThinBlock.vTxHashes.size(), xThinBlock.vMissingTx.size(), pfrom->id);
             }
@@ -818,6 +820,7 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
         int nSizeBlock = ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION);
         int nSizeThinBlock = ::GetSerializeSize(thinBlock, SER_NETWORK, PROTOCOL_VERSION);
         if (nSizeThinBlock < nSizeBlock) { // Only send a thinblock if smaller than a regular block
+            CThinBlockStats::UpdateOutBound(nSizeThinBlock, nSizeBlock);
             pfrom->PushMessage(NetMsgType::THINBLOCK, thinBlock);
             LogPrint("thin", "Sent thinblock - size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.vMissingTx.size(), pfrom->id);
         }

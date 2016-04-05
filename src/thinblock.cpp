@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "thinblock.h"
+#include "utiltime.h"
 #include <sstream>
 #include <iomanip>
 
@@ -10,6 +11,8 @@
 CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize",STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize",STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks",STAT_OP_SUM | STAT_KEEP);
+std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
+std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
 
 
 CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
@@ -96,31 +99,87 @@ CXRequestThinBlockTx::CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>
     setCheapHashesToRequest = setHashesToRequest;
 }
 
-
-
-void CThinBlockStats::Update(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
+void CThinBlockStats::UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
 {
-	CThinBlockStats::nOriginalSize += nOriginalBlockSize;
-	CThinBlockStats::nThinSize += nThinBlockSize;
-	CThinBlockStats::nBlocks+=1;
+    CThinBlockStats::nOriginalSize += nOriginalBlockSize;
+    CThinBlockStats::nThinSize += nThinBlockSize;
+    CThinBlockStats::nBlocks += 1;
+    CThinBlockStats::mapThinBlocksInBound[GetTimeMillis()] = std::pair<uint64_t, uint64_t>(nThinBlockSize, nOriginalBlockSize);
+
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksInBound.begin(); mi != CThinBlockStats::mapThinBlocksInBound.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapThinBlocksInBound.erase(mi);
+    }
 }
 
+void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
+{
+    CThinBlockStats::nOriginalSize += nOriginalBlockSize;
+    CThinBlockStats::nThinSize += nThinBlockSize;
+    CThinBlockStats::nBlocks += 1;
+    CThinBlockStats::mapThinBlocksOutBound[GetTimeMillis()] = std::pair<uint64_t, uint64_t>(nThinBlockSize, nOriginalBlockSize);
 
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksOutBound.begin(); mi != CThinBlockStats::mapThinBlocksOutBound.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapThinBlocksOutBound.erase(mi);
+    }
+}
 std::string CThinBlockStats::ToString()
 {
-	static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
-	int i = 0;
-	double size = double( CThinBlockStats::nOriginalSize() - CThinBlockStats::nThinSize() );
-	while (size > 1024) {
-		size /= 1024;
-		i++;
-	}
+    static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    int i = 0;
+    double size = double( CThinBlockStats::nOriginalSize() - CThinBlockStats::nThinSize() );
+    while (size > 1000) {
+	size /= 1000;
+	i++;
+    }
 
-	std::ostringstream ss;
-	ss << std::fixed << std::setprecision(2);
-	ss << CThinBlockStats::nBlocks() << " thin " << ((CThinBlockStats::nBlocks()!=1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
-	std::string s = ss.str();
-	return s;
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(2);
+    ss << CThinBlockStats::nBlocks() << " thin " << ((CThinBlockStats::nBlocks() > 1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
+    return ss.str();
 }
 
+// Calculate the xthin percentage compression over the last 24 hours
+std::string CThinBlockStats::InBoundPercentToString()
+{
+    double nCompressionRate = 0;
+    uint64_t nThinSizeTotal = 0;
+    uint64_t nOriginalSizeTotal = 0;
+    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksInBound.begin(); mi != CThinBlockStats::mapThinBlocksInBound.end(); ++mi) {
+        nThinSizeTotal += (*mi).second.first;
+        nOriginalSizeTotal += (*mi).second.second;
+    }
 
+    if (nOriginalSizeTotal > 0)
+        nCompressionRate = 100 - (100 * (double)nThinSizeTotal / nOriginalSizeTotal);
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(1);
+    ss << "Compression for Inbound thinblocks (last 24hrs): " << nCompressionRate << "%";
+    return ss.str();
+}
+
+// Calculate the xthin percentage compression over the last 24 hours
+std::string CThinBlockStats::OutBoundPercentToString()
+{
+    double nCompressionRate = 0;
+    uint64_t nThinSizeTotal = 0;
+    uint64_t nOriginalSizeTotal = 0;
+    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksOutBound.begin(); mi != CThinBlockStats::mapThinBlocksOutBound.end(); ++mi) {
+        nThinSizeTotal += (*mi).second.first;
+        nOriginalSizeTotal += (*mi).second.second;
+    }
+
+    if (nOriginalSizeTotal > 0)
+        nCompressionRate = 100 - (100 * (double)nThinSizeTotal / nOriginalSizeTotal);
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(1);
+    ss << "Compression for Outbound thinblocks (last 24hrs): " << nCompressionRate << "%";
+    return ss.str();
+}

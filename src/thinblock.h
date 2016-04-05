@@ -11,7 +11,6 @@
 #include "bloom.h"
 #include "stat.h"
 
-#include <vector>
 
 class CThinBlock
 {
@@ -109,9 +108,15 @@ private:
 	static CStatHistory<uint64_t> nOriginalSize;
 	static CStatHistory<uint64_t> nThinSize;
 	static CStatHistory<uint64_t> nBlocks;
+        static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksInBound;
+        static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
+
 public:
-	static void Update(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+	static void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+	static void UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
 	static std::string ToString();
+        static std::string InBoundPercentToString();
+        static std::string OutBoundPercentToString();
 };
 
 
