@@ -709,7 +709,11 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName,
 }
 
 int GetAliasExpirationDepth() {
-	return 525600;
+	#ifdef ENABLE_DEBUGRPC
+    return 100;
+  #else
+    return 525600;
+  #endif
 }
 bool GetTxOfAlias(const vector<unsigned char> &vchName, 
 				  CAliasIndex& txPos, CTransaction& tx) {

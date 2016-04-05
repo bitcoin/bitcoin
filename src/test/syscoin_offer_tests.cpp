@@ -55,77 +55,6 @@ BOOST_AUTO_TEST_CASE (generate_offernew)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck selleralias1 category title 100 0.05 description ZZZ"), runtime_error);
 }
 
-BOOST_AUTO_TEST_CASE (generate_offerupdate)
-{
-	UniValue r;
-	
-	GenerateBlocks(200);
-	GenerateBlocks(200, "node2");
-	GenerateBlocks(200, "node3");
-
-	AliasNew("node1", "selleralias2", "changeddata1");
-
-	// generate a good offer
-	string offerguid = OfferNew("node1", "selleralias2", "category", "title", "100", "0.05", "description", "USD");
-
-	// perform a valid update
-	OfferUpdate("node1", "selleralias2", offerguid, "category", "titlenew", "90", "0.15", "descriptionnew");
-
-	// should fail: offer cannot be updated by someone other than owner
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0.15 description"), runtime_error);
-
-	// should fail: generate an offer with unknown alias
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
-
-	// should fail: generate an offer with zero price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0 description"), runtime_error);
-
-	// should fail: generate an offer with negative price
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 -0.05 description"), runtime_error);
-
-	// should fail: generate an offer too-large category
-	string s256bytes =   "SfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddz";
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " " + s256bytes + " title 90 0.15 description"), runtime_error);	
-
-	// should fail: generate an offer too-large title
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category " + s256bytes + " 90 0.15 description"), runtime_error);	
-
-	// should fail: generate an offer too-large description
-	string s1024bytes =   "asdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
-	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0.15 " + s1024bytes), runtime_error);
-}
-
-BOOST_AUTO_TEST_CASE (generate_offeraccept)
-{
-	UniValue r;
-	
-	GenerateBlocks(200);
-	GenerateBlocks(200, "node2");
-	GenerateBlocks(200, "node3");
-
-	AliasNew("node1", "selleralias3", "somedata");
-	AliasNew("node2", "buyeralias3", "somedata");
-
-	// generate a good offer
-	string offerguid = OfferNew("node1", "selleralias3", "category", "title", "100", "0.01", "description", "USD");
-
-	// perform a valid accept
-	string acceptguid = OfferAccept("node1", "node2", "buyeralias3", offerguid, "1", "message");
-
-	// should fail: generate an offer accept with too-large message
-	string s1024bytes =   "asdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + s1024bytes), runtime_error);
-
-	// perform an accept on more items than available
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 100 message"), runtime_error);
-
-	// perform an accept on negative quantity
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " -1 message"), runtime_error);
-
-	// perform an accept on zero quantity
-	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 0 message"), runtime_error);
-}
-
 BOOST_AUTO_TEST_CASE (generate_certoffernew)
 {
 	UniValue r;
@@ -213,8 +142,6 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedofferexmode)
 
 	// should fail: attempt to create a linked offer for an exclusive mode product without being on the whitelist
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink selleralias9 " + offerguid + " 5 newdescription"), runtime_error);
-	
-	// should fail: attempt to create a linked offer for an exclusive mode product without being on the whitelist
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offerlink_nocheck selleralias9 " + offerguid + " 5 newdescription"), runtime_error);
 
 	// should succeed: offer seller adds affiliate to whitelist
@@ -243,10 +170,85 @@ BOOST_AUTO_TEST_CASE (generate_offernew_linkedlinkedoffer)
 
 	// should fail: try to generate a linked offer with a linked offer
 	BOOST_CHECK_THROW(r = CallRPC("node3", "offerlink selleralias14 " + lofferguid + " 5 newdescription"), runtime_error);	
-
-	// should fail: try to generate a linked offer with a linked offer
 	BOOST_CHECK_THROW(r = CallRPC("node3", "offerlink_nocheck selleralias14 " + lofferguid + " 5 newdescription"), runtime_error);	
 }
 
+BOOST_AUTO_TEST_CASE (generate_offerupdate)
+{
+	UniValue r;
+	
+	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
+	AliasNew("node1", "selleralias2", "changeddata1");
+
+	// generate a good offer
+	string offerguid = OfferNew("node1", "selleralias2", "category", "title", "100", "0.05", "description", "USD");
+
+	// perform a valid update
+	OfferUpdate("node1", "selleralias2", offerguid, "category", "titlenew", "90", "0.15", "descriptionnew");
+
+	// should fail: offer cannot be updated by someone other than owner
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0.15 description"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offerupdate_nocheck selleralias2 " + offerguid + " category title 90 0.15 description"), runtime_error);
+
+	// should fail: generate an offer with unknown alias
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck fooalias " + offerguid + " category title 90 0.15 description"), runtime_error);
+
+	// should fail: generate an offer with zero price
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0 description"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " category title 90 0 description"), runtime_error);
+
+	// should fail: generate an offer with negative price
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 -0.05 description"), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " category title 90 -0.05 description"), runtime_error);
+
+	// should fail: generate an offer too-large category
+	string s256bytes =   "SfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsfDsdsdsdsfsfsdsfsdsfdsfsdsfdsfsdsfsdSfsdfdfsdsfSfsdfdfsdsDfdfddz";
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " " + s256bytes + " title 90 0.15 description"), runtime_error);	
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " " + s256bytes + " title 90 0.15 description"), runtime_error);	
+
+	// should fail: generate an offer too-large title
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category " + s256bytes + " 90 0.15 description"), runtime_error);	
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " category " + s256bytes + " 90 0.15 description"), runtime_error);	
+
+	// should fail: generate an offer too-large description
+	string s1024bytes =   "asdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate SYS_RATES selleralias2 " + offerguid + " category title 90 0.15 " + s1024bytes), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offerupdate_nocheck selleralias2 " + offerguid + " category title 90 0.15 " + s1024bytes), runtime_error);
+}
+
+BOOST_AUTO_TEST_CASE (generate_offeraccept)
+{
+	UniValue r;
+	
+	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
+	AliasNew("node1", "selleralias3", "somedata");
+	AliasNew("node2", "buyeralias3", "somedata");
+
+	// generate a good offer
+	string offerguid = OfferNew("node1", "selleralias3", "category", "title", "100", "0.01", "description", "USD");
+
+	// perform a valid accept
+	string acceptguid = OfferAccept("node1", "node2", "buyeralias3", offerguid, "1", "message");
+
+	// should fail: generate an offer accept with too-large message
+	string s1024bytes =   "asdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfasdfasdfsadfsadassdsfsdfsdfsdfsdfsdsdfssdsfsdfsdfsdfsdfsdsdfdfsdfsdfsdfsdz";
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 1 " + s1024bytes), runtime_error);
+
+	// perform an accept on more items than available
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 100 message"), runtime_error);
+
+	// perform an accept on negative quantity
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " -1 message"), runtime_error);
+
+	// perform an accept on zero quantity
+	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept buyeralias3 " + offerguid + " 0 message"), runtime_error);
+}
 
 BOOST_AUTO_TEST_SUITE_END ()
