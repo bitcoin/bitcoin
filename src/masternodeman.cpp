@@ -342,7 +342,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
     map<uint256, CMasternodePing>::iterator it4 = mapSeenMasternodePing.begin();
     while(it4 != mapSeenMasternodePing.end()){
         if((*it4).second.sigTime < GetTime() - MASTERNODE_REMOVAL_SECONDS*2){
-            LogPrint("masternode", "CMasternodeMan::CheckAndRemove - Removing expired Masternode ping %s\n", (*it3).second.GetHash().ToString());
+            LogPrint("masternode", "CMasternodeMan::CheckAndRemove - Removing expired Masternode ping %s\n", (*it4).second.GetHash().ToString());
             mapSeenMasternodePing.erase(it4++);
         } else {
             ++it4;
