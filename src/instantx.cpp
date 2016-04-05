@@ -15,7 +15,10 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "spork.h"
+
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
 
 using namespace std;
 using namespace boost;
@@ -48,8 +51,11 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
         CTransaction tx;
         vRecv >> tx;
 
+        // FIXME: this part of simulating inv is not good actually, leaving it only for 12.1 backwards compatibility
+        // and since we are using invs for relaying even initial ix request, this can (and should) be safely removed in 12.2
         CInv inv(MSG_TXLOCK_REQUEST, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
+        GetMainSignals().Inventory(inv.hash);
 
         // have we seen it already?
         if(mapTxLockReq.count(inv.hash) || mapTxLockReqRejected.count(inv.hash)) return;
@@ -88,6 +94,15 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                 tx.GetHash().ToString()
             );
 
+            // Masternodes will sometimes propagate votes before the transaction is known to the client.
+            // If this just happened - update transaction status, try forcing external script notification,
+            // lock inputs and resolve conflicting locks
+            if(IsLockedIXTransaction(tx.GetHash())) {
+                UpdateLockedTransaction(tx, true);
+                LockTransactionInputs(tx);
+                ResolveConflicts(tx);
+            }
+
             return;
 
         } else {
@@ -100,20 +115,8 @@ void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& 
                 tx.GetHash().ToString()
             );
 
-            BOOST_FOREACH(const CTxIn& in, tx.vin){
-                if(!mapLockedInputs.count(in.prevout)){
-                    mapLockedInputs.insert(make_pair(in.prevout, tx.GetHash()));
-                }
-            }
-
-            // resolve conflicts
-            if (IsLockedIXTransaction(tx.GetHash()) && !CheckForConflictingLocks(tx)){
-                LogPrintf("ProcessMessageInstantX::ix - Found Existing Complete IX Lock\n");
-
-                //reprocess the last 15 blocks
-                ReprocessBlocks(15);
-                mapTxLockReq.insert(make_pair(tx.GetHash(), tx));
-            }
+            LockTransactionInputs(tx);
+            ResolveConflicts(tx);
 
             return;
         }
@@ -347,46 +350,25 @@ bool ProcessConsensusVote(CNode* pnode, CConsensusVote& ctx)
     if (i != mapTxLocks.end()){
         (*i).second.AddSignature(ctx);
 
-#ifdef ENABLE_WALLET
-        if(pwalletMain){
-            //when we get back signatures, we'll count them as requests. Otherwise the client will think it didn't propagate.
-            if(pwalletMain->mapRequestCount.count(ctx.txHash))
-                pwalletMain->mapRequestCount[ctx.txHash]++;
-        }
-#endif
-
         int nSignatures = (*i).second.CountSignatures();
         LogPrint("instantx", "InstantX::ProcessConsensusVote - Transaction Lock Votes %d - %s !\n", nSignatures, ctx.GetHash().ToString());
 
         if(nSignatures >= INSTANTX_SIGNATURES_REQUIRED){
             LogPrint("instantx", "InstantX::ProcessConsensusVote - Transaction Lock Is Complete %s !\n", ctx.txHash.ToString());
 
-            CTransaction& tx = mapTxLockReq[ctx.txHash];
-            if(!CheckForConflictingLocks(tx)){
+            // Masternodes will sometimes propagate votes before the transaction is known to the client,
+            // will check for conflicting locks and update transaction status on a new vote message
+            // only after the lock itself has arrived
+            if(!mapTxLockReq.count(ctx.txHash) && !mapTxLockReqRejected.count(ctx.txHash)) return true;
 
-#ifdef ENABLE_WALLET
-                if(pwalletMain){
-                    if(pwalletMain->UpdatedTransaction(ctx.txHash)){
-                        // bumping this to update UI
-                        nCompleteTXLocks++;
-                    }
-                }
-#endif
-
-                if(mapTxLockReq.count(ctx.txHash)){
-                    BOOST_FOREACH(const CTxIn& in, tx.vin){
-                        if(!mapLockedInputs.count(in.prevout)){
-                            mapLockedInputs.insert(make_pair(in.prevout, ctx.txHash));
-                        }
-                    }
-                }
-
-                // resolve conflicts
-
-                //if this tx lock was rejected, we need to remove the conflicting blocks
-                if(mapTxLockReqRejected.count(ctx.txHash)){
-                    //reprocess the last 15 blocks
-                    ReprocessBlocks(15);
+            if(!FindConflictingLocks(mapTxLockReq[ctx.txHash])) { //?????
+                if(mapTxLockReq.count(ctx.txHash)) {
+                    UpdateLockedTransaction(mapTxLockReq[ctx.txHash]);
+                    LockTransactionInputs(mapTxLockReq[ctx.txHash]);
+                } else if(mapTxLockReqRejected.count(ctx.txHash)) {
+                    ResolveConflicts(mapTxLockReqRejected[ctx.txHash]); ///?????
+                } else {
+                    LogPrint("instantx", "InstantX::ProcessConsensusVote - Transaction Lock Request is missing %s ! votes %d\n", ctx.GetHash().ToString(), nSignatures);
                 }
             }
         }
@@ -397,7 +379,43 @@ bool ProcessConsensusVote(CNode* pnode, CConsensusVote& ctx)
     return false;
 }
 
-bool CheckForConflictingLocks(CTransaction& tx)
+void UpdateLockedTransaction(CTransaction& tx, bool fForceNotification) {
+    // there should be no conflicting locks
+    if(FindConflictingLocks(tx)) return;
+    uint256 txHash = tx.GetHash();
+    // there must be a successfully verified lock request
+    if (!mapTxLockReq.count(txHash)) return;
+
+#ifdef ENABLE_WALLET
+    if(pwalletMain && pwalletMain->UpdatedTransaction(txHash)){
+        // bumping this to update UI
+        nCompleteTXLocks++;
+        int nSignatures = GetTransactionLockSignatures(txHash);
+        // a transaction lock must have enough signatures to trigger this notification
+        if(nSignatures == INSTANTX_SIGNATURES_REQUIRED || (fForceNotification && nSignatures > INSTANTX_SIGNATURES_REQUIRED)) {
+            // notify an external script once threshold is reached
+            std::string strCmd = GetArg("-ixnotify", "");
+            if ( !strCmd.empty())
+            {
+                boost::replace_all(strCmd, "%s", txHash.GetHex());
+                boost::thread t(runCommand, strCmd); // thread runs free
+            }
+        }
+    }
+#endif
+}
+
+void LockTransactionInputs(CTransaction& tx) {
+    if(mapTxLockReq.count(tx.GetHash())){
+        BOOST_FOREACH(const CTxIn& in, tx.vin){
+            if(!mapLockedInputs.count(in.prevout)){
+                mapLockedInputs.insert(make_pair(in.prevout, tx.GetHash()));
+            }
+        }
+    }
+}
+
+bool FindConflictingLocks(CTransaction& tx)
 {
     /*
         It's possible (very unlikely though) to get 2 conflicting transaction locks approved by the network.
@@ -409,7 +427,7 @@ bool CheckForConflictingLocks(CTransaction& tx)
     BOOST_FOREACH(const CTxIn& in, tx.vin){
         if(mapLockedInputs.count(in.prevout)){
             if(mapLockedInputs[in.prevout] != tx.GetHash()){
-                LogPrintf("InstantX::CheckForConflictingLocks - found two complete conflicting locks - removing both. %s %s", tx.GetHash().ToString(), mapLockedInputs[in.prevout].ToString());
+                LogPrintf("InstantX::FindConflictingLocks - found two complete conflicting locks - removing both. %s %s", tx.GetHash().ToString(), mapLockedInputs[in.prevout].ToString());
                 if(mapTxLocks.count(tx.GetHash())) mapTxLocks[tx.GetHash()].nExpiration = GetTime();
                 if(mapTxLocks.count(mapLockedInputs[in.prevout])) mapTxLocks[mapLockedInputs[in.prevout]].nExpiration = GetTime();
                 return true;
@@ -418,6 +436,17 @@ bool CheckForConflictingLocks(CTransaction& tx)
     }
 
     return false;
+}
+
+void ResolveConflicts(CTransaction& tx) {
+    // resolve conflicts
+    if (IsLockedIXTransaction(tx.GetHash()) && !FindConflictingLocks(tx)){ //?????
+        LogPrintf("ResolveConflicts - Found Existing Complete IX Lock, resolving...\n");
+
+        //reprocess the last 15 blocks
+        ReprocessBlocks(15);
+        if(!mapTxLockReq.count(tx.GetHash())) mapTxLockReq.insert(make_pair(tx.GetHash(), tx)); //?????
+    }
 }
 
 int64_t GetAverageVoteTime()
@@ -464,6 +493,9 @@ void CleanTransactionLocksList()
 }
 
 bool IsLockedIXTransaction(uint256 txHash) {
+    // there must be a successfully verified lock request...
+    if (!mapTxLockReq.count(txHash)) return false;
+    // ...and corresponding lock must have enough signatures
     std::map<uint256, CTransactionLock>::iterator i = mapTxLocks.find(txHash);
     return i != mapTxLocks.end() && (*i).second.CountSignatures() >= INSTANTX_SIGNATURES_REQUIRED;
 }

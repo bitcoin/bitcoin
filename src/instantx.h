@@ -45,9 +45,6 @@ int64_t CreateNewLock(CTransaction tx);
 
 bool IsIXTXValid(const CTransaction& txCollateral);
 
-// if two conflicting locks are approved by the network, they will cancel out
-bool CheckForConflictingLocks(CTransaction& tx);
-
 void ProcessMessageInstantX(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
 //check if we need to vote on this transaction
@@ -55,6 +52,17 @@ void DoConsensusVote(CTransaction& tx, int64_t nBlockHeight);
 
 //process consensus vote message
 bool ProcessConsensusVote(CNode *pnode, CConsensusVote& ctx);
+
+//update UI and notify external script if any
+void UpdateLockedTransaction(CTransaction& tx, bool fForceNotification = false);
+
+void LockTransactionInputs(CTransaction& tx);
+
+// if two conflicting locks are approved by the network, they will cancel out
+bool FindConflictingLocks(CTransaction& tx);
+
+//try to resolve conflicting locks
+void ResolveConflicts(CTransaction& tx);
 
 // keep transaction locks in memory for an hour
 void CleanTransactionLocksList();
