@@ -12,6 +12,7 @@
 #include "masternodeman.h"
 #include "script/sign.h"
 #include "instantx.h"
+#include "txmempool.h"
 #include "ui_interface.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/filesystem.hpp>
@@ -204,7 +205,6 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             CAmount nValueOut = 0;
             bool missingTx = false;
 
-            CValidationState state;
             CMutableTransaction tx;
 
             BOOST_FOREACH(const CTxOut o, out){
@@ -264,7 +264,9 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
 
             {
                 LOCK(cs_main);
-                if(!AcceptToMemoryPool(mempool, state, CTransaction(tx), false, NULL, false, true, true)) {
+                CValidationState validationState;
+                mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
+                if(!AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, true, true)) {
                     LogPrintf("dsi -- transaction not valid! \n");
                     errorID = ERR_INVALID_TX;
                     pfrom->PushMessage(NetMsgType::DSSTATUSUPDATE, sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
@@ -408,8 +410,8 @@ void CDarksendPool::SetNull(){
     sessionID = 0;
     sessionDenom = 0;
     entries.clear();
-    finalTransaction.vin.clear();
-    finalTransaction.vout.clear();
+    finalMutableTransaction.vin.clear();
+    finalMutableTransaction.vout.clear();
     lastTimeChanged = GetTimeMillis();
 
     // -- seed random number generator (used for ordering output lists)
@@ -540,10 +542,10 @@ void CDarksendPool::Check()
 
 
             LogPrint("darksend", "Transaction 1: %s\n", txNew.ToString());
-            finalTransaction = txNew;
+            finalMutableTransaction = txNew;
 
             // request signatures from clients
-            RelayFinalTransaction(sessionID, finalTransaction);
+            RelayFinalTransaction(sessionID, finalMutableTransaction);
         }
     }
 
@@ -568,14 +570,16 @@ void CDarksendPool::CheckFinalTransaction()
 {
     if (!fMasterNode) return; // check and relay final tx only on masternode
 
-    CWalletTx txNew = CWalletTx(pwalletMain, finalTransaction);
+    CTransaction finalTransaction = CTransaction(finalMutableTransaction);
 
-    LogPrint("darksend", "Transaction 2: %s\n", txNew.ToString());
+    LogPrint("darksend", "Transaction 2: %s\n", finalTransaction.ToString());
 
     {
-        LOCK(cs_main);
         // See if the transaction is valid
-        if (!txNew.AcceptToMemoryPool(false, true))
+        TRY_LOCK(cs_main, lockMain);
+        CValidationState validationState;
+        mempool.PrioritiseTransaction(finalTransaction.GetHash(), finalTransaction.GetHash().ToString(), 1000, 0.1*COIN);
+        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, finalTransaction, false, NULL, false, true, true))
         {
             LogPrintf("CDarksendPool::Check() - CommitTransaction : Error: Transaction not valid\n");
             SetNull();
@@ -591,7 +595,7 @@ void CDarksendPool::CheckFinalTransaction()
     // sign a message
 
     int64_t sigTime = GetAdjustedTime();
-    std::string strMessage = txNew.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
+    std::string strMessage = finalTransaction.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string strError = "";
     std::vector<unsigned char> vchSig;
     CKey key2;
@@ -613,17 +617,17 @@ void CDarksendPool::CheckFinalTransaction()
         return;
     }
 
-    if(!mapDarksendBroadcastTxes.count(txNew.GetHash())){
+    if(!mapDarksendBroadcastTxes.count(finalTransaction.GetHash())){
         CDarksendBroadcastTx dstx;
-        dstx.tx = txNew;
+        dstx.tx = finalTransaction;
         dstx.vin = activeMasternode.vin;
         dstx.vchSig = vchSig;
         dstx.sigTime = sigTime;
 
-        mapDarksendBroadcastTxes.insert(make_pair(txNew.GetHash(), dstx));
+        mapDarksendBroadcastTxes.insert(make_pair(finalTransaction.GetHash(), dstx));
     }
 
-    CInv inv(MSG_DSTX, txNew.GetHash());
+    CInv inv(MSG_DSTX, finalTransaction.GetHash());
     RelayInv(inv);
 
     // Tell the clients it was successful
@@ -979,8 +983,8 @@ bool CDarksendPool::IsCollateralValid(const CTransaction& txCollateral){
 
     {
         LOCK(cs_main);
-        CValidationState state;
-        if(!AcceptToMemoryPool(mempool, state, txCollateral, false, NULL, false, true, true)){
+        CValidationState validationState;
+        if(!AcceptToMemoryPool(mempool, validationState, txCollateral, false, NULL, false, true, true)){
             if(fDebug) LogPrintf ("CDarksendPool::IsCollateralValid - didn't pass IsAcceptable\n");
             return false;
         }
@@ -1063,11 +1067,11 @@ bool CDarksendPool::AddScriptSig(const CTxIn& newVin){
 
     LogPrint("darksend", "CDarksendPool::AddScriptSig -- sig %s\n", ScriptToAsmStr(newVin.scriptSig));
 
-    BOOST_FOREACH(CTxIn& vin, finalTransaction.vin){
+    BOOST_FOREACH(CTxIn& vin, finalMutableTransaction.vin){
         if(newVin.prevout == vin.prevout && vin.nSequence == newVin.nSequence){
             vin.scriptSig = newVin.scriptSig;
             vin.prevPubKey = newVin.prevPubKey;
-            LogPrint("darksend", "CDarksendPool::AddScriptSig -- adding to finalTransaction  %s\n", ScriptToAsmStr(newVin.scriptSig).substr(0,24));
+            LogPrint("darksend", "CDarksendPool::AddScriptSig -- adding to finalMutableTransaction  %s\n", ScriptToAsmStr(newVin.scriptSig).substr(0,24));
         }
     }
     for(unsigned int i = 0; i < entries.size(); i++){
@@ -1144,7 +1148,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
     {
         CAmount nValueOut = 0;
 
-        CValidationState state;
+        CValidationState validationState;
         CMutableTransaction tx;
 
         BOOST_FOREACH(const CTxOut& o, vout){
@@ -1155,21 +1159,18 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         BOOST_FOREACH(const CTxIn& i, vin){
             tx.vin.push_back(i);
 
-            LogPrint("darksend", "dsi -- tx in %s\n", i.ToString());
+            LogPrint("darksend", "CDarksendPool::SendDarksendDenominate() -- tx in %s\n", i.ToString());
         }
 
         LogPrintf("Submitting tx %s\n", tx.ToString());
 
-        while(true){
-            TRY_LOCK(cs_main, lockMain);
-            if(!lockMain) { MilliSleep(50); continue;}
-            if(!AcceptToMemoryPool(mempool, state, CTransaction(tx), false, NULL, false, true, true)){
-                LogPrintf("dsi -- transaction not valid! %s \n", tx.ToString());
-                UnlockCoins();
-                SetNull();
-                return;
-            }
-            break;
+        mempool.PrioritiseTransaction(tx.GetHash(), tx.GetHash().ToString(), 1000, 0.1*COIN);
+        TRY_LOCK(cs_main, lockMain);
+        if(!lockMain || !AcceptToMemoryPool(mempool, validationState, CTransaction(tx), false, NULL, false, true, true)){
+            LogPrintf("CDarksendPool::SendDarksendDenominate() -- transaction failed! %s \n", tx.ToString());
+            UnlockCoins();
+            SetNull();
+            return;
         }
     }
 
@@ -1237,8 +1238,8 @@ bool CDarksendPool::StatusUpdate(int newState, int newEntriesCount, int newAccep
 bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNode* node){
     if(fMasterNode) return false;
 
-    finalTransaction = finalTransactionNew;
-    LogPrintf("CDarksendPool::SignFinalTransaction %s", finalTransaction.ToString());
+    finalMutableTransaction = finalTransactionNew;
+    LogPrintf("CDarksendPool::SignFinalTransaction %s", finalMutableTransaction.ToString());
 
     vector<CTxIn> sigs;
 
@@ -1250,8 +1251,8 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
             CScript prevPubKey = CScript();
             CTxIn vin = CTxIn();
 
-            for(unsigned int i = 0; i < finalTransaction.vin.size(); i++){
-                if(finalTransaction.vin[i] == s){
+            for(unsigned int i = 0; i < finalMutableTransaction.vin.size(); i++){
+                if(finalMutableTransaction.vin[i] == s){
                     mine = i;
                     prevPubKey = s.prevPubKey;
                     vin = s;
@@ -1263,11 +1264,11 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                 CAmount nValue1 = 0;
                 CAmount nValue2 = 0;
 
-                for(unsigned int i = 0; i < finalTransaction.vout.size(); i++){
+                for(unsigned int i = 0; i < finalMutableTransaction.vout.size(); i++){
                     BOOST_FOREACH(const CTxOut& o, e.vout) {
-                        if(finalTransaction.vout[i] == o){
+                        if(finalMutableTransaction.vout[i] == o){
                             foundOutputs++;
-                            nValue1 += finalTransaction.vout[i].nValue;
+                            nValue1 += finalMutableTransaction.vout[i].nValue;
                         }
                     }
                 }
@@ -1289,18 +1290,18 @@ bool CDarksendPool::SignFinalTransaction(CTransaction& finalTransactionNew, CNod
                 const CKeyStore& keystore = *pwalletMain;
 
                 LogPrint("darksend", "CDarksendPool::Sign - Signing my input %i\n", mine);
-                if(!SignSignature(keystore, prevPubKey, finalTransaction, mine, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) { // changes scriptSig
+                if(!SignSignature(keystore, prevPubKey, finalMutableTransaction, mine, int(SIGHASH_ALL|SIGHASH_ANYONECANPAY))) { // changes scriptSig
                     LogPrint("darksend", "CDarksendPool::Sign - Unable to sign my own transaction! \n");
                     // not sure what to do here, it will timeout...?
                 }
 
-                sigs.push_back(finalTransaction.vin[mine]);
-                LogPrint("darksend", " -- dss %d %d %s\n", mine, (int)sigs.size(), ScriptToAsmStr(finalTransaction.vin[mine].scriptSig));
+                sigs.push_back(finalMutableTransaction.vin[mine]);
+                LogPrint("darksend", " -- dss %d %d %s\n", mine, (int)sigs.size(), ScriptToAsmStr(finalMutableTransaction.vin[mine].scriptSig));
             }
 
         }
 
-        LogPrint("darksend", "CDarksendPool::Sign - txNew:\n%s", finalTransaction.ToString());
+        LogPrint("darksend", "CDarksendPool::Sign - txNew:\n%s", finalMutableTransaction.ToString());
     }
 
 	// push all of our signatures to the Masternode
@@ -1491,7 +1492,6 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
 
         //check our collateral and create new if needed
         std::string strReason;
-        CValidationState state;
         if(txCollateral == CMutableTransaction()){
             if(!pwalletMain->CreateCollateralTransaction(txCollateral, strReason)){
                 LogPrintf("% -- create collateral error:%s\n", __func__, strReason);
@@ -1722,6 +1722,7 @@ bool CDarksendPool::CreateDenominated(CAmount nTotalValue)
     vector< CRecipient > vecSend;
     CAmount nValueLeft = nTotalValue;
 
+    LogPrintf("CreateDenominated0 %d\n", nValueLeft);
     // make our collateral address
     CReserveKey reservekeyCollateral(pwalletMain);
     // make our change address
@@ -1742,44 +1743,57 @@ bool CDarksendPool::CreateDenominated(CAmount nTotalValue)
 
     // ****** Add denoms ************ /
 
-    BOOST_REVERSE_FOREACH(CAmount v, darkSendDenominations){
+    // try few times - skipping smallest denoms first if there are too much already, if failed - use them
+    int nOutputsTotal = 0;
+    bool fSkip = true;
+    do {
 
-        // Note: denoms are skipped if there are already DENOMS_COUNT_MAX of them
+        BOOST_REVERSE_FOREACH(CAmount v, darkSendDenominations){
 
-        // check skipped denoms
-        if(IsDenomSkipped(v)) continue;
+            if(fSkip) {
+                // Note: denoms are skipped if there are already DENOMS_COUNT_MAX of them
+                // and there are still larger denoms which can be used for mixing
 
-        // find new denoms to skip if any (ignore the largest one)
-        if (v != darkSendDenominations[0] && pwalletMain->CountInputsWithAmount(v) > DENOMS_COUNT_MAX){
-            strAutoDenomResult = strprintf(_("Too many %f denominations, removing."), (float)v/COIN);
-            LogPrintf("DoAutomaticDenominating : %s\n", strAutoDenomResult);
-            darkSendDenominationsSkipped.push_back(v);
-            continue;
+                // check skipped denoms
+                if(IsDenomSkipped(v)) continue;
+
+                // find new denoms to skip if any (ignore the largest one)
+                if (v != darkSendDenominations[0] && pwalletMain->CountInputsWithAmount(v) > DENOMS_COUNT_MAX){
+                    strAutoDenomResult = strprintf(_("Too many %f denominations, removing."), (float)v/COIN);
+                    LogPrintf("DoAutomaticDenominating : %s\n", strAutoDenomResult);
+                    darkSendDenominationsSkipped.push_back(v);
+                    continue;
+                }
+            }
+
+            int nOutputs = 0;
+
+            // add each output up to 10 times until it can't be added again
+            while(nValueLeft - v >= 0 && nOutputs <= 10) {
+                CScript scriptDenom;
+                CPubKey vchPubKey;
+                //use a unique change address
+                assert(reservekeyDenom.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
+                scriptDenom = GetScriptForDestination(vchPubKey.GetID());
+                // TODO: do not keep reservekeyDenom here
+                reservekeyDenom.KeepKey();
+
+                vecSend.push_back((CRecipient){scriptDenom, v, false});
+
+                //increment outputs and subtract denomination amount
+                nOutputs++;
+                nValueLeft -= v;
+                LogPrintf("CreateDenominated1 %d %d %d\n", nOutputsTotal, nOutputs, nValueLeft);
+            }
+
+            nOutputsTotal += nOutputs;
+            if(nValueLeft == 0) break;
         }
-
-        int nOutputs = 0;
-
-        // add each output up to 10 times until it can't be added again
-        while(nValueLeft - v >= 0 && nOutputs <= 10) {
-            CScript scriptDenom;
-            CPubKey vchPubKey;
-            //use a unique change address
-            assert(reservekeyDenom.GetReservedKey(vchPubKey)); // should never fail, as we just unlocked
-            scriptDenom = GetScriptForDestination(vchPubKey.GetID());
-            // TODO: do not keep reservekeyDenom here
-            reservekeyDenom.KeepKey();
-
-            vecSend.push_back((CRecipient){scriptDenom, v, false});
-
-            //increment outputs and subtract denomination amount
-            nOutputs++;
-            nValueLeft -= v;
-            LogPrintf("CreateDenominated1 %d\n", nValueLeft);
-        }
-
-        if(nValueLeft == 0) break;
-    }
-    LogPrintf("CreateDenominated2 %d\n", nValueLeft);
+        LogPrintf("CreateDenominated2 %d %d\n", nOutputsTotal, nValueLeft);
+        // if there were no outputs added, start over without skipping
+        fSkip = !fSkip;
+    } while (nOutputsTotal == 0 && !fSkip);
+    LogPrintf("CreateDenominated3 %d %d\n", nOutputsTotal, nValueLeft);
 
     // if we have anything left over, it will be automatically send back as change - there is no need to send it manually
 

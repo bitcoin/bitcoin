@@ -262,7 +262,7 @@ private:
     mutable CCriticalSection cs_darksend;
 
     std::vector<CDarkSendEntry> entries; // Masternode/clients entries
-    CMutableTransaction finalTransaction; // the finalized transaction ready for signing
+    CMutableTransaction finalMutableTransaction; // the finalized transaction ready for signing
 
     int64_t lastTimeChanged; // last time the 'state' changed, in UTC milliseconds
 
