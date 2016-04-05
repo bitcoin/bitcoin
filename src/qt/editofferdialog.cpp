@@ -21,15 +21,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
     ui(new Ui::EditOfferDialog), mapper(0), mode(mode), model(0)
 {
     ui->setupUi(this);
-	CAmount nFee;
-	vector<string> rateList;
-	int precision;
-	if(getCurrencyToSYSFromAlias(vchFromString("SYS_RATES"), vchFromString("USD"), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
-	{
-		QMessageBox::warning(this, windowTitle(),
-			tr("Warning: SYS_RATES alias not found. No currency information available!"),
-				QMessageBox::Ok, QMessageBox::Ok);
-	}
+
 	ui->aliasPegDisclaimer->setText(tr("<font color='blue'>Choose an alias which has peg information to allow exchange of currencies into SYS amounts based on the pegged values. Consumers will pay amounts based on this peg, the alias must be managed effectively or you may end up selling your offers for unexpected amounts.</font>"));
 	ui->aliasDisclaimer->setText(tr("<font color='blue'>Select an alias to own this offer</font>"));
 	ui->privateDisclaimer->setText(tr("<font color='blue'>All offers are first listed as private. If you would like your offer to be public, please edit it after it is created.</font>"));
@@ -42,22 +34,17 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 	ui->privateEdit->clear();
 	ui->privateEdit->addItem(QString("Yes"));
 	ui->privateEdit->addItem(QString("No"));
-	
+	ui->currencyEdit->addItem(QString("USD"));
 	ui->acceptBTCOnlyEdit->clear();
 	ui->acceptBTCOnlyEdit->addItem(QString("No"));
 	ui->acceptBTCOnlyEdit->addItem(QString("Yes"));
 	ui->btcOnlyDisclaimer->setText(tr("<font color='blue'>You will receive payment in Bitcoin if you have selected <b>Yes</b> to this option and <b>BTC</b> as the currency for the offer.</font>"));
-	for(int i =0;i<rateList.size();i++)
-	{
-		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
-	}
 	cert = strCert;
 	ui->certEdit->clear();
 	ui->certEdit->addItem(tr("Select Certificate (optional)"));
 	connect(ui->certEdit, SIGNAL(currentIndexChanged(int)), this, SLOT(certChanged(int)));
 	loadAliases();
 	loadCerts();
-	
 	ui->descriptionEdit->setStyleSheet("color: rgb(0, 0, 0); background-color: rgb(255, 255, 255)");
     switch(mode)
     {
@@ -65,6 +52,7 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 		ui->offerLabel->setVisible(false);
 		ui->offerEdit->setVisible(false);
 		ui->aliasPegEdit->setText(tr("SYS_RATES"));
+		on_aliasPegEdit_editingFinished();
 		ui->privateEdit->setCurrentIndex(ui->privateEdit->findText("Yes"));
 		ui->privateEdit->setEnabled(false);
         setWindowTitle(tr("New Offer"));
@@ -78,6 +66,8 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
     case NewCertOffer:
 		ui->aliasEdit->setEnabled(false);
 		ui->offerLabel->setVisible(false);
+		ui->aliasPegEdit->setText(tr("SYS_RATES"));
+		on_aliasPegEdit_editingFinished();
 		ui->privateEdit->setCurrentIndex(ui->privateEdit->findText("Yes"));
 		ui->privateEdit->setEnabled(false);
 		ui->offerEdit->setVisible(false);
@@ -90,6 +80,25 @@ EditOfferDialog::EditOfferDialog(Mode mode, const QString &strCert, QWidget *par
 	}
     mapper = new QDataWidgetMapper(this);
     mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
+}
+void EditOfferDialog::on_aliasPegEdit_editingFinished()
+{
+	CAmount nFee;
+	vector<string> rateList;
+	int precision;
+	if(getCurrencyToSYSFromAlias(vchFromString(ui->aliasPegEdit->text().toStdString()), vchFromString(ui->currencyEdit->currentText().toStdString()), nFee, chainActive.Tip()->nHeight, rateList, precision) == "1")
+	{
+		QMessageBox::warning(this, windowTitle(),
+			tr("Warning: %1 alias not found. No currency information available for %2!").arg(ui->aliasPegEdit->text()).arg(ui->currencyEdit->currentText()),
+				QMessageBox::Ok, QMessageBox::Ok);
+		return;
+	}
+	ui->currencyEdit->clear();
+	for(int i =0;i<rateList.size();i++)
+	{
+		ui->currencyEdit->addItem(QString::fromStdString(rateList[i]));
+	}
+
 }
 void EditOfferDialog::certChanged(int index)
 {
@@ -301,6 +310,7 @@ void EditOfferDialog::loadRow(int row)
 		}
 		if(indexCurrency.isValid())
 		{
+			on_aliasPegEdit_editingFinished();
 			QString currencyStr = indexCurrency.data(OfferTableModel::CurrencyRole).toString();
 			ui->currencyEdit->setCurrentIndex(ui->currencyEdit->findText(currencyStr));
 		}
