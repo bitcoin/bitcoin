@@ -178,7 +178,11 @@ bool IsOfferOp(int op) {
 
 
 int GetOfferExpirationDepth() {
+	#ifdef ENABLE_DEBUGRPC
+    return 100;
+  #else
     return 525600;
+  #endif
 }
 
 string offerFromOp(int op) {
@@ -2288,29 +2292,29 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	} catch (std::exception &e) {
 		throw runtime_error("invalid price and/or quantity values. Quantity must be less than 4294967296 and greater than or equal to -1.");
 	}
-	if(nQty < -1)
-		throw runtime_error("qty must be greater than or equal to -1");
-	if (params.size() >= 7) vchDesc = vchFromValue(params[6]);
-	if(price <= 0)
-	{
-		throw runtime_error("offer price must be greater than 0!");
-	}
+	// if(nQty < -1)
+	// 	throw runtime_error("qty must be greater than or equal to -1");
+	// if (params.size() >= 7) vchDesc = vchFromValue(params[6]);
+	// if(price <= 0)
+	// {
+	// 	throw runtime_error("offer price must be greater than 0!");
+	// }
 	
-	if(vchCat.size() < 1)
-        throw runtime_error("offer category cannot by empty!");
-	if(vchTitle.size() < 1)
-        throw runtime_error("offer title cannot be empty!");
-	if(vchCat.size() > 255)
-        throw runtime_error("offer category cannot exceed 255 bytes!");
-	if(vchTitle.size() > 255)
-        throw runtime_error("offer title cannot exceed 255 bytes!");
-    // 1kbyte offer desc. maxlen
-	if (vchDesc.size() > MAX_VALUE_LENGTH)
-		throw runtime_error("offer description cannot exceed 1023 bytes!");
+	// if(vchCat.size() < 1)
+ //        throw runtime_error("offer category cannot by empty!");
+	// if(vchTitle.size() < 1)
+ //        throw runtime_error("offer title cannot be empty!");
+	// if(vchCat.size() > 255)
+ //        throw runtime_error("offer category cannot exceed 255 bytes!");
+	// if(vchTitle.size() > 255)
+ //        throw runtime_error("offer title cannot exceed 255 bytes!");
+ //    // 1kbyte offer desc. maxlen
+	// if (vchDesc.size() > MAX_VALUE_LENGTH)
+	// 	throw runtime_error("offer description cannot exceed 1023 bytes!");
 	CAliasIndex alias;
-	const CWalletTx *wtxAliasIn = NULL;
 	if(!vchAlias.empty())
 	{
+		const CWalletTx *wtxAliasIn = NULL;
 		CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
 		if (!aliasAddress.IsValid())
 			throw runtime_error("Invalid syscoin address");
@@ -2321,12 +2325,12 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 		if (!GetTxOfAlias(vchAlias, alias, aliastx))
 			throw runtime_error("could not find an alias with this name");
 
-		if(!IsSyscoinTxMine(aliastx, "alias")) {
-			throw runtime_error("This alias is not yours.");
-		}
-		wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
-		if (wtxAliasIn == NULL)
-			throw runtime_error("this alias is not in your wallet");
+		// if(!IsSyscoinTxMine(aliastx, "alias")) {
+		// 	throw runtime_error("This alias is not yours.");
+
+		// wtxAliasIn = pwalletMain->GetWalletTx(aliastx.GetHash());
+		// if (wtxAliasIn == NULL)
+		// 	throw runtime_error("this alias is not in your wallet");
 	}
 
 	// this is a syscoind txn
@@ -2353,10 +2357,12 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	wtxIn = pwalletMain->GetWalletTx(tx.GetHash());
 	if (wtxIn == NULL)
 		throw runtime_error("this offer is not in your wallet");
+
 	// check for existing pending offers
-	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
-		throw runtime_error("there are pending operations on that offer");
-	}
+	// if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE) || ExistsInMempool(vchOffer, OP_OFFER_UPDATE)) {
+	// 	throw runtime_error("there are pending operations on that offer");
+	// }
+
 	// unserialize offer UniValue from txn
 	if(!theOffer.UnserializeFromTx(tx))
 		throw runtime_error("cannot unserialize offer from txn");
@@ -2365,33 +2371,35 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	vector<COffer> vtxPos;
 	if (!pofferdb->ReadOffer(vchOffer, vtxPos) || vtxPos.empty())
 		throw runtime_error("could not read offer from DB");
+
 	CCert theCert;
 	CTransaction txCert;
 	const CWalletTx *wtxCertIn = NULL;
+
 	// make sure this cert is still valid
 	if (GetTxOfCert( vchCert, theCert, txCert))
 	{
 		// check for existing cert updates
-		if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
-			throw runtime_error("there are pending operations on that cert");
-		}
+		// if (ExistsInMempool(vchCert, OP_CERT_UPDATE) || ExistsInMempool(vchCert, OP_CERT_TRANSFER)) {
+		// 	throw runtime_error("there are pending operations on that cert");
+		// }
+
 		vector<vector<unsigned char> > vvch;
 		wtxCertIn = pwalletMain->GetWalletTx(txCert.GetHash());
 		// make sure its in your wallet (you control this cert)		
-		if (!IsSyscoinTxMine(txCert, "cert") || wtxCertIn == NULL) 
-			throw runtime_error("Cannot sell this certificate, it is not yours!");
+		// if (!IsSyscoinTxMine(txCert, "cert") || wtxCertIn == NULL) 
+		// 	throw runtime_error("Cannot sell this certificate, it is not yours!");
 		int op, nOut;
 		if(DecodeCertTx(txCert, op, nOut, vvch))
 			vchCert = vvch[0];
 
 		CPubKey currentCertKey(theCert.vchPubKey);
 		scriptPubKeyCertOrig = GetScriptForDestination(currentCertKey.GetID());
-		if(!theOffer.vchLinkOffer.empty())
-		{
-			throw runtime_error("cannot sell a cert as a linked offer");
-		}
+		// if(!theOffer.vchLinkOffer.empty())
+		// {
+		// 	throw runtime_error("cannot sell a cert as a linked offer");
+		// }
 	}
-
 
 	scriptPubKeyCert << CScript::EncodeOP_N(OP_CERT_UPDATE) << vchCert << OP_2DROP;
 	scriptPubKeyCert += scriptPubKeyCertOrig;
@@ -2399,6 +2407,7 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	theOffer = vtxPos.back();
 	COffer offerCopy = theOffer;
 	theOffer.ClearOffer();	
+
 	int precision = 2;
 	// get precision
 	convertCurrencyCodeToSyscoin(offerCopy.vchAliasPeg, offerCopy.sCurrencyCode, offerCopy.GetPrice(), chainActive.Tip()->nHeight, precision);
@@ -2437,8 +2446,8 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	if (params.size() >= 8)
 		theOffer.bPrivate = bPrivate;
 	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
-	if(nQty != -1 && (nQty-memPoolQty) < 0)
-		throw runtime_error("not enough remaining quantity to fulfill this offerupdate");
+	// if(nQty != -1 && (nQty-memPoolQty) < 0)
+	// 	throw runtime_error("not enough remaining quantity to fulfill this offerupdate");
 	theOffer.nHeight = chainActive.Tip()->nHeight;
 	theOffer.SetPrice(price);
 	if(params.size() >= 10)
@@ -2470,7 +2479,6 @@ UniValue offerupdate_nocheck(const UniValue& params, bool fHelp) {
 	res.push_back(wtx.GetHash().GetHex());
 	return res;
 }
-
 
 bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmount &nPrice, const CWalletTx* acceptTx, const vector<unsigned char>& linkedOfferGUID, const CScript& scriptPubKeyDestination)
 {
