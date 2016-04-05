@@ -263,7 +263,7 @@ private:
     }
 
 public:
-    TestBuilder(const CScript& redeemScript, const std::string& comment_, int flags_, bool P2SH = false) : scriptPubKey(redeemScript), havePush(false), comment(comment_), flags(flags_), scriptError(-1)
+    TestBuilder(const CScript& redeemScript, const std::string& comment_, int flags_, bool P2SH = false) : scriptPubKey(redeemScript), havePush(false), comment(comment_), flags(flags_), scriptError(SCRIPT_ERR_OK)
     {
         if (P2SH) {
             creditTx = BuildCreditingTransaction(CScript() << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL);
@@ -365,9 +365,8 @@ public:
         array.push_back(FormatScript(spendTx.vin[0].scriptSig));
         array.push_back(FormatScript(creditTx.vout[0].scriptPubKey));
         array.push_back(FormatScriptFlags(flags));
+        array.push_back(FormatScriptError((ScriptError_t)scriptError));
         array.push_back(comment);
-        if (scriptError != -1)
-            array.push_back(FormatScriptError((ScriptError_t)scriptError));
         return array;
     }
 
@@ -715,7 +714,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
 {
     // Read tests from test/data/script_valid.json
     // Format is an array of arrays
-    // Inner arrays are [ "scriptSig", "scriptPubKey", "flags" ]
+    // Inner arrays are [ "scriptSig", "scriptPubKey", "flags", "expected_scripterror" ]
     // ... where scriptSig and scriptPubKey are stringified
     // scripts.
     UniValue tests = read_json(std::string(json_tests::script_valid, json_tests::script_valid + sizeof(json_tests::script_valid)));
@@ -735,6 +734,7 @@ BOOST_AUTO_TEST_CASE(script_valid)
         string scriptPubKeyString = test[1].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
         unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
+        BOOST_CHECK_EQUAL(test[3].get_str(), "OK");
 
         DoTest(scriptPubKey, scriptSig, scriptflags, true, strTest, SCRIPT_ERR_OK);
     }
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(script_invalid)
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
         string strTest = test.write();
-        if (test.size() < 3) // Allow size > 2; extra stuff ignored (useful for comments)
+        if (test.size() < 4) // Allow size > 2; extra stuff ignored (useful for comments)
         {
             if (test.size() != 1) {
                 BOOST_ERROR("Bad test: " << strTest);
@@ -759,10 +759,7 @@ BOOST_AUTO_TEST_CASE(script_invalid)
         string scriptPubKeyString = test[1].get_str();
         CScript scriptPubKey = ParseScript(scriptPubKeyString);
         unsigned int scriptflags = ParseScriptFlags(test[2].get_str());
-        int scriptError = -1; // Expected script error is optional, and follows comment
-        if (test.size() >= 5 && test[4].get_str() != "") {
-            scriptError = ParseScriptError(test[4].get_str());
-        }
+        int scriptError = ParseScriptError(test[3].get_str());
 
         DoTest(scriptPubKey, scriptSig, scriptflags, false, strTest, scriptError);
     }
