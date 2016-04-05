@@ -168,6 +168,10 @@
         <translation>지갑 암호화를 허용하시겠습니까?</translation>
     </message>
     <message>
+        <source>Bitcoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>비트코인 코어는 암호화 과정을 마무리 하기 위해 종료됩니다. 당신의 지갑을 암호화하는 것이 여러분의 컴퓨터에 해를 끼치는 프로그램으로부터 여러분의 비트코인을 완전히 보호해주지는 못한다는 사실을 기억하십시오.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>중요: 본인 지갑파일에서 만든 예전 백업들은 새로 생성한 암호화 된 지갑 파일로 교체됩니다. 보안상 이유로 이전에 암호화 하지 않은 지갑 파일 백업은 사용할 수 없게 되니 빠른 시일 내로 새로 암호화 된 지갑을 사용하시기 바랍니다.</translation>
     </message>
@@ -178,6 +182,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>지갑 암호화 완료</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase to the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>지갑에 새로운 비밀문구를 입력하세요.&lt;br/&gt;비밀문구를 &lt;b&gt;열 개 이상의 무작위 글자&lt;/b&gt; 혹은 &lt;b&gt;여덟개 이상의 단어로&lt;b&gt; 정하세요.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase to the wallet.</source>
@@ -214,7 +222,15 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>IP/Netmask</source>
+        <translation>IP주소/넷마스크</translation>
+    </message>
+    <message>
+        <source>Banned Until</source>
+        <translation>다음과 같은 상황이 될 때까지 계정 정지됩니다.</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -394,6 +410,10 @@
         <translation>&amp;비트코인 코어 소개</translation>
     </message>
     <message>
+        <source>Modify configuration options for Bitcoin Core</source>
+        <translation>비트코인 코어를 위한 설정 옵션을 수정하세요.</translation>
+    </message>
+    <message>
         <source>Show the list of used sending addresses and labels</source>
         <translation>한번 이상 사용된 보내는 주소와 주소 제목의 목록을 보여줍니다.</translation>
     </message>
@@ -413,9 +433,17 @@
         <source>Show the Bitcoin Core help message to get a list with possible Bitcoin command-line options</source>
         <translation>사용할 수 있는 비트코인 명령어 옵션 목록을 가져오기 위해 Bitcoin-Qt 도움말 메시지를 표시합니다.</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>비트코인 네트워크에 %n개의 연결이 활성화되어 있습니다.</numerusform></translation>
+    </message>
     <message>
         <source>No block source available...</source>
         <translation>사용 가능한 블록이 없습니다...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>%n 블럭 만큼의 거래 내역을 처리하였습니다.</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>%n hour(s)</source>
@@ -578,6 +606,14 @@
         <translation>거래량</translation>
     </message>
     <message>
+        <source>Received with label</source>
+        <translation>레이블과 함께 수신되었습니다.</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>주소와 함께 수신되었습니다.</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>날짜</translation>
     </message>
@@ -680,6 +716,10 @@
     <message>
         <source>none</source>
         <translation>없음</translation>
+    </message>
+    <message>
+        <source>This label turns red if the transaction size is greater than 1000 bytes.</source>
+        <translation>이 라벨은 1000바이트 이상의 거래가 이루어지면 붉게 변합니다.</translation>
     </message>
     <message>
         <source>yes</source>

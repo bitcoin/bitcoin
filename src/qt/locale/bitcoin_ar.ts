@@ -326,6 +326,10 @@
         <translation>&amp;نافذة المعالجة</translation>
     </message>
     <message>
+        <source>Open debugging and diagnostic console</source>
+        <translation>إفتح وحدة التصحيح و التشخيص</translation>
+    </message>
+    <message>
         <source>&amp;Verify message...</source>
         <translation>&amp;التحقق من الرسالة...</translation>
     </message>
@@ -362,6 +366,14 @@
         <translation>تشفير المفتاح الخاص بمحفظتك</translation>
     </message>
     <message>
+        <source>Sign messages with your Bitcoin addresses to prove you own them</source>
+        <translation>وقَع الرسائل بواسطة ال: Bitcoin الخاص بك لإثبات امتلاكك لهم</translation>
+    </message>
+    <message>
+        <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
+        <translation>تحقق من الرسائل للتأكد من أنَها وُقعت برسائل Bitcoin محدَدة</translation>
+    </message>
+    <message>
         <source>&amp;File</source>
         <translation>&amp;ملف</translation>
     </message>
@@ -384,6 +396,22 @@
     <message>
         <source>&amp;About Bitcoin Core</source>
         <translation>حول bitcoin core</translation>
+    </message>
+    <message>
+        <source>Modify configuration options for Bitcoin Core</source>
+        <translation>تغيير خيارات الإعداد لأساس Bitcoin</translation>
+    </message>
+    <message>
+        <source>Show the list of used sending addresses and labels</source>
+        <translation>عرض قائمة عناوين الإرسال المستخدمة والملصقات</translation>
+    </message>
+    <message>
+        <source>Show the list of used receiving addresses and labels</source>
+        <translation>عرض قائمة عناوين الإستقبال المستخدمة والملصقات</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI or payment request</source>
+        <translation>فتح URI : Bitcoin أو طلب دفع</translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -1794,12 +1822,24 @@
         <translation>عنوان البروكسي غير صحيح : '%s'</translation>
     </message>
     <message>
+        <source>Make the wallet broadcast transactions</source>
+        <translation>إنتاج معاملات بث المحفظة</translation>
+    </message>
+    <message>
         <source>Insufficient funds</source>
         <translation>اموال غير كافية</translation>
     </message>
     <message>
+        <source>Loading block index...</source>
+        <translation>تحميل مؤشر الكتلة</translation>
+    </message>
+    <message>
         <source>Loading wallet...</source>
         <translation>تحميل المحفظه</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>لا يمكن تخفيض قيمة المحفظة</translation>
     </message>
     <message>
         <source>Cannot write default address</source>
