@@ -1834,6 +1834,138 @@
     "OK",
     "P2SH with CLEANSTACK"
 ],
+[
+    [
+        "3044022039105b995a5f448639a997a5c90fda06f50b49df30c3bdb6663217bf79323db002206fecd54269dec569fcc517178880eb58bb40f381a282bb75766ff3637d5f4b4301",
+        "410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8ac"
+    ],
+    "",
+    "0 0x20 0xb95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
+    "P2SH,WITNESS",
+    "OK",
+    "Basic P2WSH"
+],
+[
+    [
+        "304402201a96950593cb0af32d080b0f193517f4559241a8ebd1e95e414533ad64a3f423022047f4f6d3095c23235bdff3aeff480d0529c027a3f093cb265b7cbf148553b85101",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
+    ],
+    "",
+    "0 0x14 0x91b24bf9f5288532960ac687abb035127b1d28a5",
+    "P2SH,WITNESS",
+    "OK",
+    "Basic P2WPKH"
+],
+[
+    [
+        "3044022061fc1a144e221ec77a58a4281936eb6a1b715b9349e446e74d106ec26c8633ba022008064a0d112e8ad514440fcdfaa1006e48305d6844f50a65873fb4b2cf9c035f01",
+        "410479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8ac"
+    ],
+    "0x22 0x0020b95237b48faaa69eb078e1170be3b5cbb3fddf16d0a991e14ad274f7b33a4f64",
+    "HASH160 0x14 0xf386c2ba255cc56d20cfa6ea8b062f8b59945518 EQUAL",
+    "P2SH,WITNESS",
+    "OK",
+    "Basic P2SH(P2WSH)"
+],
+[
+    [
+        "3044022014e69768e174972f21d32d93002ca6fc26133cb9e819ceef7efb970798bde7b4022078b86849dbbec692ec9355aa2a763fce7ea11bf72fdd8ea5ea8083de6f8a77fe01",
+        "0479be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8"
+    ],
+    "0x16 0x001491b24bf9f5288532960ac687abb035127b1d28a5",
+    "HASH160 0x14 0x17743beb429c55c942d2ec703b98c4d57c2df5c6 EQUAL",
+    "P2SH,WITNESS",
+    "OK",
+    "Basic P2SH(P2WPKH)"
+],
+[
+    [
+        "304402202589f0512cb2408fb08ed9bd24f85eb3059744d9e4f2262d0b7f1338cff6e8b902206c0978f449693e0578c71bc543b11079fd0baae700ee5e9a6bee94db490af9fc01",
+        "41048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26cafac"
+    ],
+    "",
+    "0 0x20 0xac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2WSH with the wrong key"
+],
+[
+    [
+        "304402206ef7fdb2986325d37c6eb1a8bb24aeb46dede112ed8fc76c7d7500b9b83c0d3d02201edc2322c794fe2d6b0bd73ed319e714aa9b86d8891961530d5c9b7156b60d4e01",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf"
+    ],
+    "",
+    "0 0x14 0x7cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2WPKH with the wrong key"
+],
+[
+    [
+        "30440220069ea3581afaf8187f63feee1fd2bd1f9c0dc71ea7d6e8a8b07ee2ebcf824bf402201a4fdef4c532eae59223be1eda6a397fc835142d4ddc6c74f4aa85b766a5c16f01",
+        "41048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26cafac"
+    ],
+    "0x22 0x0020ac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
+    "HASH160 0x14 0x61039a003883787c0d6ebc66d97fdabe8e31449d EQUAL",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2SH(P2WSH) with the wrong key"
+],
+[
+    [
+        "304402204209e49457c2358f80d0256bc24535b8754c14d08840fc4be762d6f5a0aed80b02202eaf7d8fc8d62f60c67adcd99295528d0e491ae93c195cec5a67e7a09532a88001",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf"
+    ],
+    "0x16 0x00147cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "HASH160 0x14 0x4e0c2aed91315303fc6a1dc4c7bc21c88f75402e EQUAL",
+    "P2SH,WITNESS",
+    "EVAL_FALSE",
+    "Basic P2SH(P2WPKH) with the wrong key"
+],
+[
+    [
+        "304402202589f0512cb2408fb08ed9bd24f85eb3059744d9e4f2262d0b7f1338cff6e8b902206c0978f449693e0578c71bc543b11079fd0baae700ee5e9a6bee94db490af9fc01",
+        "41048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26cafac"
+    ],
+    "",
+    "0 0x20 0xac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
+    "P2SH",
+    "OK",
+    "Basic P2WSH with the wrong key but no WITNESS"
+],
+[
+    [
+        "304402206ef7fdb2986325d37c6eb1a8bb24aeb46dede112ed8fc76c7d7500b9b83c0d3d02201edc2322c794fe2d6b0bd73ed319e714aa9b86d8891961530d5c9b7156b60d4e01",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf"
+    ],
+    "",
+    "0 0x14 0x7cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "P2SH",
+    "OK",
+    "Basic P2WPKH with the wrong key but no WITNESS"
+],
+[
+    [
+        "30440220069ea3581afaf8187f63feee1fd2bd1f9c0dc71ea7d6e8a8b07ee2ebcf824bf402201a4fdef4c532eae59223be1eda6a397fc835142d4ddc6c74f4aa85b766a5c16f01",
+        "41048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26cafac"
+    ],
+    "0x22 0x0020ac8ebd9e52c17619a381fa4f71aebb696087c6ef17c960fd0587addad99c0610",
+    "HASH160 0x14 0x61039a003883787c0d6ebc66d97fdabe8e31449d EQUAL",
+    "P2SH",
+    "OK",
+    "Basic P2SH(P2WSH) with the wrong key but no WITNESS"
+],
+[
+    [
+        "304402204209e49457c2358f80d0256bc24535b8754c14d08840fc4be762d6f5a0aed80b02202eaf7d8fc8d62f60c67adcd99295528d0e491ae93c195cec5a67e7a09532a88001",
+        "048282263212c609d9ea2a6e3e172de238d8c39cabd5ac1ca10646e23fd5f5150811f8a8098557dfe45e8256e830b60ace62d613ac2f7b17bed31b6eaff6e26caf"
+    ],
+    "0x16 0x00147cf9c846cd4882efec4bf07e44ebdad495c94f4b",
+    "HASH160 0x14 0x4e0c2aed91315303fc6a1dc4c7bc21c88f75402e EQUAL",
+    "P2SH",
+    "OK",
+    "Basic P2SH(P2WPKH) with the wrong key but no WITNESS"
+],
 
 ["CHECKSEQUENCEVERIFY tests"], 
 ["", "NOP3", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on a empty stack"],
