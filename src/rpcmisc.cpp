@@ -523,8 +523,16 @@ UniValue getaddressutxos(const UniValue& params, bool fHelp)
 
     for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it=unspentOutputs.begin(); it!=unspentOutputs.end(); it++) {
         UniValue output(UniValue::VOBJ);
-        output.push_back(Pair("addressType", (int)it->first.type));
-        output.push_back(Pair("addressHash", it->first.hashBytes.GetHex()));
+        std::string address;
+        if (it->first.type == 2) {
+            address = CBitcoinAddress(CScriptID(it->first.hashBytes)).ToString();
+        } else if (it->first.type == 1) {
+            address = CBitcoinAddress(CKeyID(it->first.hashBytes)).ToString();
+        } else {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
+        }
+
+        output.push_back(Pair("address", address));
         output.push_back(Pair("txid", it->first.txhash.GetHex()));
         output.push_back(Pair("outputIndex", it->first.index));
         output.push_back(Pair("script", HexStr(it->second.script.begin(), it->second.script.end())));
