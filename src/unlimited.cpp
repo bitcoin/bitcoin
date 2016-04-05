@@ -688,8 +688,10 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
     else 
         nLargestBlockSeen = std::max(nSizeBlock, nLargestBlockSeen);
 
+    double nValidationTime = (double)(GetTimeMicros() - startTime) / 1000000.0;
     LogPrint("thin", "Processed Block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
-    
+    CThinBlockStats::UpdateValidationTime(nValidationTime);
+
     // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
     // Therefore we have to remove the thinblock in flight if it exists and we also need to check that 
     // the block didn't arrive from some other peer.  This code ALSO cleans up the thin block that

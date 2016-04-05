@@ -13,7 +13,8 @@ CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize",STAT_OP_SUM | 
 CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks",STAT_OP_SUM | STAT_KEEP);
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
-
+std::map<int64_t, double> CThinBlockStats::mapThinBlockResponseTime;
+std::map<int64_t, double> CThinBlockStats::mapThinBlockValidationTime;
 
 CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
 {
@@ -128,6 +129,31 @@ void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginal
             CThinBlockStats::mapThinBlocksOutBound.erase(mi);
     }
 }
+
+void CThinBlockStats::UpdateResponseTime(double nResponseTime)
+{
+    CThinBlockStats::mapThinBlockResponseTime[GetTimeMillis()] = nResponseTime;
+
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockResponseTime.begin(); mi != CThinBlockStats::mapThinBlockResponseTime.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapThinBlockResponseTime.erase(mi);
+    }
+}
+
+void CThinBlockStats::UpdateValidationTime(double nValidationTime)
+{
+    CThinBlockStats::mapThinBlockValidationTime[GetTimeMillis()] = nValidationTime;
+
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockValidationTime.begin(); mi != CThinBlockStats::mapThinBlockValidationTime.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapThinBlockValidationTime.erase(mi);
+    }
+}
+
 std::string CThinBlockStats::ToString()
 {
     static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
@@ -160,7 +186,7 @@ std::string CThinBlockStats::InBoundPercentToString()
 
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(1);
-    ss << "Compression for Inbound thinblocks (last 24hrs): " << nCompressionRate << "%";
+    ss << "Compression for Inbound  thinblocks (last 24hrs): " << nCompressionRate << "%";
     return ss.str();
 }
 
@@ -183,3 +209,64 @@ std::string CThinBlockStats::OutBoundPercentToString()
     ss << "Compression for Outbound thinblocks (last 24hrs): " << nCompressionRate << "%";
     return ss.str();
 }
+
+// Calculate the xthin percentage compression over the last 24 hours
+std::string CThinBlockStats::ResponseTimeToString()
+{
+    std::vector<double> vResponseTime;
+
+    double nResponseTimeAverage = 0;
+    double nPercentile = 0;
+    double nTotalResponseTime = 0;
+    double nTotalEntries = 0;
+    for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockResponseTime.begin(); mi != CThinBlockStats::mapThinBlockResponseTime.end(); ++mi) {
+        nTotalEntries += 1;
+        nTotalResponseTime += (*mi).second;
+        vResponseTime.push_back((*mi).second);
+    }
+
+    if (nTotalEntries > 0) {
+        nResponseTimeAverage = (double)nTotalResponseTime / nTotalEntries;
+
+        // Calculate the 95th percentile
+        uint64_t nPercentileElement = static_cast<int>((nTotalEntries * 0.95) + 0.5) - 1;
+        std::sort(vResponseTime.begin(), vResponseTime.end());
+        nPercentile = vResponseTime[nPercentileElement];
+    }
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(2);
+    ss << "Response time   (last 24hrs): AVG:" << nResponseTimeAverage << ", 95th pcntl:" << nPercentile;
+    return ss.str();
+}
+
+// Calculate the xthin percentage compression over the last 24 hours
+std::string CThinBlockStats::ValidationTimeToString()
+{
+    std::vector<double> vValidationTime;
+
+    double nValidationTimeAverage = 0;
+    double nPercentile = 0;
+    double nTotalValidationTime = 0;
+    double nTotalEntries = 0;
+    for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockValidationTime.begin(); mi != CThinBlockStats::mapThinBlockValidationTime.end(); ++mi) {
+        nTotalEntries += 1;
+        nTotalValidationTime += (*mi).second;
+        vValidationTime.push_back((*mi).second);
+    }
+
+    if (nTotalEntries > 0) {
+        nValidationTimeAverage = (double)nTotalValidationTime / nTotalEntries;
+
+        // Calculate the 95th percentile
+        uint64_t nPercentileElement = static_cast<int>((nTotalEntries * 0.95) + 0.5) - 1;
+        std::sort(vValidationTime.begin(), vValidationTime.end());
+        nPercentile = vValidationTime[nPercentileElement];
+    }
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(2);
+    ss << "Validation time (last 24hrs): AVG:" << nValidationTimeAverage << ", 95th pcntl:" << nPercentile;
+    return ss.str();
+}
+

@@ -110,13 +110,19 @@ private:
 	static CStatHistory<uint64_t> nBlocks;
         static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksInBound;
         static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
+        static std::map<int64_t, double> mapThinBlockResponseTime;
+        static std::map<int64_t, double> mapThinBlockValidationTime;
 
 public:
 	static void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
 	static void UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+	static void UpdateResponseTime(double nResponseTime);
+	static void UpdateValidationTime(double nValidationTime);
 	static std::string ToString();
         static std::string InBoundPercentToString();
         static std::string OutBoundPercentToString();
+        static std::string ResponseTimeToString();
+        static std::string ValidationTimeToString();
 };
 
 
