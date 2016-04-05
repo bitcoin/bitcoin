@@ -1590,6 +1590,18 @@ static void AlertNotify(const std::string& strMessage, bool fThread)
         runCommand(strCmd);
 }
 
+static void AlertNotifyOnce(const std::string& strMessage, bool fThread)
+{
+    static bool fWarned = false;
+
+    if (!fWarned) {
+      // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user
+      strMiscWarning = strMessage;
+      AlertNotify(strMessage, fThread);
+      fWarned = true;
+    }
+}
+
 void CheckForkWarningConditions()
 {
     AssertLockHeld(cs_main);
@@ -2564,7 +2576,6 @@ void static UpdateTip(CBlockIndex *pindexNew) {
     cvBlockChange.notify_all();
 
     // Check the version of the last 100 blocks to see if we need to upgrade:
-    static bool fWarned = false;
     if (!IsInitialBlockDownload())
     {
         int nUpgraded = 0;
@@ -2574,11 +2585,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
             if (state == THRESHOLD_ACTIVE || state == THRESHOLD_LOCKED_IN) {
                 if (state == THRESHOLD_ACTIVE) {
-                    strMiscWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
-                    if (!fWarned) {
-                        AlertNotify(strMiscWarning, true);
-                        fWarned = true;
-                    }
+                    AlertNotifyOnce(strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit), true);
                 } else {
                     LogPrintf("%s: unknown new rules are about to activate (versionbit %i)\n", __func__, bit);
                 }
@@ -2595,12 +2602,7 @@ void static UpdateTip(CBlockIndex *pindexNew) {
             LogPrintf("%s: %d of last 100 blocks have unexpected version\n", __func__, nUpgraded);
         if (nUpgraded > 100/2)
         {
-            // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
-            strMiscWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
-            if (!fWarned) {
-                AlertNotify(strMiscWarning, true);
-                fWarned = true;
-            }
+            AlertNotifyOnce(_("Warning: Unknown block versions being mined! It's possible unknown rules are in effect"), true);
         }
     }
 }
