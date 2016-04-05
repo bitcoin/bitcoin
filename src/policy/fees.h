@@ -265,8 +265,8 @@ public:
     void Read(CAutoFile& filein);
 
 private:
-    CFeeRate minTrackedFee; //! Passed to constructor to avoid dependency on main
-    double minTrackedPriority; //! Set to AllowFreeThreshold
+    CFeeRate minTrackedFee;    //!< Passed to constructor to avoid dependency on main
+    double minTrackedPriority; //!< Set to AllowFreeThreshold
     unsigned int nBestSeenHeight;
     struct TxStatsInfo
     {
