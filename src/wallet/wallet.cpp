@@ -2611,12 +2611,19 @@ bool CWallet::GetKeyFromPool(CPubKey& result)
 
 int64_t CWallet::GetOldestKeyPoolTime()
 {
-    int64_t nIndex = 0;
-    CKeyPool keypool;
-    ReserveKeyFromKeyPool(nIndex, keypool);
-    if (nIndex == -1)
+    LOCK(cs_wallet);
+
+    // if the keypool is empty, return <NOW>
+    if (setKeyPool.empty())
         return GetTime();
-    ReturnKey(nIndex);
+
+    // load oldest key from keypool, get time and return
+    CKeyPool keypool;
+    CWalletDB walletdb(strWalletFile);
+    int64_t nIndex = *(setKeyPool.begin());
+    if (!walletdb.ReadPool(nIndex, keypool))
+        throw runtime_error("GetOldestKeyPoolTime(): read oldest key in keypool failed");
+    assert(keypool.vchPubKey.IsValid());
     return keypool.nTime;
 }
 
