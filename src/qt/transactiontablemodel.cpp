@@ -312,6 +312,9 @@ QString TransactionTableModel::formatTxStatus(const TransactionRecord *wtx) cons
     case TransactionStatus::Unconfirmed:
         status = tr("Unconfirmed");
         break;
+    case TransactionStatus::Replaceable:
+        status = tr("Unconfirmed & Replaceable");
+        break;
     case TransactionStatus::Abandoned:
         status = tr("Abandoned");
         break;
@@ -471,6 +474,8 @@ QVariant TransactionTableModel::txStatusDecoration(const TransactionRecord *wtx)
         return COLOR_TX_STATUS_OFFLINE;
     case TransactionStatus::Unconfirmed:
         return QIcon(":/icons/transaction_0");
+    case TransactionStatus::Replaceable:
+        return QIcon(":/icons/transaction_replaceable");
     case TransactionStatus::Abandoned:
         return QIcon(":/icons/transaction_abandoned");
     case TransactionStatus::Confirming:
@@ -582,6 +587,10 @@ QVariant TransactionTableModel::data(const QModelIndex &index, int role) const
         if(rec->status.status == TransactionStatus::Abandoned)
         {
             return COLOR_TX_STATUS_DANGER;
+        }
+        if(rec->status.status == TransactionStatus::Replaceable)
+        {
+            return COLOR_TX_STATUS_REPLACEABLE;
         }
         // Non-confirmed (but not immature) as transactions are grey
         if(!rec->status.countsForBalance && rec->status.status != TransactionStatus::Immature)

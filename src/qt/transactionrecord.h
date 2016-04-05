@@ -31,6 +31,7 @@ public:
         OpenUntilBlock,     /**< Transaction not yet final, waiting for block */
         Offline,            /**< Not sent to any other nodes **/
         Unconfirmed,        /**< Not yet mined into a block **/
+        Replaceable,        /**< Replaceable by optin-RBF (bip125) **/
         Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted,         /**< Conflicts with other transaction or mempool **/
         Abandoned,          /**< Abandoned from the wallet **/
