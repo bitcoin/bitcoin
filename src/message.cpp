@@ -37,7 +37,11 @@ bool IsMessageOp(int op) {
 // Increase expiration to 36000 gradually starting at block 24000.
 // Use for validation purposes and pass the chain height.
 int GetMessageExpirationDepth() {
+	#ifdef ENABLE_DEBUGRPC
+    return 100;
+  #else
     return 525600;
+  #endif
 }
 
 
