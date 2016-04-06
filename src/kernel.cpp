@@ -435,8 +435,12 @@ bool ScanKernelForward(unsigned char *kernel, uint32_t nBits, uint32_t nInputTxT
     // TODO: custom threads amount
 
     uint32_t nThreads = boost::thread::hardware_concurrency();
+    if (nThreads == 0)
+    {
+       nThreads = 1;
+       printf("Warning: hardware_concurrency() failed in %s:%d\n", __FILE__, __LINE__);
+    }
     uint32_t nPart = (SearchInterval.second - SearchInterval.first) / nThreads;
-
 
     KernelWorker *workers = new KernelWorker[nThreads];
 
