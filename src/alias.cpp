@@ -258,7 +258,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-
+printf("getCurrencyToSYSFromAlias()\n");
 	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 	{
 		if(fDebug)
@@ -266,7 +266,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 		return "1";
 	}
 	
-	
+	printf("1\n");
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
@@ -282,6 +282,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 		else
 			break;
     }
+	printf("2\n");
 	if(foundAlias.IsNull())
 		foundAlias = vtxPos.back();
 
@@ -291,22 +292,29 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	
 	UniValue outerValue(UniValue::VSTR);
 	bool read = outerValue.read(value);
+	printf("3\n");
 	if (read)
 	{
 		UniValue outerObj = outerValue.get_obj();
 		UniValue ratesValue = find_value(outerObj, "rates");
+		printf("4\n");
 		if (ratesValue.isArray())
 		{
+			printf("5\n");
 			UniValue codes = ratesValue.get_array();
 			for (unsigned int idx = 0; idx < codes.size(); idx++) {
+				printf("6\n");
 				const UniValue& code = codes[idx];					
 				UniValue codeObj = code.get_obj();					
 				UniValue currencyNameValue = find_value(codeObj, "currency");
 				UniValue currencyAmountValue = find_value(codeObj, "rate");
+				printf("6a\n");
 				if (currencyNameValue.isStr())
 				{		
+					printf("7\n");
 					string currencyCode = currencyNameValue.get_str();
 					rateList.push_back(currencyCode);
+					printf("7a\n");
 					if(currencyCodeToFind == currencyCode)
 					{
 						printf("getCurrencyToSYSFromAlias() currencyCode %s\n", currencyCode.c_str());
