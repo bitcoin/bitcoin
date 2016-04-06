@@ -317,10 +317,8 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							found = true;
 							try{
 							
-								LogPrintf("getCurrencyToSYSFromAlias() 3 before\n");
 								float val = currencyAmountValue.get_real();
 								nFee = AmountFromValue(strprintf("%.8f", val));
-								LogPrintf("getCurrencyToSYSFromAlias() 3 after\n");
 							}
 							catch(std::runtime_error& err)
 							{
