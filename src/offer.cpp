@@ -2869,8 +2869,8 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
 	if (params.size() >= 3) {
-		if(atof(params[2].get_str().c_str()) <= 0)
-			throw runtime_error("invalid quantity value, must be greator than 0");
+		// if(atof(params[2].get_str().c_str()) <= 0)
+		// 	throw runtime_error("invalid quantity value, must be greator than 0");
 	
 		try {
 			nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
@@ -2880,6 +2880,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	}
 	if(vchAlias.empty())
 		throw runtime_error("You must specify an alias!");
+
 	CSyscoinAddress aliasAddress = CSyscoinAddress(stringFromVch(vchAlias));
 	if (!aliasAddress.IsValid())
 		throw runtime_error("Invalid syscoin address");
@@ -2892,11 +2893,11 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		throw runtime_error("could not find an alias with this name");
     if (vchEscrowTxHash.empty())
 	{
-		if(!IsSyscoinTxMine(aliastx, "alias")) {
-			throw runtime_error("This alias is not yours.");
-		}
-		if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
-			throw runtime_error("this alias is not in your wallet");
+		// if(!IsSyscoinTxMine(aliastx, "alias")) {
+		// 	throw runtime_error("This alias is not yours.");
+		// }
+		// if (pwalletMain->GetWalletTx(aliastx.GetHash()) == NULL)
+		// 	throw runtime_error("this alias is not in your wallet");
 	}
 	vchPubKey = alias.vchPubKey;
 	// this is a syscoin txn
@@ -2914,12 +2915,14 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	CTransaction acceptTx;
 	COffer theOffer;
 	const CWalletTx *wtxOfferIn = NULL;
+
 	// if this is a linked offer accept, set the height to the first height so sys_rates price will match what it was at the time of the original accept
 	CTransaction tx;
 	if (!GetTxOfOffer( vchOffer, theOffer, tx))
 	{
 		throw runtime_error("could not find an offer with this identifier");
 	}
+
 	if (!vchLinkOfferAcceptTxHash.empty())
 	{
 		uint256 linkTxHash(uint256S(stringFromVch(vchLinkOfferAcceptTxHash)));
@@ -2933,6 +2936,7 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 		nHeight = linkOffer.accept.nAcceptHeight;
 		nQty = linkOffer.accept.nQty;
 	}
+
 	const CWalletTx *wtxEscrowIn = NULL;
 	CEscrow escrow;
 	vector<vector<unsigned char> > escrowVvch;
@@ -2972,9 +2976,9 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 			}
 		}	
 	}
-	if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE)) {
-		throw runtime_error("there are pending operations on that offer");
-	}
+	// if (ExistsInMempool(vchOffer, OP_OFFER_ACTIVATE)) {
+	// 	throw runtime_error("there are pending operations on that offer");
+	//}
 
 	// load the offer data from the DB
 	vector<COffer> vtxPos;
@@ -2992,15 +2996,15 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	// check if parent to linked offer is still valid
 	if (!theOffer.vchLinkOffer.empty())
 	{
-		if(!vchBTCTxId.empty())
-			throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
+		// if(!vchBTCTxId.empty())
+		// 	throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
 
 		if(pofferdb->ExistsOffer(theOffer.vchLinkOffer))
 		{
 			if (!GetTxOfOffer( theOffer.vchLinkOffer, linkedOffer, tmpTx))
 				throw runtime_error("Trying to accept a linked offer but could not find parent offer, perhaps it is expired");
-			if (linkedOffer.bOnlyAcceptBTC)
-				throw runtime_error("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
+			// if (linkedOffer.bOnlyAcceptBTC)
+			// 	throw runtime_error("Linked offer only accepts Bitcoins, linked offers currently only work with Syscoin payments");
 		}
 	}
 	COfferLinkWhitelistEntry foundAlias;
@@ -3037,14 +3041,14 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	scriptPubKeyAlias += scriptPubKeyAliasOrig;
 
 	// if this is an accept for a linked offer, the offer is set to exclusive mode and you dont have an alias in the whitelist, you cannot accept this offer
-	if(wtxOfferIn != NULL && foundAlias.IsNull() && theOffer.linkWhitelist.bExclusiveResell)
-	{
-		throw runtime_error("cannot pay for this linked offer because you don't own an alias from its affiliate list");
-	}
+	// if(wtxOfferIn != NULL && foundAlias.IsNull() && theOffer.linkWhitelist.bExclusiveResell)
+	// {
+	// 	throw runtime_error("cannot pay for this linked offer because you don't own an alias from its affiliate list");
+	// }
 
-	unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
-	if(vtxPos.back().nQty != -1 && vtxPos.back().nQty < (nQty+memPoolQty))
-		throw runtime_error(strprintf("not enough remaining quantity to fulfill this orderaccept, qty remaining %u, qty desired %u,  qty waiting to be accepted by the network %d", vtxPos.back().nQty, nQty, memPoolQty));
+	// unsigned int memPoolQty = QtyOfPendingAcceptsInMempool(vchOffer);
+	// if(vtxPos.back().nQty != -1 && vtxPos.back().nQty < (nQty+memPoolQty))
+	// 	throw runtime_error(strprintf("not enough remaining quantity to fulfill this orderaccept, qty remaining %u, qty desired %u,  qty waiting to be accepted by the network %d", vtxPos.back().nQty, nQty, memPoolQty));
 
 	int precision = 2;
 	CAmount nPrice = convertCurrencyCodeToSyscoin(theOffer.vchAliasPeg, theOffer.sCurrencyCode, theOffer.GetPrice(foundAlias), nHeight, precision);
@@ -3071,30 +3075,32 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	else
 		vchPaymentMessage = vchMessage;
 	scriptPubKey << CScript::EncodeOP_N(OP_OFFER_ACCEPT) << vchOffer << vchAccept << vchPaymentMessage << vchFromString(boost::lexical_cast<std::string>(nQty)) << OP_2DROP << OP_2DROP << OP_DROP;
-	if(wtxOfferIn != NULL && !vchBTCTxId.empty())
-		throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
+	
+	// if(wtxOfferIn != NULL && !vchBTCTxId.empty())
+	// 	throw runtime_error("Cannot accept a linked offer by paying in Bitcoins");
 
-	if (strCipherText.size() > MAX_ENCRYPTED_VALUE_LENGTH)
-		throw runtime_error("offeraccept message length cannot exceed 1023 bytes!");
+	// if (strCipherText.size() > MAX_ENCRYPTED_VALUE_LENGTH)
+	// 	throw runtime_error("offeraccept message length cannot exceed 1023 bytes!");
 
-	if(!theOffer.vchCert.empty())
-	{
+	// if(!theOffer.vchCert.empty())
+	// {
 		// check for existing cert transfer
-		if (ExistsInMempool(theOffer.vchCert, OP_CERT_TRANSFER)) {
-			throw runtime_error("there is a pending transfer operation on that cert");
-		}
-		if(!vchBTCTxId.empty())
-			throw runtime_error("Cannot purchase certificates with Bitcoins!");
-		CTransaction txCert;
-		CCert theCert;
+		// if (ExistsInMempool(theOffer.vchCert, OP_CERT_TRANSFER)) {
+		// 	throw runtime_error("there is a pending transfer operation on that cert");
+		// }
+		// if(!vchBTCTxId.empty())
+		// 	throw runtime_error("Cannot purchase certificates with Bitcoins!");
+		// CTransaction txCert;
+		// CCert theCert;
 		// make sure this cert is still valid
-		if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
-			throw runtime_error("Cannot purchase with this certificate, it may be expired!");
-	}
-	else{
-		if (vchMessage.size() <= 0)
-			throw runtime_error("offeraccept message data cannot be empty!");
-	}
+		// if (!GetTxOfCert( theOffer.vchCert, theCert, txCert))
+		// 	throw runtime_error("Cannot purchase with this certificate, it may be expired!");
+	// }
+	//else{
+		// if (vchMessage.size() <= 0)
+		// 	throw runtime_error("offeraccept message data cannot be empty!");
+//	}
+	
 	// create accept
 	COfferAccept txAccept;
 	txAccept.vchAcceptRand = vchAccept;
