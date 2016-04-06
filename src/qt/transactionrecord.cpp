@@ -7,6 +7,7 @@
 #include "base58.h"
 #include "consensus/consensus.h"
 #include "main.h"
+#include "txmempool.h"
 #include "timedata.h"
 #include "wallet/wallet.h"
 
@@ -187,6 +188,7 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
     status.countsForBalance = wtx.IsTrusted() && !(wtx.GetBlocksToMaturity() > 0);
     status.depth = wtx.GetDepthInMainChain();
     status.cur_num_blocks = chainActive.Height();
+    status.inMempool = wtx.InMempool();
 
     if (!CheckFinalTx(wtx))
     {
@@ -239,6 +241,8 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
         else if (status.depth == 0)
         {
             status.status = TransactionStatus::Unconfirmed;
+            if (!status.inMempool && wtx.GetConflicts().size())
+                status.status = TransactionStatus::ConflictedNotInMempool;
             if (wtx.isAbandoned())
                 status.status = TransactionStatus::Abandoned;
         }
@@ -257,6 +261,17 @@ void TransactionRecord::updateStatus(const CWalletTx &wtx)
 bool TransactionRecord::statusUpdateNeeded()
 {
     AssertLockHeld(cs_main);
+    {
+        // to detect mempool conflicts, we need to check each
+        // transaction if the mempool status has been changed.
+        // Could be further improved by a signal fired when a
+        // mempool transaction has been evicted
+
+        LOCK(mempool.cs);
+        if (status.inMempool != mempool.exists(hash))
+            return true;
+    }
+
     return status.cur_num_blocks != chainActive.Height();
 }
 

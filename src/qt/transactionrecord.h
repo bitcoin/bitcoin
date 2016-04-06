@@ -33,6 +33,7 @@ public:
         Unconfirmed,        /**< Not yet mined into a block **/
         Confirming,         /**< Confirmed, but waiting for the recommended number of confirmations **/
         Conflicted,         /**< Conflicts with other transaction or mempool **/
+        ConflictedNotInMempool, /**< Conflicts with other transaction but is not in mempool (RBF/replaced) **/
         Abandoned,          /**< Abandoned from the wallet **/
         /// Generated (mined) transactions
         Immature,           /**< Mined but waiting for maturity */
@@ -61,6 +62,8 @@ public:
 
     /** Current number of blocks (to know whether cached status is still valid) */
     int cur_num_blocks;
+
+    bool inMempool;
 };
 
 /** UI model for a transaction. A core transaction can be represented by multiple UI transactions if it has
