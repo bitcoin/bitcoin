@@ -317,7 +317,10 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							found = true;
 							try{
 							
-								nFee = AmountFromValue(currencyAmountValue.get_real());
+								LogPrintf("getCurrencyToSYSFromAlias() 3 before\n");
+								float val = currencyAmountValue.get_real();
+								nFee = AmountFromValue(strprintf("%.8f", val));
+								LogPrintf("getCurrencyToSYSFromAlias() 3 after\n");
 							}
 							catch(std::runtime_error& err)
 							{
@@ -332,18 +335,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 									return "1";
 								}
 							}
-							catch(...)
-							{
-								LogPrintf("getCurrencyToSYSFromAlias() 3 before\n");
-								double val = currencyAmountValue.get_real();
-								float power = powf(10, precision);
-								LogPrintf("getCurrencyToSYSFromAlias() 3a %f\n", val);
-
-								float roundedVal = roundf(val * power)/power;
-								LogPrintf("getCurrencyToSYSFromAlias() 3b %f\n", roundedVal);
-								nFee = AmountFromValue(roundedVal);
-								LogPrintf("getCurrencyToSYSFromAlias() 3 after\n");
-							}
+							
 						}
 					}
 				}
