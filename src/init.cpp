@@ -41,6 +41,11 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
+#ifdef ENABLE_LIGHTWALLET
+#include "lightwallet/db.h"
+#include "lightwallet/wallet.h"
+#include "lightwallet/walletdb.h"
+#endif
 #include <stdint.h>
 #include <stdio.h>
 
@@ -392,6 +397,9 @@ std::string HelpMessage(HelpMessageMode mode)
 
 #ifdef ENABLE_WALLET
     strUsage += CWallet::GetWalletHelpString(showDebug);
+#endif
+#ifdef ENABLE_LIGHTWALLET
+    strUsage += Lightwallet::CWallet::GetWalletHelpString(showDebug);
 #endif
 
 #if ENABLE_ZMQ
