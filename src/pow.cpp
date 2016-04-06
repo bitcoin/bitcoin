@@ -19,10 +19,6 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     // Genesis block
     if (pindexLast == NULL)
         return nProofOfWorkLimit;
-	// SYSCOIN set difficulty to about 1040 at block 1k to avoid local miners mining all the blocks
-	std::string chain = ChainNameFromCommandLine();
-	if((pindexLast->nHeight+1) == 1000 && chain == CBaseChainParams::MAIN)
-		return 0x1d00003f;
     // Only change once per difficulty adjustment interval
     if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
     {
