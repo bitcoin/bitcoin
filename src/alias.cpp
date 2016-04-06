@@ -258,7 +258,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-printf("getCurrencyToSYSFromAlias()\n");
+LogPrintf("getCurrencyToSYSFromAlias()\n");
 	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 	{
 		if(fDebug)
@@ -292,73 +292,73 @@ printf("getCurrencyToSYSFromAlias()\n");
 	
 	UniValue outerValue(UniValue::VSTR);
 	bool read = outerValue.read(value);
-	printf("3\n");
+	LogPrintf("3\n");
 	if (read)
 	{
 		UniValue outerObj = outerValue.get_obj();
 		UniValue ratesValue = find_value(outerObj, "rates");
-		printf("4\n");
+		LogPrintf("4\n");
 		if (ratesValue.isArray())
 		{
-			printf("5\n");
+			LogPrintf("5\n");
 			UniValue codes = ratesValue.get_array();
 			for (unsigned int idx = 0; idx < codes.size(); idx++) {
-				printf("6\n");
+				LogPrintf("6\n");
 				const UniValue& code = codes[idx];					
 				UniValue codeObj = code.get_obj();					
 				UniValue currencyNameValue = find_value(codeObj, "currency");
 				UniValue currencyAmountValue = find_value(codeObj, "rate");
-				printf("6a\n");
+				LogPrintf("6a\n");
 				if (currencyNameValue.isStr())
 				{		
-					printf("7\n");
+					LogPrintf("7\n");
 					string currencyCode = currencyNameValue.get_str();
 					rateList.push_back(currencyCode);
-					printf("7a\n");
+					LogPrintf("7a\n");
 					if(currencyCodeToFind == currencyCode)
 					{
-						printf("getCurrencyToSYSFromAlias() currencyCode %s\n", currencyCode.c_str());
+						LogPrintf("getCurrencyToSYSFromAlias() currencyCode %s\n", currencyCode.c_str());
 						UniValue precisionValue = find_value(codeObj, "precision");
-						printf("getCurrencyToSYSFromAlias() precision\n");
+						LogPrintf("getCurrencyToSYSFromAlias() precision\n");
 						if(precisionValue.isNum())
 						{
 							precision = precisionValue.get_int();
 						}
-						printf("getCurrencyToSYSFromAlias() isNum\n");
+						LogPrintf("getCurrencyToSYSFromAlias() isNum\n");
 						if(currencyAmountValue.isNum())
 						{
-							printf("getCurrencyToSYSFromAlias() found\n");
+							LogPrintf("getCurrencyToSYSFromAlias() found\n");
 							found = true;
 							try{
 							
-								printf("getCurrencyToSYSFromAlias() 1 before\n");
+								LogPrintf("getCurrencyToSYSFromAlias() 1 before\n");
 								nFee = AmountFromValue(currencyAmountValue.get_real());
-								printf("getCurrencyToSYSFromAlias() 1 after\n");
+								LogPrintf("getCurrencyToSYSFromAlias() 1 after\n");
 							}
 							catch(std::runtime_error& err)
 							{
 								try
 								{
-									printf("getCurrencyToSYSFromAlias() 2 before\n");
+									LogPrintf("getCurrencyToSYSFromAlias() 2 before\n");
 									nFee = currencyAmountValue.get_int()*COIN;
-									printf("getCurrencyToSYSFromAlias() 1 after\n");
+									LogPrintf("getCurrencyToSYSFromAlias() 1 after\n");
 								}
 								catch(std::runtime_error& err)
 								{
-									printf("getCurrencyToSYSFromAlias() 2 exit\n");
+									LogPrintf("getCurrencyToSYSFromAlias() 2 exit\n");
 									if(fDebug)
-										printf("getCurrencyToSYSFromAlias() Failed to get currency amount from value\n");
+										LogPrintf("getCurrencyToSYSFromAlias() Failed to get currency amount from value\n");
 									return "1";
 								}
 							}
 							catch(...)
 							{
-								printf("getCurrencyToSYSFromAlias() 3 before\n");
+								LogPrintf("getCurrencyToSYSFromAlias() 3 before\n");
 								double val = currencyAmountValue.get_real();
 								double roundPrecision = 100000000;
 								double roundedVal = round(val * roundPrecision)/roundPrecision;
 								nFee = AmountFromValue(roundedVal);
-								printf("getCurrencyToSYSFromAlias() 3 after\n");
+								LogPrintf("getCurrencyToSYSFromAlias() 3 after\n");
 							}
 						}
 					}
@@ -370,7 +370,7 @@ printf("getCurrencyToSYSFromAlias()\n");
 	else
 	{
 		if(fDebug)
-			printf("getCurrencyToSYSFromAlias() Failed to get value from alias\n");
+			LogPrintf("getCurrencyToSYSFromAlias() Failed to get value from alias\n");
 		return "1";
 	}
 	if(!found)
@@ -379,7 +379,7 @@ printf("getCurrencyToSYSFromAlias()\n");
 			LogPrintf("getCurrencyToSYSFromAlias() currency %s not found in %s alias\n", stringFromVch(vchCurrency).c_str(), stringFromVch(vchAliasPeg).c_str());
 		return "0";
 	}
-	printf("getCurrencyToSYSFromAlias() done\n");
+	LogPrintf("getCurrencyToSYSFromAlias() done\n");
 	return "";
 
 }
