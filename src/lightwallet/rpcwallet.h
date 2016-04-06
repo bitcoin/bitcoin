@@ -5,9 +5,8 @@
 #ifndef BITCOIN_LIGHTWALLET_RPCWALLET_H
 #define BITCOIN_LIGHTWALLET_RPCWALLET_H
 
-namespace Lightwallet {
 class CRPCTable;
-
+namespace Lightwallet {
 void RegisterWalletRPCCommands(CRPCTable &tableRPC);
 }
 #endif //BITCOIN_LIGHTWALLET_RPCWALLET_H
