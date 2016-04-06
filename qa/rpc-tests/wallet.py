@@ -307,10 +307,7 @@ class WalletTest (BitcoinTestFramework):
         self.sync_all()
 
         # Check that the txid and balance is found by node1
-        try:
-            self.nodes[1].gettransaction(cbTxId)
-        except JSONRPCException,e:
-            assert("Invalid or non-wallet transaction id" not in e.error['message'])
+        self.nodes[1].gettransaction(cbTxId)
 
         #check if wallet or blochchain maintenance changes the balance
         self.sync_all()
