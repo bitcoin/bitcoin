@@ -336,9 +336,8 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							{
 								LogPrintf("getCurrencyToSYSFromAlias() 3 before\n");
 								double val = currencyAmountValue.get_real();
-								LogPrintf("getCurrencyToSYSFromAlias() 3a %d\n", val);
-								double roundPrecision = 100000000;
-								double roundedVal = round(val * roundPrecision)/roundPrecision;
+								LogPrintf("getCurrencyToSYSFromAlias() 3a %f\n", val);
+								float roundedVal = roundf(val * precision)/precision;
 								LogPrintf("getCurrencyToSYSFromAlias() 3b %f\n", roundedVal);
 								nFee = AmountFromValue(roundedVal);
 								LogPrintf("getCurrencyToSYSFromAlias() 3 after\n");
