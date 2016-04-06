@@ -339,7 +339,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 								float power = powf(10, precision);
 								LogPrintf("getCurrencyToSYSFromAlias() 3a %f\n", val);
 
-								float roundedVal = roundf(val * power)/10*power;
+								float roundedVal = roundf(val * power)/power;
 								LogPrintf("getCurrencyToSYSFromAlias() 3b %f\n", roundedVal);
 								nFee = AmountFromValue(roundedVal);
 								LogPrintf("getCurrencyToSYSFromAlias() 3 after\n");
