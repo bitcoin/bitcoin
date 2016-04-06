@@ -392,15 +392,18 @@ bool CBudgetManager::AddProposal(CBudgetProposal& budgetProposal)
 
 void CBudgetManager::CheckAndRemove()
 {
-    LogPrintf("CBudgetManager::CheckAndRemove \n");
+    LogPrintf("CBudgetManager::CheckAndRemove\n");
 
     std::string strError = "";
+
+    LogPrintf("CBudgetManager::CheckAndRemove - mapFinalizedBudgets cleanup - size: %d\n", mapFinalizedBudgets.size());
     std::map<uint256, CFinalizedBudget>::iterator it = mapFinalizedBudgets.begin();
     while(it != mapFinalizedBudgets.end())
     {
         CFinalizedBudget* pfinalizedBudget = &((*it).second);
 
         pfinalizedBudget->fValid = pfinalizedBudget->IsValid(strError);
+        LogPrintf("CBudgetManager::CheckAndRemove - pfinalizedBudget->IsValid - strError: %s\n", strError);
         if(pfinalizedBudget->fValid) {
             pfinalizedBudget->AutoCheck();
         }
@@ -408,6 +411,7 @@ void CBudgetManager::CheckAndRemove()
         ++it;
     }
 
+    LogPrintf("CBudgetManager::CheckAndRemove - mapProposals cleanup - size: %d\n", mapProposals.size());
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
     while(it2 != mapProposals.end())
     {
@@ -415,6 +419,8 @@ void CBudgetManager::CheckAndRemove()
         pbudgetProposal->fValid = pbudgetProposal->IsValid(strError);
         ++it2;
     }
+
+    LogPrintf("CBudgetManager::CheckAndRemove - PASSED\n");
 }
 
 void CBudgetManager::FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
@@ -804,6 +810,7 @@ void CBudgetManager::NewBlock()
 
     //remove invalid votes once in a while (we have to check the signatures and validity of every vote, somewhat CPU intensive)
 
+    LogPrintf("CBudgetManager::NewBlock - askedForSourceProposalOrBudget cleanup - size: %d\n", askedForSourceProposalOrBudget.size());
     std::map<uint256, int64_t>::iterator it = askedForSourceProposalOrBudget.begin();
     while(it != askedForSourceProposalOrBudget.end()){
         if((*it).second > GetTime() - (60*60*24)){
@@ -813,18 +820,21 @@ void CBudgetManager::NewBlock()
         }
     }
 
+    LogPrintf("CBudgetManager::NewBlock - mapProposals cleanup - size: %d\n", mapProposals.size());
     std::map<uint256, CBudgetProposal>::iterator it2 = mapProposals.begin();
     while(it2 != mapProposals.end()){
         (*it2).second.CleanAndRemove(false);
         ++it2;
     }
 
+    LogPrintf("CBudgetManager::NewBlock - mapFinalizedBudgets cleanup - size: %d\n", mapFinalizedBudgets.size());
     std::map<uint256, CFinalizedBudget>::iterator it3 = mapFinalizedBudgets.begin();
     while(it3 != mapFinalizedBudgets.end()){
         (*it3).second.CleanAndRemove(false);
         ++it3;
     }
 
+    LogPrintf("CBudgetManager::NewBlock - vecImmatureBudgetProposals cleanup - size: %d\n", vecImmatureBudgetProposals.size());
     std::vector<CBudgetProposalBroadcast>::iterator it4 = vecImmatureBudgetProposals.begin();
     while(it4 != vecImmatureBudgetProposals.end())
     {
@@ -848,6 +858,7 @@ void CBudgetManager::NewBlock()
         it4 = vecImmatureBudgetProposals.erase(it4); 
     }
 
+    LogPrintf("CBudgetManager::NewBlock - vecImmatureFinalizedBudgets cleanup - size: %d\n", vecImmatureFinalizedBudgets.size());
     std::vector<CFinalizedBudgetBroadcast>::iterator it5 = vecImmatureFinalizedBudgets.begin();
     while(it5 != vecImmatureFinalizedBudgets.end())
     {
@@ -871,7 +882,7 @@ void CBudgetManager::NewBlock()
 
         it5 = vecImmatureFinalizedBudgets.erase(it5); 
     }
-
+    LogPrintf("CBudgetManager::NewBlock - PASSED\n");
 }
 
 void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
