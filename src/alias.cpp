@@ -20,7 +20,6 @@
 #include "chainparams.h"
 #include "policy/policy.h"
 #include "utiltime.h"
-#include <math.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -310,28 +309,35 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 					rateList.push_back(currencyCode);
 					if(currencyCodeToFind == currencyCode)
 					{
+						printf("getCurrencyToSYSFromAlias() currencyCode %s\n", currencyCode.c_str());
 						UniValue precisionValue = find_value(codeObj, "precision");
+						printf("getCurrencyToSYSFromAlias() precision\n");
 						if(precisionValue.isNum())
 						{
 							precision = precisionValue.get_int();
 						}
+						printf("getCurrencyToSYSFromAlias() isNum\n");
 						if(currencyAmountValue.isNum())
 						{
+							printf("getCurrencyToSYSFromAlias() found\n");
 							found = true;
 							try{
 							
+								printf("getCurrencyToSYSFromAlias() 1 before\n");
 								nFee = AmountFromValue(currencyAmountValue.get_real());
+								printf("getCurrencyToSYSFromAlias() 1 after\n");
 							}
 							catch(std::runtime_error& err)
 							{
 								try
 								{
-								
+									printf("getCurrencyToSYSFromAlias() 2 before\n");
 									nFee = currencyAmountValue.get_int()*COIN;
+									printf("getCurrencyToSYSFromAlias() 1 after\n");
 								}
 								catch(std::runtime_error& err)
 								{
-								
+									printf("getCurrencyToSYSFromAlias() 2 exit\n");
 									if(fDebug)
 										printf("getCurrencyToSYSFromAlias() Failed to get currency amount from value\n");
 									return "1";
@@ -339,13 +345,12 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							}
 							catch(...)
 							{
-								printf("getCurrencyToSYSFromAlias() catch(...)\n");
+								printf("getCurrencyToSYSFromAlias() 3 before\n");
 								double val = currencyAmountValue.get_real();
-								printf("getCurrencyToSYSFromAlias() 1 %f\n", val);
-								float roundedVal = roundf(val * 100000000)/100000000;
-								printf("getCurrencyToSYSFromAlias() 2 %f\n", roundedVal);
+								double roundPrecision = 100000000;
+								double roundedVal = round(val * roundPrecision)/roundPrecision;
 								nFee = AmountFromValue(roundedVal);
-								printf("getCurrencyToSYSFromAlias() 3\n");
+								printf("getCurrencyToSYSFromAlias() 3 after\n");
 							}
 						}
 					}
@@ -366,6 +371,7 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 			LogPrintf("getCurrencyToSYSFromAlias() currency %s not found in %s alias\n", stringFromVch(vchCurrency).c_str(), stringFromVch(vchAliasPeg).c_str());
 		return "0";
 	}
+	printf("getCurrencyToSYSFromAlias() done\n");
 	return "";
 
 }
@@ -713,11 +719,7 @@ bool CAliasDB::ScanNames(const std::vector<unsigned char>& vchName,
 }
 
 int GetAliasExpirationDepth() {
-	#ifdef ENABLE_DEBUGRPC
-    return 250;
-  #else
-    return 525600;
-  #endif
+	return 525600;
 }
 bool GetTxOfAlias(const vector<unsigned char> &vchName, 
 				  CAliasIndex& txPos, CTransaction& tx) {
