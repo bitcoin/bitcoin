@@ -2453,6 +2453,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             "     \"changeAddress\"     (string, optional, default pool address) The bitcoin address to receive the change\n"
                             "     \"changePosition\"    (numeric, optional, default random) The index of the change output\n"
                             "     \"includeWatching\"   (boolean, optional, default false) Also select inputs which are watch only\n"
+                            "     \"lockUnspents\"      (boolean, optional, default false) Lock selected unspent outputs\n"
                             "   }\n"
                             "                         for backward compatibility: passing in a true instzead of an object will result in {\"includeWatching\":true}\n"
                             "\nResult:\n"
@@ -2478,6 +2479,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     CTxDestination changeAddress = CNoDestination();
     int changePosition = -1;
     bool includeWatching = false;
+    bool lockUnspents = false;
 
     if (params.size() > 1) {
       if (params[1].type() == UniValue::VBOOL) {
@@ -2489,7 +2491,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
         UniValue options = params[1];
 
-        RPCTypeCheckObj(options, boost::assign::map_list_of("changeAddress", UniValue::VSTR)("changePosition", UniValue::VNUM)("includeWatching", UniValue::VBOOL), true, true);
+        RPCTypeCheckObj(options, boost::assign::map_list_of("changeAddress", UniValue::VSTR)("changePosition", UniValue::VNUM)("includeWatching", UniValue::VBOOL)("lockUnspents", UniValue::VBOOL), true, true);
 
         if (options.exists("changeAddress")) {
             CBitcoinAddress address(options["changeAddress"].get_str());
@@ -2505,6 +2507,9 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
         if (options.exists("includeWatching"))
             includeWatching = options["includeWatching"].get_bool();
+
+        if (options.exists("lockUnspents"))
+            lockUnspents = options["lockUnspents"].get_bool();
       }
     }
 
@@ -2523,7 +2528,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     CAmount nFee;
     string strFailReason;
 
-    if(!pwalletMain->FundTransaction(tx, nFee, changePosition, strFailReason, includeWatching, changeAddress))
+    if(!pwalletMain->FundTransaction(tx, nFee, changePosition, strFailReason, includeWatching, lockUnspents, changeAddress))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
 
     UniValue result(UniValue::VOBJ);
