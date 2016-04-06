@@ -20,6 +20,7 @@
 #include "chainparams.h"
 #include "policy/policy.h"
 #include "utiltime.h"
+#include <math.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/case_conv.hpp> // for to_lower()
 #include <boost/xpressive/xpressive_dynamic.hpp>
@@ -338,10 +339,13 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 							}
 							catch(...)
 							{
+								printf("getCurrencyToSYSFromAlias() catch(...)\n");
 								double val = currencyAmountValue.get_real();
-								double roundPrecision = 100000000;
-								double roundedVal = round(val * roundPrecision)/roundPrecision;
+								printf("getCurrencyToSYSFromAlias() 1 %f\n", val);
+								float roundedVal = roundf(val * 100000000)/100000000;
+								printf("getCurrencyToSYSFromAlias() 2 %f\n", roundedVal);
 								nFee = AmountFromValue(roundedVal);
+								printf("getCurrencyToSYSFromAlias() 3\n");
 							}
 						}
 					}
