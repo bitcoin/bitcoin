@@ -56,13 +56,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawtx   = self.nodes[2].createrawtransaction(inputs, outputs)
         rawtx   = self.nodes[2].signrawtransaction(rawtx)
 
-        errorString = ""
         try:
             rawtx   = self.nodes[2].sendrawtransaction(rawtx['hex'])
         except JSONRPCException as e:
-            errorString = e.error['message']
+            assert("Missing inputs" in e.error['message'])
+        else:
+            assert(False)
 
-        assert("Missing inputs" in errorString)
 
         #########################
         # RAW TX MULTISIG TESTS #
