@@ -258,7 +258,6 @@ string getCurrencyToSYSFromAlias(const vector<unsigned char> &vchAliasPeg, const
 	string currencyCodeToFind = stringFromVch(vchCurrency);
 	// check for alias existence in DB
 	vector<CAliasIndex> vtxPos;
-LogPrintf("getCurrencyToSYSFromAlias()\n");
 	if (!paliasdb->ReadAlias(vchAliasPeg, vtxPos) || vtxPos.empty())
 	{
 		if(fDebug)
@@ -266,7 +265,6 @@ LogPrintf("getCurrencyToSYSFromAlias()\n");
 		return "1";
 	}
 	
-	printf("1\n");
 	if (vtxPos.size() < 1)
 	{
 		if(fDebug)
@@ -282,7 +280,6 @@ LogPrintf("getCurrencyToSYSFromAlias()\n");
 		else
 			break;
     }
-	printf("2\n");
 	if(foundAlias.IsNull())
 		foundAlias = vtxPos.back();
 
@@ -292,60 +289,44 @@ LogPrintf("getCurrencyToSYSFromAlias()\n");
 	
 	UniValue outerValue(UniValue::VSTR);
 	bool read = outerValue.read(value);
-	LogPrintf("3\n");
 	if (read)
 	{
 		UniValue outerObj = outerValue.get_obj();
 		UniValue ratesValue = find_value(outerObj, "rates");
-		LogPrintf("4\n");
 		if (ratesValue.isArray())
 		{
-			LogPrintf("5\n");
 			UniValue codes = ratesValue.get_array();
 			for (unsigned int idx = 0; idx < codes.size(); idx++) {
-				LogPrintf("6\n");
 				const UniValue& code = codes[idx];					
 				UniValue codeObj = code.get_obj();					
 				UniValue currencyNameValue = find_value(codeObj, "currency");
 				UniValue currencyAmountValue = find_value(codeObj, "rate");
-				LogPrintf("6a\n");
 				if (currencyNameValue.isStr())
 				{		
-					LogPrintf("7\n");
 					string currencyCode = currencyNameValue.get_str();
 					rateList.push_back(currencyCode);
-					LogPrintf("7a\n");
 					if(currencyCodeToFind == currencyCode)
-					{
-						LogPrintf("getCurrencyToSYSFromAlias() currencyCode %s\n", currencyCode.c_str());
+					{		
 						UniValue precisionValue = find_value(codeObj, "precision");
-						LogPrintf("getCurrencyToSYSFromAlias() precision\n");
 						if(precisionValue.isNum())
 						{
 							precision = precisionValue.get_int();
 						}
-						LogPrintf("getCurrencyToSYSFromAlias() isNum\n");
 						if(currencyAmountValue.isNum())
 						{
-							LogPrintf("getCurrencyToSYSFromAlias() found\n");
 							found = true;
 							try{
 							
-								LogPrintf("getCurrencyToSYSFromAlias() 1 before\n");
 								nFee = AmountFromValue(currencyAmountValue.get_real());
-								LogPrintf("getCurrencyToSYSFromAlias() 1 after\n");
 							}
 							catch(std::runtime_error& err)
 							{
 								try
 								{
-									LogPrintf("getCurrencyToSYSFromAlias() 2 before\n");
 									nFee = currencyAmountValue.get_int()*COIN;
-									LogPrintf("getCurrencyToSYSFromAlias() 1 after\n");
 								}
 								catch(std::runtime_error& err)
 								{
-									LogPrintf("getCurrencyToSYSFromAlias() 2 exit\n");
 									if(fDebug)
 										LogPrintf("getCurrencyToSYSFromAlias() Failed to get currency amount from value\n");
 									return "1";
@@ -355,8 +336,10 @@ LogPrintf("getCurrencyToSYSFromAlias()\n");
 							{
 								LogPrintf("getCurrencyToSYSFromAlias() 3 before\n");
 								double val = currencyAmountValue.get_real();
+								LogPrintf("getCurrencyToSYSFromAlias() 3a %d\n", val);
 								double roundPrecision = 100000000;
 								double roundedVal = round(val * roundPrecision)/roundPrecision;
+								LogPrintf("getCurrencyToSYSFromAlias() 3b %f\n", roundedVal);
 								nFee = AmountFromValue(roundedVal);
 								LogPrintf("getCurrencyToSYSFromAlias() 3 after\n");
 							}
@@ -379,7 +362,6 @@ LogPrintf("getCurrencyToSYSFromAlias()\n");
 			LogPrintf("getCurrencyToSYSFromAlias() currency %s not found in %s alias\n", stringFromVch(vchCurrency).c_str(), stringFromVch(vchAliasPeg).c_str());
 		return "0";
 	}
-	LogPrintf("getCurrencyToSYSFromAlias() done\n");
 	return "";
 
 }
