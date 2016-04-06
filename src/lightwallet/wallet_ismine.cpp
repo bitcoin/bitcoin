@@ -13,7 +13,11 @@
 
 #include <boost/foreach.hpp>
 
+
+
 using namespace std;
+
+namespace Lightwallet {
 
 typedef vector<unsigned char> valtype;
 
@@ -92,4 +96,5 @@ isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey)
         return ProduceSignature(DummySignatureCreator(&keystore), scriptPubKey, scriptSig) ? ISMINE_WATCH_SOLVABLE : ISMINE_WATCH_UNSOLVABLE;
     }
     return ISMINE_NO;
+}
 }

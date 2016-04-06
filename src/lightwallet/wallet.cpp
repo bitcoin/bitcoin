@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/wallet.h"
+#include "lightwallet/wallet.h"
 
 #include "base58.h"
 #include "checkpoints.h"
@@ -31,6 +31,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/thread.hpp>
 
+namespace Lightwallet {
 using namespace std;
 
 CWallet* pwalletMain = NULL;
@@ -977,7 +978,7 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 
 isminetype CWallet::IsMine(const CTxOut& txout) const
 {
-    return ::IsMine(*this, txout.scriptPubKey);
+    return Lightwallet::IsMine(*this, txout.scriptPubKey);
 }
 
 CAmount CWallet::GetCredit(const CTxOut& txout, const isminefilter& filter) const
@@ -996,7 +997,7 @@ bool CWallet::IsChange(const CTxOut& txout) const
     // a better way of identifying which outputs are 'the send' and which are
     // 'the change' will need to be implemented (maybe extend CWalletTx to remember
     // which output, if any, was change).
-    if (::IsMine(*this, txout.scriptPubKey))
+    if (Lightwallet::IsMine(*this, txout.scriptPubKey))
     {
         CTxDestination address;
         if (!ExtractDestination(txout.scriptPubKey, address))
@@ -2372,8 +2373,6 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
         return nLoadWalletRet;
     fFirstRunRet = !vchDefaultKey.IsValid();
 
-    uiInterface.LoadWallet(this);
-
     return DB_LOAD_OK;
 }
 
@@ -2438,7 +2437,7 @@ bool CWallet::SetAddressBook(const CTxDestination& address, const string& strNam
         if (!strPurpose.empty()) /* update purpose only if requested */
             mapAddressBook[address].purpose = strPurpose;
     }
-    NotifyAddressBookChanged(this, address, strName, ::IsMine(*this, address) != ISMINE_NO,
+    NotifyAddressBookChanged(this, address, strName, Lightwallet::IsMine(*this, address) != ISMINE_NO,
                              strPurpose, (fUpdated ? CT_UPDATED : CT_NEW) );
     if (!fFileBacked)
         return false;
@@ -2464,7 +2463,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
         mapAddressBook.erase(address);
     }
 
-    NotifyAddressBookChanged(this, address, "", ::IsMine(*this, address) != ISMINE_NO, "", CT_DELETED);
+    NotifyAddressBookChanged(this, address, "", Lightwallet::IsMine(*this, address) != ISMINE_NO, "", CT_DELETED);
 
     if (!fFileBacked)
         return false;
@@ -3008,7 +3007,7 @@ bool CWallet::GetDestData(const CTxDestination &dest, const std::string &key, st
 
 std::string CWallet::GetWalletHelpString(bool showDebug)
 {
-    std::string strUsage = HelpMessageGroup(_("Wallet options:"));
+    std::string strUsage = HelpMessageGroup(_("LightWallet options:"));
     strUsage += HelpMessageOpt("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"));
     strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
     strUsage += HelpMessageOpt("-fallbackfee=<amt>", strprintf(_("A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)"),
@@ -3324,4 +3323,5 @@ bool CMerkleTx::AcceptToMemoryPool(bool fLimitFree, CAmount nAbsurdFee)
 {
     CValidationState state;
     return ::AcceptToMemoryPool(mempool, state, *this, fLimitFree, NULL, NULL, false, nAbsurdFee);
+}
 }

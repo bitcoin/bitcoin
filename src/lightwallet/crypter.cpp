@@ -14,6 +14,8 @@
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 
+namespace Lightwallet {
+
 bool CCrypter::SetKeyFromPassphrase(const SecureString& strKeyData, const std::vector<unsigned char>& chSalt, const unsigned int nRounds, const unsigned int nDerivationMethod)
 {
     if (nRounds < 1 || chSalt.size() != WALLET_CRYPTO_SALT_SIZE)
@@ -292,3 +294,5 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
     }
     return true;
 }
+
+} //end Lightwallet namespace

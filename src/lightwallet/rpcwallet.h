@@ -2,11 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_RPCWALLET_H
-#define BITCOIN_WALLET_RPCWALLET_H
+#ifndef BITCOIN_LIGHTWALLET_RPCWALLET_H
+#define BITCOIN_LIGHTWALLET_RPCWALLET_H
 
+namespace Lightwallet {
 class CRPCTable;
 
 void RegisterWalletRPCCommands(CRPCTable &tableRPC);
-
-#endif //BITCOIN_WALLET_RPCWALLET_H
+}
+#endif //BITCOIN_LIGHTWALLET_RPCWALLET_H

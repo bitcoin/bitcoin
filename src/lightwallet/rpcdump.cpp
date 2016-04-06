@@ -12,7 +12,7 @@
 #include "sync.h"
 #include "util.h"
 #include "utiltime.h"
-#include "wallet.h"
+#include "lightwallet/wallet.h"
 #include "merkleblock.h"
 #include "core_io.h"
 
@@ -25,6 +25,8 @@
 #include <univalue.h>
 
 #include <boost/foreach.hpp>
+
+namespace Lightwallet {
 
 using namespace std;
 
@@ -155,7 +157,7 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
 void ImportAddress(const CBitcoinAddress& address, const string& strLabel);
 void ImportScript(const CScript& script, const string& strLabel, bool isRedeemScript)
 {
-    if (!isRedeemScript && ::IsMine(*pwalletMain, script) == ISMINE_SPENDABLE)
+    if (!isRedeemScript && Lightwallet::IsMine(*pwalletMain, script) == ISMINE_SPENDABLE)
         throw JSONRPCError(RPC_WALLET_ERROR, "The wallet already contains the private key for this address or script");
 
     pwalletMain->MarkDirty();
@@ -614,4 +616,5 @@ UniValue dumpwallet(const UniValue& params, bool fHelp)
     file << "# End of dump\n";
     file.close();
     return NullUniValue;
+}
 }

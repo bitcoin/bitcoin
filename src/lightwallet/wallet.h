@@ -3,8 +3,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_WALLET_H
-#define BITCOIN_WALLET_WALLET_H
+#ifndef BITCOIN_LIGHTWALLET_WALLET_H
+#define BITCOIN_LIGHTWALLET_WALLET_H
 
 #include "amount.h"
 #include "streams.h"
@@ -12,10 +12,10 @@
 #include "ui_interface.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
-#include "wallet/crypter.h"
-#include "wallet/wallet_ismine.h"
-#include "wallet/walletdb.h"
-#include "wallet/rpcwallet.h"
+#include "lightwallet/crypter.h"
+#include "lightwallet/wallet_ismine.h"
+#include "lightwallet/walletdb.h"
+#include "lightwallet/rpcwallet.h"
 
 #include <algorithm>
 #include <map>
@@ -28,6 +28,13 @@
 
 #include <boost/shared_ptr.hpp>
 
+class CBlockIndex;
+class CCoinControl;
+class COutput;
+class CScript;
+class CTxMemPool;
+
+namespace Lightwallet {
 extern CWallet* pwalletMain;
 
 /**
@@ -59,12 +66,7 @@ static const bool DEFAULT_WALLETBROADCAST = true;
 
 extern const char * DEFAULT_WALLET_DAT;
 
-class CBlockIndex;
-class CCoinControl;
-class COutput;
 class CReserveKey;
-class CScript;
-class CTxMemPool;
 class CWalletTx;
 
 /** (client) version numbers for particular wallet features */
@@ -939,5 +941,5 @@ public:
         READWRITE(vchPubKey);
     }
 };
-
-#endif // BITCOIN_WALLET_WALLET_H
+}
+#endif // BITCOIN_LIGHTWALLET_WALLET_H

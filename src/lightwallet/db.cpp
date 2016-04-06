@@ -24,6 +24,8 @@
 using namespace std;
 
 
+namespace Lightwallet {
+
 unsigned int nWalletDBUpdated;
 
 
@@ -475,4 +477,5 @@ void CDBEnv::Flush(bool fShutdown)
             }
         }
     }
+}
 }

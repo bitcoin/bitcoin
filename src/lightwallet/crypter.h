@@ -2,14 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_CRYPTER_H
-#define BITCOIN_WALLET_CRYPTER_H
+#ifndef BITCOIN_LIGHTWALLET_CRYPTER_H
+#define BITCOIN_LIGHTWALLET_CRYPTER_H
 
 #include "keystore.h"
 #include "serialize.h"
 #include "support/allocators/secure.h"
 
 class uint256;
+
+namespace Lightwallet {
 
 const unsigned int WALLET_CRYPTO_KEY_SIZE = 32;
 const unsigned int WALLET_CRYPTO_SALT_SIZE = 8;
@@ -192,5 +194,5 @@ public:
      */
     boost::signals2::signal<void (CCryptoKeyStore* wallet)> NotifyStatusChanged;
 };
-
-#endif // BITCOIN_WALLET_CRYPTER_H
+} // end Lightwallet namespace
+#endif // BITCOIN_LIGHTWALLET_CRYPTER_H

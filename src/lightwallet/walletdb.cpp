@@ -3,7 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "wallet/walletdb.h"
+#include "lightwallet/walletdb.h"
 
 #include "base58.h"
 #include "consensus/validation.h"
@@ -13,13 +13,15 @@
 #include "sync.h"
 #include "util.h"
 #include "utiltime.h"
-#include "wallet/wallet.h"
+#include "lightwallet/wallet.h"
 
 #include <boost/version.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
+
+namespace Lightwallet {
 
 using namespace std;
 
@@ -1042,4 +1044,5 @@ bool CWalletDB::EraseDestData(const std::string &address, const std::string &key
 {
     nWalletDBUpdated++;
     return Erase(std::make_pair(std::string("destdata"), std::make_pair(address, key)));
+}
 }

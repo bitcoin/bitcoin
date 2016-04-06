@@ -3,11 +3,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_WALLETDB_H
-#define BITCOIN_WALLET_WALLETDB_H
+#ifndef BITCOIN_LIGHTWALLET_WALLETDB_H
+#define BITCOIN_LIGHTWALLET_WALLETDB_H
 
 #include "amount.h"
-#include "wallet/db.h"
+#include "lightwallet/db.h"
 #include "key.h"
 
 #include <list>
@@ -16,18 +16,22 @@
 #include <utility>
 #include <vector>
 
-static const bool DEFAULT_FLUSHWALLET = true;
+struct CBlockLocator;
+class CScript;
+
+class uint160;
+class uint256;
+
+namespace Lightwallet {
 
 class CAccount;
 class CAccountingEntry;
-struct CBlockLocator;
-class CKeyPool;
-class CMasterKey;
-class CScript;
 class CWallet;
 class CWalletTx;
-class uint160;
-class uint256;
+class CKeyPool;
+class CMasterKey;
+
+static const bool DEFAULT_FLUSHWALLET = true;
 
 /** Error statuses for the wallet database */
 enum DBErrors
@@ -143,5 +147,5 @@ private:
 
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);
 void ThreadFlushWalletDB(const std::string& strFile);
-
-#endif // BITCOIN_WALLET_WALLETDB_H
+}
+#endif // BITCOIN_LIGHTWALLET_WALLETDB_H

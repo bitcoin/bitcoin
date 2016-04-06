@@ -16,14 +16,16 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilmoneystr.h"
-#include "wallet.h"
-#include "walletdb.h"
+#include "lightwallet/wallet.h"
+#include "lightwallet/walletdb.h"
 
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
 
 #include <univalue.h>
+
+namespace Lightwallet {
 
 using namespace std;
 
@@ -1334,7 +1336,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
         BOOST_FOREACH(const COutputEntry& s, listSent)
         {
             UniValue entry(UniValue::VOBJ);
-            if(involvesWatchonly || (::IsMine(*pwalletMain, s.destination) & ISMINE_WATCH_ONLY))
+            if(involvesWatchonly || (Lightwallet::IsMine(*pwalletMain, s.destination) & ISMINE_WATCH_ONLY))
                 entry.push_back(Pair("involvesWatchonly", true));
             entry.push_back(Pair("account", strSentAccount));
             MaybePushAddress(entry, s.destination);
@@ -1362,7 +1364,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if (fAllAccounts || (account == strAccount))
             {
                 UniValue entry(UniValue::VOBJ);
-                if(involvesWatchonly || (::IsMine(*pwalletMain, r.destination) & ISMINE_WATCH_ONLY))
+                if(involvesWatchonly || (Lightwallet::IsMine(*pwalletMain, r.destination) & ISMINE_WATCH_ONLY))
                     entry.push_back(Pair("involvesWatchonly", true));
                 entry.push_back(Pair("account", account));
                 MaybePushAddress(entry, r.destination);
@@ -2562,5 +2564,6 @@ static const CRPCCommand commands[] =
 void RegisterWalletRPCCommands(CRPCTable &tableRPC)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
-        tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+        ::tableRPC.appendCommand(commands[vcidx].name, &commands[vcidx]);
+}
 }
