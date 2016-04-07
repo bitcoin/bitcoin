@@ -324,17 +324,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 ssValue >> wkey;
                 pkey = wkey.vchPrivKey;
             }
-
-            // Old wallets store keys as "key" [pubkey] => [privkey]
-            // ... which was slow for wallets with lots of keys, because the public key is re-derived from the private key
-            // using EC operations as a checksum.
-            // Newer wallets store keys as "key"[pubkey] => [privkey][hash(pubkey,privkey)], which is much faster while
-            // remaining backwards-compatible.
-            try
-            {
-                ssValue >> hash;
-            }
-            catch (...) {}
+            ssValue >> hash;
 
             bool fSkipCheck = false;
 
@@ -438,8 +428,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         else if (strType == "version")
         {
             ssValue >> wss.nFileVersion;
-            if (wss.nFileVersion == 10300)
-                wss.nFileVersion = 300;
         }
         else if (strType == "cscript")
         {
@@ -570,11 +558,7 @@ DBErrors CWalletDB::LoadWallet(CWallet* pwallet)
     BOOST_FOREACH(uint256 hash, wss.vWalletUpgrade)
         WriteTx(hash, pwallet->mapWallet[hash]);
 
-    // Rewrite encrypted wallets of versions 0.4.0 and 0.5.0rc:
-    if (wss.fIsEncrypted && (wss.nFileVersion == 40000 || wss.nFileVersion == 50000))
-        return DB_NEED_REWRITE;
-
-    if (wss.nFileVersion < CLIENT_VERSION) // Update
+    if (wss.nFileVersion < CLIENT_VERSION)
         WriteVersion(CLIENT_VERSION);
 
     if (wss.fAnyUnordered)

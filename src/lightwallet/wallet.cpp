@@ -88,14 +88,9 @@ const CWalletTx* CWallet::GetWalletTx(const uint256& hash) const
 CPubKey CWallet::GenerateNewKey()
 {
     AssertLockHeld(cs_wallet); // mapKeyMetadata
-    bool fCompressed = CanSupportFeature(FEATURE_COMPRPUBKEY); // default to compressed public keys if we want 0.6.0 wallets
 
     CKey secret;
-    secret.MakeNewKey(fCompressed);
-
-    // Compressed public keys were introduced in version 0.6.0
-    if (fCompressed)
-        SetMinVersion(FEATURE_COMPRPUBKEY);
+    secret.MakeNewKey(true);
 
     CPubKey pubkey = secret.GetPubKey();
     assert(secret.VerifyPubKey(pubkey));
@@ -317,8 +312,7 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
     if (fFileBacked)
     {
         CWalletDB* pwalletdb = pwalletdbIn ? pwalletdbIn : new CWalletDB(strWalletFile);
-        if (nWalletVersion > 40000)
-            pwalletdb->WriteMinVersion(nWalletVersion);
+        pwalletdb->WriteMinVersion(nWalletVersion);
         if (!pwalletdbIn)
             delete pwalletdb;
     }
@@ -578,9 +572,6 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
             // die and let the user reload the unencrypted wallet.
             assert(false);
         }
-
-        // Encryption was introduced in version 0.4.0
-        SetMinVersion(FEATURE_WALLETCRYPT, pwalletdbEncryption, true);
 
         if (fFileBacked)
         {
