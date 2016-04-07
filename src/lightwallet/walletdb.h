@@ -24,8 +24,6 @@ class uint256;
 
 namespace Lightwallet {
 
-class CAccount;
-class CAccountingEntry;
 class CWallet;
 class CWalletTx;
 class CKeyPool;
@@ -85,7 +83,7 @@ public:
     {
     }
 
-    bool WriteName(const std::string& strAddress, const std::string& strName);
+    bool WriteLabel(const std::string& strAddress, const std::string& strLabel);
     bool EraseName(const std::string& strAddress);
 
     bool WritePurpose(const std::string& strAddress, const std::string& purpose);
@@ -116,19 +114,11 @@ public:
 
     bool WriteMinVersion(int nVersion);
 
-    /// This writes directly to the database, and will not update the CWallet's cached accounting entries!
-    /// Use wallet.AddAccountingEntry instead, to write *and* update its caches.
-    bool WriteAccountingEntry_Backend(const CAccountingEntry& acentry);
-    bool ReadAccount(const std::string& strAccount, CAccount& account);
-    bool WriteAccount(const std::string& strAccount, const CAccount& account);
-
     /// Write destination data key,value tuple to database
     bool WriteDestData(const std::string &address, const std::string &key, const std::string &value);
     /// Erase destination data tuple from wallet database
     bool EraseDestData(const std::string &address, const std::string &key);
 
-    CAmount GetAccountCreditDebit(const std::string& strAccount);
-    void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
     DBErrors ReorderTransactions(CWallet* pwallet);
     DBErrors LoadWallet(CWallet* pwallet);
@@ -141,8 +131,6 @@ public:
 private:
     CWalletDB(const CWalletDB&);
     void operator=(const CWalletDB&);
-
-    bool WriteAccountingEntry(const uint64_t nAccEntryNum, const CAccountingEntry& acentry);
 };
 
 bool BackupWallet(const CWallet& wallet, const std::string& strDest);

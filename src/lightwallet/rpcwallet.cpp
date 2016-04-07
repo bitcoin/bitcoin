@@ -35,6 +35,16 @@ using namespace std;
 int64_t nWalletUnlockTime;
 static CCriticalSection cs_nWalletUnlockTime;
 
+UniValue getObjFromParam(const UniValue &param)
+{
+    if (param.isStr())
+    {
+        UniValue newObj;
+        newObj.read(param.get_str());
+        return newObj;
+    }
+    return param;
+}
 std::string HelpRequiringPassphrase()
 {
     return Lightwallet::pwalletMain && Lightwallet::pwalletMain->IsCrypted()
@@ -103,12 +113,12 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
         entry.push_back(Pair(item.first, item.second));
 }
 
-string AccountFromValue(const UniValue& value)
+string LabelFromValue(const UniValue& value)
 {
-    string strAccount = value.get_str();
-    if (strAccount == "*")
-        throw JSONRPCError(RPC_WALLET_INVALID_ACCOUNT_NAME, "Invalid account name");
-    return strAccount;
+    string strLabel = value.get_str();
+    if (strLabel == "*")
+        throw JSONRPCError(RPC_WALLET_INVALID_ACCOUNT_NAME, "Invalid label");
+    return strLabel;
 }
 
 UniValue getnewaddress(const UniValue& params, bool fHelp)
@@ -118,12 +128,10 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getnewaddress ( \"account\" )\n"
+            "getnewaddress ( \"label\" )\n"
             "\nReturns a new Bitcoin address for receiving payments.\n"
-            "If 'account' is specified (DEPRECATED), it is added to the address book \n"
-            "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
-            "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "1. \"label\"        (string, optional) The label for the address to be added to.\n"
             "\nResult:\n"
             "\"bitcoinaddress\"    (string) The new bitcoin address\n"
             "\nExamples:\n"
@@ -133,10 +141,10 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
 
-    // Parse the account first so we don't generate a key if there's an error
-    string strAccount;
+    // Parse the label first so we don't generate a key if there's an error
+    string strLabel;
     if (params.size() > 0)
-        strAccount = AccountFromValue(params[0]);
+        strLabel = LabelFromValue(params[0]);
 
     if (!Lightwallet::pwalletMain->IsLocked())
         Lightwallet::pwalletMain->TopUpKeyPool();
@@ -147,77 +155,9 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     CKeyID keyID = newKey.GetID();
 
-    Lightwallet::pwalletMain->SetAddressBook(keyID, strAccount, "receive");
+    Lightwallet::pwalletMain->SetAddressBook(keyID, strLabel, "receive");
 
     return CBitcoinAddress(keyID).ToString();
-}
-
-
-CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
-{
-    CWalletDB walletdb(Lightwallet::pwalletMain->strWalletFile);
-
-    CAccount account;
-    walletdb.ReadAccount(strAccount, account);
-
-    if (!bForceNew) {
-        if (!account.vchPubKey.IsValid())
-            bForceNew = true;
-        else {
-            // Check if the current key has been used
-            CScript scriptPubKey = GetScriptForDestination(account.vchPubKey.GetID());
-            for (map<uint256, CWalletTx>::iterator it = Lightwallet::pwalletMain->mapWallet.begin();
-                 it != Lightwallet::pwalletMain->mapWallet.end() && account.vchPubKey.IsValid();
-                 ++it)
-                BOOST_FOREACH(const CTxOut& txout, (*it).second.vout)
-                    if (txout.scriptPubKey == scriptPubKey) {
-                        bForceNew = true;
-                        break;
-                    }
-        }
-    }
-
-    // Generate a new key
-    if (bForceNew) {
-        if (!Lightwallet::pwalletMain->GetKeyFromPool(account.vchPubKey))
-            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
-
-        Lightwallet::pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
-        walletdb.WriteAccount(strAccount, account);
-    }
-
-    return CBitcoinAddress(account.vchPubKey.GetID());
-}
-
-UniValue getaccountaddress(const UniValue& params, bool fHelp)
-{
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "getaccountaddress \"account\"\n"
-            "\nDEPRECATED. Returns the current Bitcoin address for receiving payments to this account.\n"
-            "\nArguments:\n"
-            "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
-            "\nResult:\n"
-            "\"bitcoinaddress\"   (string) The account bitcoin address\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getaccountaddress", "")
-            + HelpExampleCli("getaccountaddress", "\"\"")
-            + HelpExampleCli("getaccountaddress", "\"myaccount\"")
-            + HelpExampleRpc("getaccountaddress", "\"myaccount\"")
-        );
-
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
-
-    // Parse the account first so we don't generate a key if there's an error
-    string strAccount = AccountFromValue(params[0]);
-
-    UniValue ret(UniValue::VSTR);
-
-    ret = GetAccountAddress(strAccount).ToString();
-    return ret;
 }
 
 
@@ -256,208 +196,127 @@ UniValue getrawchangeaddress(const UniValue& params, bool fHelp)
 }
 
 
-UniValue setaccount(const UniValue& params, bool fHelp)
+UniValue setlabel(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "setaccount \"bitcoinaddress\" \"account\"\n"
-            "\nDEPRECATED. Sets the account associated with the given address.\n"
-            "\nArguments:\n"
-            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to be associated with an account.\n"
-            "2. \"account\"         (string, required) The account to assign the address to.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"tabby\"")
-            + HelpExampleRpc("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"tabby\"")
-        );
+                            "setlabel \"bitcoinaddress\" \"label\"\n"
+                            "\nSets the label associated with the given address.\n"
+                            "\nArguments:\n"
+                            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to be associated with an label.\n"
+                            "2. \"label\"           (string, required) The label to assign to the address.\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("setlabel", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"tabby\"")
+                            + HelpExampleRpc("setlabel", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \"tabby\"")
+                            );
 
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
 
-    string strAccount;
+    string strLabel;
     if (params.size() > 1)
-        strAccount = AccountFromValue(params[1]);
+        strLabel = LabelFromValue(params[1]);
 
-    // Only add the account if the address is yours.
-    if (IsMine(*Lightwallet::pwalletMain, address.Get()))
-    {
-        // Detect when changing the account of an address that is the 'unused current key' of another account:
-        if (Lightwallet::pwalletMain->mapAddressBook.count(address.Get()))
-        {
-            string strOldAccount = Lightwallet::pwalletMain->mapAddressBook[address.Get()].name;
-            if (address == GetAccountAddress(strOldAccount))
-                GetAccountAddress(strOldAccount, true);
-        }
-        Lightwallet::pwalletMain->SetAddressBook(address.Get(), strAccount, "receive");
-    }
-    else
-        throw JSONRPCError(RPC_MISC_ERROR, "setaccount can only be used with own address");
-
+    pwalletMain->SetAddressBook(address.Get(), strLabel, IsMine(*pwalletMain, address.Get()) ? "receive" : "send");
+    
     return NullUniValue;
 }
 
-
-UniValue getaccount(const UniValue& params, bool fHelp)
+/** Convert CAddressBookData to JSON record.
+ * The verbosity of the output is configurable based on the command.
+ */
+static UniValue AddressBookDataToJSON(const CAddressBookData& data, bool verbose)
 {
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "getaccount \"bitcoinaddress\"\n"
-            "\nDEPRECATED. Returns the account associated with the given address.\n"
-            "\nArguments:\n"
-            "1. \"bitcoinaddress\"  (string, required) The bitcoin address for account lookup.\n"
-            "\nResult:\n"
-            "\"accountname\"        (string) the account address\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
-            + HelpExampleRpc("getaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
-        );
-
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
-
-    CBitcoinAddress address(params[0].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
-
-    string strAccount;
-    map<CTxDestination, CAddressBookData>::iterator mi = Lightwallet::pwalletMain->mapAddressBook.find(address.Get());
-    if (mi != Lightwallet::pwalletMain->mapAddressBook.end() && !(*mi).second.name.empty())
-        strAccount = (*mi).second.name;
-    return strAccount;
-}
-
-
-UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
-{
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
-    if (fHelp || params.size() != 1)
-        throw runtime_error(
-            "getaddressesbyaccount \"account\"\n"
-            "\nDEPRECATED. Returns the list of addresses for the given account.\n"
-            "\nArguments:\n"
-            "1. \"account\"  (string, required) The account name.\n"
-            "\nResult:\n"
-            "[                     (json array of string)\n"
-            "  \"bitcoinaddress\"  (string) a bitcoin address associated with the given account\n"
-            "  ,...\n"
-            "]\n"
-            "\nExamples:\n"
-            + HelpExampleCli("getaddressesbyaccount", "\"tabby\"")
-            + HelpExampleRpc("getaddressesbyaccount", "\"tabby\"")
-        );
-
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
-
-    string strAccount = AccountFromValue(params[0]);
-
-    // Find all addresses that have the given account
-    UniValue ret(UniValue::VARR);
-    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, Lightwallet::pwalletMain->mapAddressBook)
-    {
-        const CBitcoinAddress& address = item.first;
-        const string& strName = item.second.name;
-        if (strName == strAccount)
-            ret.push_back(address.ToString());
+    UniValue ret(UniValue::VOBJ);
+    if (verbose)
+        ret.push_back(Pair("label", data.label));
+    ret.push_back(Pair("purpose", data.purpose));
+    if (verbose) {
+        UniValue ddata(UniValue::VOBJ);
+        BOOST_FOREACH(const PAIRTYPE(std::string, std::string) &item, data.destdata)
+        ddata.push_back(Pair(item.first, item.second));
+        ret.push_back(Pair("destdata", ddata));
     }
     return ret;
 }
 
-static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtractFeeFromAmount, CWalletTx& wtxNew)
-{
-    CAmount curBalance = Lightwallet::pwalletMain->GetBalance();
-
-    // Check amount
-    if (nValue <= 0)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount");
-
-    if (nValue > curBalance)
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
-
-    // Parse Bitcoin address
-    CScript scriptPubKey = GetScriptForDestination(address);
-
-    // Create and send the transaction
-    CReserveKey reservekey(Lightwallet::pwalletMain);
-    CAmount nFeeRequired;
-    std::string strError;
-    vector<CRecipient> vecSend;
-    int nChangePosRet = -1;
-    CRecipient recipient = {scriptPubKey, nValue, fSubtractFeeFromAmount};
-    vecSend.push_back(recipient);
-    if (!Lightwallet::pwalletMain->CreateTransaction(vecSend, wtxNew, reservekey, nFeeRequired, nChangePosRet, strError)) {
-        if (!fSubtractFeeFromAmount && nValue + nFeeRequired > Lightwallet::pwalletMain->GetBalance())
-            strError = strprintf("Error: This transaction requires a transaction fee of at least %s because of its amount, complexity, or use of recently received funds!", FormatMoney(nFeeRequired));
-        throw JSONRPCError(RPC_WALLET_ERROR, strError);
-    }
-    if (!Lightwallet::pwalletMain->CommitTransaction(wtxNew, reservekey))
-        throw JSONRPCError(RPC_WALLET_ERROR, "Error: The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of the wallet and coins were spent in the copy but not marked as spent here.");
-}
-
-UniValue sendtoaddress(const UniValue& params, bool fHelp)
+UniValue getlabel(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 2 || params.size() > 5)
+    if (fHelp || params.size() != 1)
         throw runtime_error(
-            "sendtoaddress \"bitcoinaddress\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
-            "\nSend an amount to a given address.\n"
-            + HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"bitcoinaddress\"  (string, required) The bitcoin address to send to.\n"
-            "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                             This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                             to which you're sending the transaction. This is not part of the \n"
-            "                             transaction, just kept in your wallet.\n"
-            "5. subtractfeefromamount  (boolean, optional, default=false) The fee will be deducted from the amount being sent.\n"
-            "                             The recipient will receive less bitcoins than you enter in the amount field.\n"
-            "\nResult:\n"
-            "\"transactionid\"  (string) The transaction id.\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1")
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"donation\" \"seans outpost\"")
-            + HelpExampleCli("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.1 \"\" \"\" true")
-            + HelpExampleRpc("sendtoaddress", "\"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.1, \"donation\", \"seans outpost\"")
-        );
+                            "getlabel \"bitcoinaddress\"\n"
+                            "\nReturns the label associated with the given address.\n"
+                            "\nArguments:\n"
+                            "1. \"bitcoinaddress\"  (string, required) The bitcoin address for label lookup.\n"
+                            "\nResult:\n"
+                            "  { (json object with information about address)\n"
+                            "    \"name\": \"labelname\" (string) The label\n"
+                            "    \"purpose\": \"string\" (string) Purpose of address (\"send\" for sending address, \"receive\" for receiving address)\n"
+                            "  },...\n"
+                            "  Result is null if there is no record for this address.\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("getlabel", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
+                            + HelpExampleRpc("getlabel", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"")
+                            );
 
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
+    
+    map<CTxDestination, CAddressBookData>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
+    if (mi != pwalletMain->mapAddressBook.end())
+        return AddressBookDataToJSON((*mi).second, true);
+    return NullUniValue;
+}
 
-    // Amount
-    CAmount nAmount = AmountFromValue(params[1]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
 
-    // Wallet comments
-    CWalletTx wtx;
-    if (params.size() > 2 && !params[2].isNull() && !params[2].get_str().empty())
-        wtx.mapValue["comment"] = params[2].get_str();
-    if (params.size() > 3 && !params[3].isNull() && !params[3].get_str().empty())
-        wtx.mapValue["to"]      = params[3].get_str();
+UniValue getaddressesbylabel(const UniValue& params, bool fHelp)
+{
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
 
-    bool fSubtractFeeFromAmount = false;
-    if (params.size() > 4)
-        fSubtractFeeFromAmount = params[4].get_bool();
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+                            "getaddressesbylabel \"label\"\n"
+                            "\nReturns the list of addresses assigned the specified label.\n"
+                            "\nArguments:\n"
+                            "1. \"label\"  (string, required) The label.\n"
+                            "\nResult:\n"
+                            "{ (json object with addresses as keys)\n"
+                            "  \"bitcoinaddress\": { (json object with information about address)\n"
+                            "    \"purpose\": \"string\" (string)  Purpose of address (\"send\" for sending address, \"receive\" for receiving address)\n"
+                            "  },...\n"
+                            "}\n"
+                            "\nExamples:\n"
+                            + HelpExampleCli("getaddressesbylabel", "\"tabby\"")
+                            + HelpExampleRpc("getaddressesbylabel", "\"tabby\"")
+                            );
 
-    EnsureWalletIsUnlocked();
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    SendMoney(address.Get(), nAmount, fSubtractFeeFromAmount, wtx);
+    string strLabel;
+    if (params.size() > 0)
+        strLabel = LabelFromValue(params[0]);
 
-    return wtx.GetHash().GetHex();
+    // Find all addresses that have the given label
+    UniValue ret(UniValue::VOBJ);
+    BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, pwalletMain->mapAddressBook)
+    {
+        if (strLabel.empty() || item.second.label == strLabel)
+            ret.push_back(Pair(item.first.ToString(), AddressBookDataToJSON(item.second, true)));
+    }
+    return ret;
 }
 
 UniValue listaddressgroupings(const UniValue& params, bool fHelp)
@@ -477,7 +336,7 @@ UniValue listaddressgroupings(const UniValue& params, bool fHelp)
             "    [\n"
             "      \"bitcoinaddress\",     (string) The bitcoin address\n"
             "      amount,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
-            "      \"account\"             (string, optional) The account (DEPRECATED)\n"
+            "      \"label\"               (string, optional) The label\n"
             "    ]\n"
             "    ,...\n"
             "  ]\n"
@@ -502,7 +361,7 @@ UniValue listaddressgroupings(const UniValue& params, bool fHelp)
             addressInfo.push_back(ValueFromAmount(balances[address]));
             {
                 if (Lightwallet::pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get()) != Lightwallet::pwalletMain->mapAddressBook.end())
-                    addressInfo.push_back(Lightwallet::pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second.name);
+                    addressInfo.push_back(Lightwallet::pwalletMain->mapAddressBook.find(CBitcoinAddress(address).Get())->second.label);
             }
             jsonGrouping.push_back(addressInfo);
         }
@@ -625,95 +484,6 @@ UniValue getreceivedbyaddress(const UniValue& params, bool fHelp)
 }
 
 
-UniValue getreceivedbyaccount(const UniValue& params, bool fHelp)
-{
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
-    if (fHelp || params.size() < 1 || params.size() > 2)
-        throw runtime_error(
-            "getreceivedbyaccount \"account\" ( minconf )\n"
-            "\nDEPRECATED. Returns the total amount received by addresses with <account> in transactions with at least [minconf] confirmations.\n"
-            "\nArguments:\n"
-            "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
-            "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "\nResult:\n"
-            "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
-            "\nExamples:\n"
-            "\nAmount received by the default account with at least 1 confirmation\n"
-            + HelpExampleCli("getreceivedbyaccount", "\"\"") +
-            "\nAmount received at the tabby account including unconfirmed amounts with zero confirmations\n"
-            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 0") +
-            "\nThe amount with at least 6 confirmation, very safe\n"
-            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 6") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("getreceivedbyaccount", "\"tabby\", 6")
-        );
-
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
-
-    // Minimum confirmations
-    int nMinDepth = 1;
-    if (params.size() > 1)
-        nMinDepth = params[1].get_int();
-
-    // Get the set of pub keys assigned to account
-    string strAccount = AccountFromValue(params[0]);
-    set<CTxDestination> setAddress = Lightwallet::pwalletMain->GetAccountAddresses(strAccount);
-
-    // Tally
-    CAmount nAmount = 0;
-    for (map<uint256, CWalletTx>::iterator it = Lightwallet::pwalletMain->mapWallet.begin(); it != Lightwallet::pwalletMain->mapWallet.end(); ++it)
-    {
-        const CWalletTx& wtx = (*it).second;
-        if (wtx.IsCoinBase() || !CheckFinalTx(wtx))
-            continue;
-
-        BOOST_FOREACH(const CTxOut& txout, wtx.vout)
-        {
-            CTxDestination address;
-            if (ExtractDestination(txout.scriptPubKey, address) && IsMine(*Lightwallet::pwalletMain, address) && setAddress.count(address))
-                if (wtx.GetDepthInMainChain() >= nMinDepth)
-                    nAmount += txout.nValue;
-        }
-    }
-
-    return (double)nAmount / (double)COIN;
-}
-
-
-CAmount GetAccountBalance(CWalletDB& walletdb, const string& strAccount, int nMinDepth, const isminefilter& filter)
-{
-    CAmount nBalance = 0;
-
-    // Tally wallet transactions
-    for (map<uint256, CWalletTx>::iterator it = Lightwallet::pwalletMain->mapWallet.begin(); it != Lightwallet::pwalletMain->mapWallet.end(); ++it)
-    {
-        const CWalletTx& wtx = (*it).second;
-        if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
-            continue;
-
-        CAmount nReceived, nSent, nFee;
-        wtx.GetAccountAmounts(strAccount, nReceived, nSent, nFee, filter);
-
-        if (nReceived != 0 && wtx.GetDepthInMainChain() >= nMinDepth)
-            nBalance += nReceived;
-        nBalance -= nSent + nFee;
-    }
-
-    // Tally internal accounting entries
-    nBalance += walletdb.GetAccountCreditDebit(strAccount);
-
-    return nBalance;
-}
-
-CAmount GetAccountBalance(const string& strAccount, int nMinDepth, const isminefilter& filter)
-{
-    CWalletDB walletdb(Lightwallet::pwalletMain->strWalletFile);
-    return GetAccountBalance(walletdb, strAccount, nMinDepth, filter);
-}
-
-
 UniValue getbalance(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
@@ -721,17 +491,12 @@ UniValue getbalance(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() > 3)
         throw runtime_error(
-            "getbalance ( \"account\" minconf includeWatchonly )\n"
-            "\nIf account is not specified, returns the server's total available balance.\n"
-            "If account is specified (DEPRECATED), returns the balance in the account.\n"
-            "Note that the account \"\" is not the same as leaving the parameter out.\n"
-            "The server total may be different to the balance in the default \"\" account.\n"
+            "getbalance ( minconf includeWatchonly )\n"
             "\nArguments:\n"
-            "1. \"account\"      (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
-            "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. includeWatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
+            "1. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
+            "2. includeWatchonly (bool, optional, default=false) Also include balance in watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
-            "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
+            "amount              (numeric) The total amount in " + CURRENCY_UNIT + ".\n"
             "\nExamples:\n"
             "\nThe total amount in the wallet\n"
             + HelpExampleCli("getbalance", "") +
@@ -747,46 +512,37 @@ UniValue getbalance(const UniValue& params, bool fHelp)
         return  ValueFromAmount(Lightwallet::pwalletMain->GetBalance());
 
     int nMinDepth = 1;
-    if (params.size() > 1)
-        nMinDepth = params[1].get_int();
+    if (params.size() > 0)
+        nMinDepth = params[0].get_int();
     isminefilter filter = ISMINE_SPENDABLE;
-    if(params.size() > 2)
-        if(params[2].get_bool())
+    if(params.size() > 1)
+        if(params[1].get_bool())
             filter = filter | ISMINE_WATCH_ONLY;
 
-    if (params[0].get_str() == "*") {
-        // Calculate total balance a different way from GetBalance()
-        // (GetBalance() sums up all unspent TxOuts)
-        // getbalance and "getbalance * 1 true" should return the same number
-        CAmount nBalance = 0;
-        for (map<uint256, CWalletTx>::iterator it = Lightwallet::pwalletMain->mapWallet.begin(); it != Lightwallet::pwalletMain->mapWallet.end(); ++it)
+    // Calculate total balance a different way from GetBalance()
+    // (GetBalance() sums up all unspent TxOuts)
+    // getbalance and "getbalance * 1 true" should return the same number
+    CAmount nBalance = 0;
+    for (map<uint256, CWalletTx>::iterator it = Lightwallet::pwalletMain->mapWallet.begin(); it != Lightwallet::pwalletMain->mapWallet.end(); ++it)
+    {
+        const CWalletTx& wtx = (*it).second;
+        if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
+            continue;
+
+        CAmount allFee;
+        list<COutputEntry> listReceived;
+        list<COutputEntry> listSent;
+        wtx.GetAmounts(listReceived, listSent, allFee, filter);
+        if (wtx.GetDepthInMainChain() >= nMinDepth)
         {
-            const CWalletTx& wtx = (*it).second;
-            if (!CheckFinalTx(wtx) || wtx.GetBlocksToMaturity() > 0 || wtx.GetDepthInMainChain() < 0)
-                continue;
-
-            CAmount allFee;
-            string strSentAccount;
-            list<COutputEntry> listReceived;
-            list<COutputEntry> listSent;
-            wtx.GetAmounts(listReceived, listSent, allFee, strSentAccount, filter);
-            if (wtx.GetDepthInMainChain() >= nMinDepth)
-            {
-                BOOST_FOREACH(const COutputEntry& r, listReceived)
-                    nBalance += r.amount;
-            }
-            BOOST_FOREACH(const COutputEntry& s, listSent)
-                nBalance -= s.amount;
-            nBalance -= allFee;
+            BOOST_FOREACH(const COutputEntry& r, listReceived)
+                nBalance += r.amount;
         }
-        return  ValueFromAmount(nBalance);
+        BOOST_FOREACH(const COutputEntry& s, listSent)
+            nBalance -= s.amount;
+        nBalance -= allFee;
     }
-
-    string strAccount = AccountFromValue(params[0]);
-
-    CAmount nBalance = GetAccountBalance(strAccount, nMinDepth, filter);
-
-    return ValueFromAmount(nBalance);
+    return  ValueFromAmount(nBalance);
 }
 
 UniValue getunconfirmedbalance(const UniValue &params, bool fHelp)
@@ -804,164 +560,25 @@ UniValue getunconfirmedbalance(const UniValue &params, bool fHelp)
     return ValueFromAmount(Lightwallet::pwalletMain->GetUnconfirmedBalance());
 }
 
-
-UniValue movecmd(const UniValue& params, bool fHelp)
+UniValue sendto(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 3 || params.size() > 5)
+    if (fHelp || params.size() < 1 || params.size() > 4)
         throw runtime_error(
-            "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" )\n"
-            "\nDEPRECATED. Move a specified amount from one account in your wallet to another.\n"
-            "\nArguments:\n"
-            "1. \"fromaccount\"   (string, required) The name of the account to move funds from. May be the default account using \"\".\n"
-            "2. \"toaccount\"     (string, required) The name of the account to move funds to. May be the default account using \"\".\n"
-            "3. amount            (numeric) Quantity of " + CURRENCY_UNIT + " to move between accounts.\n"
-            "4. minconf           (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
-            "5. \"comment\"       (string, optional) An optional comment, stored in the wallet only.\n"
-            "\nResult:\n"
-            "true|false           (boolean) true if successful.\n"
-            "\nExamples:\n"
-            "\nMove 0.01 " + CURRENCY_UNIT + " from the default account to the account named tabby\n"
-            + HelpExampleCli("move", "\"\" \"tabby\" 0.01") +
-            "\nMove 0.01 " + CURRENCY_UNIT + " timotei to akiko with a comment and funds have 6 confirmations\n"
-            + HelpExampleCli("move", "\"timotei\" \"akiko\" 0.01 6 \"happy birthday!\"") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("move", "\"timotei\", \"akiko\", 0.01, 6, \"happy birthday!\"")
-        );
-
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
-
-    string strFrom = AccountFromValue(params[0]);
-    string strTo = AccountFromValue(params[1]);
-    CAmount nAmount = AmountFromValue(params[2]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-    if (params.size() > 3)
-        // unused parameter, used to be nMinDepth, keep type-checking it though
-        (void)params[3].get_int();
-    string strComment;
-    if (params.size() > 4)
-        strComment = params[4].get_str();
-
-    CWalletDB walletdb(Lightwallet::pwalletMain->strWalletFile);
-    if (!walletdb.TxnBegin())
-        throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
-
-    int64_t nNow = GetAdjustedTime();
-
-    // Debit
-    CAccountingEntry debit;
-    debit.nOrderPos = Lightwallet::pwalletMain->IncOrderPosNext(&walletdb);
-    debit.strAccount = strFrom;
-    debit.nCreditDebit = -nAmount;
-    debit.nTime = nNow;
-    debit.strOtherAccount = strTo;
-    debit.strComment = strComment;
-    Lightwallet::pwalletMain->AddAccountingEntry(debit, walletdb);
-
-    // Credit
-    CAccountingEntry credit;
-    credit.nOrderPos = Lightwallet::pwalletMain->IncOrderPosNext(&walletdb);
-    credit.strAccount = strTo;
-    credit.nCreditDebit = nAmount;
-    credit.nTime = nNow;
-    credit.strOtherAccount = strFrom;
-    credit.strComment = strComment;
-    Lightwallet::pwalletMain->AddAccountingEntry(credit, walletdb);
-
-    if (!walletdb.TxnCommit())
-        throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
-
-    return true;
-}
-
-
-UniValue sendfrom(const UniValue& params, bool fHelp)
-{
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
-    if (fHelp || params.size() < 3 || params.size() > 6)
-        throw runtime_error(
-            "sendfrom \"fromaccount\" \"tobitcoinaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
-            "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a bitcoin address."
-            + HelpRequiringPassphrase() + "\n"
-            "\nArguments:\n"
-            "1. \"fromaccount\"       (string, required) The name of the account to send funds from. May be the default account using \"\".\n"
-            "2. \"tobitcoinaddress\"  (string, required) The bitcoin address to send funds to.\n"
-            "3. amount                (numeric or string, required) The amount in " + CURRENCY_UNIT + " (transaction fee is added on top).\n"
-            "4. minconf               (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
-            "5. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
-            "                                     This is not part of the transaction, just kept in your wallet.\n"
-            "6. \"comment-to\"        (string, optional) An optional comment to store the name of the person or organization \n"
-            "                                     to which you're sending the transaction. This is not part of the transaction, \n"
-            "                                     it is just kept in your wallet.\n"
-            "\nResult:\n"
-            "\"transactionid\"        (string) The transaction id.\n"
-            "\nExamples:\n"
-            "\nSend 0.01 " + CURRENCY_UNIT + " from the default account to the address, must have at least 1 confirmation\n"
-            + HelpExampleCli("sendfrom", "\"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01") +
-            "\nSend 0.01 from the tabby account to the given address, funds must have at least 6 confirmations\n"
-            + HelpExampleCli("sendfrom", "\"tabby\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01 6 \"donation\" \"seans outpost\"") +
-            "\nAs a json rpc call\n"
-            + HelpExampleRpc("sendfrom", "\"tabby\", \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.01, 6, \"donation\", \"seans outpost\"")
-        );
-
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
-
-    string strAccount = AccountFromValue(params[0]);
-    CBitcoinAddress address(params[1].get_str());
-    if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Bitcoin address");
-    CAmount nAmount = AmountFromValue(params[2]);
-    if (nAmount <= 0)
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
-    int nMinDepth = 1;
-    if (params.size() > 3)
-        nMinDepth = params[3].get_int();
-
-    CWalletTx wtx;
-    wtx.strFromAccount = strAccount;
-    if (params.size() > 4 && !params[4].isNull() && !params[4].get_str().empty())
-        wtx.mapValue["comment"] = params[4].get_str();
-    if (params.size() > 5 && !params[5].isNull() && !params[5].get_str().empty())
-        wtx.mapValue["to"]      = params[5].get_str();
-
-    EnsureWalletIsUnlocked();
-
-    // Check funds
-    CAmount nBalance = GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE);
-    if (nAmount > nBalance)
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
-
-    SendMoney(address.Get(), nAmount, false, wtx);
-
-    return wtx.GetHash().GetHex();
-}
-
-
-UniValue sendmany(const UniValue& params, bool fHelp)
-{
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
-    if (fHelp || params.size() < 2 || params.size() > 5)
-        throw runtime_error(
-            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] )\n"
+            "sendto {\"address\":amount,...} ( minconf \"comment\" [\"address\",...] )\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
-            "1. \"fromaccount\"         (string, required) DEPRECATED. The account to send the funds from. Should be \"\" for the default account\n"
-            "2. \"amounts\"             (string, required) A json object with addresses and amounts\n"
+            "1. \"amounts\"             (string, required) A json object with addresses and amounts\n"
             "    {\n"
             "      \"address\":amount   (numeric or string) The bitcoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
             "      ,...\n"
             "    }\n"
-            "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
-            "4. \"comment\"             (string, optional) A comment\n"
-            "5. subtractfeefromamount   (string, optional) A json array with addresses.\n"
+            "2. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
+            "3. \"comment\"             (string, optional) A comment\n"
+            "4. subtractfeefromamount   (string, optional) A json array with addresses.\n"
             "                           The fee will be equally deducted from the amount of each selected address.\n"
             "                           Those recipients will receive less bitcoins than you enter in their corresponding amount field.\n"
             "                           If no addresses are specified here, the sender pays the fee.\n"
@@ -974,31 +591,29 @@ UniValue sendmany(const UniValue& params, bool fHelp)
             "                                    the number of addresses.\n"
             "\nExamples:\n"
             "\nSend two amounts to two different addresses:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\"") +
+            + HelpExampleCli("sendto", "\"\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\"") +
             "\nSend two amounts to two different addresses setting the confirmation and comment:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 6 \"testing\"") +
+            + HelpExampleCli("sendto", "\"\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 6 \"testing\"") +
             "\nSend two amounts to two different addresses, subtract fee from amount:\n"
-            + HelpExampleCli("sendmany", "\"\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 1 \"\" \"[\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\",\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\"]\"") +
+            + HelpExampleCli("sendto", "\"\" \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\" 1 \"\" \"[\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\",\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\"]\"") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("sendmany", "\"\", \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\", 6, \"testing\"")
+            + HelpExampleRpc("sendto", "\"\", \"{\\\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\\\":0.01,\\\"1353tsE8YMTA4EuV7dgUXGjNFf9KpVvKHz\\\":0.02}\", 6, \"testing\"")
         );
 
     LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
 
-    string strAccount = AccountFromValue(params[0]);
-    UniValue sendTo = params[1].get_obj();
+    UniValue sendTo = getObjFromParam(params[0]);
     int nMinDepth = 1;
-    if (params.size() > 2)
-        nMinDepth = params[2].get_int();
+    if (params.size() > 1)
+        nMinDepth = params[1].get_int();
 
     CWalletTx wtx;
-    wtx.strFromAccount = strAccount;
-    if (params.size() > 3 && !params[3].isNull() && !params[3].get_str().empty())
-        wtx.mapValue["comment"] = params[3].get_str();
+    if (params.size() > 2 && !params[2].isNull() && !params[2].get_str().empty())
+        wtx.mapValue["comment"] = params[2].get_str();
 
     UniValue subtractFeeFromAmount(UniValue::VARR);
-    if (params.size() > 4)
-        subtractFeeFromAmount = params[4].get_array();
+    if (params.size() > 3)
+        subtractFeeFromAmount = params[3].get_array();
 
     set<CBitcoinAddress> setAddress;
     vector<CRecipient> vecSend;
@@ -1035,9 +650,9 @@ UniValue sendmany(const UniValue& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     // Check funds
-    CAmount nBalance = GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE);
+    CAmount nBalance = Lightwallet::pwalletMain->GetBalance();
     if (totalAmount > nBalance)
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
 
     // Send
     CReserveKey keyChange(Lightwallet::pwalletMain);
@@ -1060,10 +675,9 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 2 || params.size() > 3)
     {
-        string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
+        string msg = "addmultisigaddress nrequired [\"key\",...] ( \"label\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
             "Each key is a Bitcoin address or hex-encoded public key.\n"
-            "If 'account' is specified (DEPRECATED), assign address to that account.\n"
 
             "\nArguments:\n"
             "1. nrequired        (numeric, required) The number of required signatures out of the n keys or addresses.\n"
@@ -1072,7 +686,7 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
             "       \"address\"  (string) bitcoin address or hex-encoded public key\n"
             "       ...,\n"
             "     ]\n"
-            "3. \"account\"      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
+            "3. \"label\"        (string, optional) An label to assign the addresses to.\n"
 
             "\nResult:\n"
             "\"bitcoinaddress\"  (string) A bitcoin address associated with the keys.\n"
@@ -1088,16 +702,16 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
 
     LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
 
-    string strAccount;
+    string strLabel;
     if (params.size() > 2)
-        strAccount = AccountFromValue(params[2]);
+        strLabel = LabelFromValue(params[2]);
 
     // Construct using pay-to-script-hash:
     CScript inner = _createmultisig_redeemScript(params);
     CScriptID innerID(inner);
     Lightwallet::pwalletMain->AddCScript(inner);
 
-    Lightwallet::pwalletMain->SetAddressBook(innerID, strAccount, "send");
+    Lightwallet::pwalletMain->SetAddressBook(innerID, strLabel, "receive");
     return CBitcoinAddress(innerID).ToString();
 }
 
@@ -1116,14 +730,14 @@ struct tallyitem
     }
 };
 
-UniValue ListReceived(const UniValue& params, bool fByAccounts)
+UniValue ListReceived(const UniValue& params)
 {
     // Minimum confirmations
     int nMinDepth = 1;
     if (params.size() > 0)
         nMinDepth = params[0].get_int();
 
-    // Whether to include empty accounts
+    // Whether to include "empty" addresses
     bool fIncludeEmpty = false;
     if (params.size() > 1)
         fIncludeEmpty = params[1].get_bool();
@@ -1167,11 +781,11 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
 
     // Reply
     UniValue ret(UniValue::VARR);
-    map<string, tallyitem> mapAccountTally;
+    map<string, tallyitem> mapLabelTally;
     BOOST_FOREACH(const PAIRTYPE(CBitcoinAddress, CAddressBookData)& item, Lightwallet::pwalletMain->mapAddressBook)
     {
         const CBitcoinAddress& address = item.first;
-        const string& strAccount = item.second.name;
+        const string& strLabel = item.second.label;
         map<CBitcoinAddress, tallyitem>::iterator it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
@@ -1186,51 +800,23 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
             fIsWatchonly = (*it).second.fIsWatchonly;
         }
 
-        if (fByAccounts)
+        UniValue obj(UniValue::VOBJ);
+        if(fIsWatchonly)
+            obj.push_back(Pair("involvesWatchonly", true));
+        obj.push_back(Pair("address",       address.ToString()));
+        obj.push_back(Pair("label",         strLabel));
+        obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
+        obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
+        UniValue transactions(UniValue::VARR);
+        if (it != mapTally.end())
         {
-            tallyitem& item = mapAccountTally[strAccount];
-            item.nAmount += nAmount;
-            item.nConf = min(item.nConf, nConf);
-            item.fIsWatchonly = fIsWatchonly;
-        }
-        else
-        {
-            UniValue obj(UniValue::VOBJ);
-            if(fIsWatchonly)
-                obj.push_back(Pair("involvesWatchonly", true));
-            obj.push_back(Pair("address",       address.ToString()));
-            obj.push_back(Pair("account",       strAccount));
-            obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
-            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
-            if (!fByAccounts)
-                obj.push_back(Pair("label", strAccount));
-            UniValue transactions(UniValue::VARR);
-            if (it != mapTally.end())
+            BOOST_FOREACH(const uint256& item, (*it).second.txids)
             {
-                BOOST_FOREACH(const uint256& item, (*it).second.txids)
-                {
-                    transactions.push_back(item.GetHex());
-                }
+                transactions.push_back(item.GetHex());
             }
-            obj.push_back(Pair("txids", transactions));
-            ret.push_back(obj);
         }
-    }
-
-    if (fByAccounts)
-    {
-        for (map<string, tallyitem>::iterator it = mapAccountTally.begin(); it != mapAccountTally.end(); ++it)
-        {
-            CAmount nAmount = (*it).second.nAmount;
-            int nConf = (*it).second.nConf;
-            UniValue obj(UniValue::VOBJ);
-            if((*it).second.fIsWatchonly)
-                obj.push_back(Pair("involvesWatchonly", true));
-            obj.push_back(Pair("account",       (*it).first));
-            obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
-            obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
-            ret.push_back(obj);
-        }
+        obj.push_back(Pair("txids", transactions));
+        ret.push_back(obj);
     }
 
     return ret;
@@ -1255,7 +841,7 @@ UniValue listreceivedbyaddress(const UniValue& params, bool fHelp)
             "  {\n"
             "    \"involvesWatchonly\" : true,        (bool) Only returned if imported addresses were involved in transaction\n"
             "    \"address\" : \"receivingaddress\",  (string) The receiving address\n"
-            "    \"account\" : \"accountname\",       (string) DEPRECATED. The account of the receiving address. The default account is \"\".\n"
+            "    \"label\" :   \"label\",             (string) The label of the receiving address. The default label is \"\".\n"
             "    \"amount\" : x.xxx,                  (numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
             "    \"confirmations\" : n,               (numeric) The number of confirmations of the most recent transaction included\n"
             "    \"label\" : \"label\"                (string) A comment for the address/transaction, if any\n"
@@ -1271,45 +857,9 @@ UniValue listreceivedbyaddress(const UniValue& params, bool fHelp)
 
     LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
 
-    return ListReceived(params, false);
+    return ListReceived(params);
 }
 
-UniValue listreceivedbyaccount(const UniValue& params, bool fHelp)
-{
-    if (!EnsureWalletIsAvailable(fHelp))
-        return NullUniValue;
-
-    if (fHelp || params.size() > 3)
-        throw runtime_error(
-            "listreceivedbyaccount ( minconf includeempty includeWatchonly)\n"
-            "\nDEPRECATED. List balances by account.\n"
-            "\nArguments:\n"
-            "1. minconf      (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
-            "2. includeempty (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
-            "3. includeWatchonly (bool, optional, default=false) Whether to include watchonly addresses (see 'importaddress').\n"
-
-            "\nResult:\n"
-            "[\n"
-            "  {\n"
-            "    \"involvesWatchonly\" : true,   (bool) Only returned if imported addresses were involved in transaction\n"
-            "    \"account\" : \"accountname\",  (string) The account name of the receiving account\n"
-            "    \"amount\" : x.xxx,             (numeric) The total amount received by addresses with this account\n"
-            "    \"confirmations\" : n,          (numeric) The number of confirmations of the most recent transaction included\n"
-            "    \"label\" : \"label\"           (string) A comment for the address/transaction, if any\n"
-            "  }\n"
-            "  ,...\n"
-            "]\n"
-
-            "\nExamples:\n"
-            + HelpExampleCli("listreceivedbyaccount", "")
-            + HelpExampleCli("listreceivedbyaccount", "6 true")
-            + HelpExampleRpc("listreceivedbyaccount", "6, true, true")
-        );
-
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
-
-    return ListReceived(params, true);
-}
 
 static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 {
@@ -1318,32 +868,34 @@ static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
         entry.push_back(Pair("address", addr.ToString()));
 }
 
-void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
+void ListTransactions(const CWalletTx& wtx, const string& strLabelFilter, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
 {
     CAmount nFee;
-    string strSentAccount;
     list<COutputEntry> listReceived;
     list<COutputEntry> listSent;
 
-    wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
+    wtx.GetAmounts(listReceived, listSent, nFee, filter);
 
-    bool fAllAccounts = (strAccount == string("*"));
+    bool fAllLabels = (strLabelFilter == string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
     // Sent
-    if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
+    if ((!listSent.empty() || nFee != 0))
     {
         BOOST_FOREACH(const COutputEntry& s, listSent)
         {
+            // simple label filter
+            string label = Lightwallet::pwalletMain->mapAddressBook[s.destination].label;
+            if (!fAllLabels && !strLabelFilter.empty() && label != strLabelFilter)
+                continue;
+
             UniValue entry(UniValue::VOBJ);
             if(involvesWatchonly || (Lightwallet::IsMine(*Lightwallet::pwalletMain, s.destination) & ISMINE_WATCH_ONLY))
                 entry.push_back(Pair("involvesWatchonly", true));
-            entry.push_back(Pair("account", strSentAccount));
+            entry.push_back(Pair("label", label));
             MaybePushAddress(entry, s.destination);
             entry.push_back(Pair("category", "send"));
             entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
-            if (Lightwallet::pwalletMain->mapAddressBook.count(s.destination))
-                entry.push_back(Pair("label", Lightwallet::pwalletMain->mapAddressBook[s.destination].name));
             entry.push_back(Pair("vout", s.vout));
             entry.push_back(Pair("fee", ValueFromAmount(-nFee)));
             if (fLong)
@@ -1358,15 +910,15 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     {
         BOOST_FOREACH(const COutputEntry& r, listReceived)
         {
-            string account;
+            string label;
             if (Lightwallet::pwalletMain->mapAddressBook.count(r.destination))
-                account = Lightwallet::pwalletMain->mapAddressBook[r.destination].name;
-            if (fAllAccounts || (account == strAccount))
+                label = Lightwallet::pwalletMain->mapAddressBook[r.destination].label;
+            if (fAllLabels || (label == strLabelFilter))
             {
                 UniValue entry(UniValue::VOBJ);
                 if(involvesWatchonly || (Lightwallet::IsMine(*Lightwallet::pwalletMain, r.destination) & ISMINE_WATCH_ONLY))
                     entry.push_back(Pair("involvesWatchonly", true));
-                entry.push_back(Pair("account", account));
+                entry.push_back(Pair("label", label));
                 MaybePushAddress(entry, r.destination);
                 if (wtx.IsCoinBase())
                 {
@@ -1382,31 +934,12 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                     entry.push_back(Pair("category", "receive"));
                 }
                 entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
-                if (Lightwallet::pwalletMain->mapAddressBook.count(r.destination))
-                    entry.push_back(Pair("label", account));
                 entry.push_back(Pair("vout", r.vout));
                 if (fLong)
                     WalletTxToJSON(wtx, entry);
                 ret.push_back(entry);
             }
         }
-    }
-}
-
-void AcentryToJSON(const CAccountingEntry& acentry, const string& strAccount, UniValue& ret)
-{
-    bool fAllAccounts = (strAccount == string("*"));
-
-    if (fAllAccounts || acentry.strAccount == strAccount)
-    {
-        UniValue entry(UniValue::VOBJ);
-        entry.push_back(Pair("account", acentry.strAccount));
-        entry.push_back(Pair("category", "move"));
-        entry.push_back(Pair("time", acentry.nTime));
-        entry.push_back(Pair("amount", ValueFromAmount(acentry.nCreditDebit)));
-        entry.push_back(Pair("otheraccount", acentry.strOtherAccount));
-        entry.push_back(Pair("comment", acentry.strComment));
-        ret.push_back(entry);
     }
 }
 
@@ -1417,24 +950,20 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() > 4)
         throw runtime_error(
-            "listtransactions ( \"account\" count from includeWatchonly)\n"
-            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
+            "listtransactions ( \"label-filter\" count from includeWatchonly)\n"
+            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions with an alernative 'label-filter' (defaul is * = all labels).\n"
             "\nArguments:\n"
-            "1. \"account\"    (string, optional) DEPRECATED. The account name. Should be \"*\".\n"
-            "2. count          (numeric, optional, default=10) The number of transactions to return\n"
-            "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
-            "4. includeWatchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
+            "1. \"label-query\"      (string, optional) The label query. Default is \"*\".\n"
+            "2. count              (numeric, optional, default=10) The number of transactions to return\n"
+            "3. from               (numeric, optional, default=0) The number of transactions to skip\n"
+            "4. includeWatchonly   (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. \n"
-            "                                                It will be \"\" for the default account.\n"
+            "    \"label\":\"label\",               (string) The label that is associated with the transaction. \n"
             "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for \n"
             "                                                move transactions (category = move).\n"
-            "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
-            "                                                transaction between accounts, and not associated with an address,\n"
-            "                                                transaction id or block. 'send' and 'receive' transactions are \n"
-            "                                                associated with an address, transaction id and block details\n"
+            "    \"category\":\"send|receive\",     (string) The transaction category.\n"
             "    \"amount\": x.xxx,          (numeric) The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the\n"
             "                                         'move' category for moves outbound. It is positive for the 'receive' category,\n"
             "                                         and for the 'move' category for inbound funds.\n"
@@ -1457,9 +986,6 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
             "                                          for 'send' and 'receive' category of transactions.\n"
             "    \"comment\": \"...\",       (string) If a comment is associated with the transaction.\n"
             "    \"label\": \"label\"        (string) A comment for the address/transaction, if any\n"
-            "    \"otheraccount\": \"accountname\",  (string) For the 'move' category of transactions, the account the funds came \n"
-            "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
-            "                                          negative amounts).\n"
             "    \"bip125-replaceable\": \"yes|no|unknown\"  (string) Whether this transaction could be replaced due to BIP125 (replace-by-fee);\n"
             "                                                     may be unknown for unconfirmed transactions not in the mempool\n"
             "  }\n"
@@ -1476,9 +1002,9 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
 
     LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
 
-    string strAccount = "*";
+    string strLabel = "*";
     if (params.size() > 0)
-        strAccount = params[0].get_str();
+        strLabel = params[0].get_str();
     int nCount = 10;
     if (params.size() > 1)
         nCount = params[1].get_int();
@@ -1502,17 +1028,13 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
     // iterate backwards until we have nCount items to return:
     for (CWallet::TxItems::const_reverse_iterator it = txOrdered.rbegin(); it != txOrdered.rend(); ++it)
     {
-        CWalletTx *const pwtx = (*it).second.first;
+        CWalletTx *const pwtx = (*it).second;
         if (pwtx != 0)
-            ListTransactions(*pwtx, strAccount, 0, true, ret, filter);
-        CAccountingEntry *const pacentry = (*it).second.second;
-        if (pacentry != 0)
-            AcentryToJSON(*pacentry, strAccount, ret);
+            ListTransactions(*pwtx, strLabel, 0, true, ret, filter);
 
         if ((int)ret.size() >= (nCount+nFrom)) break;
     }
     // ret is newest to oldest
-
     if (nFrom > (int)ret.size())
         nFrom = ret.size();
     if ((nFrom + nCount) > (int)ret.size())
@@ -1537,82 +1059,48 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
     return ret;
 }
 
-UniValue listaccounts(const UniValue& params, bool fHelp)
+UniValue listlabels(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() > 2)
+    if (fHelp || params.size() > 1)
         throw runtime_error(
-            "listaccounts ( minconf includeWatchonly)\n"
-            "\nDEPRECATED. Returns Object that has account names as keys, account balances as values.\n"
-            "\nArguments:\n"
-            "1. minconf          (numeric, optional, default=1) Only include transactions with at least this many confirmations\n"
-            "2. includeWatchonly (bool, optional, default=false) Include balances in watchonly addresses (see 'importaddress')\n"
-            "\nResult:\n"
-            "{                      (json object where keys are account names, and values are numeric balances\n"
-            "  \"account\": x.xxx,  (numeric) The property name is the account name, and the value is the total balance for the account.\n"
-            "  ...\n"
-            "}\n"
-            "\nExamples:\n"
-            "\nList account balances where there at least 1 confirmation\n"
-            + HelpExampleCli("listaccounts", "") +
-            "\nList account balances including zero confirmation transactions\n"
-            + HelpExampleCli("listaccounts", "0") +
-            "\nList account balances for 6 or more confirmations\n"
-            + HelpExampleCli("listaccounts", "6") +
-            "\nAs json rpc call\n"
-            + HelpExampleRpc("listaccounts", "6")
-        );
+                            "listlabels ( \"purpose\" )\n"
+                            "\nReturns the list of all labels, or labels that are assigned to addresses with a specific purpose.\n"
+                            "\nArguments:\n"
+                            "1. \"purpose\"  (string, optional) Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument.\n"
+                            "\nResult:\n"
+                            "[                      (json array of string)\n"
+                            "  \"label\",  (string) Label name\n"
+                            "  ...\n"
+                            "]\n"
+                            "\nExamples:\n"
+                            "\nList all labels\n"
+                            + HelpExampleCli("listlabels", "") +
+                            "\nList labels that have receiving addresses\n"
+                            + HelpExampleCli("listlabels", "receive") +
+                            "\nList labels that have sending addresses\n"
+                            + HelpExampleCli("listlabels", "send") +
+                            "\nAs json rpc call\n"
+                            + HelpExampleRpc("listlabels", "receive")
+                            );
 
-    LOCK2(cs_main, Lightwallet::pwalletMain->cs_wallet);
+    LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    int nMinDepth = 1;
+    std::string purpose;
     if (params.size() > 0)
-        nMinDepth = params[0].get_int();
-    isminefilter includeWatchonly = ISMINE_SPENDABLE;
-    if(params.size() > 1)
-        if(params[1].get_bool())
-            includeWatchonly = includeWatchonly | ISMINE_WATCH_ONLY;
-
-    map<string, CAmount> mapAccountBalances;
-    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& entry, Lightwallet::pwalletMain->mapAddressBook) {
-        if (IsMine(*Lightwallet::pwalletMain, entry.first) & includeWatchonly) // This address belongs to me
-            mapAccountBalances[entry.second.name] = 0;
+        purpose = params[0].get_str();
+    
+    std::set<std::string> setLabels;
+    BOOST_FOREACH(const PAIRTYPE(CTxDestination, CAddressBookData)& entry, pwalletMain->mapAddressBook) {
+        if (purpose.empty() || entry.second.purpose == purpose)
+            setLabels.insert(entry.second.label);
     }
-
-    for (map<uint256, CWalletTx>::iterator it = Lightwallet::pwalletMain->mapWallet.begin(); it != Lightwallet::pwalletMain->mapWallet.end(); ++it)
-    {
-        const CWalletTx& wtx = (*it).second;
-        CAmount nFee;
-        string strSentAccount;
-        list<COutputEntry> listReceived;
-        list<COutputEntry> listSent;
-        int nDepth = wtx.GetDepthInMainChain();
-        if (wtx.GetBlocksToMaturity() > 0 || nDepth < 0)
-            continue;
-        wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, includeWatchonly);
-        mapAccountBalances[strSentAccount] -= nFee;
-        BOOST_FOREACH(const COutputEntry& s, listSent)
-            mapAccountBalances[strSentAccount] -= s.amount;
-        if (nDepth >= nMinDepth)
-        {
-            BOOST_FOREACH(const COutputEntry& r, listReceived)
-                if (Lightwallet::pwalletMain->mapAddressBook.count(r.destination))
-                    mapAccountBalances[Lightwallet::pwalletMain->mapAddressBook[r.destination].name] += r.amount;
-                else
-                    mapAccountBalances[""] += r.amount;
-        }
-    }
-
-    const list<CAccountingEntry> & acentries = Lightwallet::pwalletMain->laccentries;
-    BOOST_FOREACH(const CAccountingEntry& entry, acentries)
-        mapAccountBalances[entry.strAccount] += entry.nCreditDebit;
-
-    UniValue ret(UniValue::VOBJ);
-    BOOST_FOREACH(const PAIRTYPE(string, CAmount)& accountBalance, mapAccountBalances) {
-        ret.push_back(Pair(accountBalance.first, ValueFromAmount(accountBalance.second)));
-    }
+    UniValue ret(UniValue::VARR);
+    BOOST_FOREACH(const std::string &name, setLabels)
+    ret.push_back(name);
+    
     return ret;
 }
 
@@ -1632,7 +1120,6 @@ UniValue listsinceblock(const UniValue& params, bool fHelp)
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
-            "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. Will be \"\" for the default account.\n"
             "    \"address\":\"bitcoinaddress\",    (string) The bitcoin address of the transaction. Not present for move transactions (category = move).\n"
             "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
             "    \"amount\": x.xxx,          (numeric) The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the 'move' category for moves \n"
@@ -1734,7 +1221,6 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
             "                                                   may be unknown for unconfirmed transactions not in the mempool\n"
             "  \"details\" : [\n"
             "    {\n"
-            "      \"account\" : \"accountname\",  (string) DEPRECATED. The account name involved in the transaction, can be \"\" for the default account.\n"
             "      \"address\" : \"bitcoinaddress\",   (string) The bitcoin address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
@@ -2350,7 +1836,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
             "    \"txid\" : \"txid\",        (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"address\" : \"address\",  (string) the bitcoin address\n"
-            "    \"account\" : \"account\",  (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            "    \"label\" : \"label\",      (string) The label associated to the address\n"
             "    \"scriptPubKey\" : \"key\", (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction amount in " + CURRENCY_UNIT + "\n"
             "    \"confirmations\" : n       (numeric) The number of confirmations\n"
@@ -2415,7 +1901,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
         if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address)) {
             entry.push_back(Pair("address", CBitcoinAddress(address).ToString()));
             if (Lightwallet::pwalletMain->mapAddressBook.count(address))
-                entry.push_back(Pair("account", Lightwallet::pwalletMain->mapAddressBook[address].name));
+                entry.push_back(Pair("label", Lightwallet::pwalletMain->mapAddressBook[address].label));
         }
         entry.push_back(Pair("scriptPubKey", HexStr(pk.begin(), pk.end())));
         if (pk.IsPayToScriptHash()) {
@@ -2522,13 +2008,11 @@ static const CRPCCommand commands[] =
     { "lightwallet",             "wallet_dumpprivkey",              &dumpprivkey,              true  },
     { "lightwallet",             "wallet_dumpwallet",               &dumpwallet,               true  },
     { "lightwallet",             "wallet_encryptwallet",            &encryptwallet,            true  },
-    { "lightwallet",             "wallet_getaccountaddress",        &getaccountaddress,        true  },
-    { "lightwallet",             "wallet_getaccount",               &getaccount,               true  },
-    { "lightwallet",             "wallet_getaddressesbyaccount",    &getaddressesbyaccount,    true  },
+    { "lightwallet",             "wallet_getlabel",                 &getlabel,                 true  },
+    { "lightwallet",             "wallet_getaddressesbylabel",      &getaddressesbylabel,      true  },
     { "lightwallet",             "wallet_getbalance",               &getbalance,               false },
     { "lightwallet",             "wallet_getnewaddress",            &getnewaddress,            true  },
     { "lightwallet",             "wallet_getrawchangeaddress",      &getrawchangeaddress,      true  },
-    { "lightwallet",             "wallet_getreceivedbyaccount",     &getreceivedbyaccount,     false },
     { "lightwallet",             "wallet_getreceivedbyaddress",     &getreceivedbyaddress,     false },
     { "lightwallet",             "wallet_gettransaction",           &gettransaction,           false },
     { "lightwallet",             "wallet_getunconfirmedbalance",    &getunconfirmedbalance,    false },
@@ -2539,20 +2023,16 @@ static const CRPCCommand commands[] =
     { "lightwallet",             "wallet_importprunedfunds",        &importprunedfunds,        true  },
     { "lightwallet",             "wallet_importpubkey",             &importpubkey,             true  },
     { "lightwallet",             "wallet_keypoolrefill",            &keypoolrefill,            true  },
-    { "lightwallet",             "wallet_listaccounts",             &listaccounts,             false },
+    { "lightwallet",             "wallet_listlabels",               &listlabels,               false },
     { "lightwallet",             "wallet_listaddressgroupings",     &listaddressgroupings,     false },
     { "lightwallet",             "wallet_listlockunspent",          &listlockunspent,          false },
-    { "lightwallet",             "wallet_listreceivedbyaccount",    &listreceivedbyaccount,    false },
     { "lightwallet",             "wallet_listreceivedbyaddress",    &listreceivedbyaddress,    false },
     { "lightwallet",             "wallet_listsinceblock",           &listsinceblock,           false },
     { "lightwallet",             "wallet_listtransactions",         &listtransactions,         false },
     { "lightwallet",             "wallet_listunspent",              &listunspent,              false },
     { "lightwallet",             "wallet_lockunspent",              &lockunspent,              true  },
-    { "lightwallet",             "wallet_move",                     &movecmd,                  false },
-    { "lightwallet",             "wallet_sendfrom",                 &sendfrom,                 false },
-    { "lightwallet",             "wallet_sendmany",                 &sendmany,                 false },
-    { "lightwallet",             "wallet_sendtoaddress",            &sendtoaddress,            false },
-    { "lightwallet",             "wallet_setaccount",               &setaccount,               true  },
+    { "lightwallet",             "wallet_sendto",                   &sendto,                   false },
+    { "lightwallet",             "wallet_setlabel",                 &setlabel,                 true  },
     { "lightwallet",             "wallet_settxfee",                 &settxfee,                 true  },
     { "lightwallet",             "wallet_signmessage",              &signmessage,              true  },
     { "lightwallet",             "wallet_walletlock",               &walletlock,               true  },
