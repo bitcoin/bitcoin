@@ -13,7 +13,6 @@
 
 #include <boost/format.hpp>
 #include <boost/assign/list_of.hpp>
-#include <boost/iterator/counting_iterator.hpp>
 
 using namespace json_spirit;
 using namespace std;
@@ -161,7 +160,7 @@ Value scaninput(const Array& params, bool fHelp)
         }
         else
         {
-            vInputs = vector<int>(boost::counting_iterator<int>( 0 ), boost::counting_iterator<int>( tx.vout.size() ));
+            for (size_t i = 0; i != tx.vout.size(); ++i) vInputs.push_back(i);
         }
 
         CTxDB txdb("r");
