@@ -8,6 +8,12 @@
 
 #include <univalue.h>
 
+struct RPCConvertParam
+{
+    char methodName[128]; //!< method whose params want conversion
+    int paramIdx; //!< 0-based idx of param to convert
+};
+
 UniValue RPCConvertValues(const std::string& strMethod, const std::vector<std::string>& strParams);
 /** Non-RFC4627 JSON parser, accepts internal values (such as numbers, true, false, null)
  * as well as objects and arrays.
