@@ -545,3 +545,10 @@ def create_lots_of_big_transactions(node, txouts, utxos, fee):
         txid = node.sendrawtransaction(signresult["hex"], True)
         txids.append(txid)
     return txids
+
+def get_bip9_status(node, key):
+    info = node.getblockchaininfo()
+    for row in info['bip9_softforks']:
+        if row['id'] == key:
+            return row
+    raise IndexError ('key:"%s" not found' % key)
