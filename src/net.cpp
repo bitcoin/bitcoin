@@ -696,7 +696,7 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes)
         nBytes -= handled;
 
         if (msg.complete()) {
-            // BU: connection slot attackk mitigation.  We don't count PONG responses as bytes received. We don't want to include
+            // BU: connection slot attack mitigation.  We don't count PONG responses as bytes received. We don't want to include
             //     bytes sent or received for nodes that just connect and listen to INV messages.
             std::string strCommand = msg.hdr.GetCommand();
             if (strCommand != NetMsgType::PONG &&
@@ -704,7 +704,22 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes)
                 strCommand != NetMsgType::ADDR &&
                 strCommand != NetMsgType::VERSION &&
                 strCommand != NetMsgType::VERACK)
+            {
                 nActivityBytes += msg.hdr.nMessageSize;
+
+                // BU: furthermore, if the message is a priority message then move from the back to the front of the deque
+                if (strCommand == NetMsgType::GET_XTHIN || 
+                    strCommand == NetMsgType::XTHINBLOCK || 
+                    strCommand == NetMsgType::THINBLOCK || 
+                    strCommand == NetMsgType::XBLOCKTX || 
+                    strCommand == NetMsgType::GET_XBLOCKTX )
+                {
+                    vRecvMsg.push_front(msg);
+                    vRecvMsg.pop_back();
+                    LogPrint("thin", "Receive Queue: pushed %s to the front of the queue\n", strCommand);
+                }
+            }
+            // BU: end
             msg.nTime = GetTimeMicros();
             messageHandlerCondition.notify_one();
         }
@@ -2570,6 +2585,7 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     // BU: connection slot attack mitigation.  We don't want to add bytes for outgoing INV or PING
     //     messages since attackers will often just connect and listen to INV messages.  We want to make
     //     sure that connected nodes are really doing useful work in sending us data or requesting data.
+    std::deque<CSerializeData>::iterator it;
     char strCommand[CMessageHeader::COMMAND_SIZE + 1];
     strncpy(strCommand, &(*(ssSend.begin() + MESSAGE_START_SIZE)), CMessageHeader::COMMAND_SIZE);
     strCommand[CMessageHeader::COMMAND_SIZE] = '\0';
@@ -2579,9 +2595,25 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
         strcmp(strCommand, NetMsgType::VERSION) != 0 &&
         strcmp(strCommand, NetMsgType::VERACK) != 0 &&
         strcmp(strCommand, NetMsgType::INV) != 0)
+    {
         nActivityBytes += nSize;
 
-    std::deque<CSerializeData>::iterator it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
+        // BU: furthermore, if the message is a priority message then move to the front of the deque
+        if (strcmp(strCommand, NetMsgType::GET_XTHIN) == 0 || 
+            strcmp(strCommand, NetMsgType::XTHINBLOCK) == 0 || 
+            strcmp(strCommand, NetMsgType::THINBLOCK) == 0 || 
+            strcmp(strCommand, NetMsgType::XBLOCKTX) == 0 || 
+            strcmp(strCommand, NetMsgType::GET_XBLOCKTX) == 0 ) {
+            it = vSendMsg.insert(vSendMsg.begin(), CSerializeData());
+            LogPrint("thin", "Send Queue: pushed %s to the front of the queue\n", strCommand);
+        }
+        else
+            it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
+    }
+    else
+        it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
+    // BU: end
+
     ssSend.GetAndClear(*it);
     nSendSize += (*it).size();
 
