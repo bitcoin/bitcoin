@@ -149,13 +149,6 @@ class BIP68_112_113Test(ComparisonTestFramework):
         block.solve()
         return block
 
-    def get_bip9_status(self, key):
-        info = self.nodes[0].getblockchaininfo()
-        for row in info['bip9_softforks']:
-            if row['id'] == key:
-                return row
-        raise IndexError ('key:"%s" not found' % key)
-
     def create_bip68txs(self, bip68inputs, txversion, locktime_delta = 0):
         txs = []
         assert(len(bip68inputs) >= 16)
@@ -223,11 +216,11 @@ class BIP68_112_113Test(ComparisonTestFramework):
         self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
 
-        assert_equal(self.get_bip9_status('csv')['status'], 'defined')
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'defined')
         test_blocks = self.generate_blocks(61, 4)
         yield TestInstance(test_blocks, sync_every_block=False) # 1
         # Advanced from DEFINED to STARTED, height = 143
-        assert_equal(self.get_bip9_status('csv')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
 
         # Fail to achieve LOCKED_IN 100 out of 144 signal bit 0
         # using a variety of bits to simulate multiple parallel softforks
@@ -237,7 +230,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test_blocks = self.generate_blocks(24, 536936448, test_blocks) # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False) # 2
         # Failed to advance past STARTED, height = 287
-        assert_equal(self.get_bip9_status('csv')['status'], 'started')
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'started')
 
         # 108 out of 144 signal bit 0 to achieve lock-in
         # using a variety of bits to simulate multiple parallel softforks
@@ -247,7 +240,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test_blocks = self.generate_blocks(10, 536936448, test_blocks) # 0x20010000 (signalling not)
         yield TestInstance(test_blocks, sync_every_block=False) # 3
         # Advanced from STARTED to LOCKED_IN, height = 431
-        assert_equal(self.get_bip9_status('csv')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
 
         # 140 more version 4 blocks
         test_blocks = self.generate_blocks(140, 4)
@@ -291,7 +284,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         test_blocks = self.generate_blocks(2, 4)
         yield TestInstance(test_blocks, sync_every_block=False) # 5
         # Not yet advanced to ACTIVE, height = 574 (will activate for block 576, not 575)
-        assert_equal(self.get_bip9_status('csv')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'locked_in')
 
         # Test both version 1 and version 2 transactions for all tests
         # BIP113 test transaction will be modified before each use to put in appropriate block time
@@ -368,7 +361,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         # 1 more version 4 block to get us to height 575 so the fork should now be active for the next block
         test_blocks = self.generate_blocks(1, 4)
         yield TestInstance(test_blocks, sync_every_block=False) # 8
-        assert_equal(self.get_bip9_status('csv')['status'], 'active')
+        assert_equal(get_bip9_status(self.nodes[0], 'csv')['status'], 'active')
 
 
         #################################
