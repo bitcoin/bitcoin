@@ -534,7 +534,7 @@ UniValue getaddressutxos(const UniValue& params, bool fHelp)
 
         output.push_back(Pair("address", address));
         output.push_back(Pair("txid", it->first.txhash.GetHex()));
-        output.push_back(Pair("outputIndex", it->first.index));
+        output.push_back(Pair("outputIndex", (int)it->first.index));
         output.push_back(Pair("script", HexStr(it->second.script.begin(), it->second.script.end())));
         output.push_back(Pair("satoshis", it->second.satoshis));
         output.push_back(Pair("height", it->second.blockHeight));
@@ -594,7 +594,7 @@ UniValue getaddressdeltas(const UniValue& params, bool fHelp)
         UniValue delta(UniValue::VOBJ);
         delta.push_back(Pair("satoshis", it->second));
         delta.push_back(Pair("txid", it->first.txhash.GetHex()));
-        delta.push_back(Pair("index", it->first.index));
+        delta.push_back(Pair("index", (int)it->first.index));
         delta.push_back(Pair("height", it->first.blockHeight));
         delta.push_back(Pair("hash", it->first.hashBytes.GetHex()));
         delta.push_back(Pair("type", (int)it->first.type));
