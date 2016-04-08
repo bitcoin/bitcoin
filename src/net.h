@@ -769,7 +769,7 @@ public:
     static uint64_t GetMaxOutboundTimeLeftInCycle();
 };
 static bool GetfRelayTxes() {
-    return fRelayTxes;
+    return CNode::fRelayTxes;
 }
 
 
