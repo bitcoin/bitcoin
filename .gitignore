@@ -48,6 +48,7 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
+libconftest.dylib*
 
 .deps
 .dirstamp
@@ -119,7 +120,14 @@ share/BitcoindComparisonTool.jar
 
 .cproject
 .project
+.autotools
 /doc/doxygen/
 
 libbitcoinconsensus.pc
 src/qt/dash-qt.bash
+qa/pull-tester/tests-config.sh
+
+#development symlinks
+dash-cli
+dashd
+dash-qt
