@@ -159,6 +159,7 @@ git merge commit are mentioned.
 
 ### Validation
 - #7821 `4226aac` init: allow shutdown during 'Activating best chain...' (laanwj)
+- #7835 `46898e7` Version 2 transactions remain non-standard until CSV activates (sdaftuar)
 
 ### Build system
 - #7487 `00d57b4` Workaround Travis-side CI issues (luke-jr)
