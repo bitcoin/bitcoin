@@ -357,10 +357,7 @@ public:
     // a) it allows us to not relay tx invs before receiving the peer's version message
     // b) the peer may tell us in its version message that we should not relay tx invs
     //    unless it loads a bloom filter.
-    static bool fRelayTxes;
-    static bool GetfRelayTxes() {
-        return fRelayTxes;
-    }
+    bool fRelayTxes;
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;
@@ -771,7 +768,9 @@ public:
     // in case of no limit, it will always response 0
     static uint64_t GetMaxOutboundTimeLeftInCycle();
 };
-
+static bool GetfRelayTxes() {
+    return fRelayTxes;
+}
 
 
 class CTransaction;
