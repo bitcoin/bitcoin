@@ -768,10 +768,6 @@ public:
     // in case of no limit, it will always response 0
     static uint64_t GetMaxOutboundTimeLeftInCycle();
 };
-static bool GetfRelayTxes() {
-    return CNode::fRelayTxes;
-}
-
 
 class CTransaction;
 void RelayTransaction(const CTransaction& tx, CFeeRate feerate);
