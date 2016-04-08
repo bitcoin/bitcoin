@@ -5235,34 +5235,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->fDisconnect = true;
             return true;
         }
-        LOCK2(cs_main, pfrom->cs_filter);
 
-        std::vector<uint256> vtxid;
-        mempool.queryHashes(vtxid);
-        vector<CInv> vInv;
-        BOOST_FOREACH(uint256& hash, vtxid) {
-            CInv inv(MSG_TX, hash);
-            if (pfrom->pfilter) {
-                CTransaction tx;
-                bool fInMemPool = mempool.lookup(hash, tx);
-                if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
-                if (!pfrom->pfilter->IsRelevantAndUpdate(tx)) continue;
-            }
-            if (pfrom->minFeeFilter) {
-                CFeeRate feeRate;
-                mempool.lookupFeeRate(hash, feeRate);
-                LOCK(pfrom->cs_feeFilter);
-                if (feeRate.GetFeePerK() < pfrom->minFeeFilter)
-                    continue;
-            }
-            vInv.push_back(inv);
-            if (vInv.size() == MAX_INV_SZ) {
-                pfrom->PushMessage(NetMsgType::INV, vInv);
-                vInv.clear();
-            }
-        }
-        if (vInv.size() > 0)
-            pfrom->PushMessage(NetMsgType::INV, vInv);
+        LOCK(pfrom->cs_inventory);
+        pfrom->fSendMempool = true;
     }
 
 
@@ -5815,13 +5790,52 @@ bool SendMessages(CNode* pto)
             }
             pto->vInventoryBlockToSend.clear();
 
-            // Determine transactions to relay
+            // Check whether periodic sends should happen
             bool fSendTrickle = pto->fWhitelisted;
             if (pto->nNextInvSend < nNow) {
                 fSendTrickle = true;
                 // Use half the delay for outbound peers, as there is less privacy concern for them.
                 pto->nNextInvSend = PoissonNextSend(nNow, INVENTORY_BROADCAST_INTERVAL >> !pto->fInbound);
             }
+
+            // Respond to BIP35 mempool requests
+            if (fSendTrickle && pto->fSendMempool) {
+                std::vector<uint256> vtxid;
+                mempool.queryHashes(vtxid);
+                pto->fSendMempool = false;
+                CAmount filterrate = 0;
+                {
+                    LOCK(pto->cs_feeFilter);
+                    filterrate = pto->minFeeFilter;
+                }
+
+                LOCK(pto->cs_filter);
+
+                BOOST_FOREACH(const uint256& hash, vtxid) {
+                    CInv inv(MSG_TX, hash);
+                    pto->setInventoryTxToSend.erase(hash);
+                    if (filterrate) {
+                        CFeeRate feeRate;
+                        mempool.lookupFeeRate(hash, feeRate);
+                        if (feeRate.GetFeePerK() < filterrate)
+                            continue;
+                    }
+                    if (pto->pfilter) {
+                        CTransaction tx;
+                        bool fInMemPool = mempool.lookup(hash, tx);
+                        if (!fInMemPool) continue; // another thread removed since queryHashes, maybe...
+                        if (!pto->pfilter->IsRelevantAndUpdate(tx)) continue;
+                    }
+                    pto->filterInventoryKnown.insert(hash);
+                    vInv.push_back(inv);
+                    if (vInv.size() == MAX_INV_SZ) {
+                        pto->PushMessage(NetMsgType::INV, vInv);
+                        vInv.clear();
+                    }
+                }
+            }
+
+            // Determine transactions to relay
             if (fSendTrickle) {
                 // Produce a vector with all candidates for sending
                 vector<std::set<uint256>::iterator> vInvTx;
@@ -5851,6 +5865,10 @@ bool SendMessages(CNode* pto)
                     // Send
                     vInv.push_back(CInv(MSG_TX, hash));
                     nRelayedTransactions++;
+                    if (vInv.size() == MAX_INV_SZ) {
+                        pto->PushMessage(NetMsgType::INV, vInv);
+                        vInv.clear();
+                    }
                     pto->filterInventoryKnown.insert(hash);
                 }
             }
