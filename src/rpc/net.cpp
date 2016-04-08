@@ -491,16 +491,17 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
     UniValue obj(UniValue::VOBJ);
     CNodeStateStats statestats;
     bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
-    
-    obj.push_back(Pair("version",         CLIENT_VERSION));
-    obj.push_back(Pair("subversion",      strSubVersion));
-    obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
-    obj.push_back(Pair("localservices",   strprintf("%016x", nLocalServices)));
-    obj.push_back(Pair("localrelay",      stats.fRelayTxes); 
-    obj.push_back(Pair("timeoffset",      GetTimeOffset()));
-    obj.push_back(Pair("connections",     (int)vNodes.size()));
-    obj.push_back(Pair("networks",        GetNetworksInfo()));
-    obj.push_back(Pair("relayfee",        ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    BOOST_FOREACH(const CNodeStats& stats, vstats) {
+        obj.push_back(Pair("version",         CLIENT_VERSION));
+        obj.push_back(Pair("subversion",      strSubVersion));
+        obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
+        obj.push_back(Pair("localservices",   strprintf("%016x", nLocalServices)));
+        obj.push_back(Pair("localrelay",      stats.fRelayTxes); 
+        obj.push_back(Pair("timeoffset",      GetTimeOffset()));
+        obj.push_back(Pair("connections",     (int)vNodes.size()));
+        obj.push_back(Pair("networks",        GetNetworksInfo()));
+        obj.push_back(Pair("relayfee",        ValueFromAmount(::minRelayTxFee.GetFeePerK())));
+    }
     UniValue localAddresses(UniValue::VARR);
     {
         LOCK(cs_mapLocalHost);
