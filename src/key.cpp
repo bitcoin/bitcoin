@@ -463,20 +463,17 @@ bool CPubKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>
     ECDSA_SIG *sig = ECDSA_SIG_new();
     BN_bin2bn(&vchSig[1],32,sig->r);
     BN_bin2bn(&vchSig[33],32,sig->s);
-
+    bool fSuccessful = false;
     EC_KEY* pkey = EC_KEY_new_by_curve_name(NID_secp256k1);
     if (nV >= 31)
     {
         nV -= 4;
         EC_KEY_set_conv_form(pkey, POINT_CONVERSION_COMPRESSED);
     }
-
     do
     {
         if (ECDSA_SIG_recover_key_GFp(pkey, sig, (unsigned char*)&hash, sizeof(hash), nV - 27, 0) != 1)
             break;
-        ECDSA_SIG_free(sig);
-
         int nSize = i2o_ECPublicKey(pkey, NULL);
         if (!nSize)
             break;
@@ -485,13 +482,14 @@ bool CPubKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>
         if (i2o_ECPublicKey(pkey, &pbegin) != nSize)
             break;
         Set(vchPubKey.begin(), vchPubKey.end());
-        return IsValid();
+        fSuccessful = IsValid();
 
     } while (false);
-
     ECDSA_SIG_free(sig);
-    Invalidate();
-    return false;
+    EC_KEY_free(pkey);
+    if (!fSuccessful)
+        Invalidate();
+    return fSuccessful;
 }
 
 bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchSig) const
