@@ -486,8 +486,12 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
         );
 
     LOCK(cs_main);
-
+    vector<CNodeStats> vstats;
+    CopyNodeStats(vstats);  
     UniValue obj(UniValue::VOBJ);
+    CNodeStateStats statestats;
+    bool fStateStats = GetNodeStateStats(stats.nodeid, statestats);
+    
     obj.push_back(Pair("version",         CLIENT_VERSION));
     obj.push_back(Pair("subversion",      strSubVersion));
     obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
