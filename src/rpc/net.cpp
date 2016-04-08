@@ -492,7 +492,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("subversion",      strSubVersion));
     obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
     obj.push_back(Pair("localservices",   strprintf("%016x", nLocalServices)));
-    obj.push_back(Pair("localrelay",      GetfRelayTxes()));
+    obj.push_back(Pair("localrelay",      CNode::CNode::fRelayTxes);
     obj.push_back(Pair("timeoffset",      GetTimeOffset()));
     obj.push_back(Pair("connections",     (int)vNodes.size()));
     obj.push_back(Pair("networks",        GetNetworksInfo()));
