@@ -33,6 +33,7 @@ class CNetAddr
 {
     protected:
         unsigned char ip[16]; // in network byte order
+        uint32_t scopeId; // for scoped/link-local ipv6 addresses
 
     public:
         CNetAddr();
@@ -76,7 +77,7 @@ class CNetAddr
         std::vector<unsigned char> GetGroup() const;
         int GetReachabilityFrom(const CNetAddr *paddrPartner = NULL) const;
 
-        CNetAddr(const struct in6_addr& pipv6Addr);
+        CNetAddr(const struct in6_addr& pipv6Addr, const uint32_t scope = 0);
         bool GetIn6Addr(struct in6_addr* pipv6Addr) const;
 
         friend bool operator==(const CNetAddr& a, const CNetAddr& b);
