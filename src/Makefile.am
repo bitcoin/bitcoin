@@ -105,10 +105,11 @@ BITCOIN_CORE_H = \
   consensus/params.h \
   consensus/validation.h \
   core_io.h \
+  core_memusage.h \
   darksend.h \
   dsnotificationinterface.h \
   darksend-relay.h \
-  core_memusage.h \
+  governance.h \
   hash.h \
   httprpc.h \
   httpserver.h \
@@ -206,6 +207,7 @@ libbitcoin_server_a_SOURCES = \
   httpserver.cpp \
   init.cpp \
   dbwrapper.cpp \
+  governance.cpp \
   main.cpp \
   merkleblock.cpp \
   miner.cpp \
