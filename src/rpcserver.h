@@ -274,6 +274,24 @@ extern json_spirit::Value omni_sendclosecrowdsale(const json_spirit::Array& para
 extern json_spirit::Value omni_sendchangeissuer(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendall(const json_spirit::Array& params, bool fHelp);
 
+/* Omni Core payload creation calls */
+extern json_spirit::Value omni_createpayload_simplesend(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_sendall(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_dexsell(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_dexaccept(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_sto(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_issuancefixed(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_issuancecrowdsale(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_issuancemanaged(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_closecrowdsale(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_grant(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_revoke(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_changeissuer(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_trade(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_canceltradesbyprice(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_canceltradesbypair(const json_spirit::Array& params, bool fHelp);
+extern json_spirit::Value omni_createpayload_cancelalltrades(const json_spirit::Array& params, bool fHelp);
+
 /* Omni Core hidden calls - development usage (not shown in help) */
 extern json_spirit::Value mscrpc(const json_spirit::Array& params, bool fHelp);
 extern json_spirit::Value omni_sendactivation(const json_spirit::Array& params, bool fHelp);

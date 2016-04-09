@@ -171,6 +171,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_sendactivation", 3 },
     { "omni_sendalert", 1 },
     { "omni_sendalert", 2 },
+
     /* Omni Core - raw transaction calls */
     { "omni_decodetransaction", 1 },
     { "omni_decodetransaction", 2 },
@@ -179,6 +180,39 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_createrawtx_change", 1 },
     { "omni_createrawtx_change", 3 },
     { "omni_createrawtx_change", 4 },
+
+    /* Omni Core - payload creation */
+    { "omni_createpayload_simplesend", 0 },
+    { "omni_createpayload_sendall", 0 },
+    { "omni_createpayload_dexsell", 0 },
+    { "omni_createpayload_dexsell", 3 },
+    { "omni_createpayload_dexsell", 5 },
+    { "omni_createpayload_dexaccept", 0 },
+    { "omni_createpayload_sto", 0 },
+    { "omni_createpayload_issuancefixed", 0 },
+    { "omni_createpayload_issuancefixed", 1 },
+    { "omni_createpayload_issuancefixed", 2 },
+    { "omni_createpayload_issuancemanaged", 0 },
+    { "omni_createpayload_issuancemanaged", 1 },
+    { "omni_createpayload_issuancemanaged", 2 },
+    { "omni_createpayload_issuancecrowdsale", 0 },
+    { "omni_createpayload_issuancecrowdsale", 1 },
+    { "omni_createpayload_issuancecrowdsale", 2 },
+    { "omni_createpayload_issuancecrowdsale", 8 },
+    { "omni_createpayload_issuancecrowdsale", 10 },
+    { "omni_createpayload_issuancecrowdsale", 11 },
+    { "omni_createpayload_issuancecrowdsale", 12 },
+    { "omni_createpayload_closecrowdsale", 0 },
+    { "omni_createpayload_grant", 0 },
+    { "omni_createpayload_revoke", 0 },
+    { "omni_createpayload_changeissuer", 0 },
+    { "omni_createpayload_trade", 0 },
+    { "omni_createpayload_trade", 2 },
+    { "omni_createpayload_canceltradesbyprice", 0 },
+    { "omni_createpayload_canceltradesbyprice", 2 },
+    { "omni_createpayload_canceltradesbypair", 0 },
+    { "omni_createpayload_canceltradesbypair", 1 },
+    { "omni_createpayload_cancelalltrades", 0 },
 };
 
 class CRPCConvertTable

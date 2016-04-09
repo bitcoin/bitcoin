@@ -423,6 +423,25 @@ static const CRPCCommand vRPCCommands[] =
     { "omni layer (raw transactions)",       "omni_createrawtx_reference",      &omni_createrawtx_reference,      true,       true,       false },
     { "omni layer (raw transactions)",       "omni_createrawtx_change",         &omni_createrawtx_change,         true,       true,       false },
 
+    /* Omni Core payload creation calls */
+    /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
+    { "omni layer (payload creation)",       "omni_createpayload_simplesend",   &omni_createpayload_simplesend,   true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_sendall",      &omni_createpayload_sendall,      true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_dexsell",      &omni_createpayload_dexsell,      true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_dexaccept",    &omni_createpayload_dexaccept,    true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_sto",          &omni_createpayload_sto,          true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_grant",        &omni_createpayload_grant,        true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_revoke",       &omni_createpayload_revoke,       true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_changeissuer", &omni_createpayload_changeissuer, true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_trade",        &omni_createpayload_trade,        true,       true,       false },
+    { "omni layer (payload creation)",       "omni_createpayload_issuancefixed",       &omni_createpayload_issuancefixed,       true, true, false },
+    { "omni layer (payload creation)",       "omni_createpayload_issuancecrowdsale",   &omni_createpayload_issuancecrowdsale,   true, true, false },
+    { "omni layer (payload creation)",       "omni_createpayload_issuancemanaged",     &omni_createpayload_issuancemanaged,     true, true, false },
+    { "omni layer (payload creation)",       "omni_createpayload_closecrowdsale",      &omni_createpayload_closecrowdsale,      true, true, false },
+    { "omni layer (payload creation)",       "omni_createpayload_canceltradesbyprice", &omni_createpayload_canceltradesbyprice, true, true, false },
+    { "omni layer (payload creation)",       "omni_createpayload_canceltradesbypair",  &omni_createpayload_canceltradesbypair,  true, true, false },
+    { "omni layer (payload creation)",       "omni_createpayload_cancelalltrades",     &omni_createpayload_cancelalltrades,     true, true, false },
+
     /* Omni Core hidden calls - aliased calls for backwards compatibiltiy - to be depreciated (not shown in help) */
     /* CATEGORY                              NAME                               ACTOR (FUNCTION)                  OKSAFEMODE  THREADSAFE  REQWALLET */
     { "hidden",                              "getinfo_MP",                      &omni_getinfo,                    true,       true,       false },
