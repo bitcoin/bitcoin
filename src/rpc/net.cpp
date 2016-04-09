@@ -495,7 +495,7 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
         obj.push_back(Pair("protocolversion", PROTOCOL_VERSION));
         obj.push_back(Pair("localservices",   strprintf("%016x", nLocalServices)));
         BOOST_FOREACH(const CNodeStats& stats, vstats) {
-            networkre = stats.fRelayTxes
+            networkre = stats.fRelayTxes;
         }
         obj.push_back(Pair("localrelay",      networkre)); 
         obj.push_back(Pair("timeoffset",      GetTimeOffset()));
