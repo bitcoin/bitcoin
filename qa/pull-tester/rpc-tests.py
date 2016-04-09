@@ -45,10 +45,10 @@ if 'ENABLE_ZMQ' not in vars():
 if ENABLE_ZMQ:
     try:
         import zmq
-    except ImportError:
-        print("WARNING: \"import zmq\" failed. Setting ENABLE_ZMQ=0. " \
-            "To run zmq tests, see dependency info in /qa/README.md.")
-        ENABLE_ZMQ=0
+    except ImportError as e:
+        print("WARNING: \"import zmq\" failed. Set ENABLE_ZMQ=0 or " \
+            "to run zmq tests, see dependency info in /qa/README.md.")
+        raise e
 
 ENABLE_COVERAGE=0
 
