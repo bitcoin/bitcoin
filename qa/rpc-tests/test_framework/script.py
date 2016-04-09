@@ -15,8 +15,9 @@ Functionality to build scripts, as well as SignatureHash().
 """
 
 
-from .mininode import CTransaction, CTxOut, hash256
+from .mininode import CTransaction, CTxOut, sha256, hash256, uint256_from_str, ser_uint256, ser_string
 from binascii import hexlify
+import hashlib
 
 import sys
 bchr = chr
@@ -35,6 +36,10 @@ MAX_SCRIPT_ELEMENT_SIZE = 520
 MAX_SCRIPT_OPCODES = 201
 
 OPCODE_NAMES = {}
+
+def hash160(s):
+    return hashlib.new('ripemd160', sha256(s)).digest()
+
 
 _opcode_instances = []
 class CScriptOp(int):
@@ -895,3 +900,48 @@ def SignatureHash(script, txTo, inIdx, hashtype):
     hash = hash256(s)
 
     return (hash, None)
+
+# TODO: Allow cached hashPrevouts/hashSequence/hashOutputs to be provided.
+# Performance optimization probably not necessary for python tests, however.
+# Note that this corresponds to sigversion == 1 in EvalScript, which is used
+# for version 0 witnesses.
+def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
+
+    hashPrevouts = 0
+    hashSequence = 0
+    hashOutputs = 0
+
+    if not (hashtype & SIGHASH_ANYONECANPAY):
+        serialize_prevouts = bytes()
+        for i in txTo.vin:
+            serialize_prevouts += i.prevout.serialize()
+        hashPrevouts = uint256_from_str(hash256(serialize_prevouts))
+
+    if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+        serialize_sequence = bytes()
+        for i in txTo.vin:
+            serialize_sequence += struct.pack("<I", i.nSequence)
+        hashSequence = uint256_from_str(hash256(serialize_sequence))
+
+    if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
+        serialize_outputs = bytes()
+        for o in txTo.vout:
+            serialize_outputs += o.serialize()
+        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+    elif ((hashtype & 0x1f) == SIGHASH_SINGLE and inIdx < len(txTo.vout)):
+        serialize_outputs = txTo.vout[inIdx].serialize()
+        hashOutputs = uint256_from_str(hash256(serialize_outputs))
+
+    ss = bytes()
+    ss += struct.pack("<i", txTo.nVersion)
+    ss += ser_uint256(hashPrevouts)
+    ss += ser_uint256(hashSequence)
+    ss += txTo.vin[inIdx].prevout.serialize()
+    ss += ser_string(script)
+    ss += struct.pack("<q", amount)
+    ss += struct.pack("<I", txTo.vin[inIdx].nSequence)
+    ss += ser_uint256(hashOutputs)
+    ss += struct.pack("<i", txTo.nLockTime)
+    ss += struct.pack("<I", hashtype)
+
+    return hash256(ss)
