@@ -34,11 +34,8 @@ static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
 static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
 
 extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
-extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
-//# ----
 
-// todo - 12.1 - change budget to govman
-extern CGovernanceManager budget;
+extern CGovernanceManager governator;
 void DumpBudgets();
 
 //Check the collateral transaction for the budget proposal/finalized budget
@@ -70,6 +67,7 @@ public:
     ReadResult Read(CGovernanceManager& objToLoad, bool fDryRun = false);
 };
 
+//# ----
 
 //
 // Governance Manager : Contains all proposals for the budget
