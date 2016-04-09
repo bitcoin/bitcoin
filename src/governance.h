@@ -2,8 +2,8 @@
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef MASTERNODE_BUDGET_H
-#define MASTERNODE_BUDGET_H
+#ifndef GOVERANCE_H
+#define GOVERANCE_H
 
 #include "main.h"
 #include "sync.h"
@@ -19,14 +19,10 @@ using namespace std;
 
 extern CCriticalSection cs_budget;
 
-class CBudgetManager;
-class CFinalizedBudgetBroadcast;
-class CFinalizedBudget;
-class CFinalizedBudgetVote;
+class CGovernanceManager;
 class CBudgetProposal;
 class CBudgetProposalBroadcast;
 class CBudgetVote;
-class CTxBudgetPayment;
 
 #define VOTE_ABSTAIN  0
 #define VOTE_YES      1
@@ -39,8 +35,10 @@ static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
 
 extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
+//# ----
 
-extern CBudgetManager budget;
+// todo - 12.1 - change budget to govman
+extern CGovernanceManager budget;
 void DumpBudgets();
 
 //Check the collateral transaction for the budget proposal/finalized budget
@@ -48,6 +46,8 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
 
 /** Save Budget Manager (budget.dat)
  */
+// todo - 12.1 - rename to CGovernanceDB (cherry pick)
+// todo - 12.1 - move to goverance.dat
 class CBudgetDB
 {
     //# ----
@@ -66,17 +66,16 @@ public:
     };
 
     CBudgetDB();
-    bool Write(const CBudgetManager &objToSave);
-    ReadResult Read(CBudgetManager& objToLoad, bool fDryRun = false);
+    bool Write(const CGovernanceManager &objToSave);
+    ReadResult Read(CGovernanceManager& objToLoad, bool fDryRun = false);
 };
 
 
 //
-// Budget Manager : Contains all proposals for the budget
+// Governance Manager : Contains all proposals for the budget
 //
-class CBudgetManager
+class CGovernanceManager
 {
-    //# ----
 private:
 
     //hold txes until they mature enough to use
@@ -90,25 +89,18 @@ public:
     
     // keep track of the scanning errors I've seen
     map<uint256, CBudgetProposal> mapProposals;
-    map<uint256, CFinalizedBudget> mapFinalizedBudgets;
 
     std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
     std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
     std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
-    std::map<uint256, CFinalizedBudgetBroadcast> mapSeenFinalizedBudgets;
-    std::map<uint256, CFinalizedBudgetVote> mapSeenFinalizedBudgetVotes;
-    std::map<uint256, CFinalizedBudgetVote> mapOrphanFinalizedBudgetVotes;
 
-    CBudgetManager() {
+    CGovernanceManager() {
         mapProposals.clear();
-        mapFinalizedBudgets.clear();
     }
 
     void ClearSeen() {
         mapSeenMasternodeBudgetProposals.clear();
         mapSeenMasternodeBudgetVotes.clear();
-        mapSeenFinalizedBudgets.clear();
-        mapSeenFinalizedBudgetVotes.clear();
     }
 
     int CountProposalInventoryItems()
@@ -116,12 +108,6 @@ public:
         return mapSeenMasternodeBudgetProposals.size() + mapSeenMasternodeBudgetVotes.size();
     }
 
-    int CountFinalizedInventoryItems()
-    {
-        return mapSeenFinalizedBudgets.size() + mapSeenFinalizedBudgetVotes.size();
-    }
-
-    int sizeFinalized() {return (int)mapFinalizedBudgets.size();}
     int sizeProposals() {return (int)mapProposals.size();}
 
     void ResetSync();
@@ -130,29 +116,19 @@ public:
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
+
     CBudgetProposal *FindProposal(const std::string &strProposalName);
     CBudgetProposal *FindProposal(uint256 nHash);
-    CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
     
-    // not used?
-    //std::pair<std::string, std::string> GetVotes(std::string strProposalName);
-
-    CAmount GetTotalBudget(int nHeight);
     std::vector<CBudgetProposal*> GetBudget();
     std::vector<CBudgetProposal*> GetAllProposals();
-    std::vector<CFinalizedBudget*> GetFinalizedBudgets();
+
     bool IsBudgetPaymentBlock(int nBlockHeight);
     bool AddProposal(CBudgetProposal& budgetProposal);
-    bool AddFinalizedBudget(CFinalizedBudget& finalizedBudget);
-    void SubmitFinalBudget();
-    bool HasNextFinalizedBudget();
 
     bool UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError);
-    bool UpdateFinalizedBudget(CFinalizedBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool PropExists(uint256 nHash);
-    bool IsTransactionValid(const CTransaction& txNew, int nBlockHeight);
     std::string GetRequiredPaymentsString(int nBlockHeight);
-    void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
 
     void CheckOrphanVotes();
     void Clear(){
@@ -160,17 +136,12 @@ public:
 
         LogPrintf("Budget object cleared\n");
         mapProposals.clear();
-        mapFinalizedBudgets.clear();
         mapSeenMasternodeBudgetProposals.clear();
         mapSeenMasternodeBudgetVotes.clear();
-        mapSeenFinalizedBudgets.clear();
-        mapSeenFinalizedBudgetVotes.clear();
         mapOrphanMasternodeBudgetVotes.clear();
-        mapOrphanFinalizedBudgetVotes.clear();
     }
     void CheckAndRemove();
     std::string ToString() const;
-
 
     ADD_SERIALIZE_METHODS;
 
@@ -178,16 +149,12 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(mapSeenMasternodeBudgetProposals);
         READWRITE(mapSeenMasternodeBudgetVotes);
-        READWRITE(mapSeenFinalizedBudgets);
-        READWRITE(mapSeenFinalizedBudgetVotes);
         READWRITE(mapOrphanMasternodeBudgetVotes);
-        READWRITE(mapOrphanFinalizedBudgetVotes);
-
         READWRITE(mapProposals);
-        READWRITE(mapFinalizedBudgets);
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
+    //# ----
 };
 
 //

@@ -64,6 +64,52 @@ void CBudgetManager::ResetSync()
     }
 }
 
+void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
+{
+    LOCK(cs);
+
+    /*
+        Sync with a client on the network
+
+        --
+
+        This code checks each of the hash maps for all known budget proposals and finalized budget proposals, then checks them against the
+        budget object to see if they're OK. If all checks pass, we'll send it to the peer.
+
+    */
+
+    int nInvCount = 0;
+
+    LogPrintf("CBudgetManager::Sync - sent %d items\n", nInvCount);
+
+    // finalized budget -- this code has no issues as far as we can tell
+    std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
+    while(it3 != mapSeenFinalizedBudgets.end()){
+        CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
+        if(pfinalizedBudget && pfinalizedBudget->fValid && (nProp == uint256() || (*it3).first == nProp)){
+            pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED, (*it3).second.GetHash()));
+            nInvCount++;
+
+            //send votes
+            std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
+            while(it4 != pfinalizedBudget->mapVotes.end()){
+                if((*it4).second.fValid) {
+                    if((fPartial && !(*it4).second.fSynced) || !fPartial) {
+                        pfrom->PushInventory(CInv(MSG_BUDGET_FINALIZED_VOTE, (*it4).second.GetHash()));
+                        nInvCount++;
+                    }
+                }
+                ++it4;
+            }
+        }
+        ++it3;
+    }
+
+    pfrom->PushMessage(NetMsgType::SYNCSTATUSCOUNT, MASTERNODE_SYNC_BUDGET_FIN, nInvCount);
+    LogPrintf("CBudgetManager::Sync - sent %d items\n", nInvCount);
+
+}
+
 void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
     // lite mode is not supported
