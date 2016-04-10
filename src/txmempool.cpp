@@ -767,6 +767,16 @@ bool CTxMemPool::CompareDepthAndScore(const uint256& hasha, const uint256& hashb
     return counta < countb;
 }
 
+namespace {
+class DepthAndScoreComparator
+{
+    CTxMemPool *mp;
+public:
+    DepthAndScoreComparator(CTxMemPool *mempool) : mp(mempool) {}
+    bool operator()(const uint256& a, const uint256& b) { return mp->CompareDepthAndScore(a, b); }
+};
+}
+
 void CTxMemPool::queryHashes(vector<uint256>& vtxid)
 {
     vtxid.clear();
@@ -775,6 +785,8 @@ void CTxMemPool::queryHashes(vector<uint256>& vtxid)
     vtxid.reserve(mapTx.size());
     for (indexed_transaction_set::iterator mi = mapTx.begin(); mi != mapTx.end(); ++mi)
         vtxid.push_back(mi->GetTx().GetHash());
+
+    std::sort(vtxid.begin(), vtxid.end(), DepthAndScoreComparator(this));
 }
 
 bool CTxMemPool::lookup(uint256 hash, CTransaction& result) const
