@@ -40,35 +40,15 @@ extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 extern CBudgetManager budget;
-void DumpBudgets();
 
-/** Save Budget Manager (budget.dat)
- */
-class CBudgetDB
-{
-private:
-    boost::filesystem::path pathDB;
-    std::string strMagicMessage;
-public:
-    enum ReadResult {
-        Ok,
-        FileError,
-        HashReadError,
-        IncorrectHash,
-        IncorrectMagicMessage,
-        IncorrectMagicNumber,
-        IncorrectFormat
-    };
+/**
+* Finalized Budget Manager
+* -------------------------------------------------------
+* 
+* This object is responsible for finalization of the budget system. It's built to be completely separate from
+* the governance system, to eliminate any network differences.
+*/
 
-    CBudgetDB();
-    bool Write(const CBudgetManager &objToSave);
-    ReadResult Read(CBudgetManager& objToLoad, bool fDryRun = false);
-};
-
-
-//
-// Budget Manager : Contains all proposals for the budget
-//
 class CBudgetManager
 {
 private:

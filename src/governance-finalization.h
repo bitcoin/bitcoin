@@ -29,13 +29,9 @@ class CFinalizedBudget;
 
 extern std::vector<CGovernanceNode> vecImmatureGovernanceNodes;
 
-
-void DumpBudgets();
-
 //Check the collateral transaction for the budget proposal/finalized budget
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf);
 std::string PrimaryTypeToString(GovernanceObjectType type);
-
 
 /*
     GOVERNANCE CLASSES

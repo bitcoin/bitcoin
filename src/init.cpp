@@ -39,6 +39,8 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "masternodeconfig.h"
+#include "flat-database.h"
+#include "governance.h"
 #include "spork.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
@@ -215,9 +217,17 @@ void PrepareShutdown()
 #endif
     GenerateBitcoins(false, 0, Params());
     StopNode();
-    DumpMasternodes();
-    DumpBudgets();
-    DumpMasternodePayments();
+
+    // todo - 12.1 - magic strings as const
+    CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
+    DumpFlatDB(mnodeman, flatdb1);
+    CFlatDB<CBudgetManager> flatdb2("budget.dat", "magicBudgetCache");
+    DumpFlatDB(budget, flatdb2);
+    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+    DumpFlatDB(governator, flatdb3);
+    CFlatDB<CMasternodePayments> flatdb4("mnpayments.dat", "magicMasternodePaymentsCache");
+    DumpFlatDB(mnpayments, flatdb4);
+
     StopTorControl();
     UnregisterNodeSignals(GetNodeSignals());
 
@@ -1811,58 +1821,30 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             MilliSleep(10);
     }
 
-    // ********************************************************* Step 10: setup DarkSend
+    // ********************************************************* Step 10: Load cache data
+
+    // todo - 12.1 - magic strings as const
 
     uiInterface.InitMessage(_("Loading masternode cache..."));
-
-    CMasternodeDB mndb;
-    CMasternodeDB::ReadResult readResult = mndb.Read(mnodeman);
-    if (readResult == CMasternodeDB::FileError)
-        LogPrintf("Missing masternode cache file - mncache.dat, will try to recreate\n");
-    else if (readResult != CMasternodeDB::Ok)
-    {
-        LogPrintf("Error reading mncache.dat: ");
-        if(readResult == CMasternodeDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
+    CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
+    LoadFlatDB(mnodeman, flatdb1);
 
     uiInterface.InitMessage(_("Loading budget cache..."));
-
-    CBudgetDB budgetdb;
-    CBudgetDB::ReadResult readResult2 = budgetdb.Read(budget);
-
-    if (readResult2 == CBudgetDB::FileError)
-        LogPrintf("Missing budget cache - budget.dat, will try to recreate\n");
-    else if (readResult2 != CBudgetDB::Ok)
-    {
-        LogPrintf("Error reading budget.dat: ");
-        if(readResult2 == CBudgetDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
-
-    //flag our cached items so we send them to our peers
-    budget.ResetSync();
+    CFlatDB<CBudgetManager> flatdb2("budget.dat", "magicBudgetCache");
+    LoadFlatDB(budget, flatdb2);
+    budget.ResetSync(); //flag our cached items so we send them to our peers
     budget.ClearSeen();
 
     uiInterface.InitMessage(_("Loading masternode payment cache..."));
+    CFlatDB<CMasternodePayments> flatdb3("mnpayments.dat", "magicMasternodePaymentsCache");
+    LoadFlatDB(mnpayments, flatdb3);
 
-    CMasternodePaymentDB mnpaymentsDB;
-    CMasternodePaymentDB::ReadResult readResult3 = mnpaymentsDB.Read(mnpayments);
-    
-    if (readResult3 == CMasternodePaymentDB::FileError)
-        LogPrintf("Missing masternode payment cache - mnpayments.dat, will try to recreate\n");
-    else if (readResult3 != CMasternodePaymentDB::Ok)
-    {
-        LogPrintf("Error reading mnpayments.dat: ");
-        if(readResult3 == CMasternodePaymentDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-    }
+    CFlatDB<CGovernanceManager> flatdb4("governance.dat", "magicGovernanceCache");
+    LoadFlatDB(governator, flatdb4);
+    governator.ResetSync(); 
+    governator.ClearSeen();
+
+    // ********************************************************* Step 11: setup DarkSend
 
     fMasterNode = GetBoolArg("-masternode", false);
 
@@ -1992,7 +1974,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS), chainparams);
 
-    // ********************************************************* Step 12: finished
+    // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();
     uiInterface.InitMessage(_("Done loading"));

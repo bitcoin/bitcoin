@@ -317,35 +317,6 @@ CBudgetDB::ReadResult CBudgetDB::Read(CGovernanceManager& objToLoad, bool fDryRu
     return Ok;
 }
 
-void DumpBudgets()
-{
-    int64_t nStart = GetTimeMillis();
-
-    CBudgetDB budgetdb;
-    CGovernanceManager tempBudget;
-
-    LogPrintf("Verifying budget.dat format...\n");
-    CBudgetDB::ReadResult readResult = budgetdb.Read(tempBudget, true);
-    // there was an error and it was not an error on file opening => do not proceed
-    if (readResult == CBudgetDB::FileError)
-        LogPrintf("Missing budgets file - budget.dat, will try to recreate\n");
-    else if (readResult != CBudgetDB::Ok)
-    {
-        LogPrintf("Error reading budget.dat: ");
-        if(readResult == CBudgetDB::IncorrectFormat)
-            LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        else
-        {
-            LogPrintf("file format is unknown or invalid, please fix it manually\n");
-            return;
-        }
-    }
-    LogPrintf("Writting info to budget.dat...\n");
-    budgetdb.Write(govman);
-
-    LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
-}
-
 // bool CGovernanceManager::AddFinalizedBudget(CFinalizedBudget& finalizedBudget)
 // {
 //     std::string strError = "";
