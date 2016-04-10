@@ -629,7 +629,7 @@ class CScriptNum(object):
         neg = obj.value < 0
         absvalue = -obj.value if neg else obj.value
         while (absvalue):
-            r.append(chr(absvalue & 0xff))
+            r.append(absvalue & 0xff)
             absvalue >>= 8
         if r[-1] & 0x80:
             r.append(0x80 if neg else 0)
@@ -777,7 +777,7 @@ class CScript(bytes):
         # need to change
         def _repr(o):
             if isinstance(o, bytes):
-                return "x('%s')" % hexlify(o).decode('utf8')
+                return b"x('%s')" % hexlify(o).decode('ascii')
             else:
                 return repr(o)
 

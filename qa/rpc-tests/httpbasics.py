@@ -9,7 +9,6 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-import base64
 
 try:
     import http.client as httplib
@@ -31,7 +30,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         #################################################
         url = urlparse.urlparse(self.nodes[0].url)
         authpair = url.username + ':' + url.password
-        headers = {"Authorization": "Basic " + base64.b64encode(authpair)}
+        headers = {"Authorization": "Basic " + str_to_b64str(authpair)}
 
         conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
@@ -48,7 +47,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn.close()
 
         #same should be if we add keep-alive because this should be the std. behaviour
-        headers = {"Authorization": "Basic " + base64.b64encode(authpair), "Connection": "keep-alive"}
+        headers = {"Authorization": "Basic " + str_to_b64str(authpair), "Connection": "keep-alive"}
 
         conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
@@ -65,7 +64,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         conn.close()
 
         #now do the same with "Connection: close"
-        headers = {"Authorization": "Basic " + base64.b64encode(authpair), "Connection":"close"}
+        headers = {"Authorization": "Basic " + str_to_b64str(authpair), "Connection":"close"}
 
         conn = httplib.HTTPConnection(url.hostname, url.port)
         conn.connect()
@@ -77,7 +76,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         #node1 (2nd node) is running with disabled keep-alive option
         urlNode1 = urlparse.urlparse(self.nodes[1].url)
         authpair = urlNode1.username + ':' + urlNode1.password
-        headers = {"Authorization": "Basic " + base64.b64encode(authpair)}
+        headers = {"Authorization": "Basic " + str_to_b64str(authpair)}
 
         conn = httplib.HTTPConnection(urlNode1.hostname, urlNode1.port)
         conn.connect()
@@ -88,7 +87,7 @@ class HTTPBasicsTest (BitcoinTestFramework):
         #node2 (third node) is running with standard keep-alive parameters which means keep-alive is on
         urlNode2 = urlparse.urlparse(self.nodes[2].url)
         authpair = urlNode2.username + ':' + urlNode2.password
-        headers = {"Authorization": "Basic " + base64.b64encode(authpair)}
+        headers = {"Authorization": "Basic " + str_to_b64str(authpair)}
 
         conn = httplib.HTTPConnection(urlNode2.hostname, urlNode2.port)
         conn.connect()
