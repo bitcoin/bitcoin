@@ -88,8 +88,6 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getbalance(), bal+Decimal('1.20000000')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
 
 
-
-
         # 2of3 test from different nodes
         bal = self.nodes[2].getbalance()
         addr1 = self.nodes[1].getnewaddress()

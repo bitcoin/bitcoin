@@ -62,6 +62,6 @@ def create_transaction(prevtx, n, sig, value):
     tx = CTransaction()
     assert(n < len(prevtx.vout))
     tx.vin.append(CTxIn(COutPoint(prevtx.sha256, n), sig, 0xffffffff))
-    tx.vout.append(CTxOut(value, ""))
+    tx.vout.append(CTxOut(value, b""))
     tx.calc_sha256()
     return tx

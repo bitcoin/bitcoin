@@ -11,15 +11,11 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.mininode import *
-import binascii
 
 MAX_REPLACEMENT_LIMIT = 100
 
-def satoshi_round(amount):
-    return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
-
 def txToHex(tx):
-    return binascii.hexlify(tx.serialize()).decode('utf-8')
+    return bytes_to_hex_str(tx.serialize())
 
 def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
     """Create a txout with a given amount and scriptPubKey
@@ -53,9 +49,7 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
     tx2.vout = [CTxOut(amount, scriptPubKey)]
     tx2.rehash()
 
-    binascii.hexlify(tx2.serialize()).decode('utf-8')
-
-    signed_tx = node.signrawtransaction(binascii.hexlify(tx2.serialize()).decode('utf-8'))
+    signed_tx = node.signrawtransaction(txToHex(tx2))
 
     txid = node.sendrawtransaction(signed_tx['hex'], True)
 
