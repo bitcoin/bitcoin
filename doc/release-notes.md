@@ -57,6 +57,7 @@ This specific backport pull-request can be viewed at
 [BIP9]: https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
 [BIP68]: https://github.com/bitcoin/bips/blob/master/bip-0068.mediawiki
 [BIP112]: https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki
+[BIP113]: https://github.com/bitcoin/bips/blob/master/bip-0113.mediawiki
 
 BIP68 soft fork to enforce sequence locks for relative locktime
 ---------------------------------------------------------------
