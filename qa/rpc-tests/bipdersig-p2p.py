@@ -10,7 +10,6 @@ from test_framework.mininode import CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import CScript
-from binascii import unhexlify
 from io import BytesIO
 import time
 
@@ -25,7 +24,7 @@ def unDERify(tx):
     newscript = []
     for i in scriptSig:
         if (len(newscript) == 0):
-            newscript.append(i[0:-1] + '\0' + i[-1])
+            newscript.append(i[0:-1] + b'\0' + i[-1:])
         else:
             newscript.append(i)
     tx.vin[0].scriptSig = CScript(newscript)
@@ -68,7 +67,7 @@ class BIP66Test(ComparisonTestFramework):
         rawtx = node.createrawtransaction(inputs, outputs)
         signresult = node.signrawtransaction(rawtx)
         tx = CTransaction()
-        f = BytesIO(unhexlify(signresult['hex']))
+        f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)
         return tx
 

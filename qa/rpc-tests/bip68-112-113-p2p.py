@@ -10,7 +10,6 @@ from test_framework.mininode import ToHex, CTransaction, NetworkThread
 from test_framework.blocktools import create_coinbase, create_block
 from test_framework.comptool import TestInstance, TestManager
 from test_framework.script import *
-from binascii import unhexlify
 from io import BytesIO
 import time
 
@@ -119,7 +118,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         outputs = { to_address : amount }
         rawtx = node.createrawtransaction(inputs, outputs)
         tx = CTransaction()
-        f = BytesIO(unhexlify(rawtx))
+        f = BytesIO(hex_str_to_bytes(rawtx))
         tx.deserialize(f)
         return tx
 
@@ -127,7 +126,7 @@ class BIP68_112_113Test(ComparisonTestFramework):
         rawtx = ToHex(unsignedtx)
         signresult = node.signrawtransaction(rawtx)
         tx = CTransaction()
-        f = BytesIO(unhexlify(signresult['hex']))
+        f = BytesIO(hex_str_to_bytes(signresult['hex']))
         tx.deserialize(f)
         return tx
 
