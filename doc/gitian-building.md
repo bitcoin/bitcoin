@@ -363,7 +363,7 @@ Output from `gbuild` will look something like
     Resolving deltas: 100% (41590/41590), done.
     From https://github.com/bitcoin/bitcoin
     ... (new tags, new branch etc)
-    --- Building for precise amd64 ---
+    --- Building for trusty amd64 ---
     Stopping target if it is up
     Making a new image copy
     stdin: is not a tty
@@ -412,14 +412,14 @@ So, if you use LXC:
 export PATH="$PATH":/path/to/gitian-builder/libexec
 export USE_LXC=1
 cd /path/to/gitian-builder
-./libexec/make-clean-vm --suite precise --arch amd64
+./libexec/make-clean-vm --suite trusty --arch amd64
 
-LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root apt-get update
-LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root \
+LXC_ARCH=amd64 LXC_SUITE=trusty on-target -u root apt-get update
+LXC_ARCH=amd64 LXC_SUITE=trusty on-target -u root \
   -e DEBIAN_FRONTEND=noninteractive apt-get --no-install-recommends -y install \
   $( sed -ne '/^packages:/,/[^-] .*/ {/^- .*/{s/"//g;s/- //;p}}' ../bitcoin/contrib/gitian-descriptors/*|sort|uniq )
-LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root apt-get -q -y purge grub
-LXC_ARCH=amd64 LXC_SUITE=precise on-target -u root -e DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+LXC_ARCH=amd64 LXC_SUITE=trusty on-target -u root apt-get -q -y purge grub
+LXC_ARCH=amd64 LXC_SUITE=trusty on-target -u root -e DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
 ```
 
 And then set offline mode for apt-cacher-ng:
