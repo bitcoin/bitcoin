@@ -18,7 +18,7 @@
 #include "addrman.h"
 #include <boost/lexical_cast.hpp>
 
-CGovernanceManager governator;
+CGovernanceManager governance;
 CCriticalSection cs_budget;
 
 std::map<uint256, int64_t> askedForSourceProposalOrBudget;

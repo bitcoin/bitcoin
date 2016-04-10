@@ -6,6 +6,7 @@
 #include "db.h"
 #include "init.h"
 #include "activemasternode.h"
+#include "governance.h"
 #include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -183,9 +184,9 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError);
         }
 
-        budget.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
+        governance.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
-        budget.AddProposal(budgetProposalBroadcast);
+        governance.AddProposal(budgetProposalBroadcast);
 
         return budgetProposalBroadcast.GetHash().ToString();
 
@@ -257,8 +258,8 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
 
             std::string strError = "";
-            if(budget.UpdateProposal(vote, NULL, strError)) {
-                budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            if(governance.UpdateProposal(vote, NULL, strError)) {
+                governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
                 vote.Relay();
                 success++;
                 statusObj.push_back(Pair("result", "success"));
@@ -347,8 +348,8 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
 
             std::string strError = "";
-            if(budget.UpdateProposal(vote, NULL, strError)) {
-                budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+            if(governance.UpdateProposal(vote, NULL, strError)) {
+                governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
                 vote.Relay();
                 success++;
                 statusObj.push_back(Pair("result", "success"));
@@ -400,8 +401,8 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         }
 
         std::string strError = "";
-        if(budget.UpdateProposal(vote, NULL, strError)){
-            budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        if(governance.UpdateProposal(vote, NULL, strError)){
+            governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
             vote.Relay();
             return "Voted successfully";
         } else {
@@ -420,7 +421,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         UniValue resultObj(UniValue::VOBJ);
         CAmount nTotalAllotted = 0;
 
-        std::vector<CBudgetProposal*> winningProps = budget.GetBudget();
+        std::vector<CBudgetProposal*> winningProps = governance.GetBudget();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
             nTotalAllotted += pbudgetProposal->GetAllotted();
@@ -476,7 +477,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         UniValue resultObj(UniValue::VOBJ);
         int64_t nTotalAllotted = 0;
 
-        std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
+        std::vector<CBudgetProposal*> winningProps = governance.GetAllProposals();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
             if(strShow == "valid" && !pbudgetProposal->fValid) continue;
@@ -525,14 +526,14 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         std::string strProposalName = SanitizeString(params[1].get_str());
 
-        CBudgetProposal* pbudgetProposal = budget.FindProposal(strProposalName);
+        CBudgetProposal* pbudgetProposal = governance.FindProposal(strProposalName);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
 
         UniValue resultObj(UniValue::VOBJ);
 
-        std::vector<CBudgetProposal*> winningProps = budget.GetAllProposals();
+        std::vector<CBudgetProposal*> winningProps = governance.GetAllProposals();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
             if(pbudgetProposal->GetName() != strProposalName) continue;
@@ -557,7 +558,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         uint256 hash = ParseHashV(params[1], "Proposal hash");
 
-        CBudgetProposal* pbudgetProposal = budget.FindProposal(hash);
+        CBudgetProposal* pbudgetProposal = governance.FindProposal(hash);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
@@ -609,7 +610,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         UniValue obj(UniValue::VOBJ);
 
-        CBudgetProposal* pbudgetProposal = budget.FindProposal(hash);
+        CBudgetProposal* pbudgetProposal = governance.FindProposal(hash);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
@@ -686,8 +687,8 @@ UniValue mnbudgetvoteraw(const UniValue& params, bool fHelp)
     }
 
     std::string strError = "";
-    if(budget.UpdateProposal(vote, NULL, strError)){
-        budget.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+    if(governance.UpdateProposal(vote, NULL, strError)){
+        governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
         vote.Relay();
         return "Voted successfully";
     } else {
@@ -907,7 +908,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
 
         while(std::getline(ss, token, ',')) {
             uint256 nHash = uint256S(token);
-            CBudgetProposal* prop = budget.FindProposal(nHash);
+            CBudgetProposal* prop = governance.FindProposal(nHash);
 
             CTxBudgetPayment txBudgetPayment;
             txBudgetPayment.nProposalHash = prop->GetHash();
@@ -964,7 +965,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
 
         while(std::getline(ss, token, ',')) {
             uint256 nHash = uint256S(token);
-            CBudgetProposal* prop = budget.FindProposal(nHash);
+            CBudgetProposal* prop = governance.FindProposal(nHash);
 
             CTxBudgetPayment txBudgetPayment;
             txBudgetPayment.nProposalHash = prop->GetHash();

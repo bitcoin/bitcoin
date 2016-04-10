@@ -12,6 +12,7 @@
 #include "util.h"
 #include "base58.h"
 #include "masternode.h"
+#include "governance.h"
 #include <boost/lexical_cast.hpp>
 #include "init.h"
 
@@ -19,18 +20,16 @@ using namespace std;
 
 extern CCriticalSection cs_budget;
 
+// todo 12.1 - remove the unused
 class CBudgetManager;
 class CFinalizedBudgetBroadcast;
 class CFinalizedBudget;
 class CFinalizedBudgetVote;
-class CBudgetProposal;
-class CBudgetProposalBroadcast;
-class CBudgetVote;
+//class CBudgetProposal;
+//class CBudgetProposalBroadcast;
+//class CBudgetVote;
 class CTxBudgetPayment;
-
-#define VOTE_ABSTAIN  0
-#define VOTE_YES      1
-#define VOTE_NO       2
+class CWalletTx;
 
 static const CAmount BUDGET_FEE_TX = (5*COIN);
 static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
@@ -93,6 +92,7 @@ public:
 
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
 
+    std::vector<CBudgetProposal*> GetBudget();
     CAmount GetTotalBudget(int nHeight);
     
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
@@ -161,6 +161,7 @@ public:
 };
 
 
+
 //
 // Finalized Budget : Contains the suggested proposals to pay on a given block
 //
@@ -190,7 +191,7 @@ public:
     double GetScore();
     bool HasMinimumRequiredSupport();
 
-    bool IsValid(std::string& strError, bool fCheckCollateral=true);
+    bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
 
     std::string GetName() {return strBudgetName; }
     std::string GetProposals();
@@ -321,7 +322,7 @@ public:
     CFinalizedBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
-    bool SignatureValid(bool fSignatureCheck);
+    bool IsValid(bool fSignatureCheck);
     void Relay();
 
     uint256 GetHash(){

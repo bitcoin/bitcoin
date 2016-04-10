@@ -19,6 +19,7 @@
 #include "init.h"
 #include "instantx.h"
 #include "darksend.h"
+#include "governance.h"
 #include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -4405,10 +4406,10 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return mnpayments.mapMasternodePayeeVotes.count(inv.hash);
 
     case MSG_BUDGET_VOTE:
-        return budget.mapSeenMasternodeBudgetVotes.count(inv.hash);
+        return governance.mapSeenMasternodeBudgetVotes.count(inv.hash);
 
     case MSG_BUDGET_PROPOSAL:
-        return budget.mapSeenMasternodeBudgetProposals.count(inv.hash);
+        return governance.mapSeenMasternodeBudgetProposals.count(inv.hash);
 
     case MSG_BUDGET_FINALIZED:
         return budget.mapSeenFinalizedBudgets.count(inv.hash);
@@ -4582,20 +4583,20 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)){
+                    if(governance.mapSeenMasternodeBudgetVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetVotes[inv.hash];
+                        ss << governance.mapSeenMasternodeBudgetVotes[inv.hash];
                         pfrom->PushMessage(NetMsgType::MNBUDGETVOTE, ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)){
+                    if(governance.mapSeenMasternodeBudgetProposals.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetProposals[inv.hash];
+                        ss << governance.mapSeenMasternodeBudgetProposals[inv.hash];
                         pfrom->PushMessage(NetMsgType::MNBUDGETPROPOSAL, ss);
                         pushed = true;
                     }

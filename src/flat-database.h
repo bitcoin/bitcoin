@@ -60,7 +60,7 @@ bool DumpFlatDB(T& objToSave, CFlatDB<S>& flatdb);
 *            }
 *        }
 *        LogPrintf("Writting info to budget.dat...\n");
-*        govdb.Write(governator);
+*        govdb.Write(governance);
 *
 *        LogPrintf("Budget dump finished  %dms\n", GetTimeMillis() - nStart);
 *    
