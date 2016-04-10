@@ -33,7 +33,7 @@ class FullBlockTest(ComparisonTestFramework):
         self.num_nodes = 1
         self.block_heights = {}
         self.coinbase_key = CECKey()
-        self.coinbase_key.set_secretbytes(bytes("horsebattery"))
+        self.coinbase_key.set_secretbytes(b"horsebattery")
         self.coinbase_pubkey = self.coinbase_key.get_pubkey()
         self.block_time = int(time.time())+1
         self.tip = None
@@ -70,7 +70,7 @@ class FullBlockTest(ComparisonTestFramework):
         block = create_block(base_block_hash, coinbase, self.block_time)
         if (spend != None):
             tx = CTransaction()
-            tx.vin.append(CTxIn(COutPoint(spend.tx.sha256, spend.n), "", 0xffffffff))  # no signature yet
+            tx.vin.append(CTxIn(COutPoint(spend.tx.sha256, spend.n), b"", 0xffffffff))  # no signature yet
             # This copies the java comparison tool testing behavior: the first
             # txout has a garbage scriptPubKey, "to make sure we're not
             # pre-verifying too much" (?)
@@ -80,7 +80,7 @@ class FullBlockTest(ComparisonTestFramework):
             else:
                 tx.vout.append(CTxOut(1, script))
             # Now sign it if necessary
-            scriptSig = ""
+            scriptSig = b""
             scriptPubKey = bytearray(spend.tx.vout[spend.n].scriptPubKey)
             if (scriptPubKey[0] == OP_TRUE):  # looks like an anyone-can-spend
                 scriptSig = CScript([OP_TRUE])
@@ -225,7 +225,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                      \-> b3 (1) -> b4 (2)
         tip(6)
         block(9, spend=out4, additional_coinbase_value=1)
-        yield rejected(RejectResult(16, 'bad-cb-amount'))
+        yield rejected(RejectResult(16, b'bad-cb-amount'))
 
         
         # Create a fork that ends in a block with too much fee (the one that causes the reorg)
@@ -237,7 +237,7 @@ class FullBlockTest(ComparisonTestFramework):
         yield rejected()
 
         block(11, spend=out4, additional_coinbase_value=1)
-        yield rejected(RejectResult(16, 'bad-cb-amount'))
+        yield rejected(RejectResult(16, b'bad-cb-amount'))
 
 
         # Try again, but with a valid fork first
@@ -279,7 +279,7 @@ class FullBlockTest(ComparisonTestFramework):
         out6 = get_spendable_output()
         too_many_checksigs = CScript([OP_CHECKSIG] * (1000000 // 50))
         block(16, spend=out6, script=too_many_checksigs)
-        yield rejected(RejectResult(16, 'bad-blk-sigops'))
+        yield rejected(RejectResult(16, b'bad-blk-sigops'))
 
 
         # Attempt to spend a transaction created on a different fork
@@ -288,7 +288,7 @@ class FullBlockTest(ComparisonTestFramework):
         #                      \-> b3 (1) -> b4 (2)
         tip(15)
         block(17, spend=txout_b3)
-        yield rejected(RejectResult(16, 'bad-txns-inputs-missingorspent'))
+        yield rejected(RejectResult(16, b'bad-txns-inputs-missingorspent'))
 
         # Attempt to spend a transaction created on a different fork (on a fork this time)
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -309,7 +309,7 @@ class FullBlockTest(ComparisonTestFramework):
         tip(15)
         out7 = get_spendable_output()
         block(20, spend=out7)
-        yield rejected(RejectResult(16, 'bad-txns-premature-spend-of-coinbase'))
+        yield rejected(RejectResult(16, b'bad-txns-premature-spend-of-coinbase'))
 
         # Attempt to spend a coinbase at depth too low (on a fork this time)
         #     genesis -> b1 (0) -> b2 (1) -> b5 (2) -> b6  (3)
@@ -333,7 +333,7 @@ class FullBlockTest(ComparisonTestFramework):
         old_hash = b23.sha256
         tx = CTransaction()
         script_length = MAX_BLOCK_SIZE - len(b23.serialize()) - 69
-        script_output = CScript([chr(0)*script_length])
+        script_output = CScript([b'\x00' * script_length])
         tx.vout.append(CTxOut(0, script_output))
         tx.vin.append(CTxIn(COutPoint(b23.vtx[1].sha256, 1)))
         b23 = update_block(23, [tx])
@@ -345,11 +345,11 @@ class FullBlockTest(ComparisonTestFramework):
         tip(15)
         b24 = block(24, spend=out6)
         script_length = MAX_BLOCK_SIZE - len(b24.serialize()) - 69
-        script_output = CScript([chr(0)*(script_length+1)])
+        script_output = CScript([b'\x00' * (script_length+1)])
         tx.vout = [CTxOut(0, script_output)]
         b24 = update_block(24, [tx])
         assert_equal(len(b24.serialize()), MAX_BLOCK_SIZE+1)
-        yield rejected(RejectResult(16, 'bad-blk-length'))
+        yield rejected(RejectResult(16, b'bad-blk-length'))
 
         b25 = block(25, spend=out7)
         yield rejected()
@@ -361,12 +361,12 @@ class FullBlockTest(ComparisonTestFramework):
         #                      \-> b3 (1) -> b4 (2)
         tip(15)
         b26 = block(26, spend=out6)
-        b26.vtx[0].vin[0].scriptSig = chr(0)
+        b26.vtx[0].vin[0].scriptSig = b'\x00'
         b26.vtx[0].rehash()
         # update_block causes the merkle root to get updated, even with no new
         # transactions, and updates the required state.
         b26 = update_block(26, [])
-        yield rejected(RejectResult(16, 'bad-cb-length'))
+        yield rejected(RejectResult(16, b'bad-cb-length'))
 
         # Extend the b26 chain to make sure bitcoind isn't accepting b26
         b27 = block(27, spend=out7)
@@ -375,10 +375,10 @@ class FullBlockTest(ComparisonTestFramework):
         # Now try a too-large-coinbase script
         tip(15)
         b28 = block(28, spend=out6)
-        b28.vtx[0].vin[0].scriptSig = chr(0)*101
+        b28.vtx[0].vin[0].scriptSig = b'\x00' * 101
         b28.vtx[0].rehash()
         b28 = update_block(28, [])
-        yield rejected(RejectResult(16, 'bad-cb-length'))
+        yield rejected(RejectResult(16, b'bad-cb-length'))
 
         # Extend the b28 chain to make sure bitcoind isn't accepted b28
         b29 = block(29, spend=out7)
@@ -390,7 +390,7 @@ class FullBlockTest(ComparisonTestFramework):
         # b30 has a max-sized coinbase scriptSig.
         tip(23)
         b30 = block(30)
-        b30.vtx[0].vin[0].scriptSig = chr(0)*100
+        b30.vtx[0].vin[0].scriptSig = b'\x00' * 100
         b30.vtx[0].rehash()
         b30 = update_block(30, [])
         yield accepted()

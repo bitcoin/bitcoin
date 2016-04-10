@@ -4,13 +4,14 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 # Linux network utilities
+
 import sys
 import socket
 import fcntl
 import struct
 import array
 import os
-import binascii
+from binascii import unhexlify, hexlify
 
 # Roughly based on http://voorloopnul.com/blog/a-python-netstat-in-less-than-100-lines-of-code/ by Ricardo Pascal
 STATE_ESTABLISHED = '01'
@@ -43,7 +44,7 @@ def _remove_empty(array):
 def _convert_ip_port(array):
     host,port = array.split(':')
     # convert host from mangled-per-four-bytes form as used by kernel
-    host = binascii.unhexlify(host)
+    host = unhexlify(host)
     host_out = ''
     for x in range(0, len(host) // 4):
         (val,) = struct.unpack('=I', host[x*4:(x+1)*4])
@@ -94,7 +95,7 @@ def all_interfaces():
     max_possible = 8 # initial value
     while True:
         bytes = max_possible * struct_size
-        names = array.array('B', '\0' * bytes)
+        names = array.array('B', b'\0' * bytes)
         outbytes = struct.unpack('iL', fcntl.ioctl(
             s.fileno(),
             0x8912,  # SIOCGIFCONF
@@ -105,7 +106,7 @@ def all_interfaces():
         else:
             break
     namestr = names.tostring()
-    return [(namestr[i:i+16].split('\0', 1)[0],
+    return [(namestr[i:i+16].split(b'\0', 1)[0],
              socket.inet_ntoa(namestr[i+20:i+24]))
             for i in range(0, outbytes, struct_size)]
 
@@ -136,7 +137,7 @@ def addr_to_hex(addr):
         addr = sub[0] + ([0] * nullbytes) + sub[1]
     else:
         raise ValueError('Could not parse address %s' % addr)
-    return binascii.hexlify(bytearray(addr))
+    return hexlify(bytearray(addr)).decode('ascii')
 
 def test_ipv6_local():
     '''
