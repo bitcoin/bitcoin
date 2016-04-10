@@ -142,7 +142,7 @@ governance list
             
         } else {
     
-            // if(govObj.IsBudgetCollateralValid())
+            // if(govObj.IsCollateralValid())
             // {
             //     //Relay
             // }
@@ -299,7 +299,7 @@ governance list
     //     }
 
     //     int nConf = 0;
-    //     if(!IsBudgetCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf)){
+    //     if(!IsCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf, GOVERNANCE_FEE_TX)){
     //         return "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError;
     //     }
 
@@ -589,7 +589,7 @@ UniValue contract(const UniValue& params, bool fHelp)
     //     }
 
     //     int nConf = 0;
-    //     if(!IsBudgetCollateralValid(hash, contractBroadcast.GetHash(), strError, contractBroadcast.nTime, nConf)){
+    //     if(!IsCollateralValid(hash, contractBroadcast.GetHash(), strError, contractBroadcast.nTime, nConf, GOVERNANCE_FEE_TX)){
     //         return "Contract FeeTX is not valid - " + hash.ToString() + " - " + strError;
     //     }
 

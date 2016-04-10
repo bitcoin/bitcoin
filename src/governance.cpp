@@ -26,13 +26,13 @@ std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 
 int nSubmittedFinalBudget;
 
-bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf)
+bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf, CAmount minFee)
 {
     CTransaction txCollateral;
     uint256 nBlockHash;
     if(!GetTransaction(nTxCollateralHash, txCollateral, Params().GetConsensus(), nBlockHash, true)){
         strError = strprintf("Can't find collateral tx %s", txCollateral.ToString());
-        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s\n", strError);
+        LogPrintf ("CBudgetProposalBroadcast::IsCollateralValid - %s\n", strError);
         return false;
     }
 
@@ -46,15 +46,15 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
     BOOST_FOREACH(const CTxOut o, txCollateral.vout){
         if(!o.scriptPubKey.IsNormalPaymentScript() && !o.scriptPubKey.IsUnspendable()){
             strError = strprintf("Invalid Script %s", txCollateral.ToString());
-            LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s\n", strError);
+            LogPrintf ("CBudgetProposalBroadcast::IsCollateralValid - %s\n", strError);
             return false;
         }
-        if(o.scriptPubKey == findScript && o.nValue >= BUDGET_FEE_TX) foundOpReturn = true;
+        if(o.scriptPubKey == findScript && o.nValue >= minFee) foundOpReturn = true;
 
     }
     if(!foundOpReturn){
         strError = strprintf("Couldn't find opReturn %s in %s", nExpectedHash.ToString(), txCollateral.ToString());
-        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s\n", strError);
+        LogPrintf ("CBudgetProposalBroadcast::IsCollateralValid - %s\n", strError);
         return false;
     }
 
@@ -78,7 +78,7 @@ bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, s
         return true;
     } else {
         strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", BUDGET_FEE_CONFIRMATIONS, conf);
-        LogPrintf ("CBudgetProposalBroadcast::IsBudgetCollateralValid - %s - %d confirmations\n", strError, conf);
+        LogPrintf ("CBudgetProposalBroadcast::IsCollateralValid - %s - %d confirmations\n", strError, conf);
         return false;
     }
 }
@@ -413,7 +413,7 @@ void CGovernanceManager::NewBlock()
     {
         std::string strError = "";
         int nConf = 0;
-        if(!IsBudgetCollateralValid((*it4).nFeeTXHash, (*it4).GetHash(), strError, (*it4).nTime, nConf)){
+        if(!IsCollateralValid((*it4).nFeeTXHash, (*it4).GetHash(), strError, (*it4).nTime, nConf, GOVERNANCE_FEE_TX)){
             ++it4;
             continue;
         }
@@ -473,7 +473,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
         std::string strError = "";
         int nConf = 0;
-        if(!IsBudgetCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf)){
+        if(!IsCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf, GOVERNANCE_FEE_TX)){
             LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
             if(nConf >= 1) vecImmatureBudgetProposals.push_back(budgetProposalBroadcast);
             return;
@@ -770,7 +770,7 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
 
     if(fCheckCollateral){
         int nConf = 0;
-        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError, nTime, nConf)){
+        if(!IsCollateralValid(nFeeTXHash, GetHash(), strError, nTime, nConf, GOVERNANCE_FEE_TX)){
             return false;
         }
     }

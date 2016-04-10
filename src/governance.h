@@ -29,9 +29,9 @@ class CBudgetVote;
 #define VOTE_NO       2
 
 // todo - 12.1 - change BUDGET_ to GOVERNANCE_ (cherry pick)
-static const CAmount BUDGET_FEE_TX = (5*COIN);
-static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
-static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
+static const CAmount GOVERNANCE_FEE_TX = (5*COIN);
+static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
+static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
 
 extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
 
@@ -39,7 +39,7 @@ extern CGovernanceManager governator;
 void DumpBudgets();
 
 //Check the collateral transaction for the budget proposal/finalized budget
-bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf);
+bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf, CAmount minFee);
 
 /** Save Budget Manager (budget.dat)
  */

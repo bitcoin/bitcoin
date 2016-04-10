@@ -156,7 +156,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         std::string strError = "";
         int nConf = 0;
-        if(!IsBudgetCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime, nConf)){
+        if(!IsCollateralValid(finalizedBudgetBroadcast.nFeeTXHash, finalizedBudgetBroadcast.GetHash(), strError, finalizedBudgetBroadcast.nTime, nConf, BUDGET_FEE_TX)){
             LogPrintf("Finalized Budget FeeTX is not valid - %s - %s\n", finalizedBudgetBroadcast.nFeeTXHash.ToString(), strError);
 
             if(nConf >= 1) vecImmatureFinalizedBudgets.push_back(finalizedBudgetBroadcast);
@@ -246,7 +246,7 @@ void CBudgetManager::NewBlock()
     {
         std::string strError = "";
         int nConf = 0;
-        if(!IsBudgetCollateralValid((*it5).nFeeTXHash, (*it5).GetHash(), strError, (*it5).nTime, nConf)){
+        if(!IsCollateralValid((*it5).nFeeTXHash, (*it5).GetHash(), strError, (*it5).nTime, nConf, BUDGET_FEE_TX)){
             ++it5;
             continue;
         }
@@ -905,7 +905,7 @@ bool CFinalizedBudget::IsValid(const CBlockIndex* pindex, std::string& strError,
     std::string strError2 = "";
     if(fCheckCollateral){
         int nConf = 0;
-        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2, nTime, nConf)){
+        if(!IsCollateralValid(nFeeTXHash, GetHash(), strError2, nTime, nConf, BUDGET_FEE_TX)){
             strError = "Invalid Collateral : " + strError2;
             return false;
         }
