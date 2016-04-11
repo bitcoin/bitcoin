@@ -268,7 +268,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
         transaction.newPossibleKeyChange(wallet);
 
-        CAmount nFeeRequired = 0;
+        CAmount nFeeRequired = -1;
         int nChangePosRet = -1;
         std::string strFailReason;
 

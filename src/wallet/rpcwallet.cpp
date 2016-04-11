@@ -382,7 +382,7 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
 
     // Create and send the transaction
     CReserveKey reservekey(pwalletMain);
-    CAmount nFeeRequired;
+    CAmount nFeeRequired = -1;
     std::string strError;
     vector<CRecipient> vecSend;
     int nChangePosRet = -1;
@@ -1036,7 +1036,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
 
     // Send
     CReserveKey keyChange(pwalletMain);
-    CAmount nFeeRequired = 0;
+    CAmount nFeeRequired = -1;
     int nChangePosRet = -1;
     string strFailReason;
     bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, nChangePosRet, strFailReason);
@@ -2456,6 +2456,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             "   {\n"
                             "     \"changeAddress\"     (string, optional, default pool address) The bitcoin address to receive the change\n"
                             "     \"changePosition\"    (numeric, optional, default random) The index of the change output\n"
+                            "     \"fee\"               (numeric, optional, default minimum value) The transaction fee\n"
                             "     \"includeWatching\"   (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"      (boolean, optional, default false) Lock selected unspent outputs\n"
                             "   }\n"
@@ -2482,6 +2483,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
     CTxDestination changeAddress = CNoDestination();
     int changePosition = -1;
+    CAmount nFee = -1;
     bool includeWatching = false;
     bool lockUnspents = false;
 
@@ -2495,7 +2497,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
         UniValue options = params[1];
 
-        RPCTypeCheckObj(options, boost::assign::map_list_of("changeAddress", UniValue::VSTR)("changePosition", UniValue::VNUM)("includeWatching", UniValue::VBOOL)("lockUnspents", UniValue::VBOOL), true, true);
+        RPCTypeCheckObj(options, boost::assign::map_list_of("changeAddress", UniValue::VSTR)("changePosition", UniValue::VNUM)("fee", UniValue::VNUM)("includeWatching", UniValue::VBOOL)("lockUnspents", UniValue::VBOOL), true, true);
 
         if (options.exists("changeAddress")) {
             CBitcoinAddress address(options["changeAddress"].get_str());
@@ -2511,6 +2513,9 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
         if (options.exists("includeWatching"))
             includeWatching = options["includeWatching"].get_bool();
+
+        if (options.exists("fee"))
+            nFee = AmountFromValue(options["fee"]);
 
         if (options.exists("lockUnspents"))
             lockUnspents = options["lockUnspents"].get_bool();
@@ -2529,7 +2534,6 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
 
     CMutableTransaction tx(origTx);
-    CAmount nFee;
     string strFailReason;
 
     if(!pwalletMain->FundTransaction(tx, nFee, changePosition, strFailReason, includeWatching, lockUnspents, changeAddress))
