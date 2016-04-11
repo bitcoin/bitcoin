@@ -2439,9 +2439,9 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 1 || params.size() > 2)
+    if (fHelp || params.size() < 1 || params.size() > 3)
         throw runtime_error(
-                            "fundrawtransaction \"hexstring\" includeWatching\n"
+                            "fundrawtransaction \"hexstring\" ( includeWatching ) ( opt into Replace-By-Fee )\n"
                             "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
                             "This will not modify existing inputs, and will add one change output to the outputs.\n"
                             "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
@@ -2452,7 +2452,8 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n"
                             "\nArguments:\n"
                             "1. \"hexstring\"     (string, required) The hex string of the raw transaction\n"
-                            "2. includeWatching (boolean, optional, default false) Also select inputs which are watch only\n"
+                            "2. includeWatching (boolean, optional, default=false) Also select inputs which are watch only\n"
+                            "3. opt into RBF    (boolean, optional, default=false) Allow this transaction to be replaced by a transaction with heigher fees\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
@@ -2489,7 +2490,10 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     CAmount nFee;
     string strFailReason;
     int nChangePos = -1;
-    if(!pwalletMain->FundTransaction(tx, nFee, nChangePos, strFailReason, includeWatching))
+    unsigned int flags = CREATE_TX_DONT_SIGN;
+    if (params.size() > 2 && params[2].isTrue())
+        flags |= CREATE_TX_RBF_OPT_IN;
+    if(!pwalletMain->FundTransaction(tx, nFee, nChangePos, strFailReason, includeWatching, flags))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
 
     UniValue result(UniValue::VOBJ);
