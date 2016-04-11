@@ -778,7 +778,8 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 			// if its a linked accept or escrow, it can be a long time before the time of the buy and time of accept, above check catches that.
 			if(!linkAccept && !escrowAccept)
 			{
-				if(nHeight < heightToCheckAgainst || (nHeight - heightToCheckAgainst) > 10)
+				// give 4 hours of blocks for tx to get into chain from mempool
+				if(nHeight < heightToCheckAgainst || (nHeight - heightToCheckAgainst) > 240)
 					return error("CheckOfferInputs() OP_OFFER_ACCEPT: accept height and current block height differ by too much heightToCheckAgainst %d vs nHeight %d", heightToCheckAgainst, nHeight);
 
 			}
@@ -803,7 +804,13 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				// lookup the price of the offer in syscoin based on pegged alias at the block # when accept/escrow was made
 				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
 				if(tx.vout[nOut].nValue != nPrice)
-					return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %ld, currency %s, value found %ld\n", nPrice, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue);											
+				{
+					nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst-1, precision)*theOfferAccept.nQty;
+					if(tx.vout[nOut].nValue != nPrice)
+					{
+						return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %ld, currency %s, value found %ld\n", nPrice, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue);	
+					}
+				}												
 			}						
 		
 			if(theOfferAccept.nQty <= 0 || (theOffer.nQty != -1 && theOfferAccept.nQty > theOffer.nQty) || (!linkOffer.IsNull() && theOfferAccept.nQty > linkOffer.nQty && linkOffer.nQty != -1))
