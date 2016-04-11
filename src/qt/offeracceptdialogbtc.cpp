@@ -115,6 +115,7 @@ void OfferAcceptDialogBTC::acceptPayment()
 {
 	acceptOffer();
 }
+bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("https://blockchain.info/unconfirmed-transactions?format=json");
