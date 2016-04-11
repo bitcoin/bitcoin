@@ -115,6 +115,88 @@ void OfferAcceptDialogBTC::acceptPayment()
 {
 	acceptOffer();
 }
+{
+	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
+	QUrl url("https://blockchain.info/unconfirmed-transactions?format=json");
+	QNetworkRequest request(url);
+	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+	QNetworkReply* reply = nam->get(request);
+	reply->ignoreSslErrors();
+	CAmount valueAmount = 0;
+	CAmount priceAmount = 0;
+	if(!ParseMoney(price.toStdString(), priceAmount))
+		return false;
+	int totalTime = 0;
+	while(!reply->isFinished())
+	{
+		qApp->processEvents();
+		totalTime += 100;
+		MilliSleep(100);
+		if(totalTime > 30000)
+			return false;
+	}
+	bool doubleSpend = false;
+	
+	if(reply->error() == QNetworkReply::NoError) {
+
+		UniValue outerValue;
+		bool read = outerValue.read(reply->readAll().trimmed());
+		if (read)
+		{
+			UniValue outerObj = outerValue.get_obj();
+			UniValue txsValue = find_value(outerObj, "txs");
+			if (txsValue.isArray())
+			{
+				UniValue txs = txsValue.get_array();
+				for (unsigned int txidx = 0; txidx < txs.size(); txidx++) {
+					const UniValue& tx = txs[txidx];	
+					UniValue hashValue = find_value(tx, "hash");
+					if (hashValue.isStr())
+					{
+						if(strBTCTxId.toStdString() !=  hashValue.get_str())
+							continue;
+					}
+					else
+						continue;
+					UniValue doubleSpendValue = find_value(tx, "double_spend");
+					if (doubleSpendValue.isBool())
+					{
+						doubleSpend = doubleSpendValue.get_bool();
+						if(doubleSpend)
+							return false;
+					}
+					UniValue outputsValue = find_value(tx, "out");
+					if (outputsValue.isArray())
+					{
+						UniValue outputs = outputsValue.get_array();
+						for (unsigned int idx = 0; idx < outputs.size(); idx++) {
+							const UniValue& output = outputs[idx];	
+							UniValue addressValue = find_value(output, "addr");
+							if(addressValue.isStr())
+							{
+								if(addressValue.get_str() == address.toStdString())
+								{
+									UniValue paymentValue = find_value(output, "value");
+									if(paymentValue.isNum())
+									{
+										valueAmount += paymentValue.get_int64();
+										if(valueAmount >= priceAmount)
+											return true;
+									}
+								}
+									
+							}
+						}
+					}
+				}
+			}	
+		}
+	}
+	reply->deleteLater();
+	return false;
+
+
+}
 bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time)
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
@@ -247,15 +329,17 @@ void OfferAcceptDialogBTC::acceptOffer()
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
 		}
+
 		int height;
 		long time;
-		if(!CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), address, price, height, time))
+		if(!CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), address, price, height, time) && !CheckUnconfirmedPaymentInBTC(ui->btctxidEdit->text().trimmed(), address, price))
 		{
 			QMessageBox::critical(this, windowTitle(),
 				tr("Could not find a payment of %1 BTC at address %2, please check the Transaction ID %3 has been confirmed by the Bitcoin blockchain: ").arg(price).arg(address).arg(ui->btctxidEdit->text().trimmed()),
 				QMessageBox::Ok, QMessageBox::Ok);
 			return;
 		}
+		
 
 		UniValue params(UniValue::VARR);
 		UniValue valError;
