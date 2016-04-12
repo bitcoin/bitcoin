@@ -278,7 +278,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 		else
 		{
 			qDebug() << "Can't parse JSON";
-			qDebug << reply->readAll();
+			qDebug << QString::fromStdString(reply->readAll().trimmed());
 		}
 	}
 	else
