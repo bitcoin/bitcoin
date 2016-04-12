@@ -203,8 +203,9 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	qDebug() << "CheckPaymentInBTC https://blockchain.info/tx/" + strBTCTxId + "?format=json";
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
+	QSslSocket::setProtocol(QSsl:SslV3) 
 	QNetworkRequest request(url);
-	//request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 	QNetworkReply* reply = nam->get(request);
 	reply->ignoreSslErrors();
 	CAmount valueAmount = 0;
@@ -222,8 +223,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			return false;
 	}
 	bool doubleSpend = false;
-	qDebug() << "replay";
-
+	qDebug() << "reply error " + reply->errorString();
 		UniValue outerValue;
 		bool read = outerValue.read(reply->readAll().trimmed());
 		qDebug() << "read";
