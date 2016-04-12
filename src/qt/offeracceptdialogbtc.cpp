@@ -142,9 +142,10 @@ bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 	bool doubleSpend = false;
 	
 	if(reply->error() == QNetworkReply::NoError) {
-
+		QByteArray bytes = reply->readAll();
+		QString str = QString::fromUtf8(bytes.data(), bytes.size());
 		UniValue outerValue;
-		bool read = outerValue.read(reply->readAll().trimmed());
+		bool read = outerValue.read(str.toStdString());
 		if (read)
 		{
 			UniValue outerObj = outerValue.get_obj();
@@ -230,7 +231,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 		qDebug() << "Status Code: ";
 		qDebug() << QVariant(statusCode).toString();
 		UniValue outerValue;
-		bool read = outerValue.read(str);
+		bool read = outerValue.read(str.toStdString());
 		if (read)
 		{
 			qDebug() << "Read";
