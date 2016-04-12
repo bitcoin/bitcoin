@@ -23,7 +23,7 @@
 #if defined(HAVE_CONFIG_H)
 #include "config/syscoin-config.h" /* for USE_QRCODE */
 #endif
-
+#include <QDebug>
 #ifdef USE_QRCODE
 #include <qrencode.h>
 #endif
@@ -200,6 +200,7 @@ bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 }
 bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time)
 {
+	qDebug() << "CheckPaymentInBTC";
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
@@ -210,6 +211,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	CAmount priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), priceAmount))
 		return false;
+	qDebug() << "ParseMoney";
 	int totalTime = 0;
 	while(!reply->isFinished())
 	{
@@ -220,10 +222,12 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			return false;
 	}
 	bool doubleSpend = false;
+	qDebug() << "replay";
 	if(reply->error() == QNetworkReply::NoError) {
 
 		UniValue outerValue;
 		bool read = outerValue.read(reply->readAll().trimmed());
+		qDebug() << "read";
 		if (read)
 		{
 			UniValue outerObj = outerValue.get_obj();
@@ -236,27 +240,37 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			UniValue doubleSpendValue = find_value(outerObj, "double_spend");
 			if (doubleSpendValue.isBool())
 			{
+				qDebug() << "double spend";
 				doubleSpend = doubleSpendValue.get_bool();
 				if(doubleSpend)
 					return false;
 			}
 			UniValue outputsValue = find_value(outerObj, "out");
+			qDebug() << "outputs";
 			if (outputsValue.isArray())
 			{
 				UniValue outputs = outputsValue.get_array();
 				for (unsigned int idx = 0; idx < outputs.size(); idx++) {
+					qDebug() << "out";
 					const UniValue& output = outputs[idx];	
 					UniValue addressValue = find_value(output, "addr");
 					if(addressValue.isStr())
 					{
+						qDebug() << "address: " << addressValue.get_str() <<  " vs " << address;
 						if(addressValue.get_str() == address.toStdString())
 						{
 							UniValue paymentValue = find_value(output, "value");
+							qDebug() << "value check";
 							if(paymentValue.isNum())
 							{
+								
 								valueAmount += paymentValue.get_int64();
+								qDebug() << "valueAmount " << QString::number(valueAmount) << " vs  priceAmount " << QString::number(priceAmount);
 								if(valueAmount >= priceAmount)
+								{
+									qDebug() << "found";
 									return true;
+								}
 							}
 						}
 							
