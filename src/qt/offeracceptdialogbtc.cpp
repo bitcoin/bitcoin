@@ -223,9 +223,14 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	bool doubleSpend = false;
 	qDebug() << "Reply";
 	if(reply->error() == QNetworkReply::NoError) {
-		qDebug() << "No Error";
+		
+		QByteArray bytes = reply->readAll();
+		QString str = QString::fromUtf8(bytes.data(), bytes.size());
+		int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+		qDebug() << "Status Code: ";
+		qDebug() << QVariant(statusCode).toString();
 		UniValue outerValue;
-		bool read = outerValue.read(reply->readAll().trimmed());
+		bool read = outerValue.read(str);
 		if (read)
 		{
 			qDebug() << "Read";
@@ -276,7 +281,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 		else
 		{
 			qDebug() << "Can't parse JSON";
-			qDebug() << reply->readAll();
+			qDebug() << str;
 		}
 	}
 	else
