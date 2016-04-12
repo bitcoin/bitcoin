@@ -521,7 +521,7 @@ bool CPubKey::Verify(const uint256 &hash, const std::vector<unsigned char>& vchS
             break;
 
         // -1 = error, 0 = bad sig, 1 = good
-        ret = ECDSA_verify(0, hash.begin(), hash.size(), norm_der, derlen, pkey) == 1;
+        ret = ECDSA_verify(0, (const unsigned char*)&hash, sizeof(hash), norm_der, derlen, pkey) == 1;
         OPENSSL_free(norm_der);
     } while(false);
 
