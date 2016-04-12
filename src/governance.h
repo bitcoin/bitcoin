@@ -34,10 +34,11 @@ static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
 
 extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
+extern std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 extern CGovernanceManager governance;
 
 //Check the collateral transaction for the budget proposal/finalized budget
-bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf, CAmount minFee);
+extern bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf, CAmount minFee);
 
 /** Save Budget Manager (budget.dat)
  */

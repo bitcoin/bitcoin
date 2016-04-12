@@ -30,11 +30,11 @@ class CFlatDB;
 *
 */
 
-template<typename T, typename S>
-bool LoadFlatDB(T& objToLoad, CFlatDB<S>& flatdb);
+template<typename T>
+bool LoadFlatDB(T& objToLoad, CFlatDB<T>& flatdb);
 
-template<typename T, typename S>
-bool DumpFlatDB(T& objToSave, CFlatDB<S>& flatdb);
+template<typename T>
+bool DumpFlatDB(T& objToSave, CFlatDB<T>& flatdb);
 
 /**
 *   Reusable flat database

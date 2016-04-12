@@ -7,8 +7,8 @@
 *
 */
 
-template<typename T, typename S>
-bool LoadFlatDB(T& objToLoad, CFlatDB<S>& flatdb)
+template<typename T>
+bool LoadFlatDB(T& objToLoad, CFlatDB<T>& flatdb)
 {
     CFlatDB_ReadResult readResult = flatdb.Read(objToLoad);
     if (readResult == FileError)
@@ -33,8 +33,8 @@ bool LoadFlatDB(T& objToLoad, CFlatDB<S>& flatdb)
     return true;
 }
 
-template<typename T, typename S>
-bool DumpFlatDB(T& objToSave, CFlatDB<S>& flatdb)
+template<typename T>
+bool DumpFlatDB(T& objToSave, CFlatDB<T>& flatdb)
 {
     int64_t nStart = GetTimeMillis();
 

@@ -6,7 +6,6 @@
 #include "db.h"
 #include "init.h"
 #include "activemasternode.h"
-#include "governance.h"
 #include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -421,7 +420,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         UniValue resultObj(UniValue::VOBJ);
         CAmount nTotalAllotted = 0;
 
-        std::vector<CBudgetProposal*> winningProps = governance.GetBudget();
+        std::vector<CBudgetProposal*> winningProps = budget.GetBudget();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
             nTotalAllotted += pbudgetProposal->GetAllotted();

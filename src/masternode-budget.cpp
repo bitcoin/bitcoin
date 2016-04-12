@@ -9,7 +9,8 @@
 // todo 12.1 - remove the unused
 #include "masternode-budget.h"
 #include "masternode.h"
-//#include "darksend.h"
+#include "darksend.h"
+#include "governance.h"
 #include "masternodeman.h"
 #include "masternode-sync.h"
 #include "util.h"
@@ -710,6 +711,8 @@ void CBudgetManager::CheckOrphanVotes()
 {
     LOCK(cs);
 
+    std::string strError = "";
+
     std::map<uint256, CFinalizedBudgetVote>::iterator it2 = mapOrphanFinalizedBudgetVotes.begin();
     while(it2 != mapOrphanFinalizedBudgetVotes.end()){
         if(UpdateFinalizedBudget(((*it2).second),NULL, strError)){
@@ -931,7 +934,7 @@ std::string CFinalizedBudget::GetProposals()
     std::string ret = "";
 
     BOOST_FOREACH(CTxBudgetPayment& budgetPayment, vecBudgetPayments){
-        CBudgetProposal* pbudgetProposal = budget.FindProposal(budgetPayment.nProposalHash);
+        CBudgetProposal* pbudgetProposal = governance.FindProposal(budgetPayment.nProposalHash);
 
         std::string token = budgetPayment.nProposalHash.ToString();
 
@@ -955,7 +958,7 @@ std::string CFinalizedBudget::GetStatus()
             continue;
         }
 
-        CBudgetProposal* pbudgetProposal =  budget.FindProposal(budgetPayment.nProposalHash);
+        CBudgetProposal* pbudgetProposal =  governance.FindProposal(budgetPayment.nProposalHash);
         if(!pbudgetProposal){
             if(retBadHashes == ""){
                 retBadHashes = "Unknown proposal hash! Check this proposal before voting" + budgetPayment.nProposalHash.ToString();
@@ -995,7 +998,7 @@ bool CFinalizedBudget::IsValid(const CBlockIndex* pindex, std::string& strError,
     std::string strError2 = "";
     if(fCheckCollateral){
         int nConf = 0;
-        if(!IsBudgetCollateralValid(nFeeTXHash, GetHash(), strError2, nTime, nConf)){
+        if(!IsCollateralValid(nFeeTXHash, GetHash(), strError2, nTime, nConf, BUDGET_FEE_TX)){
             strError = "Invalid Collateral : " + strError2;
             return false;
         }
