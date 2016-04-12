@@ -53,9 +53,11 @@ private:
     QMenu *contextMenu;
     QAction *deleteAction; // to be able to explicitly disable it
     QString newOfferToSelect;
-
+	QString m_strBTCTxId;
+	QString m_strAddress;
 private Q_SLOTS:
 	void onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error);
+	void slotConfirmedFinished(QNetworkReply *);
     void on_copyOffer_clicked();
     void onCopyOfferValueAction();
     /** Export button clicked */
