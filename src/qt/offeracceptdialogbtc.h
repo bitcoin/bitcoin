@@ -2,11 +2,11 @@
 #define OFFERACCEPTDIALOGBTC_H
 #include "walletmodel.h"
 #include <QDialog>
+#include <QSslError>
 #include <QImage>
 #include <QLabel>
 class PlatformStyle;
 QT_BEGIN_NAMESPACE
-class QSslError;
 class QNetworkReply;
 QT_END_NAMESPACE
 namespace Ui {
