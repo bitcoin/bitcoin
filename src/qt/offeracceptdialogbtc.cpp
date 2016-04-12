@@ -131,6 +131,7 @@ bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 	CAmount priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), priceAmount))
 		return false;
+
 	int totalTime = 0;
 	while(!reply->isFinished())
 	{
