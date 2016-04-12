@@ -277,7 +277,9 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 				}
 			}
 		
-	}
+		}
+		else
+			qDebug() << reply->readAll();
 	reply->deleteLater();
 	return false;
 
