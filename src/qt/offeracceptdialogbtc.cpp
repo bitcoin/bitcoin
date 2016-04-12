@@ -69,8 +69,13 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(const PlatformStyle *platformStyle, Q
 
 #ifdef USE_QRCODE
 	QString message = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace";
-	QString uri = "bitcoin:" + this->address + "?amount=" + price + "&label=" + this->sellerAlias + "&message=" + GUIUtil::HtmlEscape(message);
-	
+	SendCoinsRecipient info;
+	info.address = this->address;
+	info.label = this->sellerAlias;
+	info.message = message;
+	ParseMoney(price.toStdString(), info.amount);
+	QString uri = GUIUtil::formatSyscoinURI(info);
+
 	ui->lblQRCode->setText("");
     if(!uri.isEmpty())
     {
@@ -403,7 +408,12 @@ void OfferAcceptDialogBTC::acceptOffer()
 void OfferAcceptDialogBTC::openBTCWallet()
 {
 	QString message = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace";
-	QString uri = "bitcoin:" + this->address + "?amount=" + price + "&label=" + this->sellerAlias + "&message=" + GUIUtil::HtmlEscape(message);
+	SendCoinsRecipient info;
+	info.address = this->address;
+	info.label = this->sellerAlias;
+	info.message = message;
+	ParseMoney(price.toStdString(), info.amount);
+	QString uri = GUIUtil::formatSyscoinURI(info);
 	QDesktopServices::openUrl(QUrl(uri, QUrl::TolerantMode));
 }
 bool OfferAcceptDialogBTC::getPaymentStatus()
