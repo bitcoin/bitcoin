@@ -170,52 +170,51 @@ bool MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 			return false;
 	}
 	bool doubleSpend = false;
-	if(reply->error() == QNetworkReply::NoError) {
-		QByteArray bytes = reply->readAll();
-		QString str = QString::fromUtf8(bytes.data(), bytes.size());
-		UniValue outerValue;
-		bool read = outerValue.read(str.toStdString());
-		if (read)
+	QByteArray bytes = reply->readAll();
+	QString str = QString::fromUtf8(bytes.data(), bytes.size());
+	UniValue outerValue;
+	bool read = outerValue.read(str.toStdString());
+	if (read)
+	{
+		UniValue outerObj = outerValue.get_obj();
+		UniValue heightValue = find_value(outerObj, "block_height");
+		if (heightValue.isNum())
+			height = heightValue.get_int();
+		UniValue timeValue = find_value(outerObj, "time");
+		if (timeValue.isNum())
+			time = timeValue.get_int64();
+		UniValue doubleSpendValue = find_value(outerObj, "double_spend");
+		if (doubleSpendValue.isBool())
 		{
-			UniValue outerObj = outerValue.get_obj();
-			UniValue heightValue = find_value(outerObj, "block_height");
-			if (heightValue.isNum())
-				height = heightValue.get_int();
-			UniValue timeValue = find_value(outerObj, "time");
-			if (timeValue.isNum())
-				time = timeValue.get_int64();
-			UniValue doubleSpendValue = find_value(outerObj, "double_spend");
-			if (doubleSpendValue.isBool())
-			{
-				doubleSpend = doubleSpendValue.get_bool();
-				if(doubleSpend)
-					return false;
-			}
-			UniValue outputsValue = find_value(outerObj, "out");
-			if (outputsValue.isArray())
-			{
-				UniValue outputs = outputsValue.get_array();
-				for (unsigned int idx = 0; idx < outputs.size(); idx++) {
-					const UniValue& output = outputs[idx];	
-					UniValue addressValue = find_value(output, "addr");
-					if(addressValue.isStr())
+			doubleSpend = doubleSpendValue.get_bool();
+			if(doubleSpend)
+				return false;
+		}
+		UniValue outputsValue = find_value(outerObj, "out");
+		if (outputsValue.isArray())
+		{
+			UniValue outputs = outputsValue.get_array();
+			for (unsigned int idx = 0; idx < outputs.size(); idx++) {
+				const UniValue& output = outputs[idx];	
+				UniValue addressValue = find_value(output, "addr");
+				if(addressValue.isStr())
+				{
+					if(addressValue.get_str() == address.toStdString())
 					{
-						if(addressValue.get_str() == address.toStdString())
+						UniValue paymentValue = find_value(output, "value");
+						if(paymentValue.isNum())
 						{
-							UniValue paymentValue = find_value(output, "value");
-							if(paymentValue.isNum())
-							{
-								valueAmount += paymentValue.get_int64();
-								if(valueAmount >= priceAmount)
-									return true;
-							}
+							valueAmount += paymentValue.get_int64();
+							if(valueAmount >= priceAmount)
+								return true;
 						}
-							
 					}
+						
 				}
 			}
 		}
 	}
+	
 	reply->deleteLater();
 	return false;
 

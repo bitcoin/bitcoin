@@ -143,62 +143,62 @@ bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 	}
 	bool doubleSpend = false;
 	
-	if(reply->error() == QNetworkReply::NoError) {
-		QByteArray bytes = reply->readAll();
-		QString str = QString::fromUtf8(bytes.data(), bytes.size());
-		UniValue outerValue;
-		bool read = outerValue.read(str.toStdString());
-		if (read)
+
+	QByteArray bytes = reply->readAll();
+	QString str = QString::fromUtf8(bytes.data(), bytes.size());
+	UniValue outerValue;
+	bool read = outerValue.read(str.toStdString());
+	if (read)
+	{
+		UniValue outerObj = outerValue.get_obj();
+		UniValue txsValue = find_value(outerObj, "txs");
+		if (txsValue.isArray())
 		{
-			UniValue outerObj = outerValue.get_obj();
-			UniValue txsValue = find_value(outerObj, "txs");
-			if (txsValue.isArray())
-			{
-				UniValue txs = txsValue.get_array();
-				for (unsigned int txidx = 0; txidx < txs.size(); txidx++) {
-					const UniValue& tx = txs[txidx];	
-					UniValue hashValue = find_value(tx, "hash");
-					if (hashValue.isStr())
-					{
-						if(strBTCTxId.toStdString() !=  hashValue.get_str())
-							continue;
-					}
-					else
+			UniValue txs = txsValue.get_array();
+			for (unsigned int txidx = 0; txidx < txs.size(); txidx++) {
+				const UniValue& tx = txs[txidx];	
+				UniValue hashValue = find_value(tx, "hash");
+				if (hashValue.isStr())
+				{
+					if(strBTCTxId.toStdString() !=  hashValue.get_str())
 						continue;
-					UniValue doubleSpendValue = find_value(tx, "double_spend");
-					if (doubleSpendValue.isBool())
-					{
-						doubleSpend = doubleSpendValue.get_bool();
-						if(doubleSpend)
-							return false;
-					}
-					UniValue outputsValue = find_value(tx, "out");
-					if (outputsValue.isArray())
-					{
-						UniValue outputs = outputsValue.get_array();
-						for (unsigned int idx = 0; idx < outputs.size(); idx++) {
-							const UniValue& output = outputs[idx];	
-							UniValue addressValue = find_value(output, "addr");
-							if(addressValue.isStr())
+				}
+				else
+					continue;
+				UniValue doubleSpendValue = find_value(tx, "double_spend");
+				if (doubleSpendValue.isBool())
+				{
+					doubleSpend = doubleSpendValue.get_bool();
+					if(doubleSpend)
+						return false;
+				}
+				UniValue outputsValue = find_value(tx, "out");
+				if (outputsValue.isArray())
+				{
+					UniValue outputs = outputsValue.get_array();
+					for (unsigned int idx = 0; idx < outputs.size(); idx++) {
+						const UniValue& output = outputs[idx];	
+						UniValue addressValue = find_value(output, "addr");
+						if(addressValue.isStr())
+						{
+							if(addressValue.get_str() == address.toStdString())
 							{
-								if(addressValue.get_str() == address.toStdString())
+								UniValue paymentValue = find_value(output, "value");
+								if(paymentValue.isNum())
 								{
-									UniValue paymentValue = find_value(output, "value");
-									if(paymentValue.isNum())
-									{
-										valueAmount += paymentValue.get_int64();
-										if(valueAmount >= priceAmount)
-											return true;
-									}
+									valueAmount += paymentValue.get_int64();
+									if(valueAmount >= priceAmount)
+										return true;
 								}
-									
 							}
+								
 						}
 					}
 				}
-			}	
-		}
+			}
+		}	
 	}
+	
 	reply->deleteLater();
 	return false;
 
@@ -232,73 +232,68 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	bool doubleSpend = false;
 	qDebug() << "Reply: ";
 	qDebug() << QVariant(reply->error()).toString();
-	if(reply->error() == QNetworkReply::NoError) {
+
 		
-		QByteArray bytes = reply->readAll();
-		QString str = QString::fromUtf8(bytes.data(), bytes.size());
-		int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-		qDebug() << "Status Code: ";
-		qDebug() << QVariant(statusCode).toString();
-		UniValue outerValue;
-		bool read = outerValue.read(str.toStdString());
-		if (read)
+	QByteArray bytes = reply->readAll();
+	QString str = QString::fromUtf8(bytes.data(), bytes.size());
+	int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+	qDebug() << "Status Code: ";
+	qDebug() << QVariant(statusCode).toString();
+	UniValue outerValue;
+	bool read = outerValue.read(str.toStdString());
+	if (read)
+	{
+		qDebug() << "Read";
+		UniValue outerObj = outerValue.get_obj();
+		UniValue heightValue = find_value(outerObj, "block_height");
+		if (heightValue.isNum())
+			height = heightValue.get_int();
+		UniValue timeValue = find_value(outerObj, "time");
+		if (timeValue.isNum())
+			time = timeValue.get_int64();
+		UniValue doubleSpendValue = find_value(outerObj, "double_spend");
+		if (doubleSpendValue.isBool())
 		{
-			qDebug() << "Read";
-			UniValue outerObj = outerValue.get_obj();
-			UniValue heightValue = find_value(outerObj, "block_height");
-			if (heightValue.isNum())
-				height = heightValue.get_int();
-			UniValue timeValue = find_value(outerObj, "time");
-			if (timeValue.isNum())
-				time = timeValue.get_int64();
-			UniValue doubleSpendValue = find_value(outerObj, "double_spend");
-			if (doubleSpendValue.isBool())
-			{
-				doubleSpend = doubleSpendValue.get_bool();
-				if(doubleSpend)
-					return false;
-			}
-			UniValue outputsValue = find_value(outerObj, "out");
-			if (outputsValue.isArray())
-			{
-				qDebug() << "Outputs";
-				UniValue outputs = outputsValue.get_array();
-				for (unsigned int idx = 0; idx < outputs.size(); idx++) {
-					const UniValue& output = outputs[idx];	
-					UniValue addressValue = find_value(output, "addr");
-					if(addressValue.isStr())
+			doubleSpend = doubleSpendValue.get_bool();
+			if(doubleSpend)
+				return false;
+		}
+		UniValue outputsValue = find_value(outerObj, "out");
+		if (outputsValue.isArray())
+		{
+			qDebug() << "Outputs";
+			UniValue outputs = outputsValue.get_array();
+			for (unsigned int idx = 0; idx < outputs.size(); idx++) {
+				const UniValue& output = outputs[idx];	
+				UniValue addressValue = find_value(output, "addr");
+				if(addressValue.isStr())
+				{
+					if(addressValue.get_str() == address.toStdString())
 					{
-						if(addressValue.get_str() == address.toStdString())
+						qDebug() << "Address match";
+						UniValue paymentValue = find_value(output, "value");
+						if(paymentValue.isNum())
 						{
-							qDebug() << "Address match";
-							UniValue paymentValue = find_value(output, "value");
-							if(paymentValue.isNum())
+							valueAmount += paymentValue.get_int64();
+							qDebug() << "Check value";
+							if(valueAmount >= priceAmount)
 							{
-								valueAmount += paymentValue.get_int64();
-								qDebug() << "Check value";
-								if(valueAmount >= priceAmount)
-								{
-									qDebug() << "Found";
-									return true;
-								}
+								qDebug() << "Found";
+								return true;
 							}
 						}
-							
 					}
+						
 				}
 			}
-		}
-		else
-		{
-			qDebug() << "Can't parse JSON";
-			qDebug() << str;
 		}
 	}
 	else
 	{
-		qDebug() << "Error";
-		qDebug() << reply->errorString();
+		qDebug() << "Can't parse JSON";
+		qDebug() << str;
 	}
+	
 	reply->deleteLater();
 	return false;
 
