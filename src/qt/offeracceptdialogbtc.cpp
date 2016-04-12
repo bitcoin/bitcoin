@@ -204,7 +204,11 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	//QSslSocket::setProtocol(QSsl::SslV3) 
+	QSslConfiguration SslConfiguration(QSslConfiguration::defaultConfiguration());
+	
+	SslConfiguration.setProtocol(QSsl::SslV3);
 	QNetworkRequest request(url);
+	request.setSslConfiguration(SslConfiguration);
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 	QNetworkReply* reply = nam->get(request);
 	reply->ignoreSslErrors();
