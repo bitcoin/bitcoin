@@ -19,7 +19,9 @@ class OfferAcceptDialogBTC : public QDialog
 public:
     explicit OfferAcceptDialogBTC(const PlatformStyle *platformStyle, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString strPrice, QString sellerAlias, QString address, QWidget *parent=0);
     ~OfferAcceptDialogBTC();
-
+	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& price);
+	bool CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& price);
+	bool lookup(const QString &lookupid, QString& price);
     bool getPaymentStatus();
 
 private:
@@ -34,18 +36,19 @@ private:
 	QString sellerAlias;
 	QString address;
 	QString alias;
+	QString m_strBTCTxId;
 	bool offerPaid; 
 	
 
 private Q_SLOTS:
-	void acceptPayment();
 	void on_cancelButton_clicked();
-    void acceptOffer();
+    void tryAcceptOffer();
+	void acceptOffer();
 	void openBTCWallet();
 	void onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error);  
-	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time);
-	bool CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price);
-	bool lookup(const QString &lookupid, QString& address, QString& price);
+	void slotUnconfirmedFinished(QNetworkReply *);
+	void slotConfirmedFinished(QNetworkReply *);
+	
 };
 
 #endif // OFFERACCEPTDIALOGBTC_H
