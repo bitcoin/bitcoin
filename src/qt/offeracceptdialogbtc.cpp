@@ -122,7 +122,6 @@ bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 	QNetworkRequest request(url);
 	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 	QNetworkReply* reply = nam->get(request);
-	reply->ignoreSslErrors();
 	CAmount valueAmount = 0;
 	CAmount priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), priceAmount))
