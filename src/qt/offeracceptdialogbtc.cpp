@@ -223,7 +223,6 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	}
 	bool doubleSpend = false;
 	qDebug() << "replay";
-	if(reply->error() == QNetworkReply::NoError) {
 
 		UniValue outerValue;
 		bool read = outerValue.read(reply->readAll().trimmed());
@@ -277,7 +276,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 					}
 				}
 			}
-		}
+		
 	}
 	reply->deleteLater();
 	return false;
