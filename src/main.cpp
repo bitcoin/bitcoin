@@ -1458,7 +1458,7 @@ bool GetTimestampIndex(const unsigned int &high, const unsigned int &low, std::v
 bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value)
 {
     if (!fSpentIndex)
-        return error("spent index not enabled");
+        return false;
 
     if (!pblocktree->ReadSpentIndex(key, value))
         return error("unable to get spent info");

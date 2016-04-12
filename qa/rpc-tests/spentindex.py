@@ -27,7 +27,7 @@ class SpentIndexTest(BitcoinTestFramework):
         self.nodes.append(start_node(1, self.options.tmpdir, ["-debug", "-spentindex"]))
         # Nodes 2/3 are used for testing
         self.nodes.append(start_node(2, self.options.tmpdir, ["-debug", "-spentindex"]))
-        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-spentindex"]))
+        self.nodes.append(start_node(3, self.options.tmpdir, ["-debug", "-spentindex", "-txindex"]))
         connect_nodes(self.nodes[0], 1)
         connect_nodes(self.nodes[0], 2)
         connect_nodes(self.nodes[0], 3)
@@ -62,9 +62,15 @@ class SpentIndexTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
 
+        # Check that the spentinfo works standalone
         info = self.nodes[1].getspentinfo({"txid": unspent[0]["txid"], "index": unspent[0]["vout"]})
         assert_equal(info["txid"], txid)
         assert_equal(info["index"], 0)
+
+        # Check that verbose raw transaction includes spent info
+        txVerbose = self.nodes[3].getrawtransaction(unspent[0]["txid"], 1)
+        assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentTxId"], txid)
+        assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentIndex"], 0)
 
         print "Passed\n"
 
