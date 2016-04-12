@@ -119,8 +119,8 @@ OfferAcceptDialogBTC::~OfferAcceptDialogBTC()
 bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& myprice)
 {
 	m_strBTCTxId = strBTCTxId; 
-	CAmount priceAmount = 0;
-	if(!ParseMoney(myprice.toStdString(), priceAmount))
+	m_priceAmount = 0;
+	if(!ParseMoney(myprice.toStdString(), m_priceAmount))
 	{
         QMessageBox::critical(this, windowTitle(),
             tr("Error parsing price: ") + myprice,
@@ -196,7 +196,7 @@ void OfferAcceptDialogBTC::slotUnconfirmedFinished(QNetworkReply * reply){
 								if(paymentValue.isNum())
 								{
 									valueAmount += paymentValue.get_int64();
-									if(valueAmount >= priceAmount)
+									if(valueAmount >= m_priceAmount)
 									{
 										QMessageBox::information(this, windowTitle(),
 											tr("Payment found in the Bitcoin blockchain!"),
@@ -285,7 +285,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 						{
 							valueAmount += paymentValue.get_int64();
 							qDebug() << "Check value";
-							if(valueAmount >= priceAmount)
+							if(valueAmount >= m_priceAmount)
 							{
 								qDebug() << "Found";
 								QDateTime timestamp;
@@ -318,8 +318,8 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& myprice)
 {
 	m_strBTCTxId = strBTCTxId; 
-	CAmount priceAmount = 0;
-	if(!ParseMoney(myprice.toStdString(), priceAmount))
+	m_priceAmount = 0;
+	if(!ParseMoney(myprice.toStdString(), m_priceAmount))
 	{
         QMessageBox::critical(this, windowTitle(),
             tr("Error parsing price: ") + myprice,

@@ -5,6 +5,7 @@
 #include <QSslError>
 #include <QImage>
 #include <QLabel>
+#include "amount.h"
 class PlatformStyle;
 QT_BEGIN_NAMESPACE
 class QNetworkReply;
@@ -38,6 +39,7 @@ private:
 	QString alias;
 	QString m_strBTCTxId;
 	bool offerPaid; 
+	CAmount m_priceAmount;
 	
 
 private Q_SLOTS:
