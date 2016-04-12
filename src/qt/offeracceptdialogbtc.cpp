@@ -256,7 +256,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 					UniValue addressValue = find_value(output, "addr");
 					if(addressValue.isStr())
 					{
-						qDebug() << "address: " + addressValue.get_str() +  " vs " << address;
+						qDebug() << "address: " + QString::fromStdString(addressValue.get_str()) +  " vs " << address;
 						if(addressValue.get_str() == address.toStdString())
 						{
 							UniValue paymentValue = find_value(output, "value");
