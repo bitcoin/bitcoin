@@ -156,6 +156,7 @@ bool MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
 	QNetworkReply* reply = nam->get(request);
+	reply->ignoreSslErrors();
 	CAmount valueAmount = 0;
 	CAmount priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), priceAmount))
