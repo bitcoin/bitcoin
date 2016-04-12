@@ -267,6 +267,13 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 				}
 			}
 		}
+		else
+			qDebug() << "Can't parse JSON";
+	}
+	else
+	{
+		qDebug() << "Error";
+		qDebug() << reply->errorString();
 	}
 	reply->deleteLater();
 	return false;
