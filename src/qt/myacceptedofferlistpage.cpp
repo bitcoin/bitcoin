@@ -168,7 +168,7 @@ bool MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 		QByteArray bytes = reply->readAll();
 		QString str = QString::fromUtf8(bytes.data(), bytes.size());
 		UniValue outerValue;
-		bool read = outerValue.read(str);
+		bool read = outerValue.read(str.toStdString());
 		if (read)
 		{
 			UniValue outerObj = outerValue.get_obj();
