@@ -120,10 +120,12 @@ void OfferAcceptDialogBTC::acceptPayment()
 {
 	acceptOffer();
 }
+
 bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-	QUrl url("http://blockchain.info/unconfirmed-transactions?format=json");
+	connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
+	QUrl url("https://blockchain.info/unconfirmed-transactions?format=json");
 	QNetworkRequest request(url);
 	QNetworkReply* reply = nam->get(request);
 	CAmount valueAmount = 0;
@@ -202,12 +204,18 @@ bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 
 
 }
+void OfferAcceptDialogBTC::onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error)  
+{  
+   reply->ignoreSslErrors(error);  
+}  
 bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time)
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-	QUrl url("http://blockchain.info/tx/" + strBTCTxId + "?format=json");
+	connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
+	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
 	QNetworkReply* reply = nam->get(request);
+	reply->ignoreSslErrors();
 	CAmount valueAmount = 0;
 	CAmount priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), priceAmount))
@@ -222,7 +230,8 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			return false;
 	}
 	bool doubleSpend = false;
-	qDebug() << "Reply";
+	qDebug() << "Reply: ";
+	qDebug() << QVariant(reply->error()).toString();
 	if(reply->error() == QNetworkReply::NoError) {
 		
 		QByteArray bytes = reply->readAll();

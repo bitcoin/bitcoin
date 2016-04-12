@@ -147,7 +147,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 bool MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time)
 {
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-	QUrl url("http://blockchain.info/tx/" + strBTCTxId + "?format=json");
+	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
 	QNetworkReply* reply = nam->get(request);
 	CAmount valueAmount = 0;

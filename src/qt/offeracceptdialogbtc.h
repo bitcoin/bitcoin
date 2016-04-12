@@ -5,8 +5,11 @@
 #include <QImage>
 #include <QLabel>
 class PlatformStyle;
+
 namespace Ui {
     class OfferAcceptDialogBTC;
+	class QSslError;
+	class QNetworkReply;
 }
 class OfferAcceptDialogBTC : public QDialog
 {
@@ -38,6 +41,7 @@ private Q_SLOTS:
 	void on_cancelButton_clicked();
     void acceptOffer();
 	void openBTCWallet();
+	void onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error);  
 	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time);
 	bool CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price);
 	bool lookup(const QString &lookupid, QString& address, QString& price);
