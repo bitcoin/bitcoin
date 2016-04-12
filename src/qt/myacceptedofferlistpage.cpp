@@ -145,7 +145,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 
 
 }
-void OfferAcceptDialogBTC::onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error)  
+void MyAcceptedOfferListPage::onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error)  
 {  
    reply->ignoreSslErrors(error);  
 }  
