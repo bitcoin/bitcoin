@@ -209,7 +209,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 						{
 							valueAmount += paymentValue.get_int64();
 							qDebug() << "Check value";
-							if(valueAmount >= priceAmount)
+							if(valueAmount >= m_priceAmount)
 							{
 								qDebug() << "Found";
 								QDateTime timestamp;
@@ -241,8 +241,8 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 }
 bool MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
 {
-	CAmount priceAmount = 0;
-	if(!ParseMoney(price.toStdString(), priceAmount))
+	m_priceAmount = 0;
+	if(!ParseMoney(price.toStdString(), m_priceAmount))
 	{
         QMessageBox::critical(this, windowTitle(),
             tr("Error parsing price: ") + price,

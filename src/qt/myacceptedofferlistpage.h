@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QSslError>
+#include "amount.h"
 class PlatformStyle;
 namespace Ui {
     class MyAcceptedOfferListPage;
@@ -37,7 +38,7 @@ public:
     const QString &getReturnValue() const { return returnValue; }
 	void showEvent ( QShowEvent * event );
 	bool lookup(const QString &lookupid, const QString &acceptid, QString& address, QString& price, QString& btcTxId);
-	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price, int& height, long& time);
+	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price);
 public Q_SLOTS:
     void done(int retval);
 
@@ -55,6 +56,7 @@ private:
     QString newOfferToSelect;
 	QString m_strBTCTxId;
 	QString m_strAddress;
+	CAmount m_priceAmount;
 private Q_SLOTS:
 	void onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error);
 	void slotConfirmedFinished(QNetworkReply *);
