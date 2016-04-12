@@ -99,6 +99,7 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
         if (GetSpentIndex(spentKey, spentInfo)) {
             out.push_back(Pair("spentTxId", spentInfo.txid.GetHex()));
             out.push_back(Pair("spentIndex", (int)spentInfo.inputIndex));
+            out.push_back(Pair("spentHeight", spentInfo.blockHeight));
         }
 
         vout.push_back(out);

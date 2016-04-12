@@ -66,11 +66,13 @@ class SpentIndexTest(BitcoinTestFramework):
         info = self.nodes[1].getspentinfo({"txid": unspent[0]["txid"], "index": unspent[0]["vout"]})
         assert_equal(info["txid"], txid)
         assert_equal(info["index"], 0)
+        assert_equal(info["height"], 106)
 
         # Check that verbose raw transaction includes spent info
         txVerbose = self.nodes[3].getrawtransaction(unspent[0]["txid"], 1)
         assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentTxId"], txid)
         assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentIndex"], 0)
+        assert_equal(txVerbose["vout"][unspent[0]["vout"]]["spentHeight"], 106)
 
         print "Passed\n"
 

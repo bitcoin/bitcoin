@@ -737,6 +737,7 @@ UniValue getspentinfo(const UniValue& params, bool fHelp)
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("txid", value.txid.GetHex()));
     obj.push_back(Pair("index", (int)value.inputIndex));
+    obj.push_back(Pair("height", value.blockHeight));
 
     return obj;
 }
