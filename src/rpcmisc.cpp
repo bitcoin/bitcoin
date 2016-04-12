@@ -668,11 +668,28 @@ UniValue getaddresstxids(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
+    int start = 0;
+    int end = 0;
+    if (params[0].isObject()) {
+        UniValue startValue = find_value(params[0].get_obj(), "start");
+        UniValue endValue = find_value(params[0].get_obj(), "end");
+        if (startValue.isNum() && endValue.isNum()) {
+            start = startValue.get_int();
+            end = startValue.get_int();
+        }
+    }
+
     std::vector<std::pair<CAddressIndexKey, CAmount> > addressIndex;
 
     for (std::vector<std::pair<uint160, int> >::iterator it = addresses.begin(); it != addresses.end(); it++) {
-        if (!GetAddressIndex((*it).first, (*it).second, addressIndex)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+        if (start > 0 && end > 0) {
+            if (!GetAddressIndex((*it).first, (*it).second, addressIndex, start, end)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+            }
+        } else {
+            if (!GetAddressIndex((*it).first, (*it).second, addressIndex)) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "No information available for address");
+            }
         }
     }
 
