@@ -223,12 +223,14 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			return false;
 	}
 	bool doubleSpend = false;
+	qDebug() << "Reply";
 	if(reply->error() == QNetworkReply::NoError) {
-
+		qDebug() << "No Error";
 		UniValue outerValue;
 		bool read = outerValue.read(reply->readAll().trimmed());
 		if (read)
 		{
+			qDebug() << "Read";
 			UniValue outerObj = outerValue.get_obj();
 			UniValue heightValue = find_value(outerObj, "block_height");
 			if (heightValue.isNum())
@@ -246,6 +248,7 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			UniValue outputsValue = find_value(outerObj, "out");
 			if (outputsValue.isArray())
 			{
+				qDebug() << "Outputs";
 				UniValue outputs = outputsValue.get_array();
 				for (unsigned int idx = 0; idx < outputs.size(); idx++) {
 					const UniValue& output = outputs[idx];	
@@ -254,12 +257,17 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 					{
 						if(addressValue.get_str() == address.toStdString())
 						{
+							qDebug() << "Address match";
 							UniValue paymentValue = find_value(output, "value");
 							if(paymentValue.isNum())
 							{
 								valueAmount += paymentValue.get_int64();
+								qDebug() << "Check value";
 								if(valueAmount >= priceAmount)
+								{
+									qDebug() << "Found";
 									return true;
+								}
 							}
 						}
 							
@@ -268,7 +276,10 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 			}
 		}
 		else
+		{
 			qDebug() << "Can't parse JSON";
+			qDebug << reply->readAll().trimmed();
+		}
 	}
 	else
 	{
