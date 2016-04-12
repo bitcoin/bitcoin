@@ -16,6 +16,8 @@ class QItemSelection;
 class QSortFilterProxyModel;
 class QMenu;
 class QModelIndex;
+class QSslError;
+class QNetworkReply;
 QT_END_NAMESPACE
 
 /** Widget that shows a list of owned certes.
@@ -53,7 +55,7 @@ private:
     QString newOfferToSelect;
 
 private Q_SLOTS:
-
+	void onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error);
     void on_copyOffer_clicked();
     void onCopyOfferValueAction();
     /** Export button clicked */
