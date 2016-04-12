@@ -14,6 +14,7 @@ from binascii import unhexlify
 from io import BytesIO
 import time
 
+
 def cltv_invalidate(tx):
     '''Modify the signature in vin 0 of the tx to fail CLTV
 
@@ -36,6 +37,7 @@ Mine 1 new version block.
 Mine 1 old version block, see that the node rejects.
 '''
 
+
 class BIP65Test(ComparisonTestFramework):
 
     def __init__(self):
@@ -50,13 +52,13 @@ class BIP65Test(ComparisonTestFramework):
     def run_test(self):
         test = TestManager(self, self.options.tmpdir)
         test.add_all_connections(self.nodes)
-        NetworkThread().start() # Start up network handling in another thread
+        NetworkThread().start()  # Start up network handling in another thread
         test.run()
 
     def create_transaction(self, node, coinbase, to_address, amount):
         from_txid = node.getblock(coinbase)['tx'][0]
-        inputs = [{ "txid" : from_txid, "vout" : 0}]
-        outputs = { to_address : amount }
+        inputs = [{"txid": from_txid, "vout": 0}]
+        outputs = {to_address: amount}
         rawtx = node.createrawtransaction(inputs, outputs)
         signresult = node.signrawtransaction(rawtx)
         tx = CTransaction()
@@ -68,7 +70,7 @@ class BIP65Test(ComparisonTestFramework):
 
         self.coinbase_blocks = self.nodes[0].generate(2)
         height = 3  # height of the next block to build
-        self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
+        self.tip = int("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.nodeaddress = self.nodes[0].getnewaddress()
         self.last_block_time = int(time.time())
 
@@ -103,7 +105,7 @@ class BIP65Test(ComparisonTestFramework):
         version 3 block.
         '''
         spendtx = self.create_transaction(self.nodes[0],
-                self.coinbase_blocks[0], self.nodeaddress, 1.0)
+                                          self.coinbase_blocks[0], self.nodeaddress, 1.0)
         cltv_invalidate(spendtx)
         spendtx.rehash()
 
@@ -124,7 +126,7 @@ class BIP65Test(ComparisonTestFramework):
         block.
         '''
         spendtx = self.create_transaction(self.nodes[0],
-                self.coinbase_blocks[1], self.nodeaddress, 1.0)
+                                          self.coinbase_blocks[1], self.nodeaddress, 1.0)
         cltv_invalidate(spendtx)
         spendtx.rehash()
 

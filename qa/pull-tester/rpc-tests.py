@@ -31,33 +31,33 @@ import re
 
 from tests_config import *
 
-#If imported values are not defined then set to zero (or disabled)
+# If imported values are not defined then set to zero (or disabled)
 if 'ENABLE_WALLET' not in vars():
-    ENABLE_WALLET=0
+    ENABLE_WALLET = 0
 if 'ENABLE_BITCOIND' not in vars():
-    ENABLE_BITCOIND=0
+    ENABLE_BITCOIND = 0
 if 'ENABLE_UTILS' not in vars():
-    ENABLE_UTILS=0
+    ENABLE_UTILS = 0
 if 'ENABLE_ZMQ' not in vars():
-    ENABLE_ZMQ=0
-    
+    ENABLE_ZMQ = 0
+
 # python-zmq may not be installed. Handle this gracefully and with some helpful info
 if ENABLE_ZMQ:
     try:
         import zmq
     except ImportError:
-        print("WARNING: \"import zmq\" failed. Setting ENABLE_ZMQ=0. " \
-            "To run zmq tests, see dependency info in /qa/README.md.")
-        ENABLE_ZMQ=0
+        print('''WARNING: \"import zmq\" failed. Setting ENABLE_ZMQ=0. "
+        To run zmq tests, see dependency info in /qa/README.md.''')
+        ENABLE_ZMQ = 0
 
-ENABLE_COVERAGE=0
+ENABLE_COVERAGE = 0
 
-#Create a set to store arguments and create the passOn string
+# Create a set to store arguments and create the passOn string
 opts = set()
 passOn = ""
 p = re.compile("^--")
 
-bold = ("","")
+bold = ("", "")
 if (os.name == 'posix'):
     bold = ('\033[0m', '\033[1m')
 
@@ -69,19 +69,19 @@ for arg in sys.argv[1:]:
     else:
         opts.add(arg)
 
-#Set env vars
+# Set env vars
 buildDir = BUILDDIR
 if "BITCOIND" not in os.environ:
     os.environ["BITCOIND"] = buildDir + '/src/bitcoind' + EXEEXT
 if "BITCOINCLI" not in os.environ:
     os.environ["BITCOINCLI"] = buildDir + '/src/bitcoin-cli' + EXEEXT
 
-#Disable Windows tests by default
+# Disable Windows tests by default
 if EXEEXT == ".exe" and "-win" not in opts:
-    print "Win tests currently disabled.  Use -win option to enable"
+    print("Win tests currently disabled.  Use -win option to enable")
     sys.exit(0)
 
-#Tests
+# Tests
 testScripts = [
     'bip68-112-113-p2p.py',
     'wallet.py',
@@ -132,7 +132,7 @@ testScriptsExt = [
     'txn_clone.py --mineblock',
     'forknotify.py',
     'invalidateblock.py',
-#    'rpcbind_test.py', #temporary, bug in libevent, see #6655
+    # 'rpcbind_test.py', #temporary, bug in libevent, see #6655
     'smartfees.py',
     'maxblocksinflight.py',
     'p2p-acceptblock.py',
@@ -140,10 +140,10 @@ testScriptsExt = [
     'maxuploadtarget.py',
     'replace-by-fee.py',
     'p2p-feefilter.py',
-    'pruning.py', # leave pruning last as it takes a REALLY long time
+    'pruning.py',  # leave pruning last as it takes a REALLY long time
 ]
 
-#Enable ZMQ tests
+# Enable ZMQ tests
 if ENABLE_ZMQ == 1:
     testScripts.append('zmq_test.py')
 
@@ -161,13 +161,13 @@ def runtests():
         cov_flag = coverage.flag if coverage else ''
         flags = " --srcdir %s/src %s %s" % (buildDir, cov_flag, passOn)
 
-        #Run Tests
+        # Run Tests
         for i in range(len(testScripts)):
-            if (len(opts) == 0
-                    or (len(opts) == 1 and "-win" in opts )
-                    or run_extended
-                    or testScripts[i] in opts
-                    or re.sub(".py$", "", testScripts[i]) in opts ):
+            if (any(len(opts) == 0,
+                    (len(opts) == 1 and "-win" in opts),
+                    run_extended,
+                    testScripts[i] in opts,
+                    re.sub(".py$", "", testScripts[i]) in opts)):
 
                 print("Running testscript %s%s%s ..." % (bold[1], testScripts[i], bold[0]))
                 time0 = time.time()
@@ -183,12 +183,11 @@ def runtests():
 
         # Run Extended Tests
         for i in range(len(testScriptsExt)):
-            if (run_extended or testScriptsExt[i] in opts
-                    or re.sub(".py$", "", testScriptsExt[i]) in opts):
-
-                print(
-                    "Running 2nd level testscript "
-                    + "%s%s%s ..." % (bold[1], testScriptsExt[i], bold[0]))
+            if (any(run_extended,
+                    testScriptsExt[i] in opts,
+                    re.sub(".py$", "", testScriptsExt[i]) in opts)):
+                print("Running 2nd level testscript %s%s%s ..." % (
+                    bold[1], testScriptsExt[i], bold[0]))
                 time0 = time.time()
                 subprocess.check_call(
                     rpcTestDir + testScriptsExt[i] + flags, shell=True)
@@ -201,7 +200,7 @@ def runtests():
             coverage.cleanup()
 
     else:
-        print "No rpc tests to run. Wallet, utils, and bitcoind must all be enabled"
+        print("No rpc tests to run. Wallet, utils, and bitcoind must all be enabled")
 
 
 class RPCCoverage(object):
