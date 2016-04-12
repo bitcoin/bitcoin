@@ -2,6 +2,7 @@
 #define MYACCEPTEDOFFERLISTPAGE_H
 
 #include <QDialog>
+#include <QSslError>
 class PlatformStyle;
 namespace Ui {
     class MyAcceptedOfferListPage;
@@ -16,7 +17,6 @@ class QItemSelection;
 class QSortFilterProxyModel;
 class QMenu;
 class QModelIndex;
-class QSslError;
 class QNetworkReply;
 QT_END_NAMESPACE
 
