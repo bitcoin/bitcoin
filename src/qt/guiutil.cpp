@@ -235,7 +235,34 @@ bool parseSyscoinURI(QString uri, SendCoinsRecipient *out)
     QUrl uriInstance(uri);
     return parseSyscoinURI(uriInstance, out);
 }
+// SYSCOIN
+QString formatBitcoinURI(const SendCoinsRecipient &info)
+{
+    QString ret = QString("bitcoin:%1").arg(info.address);
+    int paramCount = 0;
 
+    if (info.amount)
+    {
+        ret += QString("?amount=%1").arg(SyscoinUnits::format(SyscoinUnits::SYS, info.amount, false, SyscoinUnits::separatorNever));
+        paramCount++;
+    }
+
+    if (!info.label.isEmpty())
+    {
+        QString lbl(QUrl::toPercentEncoding(info.label));
+        ret += QString("%1label=%2").arg(paramCount == 0 ? "?" : "&").arg(lbl);
+        paramCount++;
+    }
+
+    if (!info.message.isEmpty())
+    {
+        QString msg(QUrl::toPercentEncoding(info.message));
+        ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
+        paramCount++;
+    }
+
+    return ret;
+}
 QString formatSyscoinURI(const SendCoinsRecipient &info)
 {
     QString ret = QString("syscoin:%1").arg(info.address);

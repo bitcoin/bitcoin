@@ -74,7 +74,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(const PlatformStyle *platformStyle, Q
 	info.label = this->sellerAlias;
 	info.message = message;
 	ParseMoney(price.toStdString(), info.amount);
-	QString uri = GUIUtil::formatSyscoinURI(info);
+	QString uri = GUIUtil::formatBitcoinURI(info);
 
 	ui->lblQRCode->setText("");
     if(!uri.isEmpty())
@@ -431,7 +431,7 @@ void OfferAcceptDialogBTC::openBTCWallet()
 	info.label = this->sellerAlias;
 	info.message = message;
 	ParseMoney(price.toStdString(), info.amount);
-	QString uri = GUIUtil::formatSyscoinURI(info);
+	QString uri = GUIUtil::formatBitcoinURI(info);
 	QDesktopServices::openUrl(QUrl(uri, QUrl::TolerantMode));
 }
 bool OfferAcceptDialogBTC::getPaymentStatus()
