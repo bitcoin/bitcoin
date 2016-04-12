@@ -5,11 +5,10 @@
 #include <QImage>
 #include <QLabel>
 class PlatformStyle;
-
+class QSslError;
+class QNetworkReply;
 namespace Ui {
     class OfferAcceptDialogBTC;
-	class QSslError;
-	class QNetworkReply;
 }
 class OfferAcceptDialogBTC : public QDialog
 {
