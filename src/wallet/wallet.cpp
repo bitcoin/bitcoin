@@ -1981,7 +1981,7 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
     return res;
 }
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeInOut, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange)
+bool CWallet::FundTransaction(CMutableTransaction& tx, CReserveKey& reservekeyOut, CAmount& nFeeInOut, bool overrideEstimatedFeeRate, const CFeeRate& specificFeeRate, int& nChangePosInOut, std::string& strFailReason, bool includeWatching, bool lockUnspents, const CTxDestination& destChange)
 {
     vector<CRecipient> vecSend;
 
@@ -2002,9 +2002,8 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeInOut, bool 
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
         coinControl.Select(txin.prevout);
 
-    CReserveKey reservekey(this);
     CWalletTx wtx;
-    if (!CreateTransaction(vecSend, wtx, reservekey, nFeeInOut, nChangePosInOut, strFailReason, &coinControl, CREATE_TX_DONT_SIGN))
+    if (!CreateTransaction(vecSend, wtx, reservekeyOut, nFeeInOut, nChangePosInOut, strFailReason, &coinControl, CREATE_TX_DONT_SIGN))
         return false;
 
     if (nChangePosInOut != -1)
