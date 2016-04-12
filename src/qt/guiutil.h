@@ -48,6 +48,8 @@ namespace GUIUtil
     bool parseSyscoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseSyscoinURI(QString uri, SendCoinsRecipient *out);
     QString formatSyscoinURI(const SendCoinsRecipient &info);
+	// SYSCOIN
+	QString formatBitcoinURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(const QString& address, const CAmount& amount);
