@@ -125,7 +125,6 @@ bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("http://blockchain.info/unconfirmed-transactions?format=json");
 	QNetworkRequest request(url);
-	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 	QNetworkReply* reply = nam->get(request);
 	CAmount valueAmount = 0;
 	CAmount priceAmount = 0;
@@ -207,7 +206,6 @@ bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	QUrl url("http://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
-	request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 	QNetworkReply* reply = nam->get(request);
 	CAmount valueAmount = 0;
 	CAmount priceAmount = 0;
