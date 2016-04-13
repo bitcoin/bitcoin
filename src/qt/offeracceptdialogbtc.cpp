@@ -121,18 +121,21 @@ void OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 	m_strBTCTxId = strBTCTxId; 
 	m_priceAmount = myprice;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-	//connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
+	connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotUnconfirmedFinished(QNetworkReply *)));
 	QUrl url("https://blockchain.info/unconfirmed-transactions?format=json");
 	QNetworkRequest request(url);
 	QSslConfiguration conf = request.sslConfiguration();
 	conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-	conf.setProtocol(QSsl::TlsV1_0OrLater);
+	conf.setProtocol(QSsl::TlsV1_0);
 	request.setSslConfiguration(conf);
 	nam->get(request);
 }
 void OfferAcceptDialogBTC::onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error)  
 {  
+QMessageBox::critical(this, windowTitle(),
+            tr("ignoring ssl error"),
+                QMessageBox::Ok, QMessageBox::Ok);
    reply->ignoreSslErrors(error);  
 }  
 void OfferAcceptDialogBTC::slotUnconfirmedFinished(QNetworkReply * reply){
@@ -327,13 +330,13 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	m_buttonText = ui->confirmButton->text();
 	ui->confirmButton->setText(tr("Please Wait..."));
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-	//connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
+	connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
 	QSslConfiguration conf = request.sslConfiguration();
 	conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-	conf.setProtocol(QSsl::TlsV1_0OrLater);
+	conf.setProtocol(QSsl::TlsV1_0);
 	request.setSslConfiguration(conf);
 	nam->get(request);
 }

@@ -252,13 +252,13 @@ void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 	m_strBTCTxId = strBTCTxId;
 	m_strAddress = address;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-	//connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
+	connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotUnconfirmedFinished(QNetworkReply *)));
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
 	QSslConfiguration conf = request.sslConfiguration();
 	conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-	conf.setProtocol(QSsl::TlsV1_0OrLater);
+	conf.setProtocol(QSsl::TlsV1_0);
 	request.setSslConfiguration(conf);
 	nam->get(request);
 }
