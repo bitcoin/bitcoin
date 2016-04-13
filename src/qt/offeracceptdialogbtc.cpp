@@ -23,7 +23,6 @@
 #if defined(HAVE_CONFIG_H)
 #include "config/syscoin-config.h" /* for USE_QRCODE */
 #endif
-#include <QDebug>
 #ifdef USE_QRCODE
 #include <qrencode.h>
 #endif
@@ -124,23 +123,17 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		return;
 	}
 	CAmount valueAmount = 0;
-	qDebug() << "Reply: ";
-	qDebug() << QVariant(reply->error()).toString();
 	QString time;
 	int height;
 		
 	QByteArray bytes = reply->readAll();
 	QString str = QString::fromUtf8(bytes.data(), bytes.size());
-	int statusCode = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-	qDebug() << "Status Code: ";
-	qDebug() << QVariant(statusCode).toString();
 	UniValue outerValue;
 	bool read = outerValue.read(str.toStdString());
 	if (read)
 	{
 		UniValue outerObj = outerValue.get_obj();
 		UniValue statusValue = find_value(outerObj, "status");
-		UniValue messageValue = find_value(outerObj, "message");
 		if (statusValue.isStr())
 		{
 			if(statusValue.get_str() != "success")
@@ -152,7 +145,6 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				return;
 			}
 		}
-		qDebug() << "Read";
 		outerObj = find_value(outerObj, "data");
 		UniValue heightValue = find_value(outerObj, "block");
 		if (heightValue.isNum())
@@ -163,38 +155,21 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		UniValue outputsValue = find_value(outerObj, "vouts");
 		if (outputsValue.isArray())
 		{
-			qDebug() << "Outputs";
 			UniValue outputs = outputsValue.get_array();
 			for (unsigned int idx = 0; idx < outputs.size(); idx++) {
 				const UniValue& output = outputs[idx];	
-				UniValue spentValue = find_value(output, "is_spent");
-				if (spentValue.isBool())
-				{
-					bool spent = spentValue.get_bool();
-					if(spent)
-					{
-						ui->confirmButton->setText(m_buttonText);
-						QMessageBox::critical(this, windowTitle(),
-							tr("Payment cannot be completed. Outputs seem to spent already!"),
-								QMessageBox::Ok, QMessageBox::Ok);
-						return;
-					}
-				}
 				UniValue addressValue = find_value(output, "address");
 				if(addressValue.isStr())
 				{
 					if(addressValue.get_str() == address.toStdString())
 					{
-						qDebug() << "Address match";
 						UniValue paymentValue = find_value(output, "amount");
 						if(paymentValue.isStr())
 						{
 							valueAmount += AmountFromValue(paymentValue);
-							qDebug() << "Check value";
 							if(valueAmount >= m_priceAmount)
 							{
 								ui->confirmButton->setText(m_buttonText);
-								qDebug() << "Found";
 								QMessageBox::information(this, windowTitle(),
 									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(ui->btctxidEdit->text().trimmed()).arg(height).arg(time),
 									QMessageBox::Ok, QMessageBox::Ok);
