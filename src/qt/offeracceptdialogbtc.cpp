@@ -116,17 +116,10 @@ OfferAcceptDialogBTC::~OfferAcceptDialogBTC()
 }
 
 
-bool OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& myprice)
+void OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const CAmount& myprice)
 {
 	m_strBTCTxId = strBTCTxId; 
-	m_priceAmount = 0;
-	if(!ParseMoney(myprice.toStdString(), m_priceAmount))
-	{
-        QMessageBox::critical(this, windowTitle(),
-            tr("Error parsing price: ") + myprice,
-                QMessageBox::Ok, QMessageBox::Ok);
-		return;
-	}
+	m_priceAmount = myprice;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotUnconfirmedFinished(QNetworkReply *)));
@@ -293,6 +286,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 								QMessageBox::information(this, windowTitle(),
 									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId).arg(height).arg(timestamp.toString(Qt::SystemLocaleShortDate)),
 									QMessageBox::Ok, QMessageBox::Ok);
+								acceptOffer();
 								return;
 							}
 						}
@@ -311,11 +305,9 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	}
 	
 	reply->deleteLater();
-	QMessageBox::warning(this, windowTitle(),
-		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
-			QMessageBox::Ok, QMessageBox::Ok);	
+	CheckUnconfirmedPaymentInBTC(m_strBTCTxId, m_priceAmount);
 }
-bool OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& myprice)
+void OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& myprice)
 {
 	m_strBTCTxId = strBTCTxId; 
 	m_priceAmount = 0;
@@ -394,11 +386,8 @@ void OfferAcceptDialogBTC::tryAcceptOffer()
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
 		}
-
-		if(!CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), myprice) && !CheckUnconfirmedPaymentInBTC(ui->btctxidEdit->text().trimmed(), myprice))
-			return;
+		CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), myprice);
 		
-		acceptOffer();
 
 }
 void OfferAcceptDialogBTC::acceptOffer(){
