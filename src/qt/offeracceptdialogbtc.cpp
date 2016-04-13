@@ -12,6 +12,9 @@
 #include "pubkey.h"
 #include "wallet/wallet.h"
 #include "main.h"
+#include "random.h"
+#include "alias.h"
+#include "script/script.h"
 #include "utilmoneystr.h"
 #include <QDesktopServices>
 #if QT_VERSION < 0x050000
@@ -36,6 +39,10 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(const PlatformStyle *platformStyle, Q
     QDialog(parent),
     ui(new Ui::OfferAcceptDialogBTC), platformStyle(platformStyle), alias(alias), offer(offer), notes(notes), quantity(quantity), title(title), sellerAlias(sellerAlias), address(address)
 {
+	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
+	vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
+	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
+	this->acceptGuid = QString::fromStdString(stringFromVch(vchAccept));
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();  
 	ui->aboutShadeBTC->setPixmap(QPixmap(":/images/" + theme + "/about_btc"));
@@ -67,7 +74,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(const PlatformStyle *platformStyle, Q
 	connect(ui->openBtcWalletButton, SIGNAL(clicked()), this, SLOT(openBTCWallet()));
 
 #ifdef USE_QRCODE
-	QString message = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace";
+	QString message = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace. Accept Guid: " + this->acceptGuid;
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;
@@ -139,6 +146,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	if (read)
 	{
 		UniValue statusValue = find_value(outerObj, "status");
+		UniValue messageValue = find_value(outerObj, "message");
 		if (statusValue.isStr())
 		{
 			if(statusValue.get_str() != "success")
@@ -159,7 +167,6 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		UniValue timeValue = find_value(outerObj, "time_utc");
 		if (timeValue.isStr())
 			time = timeValue.get_str();
-		outerObj = find_value(outerObj, "trade");
 		UniValue outputsValue = find_value(outerObj, "vouts");
 		if (outputsValue.isArray())
 		{
@@ -187,12 +194,23 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 					{
 						qDebug() << "Address match";
 						UniValue paymentValue = find_value(output, "amount");
-						if(paymentValue.isNum())
+						if(paymentValue.isStr())
 						{
 							valueAmount += AmountFromValue(paymentValue);
 							qDebug() << "Check value";
 							if(valueAmount >= m_priceAmount)
 							{
+								QString messageToCheckFor = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace. Accept Guid: " + this->acceptGuid;
+								if(!messageValue.isStr() || messageValue.get_str() != messageToCheckFor.toStdString())
+								{
+									qDebug() << messageToCheckFor;
+									qDebug() << messageValue.get_str();
+									ui->confirmButton->setText(m_buttonText);
+									QMessageBox::warning(this, windowTitle(),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! However a payment for this offer purchase was not found. Please enter the correct transaction ID and try again.").arg(ui->btctxidEdit->text().trimmed()),
+									QMessageBox::Ok, QMessageBox::Ok);
+									return;
+								}
 								ui->confirmButton->setText(m_buttonText);
 								qDebug() << "Found";
 								QMessageBox::information(this, windowTitle(),
@@ -319,6 +337,7 @@ void OfferAcceptDialogBTC::acceptOffer(){
 			return;
 		}
 		this->offerPaid = false;
+		params.push_back(this->acceptGuid.toStdString());
 		params.push_back(this->alias.toStdString());
 		params.push_back(this->offer.toStdString());
 		params.push_back(this->quantity.toStdString());
@@ -361,7 +380,7 @@ void OfferAcceptDialogBTC::acceptOffer(){
 }
 void OfferAcceptDialogBTC::openBTCWallet()
 {
-	QString message = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace";
+	QString message = "Payment for offer ID " + this->offer + " on Syscoin Decentralized Marketplace. Accept Guid: " + this->acceptGuid;
 	SendCoinsRecipient info;
 	info.address = this->address;
 	info.label = this->sellerAlias;

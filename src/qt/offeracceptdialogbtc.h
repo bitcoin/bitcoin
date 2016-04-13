@@ -32,6 +32,7 @@ private:
 	QString price;
 	QString title;
 	QString offer;
+	QString acceptGuid;
 	QString sellerAlias;
 	QString address;
 	QString alias;
