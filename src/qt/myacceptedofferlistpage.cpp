@@ -258,6 +258,7 @@ void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 	QNetworkRequest request(url);
 	QSslConfiguration conf = request.sslConfiguration();
 	conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+	conf.setProtocol(QSsl::TlsV1);
 	request.setSslConfiguration(conf);
 	nam->get(request);
 }
