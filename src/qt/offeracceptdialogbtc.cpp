@@ -323,7 +323,7 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
                 QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
-	m_buttonText = ui->confirmButton->getText();
+	m_buttonText = ui->confirmButton->text();
 	ui->confirmButton->setText(tr("Please Wait..."));
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
 	//connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
