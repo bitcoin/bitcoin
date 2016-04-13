@@ -37,7 +37,6 @@ private:
 	QString sellerAlias;
 	QString address;
 	QString alias;
-	QString m_strBTCTxId;
 	QString m_buttonText;
 	bool offerPaid; 
 	CAmount m_priceAmount;

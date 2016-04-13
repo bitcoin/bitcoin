@@ -241,7 +241,6 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 }
 void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
 {
-	m_priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), m_priceAmount))
 	{
         QMessageBox::critical(this, windowTitle(),
