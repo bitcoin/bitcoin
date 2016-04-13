@@ -121,10 +121,13 @@ void OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 	m_strBTCTxId = strBTCTxId; 
 	m_priceAmount = myprice;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-	connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
+	//connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotUnconfirmedFinished(QNetworkReply *)));
 	QUrl url("https://blockchain.info/unconfirmed-transactions?format=json");
 	QNetworkRequest request(url);
+	QSslConfiguration conf = request.sslConfiguration();
+	conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+	request.setSslConfiguration(conf);
 	nam->get(request);
 }
 void OfferAcceptDialogBTC::onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error)  
@@ -191,6 +194,7 @@ void OfferAcceptDialogBTC::slotUnconfirmedFinished(QNetworkReply * reply){
 									valueAmount += paymentValue.get_int64();
 									if(valueAmount >= m_priceAmount)
 									{
+										ui->confirmButton->setText(m_buttonText);
 										QMessageBox::information(this, windowTitle(),
 											tr("Payment found in the Bitcoin blockchain!"),
 												QMessageBox::Ok, QMessageBox::Ok);
@@ -280,6 +284,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 							qDebug() << "Check value";
 							if(valueAmount >= m_priceAmount)
 							{
+								ui->confirmButton->setText(m_buttonText);
 								qDebug() << "Found";
 								QDateTime timestamp;
 								timestamp.setTime_t(time);
@@ -318,11 +323,16 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
                 QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
+	m_buttonText = ui->confirmButton->getText();
+	ui->confirmButton->setText(tr("Please Wait..."));
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);
-	connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
+	//connect(nam,SIGNAL(sslErrors(QNetworkReply*,QList<QSslError>)),this,SLOT(onIgnoreSSLErrors(QNetworkReply*,QList<QSslError>)));  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
+	QSslConfiguration conf = request.sslConfiguration();
+	conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+	request.setSslConfiguration(conf);
 	nam->get(request);
 }
 
