@@ -127,7 +127,7 @@ void OfferAcceptDialogBTC::CheckUnconfirmedPaymentInBTC(const QString &strBTCTxI
 	QNetworkRequest request(url);
 	QSslConfiguration conf = request.sslConfiguration();
 	conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-	conf.setProtocol(QSsl::TlsV1);
+	conf.setProtocol(QSsl::TlsV1_0OrLater);
 	request.setSslConfiguration(conf);
 	nam->get(request);
 }
@@ -333,7 +333,7 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	QNetworkRequest request(url);
 	QSslConfiguration conf = request.sslConfiguration();
 	conf.setPeerVerifyMode(QSslSocket::VerifyNone);
-	conf.setProtocol(QSsl::TlsV1);
+	conf.setProtocol(QSsl::TlsV1_0OrLater);
 	request.setSslConfiguration(conf);
 	nam->get(request);
 }
