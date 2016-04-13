@@ -2593,6 +2593,7 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	CWalletTx wtx;
 	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig, scriptPubKeyEscrowOrig;
 	vector<unsigned char> vchAccept;
+	if(vchAcceptGuid.empty())
 	{
 		// generate offer accept identifier and hash
 		int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
