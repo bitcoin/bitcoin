@@ -239,7 +239,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
-bool MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
+void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
 {
 	m_priceAmount = 0;
 	if(!ParseMoney(price.toStdString(), m_priceAmount))

@@ -20,8 +20,8 @@ class OfferAcceptDialogBTC : public QDialog
 public:
     explicit OfferAcceptDialogBTC(const PlatformStyle *platformStyle, QString alias, QString offer, QString quantity, QString notes, QString title, QString currencyCode, QString strPrice, QString sellerAlias, QString address, QWidget *parent=0);
     ~OfferAcceptDialogBTC();
-	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& price);
-	bool CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& price);
+	void CheckPaymentInBTC(const QString &strBTCTxId, const QString& price);
+	void CheckUnconfirmedPaymentInBTC(const QString &strBTCTxId, const QString& price);
 	bool lookup(const QString &lookupid, QString& price);
     bool getPaymentStatus();
 

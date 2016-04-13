@@ -38,7 +38,7 @@ public:
     const QString &getReturnValue() const { return returnValue; }
 	void showEvent ( QShowEvent * event );
 	bool lookup(const QString &lookupid, const QString &acceptid, QString& address, QString& price, QString& btcTxId);
-	bool CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price);
+	void CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price);
 public Q_SLOTS:
     void done(int retval);
 
