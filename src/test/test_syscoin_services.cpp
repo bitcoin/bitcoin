@@ -720,7 +720,7 @@ const string OfferAccept(const string& ownernode, const string& node, const stri
 	int nQtyToAccept = atoi(qty.c_str());
 	string sTargetQty = boost::to_string(nCurrentQty - nQtyToAccept);
 
-	string offeracceptstr = "offeraccept \"\"" + aliasname + " " + offerguid + " " + qty + " " + message;
+	string offeracceptstr = "offeraccept " + aliasname + " " + offerguid + " " + qty + " " + message;
 
 	BOOST_CHECK_NO_THROW(r = CallRPC(node, offeracceptstr));
 	const UniValue &arr = r.get_array();
