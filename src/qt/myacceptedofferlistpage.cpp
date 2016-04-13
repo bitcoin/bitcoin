@@ -182,8 +182,8 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		UniValue timeValue = find_value(outerObj, "time_utc");
 		if (timeValue.isStr())
 			time = timeValue.get_str();
-		outerObj = find_value(outerObj, "trade");
-		UniValue unconfirmedValue = find_value(output, "is_unconfirmed");
+		
+		UniValue unconfirmedValue = find_value(outerObj, "is_unconfirmed");
 		if (unconfirmedValue.isBool())
 		{
 			bool unconfirmed = unconfirmedValue.get_bool();
@@ -221,11 +221,20 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 					if(addressValue.get_str() == m_strAddress.toStdString())
 					{
 						UniValue paymentValue = find_value(output, "amount");
-						if(paymentValue.isNum())
+						if(paymentValue.isStr())
 						{
 							valueAmount += AmountFromValue(paymentValue);
 							if(valueAmount >= m_priceAmount)
 							{
+								QString messageToCheckFor = "Payment for offer ID " + m_offerGuid + " on Syscoin Decentralized Marketplace. Accept Guid: " + m_acceptGuid;
+								if(!messageValue.isStr() || messageValue.get_str() != messageToCheckFor.toStdString())
+								{
+									ui->confirmButton->setText(m_buttonText);
+									QMessageBox::warning(this, windowTitle(),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! However the buyer paid for a different offer than the one found in this transaction, you may want to manually check your Bitcoin wallet to see if you received payment for the correct offer purchase.").arg(ui->btctxidEdit->text().trimmed()),
+									QMessageBox::Ok, QMessageBox::Ok);
+									return;
+								}
 								ui->btcButton->setText(m_buttonText);
 								QMessageBox::information(this, windowTitle(),
 									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId).arg(height).arg(time),
@@ -253,7 +262,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
-void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
+void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& accept, const QString& offer, const QString& address, const QString& price)
 {
 	if(!ParseMoney(price.toStdString(), m_priceAmount))
 	{
@@ -265,6 +274,8 @@ void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 	m_buttonText = ui->btcButton->text();
 	ui->btcButton->setText(tr("Please Wait..."));
 	m_strAddress = address;
+	m_acceptGuid = accept;
+	m_offerGuid = offer;
 	m_strBTCTxId = strBTCTxId;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
@@ -302,7 +313,7 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
         return;
 	}
 
-	CheckPaymentInBTC(btcTxId, address, price);
+	CheckPaymentInBTC(btcTxId, acceptid, offerid, address, price);
 
 
 }

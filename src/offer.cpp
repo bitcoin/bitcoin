@@ -145,6 +145,7 @@ string makeOfferLinkAcceptTX(const COfferAccept& theOfferAccept, const vector<un
 	{
 		return "Invalid address or alias";
 	}
+	params.push_back("");
 	params.push_back(address.aliasName);
 	params.push_back(stringFromVch(vchLinkOffer));
 	params.push_back("99");
@@ -2533,9 +2534,10 @@ bool CreateLinkedOfferAcceptRecipients(vector<CRecipient> &vecSend, const CAmoun
 }
 
 UniValue offeraccept(const UniValue& params, bool fHelp) {
-	if (fHelp || 1 > params.size() || params.size() > 7)
-		throw runtime_error("offeraccept <alias> <guid> [quantity] [message] [BTC TxId] [linkedacceptguidtxhash] [escrowTxHash]\n"
+	if (fHelp || 1 > params.size() || params.size() > 8)
+		throw runtime_error("offeraccept <acceptGuid> <alias> <guid> [quantity] [message] [BTC TxId] [linkedacceptguidtxhash] [escrowTxHash]\n"
 				"Accept&Pay for a confirmed offer.\n"
+				"<acceptGuid> Custom accept guid. Leave empty for default.\n"
 				"<alias> An alias of the buyer.\n"
 				"<guid> guidkey from offer.\n"
 				"<quantity> quantity to buy. Defaults to 1.\n"
@@ -2546,21 +2548,22 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 				+ HelpRequiringPassphrase());
 
 	CSyscoinAddress refundAddr;	
-	vector<unsigned char> vchAlias = vchFromValue(params[0]);
-	vector<unsigned char> vchOffer = vchFromValue(params[1]);
+	vector<unsigned char> vchAcceptGuid = vchFromValue(params[0]);
+	vector<unsigned char> vchAlias = vchFromValue(params[1]);
+	vector<unsigned char> vchOffer = vchFromValue(params[2]);
 	vector<unsigned char> vchPubKey;
-	vector<unsigned char> vchBTCTxId = vchFromValue(params.size()>=5?params[4]:"");
-	vector<unsigned char> vchLinkOfferAcceptTxHash = vchFromValue(params.size()>= 6? params[5]:"");
-	vector<unsigned char> vchMessage = vchFromValue(params.size()>=4?params[3]:"");
-	vector<unsigned char> vchEscrowTxHash = vchFromValue(params.size()>=7?params[6]:"");
+	vector<unsigned char> vchBTCTxId = vchFromValue(params.size()>=6?params[5]:"");
+	vector<unsigned char> vchLinkOfferAcceptTxHash = vchFromValue(params.size()>= 7? params[6]:"");
+	vector<unsigned char> vchMessage = vchFromValue(params.size()>=5?params[4]:"");
+	vector<unsigned char> vchEscrowTxHash = vchFromValue(params.size()>=8?params[7]:"");
 	int64_t nHeight = chainActive.Tip()->nHeight;
 	unsigned int nQty = 1;
-	if (params.size() >= 3) {
-		if(atof(params[2].get_str().c_str()) <= 0)
+	if (params.size() >= 4) {
+		if(atof(params[3].get_str().c_str()) <= 0)
 			throw runtime_error("invalid quantity value, must be greator than 0");
 	
 		try {
-			nQty = boost::lexical_cast<unsigned int>(params[2].get_str());
+			nQty = boost::lexical_cast<unsigned int>(params[3].get_str());
 		} catch (std::exception &e) {
 			throw runtime_error("invalid quantity value. Quantity must be less than 4294967296.");
 		}
@@ -2589,10 +2592,17 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	// this is a syscoin txn
 	CWalletTx wtx;
 	CScript scriptPubKeyOrig, scriptPubKeyAliasOrig, scriptPubKeyEscrowOrig;
-	// generate offer accept identifier and hash
-	int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
-	vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
-	vector<unsigned char> vchAccept = vchFromString(HexStr(vchAcceptRand));
+	vector<unsigned char> vchAccept;
+	{
+		// generate offer accept identifier and hash
+		int64_t rand = GetRand(std::numeric_limits<int64_t>::max());
+		vector<unsigned char> vchAcceptRand = CScriptNum(rand).getvch();
+		vchAccept = vchFromString(HexStr(vchAcceptRand));
+	}
+	else
+	{
+		vchAccept = vchAcceptGuid;
+	}
 
 	// create OFFERACCEPT txn keys
 	CScript scriptPubKey;
