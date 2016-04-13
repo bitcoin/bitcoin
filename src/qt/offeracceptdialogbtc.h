@@ -46,7 +46,6 @@ private Q_SLOTS:
     void tryAcceptOffer();
 	void acceptOffer();
 	void openBTCWallet();
-	void slotUnconfirmedFinished(QNetworkReply *);
 	void slotConfirmedFinished(QNetworkReply *);
 	
 };
