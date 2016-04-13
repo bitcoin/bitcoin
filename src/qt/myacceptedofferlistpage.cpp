@@ -164,7 +164,6 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 	{
 		UniValue outerObj = outerValue.get_obj();
 		UniValue statusValue = find_value(outerObj, "status");
-		UniValue messageValue = find_value(outerObj, "message");
 		if (statusValue.isStr())
 		{
 			if(statusValue.get_str() != "success")
@@ -203,19 +202,6 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 			UniValue outputs = outputsValue.get_array();
 			for (unsigned int idx = 0; idx < outputs.size(); idx++) {
 				const UniValue& output = outputs[idx];	
-				UniValue spentValue = find_value(output, "is_spent");
-				if (spentValue.isBool())
-				{
-					bool spent = spentValue.get_bool();
-					if(spent)
-					{
-						ui->btcButton->setText(m_buttonText);
-						QMessageBox::critical(this, windowTitle(),
-							tr("Payment cannot be completed. Outputs seem to spent already!"),
-								QMessageBox::Ok, QMessageBox::Ok);
-						return;
-					}
-				}
 				UniValue addressValue = find_value(output, "address");
 				if(addressValue.isStr())
 				{
