@@ -145,6 +145,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	bool read = outerValue.read(str.toStdString());
 	if (read)
 	{
+		UniValue outerObj = outerValue.get_obj();
 		UniValue statusValue = find_value(outerObj, "status");
 		UniValue messageValue = find_value(outerObj, "message");
 		if (statusValue.isStr())
@@ -159,14 +160,13 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 			}
 		}
 		qDebug() << "Read";
-		UniValue outerObj = outerValue.get_obj();
 		outerObj = find_value(outerObj, "data");
 		UniValue heightValue = find_value(outerObj, "block");
 		if (heightValue.isNum())
 			height = heightValue.get_int();
 		UniValue timeValue = find_value(outerObj, "time_utc");
 		if (timeValue.isStr())
-			time = timeValue.get_str();
+			time = QString::fromStdString(timeValue.get_str());
 		UniValue outputsValue = find_value(outerObj, "vouts");
 		if (outputsValue.isArray())
 		{

@@ -162,6 +162,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 	bool read = outerValue.read(str.toStdString());
 	if (read)
 	{
+		UniValue outerObj = outerValue.get_obj();
 		UniValue statusValue = find_value(outerObj, "status");
 		UniValue messageValue = find_value(outerObj, "message");
 		if (statusValue.isStr())
@@ -175,14 +176,13 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 				return;
 			}
 		}
-		UniValue outerObj = outerValue.get_obj();
 		outerObj = find_value(outerObj, "data");
 		UniValue heightValue = find_value(outerObj, "block");
 		if (heightValue.isNum())
 			height = heightValue.get_int();
 		UniValue timeValue = find_value(outerObj, "time_utc");
 		if (timeValue.isStr())
-			time = timeValue.get_str();
+			time = QString::fromStdString(timeValue.get_str());
 		
 		UniValue unconfirmedValue = find_value(outerObj, "is_unconfirmed");
 		if (unconfirmedValue.isBool())
