@@ -220,13 +220,13 @@ void PrepareShutdown()
 
     // todo - 12.1 - magic strings as const
     CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
-    DumpFlatDB(mnodeman, flatdb1);
-    CFlatDB<CBudgetManager> flatdb2("budget.dat", "magicBudgetCache");
-    DumpFlatDB(budget, flatdb2);
-    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-    DumpFlatDB(governance, flatdb3);
-    CFlatDB<CMasternodePayments> flatdb4("mnpayments.dat", "magicMasternodePaymentsCache");
-    DumpFlatDB(mnpayments, flatdb4);
+    flatdb1.Dump(mnodeman);
+    CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
+    flatdb2.Dump(mnpayments);
+    CFlatDB<CBudgetManager> flatdb3("budget.dat", "magicBudgetCache");
+    flatdb3.Dump(budget);
+    CFlatDB<CGovernanceManager> flatdb4("governance.dat", "magicGovernanceCache");
+    flatdb4.Dump(governance);
 
     StopTorControl();
     UnregisterNodeSignals(GetNodeSignals());
@@ -1824,23 +1824,22 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 10: Load cache data
 
     // todo - 12.1 - magic strings as const
-
     uiInterface.InitMessage(_("Loading masternode cache..."));
     CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
-    LoadFlatDB(mnodeman, flatdb1);
+    flatdb1.Load(mnodeman);
+
+    uiInterface.InitMessage(_("Loading masternode payment cache..."));
+    CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
+    flatdb2.Load(mnpayments);
 
     uiInterface.InitMessage(_("Loading budget cache..."));
-    CFlatDB<CBudgetManager> flatdb2("budget.dat", "magicBudgetCache");
-    LoadFlatDB(budget, flatdb2);
+    CFlatDB<CBudgetManager> flatdb3("budget.dat", "magicBudgetCache");
+    flatdb3.Load(budget);
     budget.ResetSync(); //flag our cached items so we send them to our peers
     budget.ClearSeen();
 
-    uiInterface.InitMessage(_("Loading masternode payment cache..."));
-    CFlatDB<CMasternodePayments> flatdb3("mnpayments.dat", "magicMasternodePaymentsCache");
-    LoadFlatDB(mnpayments, flatdb3);
-
     CFlatDB<CGovernanceManager> flatdb4("governance.dat", "magicGovernanceCache");
-    LoadFlatDB(governance, flatdb4);
+    flatdb4.Load(governance);
     governance.ResetSync(); 
     governance.ClearSeen();
 

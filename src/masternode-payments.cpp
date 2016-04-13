@@ -145,7 +145,7 @@ CMasternodePaymentDB::ReadResult CMasternodePaymentDB::Read(CMasternodePayments&
     LogPrintf("  %s\n", objToLoad.ToString());
     if(!fDryRun) {
         LogPrintf("Masternode payments manager - cleaning....\n");
-        objToLoad.CleanPaymentList();
+        objToLoad.CheckAndRemove();
         LogPrintf("Masternode payments manager - result:\n");
         LogPrintf("  %s\n", objToLoad.ToString());
     }
@@ -594,7 +594,7 @@ bool CMasternodePayments::IsTransactionValid(const CTransaction& txNew, int nBlo
     return true;
 }
 
-void CMasternodePayments::CleanPaymentList()
+void CMasternodePayments::CheckAndRemove()
 {
     if(!pCurrentBlockIndex) return;
 

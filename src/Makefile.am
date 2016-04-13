@@ -209,7 +209,6 @@ libbitcoin_server_a_SOURCES = \
   init.cpp \
   dbwrapper.cpp \
   governance.cpp \
-  flat-database.cpp \
   main.cpp \
   merkleblock.cpp \
   miner.cpp \
