@@ -117,11 +117,12 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 					btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());
 					
 				}
+				const string &strPrice = find_value(acceptObj, "total").get_str();
+				price = QString::fromStdString(strPrice);
 			}
-			const string &strAddress = find_value(offerObj, "address").get_str();
-			const string &strPrice = find_value(offerObj, "price").get_str();
+			const string &strAddress = find_value(offerObj, "address").get_str();			
 			address = QString::fromStdString(strAddress);
-			price = QString::fromStdString(strPrice);
+			
 			return true;
 		}
 	}
@@ -210,8 +211,8 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 						UniValue paymentValue = find_value(output, "amount");
 						if(paymentValue.isStr())
 						{
-							valueAmount += AmountFromValue(paymentValue);
-							if(valueAmount >= m_priceAmount)
+							valueAmount += QString::fromStdString(paymentValue.get_str()).toDouble();
+							if(valueAmount >= dblPrice)
 							{
 								ui->btcButton->setText(m_buttonText);
 								QMessageBox::information(this, windowTitle(),
@@ -243,13 +244,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 }
 void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const QString& address, const QString& price)
 {
-	if(!ParseMoney(price.toStdString(), m_priceAmount))
-	{
-        QMessageBox::critical(this, windowTitle(),
-            tr("Error parsing price: ") + price,
-                QMessageBox::Ok, QMessageBox::Ok);
-		return;
-	}
+	dblPrice = price.toDouble();
 	m_buttonText = ui->btcButton->text();
 	ui->btcButton->setText(tr("Please Wait..."));
 	m_strAddress = address;
