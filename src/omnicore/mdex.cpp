@@ -257,15 +257,22 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             ///////////////////////////
 
-            // strip a 0.05% fee from non-OMNI pairs (for testing, strip from everything)
-            int64_t feeDivider = 2000;
-            int64_t tradingFee = buyer_amountGot / feeDivider;
+            int64_t buyer_amountGotAfterFee = buyer_amountGot;
+            int64_t tradingFee = 0;
 
-            // subtract the fee from the amount the seller will receive
-            int64_t buyer_amountGotAfterFee = buyer_amountGot - tradingFee;
+            // strip a 0.05% fee from non-OMNI pairs
+            if ( (pold->getProperty() != (OMNI_PROPERTY_MSC || OMNI_PROPERTY_TMSC)) || (pold->getDesProperty() != (OMNI_PROPERTY_MSC || OMNI_PROPERTY_TMSC)) ) {
+                int64_t feeDivider = 2000; // 0.05%
+                tradingFee = buyer_amountGot / feeDivider;
 
-            // add the fee to the fee cache
-            p_feecache->AddFee(pnew->getDesProperty(), pnew->getBlock(), tradingFee);
+                // subtract the fee from the amount the seller will receive
+                buyer_amountGotAfterFee = buyer_amountGot - tradingFee;
+
+                // add the fee to the fee cache
+                p_feecache->AddFee(pnew->getDesProperty(), pnew->getBlock(), tradingFee);
+            } else {
+                if (msc_debug_fees) PrintToLog("Skipping fee reduction for trade match %s:%s as one of the properties is Omni\n", pold->getHash().GetHex(), pnew->getHash().GetHex());
+            }
 
             // transfer the payment property from buyer to seller
             assert(update_tally_map(pnew->getAddr(), pnew->getProperty(), -seller_amountGot, BALANCE));
