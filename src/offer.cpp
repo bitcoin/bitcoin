@@ -2822,6 +2822,8 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
 		txAccept.txBTCId = txBTCId;
+		CreateRecipient(scriptPubKey, paymentRecipient);
+		vecSend.push_back(paymentRecipient);
 	}
 	else if(!theOffer.bOnlyAcceptBTC)
 	{
@@ -3147,6 +3149,9 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	{
 		uint256 txBTCId(uint256S(stringFromVch(vchBTCTxId)));
 		txAccept.txBTCId = txBTCId;
+		CreateRecipient(scriptPubKey, paymentRecipient);
+		vecSend.push_back(paymentRecipient);
+
 	}
 	else if(!theOffer.bOnlyAcceptBTC)
 	{
