@@ -324,9 +324,6 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	QUrl url("https://blockchain.info/tx/" + strBTCTxId + "?format=json");
 	QNetworkRequest request(url);
 	nam->get(request);
-	return false;
-
-
 }
 
 bool OfferAcceptDialogBTC::lookup(const QString &lookupid, QString& myprice)
