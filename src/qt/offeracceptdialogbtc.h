@@ -2,7 +2,6 @@
 #define OFFERACCEPTDIALOGBTC_H
 #include "walletmodel.h"
 #include <QDialog>
-#include <QSslError>
 #include <QImage>
 #include <QLabel>
 #include "amount.h"
@@ -47,7 +46,6 @@ private Q_SLOTS:
     void tryAcceptOffer();
 	void acceptOffer();
 	void openBTCWallet();
-	void onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error);  
 	void slotUnconfirmedFinished(QNetworkReply *);
 	void slotConfirmedFinished(QNetworkReply *);
 	
