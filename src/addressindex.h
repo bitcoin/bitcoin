@@ -57,7 +57,7 @@ struct CMempoolAddressDeltaKey
 
 struct CMempoolAddressDeltaKeyCompare
 {
-    bool operator()(const CMempoolAddressDeltaKey& a, const CMempoolAddressDeltaKey& b) {
+    bool operator()(const CMempoolAddressDeltaKey& a, const CMempoolAddressDeltaKey& b) const {
         if (a.type == b.type) {
             if (a.addressBytes == b.addressBytes) {
                 if (a.txhash == b.txhash) {
