@@ -211,7 +211,7 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC()
 	ui->confirmButton->setText(tr("Please Wait..."));
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this); 
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
-	QUrl url("http://btc.blockr.io/api/v1/tx/info/" + strBTCTxId);
+	QUrl url("http://btc.blockr.io/api/v1/tx/info/" + ui->btctxidEdit->text().trimmed());
 	QNetworkRequest request(url);
 	nam->get(request);
 }
