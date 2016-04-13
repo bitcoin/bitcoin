@@ -381,6 +381,10 @@ void AcceptandPayOfferListPage::RefreshImage()
 			request.setRawHeader("Accept", "q=0.9,image/webp,*/*;q=0.8");
 			request.setRawHeader("Cache-Control", "no-cache");
 			request.setRawHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.71 Safari/537.36");
+			QSslConfiguration conf = request.sslConfiguration();
+			conf.setPeerVerifyMode(QSslSocket::VerifyNone);
+			conf.setProtocol(QSsl::TlsV1_0);
+			request.setSslConfiguration(conf);
 			QNetworkReply *reply = m_netwManager->get(request);
 			reply->ignoreSslErrors();
 			connect(reply, SIGNAL(finished()), this, SLOT(netwManagerFinished()));
