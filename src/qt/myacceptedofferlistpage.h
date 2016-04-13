@@ -56,7 +56,7 @@ private:
 	QString m_buttonText;
 	QString m_strBTCTxId;
 	QString m_strAddress;
-	CAmount m_priceAmount;
+	double dblPrice;
 private Q_SLOTS:
 	void slotConfirmedFinished(QNetworkReply *);
     void on_copyOffer_clicked();

@@ -14,6 +14,7 @@
 #include "main.h"
 #include "utilmoneystr.h"
 #include <QDesktopServices>
+#include <QDebug>
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #else
@@ -38,7 +39,7 @@ OfferAcceptDialogBTC::OfferAcceptDialogBTC(const PlatformStyle *platformStyle, Q
     ui->setupUi(this);
 	QString theme = GUIUtil::getThemeName();  
 	ui->aboutShadeBTC->setPixmap(QPixmap(":/images/" + theme + "/about_btc"));
-	double dblPrice = qstrPrice.toDouble()*quantity.toUInt();
+	dblPrice = qstrPrice.toDouble()*quantity.toUInt();
 	string strfPrice = strprintf("%f", dblPrice);
 	QString fprice = QString::fromStdString(strfPrice);
 	string strCurrencyCode = currencyCode.toStdString();
@@ -122,7 +123,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
                 QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
-	CAmount valueAmount = 0;
+	double valueAmount = 0;
 	QString time;
 	int height;
 		
@@ -161,13 +162,19 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				UniValue addressValue = find_value(output, "address");
 				if(addressValue.isStr())
 				{
+					QDebug() << "address";
 					if(addressValue.get_str() == address.toStdString())
 					{
+						QDebug() << address;
 						UniValue paymentValue = find_value(output, "amount");
+						QDebug() << "payment";
 						if(paymentValue.isStr())
 						{
-							valueAmount += AmountFromValue(paymentValue);
-							if(valueAmount >= m_priceAmount)
+							QDebug() << QString::fromStdString(paymentValue.get_str());
+							valueAmount += QString::fromStdString(paymentValue.get_str()).toDouble();
+							QDebug() << "valueAmount";
+							QDebug() << valueAmount;
+							if(valueAmount >= dblPrice)
 							{
 								ui->confirmButton->setText(m_buttonText);
 								QMessageBox::information(this, windowTitle(),
@@ -198,15 +205,8 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
 			QMessageBox::Ok, QMessageBox::Ok);	
 }
-void OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QString& myprice)
+void OfferAcceptDialogBTC::CheckPaymentInBTC()
 {
-	if(!ParseMoney(myprice.toStdString(), m_priceAmount))
-	{
-        QMessageBox::critical(this, windowTitle(),
-            tr("Error parsing price: ") + myprice,
-                QMessageBox::Ok, QMessageBox::Ok);
-		return;
-	}
 	m_buttonText = ui->confirmButton->text();
 	ui->confirmButton->setText(tr("Please Wait..."));
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this); 
@@ -215,67 +215,17 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC(const QString &strBTCTxId, const QS
 	QNetworkRequest request(url);
 	nam->get(request);
 }
-
-bool OfferAcceptDialogBTC::lookup(const QString &lookupid, QString& myprice)
-{
-	string strError;
-	string strMethod = string("offerinfo");
-	UniValue params(UniValue::VARR);
-	UniValue result;
-	params.push_back(lookupid.toStdString());
-
-    try {
-        result = tableRPC.execute(strMethod, params);
-
-		if (result.type() == UniValue::VOBJ)
-		{
-			const UniValue &offerObj = result.get_obj();
-
-			const string &strPrice = find_value(offerObj, "price").get_str();
-			myprice = QString::fromStdString(strPrice);
-			return true;
-		}
-	}
-	catch (UniValue& objError)
-	{
-		QMessageBox::critical(this, windowTitle(),
-			tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + lookupid,
-				QMessageBox::Ok, QMessageBox::Ok);
-		return true;
-
-	}
-	catch(std::exception& e)
-	{
-		QMessageBox::critical(this, windowTitle(),
-			tr("There was an exception trying to locate this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + QString::fromStdString(e.what()),
-				QMessageBox::Ok, QMessageBox::Ok);
-		return true;
-	}
-	return false;
-
-
-}
 // send offeraccept with offer guid/qty as params and then send offerpay with wtxid (first param of response) as param, using RPC commands.
 void OfferAcceptDialogBTC::tryAcceptOffer()
 {
-		QString myprice;
-		if (ui->btctxidEdit->text().trimmed().isEmpty()) {
-            ui->btctxidEdit->setText("");
-            QMessageBox::critical(this, windowTitle(),
-            tr("Please enter a valid Bitcoin Transaction ID into the input box and try again"),
-                QMessageBox::Ok, QMessageBox::Ok);
-            return;
-        }
-		if(!lookup(this->offer, myprice))
-		{
-            QMessageBox::critical(this, windowTitle(),
-            tr("Could not find this offer, please check the offer ID and that it has been confirmed by the blockchain: ") + this->offer,
-                QMessageBox::Ok, QMessageBox::Ok);
-            return;
-		}
-		CheckPaymentInBTC(ui->btctxidEdit->text().trimmed(), myprice);
-		
-
+	if (ui->btctxidEdit->text().trimmed().isEmpty()) {
+        ui->btctxidEdit->setText("");
+        QMessageBox::critical(this, windowTitle(),
+        tr("Please enter a valid Bitcoin Transaction ID into the input box and try again"),
+            QMessageBox::Ok, QMessageBox::Ok);
+        return;
+    }
+	CheckPaymentInBTC();		
 }
 void OfferAcceptDialogBTC::acceptOffer(){
 		UniValue params(UniValue::VARR);
