@@ -1,8 +1,16 @@
 #!/bin/bash
 
-#########################################
-## DISABLE DEV OMNI FOR THESE TESTS!!! ##
-#########################################
+################################################################################################
+## PLEASE DISABLE DEV OMNI FOR THESE TESTS!!!                                                 ##
+##                                                                                            ##
+## The fee distribution tests require an exact amount of Omni in each address.  Dev Omni will ##
+## skew these tests by increasing the amount of Omni in the Exodus Address.                   ##
+## To use this script in regtest mode, temporarily disable Dev Omni and recompile by adding:  ##
+##    return 0;                                                                               ##
+## as the first line of the function calculate_and_update_devmsc in omnicore.cpp.  This line  ##
+## must be removed and Omni Core recompiled to use on mainnet.                                ##
+################################################################################################
+
 
 PASS=0
 FAIL=0
