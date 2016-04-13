@@ -803,20 +803,20 @@ void CGovernanceManager::NewBlock()
     if(pCurrentBlockIndex->nHeight % 6 != 0) return;
 
     // incremental sync with our peers
-    if(masternodeSync.IsSynced()){
-        LogPrintf("CGovernanceManager::NewBlock - incremental sync started\n");
-        if(pCurrentBlockIndex->nHeight % 600 == rand() % 600) {
-            ClearSeen();
-            ResetSync();
-        }
+    // if(masternodeSync.IsSynced()){
+    //     LogPrintf("CGovernanceManager::NewBlock - incremental sync started\n");
+    //     if(pCurrentBlockIndex->nHeight % 600 == rand() % 600) {
+    //         ClearSeen();
+    //         ResetSync();
+    //     }
 
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            if(pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) 
-                Sync(pnode, uint256(), true);
+    //     LOCK(cs_vNodes);
+    //     BOOST_FOREACH(CNode* pnode, vNodes)
+    //         if(pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) 
+    //             Sync(pnode, uint256());
 
-        MarkSynced();
-    }
+    //     MarkSynced();
+    // }
 
     CheckAndRemove();
 

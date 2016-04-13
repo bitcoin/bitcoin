@@ -12,6 +12,7 @@
 #include "util.h"
 #include "base58.h"
 #include "masternode.h"
+#include "governance-vote.h"
 #include <boost/lexical_cast.hpp>
 #include "init.h"
 
@@ -23,10 +24,6 @@ class CGovernanceManager;
 class CBudgetProposal;
 class CBudgetProposalBroadcast;
 class CBudgetVote;
-
-#define VOTE_ABSTAIN  0
-#define VOTE_YES      1
-#define VOTE_NO       2
 
 // todo - 12.1 - change BUDGET_ to GOVERNANCE_ (cherry pick)
 static const CAmount GOVERNANCE_FEE_TX = (5*COIN);
@@ -40,33 +37,6 @@ extern CGovernanceManager governance;
 //Check the collateral transaction for the budget proposal/finalized budget
 extern bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf, CAmount minFee);
 
-/** Save Budget Manager (budget.dat)
- */
-// todo - 12.1 - rename to CGovernanceDB (cherry pick)
-// todo - 12.1 - move to goverance.dat
-class CBudgetDB
-{
-    //# ----
-private:
-    boost::filesystem::path pathDB;
-    std::string strMagicMessage;
-public:
-    enum ReadResult {
-        Ok,
-        FileError,
-        HashReadError,
-        IncorrectHash,
-        IncorrectMagicMessage,
-        IncorrectMagicNumber,
-        IncorrectFormat
-    };
-
-    CBudgetDB();
-    bool Write(const CGovernanceManager &objToSave);
-    ReadResult Read(CGovernanceManager& objToLoad, bool fDryRun = false);
-};
-
-//# ----
 
 //
 // Governance Manager : Contains all proposals for the budget
@@ -80,6 +50,9 @@ private:
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 
+    //       parent hash       vote hash     vote
+    std::map<uint256, std::map<uint256, CGovernanceVote> > mapVotes;
+
 public:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
@@ -87,6 +60,9 @@ public:
     // keep track of the scanning errors I've seen
     map<uint256, CBudgetProposal> mapProposals;
 
+// #----------- voting sweep ----------
+
+    // todo - 12.1 - move to private for better encapsulation 
     std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
     std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
     std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
@@ -107,9 +83,12 @@ public:
 
     int sizeProposals() {return (int)mapProposals.size();}
 
-    void ResetSync();
-    void MarkSynced();
-    void Sync(CNode* node, uint256 nProp, bool fPartial=false);
+    // description: incremental sync with our peers
+    // note: incremental syncing seems excessive, well just have clients ask for specific objects and their votes
+    // note: 12.1 - remove
+    //void ResetSync();
+    //void MarkSynced();
+    void Sync(CNode* node, uint256 nProp);
 
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
@@ -151,7 +130,6 @@ public:
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
-    //# ----
 };
 
 //
@@ -160,7 +138,6 @@ public:
 
 class CBudgetProposal
 {
-    //# ----
 private:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
@@ -176,13 +153,14 @@ public:
     */
     std::string strURL;
     int nBlockStart;
-    int nBlockEnd;
+    int nExpirationTime;
     CAmount nAmount;
     CScript address;
     int64_t nTime;
     uint256 nFeeTXHash;
+    uint256 nHashParent;
 
-    map<uint256, CBudgetVote> mapVotes;
+    map<uint256, map<int, CBudgetVote> > mapVotes;
     //cache object
 
     CBudgetProposal();
@@ -254,7 +232,6 @@ public:
 // Proposals are cast then sent to peers with this object, which leaves the votes out
 class CBudgetProposalBroadcast : public CBudgetProposal
 {
-    //# ----
 public:
     CBudgetProposalBroadcast() : CBudgetProposal(){}
     CBudgetProposalBroadcast(const CBudgetProposal& other) : CBudgetProposal(other){}
@@ -310,7 +287,6 @@ public:
 
 class CBudgetVote
 {
-    //# ----
 public:
     bool fValid; //if the vote is currently valid / counted
     bool fSynced; //if we've sent this to our peers

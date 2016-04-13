@@ -1,26 +1,5 @@
 // Copyright (c) 2014-2016 The Dash Core developers
 
-// Distributed under the MIT/X11 software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef GOVERNANCE_CLASSES_H
-#define GOVERNANCE_CLASSES_H
-
-//todo: which of these do we need?
-//#include "main.h"
-//#include "sync.h"
-//#include "net.h"
-//#include "key.h"
-//#include "util.h"
-//#include "base58.h"
-//#include "masternode.h"
-#include "governance.h"
-#include "governance-types.h"
-//#include <boost/lexical_cast.hpp>
-#include <univalue.h>
-
-
-class CGovernanceNode;
-
 /*
  * FIELDS AND CLASSIFICATION
  * --------------------
@@ -172,99 +151,6 @@ private:
     uint64_t nTimeValueOverrideCached;
 
 public:
-
-    CGovernanceObject() {
-        // init values are defaults as well
-        nLevel = 0; //level 0 means you have no right and are not recongnized by the network yet
-        strCategory = "unknown";
-        nStatusID = 0;
-        strStatusMessage = "none";
-    }
-
-    // virtual void CacheValueOverrides()
-    // {
-    //     // update the values once an hour
-    //     if(nTimeValueOverrideCached + 60*60 < GetTime()) return;
-
-    //     /* 
-    //         first match is the going to be the active override due to the sorting algorithm
-    //     */
-    //     BOOST_FOREACH(CGovernanceNode* child, vecChildren)
-    //     {
-    //         // we only want the active children
-    //         if(!child.IsValid()) continue;
-
-    //         // look for overrides
-    //         if(child.GetType() == ValueOverride)
-    //         {
-    //             CValueOverride* vo = &(CValueOverride)child;
-
-    //             if(vo.GetValueOverrideType() == Category){
-    //                 strCategory = vo.GetValueOverrideValue();
-    //             } else if(vo.GetValueOverrideType() == Level)
-    //             {
-    //                 nLevel = vo.GetValueOverrideValue();
-    //             } else if(vo.GetValueOverrideType() == Status)
-    //             {
-    //                 nStatus = vo.GetValueOverrideValue();
-    //                 strStatusMessage = vo.GetValueOverrideValue2();   
-    //             }
-    //         }
-    //     }
-
-    //     nTimeValueOverrideCached = GetTime();
-    // }
-
-    // int GetLevel()
-    // {
-    //     CacheValueOverrides();
-    //     return nLevel;
-    // }
-
-    // std::string GetCategory()
-    // {
-    //     CacheValueOverrides();
-    //     return strCategory;
-    // }
-
-    // int GetStatusID()
-    // {
-    //     CacheValueOverrides();
-    //     return nStatus;
-    // }
-
-    // std::string GetStatusError()
-    // {
-    //     CacheValueOverrides();
-    //     return strStatusMessage;
-    // }
-
-    // // SignWithKeyByName -- signs one of our keyspace mappings for this specific action
-    // virtual bool SignWithKeyByName(std::string& strKeyName, int nKey, std::string& strError)
-    // {
-    //     /*
-    //         Signing Keys:
-
-    //         nKey == 1: Direct owner of the node
-    //         nKey == 2: Secondary required signature 
-    //     */
-
-    //     // KEY 1 == PARENT or USER SIGNATURE
-    //     if(pParent->RequiresSignatureToAddChild((*this))) //require specific key
-    //     {
-    //         CGovernanceKey gKey = CGovernanceKeys::Find(strKeyName);
-    //         if(key.GetPubKey() == pParent->GetPubKey())
-    //         {
-    //             return SignKeySpace(1, key);
-    //         }
-    //         else {
-    //             strerror = "Public key mismatch, expected : " + pParent.GetPubKey() + "\n";
-    //         }
-    //     } else {
-
-    //     }
-
-    // }
 
     virtual uint256 GetHash() = 0;
 };

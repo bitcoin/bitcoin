@@ -1,4 +1,3 @@
-//# ----
 // Copyright (c) 2014-2016 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -9,6 +8,7 @@
 
 #include "flat-database.h"
 #include "governance.h"
+#include "governance-vote.h"
 #include "masternode.h"
 #include "masternode-budget.h"
 #include "darksend.h"
@@ -209,21 +209,32 @@ void CGovernanceManager::NewBlock()
     //this function should be called 1/6 blocks, allowing up to 100 votes per day on all proposals
     if(pCurrentBlockIndex->nHeight % 6 != 0) return;
 
-    // incremental sync with our peers
-    if(masternodeSync.IsSynced()){
-        LogPrintf("CGovernanceManager::NewBlock - incremental sync started\n");
-        if(pCurrentBlockIndex->nHeight % 600 == rand() % 600) {
-            ClearSeen();
-            ResetSync();
-        }
+    // description: incremental sync with our peers
+    // note: incremental syncing seems excessive, well just have clients ask for specific objects and their votes
+    // note: 12.1 - remove
+    // if(masternodeSync.IsSynced()){
+    //     /*
+    //         Needs comment below:
 
-        LOCK(cs_vNodes);
-        BOOST_FOREACH(CNode* pnode, vNodes)
-            if(pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) 
-                Sync(pnode, uint256(), true);
+    //         - Why are we doing a partial sync with our peers on new blocks? 
+    //         - Why only partial? Why not partial when we recieve the request directly?
+    //         - Can we simplify this somehow?
+    //         - Why are we marking everything synced? Was this to correct a bug? 
+    //     */
 
-        MarkSynced();
-    }
+    //     LogPrintf("CGovernanceManager::NewBlock - incremental sync started\n");
+    //     if(pCurrentBlockIndex->nHeight % 600 == rand() % 600) {
+    //         ClearSeen();
+    //         ResetSync();
+    //     }
+
+    //     LOCK(cs_vNodes);
+    //     BOOST_FOREACH(CNode* pnode, vNodes)
+    //         if(pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) 
+    //             Sync(pnode, uint256());
+
+    //     MarkSynced();
+    // }
 
     CheckAndRemove();
 
@@ -293,6 +304,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             }
         }
 
+        // ask for a specific proposal and it's votes
         Sync(pfrom, nProp);
         LogPrintf("mnvs - Sent Masternode votes to %s\n", pfrom->addr.ToString());
     }
@@ -378,59 +390,50 @@ bool CGovernanceManager::PropExists(uint256 nHash)
     return false;
 }
 
-//mark that a full sync is needed
-void CGovernanceManager::ResetSync()
-{
-    LOCK(cs);
+// description: incremental sync with our peers
+// note: incremental syncing seems excessive, well just have clients ask for specific objects and their votes
+// note: 12.1 - remove
+// void CGovernanceManager::ResetSync()
+// {
+//     LOCK(cs);
+
+//     std::map<uint256, std::map<uint256, CGovernanceVote> >::iterator it1 = mapVotes.begin();
+//     while(it1 != mapVotes.end()){
+//         (*it1).second.second.fSynced = false;
+//         ++it1;
+//     }
+// }
+
+// description: incremental sync with our peers
+// note: incremental syncing seems excessive, well just have clients ask for specific objects and their votes
+// note: 12.1 - remove
+// void CGovernanceManager::MarkSynced()
+// {
+//     LOCK(cs);
+
+//     /*
+//         Mark that we've sent all valid items
+//     */
+
+//     // this could screw up syncing, so let's log it
+//     LogPrintf("CGovernanceManager::MarkSynced\n");
+
+//     std::map<uint256, std::map<uint256, CGovernanceVote> >::iterator it1 = mapVotes.begin();
+//     while(it1 != mapVotes.end()){
+//         if((*it1).second.second.fValid)
+//             (*it1).second.second.fSynced = true;
+//         ++it1;
+//     }
+// }
 
 
-    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
-    while(it1 != mapSeenMasternodeBudgetProposals.end()){
-        CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
-        if(pbudgetProposal && pbudgetProposal->fValid){
-        
-            //mark votes
-            std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
-            while(it2 != pbudgetProposal->mapVotes.end()){
-                (*it2).second.fSynced = false;
-                ++it2;
-            }
-        }
-        ++it1;
-    }
-}
-
-void CGovernanceManager::MarkSynced()
-{
-    LOCK(cs);
-
-    /*
-        Mark that we've sent all valid items
-    */
-
-    std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
-    while(it1 != mapSeenMasternodeBudgetProposals.end()){
-        CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
-        if(pbudgetProposal && pbudgetProposal->fValid){
-        
-            //mark votes
-            std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
-            while(it2 != pbudgetProposal->mapVotes.end()){
-                if((*it2).second.fValid)
-                    (*it2).second.fSynced = true;
-                ++it2;
-            }
-        }
-        ++it1;
-    }
-}
-
-
-void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
+void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 {
     LOCK(cs);
 
     /*
+        note 12.1 - fix comments below
+
         Sync with a client on the network
 
         --
@@ -442,29 +445,25 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 
     int nInvCount = 0;
 
-
-    // todo - why does this code not always sync properly?
-    // the next place this data arrives at is main.cpp:4024 and main.cpp:4030
+    // sync gov objects
     std::map<uint256, CBudgetProposalBroadcast>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
     while(it1 != mapSeenMasternodeBudgetProposals.end()){
         CBudgetProposal* pbudgetProposal = FindProposal((*it1).first);
-        if(pbudgetProposal && pbudgetProposal->fValid && (nProp == uint256() || (*it1).first == nProp)){
+        if(pbudgetProposal && pbudgetProposal->fValid && ((nProp == uint256() || ((*it1).first == nProp)))){
             // Push the inventory budget proposal message over to the other client
             pfrom->PushInventory(CInv(MSG_BUDGET_PROPOSAL, (*it1).second.GetHash()));
             nInvCount++;
-        
-            //send votes, at the same time. We should collect votes and store them if we don't have the proposal yet on the other side
-            std::map<uint256, CBudgetVote>::iterator it2 = pbudgetProposal->mapVotes.begin();
-            while(it2 != pbudgetProposal->mapVotes.end()){
-                if((*it2).second.fValid){
-                    if((fPartial && !(*it2).second.fSynced) || !fPartial) {
-                        pfrom->PushInventory(CInv(MSG_BUDGET_VOTE, (*it2).second.GetHash()));
-                        nInvCount++;
-                    }
-                }
-                ++it2;
-            }
         }
+        ++it1;
+    }
+
+    // sync votes
+    std::map<uint256, std::map<uint256, CGovernanceVote> >::iterator it1 = mapVotes.begin();
+    while(it1 != mapVotes.end()){
+        if((*it1).second.second.fValid && ((nProp == uint256() || ((*it1).first == nProp))))
+                pfrom->PushInventory(CInv(MSG_BUDGET_VOTE, (*it1).second.second.GetHash()));
+                nInvCount++;
+            }
         ++it1;
     }
 
@@ -498,6 +497,29 @@ bool CGovernanceManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::st
 
 
     return mapProposals[vote.nProposalHash].AddOrUpdateVote(vote, strError);
+}
+
+bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
+{
+    LOCK(cs);
+
+    uint256 hash = vote.vin.prevout.GetHash();
+
+    if(mapVotes.count(hash)){
+        if(mapVotes[hash].nTime > vote.nTime){
+            strError = strprintf("new vote older than existing vote - %s", vote.GetHash().ToString());
+            LogPrint("mnbudget", "CBudgetProposal::AddOrUpdateVote - %s\n", strError);
+            return false;
+        }
+        if(vote.nTime - mapVotes[hash].nTime < BUDGET_VOTE_UPDATE_MIN){
+            strError = strprintf("time between votes is too soon - %s - %lli", vote.GetHash().ToString(), vote.nTime - mapVotes[hash].nTime);
+            LogPrint("mnbudget", "CBudgetProposal::AddOrUpdateVote - %s\n", strError);
+            return false;
+        }
+    }
+
+    mapVotes[hash] = vote;
+    return true;
 }
 
 CBudgetProposal::CBudgetProposal()
@@ -604,6 +626,18 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
         return false;
     }
 
+    found = false
+    if strProposalName[:10] = "proposal="; found = true;
+    if strProposalName[:10] = "contract="; found = true;
+    if strProposalName[:10] = "project="; found = true;
+    if strProposalName[:10] = "employee="; found = true;
+    if strProposalName[:10] = "project-milestone="; found = true;
+    if strProposalName[:10] = "project-report="; found = true;
+
+    if not found: return false
+
+    if(GetTime() > nExpirationTime) return false;
+
     if(fCheckCollateral){
         int nConf = 0;
         if(!IsCollateralValid(nFeeTXHash, GetHash(), strError, nTime, nConf, GOVERNANCE_FEE_TX)){
@@ -632,6 +666,8 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
         return false;
     }
 
+    nAmount can be - and +, allows increasing budget dynamically. This is R&D mode
+
     if(GetBlockEnd() + Params().GetConsensus().nBudgetPaymentsWindowBlocks < pindex->nHeight) return false;
 
 
@@ -641,29 +677,6 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
 bool CBudgetProposal::IsEstablished() {
     //Proposals must be established to make it into a budget
     return (nTime < GetTime() - Params().GetConsensus().nBudgetProposalEstablishingTime);
-}
-
-bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
-{
-    LOCK(cs);
-
-    uint256 hash = vote.vin.prevout.GetHash();
-
-    if(mapVotes.count(hash)){
-        if(mapVotes[hash].nTime > vote.nTime){
-            strError = strprintf("new vote older than existing vote - %s", vote.GetHash().ToString());
-            LogPrint("mnbudget", "CBudgetProposal::AddOrUpdateVote - %s\n", strError);
-            return false;
-        }
-        if(vote.nTime - mapVotes[hash].nTime < BUDGET_VOTE_UPDATE_MIN){
-            strError = strprintf("time between votes is too soon - %s - %lli", vote.GetHash().ToString(), vote.nTime - mapVotes[hash].nTime);
-            LogPrint("mnbudget", "CBudgetProposal::AddOrUpdateVote - %s\n", strError);
-            return false;
-        }
-    }
-
-    mapVotes[hash] = vote;
-    return true;
 }
 
 // If masternode voted for a proposal, but is now invalid -- remove the vote
@@ -786,82 +799,6 @@ void CBudgetProposalBroadcast::Relay()
 {
     CInv inv(MSG_BUDGET_PROPOSAL, GetHash());
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
-}
-
-CBudgetVote::CBudgetVote()
-{
-    vin = CTxIn();
-    nProposalHash = uint256();
-    nVote = VOTE_ABSTAIN;
-    nTime = 0;
-    fValid = true;
-    fSynced = false;
-}
-
-CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nProposalHashIn, int nVoteIn)
-{
-    vin = vinIn;
-    nProposalHash = nProposalHashIn;
-    nVote = nVoteIn;
-    nTime = GetAdjustedTime();
-    fValid = true;
-    fSynced = false;
-}
-
-void CBudgetVote::Relay()
-{
-    CInv inv(MSG_BUDGET_VOTE, GetHash());
-    RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
-}
-
-bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
-{
-    // Choose coins to use
-    CPubKey pubKeyCollateralAddress;
-    CKey keyCollateralAddress;
-
-    std::string errorMessage;
-    std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
-
-    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
-        LogPrintf("CBudgetVote::Sign - Error upon calling SignMessage");
-        return false;
-    }
-
-    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CBudgetVote::Sign - Error upon calling VerifyMessage");
-        return false;
-    }
-
-    return true;
-}
-
-bool CBudgetVote::IsValid(bool fSignatureCheck)
-{
-    if(nTime > GetTime() + (60*60)){
-        LogPrint("mnbudget", "CBudgetVote::IsValid() - vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
-        return false;
-    }
-
-    CMasternode* pmn = mnodeman.Find(vin);
-
-    if(pmn == NULL)
-    {
-        LogPrint("mnbudget", "CBudgetVote::IsValid() - Unknown Masternode - %s\n", vin.ToString());
-        return false;
-    }
-
-    if(!fSignatureCheck) return true;
-
-    std::string errorMessage;
-    std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
-
-    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CBudgetVote::IsValid() - Verify message failed - Error: %s\n", errorMessage);
-        return false;
-    }
-
-    return true;
 }
 
 std::string CGovernanceManager::ToString() const
