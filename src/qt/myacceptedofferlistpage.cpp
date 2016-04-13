@@ -163,6 +163,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 	if (read)
 	{
 		UniValue statusValue = find_value(outerObj, "status");
+		UniValue messageValue = find_value(outerObj, "message");
 		if (statusValue.isStr())
 		{
 			if(statusValue.get_str() != "success")
@@ -229,9 +230,9 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 								QString messageToCheckFor = "Payment for offer ID " + m_offerGuid + " on Syscoin Decentralized Marketplace. Accept Guid: " + m_acceptGuid;
 								if(!messageValue.isStr() || messageValue.get_str() != messageToCheckFor.toStdString())
 								{
-									ui->confirmButton->setText(m_buttonText);
+									ui->btcButton->setText(m_buttonText);
 									QMessageBox::warning(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! However the buyer paid for a different offer than the one found in this transaction, you may want to manually check your Bitcoin wallet to see if you received payment for the correct offer purchase.").arg(ui->btctxidEdit->text().trimmed()),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! However the buyer paid for a different offer than the one found in this transaction, you may want to manually check your Bitcoin wallet to see if you received payment for the correct offer purchase.").arg(m_strBTCTxId),
 									QMessageBox::Ok, QMessageBox::Ok);
 									return;
 								}
