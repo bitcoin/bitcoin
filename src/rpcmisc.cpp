@@ -675,7 +675,7 @@ UniValue getaddresstxids(const UniValue& params, bool fHelp)
         UniValue endValue = find_value(params[0].get_obj(), "end");
         if (startValue.isNum() && endValue.isNum()) {
             start = startValue.get_int();
-            end = startValue.get_int();
+            end = endValue.get_int();
         }
     }
 

@@ -21,6 +21,7 @@ struct CAddressUnspentKey;
 struct CAddressUnspentValue;
 struct CAddressIndexKey;
 struct CAddressIndexIteratorKey;
+struct CAddressIndexIteratorHeightKey;
 struct CTimestampIndexKey;
 struct CTimestampIndexIteratorKey;
 struct CSpentIndexKey;

@@ -85,14 +85,15 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(txidsb[2], txidb2)
 
         # Check that limiting by height works
-        chain_height = self.nodes[1].getblockcount()
+        print "Testing querying txids by range of block heights.."
         height_txids = self.nodes[1].getaddresstxids({
             "addresses": ["2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br"],
-            "start": 111,
-            "end": 111
+            "start": 105,
+            "end": 110
         })
-        assert_equal(len(height_txids), 1)
-        assert_equal(height_txids[0], txidb2)
+        assert_equal(len(height_txids), 2)
+        assert_equal(height_txids[0], txidb0)
+        assert_equal(height_txids[1], txidb1)
 
         # Check that multiple addresses works
         multitxids = self.nodes[1].getaddresstxids({"addresses": ["2N2JD6wb56AfK4tfmM6PwdVmoYk2dCKf4Br", "mo9ncXisMeAoXwqcV5EWuyncbmCcQN4rVs"]})
