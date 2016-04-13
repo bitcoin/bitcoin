@@ -66,7 +66,7 @@ static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static HTTPRPCTimerInterface* httpRPCTimerInterface = 0;
 
-static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
+void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id)
 {
     // Send error reply from json-rpc error object
     int nStatus = HTTP_INTERNAL_SERVER_ERROR;
@@ -127,7 +127,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     return false;
 }
 
-static bool RPCAuthorized(const std::string& strAuth)
+bool RPCAuthorized(const std::string& strAuth)
 {
     if (strRPCUserColonPass.empty()) // Belt-and-suspenders measure if InitRPCAuthentication was not called
         return false;
@@ -144,7 +144,7 @@ static bool RPCAuthorized(const std::string& strAuth)
     return multiUserAuthorized(strUserPass);
 }
 
-static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
+bool HTTPReq_HandleAuth(HTTPRequest* req)
 {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
@@ -171,6 +171,13 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         req->WriteReply(HTTP_UNAUTHORIZED);
         return false;
     }
+    return true;
+}
+
+static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
+{
+    if(!HTTPReq_HandleAuth(req))
+        return false;
 
     JSONRequest jreq;
     try {

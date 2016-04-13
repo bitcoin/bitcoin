@@ -192,7 +192,7 @@ UniValue CallRPC(const string& strMethod, const UniValue& params)
     assert(output_buffer);
     evbuffer_add(output_buffer, strRequest.data(), strRequest.size());
 
-    int r = evhttp_make_request(evcon, req, EVHTTP_REQ_POST, "/");
+    int r = evhttp_make_request(evcon, req, EVHTTP_REQ_POST, GetArg("-endpoint", "/").c_str());
     if (r != 0) {
         evhttp_connection_free(evcon);
         event_base_free(base);
