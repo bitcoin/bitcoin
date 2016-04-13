@@ -204,7 +204,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 								if(!messageValue.isStr() || messageValue.get_str() != messageToCheckFor.toStdString())
 								{
 									qDebug() << messageToCheckFor;
-									qDebug() << messageValue.get_str();
+									qDebug() << QString::fromStdString(messageValue.get_str());
 									ui->confirmButton->setText(m_buttonText);
 									QMessageBox::warning(this, windowTitle(),
 									tr("Transaction ID %1 was found in the Bitcoin blockchain! However a payment for this offer purchase was not found. Please enter the correct transaction ID and try again.").arg(ui->btctxidEdit->text().trimmed()),
