@@ -153,7 +153,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
                 QMessageBox::Ok, QMessageBox::Ok);
 		return;
 	}
-	CAmount valueAmount = 0;
+	double valueAmount = 0;
 	QString time;
 	int height;
 		
