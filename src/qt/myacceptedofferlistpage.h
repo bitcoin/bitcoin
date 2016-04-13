@@ -54,6 +54,7 @@ private:
     QAction *deleteAction; // to be able to explicitly disable it
     QString newOfferToSelect;
 	QString m_buttonText;
+	QString m_strBTCTxId;
 	QString m_strAddress;
 	CAmount m_priceAmount;
 private Q_SLOTS:
