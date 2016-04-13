@@ -298,9 +298,8 @@ public:
     }
 
     void resize(size_type new_size) {
-        while (size() > new_size) {
-            item_ptr(size() - 1)->~T();
-            _size--;
+        if (size() > new_size) {
+            erase(item_ptr(new_size), end());
         }
         if (new_size > capacity()) {
             change_capacity(new_size);
@@ -368,10 +367,7 @@ public:
     }
 
     iterator erase(iterator pos) {
-        (*pos).~T();
-        memmove(&(*pos), &(*pos) + 1, ((char*)&(*end())) - ((char*)(1 + &(*pos))));
-        _size--;
-        return pos;
+        return erase(pos, pos + 1);
     }
 
     iterator erase(iterator first, iterator last) {
@@ -396,7 +392,7 @@ public:
     }
 
     void pop_back() {
-        _size--;
+        erase(end() - 1, end());
     }
 
     T& front() {
