@@ -2,7 +2,6 @@
 #define MYACCEPTEDOFFERLISTPAGE_H
 
 #include <QDialog>
-#include <QSslError>
 #include "amount.h"
 class PlatformStyle;
 namespace Ui {
@@ -58,7 +57,6 @@ private:
 	QString m_strAddress;
 	CAmount m_priceAmount;
 private Q_SLOTS:
-	void onIgnoreSSLErrors(QNetworkReply *reply, QList<QSslError> error);
 	void slotConfirmedFinished(QNetworkReply *);
     void on_copyOffer_clicked();
     void onCopyOfferValueAction();
