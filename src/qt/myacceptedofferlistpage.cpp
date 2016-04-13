@@ -228,7 +228,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 							{
 								ui->btcButton->setText(m_buttonText);
 								QMessageBox::information(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(ui->btctxidEdit->text().trimmed()).arg(height).arg(time),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId).arg(height).arg(time),
 									QMessageBox::Ok, QMessageBox::Ok);
 								return;
 							}
@@ -265,6 +265,7 @@ void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 	m_buttonText = ui->btcButton->text();
 	ui->btcButton->setText(tr("Please Wait..."));
 	m_strAddress = address;
+	m_strBTCTxId = strBTCTxId;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
 	QUrl url("http://btc.blockr.io/api/v1/tx/info/" + strBTCTxId);
