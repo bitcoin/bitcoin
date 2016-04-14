@@ -12,9 +12,6 @@ struct PaymentAmount
 	std::string address;
 	std::string amount;
 };
-void VerifySnapShot()
-{
-}
 void SendSnapShotPayment(const std::string &strSend)
 {
 	currentTx++;
@@ -87,14 +84,9 @@ BOOST_AUTO_TEST_CASE (generate_and_verify_snapshot)
 {
 	std::vector<PaymentAmount> paymentAmounts;
 	GetUTXOs(paymentAmounts);
-	if(IsMainNetAlreadyCreated())
-	{
-		VerifySnapShot();
-	}
-	else
+	if(!IsMainNetAlreadyCreated())
 	{
 		GenerateSnapShot(paymentAmounts);
-		VerifySnapShot();
 	}
 }
 BOOST_AUTO_TEST_SUITE_END ()
