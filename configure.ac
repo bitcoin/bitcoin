@@ -38,6 +38,7 @@ else
   CXXFLAGS_overridden=no
 fi
 AC_PROG_CXX
+AX_CXX_COMPILE_STDCXX(11,noext,mandatory)
 m4_ifdef([AC_PROG_OBJCXX],[AC_PROG_OBJCXX])
 
 dnl By default, libtool for mingw refuses to link static libs into a dll for
