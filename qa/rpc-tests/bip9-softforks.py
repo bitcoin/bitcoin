@@ -77,11 +77,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
     def get_bip9_status(self, key):
         info = self.nodes[0].getblockchaininfo()
-        for row in info['bip9_softforks']:
-            if row['id'] == key:
-                return row
-        raise IndexError ('key:"%s" not found' % key)
-
+        return info['bip9_softforks'][key]
 
     def test_BIP(self, bipName, activated_version, invalidate, invalidatePostSignature, bitno):
         wait_to_sync(self.nodes[0])

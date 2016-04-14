@@ -605,7 +605,4 @@ def create_lots_of_big_transactions(node, txouts, utxos, fee):
 
 def get_bip9_status(node, key):
     info = node.getblockchaininfo()
-    for row in info['bip9_softforks']:
-        if row['id'] == key:
-            return row
-    raise IndexError ('key:"%s" not found' % key)
+    return info['bip9_softforks'][key]
