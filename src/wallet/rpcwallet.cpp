@@ -86,15 +86,11 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
     std::string rbfStatus = "no";
     if (confirms <= 0) {
         LOCK(mempool.cs);
-        if (!mempool.exists(hash)) {
-            if (SignalsOptInRBF(wtx)) {
-                rbfStatus = "yes";
-            } else {
-                rbfStatus = "unknown";
-            }
-        } else if (IsRBFOptIn(*mempool.mapTx.find(hash), mempool)) {
+        RBFTransactionState rbfState = IsRBFOptIn(wtx, mempool);
+        if (rbfState == RBF_TRANSACTIONSTATE_UNKNOWN)
+            rbfStatus = "unknown";
+        else if (rbfState == RBF_TRANSACTIONSTATE_REPLACEABLE_BIP125)
             rbfStatus = "yes";
-        }
     }
     entry.push_back(Pair("bip125-replaceable", rbfStatus));
 
