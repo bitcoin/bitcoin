@@ -2838,8 +2838,10 @@ UniValue offeraccept(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("This offer must be paid with Bitcoins as per requirements of the seller");
 	}
+	vector<unsigned char> sCurrency = theOffer.sCurrencyCode;
 	theOffer.ClearOffer();
 	theOffer.accept = txAccept;
+	theOffer.sCurrencyCode = sCurrency;
 
 	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
@@ -3166,8 +3168,10 @@ UniValue offeraccept_nocheck(const UniValue& params, bool fHelp) {
 	{
 		throw runtime_error("This offer must be paid with Bitcoins as per requirements of the seller");
 	}
+	vector<unsigned char> sCurrency = theOffer.sCurrencyCode;
 	theOffer.ClearOffer();
 	theOffer.accept = txAccept;
+	theOffer.sCurrencyCode = sCurrency;
 
 	const vector<unsigned char> &data = theOffer.Serialize();
 	CScript scriptData;
