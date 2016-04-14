@@ -178,7 +178,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 							{
 								ui->confirmButton->setText(m_buttonText);
 								QMessageBox::information(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(ui->btctxidEdit->text().trimmed()).arg(height).arg(time),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3.").arg(ui->btctxidEdit->text().trimmed()).arg(height).arg(time),
 									QMessageBox::Ok, QMessageBox::Ok);
 								acceptOffer();
 								return;
