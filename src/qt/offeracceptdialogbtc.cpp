@@ -146,14 +146,14 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				return;
 			}
 		}
-		outerObj = find_value(outerObj, "data");
-		UniValue heightValue = find_value(outerObj, "block");
+		UniValue dataObj = find_value(outerObj, "data");
+		UniValue heightValue = find_value(dataObj, "block");
 		if (heightValue.isNum())
 			height = heightValue.get_int();
-		UniValue timeValue = find_value(outerObj, "time_utc");
+		UniValue timeValue = find_value(dataObj, "time_utc");
 		if (timeValue.isStr())
 			time = QString::fromStdString(timeValue.get_str());
-		UniValue outputsValue = find_value(outerObj, "vouts");
+		UniValue outputsValue = find_value(dataObj, "vouts");
 		if (outputsValue.isArray())
 		{
 			UniValue outputs = outputsValue.get_array();
