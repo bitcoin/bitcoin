@@ -1,6 +1,6 @@
 #!/bin/sh
 if [ $# -gt 1 ]; then
-    cd "$2"
+    cd "$2" || exit
 fi
 if [ $# -gt 0 ]; then
     FILE="$1"
@@ -16,13 +16,15 @@ fi
 DESC=""
 SUFFIX=""
 LAST_COMMIT_DATE=""
-if [ -e "$(which git 2>/dev/null)" -a "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+if [ \( -n "$DONT_CHECK_FOR_DOT_GIT" -o -d ".git" \) \
+		 -a -e "$(which git 2>/dev/null)" \
+		 -a "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     # clean 'dirty' status of touched files that haven't been modified
     git diff >/dev/null 2>/dev/null 
 
     # if latest commit is tagged and not dirty, then override using the tag name
     RAWDESC=$(git describe --abbrev=0 2>/dev/null)
-    if [ "$(git rev-parse HEAD)" = "$(git rev-list -1 $RAWDESC 2>/dev/null)" ]; then
+    if [ "$(git rev-parse HEAD)" = "$(git rev-list -1 "$RAWDESC" 2>/dev/null)" ]; then
         git diff-index --quiet HEAD -- && DESC=$RAWDESC
     fi
 
