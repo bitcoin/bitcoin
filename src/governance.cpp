@@ -87,7 +87,6 @@ void CGovernanceManager::CheckOrphanVotes()
 {
     LOCK(cs);
 
-
     std::string strError = "";
     std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
     while(it1 != mapOrphanMasternodeBudgetVotes.end()){
@@ -496,14 +495,18 @@ bool CGovernanceManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::st
     }
 
 
-    return mapProposals[vote.nProposalHash].AddOrUpdateVote(vote, strError);
+    return AddOrUpdateVote(vote, strError);
 }
 
-bool CBudgetProposal::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
+bool CGovernanceManager::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
 {
     LOCK(cs);
 
     uint256 hash = vote.vin.prevout.GetHash();
+
+    // todo - need to rewrite 
+    //        check for first vote, create structure
+    //        clear out votes if the budgets are invalid
 
     if(mapVotes.count(hash)){
         if(mapVotes[hash].nTime > vote.nTime){
@@ -626,17 +629,20 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
         return false;
     }
 
-    found = false
-    if strProposalName[:10] = "proposal="; found = true;
-    if strProposalName[:10] = "contract="; found = true;
-    if strProposalName[:10] = "project="; found = true;
-    if strProposalName[:10] = "employee="; found = true;
-    if strProposalName[:10] = "project-milestone="; found = true;
-    if strProposalName[:10] = "project-report="; found = true;
+    // 12.1 - add valid predicates
+    //     this can be handled by configuration 
+    // found = false
+    // if strProposalName[:10] = "proposal="; found = true;
+    // if strProposalName[:10] = "contract="; found = true;
+    // if strProposalName[:10] = "project="; found = true;
+    // if strProposalName[:10] = "employee="; found = true;
+    // if strProposalName[:10] = "project-milestone="; found = true;
+    // if strProposalName[:10] = "project-report="; found = true;
 
-    if not found: return false
+    // if not found: return false
 
-    if(GetTime() > nExpirationTime) return false;
+    // automatically expire
+    // if(GetTime() > nExpirationTime) return false;
 
     if(fCheckCollateral){
         int nConf = 0;
@@ -666,10 +672,11 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
         return false;
     }
 
-    nAmount can be - and +, allows increasing budget dynamically. This is R&D mode
+    //* 
+    //nAmount can be - and +, allows increasing budget dynamically. This is R&D mode
+    //*
 
     if(GetBlockEnd() + Params().GetConsensus().nBudgetPaymentsWindowBlocks < pindex->nHeight) return false;
-
 
     return true;
 }

@@ -22,7 +22,6 @@ extern CCriticalSection cs_budget;
 
 class CGovernanceManager;
 class CBudgetProposal;
-class CBudgetProposalBroadcast;
 class CBudgetVote;
 
 // todo - 12.1 - change BUDGET_ to GOVERNANCE_ (cherry pick)
@@ -30,7 +29,7 @@ static const CAmount GOVERNANCE_FEE_TX = (5*COIN);
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
 
-extern std::vector<CBudgetProposalBroadcast> vecImmatureBudgetProposals;
+extern std::vector<CBudgetProposal> vecImmatureBudgetProposals;
 extern std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 extern CGovernanceManager governance;
 
@@ -50,9 +49,6 @@ private:
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 
-    //       parent hash       vote hash     vote
-    std::map<uint256, std::map<uint256, CGovernanceVote> > mapVotes;
-
 public:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
@@ -60,12 +56,12 @@ public:
     // keep track of the scanning errors I've seen
     map<uint256, CBudgetProposal> mapProposals;
 
-// #----------- voting sweep ----------
-
     // todo - 12.1 - move to private for better encapsulation 
-    std::map<uint256, CBudgetProposalBroadcast> mapSeenMasternodeBudgetProposals;
+    std::map<uint256, CBudgetProposal> mapSeenMasternodeBudgetProposals;
     std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
     std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
+    //       parent hash       vote hash     vote
+    std::map<uint256, std::map<uint256, CGovernanceVote> > mapVotes;
 
     CGovernanceManager() {
         mapProposals.clear();
@@ -103,6 +99,7 @@ public:
     bool AddProposal(CBudgetProposal& budgetProposal);
 
     bool UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError);
+    bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
     bool PropExists(uint256 nHash);
     std::string GetRequiredPaymentsString(int nBlockHeight);
 
@@ -127,10 +124,44 @@ public:
         READWRITE(mapSeenMasternodeBudgetVotes);
         READWRITE(mapOrphanMasternodeBudgetVotes);
         READWRITE(mapProposals);
+        READWRITE(mapVotes);
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
 };
+
+/**
+* Governance objects can hold any time of data
+* --------------------------------------------
+*
+*
+*/
+
+// todo - 12.1 - add payload obj to CGovernanceObj
+// union GovernanceObjectPayload
+// {
+//     CAmount nAmount;
+//     int nValue;
+//     bool bIsActive;
+//     std::string strPayload;
+//     double fValue;
+// }
+
+/**
+* Governance object payload types
+* --------------------------------------------
+*
+*
+*/
+
+// todo - 12.1 - add payload obj to CGovernanceObj
+// enum class GovernanceObjectPayloadType {
+//     CAmount,
+//     Int,
+//     Bool,
+//     String,
+//     Double
+// };
 
 //
 // Budget Proposal : Contains the masternode votes for each budget
@@ -153,23 +184,24 @@ public:
     */
     std::string strURL;
     int nBlockStart;
-    int nExpirationTime;
-    CAmount nAmount;
-    CScript address;
+    int nBlockEnd; //int nExpirationTime;
+    int nBlockStart;
+    CAmount nValue; // 12.1 - remove
+    // int nPriority; //budget is sorted by this integer before funding votecount
+    // GovernanceObjectPayloadType payloadType;
+    // GovernanceObjectPayload payload;
+    CScript address; //todo rename to addressOwner;
     int64_t nTime;
     uint256 nFeeTXHash;
-    uint256 nHashParent;
+    uint256 nHashParent; // 12.1 - remove
 
-    map<uint256, map<int, CBudgetVote> > mapVotes;
     //cache object
 
     CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
     CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
 
-    bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
     bool HasMinimumRequiredSupport();
-    std::pair<std::string, std::string> GetVotes();
 
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
     bool IsEstablished();
@@ -223,63 +255,9 @@ public:
         READWRITE(*(CScriptBase*)(&address));
         READWRITE(nTime);
         READWRITE(nFeeTXHash);
-
-        //for saving to the serialized db
-        READWRITE(mapVotes);
     }
 };
 
-// Proposals are cast then sent to peers with this object, which leaves the votes out
-class CBudgetProposalBroadcast : public CBudgetProposal
-{
-public:
-    CBudgetProposalBroadcast() : CBudgetProposal(){}
-    CBudgetProposalBroadcast(const CBudgetProposal& other) : CBudgetProposal(other){}
-    CBudgetProposalBroadcast(const CBudgetProposalBroadcast& other) : CBudgetProposal(other){}
-    CBudgetProposalBroadcast(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn) {}
-
-    void swap(CBudgetProposalBroadcast& first, CBudgetProposalBroadcast& second) // nothrow
-    {
-        // enable ADL (not necessary in our case, but good practice)
-        using std::swap;
-
-        // by swapping the members of two classes,
-        // the two classes are effectively swapped
-        swap(first.strProposalName, second.strProposalName);
-        swap(first.nBlockStart, second.nBlockStart);
-        swap(first.strURL, second.strURL);
-        swap(first.nBlockEnd, second.nBlockEnd);
-        swap(first.nAmount, second.nAmount);
-        swap(first.address, second.address);
-        swap(first.nTime, second.nTime);
-        swap(first.nFeeTXHash, second.nFeeTXHash);
-        first.mapVotes.swap(second.mapVotes);
-    }
-
-    CBudgetProposalBroadcast& operator=(CBudgetProposalBroadcast from)
-    {
-        swap(*this, from);
-        return *this;
-    }
-
-    void Relay();
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        //for syncing with other clients
-
-        READWRITE(LIMITED_STRING(strProposalName, 20));
-        READWRITE(LIMITED_STRING(strURL, 64));
-        READWRITE(nTime);
-        READWRITE(nBlockStart);
-        READWRITE(nBlockEnd);
-        READWRITE(nAmount);
-        READWRITE(*(CScriptBase*)(&address));
-        READWRITE(nFeeTXHash);
-    }
-};
 
 //
 // CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
@@ -293,6 +271,7 @@ public:
     CTxIn vin;
     uint256 nProposalHash;
     int nVote;
+    //int nVoteType; //12.1 - mapped to config values
     int64_t nTime;
     std::vector<unsigned char> vchSig;
 
@@ -329,8 +308,6 @@ public:
         READWRITE(nTime);
         READWRITE(vchSig);
     }
-
-
 
 };
 

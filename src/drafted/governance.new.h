@@ -267,7 +267,6 @@ public:
     int GetTotalPaymentCount();
     int64_t GetValidEndTimestamp();
     int64_t GetValidStartTimestamp();
-    std::pair<std::string, std::string> GetVotes();
     int GetYesCount();
 
     bool IsCategoryValid();
