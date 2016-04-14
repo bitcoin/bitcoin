@@ -412,12 +412,7 @@ public:
     }
 
     void swap(prevector<N, T, Size, Diff>& other) {
-        if (_size & other._size & 1) {
-            std::swap(_union.capacity, other._union.capacity);
-            std::swap(_union.indirect, other._union.indirect);
-        } else {
-            std::swap(_union, other._union);
-        }
+        std::swap(_union, other._union);
         std::swap(_size, other._size);
     }
 
