@@ -27,6 +27,15 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), 1e3);
     BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), 9e3);
 
+    feeRate = CFeeRate(-1000);
+    // Must always just return -1 * arg
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1), -1);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(121), -121);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(999), -999);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), -1e3);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), -9e3);
+
     feeRate = CFeeRate(123);
     // Truncates the result, if not integer
     BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
@@ -37,6 +46,26 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK_EQUAL(feeRate.GetFee(999), 122);
     BOOST_CHECK_EQUAL(feeRate.GetFee(1e3), 123);
     BOOST_CHECK_EQUAL(feeRate.GetFee(9e3), 1107);
+
+    feeRate = CFeeRate(-123);
+    // Truncates the result, if not integer
+    BOOST_CHECK_EQUAL(feeRate.GetFee(0), 0);
+    BOOST_CHECK_EQUAL(feeRate.GetFee(8), -1); // Special case: returns -1 instead of 0
+    BOOST_CHECK_EQUAL(feeRate.GetFee(9), -1);
+
+    // Check full constructor
+    // default value
+    BOOST_CHECK(CFeeRate(CAmount(-1), 1000) == CFeeRate(-1));
+    BOOST_CHECK(CFeeRate(CAmount(0), 1000) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(1), 1000) == CFeeRate(1));
+    // lost precision (can only resolve satoshis per kB)
+    BOOST_CHECK(CFeeRate(CAmount(1), 1001) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate(CAmount(2), 1001) == CFeeRate(1));
+    // some more integer checks
+    BOOST_CHECK(CFeeRate(CAmount(26), 789) == CFeeRate(32));
+    BOOST_CHECK(CFeeRate(CAmount(27), 789) == CFeeRate(34));
+    // Maximum size in bytes, should not crash
+    CFeeRate(MAX_MONEY, std::numeric_limits<size_t>::max() >> 1).GetFeePerK();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
