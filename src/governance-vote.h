@@ -19,9 +19,18 @@ using namespace std;
 
 class CBudgetVote;
 
-#define VOTE_ABSTAIN  0
-#define VOTE_YES      1
-#define VOTE_NO       2
+#define VOTE_OUTCOME_NONE     0
+#define VOTE_OUTCOME_YES      1
+#define VOTE_OUTCOME_NO       2
+#define VOTE_OUTCOME_ABSTAIN  3
+// INTENTION OF MASTERNODES REGARDING ITEM
+
+#define VOTE_TYPE_FUND           0
+#define VOTE_TYPE_END            1
+#define VOTE_TYPE_VALID          2
+#define VOTE_TYPE_MILESTONE1     3
+#define VOTE_TYPE_MILESTONE2     4
+#define VOTE_TYPE_ENDORSED       5
 
 //
 // CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
@@ -33,50 +42,35 @@ class CBudgetVote
 public:
     bool fValid; //if the vote is currently valid / counted
     bool fSynced; //if we've sent this to our peers
-    int nVoteType; //fund, end, invalid, reports
-    /* 
-        fund=1 = shall we fund this?
-        url=2= is the url correct?
-        amount=3 is the amount correct?
-        expiration is the expiration correct?
-        address is the address correct?
-        parent=4 to 10 is variable x correct?
-        reports=5= Are all reports up to date?
-        spam=6= Is this spam?
-        name=7= Is the name correct? 
-
-        certifications:
-
-        business=7  Has it been certified by the business committee? (if exists)
-        technical=8 Has it been certified by the technical committee?
-        scientific=9 etc
-
-    */
-    CTxIn vin;
-    uint256 nProposalHash;
-    int nVote;
+    int nVoteType; // see VOTE_OUTCOMES above
+    CTxIn vinMasternode;
+    uint256 nParentHash;
+    int nVoteOutcome;
     int64_t nTime;
     std::vector<unsigned char> vchSig;
 
     CBudgetVote();
-    CBudgetVote(CTxIn vin, uint256 nProposalHash, int nVoteIn);
+    CBudgetVote(CTxIn vinMasternode, uint256 nParentHash, int nVoteTypeIn, int nVoteOutcomeIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool IsValid(bool fSignatureCheck);
     void Relay();
 
     std::string GetVoteString() {
-        std::string ret = "ABSTAIN";
-        if(nVote == VOTE_YES) ret = "YES";
-        if(nVote == VOTE_NO) ret = "NO";
+        std::string ret = "ERROR";
+        if(nVoteOutcome == VOTE_OUTCOME_NONE)         ret = "NONE";
+        else if(nVoteOutcome == VOTE_OUTCOME_ABSTAIN) ret = "ABSTAIN";
+        else if(nVoteOutcome == VOTE_OUTCOME_YES)     ret = "YES";
+        else if(nVoteOutcome == VOTE_OUTCOME_NO)      ret = "NO";
         return ret;
     }
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << vin;
-        ss << nProposalHash;
-        ss << nVote;
+        ss << vinMasternode;
+        ss << nParentHash;
+        ss << nVoteType;
+        ss << nVoteOutcome;
         ss << nTime;
         return ss.GetHash();
     }
@@ -85,9 +79,10 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(vin);
-        READWRITE(nProposalHash);
-        READWRITE(nVote);
+        READWRITE(vinMasternode);
+        READWRITE(nParentHash);
+        READWRITE(nVoteOutcome);
+        READWRITE(nVoteType);
         READWRITE(nTime);
         READWRITE(vchSig);
     }

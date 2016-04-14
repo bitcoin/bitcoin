@@ -103,6 +103,8 @@ public:
     bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
     bool PropExists(uint256 nHash);
     std::string GetRequiredPaymentsString(int nBlockHeight);
+    void CleanAndRemove(bool fSignatureCheck);
+    int CountMatchingVotes(int nVoteTypeIn, int nVoteOutcomeIn);
 
     void CheckOrphanVotes();
     void Clear(){
@@ -184,8 +186,8 @@ public:
         This allows the proposal website to stay 100% decentralized
     */
     std::string strURL;
-    int nBlockStart; //int nStartTime;
-    int nBlockEnd; //int nExpirationTime;
+    int nStartTime;
+    int nEndTime;
     CAmount nAmount; // 12.1 - remove
     // int nPriority; //budget is sorted by this integer before funding votecount
     // GovernanceObjectPayloadType payloadType;
@@ -205,25 +207,19 @@ public:
 
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
     bool IsEstablished();
+    bool NetworkWillPay();
 
     std::string GetName() {return strProposalName; }
     std::string GetURL() {return strURL; }
-    int GetBlockStart() {return nBlockStart;}
-    int GetBlockEnd() {return nBlockEnd;}
+    int GetStartTime() {return nStartTime;}
+    int GetEndTime() {return nEndTime;}
     CScript GetPayee() {return address;}
-    int GetTotalPaymentCount();
-    int GetRemainingPaymentCount(int nBlockHeight);
-    int GetBlockStartCycle();
-    int GetBlockCurrentCycle(const CBlockIndex* pindex);
-    int GetBlockEndCycle();
-    double GetRatio();
+    int IsActive() {return GetTime() > nStartTime && GetTime() < nEndTime;}
     int GetAbsoluteYesCount();
     int GetYesCount();
     int GetNoCount();
     int GetAbstainCount();
     CAmount GetAmount() {return nAmount;}
-    void SetAllotted(CAmount nAllotedIn) {nAlloted = nAllotedIn;}
-    CAmount GetAllotted() {return nAlloted;}
 
     void CleanAndRemove(bool fSignatureCheck);
 
@@ -231,8 +227,8 @@ public:
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strProposalName;
         ss << strURL;
-        ss << nBlockStart;
-        ss << nBlockEnd;
+        ss << nStartTime;
+        ss << nEndTime;
         ss << nAmount;
         ss << *(CScriptBase*)(&address);
         uint256 h1 = ss.GetHash();
@@ -249,8 +245,8 @@ public:
         READWRITE(LIMITED_STRING(strProposalName, 20));
         READWRITE(LIMITED_STRING(strURL, 64));
         READWRITE(nTime);
-        READWRITE(nBlockStart);
-        READWRITE(nBlockEnd);
+        READWRITE(nStartTime);
+        READWRITE(nEndTime);
         READWRITE(nAmount);
 
         READWRITE(*(CScriptBase*)(&address));
