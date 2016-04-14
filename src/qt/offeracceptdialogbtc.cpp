@@ -14,7 +14,6 @@
 #include "main.h"
 #include "utilmoneystr.h"
 #include <QDesktopServices>
-#include <QDebug>
 #if QT_VERSION < 0x050000
 #include <QUrl>
 #else
@@ -162,18 +161,13 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				UniValue addressValue = find_value(output, "address");
 				if(addressValue.isStr())
 				{
-					qDebug() << "address";
 					if(addressValue.get_str() == address.toStdString())
 					{
-						qDebug() << address;
 						UniValue paymentValue = find_value(output, "amount");
-						qDebug() << "payment";
 						if(paymentValue.isStr())
 						{
-							qDebug() << QString::fromStdString(paymentValue.get_str());
 							valueAmount += QString::fromStdString(paymentValue.get_str()).toDouble();
-							qDebug() << "valueAmount";
-							qDebug() << valueAmount;
+	
 							if(valueAmount >= dblPrice)
 							{
 								ui->confirmButton->setText(m_buttonText);
