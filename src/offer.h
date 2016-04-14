@@ -224,7 +224,6 @@ public:
 		sTitle.clear();
 		sDescription.clear();
 		vchLinkOffer.clear();
-		sCurrencyCode.clear();
 		vchLinkOffer.clear();
 		vchCert.clear();
 		vchAliasPeg.clear();
