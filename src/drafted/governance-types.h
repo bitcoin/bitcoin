@@ -73,29 +73,29 @@ extern std::string GovernanceTypeToString(GovernanceObjectType type);
 
 // Payments for a finalized budget
 
-class CTxBudgetPayment
-{
-public:
-    uint256 nProposalHash;
-    CScript payee;
-    CAmount nAmount;
+// class CTxBudgetPayment
+// {
+// public:
+//     uint256 nProposalHash;
+//     CScript payee;
+//     CAmount nAmount;
 
-    CTxBudgetPayment() {
-        payee = CScript();
-        nAmount = 0;
-        nProposalHash = uint256();
-    }
+//     CTxBudgetPayment() {
+//         payee = CScript();
+//         nAmount = 0;
+//         nProposalHash = uint256();
+//     }
 
-    ADD_SERIALIZE_METHODS;
+//     ADD_SERIALIZE_METHODS;
 
-    //for saving to the serialized db
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(*(CScriptBase*)(&payee));
-        READWRITE(nAmount);
-        READWRITE(nProposalHash);
-    }
-};
+//     //for saving to the serialized db
+//     template <typename Stream, typename Operation>
+//     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+//         READWRITE(*(CScriptBase*)(&payee));
+//         READWRITE(nAmount);
+//         READWRITE(nProposalHash);
+//     }
+// };
 
 
 #endif

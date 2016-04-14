@@ -93,12 +93,10 @@ public:
     CBudgetProposal *FindProposal(const std::string &strProposalName);
     CBudgetProposal *FindProposal(uint256 nHash);
     
-    std::vector<CBudgetProposal*> GetBudget();
     std::vector<CBudgetProposal*> GetAllProposals();
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
     bool AddProposal(CBudgetProposal& budgetProposal);
-
     bool UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
     bool PropExists(uint256 nHash);
@@ -201,10 +199,9 @@ public:
 
     CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
-    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int nBlockStartIn, uint256 nFeeTXHashIn);
+    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
 
     bool HasMinimumRequiredSupport();
-
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
     bool IsEstablished();
     bool NetworkWillPay();
@@ -214,7 +211,7 @@ public:
     int GetStartTime() {return nStartTime;}
     int GetEndTime() {return nEndTime;}
     CScript GetPayee() {return address;}
-    int IsActive() {return GetTime() > nStartTime && GetTime() < nEndTime;}
+    int IsActive(int64_t nTime) {return nTime > nStartTime && nTime < nEndTime;}
     int GetAbsoluteYesCount();
     int GetYesCount();
     int GetNoCount();
