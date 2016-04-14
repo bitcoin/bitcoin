@@ -61,7 +61,7 @@ public:
     std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
     std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
     //       parent hash       vote hash     vote
-    std::map<uint256, std::map<uint256, CGovernanceVote> > mapVotes;
+    std::map<uint256, std::map<uint256, CBudgetVote> > mapVotes;
 
     CGovernanceManager() {
         mapProposals.clear();
@@ -183,9 +183,8 @@ public:
         This allows the proposal website to stay 100% decentralized
     */
     std::string strURL;
-    int nBlockStart;
+    int nBlockStart; //int nStartTime;
     int nBlockEnd; //int nExpirationTime;
-    int nBlockStart;
     CAmount nValue; // 12.1 - remove
     // int nPriority; //budget is sorted by this integer before funding votecount
     // GovernanceObjectPayloadType payloadType;

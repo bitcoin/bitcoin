@@ -396,7 +396,7 @@ bool CGovernanceManager::PropExists(uint256 nHash)
 // {
 //     LOCK(cs);
 
-//     std::map<uint256, std::map<uint256, CGovernanceVote> >::iterator it1 = mapVotes.begin();
+//     std::map<uint256, std::map<uint256, CBudgetVote> >::iterator it1 = mapVotes.begin();
 //     while(it1 != mapVotes.end()){
 //         (*it1).second.second.fSynced = false;
 //         ++it1;
@@ -417,7 +417,7 @@ bool CGovernanceManager::PropExists(uint256 nHash)
 //     // this could screw up syncing, so let's log it
 //     LogPrintf("CGovernanceManager::MarkSynced\n");
 
-//     std::map<uint256, std::map<uint256, CGovernanceVote> >::iterator it1 = mapVotes.begin();
+//     std::map<uint256, std::map<uint256, CBudgetVote> >::iterator it1 = mapVotes.begin();
 //     while(it1 != mapVotes.end()){
 //         if((*it1).second.second.fValid)
 //             (*it1).second.second.fSynced = true;
@@ -457,7 +457,7 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
     }
 
     // sync votes
-    std::map<uint256, std::map<uint256, CGovernanceVote> >::iterator it1 = mapVotes.begin();
+    std::map<uint256, std::map<uint256, CBudgetVote> >::iterator it1 = mapVotes.begin();
     while(it1 != mapVotes.end()){
         if((*it1).second.second.fValid && ((nProp == uint256() || ((*it1).first == nProp))))
                 pfrom->PushInventory(CInv(MSG_BUDGET_VOTE, (*it1).second.second.GetHash()));
@@ -681,6 +681,20 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
     return true;
 }
 
+bool CBudgetProposal::NetworkWillPay()
+{
+    /**
+    * vote nVoteType 1 to 10
+    * --------------------------
+    *
+    * 
+    * // note: if the vote is not passing and we're before the starttime, it's invalid
+    * // note: plain english version - if funding votes nocount > funding votes yescount and GetTime() < nStartTime: return false
+    * if votecount(VOTE_TYPE_FUNDING, "no") > votecount(VOTE_TYPE_FUNDING, "yes") && GetTime() < nStartTime: return false
+    */
+
+}
+
 bool CBudgetProposal::IsEstablished() {
     //Proposals must be established to make it into a budget
     return (nTime < GetTime() - Params().GetConsensus().nBudgetProposalEstablishingTime);
@@ -827,3 +841,78 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
     if(!fLiteMode && masternodeSync.RequestedMasternodeAssets > MASTERNODE_SYNC_LIST)
         NewBlock();
 }
+
+// 12.1 - add Priority sorting, add NetworkWillPay
+std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
+{
+    LOCK(cs);
+
+    // ------- Sort budgets by Yes Count
+
+    std::vector<std::pair<CBudgetProposal*, int> > vBudgetPorposalsSort;
+
+    std::map<uint256, CBudgetProposal>::iterator it = governance.mapProposals.begin();
+    while(it != governance.mapProposals.end()){
+        (*it).second.CleanAndRemove(false);
+        vBudgetPorposalsSort.push_back(make_pair(&((*it).second), (*it).second.GetYesCount()-(*it).second.GetNoCount()));
+        ++it;
+    }
+
+    // 12.1 -- add priority
+    std::sort(vBudgetPorposalsSort.begin(), vBudgetPorposalsSort.end(), sortProposalsByVotes());
+
+    // ------- Grab The Budgets In Order
+
+    std::vector<CBudgetProposal*> vBudgetProposalsRet;
+
+    CAmount nBudgetAllocated = 0;
+    if(!pCurrentBlockIndex) return vBudgetProposalsRet;
+
+    int nBlockStart = pCurrentBlockIndex->nHeight - pCurrentBlockIndex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
+    int nBlockEnd  =  nBlockStart + Params().GetConsensus().nBudgetPaymentsWindowBlocks;
+    CAmount nTotalBudget = GetTotalBudget(nBlockStart);
+
+
+    std::vector<std::pair<CBudgetProposal*, int> >::iterator it2 = vBudgetPorposalsSort.begin();
+    while(it2 != vBudgetPorposalsSort.end())
+    {
+        CBudgetProposal* pbudgetProposal = (*it2).first;
+
+        // 12.1 - skip if NetworkWillPay == false
+
+
+        printf("-> Budget Name : %s\n", pbudgetProposal->strProposalName.c_str());
+        printf("------- nBlockStart : %d\n", pbudgetProposal->nBlockStart);
+        printf("------- nBlockEnd : %d\n", pbudgetProposal->nBlockEnd);
+        printf("------- nBlockStart2 : %d\n", nBlockStart);
+        printf("------- nBlockEnd2 : %d\n", nBlockEnd);
+
+        printf("------- 1 : %d\n", pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart);
+        printf("------- 2 : %d\n", pbudgetProposal->nBlockEnd >= nBlockEnd);
+        printf("------- 3 : %d\n", pbudgetProposal->GetYesCount() - pbudgetProposal->GetNoCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10);
+        printf("------- 4 : %d\n", pbudgetProposal->IsEstablished());
+
+        //prop start/end should be inside this period
+        if(pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart &&
+                pbudgetProposal->nBlockEnd >= nBlockEnd &&
+                pbudgetProposal->GetYesCount() - pbudgetProposal->GetNoCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10 && 
+                pbudgetProposal->IsEstablished())
+        {
+            printf("------- In range \n");
+
+            if(pbudgetProposal->GetAmount() + nBudgetAllocated <= nTotalBudget) {
+                pbudgetProposal->SetAllotted(pbudgetProposal->GetAmount());
+                nBudgetAllocated += pbudgetProposal->GetAmount();
+                vBudgetProposalsRet.push_back(pbudgetProposal);
+                printf("------- YES \n");
+            } else {
+                pbudgetProposal->SetAllotted(0);
+            }
+        }
+
+        ++it2;
+    }
+
+    return vBudgetProposalsRet;
+}
+

@@ -43,123 +43,52 @@ struct sortProposalsByVotes {
 };
 
 
-//Need to review this function
-std::vector<CBudgetProposal*> CBudgetManager::GetBudget()
-{
-    LOCK(cs);
+// void CBudgetManager::MarkSynced()
+// {
+//     LOCK(cs);
 
-    // ------- Sort budgets by Yes Count
+//     /*
+//         Mark that we've sent all valid items
+//     */
 
-    std::vector<std::pair<CBudgetProposal*, int> > vBudgetPorposalsSort;
+//     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
+//     while(it3 != mapSeenFinalizedBudgets.end()){
+//         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
+//         if(pfinalizedBudget && pfinalizedBudget->fValid){
 
-    std::map<uint256, CBudgetProposal>::iterator it = governance.mapProposals.begin();
-    while(it != governance.mapProposals.end()){
-        (*it).second.CleanAndRemove(false);
-        vBudgetPorposalsSort.push_back(make_pair(&((*it).second), (*it).second.GetYesCount()-(*it).second.GetNoCount()));
-        ++it;
-    }
+//             //mark votes
+//             std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
+//             while(it4 != pfinalizedBudget->mapVotes.end()){
+//                 if((*it4).second.fValid)
+//                     (*it4).second.fSynced = true;
+//                 ++it4;
+//             }
+//         }
+//         ++it3;
+//     }
 
-    std::sort(vBudgetPorposalsSort.begin(), vBudgetPorposalsSort.end(), sortProposalsByVotes());
+// }
 
-    // ------- Grab The Budgets In Order
+// //mark that a full sync is needed
+// void CBudgetManager::ResetSync()
+// {
+//     LOCK(cs);
 
-    std::vector<CBudgetProposal*> vBudgetProposalsRet;
+//     std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
+//     while(it3 != mapSeenFinalizedBudgets.end()){
+//         CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
+//         if(pfinalizedBudget && pfinalizedBudget->fValid){
 
-    CAmount nBudgetAllocated = 0;
-    if(!pCurrentBlockIndex) return vBudgetProposalsRet;
-
-    int nBlockStart = pCurrentBlockIndex->nHeight - pCurrentBlockIndex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
-    int nBlockEnd  =  nBlockStart + Params().GetConsensus().nBudgetPaymentsWindowBlocks;
-    CAmount nTotalBudget = GetTotalBudget(nBlockStart);
-
-
-    std::vector<std::pair<CBudgetProposal*, int> >::iterator it2 = vBudgetPorposalsSort.begin();
-    while(it2 != vBudgetPorposalsSort.end())
-    {
-        CBudgetProposal* pbudgetProposal = (*it2).first;
-
-
-        printf("-> Budget Name : %s\n", pbudgetProposal->strProposalName.c_str());
-        printf("------- nBlockStart : %d\n", pbudgetProposal->nBlockStart);
-        printf("------- nBlockEnd : %d\n", pbudgetProposal->nBlockEnd);
-        printf("------- nBlockStart2 : %d\n", nBlockStart);
-        printf("------- nBlockEnd2 : %d\n", nBlockEnd);
-
-        printf("------- 1 : %d\n", pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart);
-        printf("------- 2 : %d\n", pbudgetProposal->nBlockEnd >= nBlockEnd);
-        printf("------- 3 : %d\n", pbudgetProposal->GetYesCount() - pbudgetProposal->GetNoCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10);
-        printf("------- 4 : %d\n", pbudgetProposal->IsEstablished());
-
-        //prop start/end should be inside this period
-        if(pbudgetProposal->fValid && pbudgetProposal->nBlockStart <= nBlockStart &&
-                pbudgetProposal->nBlockEnd >= nBlockEnd &&
-                pbudgetProposal->GetYesCount() - pbudgetProposal->GetNoCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10 && 
-                pbudgetProposal->IsEstablished())
-        {
-            printf("------- In range \n");
-
-            if(pbudgetProposal->GetAmount() + nBudgetAllocated <= nTotalBudget) {
-                pbudgetProposal->SetAllotted(pbudgetProposal->GetAmount());
-                nBudgetAllocated += pbudgetProposal->GetAmount();
-                vBudgetProposalsRet.push_back(pbudgetProposal);
-                printf("------- YES \n");
-            } else {
-                pbudgetProposal->SetAllotted(0);
-            }
-        }
-
-        ++it2;
-    }
-
-    return vBudgetProposalsRet;
-}
-
-void CBudgetManager::MarkSynced()
-{
-    LOCK(cs);
-
-    /*
-        Mark that we've sent all valid items
-    */
-
-    std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
-    while(it3 != mapSeenFinalizedBudgets.end()){
-        CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
-        if(pfinalizedBudget && pfinalizedBudget->fValid){
-
-            //mark votes
-            std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
-            while(it4 != pfinalizedBudget->mapVotes.end()){
-                if((*it4).second.fValid)
-                    (*it4).second.fSynced = true;
-                ++it4;
-            }
-        }
-        ++it3;
-    }
-
-}
-
-//mark that a full sync is needed
-void CBudgetManager::ResetSync()
-{
-    LOCK(cs);
-
-    std::map<uint256, CFinalizedBudgetBroadcast>::iterator it3 = mapSeenFinalizedBudgets.begin();
-    while(it3 != mapSeenFinalizedBudgets.end()){
-        CFinalizedBudget* pfinalizedBudget = FindFinalizedBudget((*it3).first);
-        if(pfinalizedBudget && pfinalizedBudget->fValid){
-
-            //send votes
-            std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
-            while(it4 != pfinalizedBudget->mapVotes.end()){
-                (*it4).second.fSynced = false;
-                ++it4;
-            }
-        }
-        ++it3;
-    }
-}
+//             //send votes
+//             std::map<uint256, CFinalizedBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
+//             while(it4 != pfinalizedBudget->mapVotes.end()){
+//                 (*it4).second.fSynced = false;
+//                 ++it4;
+//             }
+//         }
+//         ++it3;
+//     }
+// }
 
 void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
 {

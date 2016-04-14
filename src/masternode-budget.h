@@ -92,7 +92,6 @@ public:
 
     CFinalizedBudget *FindFinalizedBudget(uint256 nHash);
 
-    std::vector<CBudgetProposal*> GetBudget();
     CAmount GetTotalBudget(int nHeight);
     
     std::vector<CFinalizedBudget*> GetFinalizedBudgets();
