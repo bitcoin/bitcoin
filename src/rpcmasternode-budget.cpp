@@ -107,7 +107,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, uint256());
+        CBudgetProposal budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
@@ -170,7 +170,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         uint256 hash = ParseHashV(params[7], "Proposal hash");
 
         //create the proposal incase we're the first to make it
-        CBudgetProposalBroadcast budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
+        CBudgetProposal budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
 
         std::string strError = "";
 
@@ -762,7 +762,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
             }
 
 
-            CFinalizedBudgetVote vote(pmn->vin, hash);
+            CBudgetVote vote(pmn->vin, hash);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -813,7 +813,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + activeMasternode.vin.ToString());
         }
 
-        CFinalizedBudgetVote vote(activeMasternode.vin, hash);
+        CBudgetVote vote(activeMasternode.vin, hash);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to sign.");
         }
@@ -872,7 +872,7 @@ UniValue mnfinalbudget(const UniValue& params, bool fHelp)
         if(pfinalBudget == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown budget hash");
 
-        std::map<uint256, CFinalizedBudgetVote>::iterator it = pfinalBudget->mapVotes.begin();
+        std::map<uint256, CBudgetVote>::iterator it = pfinalBudget->mapVotes.begin();
         while(it != pfinalBudget->mapVotes.end()){
 
             UniValue bObj(UniValue::VOBJ);

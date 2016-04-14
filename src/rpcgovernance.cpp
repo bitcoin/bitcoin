@@ -1079,7 +1079,7 @@ UniValue superblock(const UniValue& params, bool fHelp)
 
     //     int nBlockStart = pindex->nHeight - pindex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
 
-    //     CFinalizedBudgetBroadcast tempBudget("main", nBlockStart, vecTxBudgetPayments, uint256());
+    //     CFinalizedBudget tempBudget("main", nBlockStart, vecTxBudgetPayments, uint256());
     //     // if(mapSeenFinalizedBudgets.count(tempBudget.GetHash())) {
     //     //     return "already exists"; //already exists
     //     // }
@@ -1149,7 +1149,7 @@ UniValue superblock(const UniValue& params, bool fHelp)
     //     // }
 
     //     //create the proposal incase we're the first to make it
-    //     CFinalizedBudgetBroadcast finalizedBudgetBroadcast("main", nBlockStart, vecTxBudgetPayments, nColHash);
+    //     CFinalizedBudget finalizedBudgetBroadcast("main", nBlockStart, vecTxBudgetPayments, nColHash);
 
     //     std::string strError = "";
     //     if(!finalizedBudgetBroadcast.IsValid(pindex, strError)){

@@ -1835,12 +1835,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     uiInterface.InitMessage(_("Loading budget cache..."));
     CFlatDB<CBudgetManager> flatdb3("budget.dat", "magicBudgetCache");
     flatdb3.Load(budget);
-    budget.ResetSync(); //flag our cached items so we send them to our peers
     budget.ClearSeen();
 
     CFlatDB<CGovernanceManager> flatdb4("governance.dat", "magicGovernanceCache");
     flatdb4.Load(governance);
-    governance.ResetSync(); 
     governance.ClearSeen();
 
     // ********************************************************* Step 11: setup DarkSend

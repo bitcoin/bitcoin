@@ -94,4 +94,27 @@ public:
 
 };
 
+
+/** 
+* 12.1.1 - CGovernanceVoteManager
+* -------------------------------
+*
+
+    Class Structure:
+
+    //       parent hash       vote hash     vote
+    std::map<uint256, std::map<uint256, CBudgetVote> > mapVotes;
+
+    GetVote(name, yes_no):
+        - caching function
+        - mark last accessed votes
+        - load serialized files from filesystem if needed
+        - calc answer
+        - return result
+    
+    CacheUnused():
+        - Cache votes if lastused > 12h/24/48/etc
+
+*/
+
 #endif
