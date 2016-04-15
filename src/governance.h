@@ -145,14 +145,16 @@ public:
 *
 */
 
-// todo - 12.1 - add payload obj to CGovernanceObj
-// union GovernanceObjectPayload
+// todo - 12.1 - add register obj to CGovernanceObj
+// union GovernanceObjectRegister
 // {
-//     CAmount nAmount;
-//     int nValue;
-//     bool bIsActive;
-//     std::string strPayload;
-//     double fValue;
+//     CAmount a;
+//     int i;
+//     bool b;
+//     double f;
+//     std::string s;
+//     uint256 h;
+//     CBitcoinAddress ba;
 // }
 
 /**
@@ -168,7 +170,9 @@ public:
 //     Int,
 //     Bool,
 //     String,
-//     Double
+//     Double,
+//     Hash256,
+//     BitcoinAddress
 // };
 
 //
@@ -195,12 +199,30 @@ public:
     int nEndTime;
     CAmount nAmount; // 12.1 - remove
     // int nPriority; //budget is sorted by this integer before funding votecount
-    // GovernanceObjectPayloadType payloadType;
-    // GovernanceObjectPayload payload;
     CScript address; //todo rename to addressOwner;
     int64_t nTime;
     uint256 nFeeTXHash;
     uint256 nHashParent; // 12.1 - remove
+    
+    // Registers, these can be used for anything by the masternode network
+    // vector<GovernanceObjectPayloadType> registerTypes;
+    // vector<GovernanceObjectPayload> registers;
+    /**
+    *   Example usage:
+    *
+    *   - This system is designed to allow virtually any usage
+    *   - No protocol changes are needed
+    *   - Abuse will just be simply automatically deleted
+    *   - Masternodes could read this data and do all sorts of things
+    *
+    *   Contractor: Mailing address, contact info (5 strings)
+    *   Company: BitcoinAddress, UserHash, repeat (automate core team payments?)
+    *   Contract: CAmount, nDenomination(int)
+    *   Proposal:    
+    *   MasternodePaymentsBlock: BlockStart, Masternode1, 2, 3... 
+    *   Arbitration: UserId1, UserId2, TxHash, ContractHash
+    */
+
 
     //cache object
 
