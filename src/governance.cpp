@@ -266,17 +266,18 @@ void CGovernanceManager::NewBlock()
             continue;
         }
 
-        if(!(*it4).IsValid(pCurrentBlockIndex, strError)) {
-            LogPrintf("mprop (immature) - invalid budget proposal - %s\n", strError);
-            it4 = vecImmatureBudgetProposals.erase(it4); 
-            continue;
-        }
+        // 12.1 -- fix below
+        // if(!(*it4).IsValid(pCurrentBlockIndex, strError)) {
+        //     LogPrintf("mprop (immature) - invalid budget proposal - %s\n", strError);
+        //     it4 = vecImmatureBudgetProposals.erase(it4); 
+        //     continue;
+        // }
 
-        CBudgetProposal budgetProposal((*it4));
-        if(AddProposal(budgetProposal)) {(*it4).Relay();}
+        // CBudgetProposal budgetProposal((*it4));
+        // if(AddProposal(budgetProposal)) {(*it4).Relay();}
 
-        LogPrintf("mprop (immature) - new budget - %s\n", (*it4).GetHash().ToString());
-        it4 = vecImmatureBudgetProposals.erase(it4); 
+        // LogPrintf("mprop (immature) - new budget - %s\n", (*it4).GetHash().ToString());
+        // it4 = vecImmatureBudgetProposals.erase(it4); 
     }
 
 }

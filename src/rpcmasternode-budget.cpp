@@ -107,7 +107,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CBudgetProposal budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, uint256());
+        CBudgetProposal budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
@@ -170,7 +170,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         uint256 hash = ParseHashV(params[7], "Proposal hash");
 
         //create the proposal incase we're the first to make it
-        CBudgetProposal budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, nBlockStart, hash);
+        CBudgetProposal budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, hash);
 
         std::string strError = "";
 
@@ -202,11 +202,12 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         hash = ParseHashV(params[1], "Proposal hash");
         strVote = params[2].get_str();
 
-        if(strVote != "yes" && strVote != "no")
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes' or 'no'");
-        int nVote = VOTE_ABSTAIN;
-        if(strVote == "yes") nVote = VOTE_YES;
-        if(strVote == "no") nVote = VOTE_NO;
+        int nVote = VOTE_OUTCOME_NONE;
+        if(strVote == "yes") nVote = VOTE_OUTCOME_YES;
+        if(strVote == "no") nVote = VOTE_OUTCOME_NO;
+        if(strVote == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
+        if(nVote == VOTE_OUTCOME_NONE)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes', 'no' or 'abstain'");
 
         int success = 0;
         int failed = 0;
@@ -246,7 +247,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
                 continue;
             }
 
-            CBudgetVote vote(pmn->vin, hash, nVote);
+            CBudgetVote vote(pmn->vin, hash, nVote, VOTE_TYPE_NONE);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -289,11 +290,12 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         strVote = params[2].get_str();
         std::string strAlias = params[3].get_str();
 
-        if(strVote != "yes" && strVote != "no")
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes' or 'no'");
-        int nVote = VOTE_ABSTAIN;
-        if(strVote == "yes") nVote = VOTE_YES;
-        if(strVote == "no") nVote = VOTE_NO;
+        int nVote = VOTE_OUTCOME_NONE;
+        if(strVote == "yes") nVote = VOTE_OUTCOME_YES;
+        if(strVote == "no") nVote = VOTE_OUTCOME_NO;
+        if(strVote == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
+        if(nVote == VOTE_OUTCOME_NONE)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes', 'no' or 'abstain'");
 
         int success = 0;
         int failed = 0;
@@ -336,7 +338,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
                 continue;
             }
 
-            CBudgetVote vote(pmn->vin, hash, nVote);
+            CBudgetVote vote(pmn->vin, hash, nVote, VOTE_TYPE_NONE);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -375,11 +377,12 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         uint256 hash = ParseHashV(params[1], "Proposal hash");
         std::string strVote = params[2].get_str();
 
-        if(strVote != "yes" && strVote != "no")
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes' or 'no'");
-        int nVote = VOTE_ABSTAIN;
-        if(strVote == "yes") nVote = VOTE_YES;
-        if(strVote == "no") nVote = VOTE_NO;
+        int nVote = VOTE_OUTCOME_NONE;
+        if(strVote == "yes") nVote = VOTE_OUTCOME_YES;
+        if(strVote == "no") nVote = VOTE_OUTCOME_NO;
+        if(strVote == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
+        if(nVote == VOTE_OUTCOME_NONE)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes', 'no' or 'abstain'");
 
         CPubKey pubKeyMasternode;
         CKey keyMasternode;
@@ -394,7 +397,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + activeMasternode.vin.ToString());
         }
 
-        CBudgetVote vote(activeMasternode.vin, hash, nVote);
+        CBudgetVote vote(activeMasternode.vin, hash, nVote, VOTE_TYPE_NONE);
         if(!vote.Sign(keyMasternode, pubKeyMasternode)){
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to sign.");
         }
@@ -417,21 +420,18 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         std::string strShow = "valid";
         if (params.size() == 2) strShow = params[1].get_str();
 
+        UniValue resultObj(UniValue::VOBJ);
+
         CBlockIndex* pindex;
         {
             LOCK(cs_main);
             pindex = chainActive.Tip();
         }
 
-        UniValue resultObj(UniValue::VOBJ);
-        int64_t nTotalAllotted = 0;
-
         std::vector<CBudgetProposal*> winningProps = governance.GetAllProposals();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
             if(strShow == "valid" && !pbudgetProposal->fValid) continue;
-
-            nTotalAllotted += pbudgetProposal->GetAllotted();
 
             CTxDestination address1;
             ExtractDestination(pbudgetProposal->GetPayee(), address1);
@@ -442,19 +442,14 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
             bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
             bObj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
-            bObj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
-            bObj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
-            bObj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
-            bObj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount(pindex->nHeight)));
-            bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
-            bObj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
+            bObj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
+            bObj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
             bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
             bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
             bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
             bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
-            bObj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
+            bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
             bObj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
-
             bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
 
             std::string strError = "";
@@ -528,17 +523,13 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
         obj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
         obj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
-        obj.push_back(Pair("BlockStart",  (int64_t)pbudgetProposal->GetBlockStart()));
-        obj.push_back(Pair("BlockEnd",    (int64_t)pbudgetProposal->GetBlockEnd()));
-        obj.push_back(Pair("TotalPaymentCount",  (int64_t)pbudgetProposal->GetTotalPaymentCount()));
-        obj.push_back(Pair("RemainingPaymentCount",  (int64_t)pbudgetProposal->GetRemainingPaymentCount(pindex->nHeight)));
+        obj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
+        obj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
         obj.push_back(Pair("PaymentAddress",   address2.ToString()));
-        obj.push_back(Pair("Ratio",  pbudgetProposal->GetRatio()));
         obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
         obj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
         obj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
         obj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
-        obj.push_back(Pair("TotalPayment",  ValueFromAmount(pbudgetProposal->GetAmount()*pbudgetProposal->GetTotalPaymentCount())));
         obj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
         
         obj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
@@ -564,19 +555,20 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
 
-        std::map<uint256, CBudgetVote>::iterator it = pbudgetProposal->mapVotes.begin();
-        while(it != pbudgetProposal->mapVotes.end()){
+        // 12.1 - rewrite
+        // std::map<uint256, CBudgetVote>::iterator it = pbudgetProposal->mapVotes.begin();
+        // while(it != pbudgetProposal->mapVotes.end()){
 
-            UniValue bObj(UniValue::VOBJ);
-            bObj.push_back(Pair("nHash",  (*it).first.ToString().c_str()));
-            bObj.push_back(Pair("Vote",  (*it).second.GetVoteString()));
-            bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
-            bObj.push_back(Pair("fValid",  (*it).second.fValid));
+        //     UniValue bObj(UniValue::VOBJ);
+        //     bObj.push_back(Pair("nHash",  (*it).first.ToString().c_str()));
+        //     bObj.push_back(Pair("Vote",  (*it).second.GetVoteString()));
+        //     bObj.push_back(Pair("nTime",  (int64_t)(*it).second.nTime));
+        //     bObj.push_back(Pair("fValid",  (*it).second.fValid));
 
-            obj.push_back(Pair((*it).second.vin.prevout.ToStringShort(), bObj));
+        //     obj.push_back(Pair((*it).second.vin.prevout.ToStringShort(), bObj));
 
-            it++;
-        }
+        //     it++;
+        // }
 
 
         return obj;
@@ -607,11 +599,13 @@ UniValue mnbudgetvoteraw(const UniValue& params, bool fHelp)
     uint256 hashProposal = ParseHashV(params[2], "Proposal hash");
     std::string strVote = params[3].get_str();
 
-    if(strVote != "yes" && strVote != "no")
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes' or 'no'");
-    int nVote = VOTE_ABSTAIN;
-    if(strVote == "yes") nVote = VOTE_YES;
-    if(strVote == "no") nVote = VOTE_NO;
+    int nVote = VOTE_OUTCOME_NONE;
+    if(strVote == "yes") nVote = VOTE_OUTCOME_YES;
+    if(strVote == "no") nVote = VOTE_OUTCOME_NO;
+    if(strVote == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
+    if(nVote == VOTE_OUTCOME_NONE)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes', 'no' or 'abstain'");
+
 
     int64_t nTime = params[4].get_int64();
     std::string strSig = params[5].get_str();
@@ -627,7 +621,7 @@ UniValue mnbudgetvoteraw(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + vin.ToString());
     }
 
-    CBudgetVote vote(vin, hashProposal, nVote);
+    CBudgetVote vote(vin, hashProposal, nVote, VOTE_TYPE_NONE);
     vote.nTime = nTime;
     vote.vchSig = vchSig;
 

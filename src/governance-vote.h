@@ -25,12 +25,13 @@ class CBudgetVote;
 #define VOTE_OUTCOME_ABSTAIN  3
 // INTENTION OF MASTERNODES REGARDING ITEM
 
-#define VOTE_TYPE_FUND           0
-#define VOTE_TYPE_END            1
-#define VOTE_TYPE_VALID          2
-#define VOTE_TYPE_MILESTONE1     3
-#define VOTE_TYPE_MILESTONE2     4
-#define VOTE_TYPE_ENDORSED       5
+#define VOTE_TYPE_NONE           0
+#define VOTE_TYPE_FUND           1
+#define VOTE_TYPE_END            2
+#define VOTE_TYPE_VALID          3
+#define VOTE_TYPE_MILESTONE1     4
+#define VOTE_TYPE_MILESTONE2     5
+#define VOTE_TYPE_ENDORSED       6
 
 //
 // CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
