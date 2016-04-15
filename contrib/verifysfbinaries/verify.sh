@@ -23,9 +23,6 @@ BASEDIR="https://bitcoin.org/bin/"
 VERSIONPREFIX="bitcoin-core-"
 RCVERSIONSTRING="rc"
 
-#this URL is used if a version number is not specified as an argument to the script
-SIGNATUREFILE="$BASEDIR""$VERSIONPREFIX""0.10.4/""$RCSUBDIR""$SIGNATUREFILENAME"
-
 if [ ! -d "$WORKINGDIR" ]; then
    mkdir "$WORKINGDIR"
 fi
@@ -53,7 +50,8 @@ if [ -n "$1" ]; then
 
    SIGNATUREFILE="$BASEDIR$SIGNATUREFILENAME"
 else
-   BASEDIR="${SIGNATUREFILE%/*}/"
+   echo "Error: need to specify a version on the command line"
+   exit 2
 fi
 
 #first we fetch the file containing the signature
