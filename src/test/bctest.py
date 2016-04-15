@@ -2,7 +2,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from __future__ import division,print_function,unicode_literals
-from io import open
 import subprocess
 import os
 import json
@@ -17,7 +16,7 @@ def bctest(testDir, testObj, exeext):
 	inputData = None
 	if "input" in testObj:
 		filename = testDir + "/" + testObj['input']
-		inputData = open(filename, 'rb').read()
+		inputData = open(filename).read()
 		stdinCfg = subprocess.PIPE
 
 	outputFn = None
