@@ -1932,7 +1932,7 @@ bool CWallet::SelectCoins(const vector<COutput>& vAvailableCoins, const CAmount&
     return res;
 }
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nChangePosRet, std::string& strFailReason, bool includeWatching)
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nChangePosRet, std::string& strFailReason, bool includeWatching, std::string& strChangeAddress)
 {
     vector<CRecipient> vecSend;
 
@@ -1948,6 +1948,15 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nC
     coinControl.fAllowWatchOnly = includeWatching;
     BOOST_FOREACH(const CTxIn& txin, tx.vin)
         coinControl.Select(txin.prevout);
+
+    if (!strChangeAddress.empty()) {
+        CBitcoinAddress changeAddress(strChangeAddress);
+        if (!changeAddress.IsValid()) {
+            strFailReason = _("Invalid change address");
+            return false;
+        }
+        coinControl.destChange = changeAddress.Get();
+    }
 
     CReserveKey reservekey(this);
     CWalletTx wtx;
