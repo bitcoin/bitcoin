@@ -130,7 +130,7 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
             continue;
         }
         CValidationState state;
-        if (!ProcessNewBlock(state, Params(), NULL, pblock, true, NULL))
+        if (!ProcessNewBlock(state, Params(), pblock, true, NULL))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
         ++nHeight;
         blockHashes.push_back(pblock->GetHash().GetHex());
@@ -635,7 +635,7 @@ UniValue submitblock(const UniValue& params, bool fHelp)
     CValidationState state;
     submitblock_StateCatcher sc(block.GetHash());
     RegisterValidationInterface(&sc);
-    bool fAccepted = ProcessNewBlock(state, Params(), NULL, &block, true, NULL);
+    bool fAccepted = ProcessNewBlock(state, Params(), &block, true, NULL);
     UnregisterValidationInterface(&sc);
     if (fBlockPresent)
     {
