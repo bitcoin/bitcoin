@@ -97,7 +97,7 @@ public:
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
 
-    CBudgetProposal *FindProposal(const std::string &strProposalName);
+    CBudgetProposal *FindProposal(const std::string &strName);
     CBudgetProposal *FindProposal(uint256 nHash);
     
     std::vector<CBudgetProposal*> GetAllProposals();
@@ -188,12 +188,7 @@ private:
 
 public:
     bool fValid;
-    std::string strProposalName;
-
-    /*
-        json object with name, short-description, long-description, pdf-url and any other info
-        This allows the proposal website to stay 100% decentralized
-    */
+    std::string strName;
     std::string strURL;
     int nStartTime;
     int nEndTime;
@@ -228,14 +223,14 @@ public:
 
     CBudgetProposal();
     CBudgetProposal(const CBudgetProposal& other);
-    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
+    CBudgetProposal(std::string strNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
 
     bool HasMinimumRequiredSupport();
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
     bool IsEstablished();
     bool NetworkWillPay();
 
-    std::string GetName() {return strProposalName; }
+    std::string GetName() {return strName; }
     std::string GetURL() {return strURL; }
     int GetStartTime() {return nStartTime;}
     int GetEndTime() {return nEndTime;}
@@ -251,7 +246,7 @@ public:
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << strProposalName;
+        ss << strName;
         ss << strURL;
         ss << nStartTime;
         ss << nEndTime;
@@ -268,7 +263,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         //for syncing with other clients
-        READWRITE(LIMITED_STRING(strProposalName, 20));
+        READWRITE(LIMITED_STRING(strName, 20));
         READWRITE(LIMITED_STRING(strURL, 64));
         READWRITE(nTime);
         READWRITE(nStartTime);

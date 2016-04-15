@@ -73,7 +73,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        std::string strProposalName = SanitizeString(params[1].get_str());
+        std::string strName = SanitizeString(params[1].get_str());
         std::string strURL = SanitizeString(params[2].get_str());
         int nPaymentCount = params[3].get_int();
         int nBlockStart = params[4].get_int();
@@ -95,7 +95,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CBudgetProposal budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, uint256());
+        CBudgetProposal budgetProposalBroadcast(strName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
@@ -137,7 +137,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        std::string strProposalName = SanitizeString(params[1].get_str());
+        std::string strName = SanitizeString(params[1].get_str());
         std::string strURL = SanitizeString(params[2].get_str());
         int nPaymentCount = params[3].get_int();
         int nBlockStart = params[4].get_int();
@@ -158,7 +158,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         uint256 hash = ParseHashV(params[7], "Proposal hash");
 
         //create the proposal incase we're the first to make it
-        CBudgetProposal budgetProposalBroadcast(strProposalName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, hash);
+        CBudgetProposal budgetProposalBroadcast(strName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, hash);
 
         std::string strError = "";
 
@@ -456,9 +456,9 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         if (params.size() != 2)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget getproposalhash <proposal-name>'");
 
-        std::string strProposalName = SanitizeString(params[1].get_str());
+        std::string strName = SanitizeString(params[1].get_str());
 
-        CBudgetProposal* pbudgetProposal = governance.FindProposal(strProposalName);
+        CBudgetProposal* pbudgetProposal = governance.FindProposal(strName);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
@@ -468,7 +468,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         std::vector<CBudgetProposal*> winningProps = governance.GetAllProposals();
         BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
         {
-            if(pbudgetProposal->GetName() != strProposalName) continue;
+            if(pbudgetProposal->GetName() != strName) continue;
             if(!pbudgetProposal->fValid) continue;
 
             CTxDestination address1;

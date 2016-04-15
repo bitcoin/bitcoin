@@ -135,7 +135,7 @@ void CGovernanceManager::CheckAndRemove()
     }
 }
 
-CBudgetProposal *CGovernanceManager::FindProposal(const std::string &strProposalName)
+CBudgetProposal *CGovernanceManager::FindProposal(const std::string &strName)
 {
     //find the prop with the highest yes count
 
@@ -144,7 +144,7 @@ CBudgetProposal *CGovernanceManager::FindProposal(const std::string &strProposal
 
     std::map<uint256, CBudgetProposal>::iterator it = mapProposals.begin();
     while(it != mapProposals.end()){
-        if((*it).second.strProposalName == strProposalName && (*it).second.GetYesCount() > nYesCount){
+        if((*it).second.strName == strName && (*it).second.GetYesCount() > nYesCount){
             pbudgetProposal = &((*it).second);
             nYesCount = pbudgetProposal->GetYesCount();
         }
@@ -529,7 +529,7 @@ bool CGovernanceManager::AddOrUpdateVote(CBudgetVote& vote, std::string& strErro
 
 CBudgetProposal::CBudgetProposal()
 {
-    strProposalName = "unknown";
+    strName = "unknown";
     nStartTime = 0;
     nEndTime = 0;
     nAmount = 0;
@@ -539,7 +539,7 @@ CBudgetProposal::CBudgetProposal()
 
 CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
 {
-    strProposalName = other.strProposalName;
+    strName = other.strName;
     strURL = other.strURL;
     nStartTime = other.nStartTime;
     nEndTime = other.nEndTime;
@@ -550,9 +550,9 @@ CBudgetProposal::CBudgetProposal(const CBudgetProposal& other)
     fValid = true;
 }
 
-CBudgetProposal::CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn)
+CBudgetProposal::CBudgetProposal(std::string strNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn)
 {
-    strProposalName = strProposalNameIn;
+    strName = strNameIn;
     strURL = strURLIn;
     nStartTime = nStartTimeIn;
     nEndTime = nEndTimeIn;
@@ -583,12 +583,12 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
         return false;
     }
 
-    if(strProposalName.size() > 20) {
+    if(strName.size() > 20) {
         strError = "Invalid proposal name, limit of 20 characters.";
         return false;
     }
 
-    if(strProposalName != SanitizeString(strProposalName)) {
+    if(strName != SanitizeString(strName)) {
         strError = "Invalid proposal name, unsafe characters found.";
         return false;
     }
@@ -611,12 +611,12 @@ bool CBudgetProposal::IsValid(const CBlockIndex* pindex, std::string& strError, 
     // 12.1 - add valid predicates
     //     this can be handled by configuration 
     // found = false
-    // if strProposalName[:10] = "proposal="; found = true;
-    // if strProposalName[:10] = "contract="; found = true;
-    // if strProposalName[:10] = "project="; found = true;
-    // if strProposalName[:10] = "employee="; found = true;
-    // if strProposalName[:10] = "project-milestone="; found = true;
-    // if strProposalName[:10] = "project-report="; found = true;
+    // if strName[:10] = "proposal="; found = true;
+    // if strName[:10] = "contract="; found = true;
+    // if strName[:10] = "project="; found = true;
+    // if strName[:10] = "employee="; found = true;
+    // if strName[:10] = "project-milestone="; found = true;
+    // if strName[:10] = "project-report="; found = true;
 
     // if not found: return false
 
