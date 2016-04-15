@@ -69,6 +69,7 @@ if "BITCOINCLI" not in os.environ:
 
 if EXEEXT == ".exe" and "-win" not in opts:
     # https://github.com/bitcoin/bitcoin/commit/d52802551752140cf41f0d9a225a43e84404d3e9
+    # https://github.com/bitcoin/bitcoin/pull/5677#issuecomment-136646964
     print "Win tests currently disabled by default.  Use -win option to enable"
     sys.exit(0)
 
@@ -81,7 +82,7 @@ if ENABLE_ZMQ:
     try:
         import zmq
     except ImportError as e:
-        print("WARNING: \"import zmq\" failed. Set ENABLE_ZMQ=0 or " \
+        print("ERROR: \"import zmq\" failed. Set ENABLE_ZMQ=0 or " \
             "to run zmq tests, see dependency info in /qa/README.md.")
         raise e
 
