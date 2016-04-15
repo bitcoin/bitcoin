@@ -2652,7 +2652,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-                            "fundrawtransaction \"hexstring\" includeWatching\n"
+                            "fundrawtransaction \"hexstring\" ( options )\n"
                             "\nAdd inputs to a transaction until it has enough in value to meet its out value.\n"
                             "This will not modify existing inputs, and will add one change output to the outputs.\n"
                             "Note that inputs which were signed may need to be resigned after completion since in/outputs have been added.\n"
@@ -2663,8 +2663,15 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             "You can see whether this is the case by checking the \"solvable\" field in the listunspent output.\n"
                             "Only pay-to-pubkey, multisig, and P2SH versions thereof are currently supported for watch-only\n"
                             "\nArguments:\n"
-                            "1. \"hexstring\"     (string, required) The hex string of the raw transaction\n"
-                            "2. includeWatching (boolean, optional, default false) Also select inputs which are watch only\n"
+                            "1. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
+                            "2. options               (object, optional)\n"
+                            "   {\n"
+                            "     \"changeAddress\"     (string, optional, default pool address) The bitcoin address to receive the change\n"
+                            "     \"changePosition\"    (numeric, optional, default random) The index of the change output\n"
+                            "     \"includeWatching\"   (boolean, optional, default false) Also select inputs which are watch only\n"
+                            "     \"lockUnspents\"      (boolean, optional, default false) Lock selected unspent outputs\n"
+                            "   }\n"
+                            "                         for backward compatibility: passing in a true instzead of an object will result in {\"includeWatching\":true}\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
@@ -2683,7 +2690,44 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             + HelpExampleCli("sendrawtransaction", "\"signedtransactionhex\"")
                             );
 
-    RPCTypeCheck(params, boost::assign::list_of(UniValue::VSTR)(UniValue::VBOOL));
+    RPCTypeCheck(params, boost::assign::list_of(UniValue::VSTR));
+
+    CTxDestination changeAddress = CNoDestination();
+    int changePosition = -1;
+    bool includeWatching = false;
+    bool lockUnspents = false;
+
+    if (params.size() > 1) {
+      if (params[1].type() == UniValue::VBOOL) {
+        // backward compatibility bool only fallback
+        includeWatching = params[1].get_bool();
+      }
+      else {
+        RPCTypeCheck(params, boost::assign::list_of(UniValue::VSTR)(UniValue::VOBJ));
+
+        UniValue options = params[1];
+
+        RPCTypeCheckObj(options, boost::assign::map_list_of("changeAddress", UniValue::VSTR)("changePosition", UniValue::VNUM)("includeWatching", UniValue::VBOOL)("lockUnspents", UniValue::VBOOL), true, true);
+
+        if (options.exists("changeAddress")) {
+            CBitcoinAddress address(options["changeAddress"].get_str());
+
+            if (!address.IsValid())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "changeAddress must be a valid bitcoin address");
+
+            changeAddress = address.Get();
+        }
+
+        if (options.exists("changePosition"))
+            changePosition = options["changePosition"].get_int();
+
+        if (options.exists("includeWatching"))
+            includeWatching = options["includeWatching"].get_bool();
+
+        if (options.exists("lockUnspents"))
+            lockUnspents = options["lockUnspents"].get_bool();
+      }
+    }
 
     // parse hex string from parameter
     CTransaction origTx;
@@ -2693,20 +2737,19 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     if (origTx.vout.size() == 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "TX must have at least one output");
 
-    bool includeWatching = false;
-    if (params.size() > 1)
-        includeWatching = params[1].get_bool();
+    if (changePosition != -1 && (changePosition < 0 || changePosition > origTx.vout.size()))
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "changePosition out of bounds");
 
     CMutableTransaction tx(origTx);
     CAmount nFee;
     string strFailReason;
-    int nChangePos = -1;
-    if(!pwalletMain->FundTransaction(tx, nFee, nChangePos, strFailReason, includeWatching))
+
+    if(!pwalletMain->FundTransaction(tx, nFee, changePosition, strFailReason, includeWatching, lockUnspents, changeAddress))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
 
     UniValue result(UniValue::VOBJ);
     result.push_back(Pair("hex", EncodeHexTx(tx)));
-    result.push_back(Pair("changepos", nChangePos));
+    result.push_back(Pair("changepos", changePosition));
     result.push_back(Pair("fee", ValueFromAmount(nFee)));
 
     return result;
