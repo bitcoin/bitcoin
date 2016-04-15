@@ -6,7 +6,7 @@
 #include "db.h"
 #include "init.h"
 #include "activemasternode.h"
-#include "masternode-budget.h"
+#include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeconfig.h"
@@ -59,18 +59,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         int nNext = pindex->nHeight - pindex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
         return nNext;
-    }
-
-    if(strCommand == "nextsuperblocksize")
-    {
-        LOCK(cs_main);
-        CBlockIndex* pindex = chainActive.Tip();
-        if(!pindex) return "unknown";
-
-        int nHeight = pindex->nHeight - pindex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
-
-        CAmount nTotal = budget.GetTotalBudget(nHeight);
-        return nTotal;
     }
 
     if(strCommand == "prepare")
@@ -572,13 +560,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
 
         return obj;
-    }
-
-    if(strCommand == "check")
-    {
-        budget.CheckAndRemove();
-
-        return "Success";
     }
 
     return NullUniValue;

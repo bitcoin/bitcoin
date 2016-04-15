@@ -7,7 +7,7 @@
 #include "init.h"
 
 // todo 12.1 - remove the unused
-#include "masternode-budget.h"
+#include "governance.h"
 #include "masternode.h"
 #include "darksend.h"
 #include "governance.h"

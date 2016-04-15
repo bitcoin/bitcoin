@@ -10,7 +10,7 @@
 #include "governance.h"
 #include "governance-vote.h"
 #include "masternode.h"
-#include "masternode-budget.h"
+#include "governance.h"
 #include "darksend.h"
 #include "masternodeman.h"
 #include "masternode-sync.h"

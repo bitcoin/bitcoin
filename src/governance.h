@@ -17,8 +17,15 @@
 #include "init.h"
 
 using namespace std;
-
 extern CCriticalSection cs_budget;
+
+// note: is there a reason these are static? 
+//         http://stackoverflow.com/questions/3709207/c-semantics-of-static-const-vs-const 
+static const CAmount BUDGET_FEE_TX = (5*COIN);
+static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
+static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
+static const int64_t CONTRACT_ACTIVATION_TIME = 60*60*24*14;
+
 
 class CGovernanceManager;
 class CBudgetProposal;

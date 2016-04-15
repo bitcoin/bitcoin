@@ -9,7 +9,7 @@
 #include "flat-database.h"
 #include "governance.h"
 #include "masternode.h"
-#include "masternode-budget.h"
+#include "governance.h"
 #include "darksend.h"
 #include "masternodeman.h"
 #include "masternode-sync.h"
