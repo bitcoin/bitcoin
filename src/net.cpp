@@ -81,8 +81,8 @@ static bool vfLimited[NET_MAX] = {};
 static CNode* pnodeLocalHost = NULL;
 std::string strSubVersion;
 
-std::map<CInv, CDataStream> mapRelay;
-std::deque<pair<int64_t, CInv> > vRelayExpiration;
+std::map<uint256, CTransaction> mapRelay;
+std::deque<pair<int64_t, uint256> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
 limitedmap<uint256, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
@@ -2476,23 +2476,6 @@ bool CConnman::DisconnectNode(NodeId id)
 
 void CConnman::RelayTransaction(const CTransaction& tx)
 {
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss.reserve(10000);
-    uint256 hash = tx.GetHash();
-    CTxLockRequest txLockRequest;
-    CDarksendBroadcastTx dstx = CPrivateSend::GetDSTX(hash);
-    if(dstx) { // MSG_DSTX
-        ss << dstx;
-    } else if(instantsend.GetTxLockRequest(hash, txLockRequest)) { // MSG_TXLOCK_REQUEST
-        ss << txLockRequest;
-    } else { // MSG_TX
-        ss << tx;
-    }
-    RelayTransaction(tx, ss);
-}
-
-void CConnman::RelayTransaction(const CTransaction& tx, const CDataStream& ss)
-{
     uint256 hash = tx.GetHash();
     int nInv = static_cast<bool>(CPrivateSend::GetDSTX(hash)) ? MSG_DSTX :
                 (instantsend.HasTxLockRequest(hash) ? MSG_TXLOCK_REQUEST : MSG_TX);
@@ -2506,9 +2489,8 @@ void CConnman::RelayTransaction(const CTransaction& tx, const CDataStream& ss)
             vRelayExpiration.pop_front();
         }
 
-        // Save original serialized message so newer versions are preserved
-        mapRelay.insert(std::make_pair(inv, ss));
-        vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv));
+        mapRelay.insert(std::make_pair(inv.hash, tx));
+        vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv.hash));
     }
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)

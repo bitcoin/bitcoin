@@ -572,8 +572,8 @@ extern bool fDiscover;
 extern bool fListen;
 extern bool fRelayTxes;
 
-extern std::map<CInv, CDataStream> mapRelay;
-extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
+extern std::map<uint256, CTransaction> mapRelay;
+extern std::deque<std::pair<int64_t, uint256> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
 extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 

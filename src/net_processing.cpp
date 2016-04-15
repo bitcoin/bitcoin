@@ -886,9 +886,9 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 bool pushed = false;
                 {
                     LOCK(cs_mapRelay);
-                    map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
+                    map<uint256, CTransaction>::iterator mi = mapRelay.find(inv.hash);
                     if (mi != mapRelay.end()) {
-                        pfrom->PushMessage(inv.GetCommand(), (*mi).second);
+                        connman.PushMessage(pfrom, inv.GetCommand(), (*mi).second);
                         pushed = true;
                     }
                 }
@@ -896,10 +896,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 if (!pushed && inv.type == MSG_TX) {
                     CTransaction tx;
                     if (mempool.lookup(inv.hash, tx)) {
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << tx;
-                        connman.PushMessage(pfrom, NetMsgType::TX, ss);
+                        connman.PushMessage(pfrom, NetMsgType::TX, tx);
                         pushed = true;
                     }
                 }
