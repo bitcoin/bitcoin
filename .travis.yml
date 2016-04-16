@@ -43,9 +43,20 @@ install:
     - if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
+    - if [ "$CHECK_DOC" = 1 ]; then travis_retry git fetch https://github.com/bitcoin/secp256k1.git; fi
+    - if [ "$CHECK_DOC" = 1 ]; then travis_retry git fetch -unshallow https://github.com/bitcoin/leveldb.git; fi
+    - if [ "$CHECK_DOC" = 1 ]; then travis_retry git fetch https://github.com/bitcoin/univalue.git; fi
+    - if [ "$CHECK_DOC" = 1 ]; then travis_retry git fetch https://github.com/bitcoin-core/ctaes.git; fi
+#    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then mkdir -p bin && cd bin; fi
+#    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then travis_retry wget -N https://bitcoin.org/bin/bitcoin-core-0.12.1/bitcoin-0.12.1-linux64.tar.gz; fi
+#    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then cd .. && echo "54aca14b7512801ab78cc93f8576e1b66364a890e8017e8a187e4bf0209fd28c  bin/bitcoin-0.12.1-linux64.tar.gz" | sha256sum --check && tar -xzvf bin/bitcoin-0.12.1-linux64.tar.gz; fi
 before_script:
     - unset CC; unset CXX
     - if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi
+    - if [ "$CHECK_DOC" = 1 ]; then ./contrib/devtools/git-subtree-check.sh src/secp256k1; fi
+    - if [ "$CHECK_DOC" = 1 ]; then ./contrib/devtools/git-subtree-check.sh src/leveldb; fi
+    - if [ "$CHECK_DOC" = 1 ]; then ./contrib/devtools/git-subtree-check.sh src/univalue; fi
+    - if [ "$CHECK_DOC" = 1 ]; then ./contrib/devtools/git-subtree-check.sh src/crypto/ctaes; fi
     - mkdir -p depends/SDKs depends/sdk-sources
     - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
     - if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
@@ -71,7 +82,9 @@ script:
     - export LD_LIBRARY_PATH=$TRAVIS_BUILD_DIR/depends/$HOST/lib
     - if [ "$RUN_TESTS" = "true" ]; then make $MAKEJOBS check VERBOSE=1; fi
     - if [ "$TRAVIS_EVENT_TYPE" = "cron" ]; then extended="--extended --exclude pruning"; fi
-    - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --coverage --quiet ${extended}; fi
+    - if [ "$RUN_TESTS" = "true" ]; then test/functional/test_runner.py --coverage ${extended}; fi
+#    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py p2p-segwit --oldbinary=../bitcoin-0.12.1/bin/bitcoind; fi
+    - if [ "$RUN_ALL_RPC_TESTS" = "true" ]; then test/functional/test_runner.py -extended --coverage; fi
 after_script:
     - echo $TRAVIS_COMMIT_RANGE
     - echo $TRAVIS_COMMIT_LOG
