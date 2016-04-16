@@ -488,6 +488,8 @@ UniValue setban(const UniValue& params, bool fHelp)
                             + HelpExampleCli("setban", "\"192.168.0.0/24\" \"add\"")
                             + HelpExampleRpc("setban", "\"192.168.0.6\", \"add\", 86400")
                             );
+    if(!g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     CSubNet subNet;
     CNetAddr netAddr;
@@ -509,7 +511,7 @@ UniValue setban(const UniValue& params, bool fHelp)
 
     if (strCommand == "add")
     {
-        if (isSubnet ? CNode::IsBanned(subNet) : CNode::IsBanned(netAddr))
+        if (isSubnet ? g_connman->IsBanned(subNet) : g_connman->IsBanned(netAddr))
             throw JSONRPCError(RPC_CLIENT_NODE_ALREADY_ADDED, "Error: IP/Subnet already banned");
 
         int64_t banTime = 0; //use standard bantime if not specified
@@ -520,11 +522,11 @@ UniValue setban(const UniValue& params, bool fHelp)
         if (params.size() == 4 && params[3].isTrue())
             absolute = true;
 
-        isSubnet ? CNode::Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : CNode::Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
+        isSubnet ? g_connman->Ban(subNet, BanReasonManuallyAdded, banTime, absolute) : g_connman->Ban(netAddr, BanReasonManuallyAdded, banTime, absolute);
     }
     else if(strCommand == "remove")
     {
-        if (!( isSubnet ? CNode::Unban(subNet) : CNode::Unban(netAddr) ))
+        if (!( isSubnet ? g_connman->Unban(subNet) : g_connman->Unban(netAddr) ))
             throw JSONRPCError(RPC_MISC_ERROR, "Error: Unban failed");
     }
     return NullUniValue;
@@ -541,8 +543,11 @@ UniValue listbanned(const UniValue& params, bool fHelp)
                             + HelpExampleRpc("listbanned", "")
                             );
 
+    if(!g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
     banmap_t banMap;
-    CNode::GetBanned(banMap);
+    g_connman->GetBanned(banMap);
 
     UniValue bannedAddresses(UniValue::VARR);
     for (banmap_t::iterator it = banMap.begin(); it != banMap.end(); it++)
@@ -570,8 +575,10 @@ UniValue clearbanned(const UniValue& params, bool fHelp)
                             + HelpExampleCli("clearbanned", "")
                             + HelpExampleRpc("clearbanned", "")
                             );
+    if(!g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    CNode::ClearBanned();
+    g_connman->ClearBanned();
 
     return NullUniValue;
 }
