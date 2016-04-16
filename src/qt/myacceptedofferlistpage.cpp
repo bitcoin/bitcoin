@@ -92,6 +92,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 	string strMethod = string("offerinfo");
 	UniValue params(UniValue::VARR);
 	UniValue result;
+	QString offerAcceptHash;
 	params.push_back(lookupid.toStdString());
 
     try {
@@ -108,13 +109,21 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 		    for (unsigned int idx = 0; idx < offerAccepts.size(); idx++) {
 			    const UniValue& accept = offerAccepts[idx];				
 				const UniValue& acceptObj = accept.get_obj();
-				QString offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
+				offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
 				if(offerAcceptHash != acceptid)
 					continue;
 				
 				btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());			
 				const string &strPrice = find_value(acceptObj, "total").get_str();
 				price = QString::fromStdString(strPrice);
+			}
+			if(offerAcceptHash != acceptid)
+			{
+				qDebug() << "offerAcceptHash";
+				qDebug() << offerAcceptHash;
+				qDebug() << "acceptid";
+				qDebug() << acceptid;
+				return false;
 			}
 			const string &strAddress = find_value(offerObj, "address").get_str();			
 			address = QString::fromStdString(strAddress);			
