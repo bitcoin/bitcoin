@@ -1,4 +1,4 @@
-/**********************************************************************
+/***********************************************************************
  * Copyright (c) 2016 Andrew Poelstra                                 *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
@@ -187,17 +187,54 @@ void r_from_k(secp256k1_scalar *r, const secp256k1_ge *group, int k) {
     secp256k1_scalar_set_b32(r, x_bin, NULL);
 }
 
-/* hee hee hee */
-int solve_discrete_log(const secp256k1_scalar *x_coord, const secp256k1_ge *group, int order) {
-    int i;
-    for (i = 0; i < order; i++) {
-        secp256k1_scalar check_x;
-        r_from_k(&check_x, group, i);
-        if (*x_coord == check_x) {
-           return i;
+void test_exhaustive_verify(const secp256k1_context *ctx, const secp256k1_ge *group, int order) {
+    int s, r, msg, key;
+    for (s = 1; s < order; s++) {
+        for (r = 1; r < order; r++) {
+            for (msg = 1; msg < order; msg++) {
+                for (key = 1; key < order; key++) {
+                    secp256k1_ge nonconst_ge;
+                    secp256k1_ecdsa_signature sig;
+                    secp256k1_pubkey pk;
+                    secp256k1_scalar sk_s, msg_s, r_s, s_s;
+                    secp256k1_scalar s_times_k_s, msg_plus_r_times_sk_s;
+                    int k, should_verify;
+                    unsigned char msg32[32];
+
+                    secp256k1_scalar_set_int(&s_s, s);
+                    secp256k1_scalar_set_int(&r_s, r);
+                    secp256k1_scalar_set_int(&msg_s, msg);
+                    secp256k1_scalar_set_int(&sk_s, key);
+
+                    /* Verify by hand */
+                    /* Run through every k value that gives us this r and check that *one* works.
+                     * Note there could be none, there could be multiple, ECDSA is weird. */
+                    should_verify = 0;
+                    for (k = 0; k < order; k++) {
+                        secp256k1_scalar check_x_s;
+                        r_from_k(&check_x_s, group, k);
+                        if (r_s == check_x_s) {
+                            secp256k1_scalar_set_int(&s_times_k_s, k);
+                            secp256k1_scalar_mul(&s_times_k_s, &s_times_k_s, &s_s);
+                            secp256k1_scalar_mul(&msg_plus_r_times_sk_s, &r_s, &sk_s);
+                            secp256k1_scalar_add(&msg_plus_r_times_sk_s, &msg_plus_r_times_sk_s, &msg_s);
+                            should_verify |= secp256k1_scalar_eq(&s_times_k_s, &msg_plus_r_times_sk_s);
+                        }
+                    }
+                    /* nb we have a "high s" rule */
+                    should_verify &= !secp256k1_scalar_is_high(&s_s);
+
+                    /* Verify by calling verify */
+                    secp256k1_ecdsa_signature_save(&sig, &r_s, &s_s);
+                    memcpy(&nonconst_ge, &group[sk_s], sizeof(nonconst_ge));
+                    secp256k1_pubkey_save(&pk, &nonconst_ge);
+                    secp256k1_scalar_get_b32(msg32, &msg_s);
+                    CHECK(should_verify ==
+                          secp256k1_ecdsa_verify(ctx, &sig, msg32, &pk));
+                }
+            }
         }
     }
-    return -1;
 }
 
 void test_exhaustive_sign(const secp256k1_context *ctx, const secp256k1_ge *group, int order) {
@@ -279,15 +316,13 @@ int main(void) {
     }
 
     /* Run the tests */
-    test_exhaustive_sign(ctx, group, EXHAUSTIVE_TEST_ORDER);
-    /* cannot exhaustively test verify, since our verify code
-     * depends on the field order being less than twice the
-     * group order */
 #ifdef USE_ENDOMORPHISM
     test_exhaustive_endomorphism(group, EXHAUSTIVE_TEST_ORDER);
 #endif
     test_exhaustive_addition(group, groupj, EXHAUSTIVE_TEST_ORDER);
     test_exhaustive_ecmult(ctx, group, groupj, EXHAUSTIVE_TEST_ORDER);
+    test_exhaustive_sign(ctx, group, EXHAUSTIVE_TEST_ORDER);
+    test_exhaustive_verify(ctx, group, EXHAUSTIVE_TEST_ORDER);
 
     return 0;
 }
