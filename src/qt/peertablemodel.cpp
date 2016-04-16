@@ -54,24 +54,21 @@ public:
     void refreshPeers()
     {
         {
-            TRY_LOCK(cs_vNodes, lockNodes);
-            if (!lockNodes)
-            {
-                // skip the refresh if we can't immediately get the lock
-                return;
-            }
             cachedNodeStats.clear();
+            std::vector<CNodeStats> vstats;
+            if(g_connman)
+                g_connman->GetNodeStats(vstats);
 #if QT_VERSION >= 0x040700
-            cachedNodeStats.reserve(vNodes.size());
+            cachedNodeStats.reserve(vstats.size());
 #endif
-            Q_FOREACH (CNode* pnode, vNodes)
+            Q_FOREACH (const CNodeStats& nodestats, vstats)
             {
                 CNodeCombinedStats stats;
                 stats.nodeStateStats.nMisbehavior = 0;
                 stats.nodeStateStats.nSyncHeight = -1;
                 stats.nodeStateStats.nCommonHeight = -1;
                 stats.fNodeStateStatsAvailable = false;
-                pnode->copyStats(stats.nodeStats);
+                stats.nodeStats = nodestats;
                 cachedNodeStats.append(stats);
             }
         }
