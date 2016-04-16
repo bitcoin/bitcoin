@@ -507,14 +507,15 @@ UniValue signmessage(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() != 2)
+    if (fHelp || params.size() < 2 || params.size() > 3)
         throw runtime_error(
-            "signmessage \"bitcoinaddress\" \"message\"\n"
+            "signmessage \"bitcoinaddress\" \"message\" ( \"privatekey\" )\n"
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
             "1. \"bitcoinaddress\"  (string, required) The bitcoin address to use for the private key.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
+            "3. \"privatekey\"      (string, optional) The base58-encoded private key to use for signing the message.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
             "\nExamples:\n"
@@ -530,7 +531,21 @@ UniValue signmessage(const UniValue& params, bool fHelp)
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    EnsureWalletIsUnlocked();
+    bool fGivenKey = false;
+    CBasicKeyStore tempKeystore;
+
+    if (params.size() > 2) {
+        CBitcoinSecret vchSecret;
+        if (!vchSecret.SetString(params[2].get_str()))
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid private key");
+        CKey key = vchSecret.GetKey();
+        if (!key.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Private key outside allowed range");
+        tempKeystore.AddKey(key);
+        fGivenKey = true;
+    }
+    else
+        EnsureWalletIsUnlocked();
 
     string strAddress = params[0].get_str();
     string strMessage = params[1].get_str();
@@ -543,8 +558,9 @@ UniValue signmessage(const UniValue& params, bool fHelp)
     if (!addr.GetKeyID(keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
 
+    const CKeyStore& keystore = fGivenKey ? tempKeystore : *pwalletMain;
     CKey key;
-    if (!pwalletMain->GetKey(keyID, key))
+    if (!keystore.GetKey(keyID, key))
         throw JSONRPCError(RPC_WALLET_ERROR, "Private key not available");
 
     CHashWriter ss(SER_GETHASH, 0);
