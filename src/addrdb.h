@@ -14,6 +14,7 @@
 
 class CSubNet;
 class CAddrMan;
+class CDataStream;
 
 typedef enum BanReason
 {
