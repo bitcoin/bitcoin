@@ -27,6 +27,7 @@ extern const CRPCTable tableRPC;
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <QDebug>
 MyAcceptedOfferListPage::MyAcceptedOfferListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyAcceptedOfferListPage),
@@ -112,8 +113,9 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 				offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
 				if(offerAcceptHash != acceptid)
 					continue;
-				
-				btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());			
+				qDebug() << "found accept id, btc tx id: ";	
+				btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());		
+				qDebug() << btcTxId;
 				const string &strPrice = find_value(acceptObj, "total").get_str();
 				price = QString::fromStdString(strPrice);
 			}
