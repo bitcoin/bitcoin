@@ -91,9 +91,6 @@ std::vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;
 limitedmap<uint256, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
-static std::deque<std::string> vOneShots;
-CCriticalSection cs_vOneShots;
-
 std::vector<std::string> vAddedNodes;
 CCriticalSection cs_vAddedNodes;
 
@@ -107,7 +104,7 @@ boost::condition_variable messageHandlerCondition;
 static CNodeSignals g_signals;
 CNodeSignals& GetNodeSignals() { return g_signals; }
 
-void AddOneShot(const std::string& strDest)
+void CConnman::AddOneShot(const std::string& strDest)
 {
     LOCK(cs_vOneShots);
     vOneShots.push_back(strDest);

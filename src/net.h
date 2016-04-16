@@ -87,7 +87,6 @@ unsigned int SendBufferSize();
 
 typedef int NodeId;
 
-void AddOneShot(const std::string& strDest);
 CNode* FindNode(const CNetAddr& ip);
 CNode* FindNode(const CSubNet& subNet);
 CNode* FindNode(const std::string& addrName);
@@ -137,6 +136,7 @@ public:
     void GetBanned(banmap_t &banmap);
     void SetBanned(const banmap_t &banmap);
 
+    void AddOneShot(const std::string& strDest);
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -171,6 +171,8 @@ private:
     bool setBannedIsDirty;
     bool fAddressesInitialized;
     CAddrMan addrman;
+    std::deque<std::string> vOneShots;
+    CCriticalSection cs_vOneShots;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void MapPort(bool fUseUPnP);
