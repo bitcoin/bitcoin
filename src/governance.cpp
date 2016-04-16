@@ -550,14 +550,13 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
     fValid = true;
 }
 
-CGovernanceObject::CGovernanceObject(std::string strNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn)
+CGovernanceObject::CGovernanceObject(std::string strNameIn, std::string strURLIn, int64_t nStartTimeIn, 
+    int64_t nEndTimeIn, uint256 nFeeTXHashIn)
 {
     strName = strNameIn;
     strURL = strURLIn;
     nStartTime = nStartTimeIn;
     nEndTime = nEndTimeIn;
-    address = addressIn;
-    nAmount = nAmountIn;
     nFeeTXHash = nFeeTXHashIn;
 }
 

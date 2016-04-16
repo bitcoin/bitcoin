@@ -22,6 +22,11 @@
 
 using namespace std;
 
+/*
+    12.1 - needs to be rewritten
+        - none of this is in the correct context now
+*/
+
 UniValue mnbudget(const UniValue& params, bool fHelp)
 {
     string strCommand;
@@ -30,8 +35,8 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
     if (fHelp  ||
         (strCommand != "vote-many" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" &&
-         strCommand != "vote" && strCommand != "getvotes" && strCommand != "getproposal" && strCommand != "getproposalhash" &&
-         strCommand != "list" && strCommand != "projection" && strCommand != "check" && strCommand != "nextblock" && strCommand != "nextsuperblocksize"))
+         strCommand != "vote" && strCommand != "getvotes" && strCommand != "getproposal" &&
+         strCommand != "list" && strCommand != "projection" && strCommand != "check"))
         throw runtime_error(
                 "mnbudget \"command\"...\n"
                 "Manage proposals\n"
@@ -43,23 +48,11 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
                 "  getproposal        - Show proposal\n"
                 "  getvotes           - Show detailed votes list for proposal\n"
                 "  list               - List all proposals\n"
-                "  nextblock          - Get info about next superblock for budget system\n"
-                "  nextsuperblocksize - Get superblock size for a given blockheight\n"
                 "  projection         - Show the projection of which proposals will be paid the next cycle\n"
                 "  vote               - Vote on a proposal by single masternode (using dash.conf setup)\n"
                 "  vote-many          - Vote on a proposal by all masternodes (using masternode.conf setup)\n"
                 "  vote-alias         - Vote on a proposal by alias\n"
                 );
-
-    if(strCommand == "nextblock")
-    {
-        LOCK(cs_main);
-        CBlockIndex* pindex = chainActive.Tip();
-        if(!pindex) return "unknown";
-
-        int nNext = pindex->nHeight - pindex->nHeight % Params().GetConsensus().nBudgetPaymentsCycleBlocks + Params().GetConsensus().nBudgetPaymentsCycleBlocks;
-        return nNext;
-    }
 
     if(strCommand == "prepare")
     {
@@ -75,7 +68,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         std::string strName = SanitizeString(params[1].get_str());
         std::string strURL = SanitizeString(params[2].get_str());
-        int nPaymentCount = params[3].get_int();
         int nBlockStart = params[4].get_int();
 
         //set block min
@@ -88,35 +80,24 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         if (!address.IsValid())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
 
-        // Parse Dash address
-        CScript scriptPubKey = GetScriptForDestination(address.Get());
-        CAmount nAmount = AmountFromValue(params[6]);
-
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CGovernanceObject budgetProposalBroadcast(strName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, uint256());
+        CGovernanceObject budgetProposalBroadcast(strName, strURL, GetTime(), 253370764800, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
 
-        bool useIX = false; //true;
-        // if (params.size() > 7) {
-        //     if(params[7].get_str() != "false" && params[7].get_str() != "true")
-        //         return "Invalid use_ix, must be true or false";
-        //     useIX = params[7].get_str() == "true" ? true : false;
-        // }
-
         CWalletTx wtx;
-        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), useIX)){
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), false)){
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for proposal. Please check your wallet balance and make sure your wallet is unlocked.");
         }
 
         // make our change address
         CReserveKey reservekey(pwalletMain);
         //send the tx to the network
-        pwalletMain->CommitTransaction(wtx, reservekey, useIX ? NetMsgType::IX : NetMsgType::TX);
+        pwalletMain->CommitTransaction(wtx, reservekey, NetMsgType::TX);
 
         return wtx.GetHash().ToString();
     }
@@ -139,26 +120,14 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         std::string strName = SanitizeString(params[1].get_str());
         std::string strURL = SanitizeString(params[2].get_str());
-        int nPaymentCount = params[3].get_int();
-        int nBlockStart = params[4].get_int();
 
         //set block min
         if(pindex != NULL) nBlockMin = pindex->nHeight;
 
-        if(nBlockStart < nBlockMin)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid payment count, must be more than current height.");
+        // create new governance object
 
-        CBitcoinAddress address(params[5].get_str());
-        if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
-
-        // Parse Dash address
-        CScript scriptPubKey = GetScriptForDestination(address.Get());
-        CAmount nAmount = AmountFromValue(params[6]);
         uint256 hash = ParseHashV(params[7], "Proposal hash");
-
-        //create the proposal incase we're the first to make it
-        CGovernanceObject budgetProposalBroadcast(strName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, hash);
+        CGovernanceObject budgetProposalBroadcast(strName, strURL, GetTime(), 253370764800, uint256());
 
         std::string strError = "";
 
@@ -421,10 +390,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         {
             if(strShow == "valid" && !pbudgetProposal->fValid) continue;
 
-            CTxDestination address1;
-            ExtractDestination(pbudgetProposal->GetPayee(), address1);
-            CBitcoinAddress address2(address1);
-
             UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("Name",  pbudgetProposal->GetName()));
             bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
@@ -436,8 +401,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
             bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
             bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
-            bObj.push_back(Pair("PaymentAddress",   address2.ToString()));
-            bObj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
             bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
 
             std::string strError = "";
@@ -449,38 +412,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         }
 
         return resultObj;
-    }
-
-    if(strCommand == "getproposalhash")
-    {
-        if (params.size() != 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget getproposalhash <proposal-name>'");
-
-        std::string strName = SanitizeString(params[1].get_str());
-
-        CGovernanceObject* pbudgetProposal = governance.FindProposal(strName);
-
-        if(pbudgetProposal == NULL)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
-
-        UniValue resultObj(UniValue::VOBJ);
-
-        std::vector<CGovernanceObject*> winningProps = governance.GetAllProposals();
-        BOOST_FOREACH(CGovernanceObject* pbudgetProposal, winningProps)
-        {
-            if(pbudgetProposal->GetName() != strName) continue;
-            if(!pbudgetProposal->fValid) continue;
-
-            CTxDestination address1;
-            ExtractDestination(pbudgetProposal->GetPayee(), address1);
-            CBitcoinAddress address2(address1);
-
-            resultObj.push_back(Pair(pbudgetProposal->GetHash().ToString(), pbudgetProposal->GetHash().ToString()));
-        }
-
-        if(resultObj.size() > 1) return resultObj;
-
-        return pbudgetProposal->GetHash().ToString();
     }
 
     if(strCommand == "getproposal")
@@ -501,10 +432,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             pindex = chainActive.Tip();
         }
 
-        CTxDestination address1;
-        ExtractDestination(pbudgetProposal->GetPayee(), address1);
-        CBitcoinAddress address2(address1);
-
         LOCK(cs_main);
         UniValue obj(UniValue::VOBJ);
         obj.push_back(Pair("Name",  pbudgetProposal->GetName()));
@@ -513,13 +440,10 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         obj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
         obj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
         obj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
-        obj.push_back(Pair("PaymentAddress",   address2.ToString()));
         obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
         obj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
         obj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
-        obj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
-        obj.push_back(Pair("MonthlyPayment",  ValueFromAmount(pbudgetProposal->GetAmount())));
-        
+        obj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));        
         obj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
 
         std::string strError = "";

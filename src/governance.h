@@ -238,9 +238,6 @@ public:
         return true;
     }
 
-
-    //cache object
-
     CGovernanceObject();
     CGovernanceObject(const CGovernanceObject& other);
     CGovernanceObject(std::string strNameIn, std::string strURLIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
@@ -268,7 +265,7 @@ public:
         ss << strURL;
         ss << nStartTime;
         ss << nEndTime;
-        ss << mapRegister;
+        //ss << mapRegister;
         uint256 h1 = ss.GetHash();
 
         return h1;
@@ -285,7 +282,7 @@ public:
         READWRITE(nTime);
         READWRITE(nStartTime);
         READWRITE(nEndTime);
-        READWRITE(mapRegister);
+        //READWRITE(mapRegister);
         READWRITE(nFeeTXHash);
     }
 };
