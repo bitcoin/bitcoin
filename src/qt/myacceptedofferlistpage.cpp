@@ -111,18 +111,13 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 				QString offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
 				if(offerAcceptHash != acceptid)
 					continue;
-				QString currencyStr = QString::fromStdString(find_value(acceptObj, "currency").get_str());
-				if(currencyStr == "BTC")
-				{
-					btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());
-					
-				}
+				
+				btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());			
 				const string &strPrice = find_value(acceptObj, "total").get_str();
 				price = QString::fromStdString(strPrice);
 			}
 			const string &strAddress = find_value(offerObj, "address").get_str();			
-			address = QString::fromStdString(strAddress);
-			
+			address = QString::fromStdString(strAddress);			
 			return true;
 		}
 	}
