@@ -20,6 +20,7 @@
 #include "timedata.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "primitives/block.h"
 
 #include <stdint.h>
 
@@ -624,7 +625,7 @@ static UniValue HardForkMajorityDesc(int minVersion, CBlockIndex* pindex, int nR
     } else {
         for (int i = 0; i < consensusParams.nMajorityWindow && pstart != NULL; i++)
         {
-            if (pstart->nVersion >= minVersion)
+            if ((pstart->nVersion & minVersion) == minVersion)
                 ++nFound;
             pstart = pstart->pprev;
         }
@@ -720,9 +721,12 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
     softforks.push_back(SoftForkDesc("bip65", 4, tip, consensusParams));
     obj.push_back(Pair("softforks",             softforks));
 
-    UniValue hardforks(UniValue::VARR);
-    hardforks.push_back(HardForkDesc("bip109", 0x01000000, tip, consensusParams));
-    obj.push_back(Pair("hardforks", hardforks));
+    if (tip->nTime <= consensusParams.SizeForkExpiration())
+    {
+        UniValue hardforks(UniValue::VARR);
+        hardforks.push_back(HardForkDesc("bip109", BASE_VERSION + FORK_BIT_2MB, tip, consensusParams));
+        obj.push_back(Pair("hardforks", hardforks));
+    }
 
     if (fPruneMode)
     {
