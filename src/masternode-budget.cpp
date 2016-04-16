@@ -35,7 +35,7 @@ struct sortFinalizedBudgetsByVotes {
 // Sort by votes, if there's a tie sort by their feeHash TX
 //
 struct sortProposalsByVotes {
-    bool operator()(const std::pair<CBudgetProposal*, int> &left, const std::pair<CBudgetProposal*, int> &right) {
+    bool operator()(const std::pair<CGovernanceObject*, int> &left, const std::pair<CGovernanceObject*, int> &right) {
       if( left.second != right.second)
         return (left.second > right.second);
       return (UintToArith256(left.first->nFeeTXHash) > UintToArith256(right.first->nFeeTXHash));
@@ -700,7 +700,7 @@ void CFinalizedBudget::AutoCheck()
 
     if(strBudgetMode == "auto") //only vote for exact matches
     {
-        std::vector<CBudgetProposal*> vBudgetProposals = budget.GetBudget();
+        std::vector<CGovernanceObject*> vBudgetProposals = budget.GetBudget();
 
 
         for(unsigned int i = 0; i < vecBudgetPayments.size(); i++){
@@ -783,7 +783,7 @@ std::string CFinalizedBudget::GetProposals()
     std::string ret = "";
 
     BOOST_FOREACH(CTxBudgetPayment& budgetPayment, vecBudgetPayments){
-        CBudgetProposal* pbudgetProposal = governance.FindProposal(budgetPayment.nProposalHash);
+        CGovernanceObject* pbudgetProposal = governance.FindProposal(budgetPayment.nProposalHash);
 
         std::string token = budgetPayment.nProposalHash.ToString();
 
@@ -807,7 +807,7 @@ std::string CFinalizedBudget::GetStatus()
             continue;
         }
 
-        CBudgetProposal* pbudgetProposal =  governance.FindProposal(budgetPayment.nProposalHash);
+        CGovernanceObject* pbudgetProposal =  governance.FindProposal(budgetPayment.nProposalHash);
         if(!pbudgetProposal){
             if(retBadHashes == ""){
                 retBadHashes = "Unknown proposal hash! Check this proposal before voting" + budgetPayment.nProposalHash.ToString();

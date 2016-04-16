@@ -8,7 +8,7 @@
 	has:
 		vector<CNetworkVariable> vecNetworkVariables;
 		vector<CDashProject> vecProjects;
-		vector<CBudgetProposal> vecProposals;
+		vector<CGovernanceObject> vecProposals;
 		vector<CBudgetContract> vecContracts;
 		vector<CBudgetUsers> vecUsers;
 

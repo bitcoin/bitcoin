@@ -95,7 +95,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CBudgetProposal budgetProposalBroadcast(strName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, uint256());
+        CGovernanceObject budgetProposalBroadcast(strName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
@@ -158,7 +158,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         uint256 hash = ParseHashV(params[7], "Proposal hash");
 
         //create the proposal incase we're the first to make it
-        CBudgetProposal budgetProposalBroadcast(strName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, hash);
+        CGovernanceObject budgetProposalBroadcast(strName, strURL, nPaymentCount, scriptPubKey, nAmount, GetTime(), 253370764800, hash);
 
         std::string strError = "";
 
@@ -416,8 +416,8 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             pindex = chainActive.Tip();
         }
 
-        std::vector<CBudgetProposal*> winningProps = governance.GetAllProposals();
-        BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
+        std::vector<CGovernanceObject*> winningProps = governance.GetAllProposals();
+        BOOST_FOREACH(CGovernanceObject* pbudgetProposal, winningProps)
         {
             if(strShow == "valid" && !pbudgetProposal->fValid) continue;
 
@@ -458,15 +458,15 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         std::string strName = SanitizeString(params[1].get_str());
 
-        CBudgetProposal* pbudgetProposal = governance.FindProposal(strName);
+        CGovernanceObject* pbudgetProposal = governance.FindProposal(strName);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
 
         UniValue resultObj(UniValue::VOBJ);
 
-        std::vector<CBudgetProposal*> winningProps = governance.GetAllProposals();
-        BOOST_FOREACH(CBudgetProposal* pbudgetProposal, winningProps)
+        std::vector<CGovernanceObject*> winningProps = governance.GetAllProposals();
+        BOOST_FOREACH(CGovernanceObject* pbudgetProposal, winningProps)
         {
             if(pbudgetProposal->GetName() != strName) continue;
             if(!pbudgetProposal->fValid) continue;
@@ -490,7 +490,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         uint256 hash = ParseHashV(params[1], "Proposal hash");
 
-        CBudgetProposal* pbudgetProposal = governance.FindProposal(hash);
+        CGovernanceObject* pbudgetProposal = governance.FindProposal(hash);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
@@ -538,7 +538,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
         UniValue obj(UniValue::VOBJ);
 
-        CBudgetProposal* pbudgetProposal = governance.FindProposal(hash);
+        CGovernanceObject* pbudgetProposal = governance.FindProposal(hash);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
