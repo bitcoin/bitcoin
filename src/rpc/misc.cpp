@@ -89,7 +89,8 @@ UniValue getinfo(const UniValue& params, bool fHelp)
 #endif
     obj.push_back(Pair("blocks",        (int)chainActive.Height()));
     obj.push_back(Pair("timeoffset",    GetTimeOffset()));
-    obj.push_back(Pair("connections",   (int)vNodes.size()));
+    if(g_connman)
+        obj.push_back(Pair("connections",   (int)g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL)));
     obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.proxy.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       Params().TestnetToBeDeprecatedFieldRPC()));
