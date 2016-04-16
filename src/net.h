@@ -95,12 +95,7 @@ struct AddedNodeInfo
     bool fInbound;
 };
 
-CNode* FindNode(const CNetAddr& ip);
-CNode* FindNode(const CSubNet& subNet);
-CNode* FindNode(const std::string& addrName);
-CNode* FindNode(const CService& ip);
-CNode* FindNode(const NodeId id); //TODO: Remove this
-
+class CTransaction;
 class CNodeStats;
 class CConnman
 {
@@ -119,6 +114,14 @@ public:
     void Stop();
     bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
     bool OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = NULL, const char *strDest = NULL, bool fOneShot = false, bool fFeeler = false);
+
+    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
+    bool ForEachNode(std::function<bool(CNode* pnode)> func);
+    bool ForEachNode(std::function<bool(const CNode* pnode)> func) const;
+    bool ForEachNodeThen(std::function<bool(CNode* pnode)> pre, std::function<void()> post);
+    bool ForEachNodeThen(std::function<bool(const CNode* pnode)> pre, std::function<void()> post) const;
+
+    void RelayTransaction(const CTransaction& tx);
 
     // Addrman functions
     size_t GetAddressCount() const;
@@ -182,6 +185,12 @@ private:
     void ThreadSocketHandler();
     void ThreadDNSAddressSeed();
 
+    CNode* FindNode(const CNetAddr& ip);
+    CNode* FindNode(const CSubNet& subNet);
+    CNode* FindNode(const std::string& addrName);
+    CNode* FindNode(const CService& addr);
+
+    bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure);
     void DeleteNode(CNode* pnode);
     //!check is the banlist has unwritten changes
@@ -204,6 +213,8 @@ private:
     CCriticalSection cs_vOneShots;
     std::vector<std::string> vAddedNodes;
     CCriticalSection cs_vAddedNodes;
+    std::vector<CNode*> vNodes;
+    mutable CCriticalSection cs_vNodes;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void MapPort(bool fUseUPnP);
@@ -279,8 +290,6 @@ extern uint64_t nLocalHostNonce;
 /** Maximum number of connections to simultaneously allow (aka connection slots) */
 extern int nMaxConnections;
 
-extern std::vector<CNode*> vNodes;
-extern CCriticalSection cs_vNodes;
 extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 
 extern NodeId nLastNodeId;
@@ -828,8 +837,6 @@ public:
 
 
 
-class CTransaction;
-void RelayTransaction(const CTransaction& tx);
 
 
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */

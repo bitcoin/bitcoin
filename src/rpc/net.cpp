@@ -55,13 +55,14 @@ UniValue ping(const UniValue& params, bool fHelp)
             + HelpExampleRpc("ping", "")
         );
 
+    if(!g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
     // Request that each node send a ping during next message processing pass
-    LOCK2(cs_main, cs_vNodes);
-
-    BOOST_FOREACH(CNode* pNode, vNodes) {
-        pNode->fPingQueued = true;
-    }
-
+    g_connman->ForEachNode([](CNode* pnode) {
+        pnode->fPingQueued = true;
+        return true;
+    });
     return NullUniValue;
 }
 
