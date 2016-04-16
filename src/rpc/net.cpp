@@ -214,12 +214,15 @@ UniValue addnode(const UniValue& params, bool fHelp)
             + HelpExampleRpc("addnode", "\"192.168.0.6:8333\", \"onetry\"")
         );
 
+    if(!g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+
     string strNode = params[0].get_str();
 
     if (strCommand == "onetry")
     {
         CAddress addr;
-        OpenNetworkConnection(addr, false, NULL, strNode.c_str());
+        g_connman->OpenNetworkConnection(addr, false, NULL, strNode.c_str());
         return NullUniValue;
     }
 
