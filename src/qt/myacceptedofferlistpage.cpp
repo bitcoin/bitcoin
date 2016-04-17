@@ -118,6 +118,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 				qDebug() << btcTxId;
 				const string &strPrice = find_value(acceptObj, "total").get_str();
 				price = QString::fromStdString(strPrice);
+				break;
 			}
 			if(offerAcceptHash != acceptid)
 			{
