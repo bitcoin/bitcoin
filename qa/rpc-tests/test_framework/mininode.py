@@ -38,6 +38,11 @@ MY_SUBVERSION = "/python-mininode-tester:0.0.1/"
 MAX_INV_SZ = 50000
 MAX_BLOCK_SIZE = 1000000
 
+NODE_NETWORK = (1 << 0)
+NODE_GETUTXO = (1 << 1)
+NODE_BLOOM = (1 << 2)
+NODE_WITNESS = (1 << 3)
+
 # Keep our own socket map for asyncore, so that we can track disconnects
 # ourselves (to workaround an issue with closing an asyncore socket when 
 # using select)
@@ -127,7 +132,10 @@ def deser_vector(f, c):
     return r
 
 
-def ser_vector(l):
+# ser_function_name: Allow for an alternate serialization function on the
+# entries in the vector (we use this for serializing the vector of transactions
+# for a witness block).
+def ser_vector(l, ser_function_name=None):
     r = ""
     if len(l) < 253:
         r = chr(len(l))
@@ -138,7 +146,10 @@ def ser_vector(l):
     else:
         r = chr(255) + struct.pack("<Q", len(l))
     for i in l:
-        r += i.serialize()
+        if ser_function_name:
+            r += getattr(i, ser_function_name)()
+        else:
+            r += i.serialize()
     return r
 
 
@@ -267,12 +278,16 @@ class CAddress(object):
         return "CAddress(nServices=%i ip=%s port=%i)" % (self.nServices,
                                                          self.ip, self.port)
 
+MSG_WITNESS_FLAG = 1<<30
 
 class CInv(object):
     typemap = {
         0: "Error",
         1: "TX",
-        2: "Block"}
+        2: "Block",
+        1|MSG_WITNESS_FLAG: "WitnessTx",
+        2|MSG_WITNESS_FLAG : "WitnessBlock"
+    }
 
     def __init__(self, t=0, h=0L):
         self.type = t
@@ -381,12 +396,73 @@ class CTxOut(object):
                binascii.hexlify(self.scriptPubKey))
 
 
+class CScriptWitness(object):
+    def __init__(self):
+        # stack is a vector of strings
+        self.stack = []
+
+    def __repr__(self):
+        return "CScriptWitness(%s)" % \
+               (",".join([binascii.hexlify(x) for x in self.stack]))
+
+    def is_null(self):
+        if self.stack:
+            return False
+        return True
+
+
+class CTxinWitness(object):
+    def __init__(self):
+        self.scriptWitness = CScriptWitness()
+
+    def deserialize(self, f):
+        self.scriptWitness.stack = deser_string_vector(f)
+
+    def serialize(self):
+        return ser_string_vector(self.scriptWitness.stack)
+
+    def __repr__(self):
+        return repr(self.scriptWitness)
+
+    def is_null(self):
+        return self.scriptWitness.is_null()
+
+
+class CTxWitness(object):
+    def __init__(self):
+        self.vtxinwit = []
+
+    def deserialize(self, f):
+        for i in xrange(len(self.vtxinwit)):
+            self.vtxinwit[i].deserialize(f)
+
+    def serialize(self):
+        r = ""
+        # This is different than the usual vector serialization --
+        # we omit the length of the vector, which is required to be
+        # the same length as the transaction's vin vector.
+        for x in self.vtxinwit:
+            r += x.serialize()
+        return r
+
+    def __repr__(self):
+        return "CTxWitness(%s)" % \
+               (';'.join([repr(x) for x in self.vtxinwit]))
+
+    def is_null(self):
+        for x in self.vtxinwit:
+            if not x.is_null():
+                return False
+        return True
+
+
 class CTransaction(object):
     def __init__(self, tx=None):
         if tx is None:
             self.nVersion = 1
             self.vin = []
             self.vout = []
+            self.wit = CTxWitness()
             self.nLockTime = 0
             self.sha256 = None
             self.hash = None
@@ -395,18 +471,31 @@ class CTransaction(object):
             self.vin = copy.deepcopy(tx.vin)
             self.vout = copy.deepcopy(tx.vout)
             self.nLockTime = tx.nLockTime
-            self.sha256 = None
-            self.hash = None
+            self.sha256 = tx.sha256
+            self.hash = tx.hash
+            self.wit = copy.deepcopy(tx.wit)
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
         self.vin = deser_vector(f, CTxIn)
-        self.vout = deser_vector(f, CTxOut)
+        flags = 0
+        if len(self.vin) == 0:
+            flags = struct.unpack("<B", f.read(1))[0]
+            # Not sure why flags can't be zero, but this
+            # matches the implementation in bitcoind
+            if (flags != 0):
+                self.vin = deser_vector(f, CTxIn)
+                self.vout = deser_vector(f, CTxOut)
+        else:
+            self.vout = deser_vector(f, CTxOut)
+        if flags != 0:
+            self.wit.vtxinwit = [CTxinWitness()]*len(self.vin)
+            self.wit.deserialize(f)
         self.nLockTime = struct.unpack("<I", f.read(4))[0]
         self.sha256 = None
         self.hash = None
 
-    def serialize(self):
+    def serialize_without_witness(self):
         r = ""
         r += struct.pack("<i", self.nVersion)
         r += ser_vector(self.vin)
@@ -414,14 +503,50 @@ class CTransaction(object):
         r += struct.pack("<I", self.nLockTime)
         return r
 
+    # Only serialize with witness when explicitly called for
+    def serialize_with_witness(self):
+        flags = 0
+        if not self.wit.is_null():
+            flags |= 1
+        r = ""
+        r += struct.pack("<i", self.nVersion)
+        if flags:
+            dummy = []
+            r += ser_vector(dummy)
+            r += struct.pack("<B", flags)
+        r += ser_vector(self.vin)
+        r += ser_vector(self.vout)
+        if flags & 1:
+            if (len(self.wit.vtxinwit) != len(self.vin)):
+                # vtxinwit must have the same length as vin
+                self.wit.vtxinwit = self.wit.vtxinwit[:len(self.vin)]
+                for i in xrange(len(self.wit.vtxinwit), len(self.vin)):
+                    self.wit.vtxinwit.append(CTxinWitness())
+            r += self.wit.serialize()
+        r += struct.pack("<I", self.nLockTime)
+        return r
+
+    # Regular serialization is without witness -- must explicitly
+    # call serialize_with_witness to include witness data.
+    def serialize(self):
+        return self.serialize_without_witness()
+
+    # Recalculate the txid (transaction hash without witness)
     def rehash(self):
         self.sha256 = None
         self.calc_sha256()
 
-    def calc_sha256(self):
+    # We will only cache the serialization without witness in
+    # self.sha256 and self.hash -- those are expected to be the txid.
+    def calc_sha256(self, with_witness=False):
+        if with_witness:
+            # Don't cache the result, just return it
+            return uint256_from_str(hash256(self.serialize_with_witness()))
+
         if self.sha256 is None:
-            self.sha256 = uint256_from_str(hash256(self.serialize()))
+            self.sha256 = uint256_from_str(hash256(self.serialize_without_witness()))
         self.hash = hash256(self.serialize())[::-1].encode('hex_codec')
+        return self.sha256
 
     def is_valid(self):
         self.calc_sha256()
@@ -512,17 +637,17 @@ class CBlock(CBlockHeader):
         super(CBlock, self).deserialize(f)
         self.vtx = deser_vector(f, CTransaction)
 
-    def serialize(self):
+    def serialize(self, with_witness=False):
         r = ""
         r += super(CBlock, self).serialize()
-        r += ser_vector(self.vtx)
+        if with_witness:
+            r += ser_vector(self.vtx, "serialize_with_witness")
+        else:
+            r += ser_vector(self.vtx)
         return r
 
-    def calc_merkle_root(self):
-        hashes = []
-        for tx in self.vtx:
-            tx.calc_sha256()
-            hashes.append(ser_uint256(tx.sha256))
+    # Calculate the merkle root given a vector of transaction hashes
+    def get_merkle_root(self, hashes):
         while len(hashes) > 1:
             newhashes = []
             for i in xrange(0, len(hashes), 2):
@@ -530,6 +655,24 @@ class CBlock(CBlockHeader):
                 newhashes.append(hash256(hashes[i] + hashes[i2]))
             hashes = newhashes
         return uint256_from_str(hashes[0])
+
+    def calc_merkle_root(self):
+        hashes = []
+        for tx in self.vtx:
+            tx.calc_sha256()
+            hashes.append(ser_uint256(tx.sha256))
+        return self.get_merkle_root(hashes)
+
+    def calc_witness_merkle_root(self):
+        # For witness root purposes, the hash of the
+        # coinbase, with witness, is defined to be 0...0
+        hashes = [ser_uint256(0)]
+
+        for tx in self.vtx[1:]:
+            # Calculate the hashes with witness data
+            hashes.append(ser_uint256(tx.calc_sha256(True)))
+
+        return self.get_merkle_root(hashes)
 
     def is_valid(self):
         self.calc_sha256()
@@ -806,10 +949,15 @@ class msg_tx(object):
         self.tx.deserialize(f)
 
     def serialize(self):
-        return self.tx.serialize()
+        return self.tx.serialize_without_witness()
 
     def __repr__(self):
         return "msg_tx(tx=%s)" % (repr(self.tx))
+
+class msg_witness_tx(msg_tx):
+
+    def serialize(self):
+        return self.tx.serialize_with_witness()
 
 
 class msg_block(object):
@@ -829,6 +977,12 @@ class msg_block(object):
 
     def __repr__(self):
         return "msg_block(block=%s)" % (repr(self.block))
+
+class msg_witness_block(msg_block):
+
+    def serialize(self):
+        r = self.block.serialize(with_witness=True)
+        return r
 
 
 class msg_getaddr(object):
@@ -929,6 +1083,7 @@ class msg_sendheaders(object):
     def __repr__(self):
         return "msg_sendheaders()"
 
+
 # getheaders message has
 # number of entries
 # vector of hashes
@@ -1016,6 +1171,8 @@ class NodeConnCB(object):
         # tests; it causes message delivery to sleep for the specified time
         # before acquiring the global lock and delivering the next message.
         self.deliver_sleep_time = None
+        # Remember the services our peer has advertised
+        self.peer_services = None
 
     def set_deliver_sleep_time(self, value):
         with mininode_lock:
@@ -1053,6 +1210,7 @@ class NodeConnCB(object):
         conn.ver_send = min(MY_VERSION, message.nVersion)
         if message.nVersion < 209:
             conn.ver_recv = conn.ver_send
+        conn.nServices = message.nServices
 
     def on_verack(self, conn, message):
         conn.ver_recv = conn.ver_send
@@ -1082,6 +1240,7 @@ class NodeConnCB(object):
     def on_close(self, conn): pass
     def on_mempool(self, conn): pass
     def on_pong(self, conn, message): pass
+    def on_sendheaders(self, conn, message): pass
 
 
 # The actual NodeConn class
@@ -1103,15 +1262,17 @@ class NodeConn(asyncore.dispatcher):
         "headers": msg_headers,
         "getheaders": msg_getheaders,
         "reject": msg_reject,
-        "mempool": msg_mempool
+        "mempool": msg_mempool,
+        "sendheaders": msg_sendheaders,
     }
     MAGIC_BYTES = {
         "mainnet": "\xf9\xbe\xb4\xd9",   # mainnet
         "testnet3": "\x0b\x11\x09\x07",  # testnet3
-        "regtest": "\xfa\xbf\xb5\xda"    # regtest
+        "regtest": "\xfa\xbf\xb5\xda",   # regtest
+        "segnet": "\x2e\x96\xea\xca"     # segnet
     }
 
-    def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=1):
+    def __init__(self, dstaddr, dstport, rpc, callback, net="regtest", services=NODE_NETWORK):
         asyncore.dispatcher.__init__(self, map=mininode_socket_map)
         self.log = logging.getLogger("NodeConn(%s:%d)" % (dstaddr, dstport))
         self.dstaddr = dstaddr
@@ -1126,6 +1287,7 @@ class NodeConn(asyncore.dispatcher):
         self.network = net
         self.cb = callback
         self.disconnect = False
+        self.nServices = 0
 
         # stuff version msg into sendbuf
         vt = msg_version()

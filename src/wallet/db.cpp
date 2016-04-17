@@ -224,7 +224,7 @@ void CDBEnv::CheckpointLSN(const std::string& strFile)
 }
 
 
-CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnCloseIn) : pdb(NULL), activeTxn(NULL)
+CDB::CDB(const std::string& strFilename, const char* pszMode, bool fFlushOnCloseIn, int nSerVersionIn) : pdb(NULL), activeTxn(NULL), nSerVersion(nSerVersionIn)
 {
     int ret;
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));

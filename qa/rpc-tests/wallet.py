@@ -256,6 +256,7 @@ class WalletTest (BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_all()
         balance_nodes = [self.nodes[i].getbalance() for i in range(3)]
+        block_count = self.nodes[0].getblockcount()
 
         maintenance = [
             '-rescan',
@@ -268,10 +269,9 @@ class WalletTest (BitcoinTestFramework):
             stop_nodes(self.nodes)
             wait_bitcoinds()
             self.nodes = start_nodes(3, self.options.tmpdir, [[m]] * 3)
-            connect_nodes_bi(self.nodes,0,1)
-            connect_nodes_bi(self.nodes,1,2)
-            connect_nodes_bi(self.nodes,0,2)
-            self.sync_all()
+            while m == '-reindex' and [block_count] * 3 != [self.nodes[i].getblockcount() for i in range(3)]:
+                # reindex will leave rpc warm up "early"; Wait for it to finish
+                time.sleep(0.1)
             assert_equal(balance_nodes, [self.nodes[i].getbalance() for i in range(3)])
 
 

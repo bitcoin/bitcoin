@@ -69,12 +69,15 @@ namespace {
     };
 }
 
+/** Services this node implementation cares about */
+static const uint64_t nRelevantServices = NODE_NETWORK | NODE_WITNESS;
+
 //
 // Global state variables
 //
 bool fDiscover = true;
 bool fListen = true;
-uint64_t nLocalServices = NODE_NETWORK;
+uint64_t nLocalServices = NODE_NETWORK | NODE_WITNESS;
 CCriticalSection cs_mapLocalHost;
 map<CNetAddr, LocalServiceInfo> mapLocalHost;
 static bool vfReachable[NET_MAX] = {};
@@ -89,10 +92,10 @@ std::string strSubVersion;
 
 vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;
-map<CInv, CDataStream> mapRelay;
-deque<pair<int64_t, CInv> > vRelayExpiration;
+map<uint256, CTransaction> mapRelay;
+deque<pair<int64_t, uint256> > vRelayExpiration;
 CCriticalSection cs_mapRelay;
-limitedmap<CInv, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
+limitedmap<uint256, int64_t> mapAlreadyAskedFor(MAX_INV_SZ);
 
 static deque<string> vOneShots;
 CCriticalSection cs_vOneShots;
@@ -422,6 +425,7 @@ CNode* ConnectNode(CAddress addrConnect, const char *pszDest)
             vNodes.push_back(pnode);
         }
 
+        pnode->nServicesExpected = addrConnect.nServices & nRelevantServices;
         pnode->nTimeConnected = GetTime();
 
         return pnode;
@@ -1589,8 +1593,16 @@ void ThreadOpenConnections()
             if (IsLimited(addr))
                 continue;
 
+            // only connect to full nodes
+            if (!(addr.nServices & NODE_NETWORK))
+                continue;
+
             // only consider very recently tried nodes after 30 failed attempts
             if (nANow - addr.nLastTry < 600 && nTries < 30)
+                continue;
+
+            // only consider non-witness nodes after 40 failed attemps
+            if (!(addr.nServices & NODE_WITNESS) && nTries < 40)
                 continue;
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
@@ -2050,14 +2062,6 @@ instance_of_cnetcleanup;
 
 void RelayTransaction(const CTransaction& tx)
 {
-    CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss.reserve(10000);
-    ss << tx;
-    RelayTransaction(tx, ss);
-}
-
-void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
-{
     CInv inv(MSG_TX, tx.GetHash());
     {
         LOCK(cs_mapRelay);
@@ -2068,9 +2072,8 @@ void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
             vRelayExpiration.pop_front();
         }
 
-        // Save original serialized message so newer versions are preserved
-        mapRelay.insert(std::make_pair(inv, ss));
-        vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv));
+        mapRelay.insert(std::make_pair(inv.hash, tx));
+        vRelayExpiration.push_back(std::make_pair(GetTime() + 15 * 60, inv.hash));
     }
     LOCK(cs_vNodes);
     BOOST_FOREACH(CNode* pnode, vNodes)
@@ -2113,7 +2116,7 @@ void CNode::RecordBytesSent(uint64_t bytes)
 void CNode::SetMaxOutboundTarget(uint64_t limit)
 {
     LOCK(cs_totalBytesSent);
-    uint64_t recommendedMinimum = (nMaxOutboundTimeframe / 600) * MAX_BLOCK_SIZE;
+    uint64_t recommendedMinimum = (nMaxOutboundTimeframe / 600) * MAX_BLOCK_SERIALIZED_SIZE;
     nMaxOutboundLimit = limit;
 
     if (limit > 0 && limit < recommendedMinimum)
@@ -2168,7 +2171,7 @@ bool CNode::OutboundTargetReached(bool historicalBlockServingLimit)
     {
         // keep a large enought buffer to at least relay each block once
         uint64_t timeLeftInCycle = GetMaxOutboundTimeLeftInCycle();
-        uint64_t buffer = timeLeftInCycle / 600 * MAX_BLOCK_SIZE;
+        uint64_t buffer = timeLeftInCycle / 600 * MAX_BLOCK_SERIALIZED_SIZE;
         if (buffer >= nMaxOutboundLimit || nMaxOutboundTotalBytesSentInCycle >= nMaxOutboundLimit - buffer)
             return true;
     }
@@ -2344,6 +2347,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     filterInventoryKnown(50000, 0.000001)
 {
     nServices = 0;
+    nServicesExpected = 0;
     hSocket = hSocketIn;
     nRecvVersion = INIT_PROTO_VERSION;
     nLastSend = 0;
@@ -2419,7 +2423,7 @@ void CNode::AskFor(const CInv& inv)
     // We're using mapAskFor as a priority queue,
     // the key is the earliest time the request can be sent
     int64_t nRequestTime;
-    limitedmap<CInv, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv);
+    limitedmap<uint256, int64_t>::const_iterator it = mapAlreadyAskedFor.find(inv.hash);
     if (it != mapAlreadyAskedFor.end())
         nRequestTime = it->second;
     else
@@ -2438,7 +2442,7 @@ void CNode::AskFor(const CInv& inv)
     if (it != mapAlreadyAskedFor.end())
         mapAlreadyAskedFor.update(it, nRequestTime);
     else
-        mapAlreadyAskedFor.insert(std::make_pair(inv, nRequestTime));
+        mapAlreadyAskedFor.insert(std::make_pair(inv.hash, nRequestTime));
     mapAskFor.insert(std::make_pair(nRequestTime, inv));
 }
 

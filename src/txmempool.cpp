@@ -9,6 +9,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "main.h"
+#include "policy/policy.h"
 #include "policy/fees.h"
 #include "streams.h"
 #include "timedata.h"
@@ -22,12 +23,12 @@ using namespace std;
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransaction& _tx, const CAmount& _nFee,
                                  int64_t _nTime, double _entryPriority, unsigned int _entryHeight,
                                  bool poolHasNoInputsOf, CAmount _inChainInputValue,
-                                 bool _spendsCoinbase, unsigned int _sigOps, LockPoints lp):
+                                 bool _spendsCoinbase, unsigned int _sigOpsCost, LockPoints lp):
     tx(_tx), nFee(_nFee), nTime(_nTime), entryPriority(_entryPriority), entryHeight(_entryHeight),
     hadNoDependencies(poolHasNoInputsOf), inChainInputValue(_inChainInputValue),
-    spendsCoinbase(_spendsCoinbase), sigOpCount(_sigOps), lockPoints(lp)
+    spendsCoinbase(_spendsCoinbase), sigOpCost(_sigOpsCost), lockPoints(lp)
 {
-    nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
+    nTxSize = GetVirtualTransactionSize(tx);
     nModSize = tx.CalculateModifiedSize(nTxSize);
     nUsageSize = RecursiveDynamicUsage(tx);
 

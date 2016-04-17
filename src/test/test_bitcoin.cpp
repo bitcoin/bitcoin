@@ -126,7 +126,7 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
         block.vtx.push_back(tx);
     // IncrementExtraNonce creates a valid coinbase and merkleRoot
     unsigned int extraNonce = 0;
-    IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
+    IncrementExtraNonce(&block, chainActive.Tip(), extraNonce, pblocktemplate->vchCoinbaseCommitment);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
@@ -150,7 +150,7 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(CMutableTransaction &tx, CTxMemPo
     CAmount inChainValue = hasNoDependencies ? txn.GetValueOut() : 0;
 
     return CTxMemPoolEntry(txn, nFee, nTime, dPriority, nHeight,
-                           hasNoDependencies, inChainValue, spendsCoinbase, sigOpCount, lp);
+                           hasNoDependencies, inChainValue, spendsCoinbase, sigOpCost, lp);
 }
 
 void Shutdown(void* parg)

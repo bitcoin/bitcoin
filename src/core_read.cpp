@@ -96,7 +96,7 @@ bool DecodeHexTx(CTransaction& tx, const std::string& strHexTx)
         return false;
 
     vector<unsigned char> txData(ParseHex(strHexTx));
-    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_WITNESS);
     try {
         ssData >> tx;
     }
@@ -113,7 +113,7 @@ bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
         return false;
 
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_WITNESS);
     try {
         ssBlock >> block;
     }

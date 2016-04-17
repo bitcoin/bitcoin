@@ -7,6 +7,7 @@
 #define BITCOIN_WALLET_WALLETDB_H
 
 #include "amount.h"
+#include "primitives/transaction.h"
 #include "wallet/db.h"
 #include "key.h"
 
@@ -77,7 +78,7 @@ public:
 class CWalletDB : public CDB
 {
 public:
-    CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CDB(strFilename, pszMode, fFlushOnClose)
+    CWalletDB(const std::string& strFilename, const char* pszMode = "r+", bool fFlushOnClose = true) : CDB(strFilename, pszMode, fFlushOnClose, CLIENT_VERSION | SERIALIZE_TRANSACTION_WITNESS)
     {
     }
 

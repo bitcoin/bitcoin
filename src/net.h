@@ -43,8 +43,8 @@ static const int TIMEOUT_INTERVAL = 20 * 60;
 static const unsigned int MAX_INV_SZ = 50000;
 /** The maximum number of new addresses to accumulate before announcing. */
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
-/** Maximum length of incoming protocol messages (no message over 2 MiB is currently acceptable). */
-static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 2 * 1024 * 1024;
+/** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
+static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 /** Maximum length of strSubVer in `version` message */
 static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 /** -listen default */
@@ -161,10 +161,10 @@ extern int nMaxConnections;
 
 extern std::vector<CNode*> vNodes;
 extern CCriticalSection cs_vNodes;
-extern std::map<CInv, CDataStream> mapRelay;
-extern std::deque<std::pair<int64_t, CInv> > vRelayExpiration;
+extern std::map<uint256, CTransaction> mapRelay;
+extern std::deque<std::pair<int64_t, uint256> > vRelayExpiration;
 extern CCriticalSection cs_mapRelay;
-extern limitedmap<CInv, int64_t> mapAlreadyAskedFor;
+extern limitedmap<uint256, int64_t> mapAlreadyAskedFor;
 
 extern std::vector<std::string> vAddedNodes;
 extern CCriticalSection cs_vAddedNodes;
@@ -316,6 +316,7 @@ class CNode
 public:
     // socket
     uint64_t nServices;
+    uint64_t nServicesExpected;
     SOCKET hSocket;
     CDataStream ssSend;
     size_t nSendSize; // total size of all vSendMsg entries
@@ -507,7 +508,7 @@ public:
     {
         {
             LOCK(cs_inventory);
-            if (inv.type == MSG_TX && filterInventoryKnown.contains(inv.hash))
+            if ((inv.type == MSG_TX || inv.type == MSG_WITNESS_TX) && filterInventoryKnown.contains(inv.hash))
                 return;
             vInventoryToSend.push_back(inv);
         }
@@ -554,6 +555,23 @@ public:
         {
             BeginMessage(pszCommand);
             ssSend << a1;
+            EndMessage();
+        }
+        catch (...)
+        {
+            AbortMessage();
+            throw;
+        }
+    }
+
+    /** Send a message containing a1, serialized with flag flag. */
+    template<typename T1>
+    void PushMessageWithFlag(int flag, const char* pszCommand, const T1& a1)
+    {
+        try
+        {
+            BeginMessage(pszCommand);
+            WithOrVersion(&ssSend, flag) << a1;
             EndMessage();
         }
         catch (...)
@@ -762,7 +780,6 @@ public:
 
 class CTransaction;
 void RelayTransaction(const CTransaction& tx);
-void RelayTransaction(const CTransaction& tx, const CDataStream& ss);
 
 /** Access to the (IP) address database (peers.dat) */
 class CAddrDB
