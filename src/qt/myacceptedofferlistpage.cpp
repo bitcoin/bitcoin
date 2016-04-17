@@ -27,7 +27,6 @@ extern const CRPCTable tableRPC;
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
-#include <QDebug>
 MyAcceptedOfferListPage::MyAcceptedOfferListPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::MyAcceptedOfferListPage),
@@ -112,20 +111,14 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 				const UniValue& acceptObj = accept.get_obj();
 				offerAcceptHash = QString::fromStdString(find_value(acceptObj, "id").get_str());
 				if(offerAcceptHash != acceptid)
-					continue;
-				qDebug() << "found accept id, btc tx id: ";	
+					continue;	
 				btcTxId = QString::fromStdString(find_value(acceptObj, "btctxid").get_str());		
-				qDebug() << btcTxId;
 				const string &strPrice = find_value(acceptObj, "total").get_str();
 				price = QString::fromStdString(strPrice);
 				break;
 			}
 			if(offerAcceptHash != acceptid)
 			{
-				qDebug() << "offerAcceptHash";
-				qDebug() << offerAcceptHash;
-				qDebug() << "acceptid";
-				qDebug() << acceptid;
 				return false;
 			}
 			const string &strAddress = find_value(offerObj, "address").get_str();			
@@ -274,8 +267,8 @@ void MyAcceptedOfferListPage::on_btcButton_clicked()
         return;
     }
 	QString address, price, btcTxId;
-	QString offerid = selection.at(0).data(OfferAcceptTableModel::Name).toString();
-	QString acceptid = selection.at(0).data(OfferAcceptTableModel::GUID).toString();
+	QString offerid = selection.at(0).data(OfferAcceptTableModel::NameRole).toString();
+	QString acceptid = selection.at(0).data(OfferAcceptTableModel::GUIDRole).toString();
 	
 	if(!lookup(offerid, acceptid, address, price, btcTxId))
 	{
