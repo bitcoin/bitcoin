@@ -22,9 +22,25 @@
 
 using namespace std;
 
-/*
-    12.1 - needs to be rewritten
-        - none of this is in the correct context now
+/**
+*    NOTE: 12.1 - code needs to be rewritten, much of it's in the incorrect context
+*
+*    Governance Object Creation and Voting
+*    -------------------------------------------------------
+*
+*       This code allows users to create new types of objects. To correctly use the system
+*       please see the governance wiki and code-as-law implementation. Any conflicting entries will be 
+*       automatically downvoted and deleted, requiring resubmission to correct. 
+*
+*    command structure:
+*
+*       governance prepare new nTypeIn nParentID "name" epoch-start epoch-end parameter1 parameter2 parameter3
+*           >> fee transaction hash
+*       
+*       governance submit fee-hash nTypeIn nParentID, "name", epoch-start, epoch-end, fee-hash, parameter1, parameter2, parameter3
+*           >> governance object hash
+*
+*
 */
 
 UniValue mnbudget(const UniValue& params, bool fHelp)

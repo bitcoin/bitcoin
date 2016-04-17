@@ -186,7 +186,6 @@ private:
 public:
     bool fValid;
     std::string strName; //org name, username, prop name, etc. 
-    std::string strURL;
     int nStartTime;
     int nEndTime;
     CAmount nAmount; // 12.1 - remove
@@ -200,8 +199,42 @@ public:
     //   -- check governance wiki for correct usage
     std::map<int, CGovernanceObjectRegister> mapRegister;
 
+
+    CGovernanceObject();
+    CGovernanceObject(const CGovernanceObject& other);
+    CGovernanceObject(std::string strNameIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
+
+    bool HasMinimumRequiredSupport();
+    bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
+    bool IsEstablished();
+    bool NetworkWillPay();
+
+    std::string GetName() {return strName; }
+    std::string GetURL() {return strURL; }
+    int GetStartTime() {return nStartTime;}
+    int GetEndTime() {return nEndTime;}
+    int IsActive(int64_t nTime) {return nTime > nStartTime && nTime < nEndTime;}
+    int GetAbsoluteYesCount();
+    int GetYesCount();
+    int GetNoCount();
+    int GetAbstainCount();
+
+    void CleanAndRemove(bool fSignatureCheck);
+    void Relay();
+
+    uint256 GetHash(){
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << strName;
+        ss << nStartTime;
+        ss << nEndTime;
+        //ss << mapRegister;
+        uint256 h1 = ss.GetHash();
+
+        return h1;
+    }
+
     /**
-    *   Example usage:
+    *   AddRegister - Example usage:
     *   --------------------------------------------------------
     * 
     *   We don't really care what's in these, as long as the masternode network
@@ -238,47 +271,12 @@ public:
         return true;
     }
 
-    CGovernanceObject();
-    CGovernanceObject(const CGovernanceObject& other);
-    CGovernanceObject(std::string strNameIn, std::string strURLIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
-
-    bool HasMinimumRequiredSupport();
-    bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
-    bool IsEstablished();
-    bool NetworkWillPay();
-
-    std::string GetName() {return strName; }
-    std::string GetURL() {return strURL; }
-    int GetStartTime() {return nStartTime;}
-    int GetEndTime() {return nEndTime;}
-    int IsActive(int64_t nTime) {return nTime > nStartTime && nTime < nEndTime;}
-    int GetAbsoluteYesCount();
-    int GetYesCount();
-    int GetNoCount();
-    int GetAbstainCount();
-
-    void CleanAndRemove(bool fSignatureCheck);
-
-    uint256 GetHash(){
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << strName;
-        ss << strURL;
-        ss << nStartTime;
-        ss << nEndTime;
-        //ss << mapRegister;
-        uint256 h1 = ss.GetHash();
-
-        return h1;
-    }
-    void Relay();
-
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        //for syncing with other clients
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
         READWRITE(LIMITED_STRING(strName, 20));
-        READWRITE(LIMITED_STRING(strURL, 64));
         READWRITE(nTime);
         READWRITE(nStartTime);
         READWRITE(nEndTime);

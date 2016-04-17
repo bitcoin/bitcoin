@@ -131,3 +131,4 @@ qa/pull-tester/tests-config.sh
 dash-cli
 dashd
 dash-qt
+make
