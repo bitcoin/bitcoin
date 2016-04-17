@@ -161,7 +161,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 				UniValue addressValue = find_value(output, "address");
 				if(addressValue.isStr())
 				{
-					if(addressValue.get_str() == address.toStdString())
+					if(/*addressValue.get_str() == address.toStdString()*/1)
 					{
 						UniValue paymentValue = find_value(output, "amount");
 						if(paymentValue.isStr())
