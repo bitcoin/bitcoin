@@ -2671,7 +2671,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             "     \"includeWatching\"   (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"      (boolean, optional, default false) Lock selected unspent outputs\n"
                             "   }\n"
-                            "                         for backward compatibility: passing in a true instzead of an object will result in {\"includeWatching\":true}\n"
+                            "                         for backward compatibility: passing in a true instead of an object will result in {\"includeWatching\":true}\n"
                             "\nResult:\n"
                             "{\n"
                             "  \"hex\":       \"value\", (string)  The resulting raw transaction (hex-encoded string)\n"
