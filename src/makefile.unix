@@ -149,8 +149,8 @@ OBJS= \
 
 all: ppcoind
 
-test check: test_bitcoin FORCE
-	./test_bitcoin
+test check: test_ppcoin FORCE
+	./test_ppcoin
 
 #
 # LevelDB support
