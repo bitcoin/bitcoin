@@ -240,7 +240,6 @@ CAmount convertCurrencyCodeToSyscoin(const vector<unsigned char> &vchAliasPeg, c
 	{
 		if(getCurrencyToSYSFromAlias(vchAliasPeg, vchCurrencyCode, nRate, nHeight, rateList, precision) == "")
 		{
-			LogPrintf("convertCurrencyCodeToSyscoin rate: %ld, height %d\n", nRate, nHeight);
 			float price = nPrice*(float)nRate;
 			sysPrice = CAmount(price);
 		}

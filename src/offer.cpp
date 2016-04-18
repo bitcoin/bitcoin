@@ -805,13 +805,14 @@ bool CheckOfferInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				CAmount nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst, precision)*theOfferAccept.nQty;
 				if(tx.vout[nOut].nValue != nPrice)
 				{
-					LogPrintf("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %ld, currency %s, value found %ld, height %d... trying heightToCheckAgainst-1\n", nPrice, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue, heightToCheckAgainst);
-					nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst-1, precision)*theOfferAccept.nQty;
-					CAmount nPrice1 = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst+1, precision)*theOfferAccept.nQty;
-					LogPrintf("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price1 %ld, currency %s, value found %ld, height %d... trying heightToCheckAgainst-1\n", nPrice1, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue, heightToCheckAgainst);
+					nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst+1, precision)*theOfferAccept.nQty;
 					if(tx.vout[nOut].nValue != nPrice)
 					{
-						return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %ld, currency %s, value found %ld, height %d\n", nPrice, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue, heightToCheckAgainst-1);	
+						nPrice = convertCurrencyCodeToSyscoin(myPriceOffer.vchAliasPeg, myPriceOffer.sCurrencyCode, priceAtTimeOfAccept, heightToCheckAgainst-1, precision)*theOfferAccept.nQty;
+						if(tx.vout[nOut].nValue != nPrice)
+						{
+							return error("CheckOfferInputs() OP_OFFER_ACCEPT: this offer accept does not pay enough according to the offer price %ld, currency %s, value found %ld, height %d\n", nPrice, stringFromVch(theOffer.sCurrencyCode).c_str(), tx.vout[nOut].nValue, heightToCheckAgainst-1);	
+						}
 					}
 				}												
 			}						
@@ -3325,7 +3326,7 @@ UniValue offerinfo(const UniValue& params, bool fHelp) {
 		oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(txA, "offer") ? "true" : "false"));
 
 		if(!ca.txBTCId.IsNull())
-			oOfferAccept.push_back(Pair("paid","check payment"));
+			oOfferAccept.push_back(Pair("paid","true(BTC)"));
 		else
 			oOfferAccept.push_back(Pair("paid","true"));
 		string strMessage = string("");
@@ -3544,7 +3545,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 				oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(acceptTx, "offer")? "true" : "false"));
 
 				if(!theOfferAccept.txBTCId.IsNull())
-					oOfferAccept.push_back(Pair("status","check payment"));
+					oOfferAccept.push_back(Pair("status","paid(BTC)"));
 				else
 					oOfferAccept.push_back(Pair("status","paid"));
 
@@ -3687,7 +3688,7 @@ UniValue offeracceptlist(const UniValue& params, bool fHelp) {
 			// this accept is for me(something ive sold) if this offer is mine
 			oOfferAccept.push_back(Pair("ismine", IsSyscoinTxMine(acceptTx, "offer")? "true" : "false"));
 			if(!theOfferAccept.txBTCId.IsNull())
-				oOfferAccept.push_back(Pair("status","check payment"));
+				oOfferAccept.push_back(Pair("status","paid(BTC)"));
 			else
 				oOfferAccept.push_back(Pair("status","paid"));
 
