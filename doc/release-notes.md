@@ -21,6 +21,13 @@ It is recommended to use this for sensitive information such as wallet
 passphrases, as command-line arguments can usually be read from the process
 table by any user on the system.
 
+RPC low-level changes
+----------------------
+
+- `gettxoutsetinfo` UTXO hash (`hash_serialized`) has changed. There was a divergence between
+  32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
+  fixed, but this means that the output will be different than from previous versions.
+
 0.13.0 Change log
 =================
 
