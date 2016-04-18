@@ -28,6 +28,8 @@ const uint16_t FEATURE_DEXMATH = 5;
 const uint16_t FEATURE_SENDALL = 6;
 //! Feature identifier disable ecosystem crossovers in crowdsale logic
 const uint16_t FEATURE_SPCROWDCROSSOVER = 7;
+//! Feature identifier to enable non-Omni pairs on the distributed exchange
+const uint16_t FEATURE_TRADEALLPAIRS = 8;
 
 /** A structure to represent transaction restrictions.
  */
@@ -111,6 +113,8 @@ public:
     int DEXMATH_FEATURE_BLOCK;
     //! Block to disable ecosystem crossovers in crowdsale logic
     int SPCROWDCROSSOVER_FEATURE_BLOCK;
+    //! Block to enable trading of non-Omni pairs
+    int TRADEALLPAIRS_FEATURE_BLOCK;
 
     /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
     virtual std::vector<TransactionRestriction> GetRestrictions() const;
