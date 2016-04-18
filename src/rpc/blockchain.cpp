@@ -467,6 +467,7 @@ static bool GetUTXOStats(CCoinsView *view, CCoinsStats &stats)
         CCoins coins;
         if (pcursor->GetKey(key) && pcursor->GetValue(coins)) {
             stats.nTransactions++;
+            ss << key;
             for (unsigned int i=0; i<coins.vout.size(); i++) {
                 const CTxOut &out = coins.vout[i];
                 if (!out.IsNull()) {
