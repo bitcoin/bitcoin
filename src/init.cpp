@@ -538,7 +538,7 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     AppendParamsHelpMessages(strUsage, showDebug);
-    strUsage += HelpMessageOpt("-litemode=<n>", strprintf(_("Disable all Dash specific functionality (Masternodes, Darksend, InstantX, Budgeting) (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-litemode=<n>", strprintf(_("Disable all Dash specific functionality (Masternodes, PrivacyProtect, InstantX, Budgeting) (0-1, default: %u)"), 0));
 
     strUsage += HelpMessageGroup(_("Masternode options:"));
     strUsage += HelpMessageOpt("-masternode=<n>", strprintf(_("Enable the client to act as a masternode (0-1, default: %u)"), 0));
@@ -548,12 +548,12 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-masternodeaddr=<n>", strprintf(_("Set external address:port to get to this masternode (example: %s)"), "128.127.106.235:9999"));
     strUsage += HelpMessageOpt("-budgetvotemode=<mode>", _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)"));
 
-    strUsage += HelpMessageGroup(_("Darksend options:"));
-    strUsage += HelpMessageOpt("-enabledarksend=<n>", strprintf(_("Enable use of automated darksend for funds stored in this wallet (0-1, default: %u)"), fEnableDarksend));
-    strUsage += HelpMessageOpt("-darksendmultisession=<n>", strprintf(_("Enable multiple darksend mixing sessions per block, experimental (0-1, default: %u)"), fDarksendMultiSession));
+    strUsage += HelpMessageGroup(_("PrivacyProtect options:"));
+    strUsage += HelpMessageOpt("-enabledarksend=<n>", strprintf(_("Enable use of automated PrivacyProtect for funds stored in this wallet (0-1, default: %u)"), fEnableDarksend));
+    strUsage += HelpMessageOpt("-darksendmultisession=<n>", strprintf(_("Enable multiple PrivacyProtect mixing sessions per block, experimental (0-1, default: %u)"), fDarksendMultiSession));
     strUsage += HelpMessageOpt("-darksendrounds=<n>", strprintf(_("Use N separate masternodes to anonymize funds  (2-8, default: %u)"), nDarksendRounds));
     strUsage += HelpMessageOpt("-anonymizedashamount=<n>", strprintf(_("Keep N DASH anonymized (default: %u)"), nAnonymizeDashAmount));
-    strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to Darksend by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), nLiquidityProvider));
+    strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivacyProtect by infrequently mixing coins on a continual basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, low fees)"), nLiquidityProvider));
 
     strUsage += HelpMessageGroup(_("InstantX options:"));
     strUsage += HelpMessageOpt("-enableinstantx=<n>", strprintf(_("Enable instantx, show confirmations for locked transactions (0-1, default: %u)"), fEnableInstantX));
@@ -1941,7 +1941,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
     LogPrintf("nInstantXDepth %d\n", nInstantXDepth);
-    LogPrintf("Darksend rounds %d\n", nDarksendRounds);
+    LogPrintf("PrivacyProtect rounds %d\n", nDarksendRounds);
     LogPrintf("Anonymize Dash Amount %d\n", nAnonymizeDashAmount);
     LogPrintf("Budget Mode %s\n", strBudgetMode);
 

@@ -458,7 +458,7 @@
            <item row="2" column="0">
             <widget class="QLabel" name="labelAnonymizedText">
              <property name="text">
-              <string>Darksend Balance:</string>
+              <string>Privacy Balance:</string>
              </property>
             </widget>
            </item>
@@ -1025,7 +1025,7 @@
            </sizepolicy>
           </property>
           <property name="toolTip">
-           <string>Try to manually submit a Darksend request.</string>
+           <string>Try to manually submit a PrivacyProtect request.</string>
           </property>
           <property name="text">
            <string>Try Mix</string>
@@ -1034,7 +1034,7 @@
          <widget class="QPushButton" name="darksendReset">
           <property name="geometry">
            <rect>
-            <x>230</x>
+            <x>220</x>
             <y>319</y>
             <width>221</width>
             <height>28</height>
@@ -1047,7 +1047,7 @@
            </sizepolicy>
           </property>
           <property name="toolTip">
-           <string>Reset the current status of Darksend (can interrupt Darksend if it's in the process of Mixing, which can cost you money!)</string>
+           <string>Reset the current status of PrivacyProtect (can interrupt PrivacyProtect if it's in the process of Mixing, which can cost you money!)</string>
           </property>
           <property name="autoFillBackground">
            <bool>false</bool>
@@ -1075,7 +1075,7 @@
               </font>
              </property>
              <property name="text">
-              <string>Darksend</string>
+              <string>PrivacyProtect</string>
              </property>
             </widget>
            </item>

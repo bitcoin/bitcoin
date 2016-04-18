@@ -132,7 +132,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             }
 
             if(state == POOL_STATUS_QUEUE){
-                LogPrint("darksend", "Darksend queue is ready - %s\n", addr.ToString());
+                LogPrint("darksend", "PrivacyProtect queue is ready - %s\n", addr.ToString());
                 PrepareDarksendDenominate();
             }
         } else {
@@ -151,7 +151,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             pmn->nLastDsq = mnodeman.nDsqCount;
             pmn->allowFreeTx = true;
 
-            LogPrint("darksend", "dsq - new Darksend queue object - %s\n", addr.ToString());
+            LogPrint("darksend", "dsq - new PrivacyProtect queue object - %s\n", addr.ToString());
             vecDarksendQueue.push_back(dsq);
             dsq.Relay();
             dsq.time = GetTime();
@@ -242,7 +242,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
             }
 
             if (nValueIn > DARKSEND_POOL_MAX) {
-                LogPrintf("dsi -- more than Darksend pool max! %s\n", tx.ToString());
+                LogPrintf("dsi -- more than PrivacyProtect pool max! %s\n", tx.ToString());
                 errorID = ERR_MAXIMUM;
                 pfrom->PushMessage(NetMsgType::DSSTATUSUPDATE, sessionID, GetState(), GetEntriesCount(), MASTERNODE_REJECTED, errorID);
                 return;
@@ -305,7 +305,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         LogPrint("darksend", "dssu - state: %i entriesCount: %i accepted: %i error: %s \n", state, entriesCount, accepted, GetMessageByID(errorID));
 
         if((accepted != 1 && accepted != 0) && sessionID != sessionIDMessage){
-            LogPrintf("dssu - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
+            LogPrintf("dssu - message doesn't match current PrivacyProtect session %d %d\n", sessionID, sessionIDMessage);
             return;
         }
 
@@ -350,7 +350,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vRecv >> sessionIDMessage >> txNew;
 
         if(sessionID != sessionIDMessage){
-            LogPrint("darksend", "dsf - message doesn't match current Darksend session %d %d\n", sessionID, sessionIDMessage);
+            LogPrint("darksend", "dsf - message doesn't match current PrivacyProtect session %d %d\n", sessionID, sessionIDMessage);
             return;
         }
 
@@ -375,7 +375,7 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vRecv >> sessionIDMessage >> error >> errorID;
 
         if(sessionID != sessionIDMessage){
-            LogPrint("darksend", "dsc - message doesn't match current Darksend session %d %d\n", darkSendPool.sessionID, sessionIDMessage);
+            LogPrint("darksend", "dsc - message doesn't match current PrivacyProtect session %d %d\n", darkSendPool.sessionID, sessionIDMessage);
             return;
         }
 
@@ -424,7 +424,7 @@ bool CDarksendPool::SetCollateralAddress(std::string strAddress){
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
     {
-        LogPrintf("CDarksendPool::SetCollateralAddress - Invalid Darksend collateral address\n");
+        LogPrintf("CDarksendPool::SetCollateralAddress - Invalid PrivacyProtect collateral address\n");
         return false;
     }
     collateralPubKey = GetScriptForDestination(address.Get());
@@ -457,7 +457,7 @@ std::string CDarksendPool::GetStatus()
     }
     switch(state) {
         case POOL_STATUS_IDLE:
-            return _("Darksend is idle.");
+            return _("PrivacyProtect is idle.");
         case POOL_STATUS_ACCEPTING_ENTRIES:
             if(entriesCount == 0) {
                 showingDarkSendMessage = 0;
@@ -467,7 +467,7 @@ std::string CDarksendPool::GetStatus()
                     lastEntryAccepted = 0;
                     showingDarkSendMessage = 0;
                 }
-                return _("Darksend request complete:") + " " + _("Your transaction was accepted into the pool!");
+                return _("PrivacyProtect request complete:") + " " + _("Your transaction was accepted into the pool!");
             } else {
                 std::string suffix = "";
                 if(     showingDarkSendMessage % 70 <= 40) return strprintf(_("Submitted following entries to masternode: %u / %d"), entriesCount, GetMaxPoolTransactions());
@@ -487,9 +487,9 @@ std::string CDarksendPool::GetStatus()
         case POOL_STATUS_FINALIZE_TRANSACTION:
             return _("Finalizing transaction.");
         case POOL_STATUS_ERROR:
-            return _("Darksend request incomplete:") + " " + lastMessage + " " + _("Will retry...");
+            return _("PrivacyProtect request incomplete:") + " " + lastMessage + " " + _("Will retry...");
         case POOL_STATUS_SUCCESS:
-            return _("Darksend request complete:") + " " + lastMessage;
+            return _("PrivacyProtect request complete:") + " " + lastMessage;
         case POOL_STATUS_QUEUE:
             if(     showingDarkSendMessage % 70 <= 30) suffix = ".";
             else if(showingDarkSendMessage % 70 <= 50) suffix = "..";
@@ -1102,12 +1102,12 @@ bool CDarksendPool::SignaturesComplete(){
 void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<CTxOut>& vout, CAmount amount){
 
     if(fMasterNode) {
-        LogPrintf("CDarksendPool::SendDarksendDenominate() - Darksend from a Masternode is not supported currently.\n");
+        LogPrintf("CDarksendPool::SendDarksendDenominate() - PrivacyProtect from a Masternode is not supported currently.\n");
         return;
     }
 
     if(txCollateral == CMutableTransaction()){
-        LogPrintf ("CDarksendPool:SendDarksendDenominate() - Darksend collateral not set");
+        LogPrintf ("CDarksendPool:SendDarksendDenominate() - PrivacyProtect collateral not set");
         return;
     }
 
@@ -1134,7 +1134,7 @@ void CDarksendPool::SendDarksendDenominate(std::vector<CTxIn>& vin, std::vector<
         UnlockCoins();
         SetNull();
         fEnableDarksend = false;
-        LogPrintf("CDarksendPool::SendDarksendDenominate() - Not enough disk space, disabling Darksend.\n");
+        LogPrintf("CDarksendPool::SendDarksendDenominate() - Not enough disk space, disabling PrivacyProtect.\n");
         return;
     }
 
@@ -1388,8 +1388,8 @@ bool CDarksendPool::DoAutomaticDenominating(bool fDryRun)
     }
 
     if(!fDarksendMultiSession && pCurrentBlockIndex->nHeight - cachedLastSuccess < minBlockSpacing) {
-        LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful Darksend action was too recent\n");
-        strAutoDenomResult = _("Last successful Darksend action was too recent.");
+        LogPrintf("CDarksendPool::DoAutomaticDenominating - Last successful PrivacyProtect action was too recent\n");
+        strAutoDenomResult = _("Last successful PrivacyProtect action was too recent.");
         return false;
     }
 
@@ -1644,13 +1644,13 @@ bool CDarksendPool::PrepareDarksendDenominate()
     // Try to use only inputs with the same number of rounds starting from lowest number of rounds possible
     for(int i = 0; i < nDarksendRounds; i++) {
         strError = pwalletMain->PrepareDarksendDenominate(i, i+1);
-        LogPrintf("DoAutomaticDenominating : Running Darksend denominate for %d rounds. Return '%s'\n", i, strError);
+        LogPrintf("DoAutomaticDenominating : Running PrivacyProtect denominate for %d rounds. Return '%s'\n", i, strError);
         if(strError == "") return true;
     }
 
     // We failed? That's strange but let's just make final attempt and try to mix everything
     strError = pwalletMain->PrepareDarksendDenominate(0, nDarksendRounds);
-    LogPrintf("DoAutomaticDenominating : Running Darksend denominate for all rounds. Return '%s'\n", strError);
+    LogPrintf("DoAutomaticDenominating : Running PrivacyProtect denominate for all rounds. Return '%s'\n", strError);
     if(strError == "") return true;
 
     // Should never actually get here but just in case
@@ -2029,13 +2029,13 @@ std::string CDarksendPool::GetMessageByID(int messageID) {
     case ERR_INVALID_INPUT: return _("Input is not valid.");
     case ERR_INVALID_SCRIPT: return _("Invalid script detected.");
     case ERR_INVALID_TX: return _("Transaction not valid.");
-    case ERR_MAXIMUM: return _("Value more than Darksend pool maximum allows.");
+    case ERR_MAXIMUM: return _("Value more than PrivacyProtect pool maximum allows.");
     case ERR_MN_LIST: return _("Not in the Masternode list.");
     case ERR_MODE: return _("Incompatible mode.");
     case ERR_NON_STANDARD_PUBKEY: return _("Non-standard public key detected.");
     case ERR_NOT_A_MN: return _("This is not a Masternode.");
     case ERR_QUEUE_FULL: return _("Masternode queue is full.");
-    case ERR_RECENT: return _("Last Darksend was too recent.");
+    case ERR_RECENT: return _("Last PrivacyProtect was too recent.");
     case ERR_SESSION: return _("Session not complete!");
     case ERR_MISSING_TX: return _("Missing input transaction information.");
     case ERR_VERSION: return _("Incompatible version.");

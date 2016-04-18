@@ -2708,7 +2708,7 @@ bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std
 
     if (!SelectCoinsCollateral(vCoinsCollateral, nValueIn2))
     {
-        strReason = "Error: Darksend requires a collateral transaction and could not locate an acceptable input!";
+        strReason = "Error: PrivacyProtect requires a collateral transaction and could not locate an acceptable input!";
         return false;
     }
 
@@ -2918,10 +2918,10 @@ bool CWallet::CreateTransaction(const vector<CRecipient>& vecSend, CWalletTx& wt
                     } else if (coin_type == ONLY_NOT1000IFMN) {
                         strFailReason = _("Unable to locate enough funds for this transaction that are not equal 1000 DASH.");
                     } else if (coin_type == ONLY_NONDENOMINATED_NOT1000IFMN) {
-                        strFailReason = _("Unable to locate enough Darksend non-denominated funds for this transaction that are not equal 1000 DASH.");
+                        strFailReason = _("Unable to locate enough PrivacyProtect non-denominated funds for this transaction that are not equal 1000 DASH.");
                     } else {
-                        strFailReason = _("Unable to locate enough Darksend denominated funds for this transaction.");
-                        strFailReason += " " + _("Darksend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
+                        strFailReason = _("Unable to locate enough PrivacyProtect denominated funds for this transaction.");
+                        strFailReason += " " + _("PrivacyProtect uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
                     }
 
                     if(useIX){
@@ -3256,7 +3256,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
 
     if(darkSendPool.GetState() != POOL_STATUS_ERROR && darkSendPool.GetState() != POOL_STATUS_SUCCESS)
         if(darkSendPool.GetEntriesCount() > 0)
-            return _("Error: You already have pending entries in the Darksend pool");
+            return _("Error: You already have pending entries in the PrivacyProtect pool");
 
     // ** find the coins we'll use
     std::vector<CTxIn> vCoins;
@@ -3275,7 +3275,7 @@ string CWallet::PrepareDarksendDenominate(int minRounds, int maxRounds)
             return _("Error: Can't select current denominated inputs");
     }
 
-    LogPrintf("PrepareDarksendDenominate - preparing darksend denominate . Got: %d \n", nValueIn);
+    LogPrintf("PrepareDarksendDenominate - preparing PrivacyProtect denominate . Got: %d \n", nValueIn);
 
     {
         LOCK(cs_wallet);

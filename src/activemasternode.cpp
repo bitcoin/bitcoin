@@ -206,7 +206,7 @@ bool CActiveMasternode::SendMasternodePing(std::string& errorMessage) {
     else
     {
         // Seems like we are trying to send a ping while the Masternode is not registered in the network
-        errorMessage = "Darksend Masternode List doesn't include our Masternode, shutting down Masternode pinging service! " + vin.ToString();
+        errorMessage = "PrivacyProtect Masternode List doesn't include our Masternode, shutting down Masternode pinging service! " + vin.ToString();
         status = ACTIVE_MASTERNODE_NOT_CAPABLE;
         notCapableReason = errorMessage;
         return false;
