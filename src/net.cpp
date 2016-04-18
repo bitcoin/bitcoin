@@ -463,9 +463,13 @@ bool CNode::setBannedIsDirty;
 
 void CNode::ClearBanned()
 {
-    LOCK(cs_setBanned);
-    setBanned.clear();
-    setBannedIsDirty = true;
+    {
+        LOCK(cs_setBanned);
+        setBanned.clear();
+        setBannedIsDirty = true;
+    }
+    DumpBanlist(); //store banlist to disk
+    uiInterface.BannedListChanged();
 }
 
 bool CNode::IsBanned(CNetAddr ip)
@@ -516,11 +520,25 @@ void CNode::Ban(const CSubNet& subNet, const BanReason &banReason, int64_t banti
     }
     banEntry.nBanUntil = (sinceUnixEpoch ? 0 : GetTime() )+bantimeoffset;
 
-    LOCK(cs_setBanned);
-    if (setBanned[subNet].nBanUntil < banEntry.nBanUntil)
-        setBanned[subNet] = banEntry;
-
-    setBannedIsDirty = true;
+    {
+        LOCK(cs_setBanned);
+        if (setBanned[subNet].nBanUntil < banEntry.nBanUntil) {
+            setBanned[subNet] = banEntry;
+            setBannedIsDirty = true;
+        }
+        else
+            return;
+    }
+    uiInterface.BannedListChanged();
+    {
+        LOCK(cs_vNodes);
+        BOOST_FOREACH(CNode* pnode, vNodes) {
+            if (subNet.Match((CNetAddr)pnode->addr))
+                pnode->fDisconnect = true;
+        }
+    }
+    if(banReason == BanReasonManuallyAdded)
+        DumpBanlist(); //store banlist to disk immediately if user requested ban
 }
 
 bool CNode::Unban(const CNetAddr &addr) {
@@ -529,13 +547,15 @@ bool CNode::Unban(const CNetAddr &addr) {
 }
 
 bool CNode::Unban(const CSubNet &subNet) {
-    LOCK(cs_setBanned);
-    if (setBanned.erase(subNet))
     {
+        LOCK(cs_setBanned);
+        if (!setBanned.erase(subNet))
+            return false;
         setBannedIsDirty = true;
-        return true;
     }
-    return false;
+    uiInterface.BannedListChanged();
+    DumpBanlist(); //store banlist to disk immediately
+    return true;
 }
 
 void CNode::GetBanned(banmap_t &banMap)
