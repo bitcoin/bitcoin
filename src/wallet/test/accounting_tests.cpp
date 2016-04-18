@@ -5,7 +5,7 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 
-#include "test/test_bitcoin.h"
+#include "wallet/test/wallet_test_fixture.h"
 
 #include <stdint.h>
 
@@ -14,7 +14,7 @@
 
 extern CWallet* pwalletMain;
 
-BOOST_FIXTURE_TEST_SUITE(accounting_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(accounting_tests, WalletTestingSetup)
 
 static void
 GetResults(CWalletDB& walletdb, std::map<CAmount, CAccountingEntry>& results)
