@@ -69,15 +69,11 @@ namespace {
 
 const static std::string NET_MESSAGE_COMMAND_OTHER = "*other*";
 
-/** Services this node implementation cares about */
-ServiceFlags nRelevantServices = NODE_NETWORK;
-
 //
 // Global state variables
 //
 bool fDiscover = true;
 bool fListen = true;
-ServiceFlags nLocalServices = NODE_NETWORK;
 bool fRelayTxes = true;
 CCriticalSection cs_mapLocalHost;
 std::map<CNetAddr, LocalServiceInfo> mapLocalHost;
@@ -155,7 +151,7 @@ static std::vector<CAddress> convertSeed6(const std::vector<SeedSpec6> &vSeedsIn
 // Otherwise, return the unroutable 0.0.0.0 but filled in with
 // the normal parameters, since the IP may be changed to a useful
 // one by discovery.
-CAddress GetLocalAddress(const CNetAddr *paddrPeer)
+CAddress GetLocalAddress(const CNetAddr *paddrPeer, ServiceFlags nLocalServices)
 {
     CAddress ret(CService(CNetAddr(),GetListenPort()), NODE_NONE);
     CService addr;
@@ -187,7 +183,7 @@ void AdvertiseLocal(CNode *pnode)
 {
     if (fListen && pnode->fSuccessfullyConnected)
     {
-        CAddress addrLocal = GetLocalAddress(&pnode->addr);
+        CAddress addrLocal = GetLocalAddress(&pnode->addr, pnode->GetLocalServices());
         // If discovery is enabled, sometimes give our peer the address it
         // tells us that it sees us as in case it has a better idea of our
         // address than we do.
@@ -400,7 +396,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         addrman.Attempt(addrConnect, fCountFailure);
 
         // Add node
-        CNode* pnode = new CNode(GetNewNodeId(), hSocket, addrConnect, pszDest ? pszDest : "", false);
+        CNode* pnode = new CNode(GetNewNodeId(), nLocalServices, hSocket, addrConnect, pszDest ? pszDest : "", false);
         GetNodeSignals().InitializeNode(pnode->GetId(), pnode);
         pnode->AddRef();
 
@@ -463,7 +459,7 @@ void CNode::PushVersion()
 
     int64_t nTime = (fInbound ? GetAdjustedTime() : GetTime());
     CAddress addrYou = (addr.IsRoutable() && !IsProxy(addr) ? addr : CAddress(CService(), addr.nServices));
-    CAddress addrMe = GetLocalAddress(&addr);
+    CAddress addrMe = GetLocalAddress(&addr, nLocalServices);
     if (fLogIPs)
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), addrYou.ToString(), id);
     else
@@ -1036,7 +1032,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         }
     }
 
-    CNode* pnode = new CNode(GetNewNodeId(), hSocket, addr, "", true);
+    CNode* pnode = new CNode(GetNewNodeId(), nLocalServices, hSocket, addr, "", true);
     GetNodeSignals().InitializeNode(pnode->GetId(), pnode);
     pnode->AddRef();
     pnode->fWhitelisted = whitelisted;
@@ -2045,11 +2041,11 @@ CConnman::CConnman()
     nReceiveFloodSize = 0;
 }
 
-bool StartNode(CConnman& connman, boost::thread_group& threadGroup, CScheduler& scheduler, std::string& strNodeError)
+bool StartNode(CConnman& connman, boost::thread_group& threadGroup, CScheduler& scheduler, ServiceFlags nLocalServices, ServiceFlags nRelevantServices, std::string& strNodeError)
 {
     Discover(threadGroup);
 
-    bool ret = connman.Start(threadGroup, scheduler, strNodeError);
+    bool ret = connman.Start(threadGroup, scheduler, nLocalServices, nRelevantServices, strNodeError);
 
     return ret;
 }
@@ -2059,13 +2055,15 @@ NodeId CConnman::GetNewNodeId()
     return nLastNodeId.fetch_add(1, std::memory_order_relaxed);
 }
 
-bool CConnman::Start(boost::thread_group& threadGroup, CScheduler& scheduler, std::string& strNodeError)
+bool CConnman::Start(boost::thread_group& threadGroup, CScheduler& scheduler, ServiceFlags nLocalServicesIn, ServiceFlags nRelevantServicesIn, std::string& strNodeError)
 {
     nTotalBytesRecv = 0;
     nTotalBytesSent = 0;
     nMaxOutboundLimit = 0;
     nMaxOutboundTotalBytesSentInCycle = 0;
     nMaxOutboundTimeframe = 60*60*24; //1 day
+    nLocalServices = nLocalServicesIn;
+    nRelevantServices = nRelevantServicesIn;
     nMaxOutboundCycleStartTime = 0;
 
     nSendBufferMaxSize = 1000*GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
@@ -2116,7 +2114,7 @@ bool CConnman::Start(boost::thread_group& threadGroup, CScheduler& scheduler, st
     if (pnodeLocalHost == NULL) {
         CNetAddr local;
         LookupHost("127.0.0.1", local, false);
-        pnodeLocalHost = new CNode(GetNewNodeId(), INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices));
+        pnodeLocalHost = new CNode(GetNewNodeId(), nLocalServices, INVALID_SOCKET, CAddress(CService(local, 0), nLocalServices));
         GetNodeSignals().InitializeNode(pnodeLocalHost->GetId(), pnodeLocalHost);
     }
 
@@ -2467,6 +2465,11 @@ uint64_t CConnman::GetTotalBytesSent()
     return nTotalBytesSent;
 }
 
+ServiceFlags CConnman::GetLocalServices() const
+{
+    return nLocalServices;
+}
+
 void CNode::Fuzz(int nChance)
 {
     if (!fSuccessfullyConnected) return; // Don't fuzz initial handshake
@@ -2505,7 +2508,7 @@ void CNode::Fuzz(int nChance)
 unsigned int CConnman::GetReceiveFloodSize() const { return nReceiveFloodSize; }
 unsigned int CConnman::GetSendBufferSize() const{ return nSendBufferMaxSize; }
 
-CNode::CNode(NodeId idIn, SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn) :
+CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNameIn, bool fInboundIn) :
     ssSend(SER_NETWORK, INIT_PROTO_VERSION),
     addr(addrIn),
     nKeyedNetGroup(CalculateKeyedNetGroup(addrIn)),
@@ -2560,6 +2563,7 @@ CNode::CNode(NodeId idIn, SOCKET hSocketIn, const CAddress& addrIn, const std::s
     nextSendTimeFeeFilter = 0;
     id = idIn;
     nOptimisticBytesWritten = 0;
+    nLocalServices = nLocalServicesIn;
 
     GetRandBytes((unsigned char*)&nLocalHostNonce, sizeof(nLocalHostNonce));
 
