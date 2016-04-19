@@ -18,7 +18,7 @@ clear
 printf "Preparing a test environment...\n"
 printf "   * Starting a fresh regtest daemon\n"
 rm -r ~/.bitcoin/regtest
-./src/omnicored --regtest --server --daemon >nul
+./src/omnicored --regtest --server --daemon --omniactivationallowsender=any >nul
 sleep 3
 printf "   * Preparing some mature testnet BTC\n"
 ./src/omnicore-cli --regtest setgenerate true 102 >null
@@ -56,6 +56,33 @@ printf "   * Seeding %s with 150.00 OMNI\n" ${ADDRESS[3]}
 printf "   * Seeding %s with 200.00 OMNI\n" ${ADDRESS[4]}
 ./src/omnicore-cli --regtest omni_send $ADDR ${ADDRESS[4]} 1 200.0 >null
 ./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "\nActivating the fee system...\n"
+printf "   * Sending the activation\n"
+BLOCKS=$(./src/omnicore-cli --regtest getblockcount)
+TXID=$(./src/omnicore-cli --regtest omni_sendactivation $ADDR 9 $(($BLOCKS + 8)) 999)
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "     # Checking the activation transaction was valid..."
+RESULT=$(./src/omnicore-cli --regtest omni_gettransaction $TXID | grep valid | cut -c15-)
+if [ $RESULT == "true," ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $RESULT
+    FAIL=$((FAIL+1))
+fi
+printf "   * Mining 10 blocks to forward past the activation block\n"
+./src/omnicore-cli --regtest setgenerate true 10 >null
+printf "     # Checking the activation went live as expected..."
+FEATUREID=$(./src/omnicore-cli --regtest omni_getactivations | grep -A 10 completed | grep featureid | cut -c27)
+if [ $FEATUREID == "9" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $FEATUREID
+    FAIL=$((FAIL+1))
+fi
 printf "\nChecking share of fees for recipients...\n"
 printf "   * Checking %s has a 5 percent share of fees... " ${ADDRESS[1]}
 FEESHARE=$(./src/omnicore-cli --regtest omni_getfeeshare ${ADDRESS[1]} | grep feeshare | cut -d '"' -f4)
