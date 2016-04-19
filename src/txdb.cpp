@@ -134,12 +134,8 @@ bool CCoinsViewDBCursor::Valid() const
 void CCoinsViewDBCursor::Next()
 {
     pcursor->Next();
-    if (pcursor->Valid()) {
-        bool ok = pcursor->GetKey(keyTmp);
-        assert(ok); // If GetKey fails here something must be wrong with underlying database, we cannot handle that here
-    } else {
+    if (!pcursor->Valid() || !pcursor->GetKey(keyTmp))
         keyTmp.first = 0; // Invalidate cached key after last record so that Valid() and GetKey() return false
-    }
 }
 
 bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo) {
