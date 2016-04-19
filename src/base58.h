@@ -114,6 +114,7 @@ public:
 	// SYSCOIN aliases as addresses
     CSyscoinAddress();
     CSyscoinAddress(const CTxDestination &dest);
+	CSyscoinAddress(const CTxDestination &dest, bool oldSys);
     CSyscoinAddress(const std::string& strAddress);
     CSyscoinAddress(const char* pszAddress);
 
