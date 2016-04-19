@@ -232,11 +232,6 @@ CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest, bool oldSys) {
 	aliasName = "";
     Set(dest, oldSys);
 }
-CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest) { 
-	isAlias = false;
-	aliasName = "";
-    Set(dest, false);
-}
 CSyscoinAddress::CSyscoinAddress(const std::string& strAddress) { 
 	isAlias = false;
 	aliasName = "";
