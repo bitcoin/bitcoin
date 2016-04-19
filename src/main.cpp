@@ -4766,7 +4766,7 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman& connma
     connman.ForEachNodeThen(std::move(sortfunc), std::move(pushfunc));
 }
 
-void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParams)
+void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParams, CConnman& connman)
 {
     std::deque<CInv>::iterator it = pfrom->vRecvGetData.begin();
 
@@ -4808,7 +4808,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 // disconnect node in case we have reached the outbound limit for serving historical blocks
                 // never disconnect whitelisted nodes
                 static const int nOneWeek = 7 * 24 * 60 * 60; // assume > 1 week = historical
-                if (send && CNode::OutboundTargetReached(true) && ( ((pindexBestHeader != NULL) && (pindexBestHeader->GetBlockTime() - mi->second->GetBlockTime() > nOneWeek)) || inv.type == MSG_FILTERED_BLOCK) && !pfrom->fWhitelisted)
+                if (send && connman.OutboundTargetReached(true) && ( ((pindexBestHeader != NULL) && (pindexBestHeader->GetBlockTime() - mi->second->GetBlockTime() > nOneWeek)) || inv.type == MSG_FILTERED_BLOCK) && !pfrom->fWhitelisted)
                 {
                     LogPrint("net", "historical block serving limit reached, disconnect peer=%d\n", pfrom->GetId());
 
@@ -5312,7 +5312,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             LogPrint("net", "received getdata for: %s peer=%d\n", vInv[0].ToString(), pfrom->id);
 
         pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), vInv.begin(), vInv.end());
-        ProcessGetData(pfrom, chainparams.GetConsensus());
+        ProcessGetData(pfrom, chainparams.GetConsensus(), connman);
     }
 
 
@@ -5986,7 +5986,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             return true;
         }
 
-        if (CNode::OutboundTargetReached(false) && !pfrom->fWhitelisted)
+        if (connman.OutboundTargetReached(false) && !pfrom->fWhitelisted)
         {
             LogPrint("net", "mempool request with bandwidth limit reached, disconnect peer=%d\n", pfrom->GetId());
             pfrom->fDisconnect = true;
@@ -6202,7 +6202,7 @@ bool ProcessMessages(CNode* pfrom, CConnman& connman)
     bool fOk = true;
 
     if (!pfrom->vRecvGetData.empty())
-        ProcessGetData(pfrom, chainparams.GetConsensus());
+        ProcessGetData(pfrom, chainparams.GetConsensus(), connman);
 
     // this maintains the order of responses
     if (!pfrom->vRecvGetData.empty()) return fOk;
