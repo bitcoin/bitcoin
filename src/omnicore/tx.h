@@ -195,6 +195,7 @@ public:
     uint16_t getFeatureId() const { return feature_id; }
     uint32_t getActivationBlock() const { return activation_block; }
     uint32_t getMinClientVersion() const { return min_client_version; }
+    unsigned int getIndexInBlock() const { return tx_idx; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
