@@ -203,6 +203,7 @@ libbitcoin_server_a_SOURCES = \
   torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
+  ui_interface.cpp \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
@@ -323,7 +324,6 @@ libbitcoin_util_a_SOURCES = \
   rpc/protocol.cpp \
   support/cleanse.cpp \
   sync.cpp \
-  ui_interface.cpp \
   util.cpp \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
