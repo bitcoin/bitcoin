@@ -99,3 +99,8 @@ using other means such as firewalling.
 Note that when the block chain tip changes, a reorganisation may occur
 and just the tip will be notified. It is up to the subscriber to
 retrieve the chain from the last known block to the new tip.
+
+There are several possibilities that ZMQ notification can get lost
+during transmission depending on the communication type your are
+using. Bitcoind appends an up-counting sequence number to each
+notification which allows listeners to detect lost notifications.
