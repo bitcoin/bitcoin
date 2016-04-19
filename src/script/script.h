@@ -574,7 +574,7 @@ public:
         opcodetype opcode;
         do
         {
-            while (end() - pc >= (long)b.size() && std::equal(b.begin(), b.end(), pc))
+            while (static_cast<size_t>(end() - pc) >= b.size() && std::equal(b.begin(), b.end(), pc))
             {
                 pc = erase(pc, pc + b.size());
                 ++nFound;
