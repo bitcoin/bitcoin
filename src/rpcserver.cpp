@@ -345,6 +345,8 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "getaddressesbyaccount",  &getaddressesbyaccount,  true  },
     { "wallet",             "getbalance",             &getbalance,             false },
     { "wallet",             "getnewaddress",          &getnewaddress,          true  },
+	// SYSCOIN support old sys
+	{ "wallet",             "getoldaddress",          &getoldaddress,          true  },
     { "wallet",             "getrawchangeaddress",    &getrawchangeaddress,    true  },
     { "wallet",             "getreceivedbyaccount",   &getreceivedbyaccount,   false },
     { "wallet",             "getreceivedbyaddress",   &getreceivedbyaddress,   false },
