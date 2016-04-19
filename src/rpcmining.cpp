@@ -799,7 +799,9 @@ UniValue estimatesmartpriority(const UniValue& params, bool fHelp)
     return result;
 }
 
- // SYSCOIN: Merge mining
+/* ************************************************************************** */
+// SYSCOIN Merge mining.  
+
 UniValue getauxblock(const UniValue& params, bool fHelp)
 {
     if (fHelp || (params.size() != 0 && params.size() != 2))
@@ -848,7 +850,7 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
     if (IsInitialBlockDownload() && !Params().MineBlocksOnDemand())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD,
                            "Syscoin is downloading blocks...");
-    
+
     /* The variables below are used to keep track of created and not yet
        submitted auxpow blocks.  Lock them to be sure even for multiple
        RPC threads running in parallel.  */
@@ -924,7 +926,7 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
     }
 
     /* Submit a block instead.  Note that this need not lock cs_main,
-       since ProcessBlockFound below locks it instead.  */
+       since ProcessNewBlock below locks it instead.  */
 
     assert(params.size() == 2);
     uint256 hash;
@@ -942,9 +944,39 @@ UniValue getauxblock(const UniValue& params, bool fHelp)
     block.SetAuxpow(new CAuxPow(pow));
     assert(block.GetHash() == hash);
 
-    const bool ok = ProcessBlockFound(&block, Params());
-    if (ok)
-        coinbaseScript->KeepScript();
+    // This is a straight cut & paste job from submitblock()
+    bool fBlockPresent = false;
+    {
+        LOCK(cs_main);
+        BlockMap::iterator mi = mapBlockIndex.find(hash);
+        if (mi != mapBlockIndex.end()) {
+            CBlockIndex *pindex = mi->second;
+            if (pindex->IsValid(BLOCK_VALID_SCRIPTS))
+                return "duplicate";
+            if (pindex->nStatus & BLOCK_FAILED_MASK)
+                return "duplicate-invalid";
+            // Otherwise, we might only have the header - process the block before returning
+            fBlockPresent = true;
+        }
+    }
 
-    return ok;
+    CValidationState state;
+    submitblock_StateCatcher sc(block.GetHash());
+    RegisterValidationInterface(&sc);
+    bool fAccepted = ProcessNewBlock(state, Params(), NULL, &block, true, NULL);
+    UnregisterValidationInterface(&sc);
+    if (fBlockPresent)
+    {
+        if (fAccepted && !sc.found)
+            return "duplicate-inconclusive";
+        return "duplicate";
+    }
+    if (fAccepted)
+    {
+        if (!sc.found)
+            return "inconclusive";
+        coinbaseScript->KeepScript();
+    }
+    return fAccepted;
 }
+
