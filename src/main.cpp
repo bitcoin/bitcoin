@@ -1797,6 +1797,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     LogPrint("partitioncheck", "%s : Found %d blocks in the last %d hours\n", __func__, nBlocks, SPAN_HOURS);
     LogPrint("partitioncheck", "%s : likelihood: %g\n", __func__, p);
 
+    /*
     // Aim for one false-positive about every fifty years of normal running:
     const int FIFTY_YEARS = 50*365*24*60*60;
     double alertThreshold = 1.0 / (FIFTY_YEARS / SPAN_SECONDS);
@@ -1813,6 +1814,8 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
         strWarning = strprintf(_("WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)"),
                                nBlocks, SPAN_HOURS, BLOCKS_EXPECTED);
     }
+    */
+    
     if (!strWarning.empty())
     {
         strMiscWarning = strWarning;
