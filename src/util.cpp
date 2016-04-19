@@ -283,7 +283,7 @@ bool LogAcceptCategory(const char* category)
                 ptrCategory->insert(string("masternode"));
                 ptrCategory->insert(string("keepass"));
                 ptrCategory->insert(string("mnpayments"));
-                ptrCategory->insert(string("mnbudget"));
+                ptrCategory->insert(string("mngovernance"));
             }
         }
         const set<string>& setCategories = *ptrCategory.get();

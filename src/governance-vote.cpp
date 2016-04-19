@@ -9,7 +9,7 @@
 #include "flat-database.h"
 #include "governance.h"
 #include "masternode.h"
-#include "masternode-budget.h"
+#include "governance.h"
 #include "darksend.h"
 #include "masternodeman.h"
 #include "masternode-sync.h"
@@ -69,7 +69,7 @@ bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 bool CBudgetVote::IsValid(bool fSignatureCheck)
 {
     if(nTime > GetTime() + (60*60)){
-        LogPrint("mnbudget", "CBudgetVote::IsValid() - vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
+        LogPrint("mngovernance", "CBudgetVote::IsValid() - vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
         return false;
     }
 
@@ -77,7 +77,7 @@ bool CBudgetVote::IsValid(bool fSignatureCheck)
 
     if(pmn == NULL)
     {
-        LogPrint("mnbudget", "CBudgetVote::IsValid() - Unknown Masternode - %s\n", vin.ToString());
+        LogPrint("mngovernance", "CBudgetVote::IsValid() - Unknown Masternode - %s\n", vin.ToString());
         return false;
     }
 

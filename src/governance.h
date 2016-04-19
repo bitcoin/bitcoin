@@ -16,12 +16,22 @@
 #include <boost/lexical_cast.hpp>
 #include "init.h"
 
-using namespace std;
+#include <stdio.h>
+#include <string.h>
 
+using namespace std;
 extern CCriticalSection cs_budget;
 
+// note: is there a reason these are static? 
+//         http://stackoverflow.com/questions/3709207/c-semantics-of-static-const-vs-const 
+static const CAmount BUDGET_FEE_TX = (5*COIN);
+static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
+static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
+static const int64_t CONTRACT_ACTIVATION_TIME = 60*60*24*14;
+
+
 class CGovernanceManager;
-class CBudgetProposal;
+class CGovernanceObject;
 class CBudgetVote;
 class CNode;
 
@@ -30,7 +40,7 @@ static const CAmount GOVERNANCE_FEE_TX = (5*COIN);
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
 
-extern std::vector<CBudgetProposal> vecImmatureBudgetProposals;
+extern std::vector<CGovernanceObject> vecImmatureBudgetProposals;
 extern std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 extern CGovernanceManager governance;
 
@@ -50,15 +60,17 @@ private:
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 
+    int64_t nTimeLastDiff;
+
 public:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
     
     // keep track of the scanning errors I've seen
-    map<uint256, CBudgetProposal> mapProposals;
+    map<uint256, CGovernanceObject> mapProposals;
 
     // todo - 12.1 - move to private for better encapsulation 
-    std::map<uint256, CBudgetProposal> mapSeenMasternodeBudgetProposals;
+    std::map<uint256, CGovernanceObject> mapSeenMasternodeBudgetProposals;
     std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
     std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
     //       parent hash       vote hash     vote
@@ -90,13 +102,13 @@ public:
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
 
-    CBudgetProposal *FindProposal(const std::string &strProposalName);
-    CBudgetProposal *FindProposal(uint256 nHash);
+    CGovernanceObject *FindProposal(const std::string &strName);
+    CGovernanceObject *FindProposal(uint256 nHash);
     
-    std::vector<CBudgetProposal*> GetAllProposals();
+    std::vector<CGovernanceObject*> GetAllProposals();
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    bool AddProposal(CBudgetProposal& budgetProposal);
+    bool AddProposal(CGovernanceObject& budgetProposal);
     bool UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError);
     bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
     bool PropExists(uint256 nHash);
@@ -129,46 +141,46 @@ public:
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
+    int64_t GetLastDiffTime() {return nTimeLastDiff;}
+    void UpdateLastDiffTime(int64_t nTimeIn) {nTimeLastDiff=nTimeIn;}
 };
 
 /**
-* Governance objects can hold any time of data
+* Governance objects can hold any type of data
 * --------------------------------------------
-*
 *
 */
 
-// todo - 12.1 - add payload obj to CGovernanceObj
-// union GovernanceObjectPayload
-// {
-//     CAmount nAmount;
-//     int nValue;
-//     bool bIsActive;
-//     std::string strPayload;
-//     double fValue;
-// }
+class CGovernanceObjectRegister
+{
+private:
+    int nType;
+    std::string strReg;
+
+public:
+    CGovernanceObjectRegister(int nTypeIn, char* strRegIn)
+    {
+        nType = nTypeIn;
+        strReg = strRegIn;
+    }
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        //for syncing with other clients
+        READWRITE(nType);
+        READWRITE(LIMITED_STRING(strReg, 255));
+    }
+};
 
 /**
-* Governance object payload types
-* --------------------------------------------
+* Generic Governance Object
 *
 *
 */
 
-// todo - 12.1 - add payload obj to CGovernanceObj
-// enum class GovernanceObjectPayloadType {
-//     CAmount,
-//     Int,
-//     Bool,
-//     String,
-//     Double
-// };
-
-//
-// Budget Proposal : Contains the masternode votes for each budget
-//
-
-class CBudgetProposal
+class CGovernanceObject
 {
 private:
     // critical section to protect the inner data structures
@@ -176,78 +188,119 @@ private:
     CAmount nAlloted;
 
 public:
-    bool fValid;
-    std::string strProposalName;
 
-    /*
-        json object with name, short-description, long-description, pdf-url and any other info
-        This allows the proposal website to stay 100% decentralized
-    */
-    std::string strURL;
+    uint256 nHashParent; //parent object, 0 is root
+    int nPriority; //budget is sorted by this integer before funding votecount
+    int nRevision; //object revision in the system
+    int64_t nTime; //time this object was created
+
+    std::string strName; //org name, username, prop name, etc. 
     int nStartTime;
     int nEndTime;
-    CAmount nAmount; // 12.1 - remove
-    // int nPriority; //budget is sorted by this integer before funding votecount
-    // GovernanceObjectPayloadType payloadType;
-    // GovernanceObjectPayload payload;
-    CScript address; //todo rename to addressOwner;
-    int64_t nTime;
+    CScript ownerAddress; //todo rename to addressOwner;
     uint256 nFeeTXHash;
-    uint256 nHashParent; // 12.1 - remove
+    
+    // caching
+    bool fValid;
+    uint256 nHash;
 
-    //cache object
+    // Registers, these can be used for anything
+    //   -- check governance wiki for correct usage
+    std::map<int, CGovernanceObjectRegister> mapRegister;
 
-    CBudgetProposal();
-    CBudgetProposal(const CBudgetProposal& other);
-    CBudgetProposal(std::string strProposalNameIn, std::string strURLIn, int nPaymentCount, CScript addressIn, CAmount nAmountIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
+
+    CGovernanceObject();
+    CGovernanceObject(uint256 nHashParentIn, int nPriorityIn, int nRevisionIn, int nTypeVersionIn, std::string strNameIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
 
     bool HasMinimumRequiredSupport();
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
     bool IsEstablished();
     bool NetworkWillPay();
 
-    std::string GetName() {return strProposalName; }
-    std::string GetURL() {return strURL; }
+    std::string GetName() {return strName; }
     int GetStartTime() {return nStartTime;}
     int GetEndTime() {return nEndTime;}
-    CScript GetPayee() {return address;}
     int IsActive(int64_t nTime) {return nTime > nStartTime && nTime < nEndTime;}
     int GetAbsoluteYesCount();
     int GetYesCount();
     int GetNoCount();
     int GetAbstainCount();
-    CAmount GetAmount() {return nAmount;}
 
     void CleanAndRemove(bool fSignatureCheck);
+    void Relay();
 
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << strProposalName;
-        ss << strURL;
+        ss << strName;
         ss << nStartTime;
         ss << nEndTime;
-        ss << nAmount;
-        ss << *(CScriptBase*)(&address);
+        //ss << mapRegister;
         uint256 h1 = ss.GetHash();
 
         return h1;
     }
-    void Relay();
+
+    /**
+    *   AddRegister - Example usage:
+    *   --------------------------------------------------------
+    * 
+    *   We don't really care what's in these, as long as the masternode network
+    *   believes they're accurate. Otherwise the masternodes will vote them down 
+    *   and we'll delete them from memory (fee-loss attack). 
+    *
+    *   - This system is designed to allow virtually any usage
+    *   - No protocol changes are needed
+    *   - Abuse will just be simply automatically deleted
+    *   - Masternodes could read this data and do all sorts of things
+    *
+    *   Contractor: Mailing address, contact info (5 strings)
+    *   Company: BitcoinAddress, UserHash, repeat (automate core team payments?)
+    *   Contract: CAmount, nDenomination(int)
+    *   Proposal:    
+    *   MasternodePaymentsBlock: BlockStart, Masternode1, 2, 3... 
+    *   Arbitration: UserId1, UserId2, TxHash, ContractHash
+    
+    */
+
+    bool AddRegister(std::string& strError, int nTypeIn, std::string strIn)
+    {
+        if(strIn.size() > 64)
+        {
+            strError = "Too big.";
+            return false;
+        }
+
+        char regbuff[64];
+        strncpy(regbuff, strIn.c_str(), sizeof(regbuff));
+
+        CGovernanceObjectRegister newRegister(nTypeIn, regbuff);
+        mapRegister.insert(make_pair(1 , newRegister));
+        return true;
+    }
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        //for syncing with other clients
-        READWRITE(LIMITED_STRING(strProposalName, 20));
-        READWRITE(LIMITED_STRING(strURL, 64));
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    {
+        /*
+
+    uint256 nHashParent; //parent object, 0 is root
+    int nPriority; //budget is sorted by this integer before funding votecount
+    int nRevision; //object revision in the system
+    int64_t nTime; //time this object was created
+
+    std::string strName; //org name, username, prop name, etc. 
+    int nStartTime;
+    int nEndTime;
+    CScript ownerAddress; //todo rename to addressOwner;
+    uint256 nFeeTXHash;
+    */
+        READWRITE(LIMITED_STRING(strName, 20));
         READWRITE(nTime);
         READWRITE(nStartTime);
         READWRITE(nEndTime);
-        READWRITE(nAmount);
-
-        READWRITE(*(CScriptBase*)(&address));
-        READWRITE(nTime);
+        //READWRITE(mapRegister);
         READWRITE(nFeeTXHash);
     }
 };

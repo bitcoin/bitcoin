@@ -17,7 +17,7 @@
 #include "keystore.h"
 #include "main.h"
 #include "net.h"
-#include "masternode-budget.h"
+#include "governance.h"
 #include "keepass.h"
 #include "instantx.h"
 #include "policy/policy.h"

@@ -34,7 +34,6 @@
 #include "ui_interface.h"
 #include "util.h"
 #include "activemasternode.h"
-#include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
@@ -223,10 +222,8 @@ void PrepareShutdown()
     flatdb1.Dump(mnodeman);
     CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
     flatdb2.Dump(mnpayments);
-    CFlatDB<CBudgetManager> flatdb3("budget.dat", "magicBudgetCache");
-    flatdb3.Dump(budget);
-    CFlatDB<CGovernanceManager> flatdb4("governance.dat", "magicGovernanceCache");
-    flatdb4.Dump(governance);
+    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+    flatdb3.Dump(governance);
 
     StopTorControl();
     UnregisterNodeSignals(GetNodeSignals());
@@ -514,7 +511,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-limitdescendantsize=<n>", strprintf("Do not accept transactions if any ancestor would have more than <n> kilobytes of in-mempool descendants (default: %u).", DEFAULT_DESCENDANT_SIZE_LIMIT));
     }
     string debugCategories = "addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, mempool, mempoolrej, net, proxy, prune, http, libevent, tor, zmq, "
-                             "dash (or specifically: darksend, instantx, masternode, keepass, mnpayments, mnbudget)"; // Don't translate these and qt below
+                             "dash (or specifically: darksend, instantx, masternode, keepass, mnpayments, mngovernance)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         debugCategories += ", qt";
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
@@ -1832,13 +1829,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
     flatdb2.Load(mnpayments);
 
-    uiInterface.InitMessage(_("Loading budget cache..."));
-    CFlatDB<CBudgetManager> flatdb3("budget.dat", "magicBudgetCache");
-    flatdb3.Load(budget);
-    budget.ClearSeen();
-
-    CFlatDB<CGovernanceManager> flatdb4("governance.dat", "magicGovernanceCache");
-    flatdb4.Load(governance);
+    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+    flatdb3.Load(governance);
     governance.ClearSeen();
 
     // ********************************************************* Step 11: setup DarkSend
@@ -1932,7 +1924,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
     darkSendPool.UpdatedBlockTip(chainActive.Tip());
     mnpayments.UpdatedBlockTip(chainActive.Tip());
-    budget.UpdatedBlockTip(chainActive.Tip());
     masternodeSync.UpdatedBlockTip(chainActive.Tip());
 
     // start dash-darksend thread
