@@ -259,7 +259,7 @@ void CMasternodeSync::Process()
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
                 uint256 n = uint256();
-                pnode->PushMessage(NetMsgType::MNBUDGETVOTESYNC, n); //sync masternode votes
+                pnode->PushMessage(NetMsgType::mngovernanceVOTESYNC, n); //sync masternode votes
             } else {
                 RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }

@@ -264,8 +264,8 @@ extern UniValue spork(const UniValue& params, bool fHelp);
 extern UniValue masternode(const UniValue& params, bool fHelp);
 extern UniValue masternodelist(const UniValue& params, bool fHelp);
 extern UniValue masternodebroadcast(const UniValue& params, bool fHelp);
-extern UniValue mnbudget(const UniValue& params, bool fHelp);
-extern UniValue mnbudgetvoteraw(const UniValue& params, bool fHelp);
+extern UniValue mngovernance(const UniValue& params, bool fHelp);
+extern UniValue mngovernancevoteraw(const UniValue& params, bool fHelp);
 extern UniValue mnsync(const UniValue& params, bool fHelp);
 
 extern UniValue getblockcount(const UniValue& params, bool fHelp); // in rpcblockchain.cpp

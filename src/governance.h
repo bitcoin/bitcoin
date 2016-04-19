@@ -60,6 +60,8 @@ private:
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 
+    int64_t nTimeLastDiff;
+
 public:
     // critical section to protect the inner data structures
     mutable CCriticalSection cs;
@@ -139,6 +141,8 @@ public:
     }
 
     void UpdatedBlockTip(const CBlockIndex *pindex);
+    int64_t GetLastDiffTime() {return nTimeLastDiff;}
+    void UpdateLastDiffTime(int64_t nTimeIn) {nTimeLastDiff=nTimeIn;}
 };
 
 /**
@@ -166,7 +170,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         //for syncing with other clients
         READWRITE(nType);
-        READWRITE(LIMITED_STRING(strReg, 64));
+        READWRITE(LIMITED_STRING(strReg, 255));
     }
 };
 
@@ -184,25 +188,29 @@ private:
     CAmount nAlloted;
 
 public:
-    bool fValid;
+
+    uint256 nHashParent; //parent object, 0 is root
+    int nPriority; //budget is sorted by this integer before funding votecount
+    int nRevision; //object revision in the system
+    int64_t nTime; //time this object was created
+
     std::string strName; //org name, username, prop name, etc. 
     int nStartTime;
     int nEndTime;
-    CAmount nAmount; // 12.1 - remove
-    int nPriority; //budget is sorted by this integer before funding votecount
-    CScript address; //todo rename to addressOwner;
-    int64_t nTime;
+    CScript ownerAddress; //todo rename to addressOwner;
     uint256 nFeeTXHash;
-    uint256 nHashParent; // 12.1 - remove
     
+    // caching
+    bool fValid;
+    uint256 nHash;
+
     // Registers, these can be used for anything
     //   -- check governance wiki for correct usage
     std::map<int, CGovernanceObjectRegister> mapRegister;
 
 
     CGovernanceObject();
-    CGovernanceObject(const CGovernanceObject& other);
-    CGovernanceObject(std::string strNameIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
+    CGovernanceObject(uint256 nHashParentIn, int nPriorityIn, int nRevisionIn, int nTypeVersionIn, std::string strNameIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
 
     bool HasMinimumRequiredSupport();
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
@@ -210,7 +218,6 @@ public:
     bool NetworkWillPay();
 
     std::string GetName() {return strName; }
-    std::string GetURL() {return strURL; }
     int GetStartTime() {return nStartTime;}
     int GetEndTime() {return nEndTime;}
     int IsActive(int64_t nTime) {return nTime > nStartTime && nTime < nEndTime;}
@@ -276,6 +283,19 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
+        /*
+
+    uint256 nHashParent; //parent object, 0 is root
+    int nPriority; //budget is sorted by this integer before funding votecount
+    int nRevision; //object revision in the system
+    int64_t nTime; //time this object was created
+
+    std::string strName; //org name, username, prop name, etc. 
+    int nStartTime;
+    int nEndTime;
+    CScript ownerAddress; //todo rename to addressOwner;
+    uint256 nFeeTXHash;
+    */
         READWRITE(LIMITED_STRING(strName, 20));
         READWRITE(nTime);
         READWRITE(nStartTime);

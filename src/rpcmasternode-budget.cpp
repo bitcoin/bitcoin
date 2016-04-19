@@ -34,16 +34,28 @@ using namespace std;
 *
 *    command structure:
 *
-*       governance prepare new nTypeIn nParentID "name" epoch-start epoch-end parameter1 parameter2 parameter3
+*       For instructions on creating registers, see dashbrain
+*
+*
+*       governance prepare new nTypeIn nParentID "name" epoch-start epoch-end register1 register2 register3
 *           >> fee transaction hash
 *       
-*       governance submit fee-hash nTypeIn nParentID, "name", epoch-start, epoch-end, fee-hash, parameter1, parameter2, parameter3
+*       governance submit fee-hash nTypeIn nParentID, "name", epoch-start, epoch-end, fee-hash, register1, register2, register3
 *           >> governance object hash
+*       
+*       governance vote(-alias|many) type hash yes|no|abstain
+*           >> success|failure
+*       
+*       governance list
+*           >> flat data representation of the governance system
+*           >> NOTE: this shouldn't be altered, we'll analyze the system outside of this project
 *
+*       governance get hash
+*           >> show one proposal
 *
 */
 
-UniValue mnbudget(const UniValue& params, bool fHelp)
+UniValue mngovernance(const UniValue& params, bool fHelp)
 {
     string strCommand;
     if (params.size() >= 1)
@@ -51,20 +63,16 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
 
     if (fHelp  ||
         (strCommand != "vote-many" && strCommand != "vote-alias" && strCommand != "prepare" && strCommand != "submit" &&
-         strCommand != "vote" && strCommand != "getvotes" && strCommand != "getproposal" &&
-         strCommand != "list" && strCommand != "projection" && strCommand != "check"))
+         strCommand != "vote" && strCommand != "get" && strCommand != "list" && strCommand != "diff"))
         throw runtime_error(
-                "mnbudget \"command\"...\n"
+                "mngovernance \"command\"...\n"
                 "Manage proposals\n"
                 "\nAvailable commands:\n"
-                "  check              - Scan proposals and remove invalid from proposals list\n"
                 "  prepare            - Prepare proposal by signing and creating tx\n"
                 "  submit             - Submit proposal to network\n"
-                "  getproposalhash    - Get proposal hash(es) by proposal name\n"
-                "  getproposal        - Show proposal\n"
-                "  getvotes           - Show detailed votes list for proposal\n"
+                "  get                - Get proposal hash(es) by proposal name\n"
                 "  list               - List all proposals\n"
-                "  projection         - Show the projection of which proposals will be paid the next cycle\n"
+                "  diff               - List differences since last diff\n"
                 "  vote               - Vote on a proposal by single masternode (using dash.conf setup)\n"
                 "  vote-many          - Vote on a proposal by all masternodes (using masternode.conf setup)\n"
                 "  vote-alias         - Vote on a proposal by alias\n"
@@ -73,7 +81,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     if(strCommand == "prepare")
     {
         if (params.size() != 7)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget prepare <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance prepare <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash>'");
 
         int nBlockMin = 0;
         LOCK(cs_main);
@@ -83,14 +91,9 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         std::string strName = SanitizeString(params[1].get_str());
-        std::string strURL = SanitizeString(params[2].get_str());
-        int nBlockStart = params[4].get_int();
 
         //set block min
         if(pindex != NULL) nBlockMin = pindex->nHeight;
-
-        if(nBlockStart < nBlockMin)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid block start, must be more than current height.");
 
         CBitcoinAddress address(params[5].get_str());
         if (!address.IsValid())
@@ -99,7 +102,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CGovernanceObject budgetProposalBroadcast(strName, strURL, GetTime(), 253370764800, uint256());
+        CGovernanceObject budgetProposalBroadcast(strName, GetTime(), 253370764800, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
@@ -121,7 +124,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     if(strCommand == "submit")
     {
         if (params.size() != 8)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget submit <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash> <fee-tx>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance submit <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash> <fee-tx>'");
 
         if(!masternodeSync.IsBlockchainSynced()){
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
@@ -135,7 +138,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         std::string strName = SanitizeString(params[1].get_str());
-        std::string strURL = SanitizeString(params[2].get_str());
 
         //set block min
         if(pindex != NULL) nBlockMin = pindex->nHeight;
@@ -143,7 +145,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         // create new governance object
 
         uint256 hash = ParseHashV(params[7], "Proposal hash");
-        CGovernanceObject budgetProposalBroadcast(strName, strURL, GetTime(), 253370764800, uint256());
+        CGovernanceObject budgetProposalBroadcast(strName, GetTime(), 253370764800, uint256());
 
         std::string strError = "";
 
@@ -167,7 +169,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     if(strCommand == "vote-many")
     {
         if(params.size() != 3)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget vote-many <proposal-hash> [yes|no]'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-many <proposal-hash> [yes|no]'");
 
         uint256 hash;
         std::string strVote;
@@ -254,7 +256,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     if(strCommand == "vote-alias")
     {
         if(params.size() != 4)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget vote-alias <proposal-hash> [yes|no] <alias-name>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-alias <proposal-hash> [yes|no] <alias-name>'");
 
         uint256 hash;
         std::string strVote;
@@ -345,7 +347,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     if(strCommand == "vote")
     {
         if (params.size() != 3)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget vote <proposal-hash> [yes|no]'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote <proposal-hash> [yes|no]'");
 
         uint256 hash = ParseHashV(params[1], "Proposal hash");
         std::string strVote = params[2].get_str();
@@ -385,10 +387,10 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         }
     }
 
-    if(strCommand == "list")
+    if(strCommand == "list" || strCommand == "diff")
     {
         if (params.size() > 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget list [valid]'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance list [valid]'");
 
         std::string strShow = "valid";
         if (params.size() == 2) strShow = params[1].get_str();
@@ -401,14 +403,14 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
             pindex = chainActive.Tip();
         }
 
-        std::vector<CGovernanceObject*> winningProps = governance.GetAllProposals();
+        std::vector<CGovernanceObject*> winningProps = governance.GetAllProposals(governance.GetLastDiffTime());
+        governance.UpdateLastDiffTime(GetTime());
         BOOST_FOREACH(CGovernanceObject* pbudgetProposal, winningProps)
         {
             if(strShow == "valid" && !pbudgetProposal->fValid) continue;
 
             UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("Name",  pbudgetProposal->GetName()));
-            bObj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
             bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
             bObj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
             bObj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
@@ -433,7 +435,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     if(strCommand == "getproposal")
     {
         if (params.size() != 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget getproposal <proposal-hash>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance getproposal <proposal-hash>'");
 
         uint256 hash = ParseHashV(params[1], "Proposal hash");
 
@@ -453,7 +455,6 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
         obj.push_back(Pair("Name",  pbudgetProposal->GetName()));
         obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
         obj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
-        obj.push_back(Pair("URL",  pbudgetProposal->GetURL()));
         obj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
         obj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
         obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
@@ -472,7 +473,7 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     if(strCommand == "getvotes")
     {
         if (params.size() != 2)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mnbudget getvotes <proposal-hash>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance getvotes <proposal-hash>'");
 
         uint256 hash = ParseHashV(params[1], "Proposal hash");
 
@@ -505,11 +506,11 @@ UniValue mnbudget(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue mnbudgetvoteraw(const UniValue& params, bool fHelp)
+UniValue mngovernancevoteraw(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 6)
         throw runtime_error(
-                "mnbudgetvoteraw <masternode-tx-hash> <masternode-tx-index> <proposal-hash> [yes|no] <time> <vote-sig>\n"
+                "mngovernancevoteraw <masternode-tx-hash> <masternode-tx-index> <proposal-hash> [yes|no] <time> <vote-sig>\n"
                 "Compile and relay a proposal vote with provided external signature instead of signing vote internally\n"
                 );
 

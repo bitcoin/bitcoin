@@ -64,18 +64,6 @@
  *   CValueOverride lvl, vo-type, status, status-error
 */
 
-class CDashNetwork;
-class CDashNetworkVariable;
-class CCategory;
-class CGroup;
-class CUser;
-class CCompany;
-class CProject;
-class CProjectReport;
-class CProjectMilestone;
-class CProposal;
-class CContract;
-class CValueOverride;
 
 
 /*
@@ -87,20 +75,6 @@ class CValueOverride;
  *   -- Most of the values in these classes can be overriden 
  *
  *  CGovernanceNode (base)
- *      -> CGovernanceObject (unimplementable)
- *          -> CDashNetwork
- *          -> CDashNetworkVariable
- *          -> CValueOverride
- *           -> CCategory
- *           -> CGovernanceActor
- *               -> CGroup
- *               -> CUser
- *               -> CCompany
- *                   -> DAO/DO/LLC/501c6/etc
- *           -> CProject
- *           -> CProjectReport
- *           -> CProjectMilestone
- *
  *
  *  TREE STRUCTURE
  *  ===========================================
