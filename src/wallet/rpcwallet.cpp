@@ -139,14 +139,14 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
     return CSyscoinAddress(keyID).ToString();
 }
 // SYSCOIN support old sys
-UniValue getoldaddress(const UniValue& params, bool fHelp)
+UniValue getv1address(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
     
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getoldaddress ( \"account\" )\n"
+            "getv1address ( \"account\" )\n"
 			"\nReturns a new Syscoin1 (starts with S) address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
