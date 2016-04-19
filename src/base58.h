@@ -105,6 +105,7 @@ class CSyscoinAddress : public CBase58Data {
 public:
 	bool isAlias;
 	std::string aliasName;
+	// SYSCOIN support old sys
     bool Set(const CKeyID &id, bool oldSys = false);
     bool Set(const CScriptID &id);
     bool Set(const CTxDestination &dest, bool oldSys = false);
@@ -113,7 +114,6 @@ public:
 
 	// SYSCOIN aliases as addresses
     CSyscoinAddress();
-    CSyscoinAddress(const CTxDestination &dest);
 	CSyscoinAddress(const CTxDestination &dest, bool oldSys = false);
     CSyscoinAddress(const std::string& strAddress);
     CSyscoinAddress(const char* pszAddress);
