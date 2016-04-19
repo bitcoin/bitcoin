@@ -27,10 +27,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 
-CClientUIInterface uiInterface; // Declared but not defined in ui_interface.h
 
 std::unique_ptr<CConnman> g_connman;
-
 extern bool fPrintToConsole;
 extern void noui_connect();
 
