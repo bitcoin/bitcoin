@@ -67,11 +67,11 @@
     </message>
     <message>
         <source>These are your Zetacoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>这是您用来付款的比特币地址。在付款前，请仔细核实付款金额和收款地址。</translation>
+        <translation>这是您用来付款的泽塔币地址。在付款前，请仔细核实付款金额和收款地址。</translation>
     </message>
     <message>
         <source>These are your Zetacoin addresses for receiving payments. It is recommended to use a new receiving address for each transaction.</source>
-        <translation>这些都是您的比特币地址，可用于收款。建议对每笔交易都使用一个新的地址。</translation>
+        <translation>这些都是您的泽塔币地址，可用于收款。建议对每笔交易都使用一个新的地址。</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -161,7 +161,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR ZETACOINS&lt;/b&gt;!</source>
-        <translation>警告：如果您加密了您的钱包，但是忘记了密码，你将会&lt;b&gt;丢失所有的比特币&lt;/b&gt;！</translation>
+        <translation>警告：如果您加密了您的钱包，但是忘记了密码，你将会&lt;b&gt;丢失所有的泽塔币&lt;/b&gt;！</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -169,7 +169,7 @@
     </message>
     <message>
         <source>Zetacoin Core will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your zetacoins from being stolen by malware infecting your computer.</source>
-        <translation>比特币核心现在将关闭以完成加密过程。请记住，在您的计算机被恶意软件感染的情况下，加密不能完全保护您的比特币免于被盗。</translation>
+        <translation>泽塔币核心现在将关闭以完成加密过程。请记住，在您的计算机被恶意软件感染的情况下，加密不能完全保护您的泽塔币免于被盗。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -296,7 +296,7 @@
     </message>
     <message>
         <source>Zetacoin Core client</source>
-        <translation>比特币核心钱包</translation>
+        <translation>泽塔币核心钱包</translation>
     </message>
     <message>
         <source>Importing blocks from disk...</source>
@@ -308,7 +308,7 @@
     </message>
     <message>
         <source>Send coins to a Zetacoin address</source>
-        <translation>向一个比特币地址发送比特币</translation>
+        <translation>向一个泽塔币地址发送泽塔币</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -332,7 +332,7 @@
     </message>
     <message>
         <source>Zetacoin</source>
-        <translation>比特币</translation>
+        <translation>泽塔币</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -348,7 +348,7 @@
     </message>
     <message>
         <source>Show information about Zetacoin Core</source>
-        <translation>显示有关比特币核心钱包信息</translation>
+        <translation>显示有关泽塔币核心钱包信息</translation>
     </message>
     <message>
         <source>&amp;Show / Hide</source>
@@ -364,11 +364,11 @@
     </message>
     <message>
         <source>Sign messages with your Zetacoin addresses to prove you own them</source>
-        <translation>用比特币地址关联的私钥为消息签名，以证明您拥有这个比特币地址</translation>
+        <translation>用泽塔币地址关联的私钥为消息签名，以证明您拥有这个泽塔币地址</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Zetacoin addresses</source>
-        <translation>校验消息，确保该消息是由指定的比特币地址所有者签名的</translation>
+        <translation>校验消息，确保该消息是由指定的泽塔币地址所有者签名的</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -388,7 +388,7 @@
     </message>
     <message>
         <source>Zetacoin Core</source>
-        <translation>比特币核心</translation>
+        <translation>泽塔币核心</translation>
     </message>
     <message>
         <source>Request payments (generates QR codes and zetacoin: URIs)</source>
@@ -396,11 +396,11 @@
     </message>
     <message>
         <source>&amp;About Zetacoin Core</source>
-        <translation>关于比特币核心(&amp;A)</translation>
+        <translation>关于泽塔币核心(&amp;A)</translation>
     </message>
     <message>
         <source>Modify configuration options for Zetacoin Core</source>
-        <translation>修改比特币核心的配置选项</translation>
+        <translation>修改泽塔币核心的配置选项</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -412,7 +412,7 @@
     </message>
     <message>
         <source>Open a zetacoin: URI or payment request</source>
-        <translation>打开一个比特币：URI 或支付请求</translation>
+        <translation>打开一个泽塔币：URI 或支付请求</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -420,11 +420,11 @@
     </message>
     <message>
         <source>Show the Zetacoin Core help message to get a list with possible Zetacoin command-line options</source>
-        <translation>显示比特币核心 程序帮助信息，获取可用的命令行选项 </translation>
+        <translation>显示泽塔币核心 程序帮助信息，获取可用的命令行选项 </translation>
     </message>
     <message numerus="yes">
         <source>%n active connection(s) to Zetacoin network</source>
-        <translation><numerusform>%n 个到比特币网络的活动连接</numerusform></translation>
+        <translation><numerusform>%n 个到泽塔币网络的活动连接</numerusform></translation>
     </message>
     <message>
         <source>No block source available...</source>
@@ -807,7 +807,7 @@
     </message>
     <message>
         <source>The entered address "%1" is not a valid Zetacoin address.</source>
-        <translation>您输入的“%1”不是有效的比特币地址。</translation>
+        <translation>您输入的“%1”不是有效的泽塔币地址。</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -845,7 +845,7 @@
     <name>HelpMessageDialog</name>
     <message>
         <source>Zetacoin Core</source>
-        <translation>比特币核心</translation>
+        <translation>泽塔币核心</translation>
     </message>
     <message>
         <source>version</source>
@@ -857,7 +857,7 @@
     </message>
     <message>
         <source>About Zetacoin Core</source>
-        <translation>关于比特币核心</translation>
+        <translation>关于泽塔币核心</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -880,15 +880,15 @@
     </message>
     <message>
         <source>Welcome to Zetacoin Core.</source>
-        <translation>欢迎使用 比特币核心 程序。</translation>
+        <translation>欢迎使用 泽塔币核心 程序。</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where Zetacoin Core will store its data.</source>
-        <translation>由于这是第一次运行 比特币核心 程序，您可以选择数据存储目录。</translation>
+        <translation>由于这是第一次运行 泽塔币核心 程序，您可以选择数据存储目录。</translation>
     </message>
     <message>
         <source>Zetacoin Core will download and store a copy of the Zetacoin block chain. At least %1GB of data will be stored in this directory, and it will grow over time. The wallet will also be stored in this directory.</source>
-        <translation>比特币核心 程序会下载储存一份数据块链(blockchain)。至少需要 %1 GB的存储空间，随着时间推移会需要更多的存储空间。钱包文件也储存在该目录。</translation>
+        <translation>泽塔币核心 程序会下载储存一份数据块链(blockchain)。至少需要 %1 GB的存储空间，随着时间推移会需要更多的存储空间。钱包文件也储存在该目录。</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -900,7 +900,7 @@
     </message>
     <message>
         <source>Zetacoin Core</source>
-        <translation>比特币核心</translation>
+        <translation>泽塔币核心</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -982,7 +982,7 @@
     </message>
     <message>
         <source>The user interface language can be set here. This setting will take effect after restarting Zetacoin Core.</source>
-        <translation>可以在这里设置用户界面语言。此设置将在重新启动比特币核心后生效。</translation>
+        <translation>可以在这里设置用户界面语言。此设置将在重新启动泽塔币核心后生效。</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
@@ -1010,11 +1010,11 @@
     </message>
     <message>
         <source>Automatically start Zetacoin Core after logging in to the system.</source>
-        <translation>登录到系统后自动启动比特币核心。</translation>
+        <translation>登录到系统后自动启动泽塔币核心。</translation>
     </message>
     <message>
         <source>&amp;Start Zetacoin Core on system login</source>
-        <translation>系统登录时启动比特币核心(&amp;S)</translation>
+        <translation>系统登录时启动泽塔币核心(&amp;S)</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
@@ -1042,7 +1042,7 @@
     </message>
     <message>
         <source>Automatically open the Zetacoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>自动在路由器中打开比特币端口。只有当您的路由器开启了 UPnP 选项时此功能才有效。</translation>
+        <translation>自动在路由器中打开泽塔币端口。只有当您的路由器开启了 UPnP 选项时此功能才有效。</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1050,7 +1050,7 @@
     </message>
     <message>
         <source>Connect to the Zetacoin network through a SOCKS5 proxy.</source>
-        <translation>通过 SOCKS5 代理连接比特币网络。</translation>
+        <translation>通过 SOCKS5 代理连接泽塔币网络。</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1094,11 +1094,11 @@
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>比特币金额单位(&amp;U)：</translation>
+        <translation>泽塔币金额单位(&amp;U)：</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>选择比特币单位。</translation>
+        <translation>选择泽塔币单位。</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1149,7 +1149,7 @@
     </message>
     <message>
         <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Zetacoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>现在显示的消息可能是过期的. 在连接上比特币网络节点后，您的钱包将自动与网络同步，但是这个过程还没有完成。</translation>
+        <translation>现在显示的消息可能是过期的. 在连接上泽塔币网络节点后，您的钱包将自动与网络同步，但是这个过程还没有完成。</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1248,7 +1248,7 @@
     </message>
     <message>
         <source>Cannot start zetacoin: click-to-pay handler</source>
-        <translation>暂时无法启动比特币：点击支付功能</translation>
+        <translation>暂时无法启动泽塔币：点击支付功能</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1256,7 +1256,7 @@
     </message>
     <message>
         <source>URI cannot be parsed! This can be caused by an invalid Zetacoin address or malformed URI parameters.</source>
-        <translation>URI无法解析！原因可能是比特币地址不正确，或者URI参数错误。</translation>
+        <translation>URI无法解析！原因可能是泽塔币地址不正确，或者URI参数错误。</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1334,7 +1334,7 @@
     </message>
     <message>
         <source>Enter a Zetacoin address (e.g. %1)</source>
-        <translation>请输入一个比特币地址 (例如 %1)</translation>
+        <translation>请输入一个泽塔币地址 (例如 %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1444,7 +1444,7 @@
     </message>
     <message>
         <source>Open the Zetacoin Core debug log file from the current data directory. This can take a few seconds for large log files.</source>
-        <translation>从当前的数据目录打开比特币核心调试日志文件。对于较大的日志文件，这可能需要几秒钟。</translation>
+        <translation>从当前的数据目录打开泽塔币核心调试日志文件。对于较大的日志文件，这可能需要几秒钟。</translation>
     </message>
     <message>
         <source>Received</source>
@@ -1564,7 +1564,7 @@
     </message>
     <message>
         <source>Welcome to the Zetacoin Core RPC console.</source>
-        <translation>欢迎使用 比特币核心 RPC 控制台。</translation>
+        <translation>欢迎使用 泽塔币核心 RPC 控制台。</translation>
     </message>
     <message>
         <source>Use up and down arrows to navigate history, and &lt;b&gt;Ctrl-L&lt;/b&gt; to clear screen.</source>
@@ -1639,7 +1639,7 @@
     </message>
     <message>
         <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the Zetacoin network.</source>
-        <translation>可在付款请求上备注一条信息，在打开付款请求时可以看到。注意：该消息不是通过比特币网络传送。</translation>
+        <translation>可在付款请求上备注一条信息，在打开付款请求时可以看到。注意：该消息不是通过泽塔币网络传送。</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -1788,7 +1788,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>发送比特币</translation>
+        <translation>发送泽塔币</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -2000,7 +2000,7 @@
     </message>
     <message>
         <source>The transaction was rejected! This might happen if some of the coins in your wallet were already spent, such as if you used a copy of wallet.dat and coins were spent in the copy but not marked as spent here.</source>
-        <translation>错误：该交易被拒绝！发生这种错误的原因可能是：钱包中的比特币已经被用掉，有可能您复制了wallet.dat钱包文件，然后用复制的钱包文件支付了比特币，但是这个钱包文件中没有记录。</translation>
+        <translation>错误：该交易被拒绝！发生这种错误的原因可能是：钱包中的泽塔币已经被用掉，有可能您复制了wallet.dat钱包文件，然后用复制的钱包文件支付了泽塔币，但是这个钱包文件中没有记录。</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -2032,7 +2032,7 @@
     </message>
     <message>
         <source>Warning: Invalid Zetacoin address</source>
-        <translation>警告：无效的比特币地址</translation>
+        <translation>警告：无效的泽塔币地址</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -2103,7 +2103,7 @@
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less zetacoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>交易费将从发送总额中扣除。接收人将收到比您在金额框中输入的更少的比特币。如果选中了多个收件人，交易费平分。</translation>
+        <translation>交易费将从发送总额中扣除。接收人将收到比您在金额框中输入的更少的泽塔币。如果选中了多个收件人，交易费平分。</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2127,7 +2127,7 @@
     </message>
     <message>
         <source>A message that was attached to the zetacoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Zetacoin network.</source>
-        <translation>zetacoin:URI 附带的备注信息，将会和交易一起存储，备查。 注意：该消息不会通过比特币网络传输。</translation>
+        <translation>zetacoin:URI 附带的备注信息，将会和交易一起存储，备查。 注意：该消息不会通过泽塔币网络传输。</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2142,7 +2142,7 @@
     <name>ShutdownWindow</name>
     <message>
         <source>Zetacoin Core is shutting down...</source>
-        <translation>比特币核心正在关机...</translation>
+        <translation>泽塔币核心正在关机...</translation>
     </message>
     <message>
         <source>Do not shut down the computer until this window disappears.</source>
@@ -2161,7 +2161,7 @@
     </message>
     <message>
         <source>You can sign messages/agreements with your addresses to prove you can receive zetacoins sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>您可以用你的地址对消息/协议进行签名，以证明您可以接收发送到该地址的比特币。注意不要对任何模棱两可或者随机的消息进行签名，以免遭受钓鱼式攻击。请确保消息内容准确的表达了您的真实意愿。</translation>
+        <translation>您可以用你的地址对消息/协议进行签名，以证明您可以接收发送到该地址的泽塔币。注意不要对任何模棱两可或者随机的消息进行签名，以免遭受钓鱼式攻击。请确保消息内容准确的表达了您的真实意愿。</translation>
     </message>
     <message>
         <source>The Zetacoin address to sign the message with</source>
@@ -2225,7 +2225,7 @@
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Zetacoin address</source>
-        <translation>验证消息，确保消息是由指定的比特币地址签名过的。</translation>
+        <translation>验证消息，确保消息是由指定的泽塔币地址签名过的。</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2292,7 +2292,7 @@
     <name>SplashScreen</name>
     <message>
         <source>Zetacoin Core</source>
-        <translation>比特币核心</translation>
+        <translation>泽塔币核心</translation>
     </message>
     <message>
         <source>The Zetacoin Core developers</source>
@@ -2422,7 +2422,7 @@
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>生成的比特币在可以使用前必须有 %1 个成熟的区块。当您生成了此区块后，它将被广播到网络中以加入区块链。如果它未成功进入区块链，其状态将变更为“不接受”并且不可使用。这可能偶尔会发生，如果另一个节点比你早几秒钟成功生成一个区块。</translation>
+        <translation>生成的泽塔币在可以使用前必须有 %1 个成熟的区块。当您生成了此区块后，它将被广播到网络中以加入区块链。如果它未成功进入区块链，其状态将变更为“不接受”并且不可使用。这可能偶尔会发生，如果另一个节点比你早几秒钟成功生成一个区块。</translation>
     </message>
     <message>
         <source>Debug information</source>
@@ -2740,7 +2740,7 @@
     <name>WalletModel</name>
     <message>
         <source>Send Coins</source>
-        <translation>发送比特币</translation>
+        <translation>发送泽塔币</translation>
     </message>
 </context>
 <context>
@@ -2852,7 +2852,7 @@
     </message>
     <message>
         <source>Unable to bind to %s on this computer. Zetacoin Core is probably already running.</source>
-        <translation>无法 %s的绑定到电脑上，比特币核心钱包可能已经在运行。</translation>
+        <translation>无法 %s的绑定到电脑上，泽塔币核心钱包可能已经在运行。</translation>
     </message>
     <message>
         <source>WARNING: abnormally high number of blocks generated, %d blocks received in the last %d hours (%d expected)</source>
@@ -3044,7 +3044,7 @@
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. Zetacoin Core is probably already running.</source>
-        <translation>无法获取数据目录的 %s. 比特币核心钱包可能已经在运行.</translation>
+        <translation>无法获取数据目录的 %s. 泽塔币核心钱包可能已经在运行.</translation>
     </message>
     <message>
         <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
@@ -3100,7 +3100,7 @@
     </message>
     <message>
         <source>Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)</source>
-        <translation>设置比特币生成线程数 ( -1=所有核, 默认: %d) </translation>
+        <translation>设置泽塔币生成线程数 ( -1=所有核, 默认: %d) </translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -3140,7 +3140,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Warning: Please check that your computer's date and time are correct! If your clock is wrong Zetacoin Core will not work properly.</source>
-        <translation>警告：请检查电脑的日期时间设置是否正确！时间错误可能会导致比特币客户端运行异常。</translation>
+        <translation>警告：请检查电脑的日期时间设置是否正确！时间错误可能会导致泽塔币客户端运行异常。</translation>
     </message>
     <message>
         <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
@@ -3188,7 +3188,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Error loading wallet.dat: Wallet requires newer version of Zetacoin Core</source>
-        <translation>加载wallet.dat错误：需要新版的比特币核心钱包</translation>
+        <translation>加载wallet.dat错误：需要新版的泽塔币核心钱包</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3248,7 +3248,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>RPC SSL options: (see the Bitcoin Wiki for SSL setup instructions)</source>
-        <translation>RPC SSL选项：(见有关比特币设置用于SSL说明的维基百科)</translation>
+        <translation>RPC SSL选项：(见有关泽塔币设置用于SSL说明的维基百科)</translation>
     </message>
     <message>
         <source>RPC server options:</source>
@@ -3447,7 +3447,7 @@ rpcpassword=%s
     </message>
     <message>
         <source>Generate coins (default: %u)</source>
-        <translation>生成比特币 (默认: %u)</translation>
+        <translation>生成泽塔币 (默认: %u)</translation>
     </message>
     <message>
         <source>How many blocks to check at startup (default: %u, 0 = all)</source>
