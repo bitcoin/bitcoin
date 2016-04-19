@@ -175,7 +175,7 @@ UniValue getv1address(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     CKeyID keyID = newKey.GetID();
 
-    pwalletMain->SetAddressBook(keyID, strAccount, "receive");
+    pwalletMain->SetAddressBook(keyID, strAccount, "v1 address");
 
     return CSyscoinAddress(keyID, true).ToString();
 }
