@@ -158,9 +158,9 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
             ui->frameDarksend->setEnabled(false);
         } else {
             if(!fEnableDarksend){
-                ui->toggleDarksend->setText(tr("Start PrivacyProtect Mixing"));
+                ui->toggleDarksend->setText(tr("Start Mixing"));
             } else {
-                ui->toggleDarksend->setText(tr("Stop PrivacyProtect Mixing"));
+                ui->toggleDarksend->setText(tr("Stop Mixing"));
             }
             timer = new QTimer(this);
             connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
@@ -448,7 +448,7 @@ void OverviewPage::darkSendStatus()
 
             ui->darksendEnabled->setText(tr("Disabled"));
             ui->darksendStatus->setText("");
-            ui->toggleDarksend->setText(tr("Start PrivacyProtect Mixing"));
+            ui->toggleDarksend->setText(tr("Start Mixing"));
         }
 
         return;
@@ -539,10 +539,10 @@ void OverviewPage::toggleDarksend(){
     darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
 
     if(!fEnableDarksend){
-        ui->toggleDarksend->setText(tr("Start PrivacyProtect Mixing"));
+        ui->toggleDarksend->setText(tr("Start Mixing"));
         darkSendPool.UnlockCoins();
     } else {
-        ui->toggleDarksend->setText(tr("Stop PrivacyProtect Mixing"));
+        ui->toggleDarksend->setText(tr("Stop Mixing"));
 
         /* show darksend configuration if client has defaults set */
 
