@@ -149,36 +149,22 @@ CInv::CInv(int typeIn, const uint256& hashIn)
     hash = hashIn;
 }
 
-CInv::CInv(const std::string& strType, const uint256& hashIn)
-{
-    if (strType == NetMsgType::TX)
-        type = MSG_TX;
-    else if (strType == NetMsgType::BLOCK)
-        type = MSG_BLOCK;
-    else
-        throw std::out_of_range(strprintf("CInv::CInv(string, uint256): unknown type '%s'", strType));
-
-    hash = hashIn;
-}
-
 bool operator<(const CInv& a, const CInv& b)
 {
     return (a.type < b.type || (a.type == b.type && a.hash < b.hash));
 }
 
-bool CInv::IsKnownType() const
+std::string CInv::GetCommand() const
 {
-    int masked = type & MSG_TYPE_MASK;
-    return (masked >= 1 && masked <= MSG_TYPE_MAX);
-}
-
-const char* CInv::GetCommand() const
-{
+    std::string cmd;
+    if (type & MSG_WITNESS_FLAG)
+        cmd.append("witness-");
     int masked = type & MSG_TYPE_MASK;
     switch (masked)
     {
-    case MSG_TX:    return NetMsgType::TX;
-    case MSG_BLOCK: return NetMsgType::BLOCK;
+    case MSG_TX:             return cmd.append(NetMsgType::TX);
+    case MSG_BLOCK:          return cmd.append(NetMsgType::BLOCK);
+    case MSG_FILTERED_BLOCK: return cmd.append(NetMsgType::MERKLEBLOCK);
     default:
         throw std::out_of_range(strprintf("CInv::GetCommand(): type=%d unknown type", type));
     }
