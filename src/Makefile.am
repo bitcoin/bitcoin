@@ -154,6 +154,7 @@ BITCOIN_CORE_H = \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
+  script/ismine.h \
   spork.h \
   streams.h \
   support/allocators/secure.h \
@@ -179,7 +180,6 @@ BITCOIN_CORE_H = \
   wallet/db.h \
   wallet/rpcwallet.h \
   wallet/wallet.h \
-  wallet/wallet_ismine.h \
   wallet/walletdb.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
@@ -243,6 +243,7 @@ libbitcoin_server_a_SOURCES = \
   rpc/rawtransaction.cpp \
   rpc/server.cpp \
   script/sigcache.cpp \
+  script/ismine.cpp \
   sendalert.cpp \
   spork.cpp \
   timedata.cpp \
@@ -279,7 +280,6 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/rpcdump.cpp \
   wallet/rpcwallet.cpp \
   wallet/wallet.cpp \
-  wallet/wallet_ismine.cpp \
   wallet/walletdb.cpp \
   policy/rbf.cpp \
   $(BITCOIN_CORE_H)
