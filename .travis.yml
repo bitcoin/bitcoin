@@ -4,10 +4,11 @@
 #   replacing the "compilers" with a build name prefixed by the no-op ":"
 #   command. See: https://github.com/travis-ci/travis-ci/issues/4393
 
-os: linux
 sudo: required
-group: legacy
+dist: trusty
 language: cpp
+python:
+  - '2.7.11'
 compiler: gcc
 env:
   global:
@@ -33,9 +34,9 @@ matrix:
     - compiler: ": ARM"
       env: HOST=arm-linux-gnueabihf PACKAGES="g++-arm-linux-gnueabihf" DEP_OPTS="NO_QT=1" GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports --with-comparison-tool=no"
     - compiler: ": Win64"
-      env: HOST=x86_64-w64-mingw32 PPA="ppa:ubuntu-wine/ppa" PACKAGES="nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-dev wine1.7 bc" RUN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --with-comparison-tool=no" MAKEJOBS="-j2"
+      env: HOST=x86_64-w64-mingw32 PPA="ppa:ubuntu-wine/ppa" PACKAGES="nsis gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 binutils-mingw-w64-x86-64 mingw-w64-x86-64-dev wine1.7 bc" RUN_TESTS=true GOAL="deploy" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports --with-comparison-tool=no" MAKEJOBS="-j2"
     - compiler: ": bitcoind"
-      env: HOST=x86_64-unknown-linux-gnu PACKAGES="bc python-zmq" PPA="ppa:chris-lea/zeromq" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
+      env: HOST=x86_64-unknown-linux-gnu PACKAGES="bc python-dev python-zmq" PPA="ppa:chris-lea/zeromq" DEP_OPTS="NO_QT=1 NO_UPNP=1 DEBUG=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports CPPFLAGS=-DDEBUG_LOCKORDER"
     - compiler: ": No wallet"
       env: HOST=x86_64-unknown-linux-gnu DEP_OPTS="NO_WALLET=1" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports --with-comparison-tool=no"
     - compiler: ": Cross-Mac"
@@ -44,10 +45,15 @@ matrix:
     - compiler: gcc
 install:
     - if [ -n "$PACKAGES" ]; then sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list; fi
-    - if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; fi
+    - if [ -n "$PPA" ]; then travis_retry sudo add-apt-repository "$PPA" -y; sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
+    - if [ "$HOST" = "x86_64-w64-mingw32" ]; then sudo sed -i -e 's/deb http/deb [arch=amd64] http/' "/etc/apt/sources.list.d/google-chrome.list"; sudo dpkg --add-architecture i386; sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
 before_script:
+    - sudo sh -c 'echo 0 > /proc/sys/net/ipv6/conf/all/disable_ipv6'
+    - sudo sh -c 'echo ::1 ip6-localhost >> /etc/hosts'
+    - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g"); export PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages/
+    - which python2.7; which python; python2.7 -c "import sys; print ('UCS4 build' if sys.maxunicode > 65535 else 'UCS2 build')"
     - unset CC; unset CXX
     - mkdir -p depends/SDKs depends/sdk-sources
     - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then wget $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -O depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
