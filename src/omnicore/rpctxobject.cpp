@@ -72,17 +72,6 @@ int populateRPCTransactionObject(const CTransaction& tx, const uint256& blockHas
             confirmations = 1 + blockHeight - pBlockIndex->nHeight;
             blockTime = pBlockIndex->nTime;
             blockHeight = pBlockIndex->nHeight;
-            /*
-            CBlock block;
-            if (ReadBlockFromDisk(block, pBlockIndex)) {
-                BOOST_FOREACH(const CTransaction &blocktx, block.vtx) {
-                   positionInBlock++;
-                   if (blocktx.GetHash() == tx.GetHash()) {
-                       break; // positionInBlock is now set to the index of the tx in the block
-                   }
-                }
-            }
-            */
         }
     }
 
