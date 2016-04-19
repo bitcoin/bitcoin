@@ -209,11 +209,13 @@ class CSyscoinAddressVisitor : public boost::static_visitor<bool>
 {
 private:
     CSyscoinAddress* addr;
-
+	// SYSCOIN support old sys
+	bool bOldSys;
 public:
     CSyscoinAddressVisitor(CSyscoinAddress* addrIn) : addr(addrIn) {}
+	CSyscoinAddressVisitor(CSyscoinAddress* addrIn, bool oldSys) : bOldSys(oldSys), addr(addrIn) {}
 
-    bool operator()(const CKeyID& id) const { return addr->Set(id); }
+    bool operator()(const CKeyID& id) const { return addr->Set(id, bOldSys); }
     bool operator()(const CScriptID& id) const { return addr->Set(id); }
     bool operator()(const CNoDestination& no) const { return false; }
 };
@@ -223,6 +225,12 @@ public:
 CSyscoinAddress::CSyscoinAddress() {
 	isAlias = false;
 	aliasName = "";
+}
+// SYSCOIN support old sys
+CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest, bool oldSys) { 
+	isAlias = false;
+	aliasName = "";
+    Set(dest, oldSys);
 }
 CSyscoinAddress::CSyscoinAddress(const CTxDestination &dest) { 
 	isAlias = false;
@@ -297,9 +305,10 @@ CSyscoinAddress::CSyscoinAddress(const char* pszAddress) {
 		}
 	}
 }
-bool CSyscoinAddress::Set(const CKeyID& id)
+// SYSCOIN support old sys
+bool CSyscoinAddress::Set(const CKeyID& id, bool oldSys = false)
 {
-    SetData(Params().Base58Prefix(CChainParams::PUBKEY_ADDRESS), &id, 20);
+	SetData(Params().Base58Prefix(oldSys? CChainParams::PUBKEY_ADDRESS_SYS: CChainParams::PUBKEY_ADDRESS), &id, 20);
     return true;
 }
 
@@ -308,10 +317,10 @@ bool CSyscoinAddress::Set(const CScriptID& id)
     SetData(Params().Base58Prefix(CChainParams::SCRIPT_ADDRESS), &id, 20);
     return true;
 }
-
-bool CSyscoinAddress::Set(const CTxDestination& dest)
+// SYSCOIN support old sys
+bool CSyscoinAddress::Set(const CTxDestination& dest, bool oldSys = false)
 {
-    return boost::apply_visitor(CSyscoinAddressVisitor(this), dest);
+    return boost::apply_visitor(CSyscoinAddressVisitor(this, oldSys), dest);
 }
 
 bool CSyscoinAddress::IsValid() const
