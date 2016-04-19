@@ -283,21 +283,21 @@ BOOST_AUTO_TEST_CASE(test_GetThrow)
     CCoinsViewCache coins(coinsDummy);
     std::vector<CTransaction> dummyTransactions = SetupDummyInputs(keystore, coins);
 
-    CTransaction t;
-    t.vin.resize(3);
-    t.vin[0].prevout.hash = dummyTransactions[0].GetHash();
-    t.vin[0].prevout.n = 0;
-    t.vin[1].prevout.hash = dummyTransactions[1].GetHash();
-    t.vin[1].prevout.n = 0;
-    t.vin[2].prevout.hash = dummyTransactions[1].GetHash();
-    t.vin[2].prevout.n = 1;
-    t.vout.resize(2);
-    t.vout[0].nValue = 90*CENT;
-    t.vout[0].scriptPubKey << OP_1;
+    CTransaction t1;
+    t1.vin.resize(3);
+    t1.vin[0].prevout.hash = dummyTransactions[0].GetHash();
+    t1.vin[0].prevout.n = 0;
+    t1.vin[1].prevout.hash = dummyTransactions[1].GetHash();
+    t1.vin[1].prevout.n = 0;
+    t1.vin[2].prevout.hash = dummyTransactions[1].GetHash();
+    t1.vin[2].prevout.n = 1;
+    t1.vout.resize(2);
+    t1.vout[0].nValue = 90*CENT;
+    t1.vout[0].scriptPubKey << OP_1;
 
-    t.vout[0].scriptPubKey = CScript() << OP_1;
-    BOOST_CHECK_THROW(t.AreInputsStandard(coins), runtime_error);
-    BOOST_CHECK_THROW(t.GetValueIn(coins), runtime_error);
+    t1.vout[0].scriptPubKey = CScript() << OP_1;
+    BOOST_CHECK_THROW(t1.AreInputsStandard(coins), runtime_error);
+    BOOST_CHECK_THROW(t1.GetValueIn(coins), runtime_error);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
