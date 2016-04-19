@@ -347,19 +347,21 @@ UniValue getnettotals(const UniValue& params, bool fHelp)
             + HelpExampleCli("getnettotals", "")
             + HelpExampleRpc("getnettotals", "")
        );
+    if(!g_connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     UniValue obj(UniValue::VOBJ);
-    obj.push_back(Pair("totalbytesrecv", CNode::GetTotalBytesRecv()));
-    obj.push_back(Pair("totalbytessent", CNode::GetTotalBytesSent()));
+    obj.push_back(Pair("totalbytesrecv", g_connman->GetTotalBytesRecv()));
+    obj.push_back(Pair("totalbytessent", g_connman->GetTotalBytesSent()));
     obj.push_back(Pair("timemillis", GetTimeMillis()));
 
     UniValue outboundLimit(UniValue::VOBJ);
-    outboundLimit.push_back(Pair("timeframe", CNode::GetMaxOutboundTimeframe()));
-    outboundLimit.push_back(Pair("target", CNode::GetMaxOutboundTarget()));
-    outboundLimit.push_back(Pair("target_reached", CNode::OutboundTargetReached(false)));
-    outboundLimit.push_back(Pair("serve_historical_blocks", !CNode::OutboundTargetReached(true)));
-    outboundLimit.push_back(Pair("bytes_left_in_cycle", CNode::GetOutboundTargetBytesLeft()));
-    outboundLimit.push_back(Pair("time_left_in_cycle", CNode::GetMaxOutboundTimeLeftInCycle()));
+    outboundLimit.push_back(Pair("timeframe", g_connman->GetMaxOutboundTimeframe()));
+    outboundLimit.push_back(Pair("target", g_connman->GetMaxOutboundTarget()));
+    outboundLimit.push_back(Pair("target_reached", g_connman->OutboundTargetReached(false)));
+    outboundLimit.push_back(Pair("serve_historical_blocks", !g_connman->OutboundTargetReached(true)));
+    outboundLimit.push_back(Pair("bytes_left_in_cycle", g_connman->GetOutboundTargetBytesLeft()));
+    outboundLimit.push_back(Pair("time_left_in_cycle", g_connman->GetMaxOutboundTimeLeftInCycle()));
     obj.push_back(Pair("uploadtarget", outboundLimit));
     return obj;
 }

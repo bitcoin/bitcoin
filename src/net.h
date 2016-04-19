@@ -171,6 +171,31 @@ public:
     bool DisconnectSubnet(const CSubNet& subnet);
 
     void AddWhitelistedRange(const CSubNet &subnet);
+
+    //!set the max outbound target in bytes
+    void SetMaxOutboundTarget(uint64_t limit);
+    uint64_t GetMaxOutboundTarget();
+
+    //!set the timeframe for the max outbound target
+    void SetMaxOutboundTimeframe(uint64_t timeframe);
+    uint64_t GetMaxOutboundTimeframe();
+
+    //!check if the outbound target is reached
+    // if param historicalBlockServingLimit is set true, the function will
+    // response true if the limit for serving historical blocks has been reached
+    bool OutboundTargetReached(bool historicalBlockServingLimit);
+
+    //!response the bytes left in the current max outbound cycle
+    // in case of no limit, it will always response 0
+    uint64_t GetOutboundTargetBytesLeft();
+
+    //!response the time in second left in the current max outbound cycle
+    // in case of no limit, it will always response 0
+    uint64_t GetMaxOutboundTimeLeftInCycle();
+
+    uint64_t GetTotalBytesRecv();
+    uint64_t GetTotalBytesSent();
+
 private:
     struct ListenSocket {
         SOCKET socket;
@@ -209,6 +234,22 @@ private:
     void DumpAddresses();
     void DumpData();
     void DumpBanlist();
+
+    // Network stats
+    void RecordBytesRecv(uint64_t bytes);
+    void RecordBytesSent(uint64_t bytes);
+
+    // Network usage totals
+    CCriticalSection cs_totalBytesRecv;
+    CCriticalSection cs_totalBytesSent;
+    uint64_t nTotalBytesRecv;
+    uint64_t nTotalBytesSent;
+
+    // outbound limit & stats
+    uint64_t nMaxOutboundTotalBytesSentInCycle;
+    uint64_t nMaxOutboundCycleStartTime;
+    uint64_t nMaxOutboundLimit;
+    uint64_t nMaxOutboundTimeframe;
 
     // Whitelisted ranges. Any node connecting from these is automatically
     // whitelisted (as well as those connecting to whitelisted binds).
@@ -396,6 +437,7 @@ public:
     CDataStream ssSend;
     size_t nSendSize; // total size of all vSendMsg entries
     size_t nSendOffset; // offset inside the first vSendMsg already sent
+    uint64_t nOptimisticBytesWritten;
     uint64_t nSendBytes;
     std::deque<CSerializeData> vSendMsg;
     CCriticalSection cs_vSend;
@@ -507,18 +549,6 @@ public:
     ~CNode();
 
 private:
-    // Network usage totals
-    static CCriticalSection cs_totalBytesRecv;
-    static CCriticalSection cs_totalBytesSent;
-    static uint64_t nTotalBytesRecv;
-    static uint64_t nTotalBytesSent;
-
-    // outbound limit & stats
-    static uint64_t nMaxOutboundTotalBytesSentInCycle;
-    static uint64_t nMaxOutboundCycleStartTime;
-    static uint64_t nMaxOutboundLimit;
-    static uint64_t nMaxOutboundTimeframe;
-
     CNode(const CNode&);
     void operator=(const CNode&);
 
@@ -812,34 +842,6 @@ public:
     void CloseSocketDisconnect();
 
     void copyStats(CNodeStats &stats);
-
-    // Network stats
-    static void RecordBytesRecv(uint64_t bytes);
-    static void RecordBytesSent(uint64_t bytes);
-
-    static uint64_t GetTotalBytesRecv();
-    static uint64_t GetTotalBytesSent();
-
-    //!set the max outbound target in bytes
-    static void SetMaxOutboundTarget(uint64_t limit);
-    static uint64_t GetMaxOutboundTarget();
-
-    //!set the timeframe for the max outbound target
-    static void SetMaxOutboundTimeframe(uint64_t timeframe);
-    static uint64_t GetMaxOutboundTimeframe();
-
-    //!check if the outbound target is reached
-    // if param historicalBlockServingLimit is set true, the function will
-    // response true if the limit for serving historical blocks has been reached
-    static bool OutboundTargetReached(bool historicalBlockServingLimit);
-
-    //!response the bytes left in the current max outbound cycle
-    // in case of no limit, it will always response 0
-    static uint64_t GetOutboundTargetBytesLeft();
-
-    //!response the time in second left in the current max outbound cycle
-    // in case of no limit, it will always response 0
-    static uint64_t GetMaxOutboundTimeLeftInCycle();
 };
 
 
