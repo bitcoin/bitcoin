@@ -18,14 +18,14 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "Bitcoin"
-            VALUE "FileDescription",    "Bitcoin Core (GUI node for Bitcoin)"
+            VALUE "CompanyName",        "Zetacoin"
+            VALUE "FileDescription",    "Zetacoin Core (GUI node for Zetacoin)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
-            VALUE "InternalName",       "bitcoin-qt"
+            VALUE "InternalName",       "zetacoin-qt"
             VALUE "LegalCopyright",     COPYRIGHT_STR
             VALUE "LegalTrademarks1",   "Distributed under the MIT software license, see the accompanying file COPYING or http://www.opensource.org/licenses/mit-license.php."
-            VALUE "OriginalFilename",   "bitcoin-qt.exe"
-            VALUE "ProductName",        "Bitcoin Core"
+            VALUE "OriginalFilename",   "zetacoin-qt.exe"
+            VALUE "ProductName",        "Zetacoin Core"
             VALUE "ProductVersion",     VER_PRODUCTVERSION_STR
         END
     END
