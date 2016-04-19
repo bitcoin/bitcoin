@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include "test/test_bitcoin.h"
+#include "wallet/test/wallet_test_fixture.h"
 
 #include <boost/foreach.hpp>
 #include <boost/test/unit_test.hpp>
@@ -25,7 +25,7 @@ using namespace std;
 
 typedef set<pair<const CWalletTx*,unsigned int> > CoinSet;
 
-BOOST_FIXTURE_TEST_SUITE(wallet_tests, TestingSetup)
+BOOST_FIXTURE_TEST_SUITE(wallet_tests, WalletTestingSetup)
 
 static CWallet wallet;
 static vector<COutput> vCoins;
