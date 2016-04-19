@@ -143,6 +143,16 @@ bool CZMQAbstractPublishNotifier::SendMessage(const char *command, const void* d
     return true;
 }
 
+CZMQValidationPublishNotifier::CZMQValidationPublishNotifier()
+{
+    RegisterValidationInterface(this);
+}
+
+CZMQValidationPublishNotifier::~CZMQValidationPublishNotifier()
+{
+    UnregisterValidationInterface(this);
+}
+
 /** Write 256-bit hash to buffer reversed format */
 static void ZMQWriteHash(unsigned char *ptr, const uint256 &hash)
 {
@@ -150,25 +160,25 @@ static void ZMQWriteHash(unsigned char *ptr, const uint256 &hash)
         ptr[31 - i] = hash.begin()[i];
 }
 
-bool CZMQPublishHashBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
+void CZMQPublishHashBlockNotifier::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     uint256 hash = pindex->GetBlockHash();
     LogPrint("zmq", "zmq: Publish hashblock %s\n", hash.GetHex());
     uint8_t data[32];
     ZMQWriteHash(data, hash);
-    return SendMessage(MSG_HASHBLOCK, data, 32);
+    SendMessage(MSG_HASHBLOCK, data, 32);
 }
 
-bool CZMQPublishHashTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+void CZMQPublishHashTransactionNotifier::SyncTransaction(const CTransaction& transaction, const CBlockIndex * /*pindex*/, const CBlock* /*pblock*/)
 {
     uint256 hash = transaction.GetHash();
     LogPrint("zmq", "zmq: Publish hashtx %s\n", hash.GetHex());
     uint8_t data[32];
     ZMQWriteHash(data, hash);
-    return SendMessage(MSG_HASHTX, data, 32);
+    SendMessage(MSG_HASHTX, data, 32);
 }
 
-bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
+void CZMQPublishRawBlockNotifier::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     LogPrint("zmq", "zmq: Publish rawblock %s\n", pindex->GetBlockHash().GetHex());
 
@@ -180,22 +190,22 @@ bool CZMQPublishRawBlockNotifier::NotifyBlock(const CBlockIndex *pindex)
         if(!ReadBlockFromDisk(block, pindex, consensusParams))
         {
             zmqError("Can't read block from disk");
-            return false;
+            return;
         }
 
         ss << block;
     }
 
-    return SendMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
+    SendMessage(MSG_RAWBLOCK, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &transaction)
+void CZMQPublishRawTransactionNotifier::SyncTransaction(const CTransaction& transaction, const CBlockIndex * /*pindex*/, const CBlock* /*pblock*/)
 {
     uint256 hash = transaction.GetHash();
     LogPrint("zmq", "zmq: Publish rawtx %s\n", hash.GetHex());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << transaction;
-    return SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
+    SendMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
 
 CZMQPublishMempoolNotifier::CZMQPublishMempoolNotifier(CTxMemPool *mempoolIn):

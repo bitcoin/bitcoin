@@ -227,7 +227,6 @@ void Shutdown()
 
 #if ENABLE_ZMQ
     if (pzmqNotificationInterface) {
-        UnregisterValidationInterface(pzmqNotificationInterface);
         delete pzmqNotificationInterface;
         pzmqNotificationInterface = NULL;
     }
@@ -1146,10 +1145,6 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
 #if ENABLE_ZMQ
     pzmqNotificationInterface = CZMQNotificationInterface::CreateWithArguments(mapArgs, &mempool);
-
-    if (pzmqNotificationInterface) {
-        RegisterValidationInterface(pzmqNotificationInterface);
-    }
 #endif
     if (mapArgs.count("-maxuploadtarget")) {
         CNode::SetMaxOutboundTarget(GetArg("-maxuploadtarget", DEFAULT_MAX_UPLOAD_TARGET)*1024*1024);

@@ -24,9 +24,6 @@ public:
     virtual bool Initialize(void *pcontext) = 0;
     virtual void Shutdown() = 0;
 
-    virtual bool NotifyBlock(const CBlockIndex *pindex);
-    virtual bool NotifyTransaction(const CTransaction &transaction);
-
 protected:
     void *psocket;
     std::string type;
