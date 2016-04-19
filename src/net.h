@@ -282,6 +282,8 @@ private:
 
     /** Services this instance cares about */
     ServiceFlags nRelevantServices;
+
+    CSemaphore *semOutbound;
 };
 extern std::unique_ptr<CConnman> g_connman;
 void MapPort(bool fUseUPnP);
