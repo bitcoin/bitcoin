@@ -105,9 +105,9 @@ class CSyscoinAddress : public CBase58Data {
 public:
 	bool isAlias;
 	std::string aliasName;
-    bool Set(const CKeyID &id);
+    bool Set(const CKeyID &id, bool oldSys);
     bool Set(const CScriptID &id);
-    bool Set(const CTxDestination &dest);
+    bool Set(const CTxDestination &dest, bool oldSys);
     bool IsValid() const;
     bool IsValid(const CChainParams &params) const;
 
