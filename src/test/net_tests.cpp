@@ -163,12 +163,12 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     bool fInboundIn = false;
 
     // Test that fFeeler is false by default.
-    CNode* pnode1 = new CNode(id++, hSocket, addr, pszDest, fInboundIn);
+    CNode* pnode1 = new CNode(id++, NODE_NETWORK, hSocket, addr, pszDest, fInboundIn);
     BOOST_CHECK(pnode1->fInbound == false);
     BOOST_CHECK(pnode1->fFeeler == false);
 
     fInboundIn = true;
-    CNode* pnode2 = new CNode(id++, hSocket, addr, pszDest, fInboundIn);
+    CNode* pnode2 = new CNode(id++, NODE_NETWORK, hSocket, addr, pszDest, fInboundIn);
     BOOST_CHECK(pnode2->fInbound == true);
     BOOST_CHECK(pnode2->fFeeler == false);
 }
