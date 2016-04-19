@@ -478,6 +478,35 @@ def assert_is_hash_string(string, length=64):
         raise AssertionError(
             "String %r contains invalid characters for a hash." % string)
 
+def assert_array_result(object_array, to_match, expected, should_not_find = False):
+    """
+        Pass in array of JSON objects, a dictionary with key/value pairs
+        to match against, and another dictionary with expected key/value
+        pairs.
+        If the should_not_find flag is true, to_match should not be found
+        in object_array
+        """
+    if should_not_find == True:
+        expected = { }
+    num_matched = 0
+    for item in object_array:
+        all_match = True
+        for key,value in to_match.items():
+            if item[key] != value:
+                all_match = False
+        if not all_match:
+            continue
+        elif should_not_find == True:
+            num_matched = num_matched+1
+        for key,value in expected.items():
+            if item[key] != value:
+                raise AssertionError("%s : expected %s=%s"%(str(item), str(key), str(value)))
+            num_matched = num_matched+1
+    if num_matched == 0 and should_not_find != True:
+        raise AssertionError("No objects matched %s"%(str(to_match)))
+    if num_matched > 0 and should_not_find == True:
+        raise AssertionError("Objects were found %s"%(str(to_match)))
+
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
