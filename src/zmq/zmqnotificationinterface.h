@@ -13,7 +13,7 @@ class CBlockIndex;
 class CZMQAbstractNotifier;
 class CTxMemPool;
 
-class CZMQNotificationInterface : public CValidationInterface
+class CZMQNotificationInterface
 {
 public:
     virtual ~CZMQNotificationInterface();
@@ -23,10 +23,6 @@ public:
 protected:
     bool Initialize();
     void Shutdown();
-
-    // CValidationInterface
-    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, int posInBlock);
-    void UpdatedBlockTip(const CBlockIndex *pindex);
 
 private:
     CZMQNotificationInterface();
