@@ -23,7 +23,7 @@ import asyncore
 import time
 import sys
 import random
-from binascii import hexlify, unhexlify
+from .util import hex_str_to_bytes, bytes_to_hex_str
 from io import BytesIO
 from codecs import encode
 import hashlib
@@ -93,7 +93,7 @@ def deser_uint256(f):
 
 
 def ser_uint256(u):
-    rs = ""
+    rs = b""
     for i in xrange(8):
         rs += struct.pack("<I", u & 0xFFFFFFFFL)
         u >>= 32
@@ -191,7 +191,7 @@ def deser_string_vector(f):
 
 
 def ser_string_vector(l):
-    r = ""
+    r = b""
     if len(l) < 253:
         r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
@@ -236,12 +236,12 @@ def ser_int_vector(l):
 
 # Deserialize from a hex string representation (eg from RPC)
 def FromHex(obj, hex_string):
-    obj.deserialize(BytesIO(unhexlify(hex_string.encode('ascii'))))
+    obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
     return obj
 
 # Convert a binary-serializable object to hex (eg for submission via RPC)
 def ToHex(obj):
-    return hexlify(obj.serialize()).decode('ascii')
+    return bytes_to_hex_str(obj.serialize())
 
 # Objects that map to bitcoind objects, which can be serialized/deserialized
 
@@ -359,7 +359,7 @@ class CTxIn(object):
 
     def __repr__(self):
         return "CTxIn(prevout=%s scriptSig=%s nSequence=%i)" \
-            % (repr(self.prevout), hexlify(self.scriptSig),
+            % (repr(self.prevout), bytes_to_hex_str(self.scriptSig),
                self.nSequence)
 
 
@@ -381,7 +381,7 @@ class CTxOut(object):
     def __repr__(self):
         return "CTxOut(nValue=%i.%08i scriptPubKey=%s)" \
             % (self.nValue // COIN, self.nValue % COIN,
-               hexlify(self.scriptPubKey))
+               bytes_to_hex_str(self.scriptPubKey))
 
 
 class CTransaction(object):
@@ -624,7 +624,7 @@ class CAlert(object):
         self.vchSig = deser_string(f)
 
     def serialize(self):
-        r = ""
+        r = b""
         r += ser_string(self.vchMsg)
         r += ser_string(self.vchSig)
         return r
@@ -987,7 +987,7 @@ class msg_reject(object):
     def __init__(self):
         self.message = b""
         self.code = 0
-        self.reason = ""
+        self.reason = b""
         self.data = 0L
 
     def deserialize(self, f):
