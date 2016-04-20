@@ -25,20 +25,34 @@ public:
 
 void HandleError(const leveldb::Status& status);
 
+class CDBWrapper;
+
+/** These should be considered an implementation detail of the specific database.
+ */
+namespace dbwrapper_private {
+
+/** Work around circular dependency, as well as for testing in dbwrapper_tests.
+ * Database obfuscation should be considered an implementation detail of the
+ * specific database.
+ */
+const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w);
+
+};
+
 /** Batch of changes queued to be written to a CDBWrapper */
 class CDBBatch
 {
     friend class CDBWrapper;
 
 private:
+    const CDBWrapper &parent;
     leveldb::WriteBatch batch;
-    const std::vector<unsigned char> *obfuscate_key;
 
 public:
     /**
-     * @param[in] obfuscate_key    If passed, XOR data with this key.
+     * @param[in] parent    CDBWrapper that this batch is to be submitted to
      */
-    CDBBatch(const std::vector<unsigned char> *obfuscate_key) : obfuscate_key(obfuscate_key) { };
+    CDBBatch(const CDBWrapper &parent) : parent(parent) { };
 
     template <typename K, typename V>
     void Write(const K& key, const V& value)
@@ -51,7 +65,7 @@ public:
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         ssValue.reserve(ssValue.GetSerializeSize(value));
         ssValue << value;
-        ssValue.Xor(*obfuscate_key);
+        ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
         leveldb::Slice slValue(&ssValue[0], ssValue.size());
 
         batch.Put(slKey, slValue);
@@ -72,17 +86,17 @@ public:
 class CDBIterator
 {
 private:
+    const CDBWrapper &parent;
     leveldb::Iterator *piter;
-    const std::vector<unsigned char> *obfuscate_key;
 
 public:
 
     /**
+     * @param[in] parent           Parent CDBWrapper instance.
      * @param[in] piterIn          The original leveldb iterator.
-     * @param[in] obfuscate_key    If passed, XOR data with this key.
      */
-    CDBIterator(leveldb::Iterator *piterIn, const std::vector<unsigned char>* obfuscate_key) :
-        piter(piterIn), obfuscate_key(obfuscate_key) { };
+    CDBIterator(const CDBWrapper &parent, leveldb::Iterator *piterIn) :
+        parent(parent), piter(piterIn) { };
     ~CDBIterator();
 
     bool Valid();
@@ -118,7 +132,7 @@ public:
         leveldb::Slice slValue = piter->value();
         try {
             CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
-            ssValue.Xor(*obfuscate_key);
+            ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
             ssValue >> value;
         } catch (const std::exception&) {
             return false;
@@ -134,6 +148,7 @@ public:
 
 class CDBWrapper
 {
+    friend const std::vector<unsigned char>& dbwrapper_private::GetObfuscateKey(const CDBWrapper &w);
 private:
     //! custom environment this database is using (may be NULL in case of default environment)
     leveldb::Env* penv;
@@ -208,7 +223,7 @@ public:
     template <typename K, typename V>
     bool Write(const K& key, const V& value, bool fSync = false)
     {
-        CDBBatch batch(&obfuscate_key);
+        CDBBatch batch(*this);
         batch.Write(key, value);
         return WriteBatch(batch, fSync);
     }
@@ -235,7 +250,7 @@ public:
     template <typename K>
     bool Erase(const K& key, bool fSync = false)
     {
-        CDBBatch batch(&obfuscate_key);
+        CDBBatch batch(*this);
         batch.Erase(key);
         return WriteBatch(batch, fSync);
     }
@@ -250,24 +265,19 @@ public:
 
     bool Sync()
     {
-        CDBBatch batch(&obfuscate_key);
+        CDBBatch batch(*this);
         return WriteBatch(batch, true);
     }
 
     CDBIterator *NewIterator()
     {
-        return new CDBIterator(pdb->NewIterator(iteroptions), &obfuscate_key);
+        return new CDBIterator(*this, pdb->NewIterator(iteroptions));
     }
 
     /**
      * Return true if the database managed by this class contains no entries.
      */
     bool IsEmpty();
-
-    /**
-     * Accessor for obfuscate_key.
-     */
-    const std::vector<unsigned char>& GetObfuscateKey() const;
 };
 
 #endif // BITCOIN_DBWRAPPER_H

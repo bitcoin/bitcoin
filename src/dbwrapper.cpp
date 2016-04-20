@@ -136,12 +136,16 @@ bool CDBWrapper::IsEmpty()
     return !(it->Valid());
 }
 
-const std::vector<unsigned char>& CDBWrapper::GetObfuscateKey() const
-{
-    return obfuscate_key;
-}
-
 CDBIterator::~CDBIterator() { delete piter; }
 bool CDBIterator::Valid() { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
+
+namespace dbwrapper_private {
+
+const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w)
+{
+    return w.obfuscate_key;
+}
+
+};
