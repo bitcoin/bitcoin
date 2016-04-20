@@ -26,7 +26,7 @@ public:
     dbwrapper_error(const std::string& msg) : std::runtime_error(msg) {}
 };
 
-void HandleError(const leveldb::Status& status) throw(dbwrapper_error);
+void HandleError(const leveldb::Status& status);
 
 /** Batch of changes queued to be written to a CDBWrapper */
 class CDBBatch
@@ -188,7 +188,7 @@ public:
     ~CDBWrapper();
 
     template <typename K, typename V>
-    bool Read(const K& key, V& value) const throw(dbwrapper_error)
+    bool Read(const K& key, V& value) const
     {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
@@ -214,7 +214,7 @@ public:
     }
 
     template <typename K, typename V>
-    bool Write(const K& key, const V& value, bool fSync = false) throw(dbwrapper_error)
+    bool Write(const K& key, const V& value, bool fSync = false)
     {
         CDBBatch batch(&obfuscate_key);
         batch.Write(key, value);
@@ -222,7 +222,7 @@ public:
     }
 
     template <typename K>
-    bool Exists(const K& key) const throw(dbwrapper_error)
+    bool Exists(const K& key) const
     {
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         ssKey.reserve(DBWRAPPER_PREALLOC_KEY_SIZE);
@@ -241,14 +241,14 @@ public:
     }
 
     template <typename K>
-    bool Erase(const K& key, bool fSync = false) throw(dbwrapper_error)
+    bool Erase(const K& key, bool fSync = false)
     {
         CDBBatch batch(&obfuscate_key);
         batch.Erase(key);
         return WriteBatch(batch, fSync);
     }
 
-    bool WriteBatch(CDBBatch& batch, bool fSync = false) throw(dbwrapper_error);
+    bool WriteBatch(CDBBatch& batch, bool fSync = false);
 
     // not available for LevelDB; provide for compatibility with BDB
     bool Flush()
@@ -256,7 +256,7 @@ public:
         return true;
     }
 
-    bool Sync() throw(dbwrapper_error)
+    bool Sync()
     {
         CDBBatch batch(&obfuscate_key);
         return WriteBatch(batch, true);

@@ -15,7 +15,7 @@
 #include <memenv.h>
 #include <stdint.h>
 
-void HandleError(const leveldb::Status& status) throw(dbwrapper_error)
+void HandleError(const leveldb::Status& status)
 {
     if (status.ok())
         return;
@@ -102,7 +102,7 @@ CDBWrapper::~CDBWrapper()
     options.env = NULL;
 }
 
-bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync) throw(dbwrapper_error)
+bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
 {
     leveldb::Status status = pdb->Write(fSync ? syncoptions : writeoptions, &batch.batch);
     HandleError(status);
