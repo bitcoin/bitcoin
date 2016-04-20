@@ -63,6 +63,8 @@ mininode_lock = RLock()
 def sha256(s):
     return hashlib.new('sha256', s).digest()
 
+def ripemd160(s):
+    return hashlib.new('ripemd160', s).digest()
 
 def hash256(s):
     return sha256(sha256(s))
@@ -440,7 +442,7 @@ class CTxWitness(object):
             self.vtxinwit[i].deserialize(f)
 
     def serialize(self):
-        r = ""
+        r = b""
         # This is different than the usual vector serialization --
         # we omit the length of the vector, which is required to be
         # the same length as the transaction's vin vector.

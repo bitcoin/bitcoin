@@ -9,10 +9,9 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
+from test_framework.mininode import sha256, ripemd160
 import os
 import shutil
-import hashlib
-from binascii import hexlify
 
 NODE_0 = 0
 NODE_1 = 1
@@ -20,33 +19,27 @@ NODE_2 = 2
 WIT_V0 = 0
 WIT_V1 = 1
 
-def sha256(s):
-    return hashlib.new('sha256', s).digest()
-
-def ripemd160(s):
-    return hashlib.new('ripemd160', s).digest()
-
 def witness_script(version, pubkey):
     if (version == 0):
-        pubkeyhash = hexlify(ripemd160(sha256(pubkey.decode("hex"))))
+        pubkeyhash = bytes_to_hex_str(ripemd160(sha256(hex_str_to_bytes(pubkey))))
         pkscript = "0014" + pubkeyhash
     elif (version == 1):
         # 1-of-1 multisig
-        scripthash = hexlify(sha256(("5121" + pubkey + "51ae").decode("hex")))
+        scripthash = bytes_to_hex_str(sha256(hex_str_to_bytes("5121" + pubkey + "51ae")))
         pkscript = "0020" + scripthash
     else:
         assert("Wrong version" == "0 or 1")
     return pkscript
 
 def addlength(script):
-    scriptlen = format(len(script)/2, 'x')
+    scriptlen = format(len(script)//2, 'x')
     assert(len(scriptlen) == 2)
     return scriptlen + script
 
 def create_witnessprogram(version, node, utxo, pubkey, encode_p2sh, amount):
     pkscript = witness_script(version, pubkey);
     if (encode_p2sh):
-        p2sh_hash = hexlify(ripemd160(sha256(pkscript.decode("hex"))))
+        p2sh_hash = bytes_to_hex_str(ripemd160(sha256(hex_str_to_bytes(pkscript))))
         pkscript = "a914"+p2sh_hash+"87"
     inputs = []
     outputs = {}

@@ -23,7 +23,7 @@ def create_block(hashprev, coinbase, nTime=None):
     return block
 
 # From BIP141
-WITNESS_COMMITMENT_HEADER = "\xaa\x21\xa9\xed"
+WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
 # According to BIP141, blocks with witness rules active must commit to the
 # hash of all in-block transactions including witness.

@@ -911,19 +911,19 @@ def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
     hashOutputs = 0L
 
     if not (hashtype & SIGHASH_ANYONECANPAY):
-        serialize_prevouts = str()
+        serialize_prevouts = bytes()
         for i in txTo.vin:
             serialize_prevouts += i.prevout.serialize()
         hashPrevouts = uint256_from_str(hash256(serialize_prevouts))
 
     if (not (hashtype & SIGHASH_ANYONECANPAY) and (hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
-        serialize_sequence = str()
+        serialize_sequence = bytes()
         for i in txTo.vin:
             serialize_sequence += struct.pack("<I", i.nSequence)
         hashSequence = uint256_from_str(hash256(serialize_sequence))
 
     if ((hashtype & 0x1f) != SIGHASH_SINGLE and (hashtype & 0x1f) != SIGHASH_NONE):
-        serialize_outputs = str()
+        serialize_outputs = bytes()
         for o in txTo.vout:
             serialize_outputs += o.serialize()
         hashOutputs = uint256_from_str(hash256(serialize_outputs))
@@ -931,7 +931,7 @@ def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
         serialize_outputs = txTo.vout[inIdx].serialize()
         hashOutputs = uint256_from_str(hash256(serialize_outputs))
 
-    ss = str()
+    ss = bytes()
     ss += struct.pack("<i", txTo.nVersion)
     ss += ser_uint256(hashPrevouts)
     ss += ser_uint256(hashSequence)

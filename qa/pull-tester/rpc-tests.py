@@ -123,6 +123,7 @@ testScripts = [
     'abandonconflict.py',
     'p2p-versionbits-warning.py',
     'p2p-segwit.py',
+    'segwit.py',
     'importprunedfunds.py',
 ]
 if ENABLE_ZMQ:
