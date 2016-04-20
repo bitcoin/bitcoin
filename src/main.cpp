@@ -5718,7 +5718,21 @@ bool SendMessages(CNode* pto)
                         fRevertToInv = true;
                         break;
                     }
-                    assert(pBestIndex == NULL || pindex->pprev == pBestIndex);
+                    if (pBestIndex != NULL && pindex->pprev != pBestIndex) {
+                        // This means that the list of blocks to announce don't
+                        // connect to each other.
+                        // This shouldn't really be possible to hit during
+                        // regular operation (because reorgs should take us to
+                        // a chain that has some block not on the prior chain,
+                        // which should be caught by the prior check), but one
+                        // way this could happen is by using invalidateblock /
+                        // reconsiderblock repeatedly on the tip, causing it to
+                        // be added multiple times to vBlockHashesToAnnounce.
+                        // Robustly deal with this rare situation by reverting
+                        // to an inv.
+                        fRevertToInv = true;
+                        break;
+                    }
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // add this to the headers message
