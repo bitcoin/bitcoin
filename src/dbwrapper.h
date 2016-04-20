@@ -276,12 +276,6 @@ public:
      * Accessor for obfuscate_key.
      */
     const std::vector<unsigned char>& GetObfuscateKey() const;
-
-    /**
-     * Return the obfuscate_key as a hex-formatted string.
-     */
-    std::string GetObfuscateKeyHex() const;
-
 };
 
 #endif // BITCOIN_DBWRAPPER_H
