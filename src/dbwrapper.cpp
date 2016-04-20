@@ -84,10 +84,10 @@ CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, b
         Write(OBFUSCATE_KEY_KEY, new_key);
         obfuscate_key = new_key;
 
-        LogPrintf("Wrote new obfuscate key for %s: %s\n", path.string(), GetObfuscateKeyHex());
+        LogPrintf("Wrote new obfuscate key for %s: %s\n", path.string(), HexStr(obfuscate_key));
     }
 
-    LogPrintf("Using obfuscation key for %s: %s\n", path.string(), GetObfuscateKeyHex());
+    LogPrintf("Using obfuscation key for %s: %s\n", path.string(), HexStr(obfuscate_key));
 }
 
 CDBWrapper::~CDBWrapper()
@@ -139,11 +139,6 @@ bool CDBWrapper::IsEmpty()
 const std::vector<unsigned char>& CDBWrapper::GetObfuscateKey() const
 {
     return obfuscate_key;
-}
-
-std::string CDBWrapper::GetObfuscateKeyHex() const
-{
-    return HexStr(obfuscate_key);
 }
 
 CDBIterator::~CDBIterator() { delete piter; }
