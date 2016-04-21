@@ -4,6 +4,7 @@
 
 #include "thinblock.h"
 #include "utiltime.h"
+#include "unlimited.h"
 #include <sstream>
 #include <iomanip>
 
@@ -132,25 +133,31 @@ void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginal
 
 void CThinBlockStats::UpdateResponseTime(double nResponseTime)
 {
-    CThinBlockStats::mapThinBlockResponseTime[GetTimeMillis()] = nResponseTime;
+    // only update stats if IBD is complete
+    if (IsChainNearlySyncd() && IsThinBlocksEnabled()) {
+        CThinBlockStats::mapThinBlockResponseTime[GetTimeMillis()] = nResponseTime;
 
-    // Delete any entries that are more than 24 hours old
-    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockResponseTime.begin(); mi != CThinBlockStats::mapThinBlockResponseTime.end(); ++mi) {
-        if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapThinBlockResponseTime.erase(mi);
+        // Delete any entries that are more than 24 hours old
+        int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+        for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockResponseTime.begin(); mi != CThinBlockStats::mapThinBlockResponseTime.end(); ++mi) {
+            if ((*mi).first < nTimeCutoff)
+                CThinBlockStats::mapThinBlockResponseTime.erase(mi);
+        }
     }
 }
 
 void CThinBlockStats::UpdateValidationTime(double nValidationTime)
 {
-    CThinBlockStats::mapThinBlockValidationTime[GetTimeMillis()] = nValidationTime;
+    // only update stats if IBD is complete
+    if (IsChainNearlySyncd() && IsThinBlocksEnabled()) {
+        CThinBlockStats::mapThinBlockValidationTime[GetTimeMillis()] = nValidationTime;
 
-    // Delete any entries that are more than 24 hours old
-    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
-    for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockValidationTime.begin(); mi != CThinBlockStats::mapThinBlockValidationTime.end(); ++mi) {
-        if ((*mi).first < nTimeCutoff)
-            CThinBlockStats::mapThinBlockValidationTime.erase(mi);
+        // Delete any entries that are more than 24 hours old
+        int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+        for (std::map<int64_t, double>::iterator mi = CThinBlockStats::mapThinBlockValidationTime.begin(); mi != CThinBlockStats::mapThinBlockValidationTime.end(); ++mi) {
+            if ((*mi).first < nTimeCutoff)
+                CThinBlockStats::mapThinBlockValidationTime.erase(mi);
+        }
     }
 }
 
