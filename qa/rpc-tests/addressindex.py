@@ -256,6 +256,20 @@ class AddressIndexTest(BitcoinTestFramework):
         mempool2 = self.nodes[2].getaddressmempool({"addresses": [address3]})
         assert_equal(len(mempool2), 0)
 
+        tx = CTransaction()
+        tx.vin = [CTxIn(COutPoint(int(memtxid2, 16), 0))]
+        tx.vout = [CTxOut(amount - 10000, scriptPubKey2)]
+        tx.rehash()
+        self.nodes[2].importprivkey(privKey3)
+        signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        memtxid3 = self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
+        time.sleep(2)
+
+        mempool3 = self.nodes[2].getaddressmempool({"addresses": [address3]})
+        assert_equal(len(mempool3), 1)
+        assert_equal(mempool3[0]["prevtxid"], memtxid2)
+        assert_equal(mempool3[0]["prevout"], 0)
+
         print "Passed\n"
 
 
