@@ -178,6 +178,10 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(balance3, change_amount)
         assert_equal(deltas[0]["address"], address2)
 
+        # Check that entire range will be queried
+        deltasAll = self.nodes[1].getaddressdeltas({"addresses": [address2]})
+        assert_equal(len(deltasAll), len(deltas))
+
         # Check that deltas can be returned from range of block heights
         deltas = self.nodes[1].getaddressdeltas({"addresses": [address2], "start": 113, "end": 113})
         assert_equal(len(deltas), 1)
