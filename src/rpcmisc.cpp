@@ -398,6 +398,18 @@ UniValue setmocktime(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
+bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
+{
+    if (type == 2) {
+        address = CBitcoinAddress(CScriptID(hash)).ToString();
+    } else if (type == 1) {
+        address = CBitcoinAddress(CKeyID(hash)).ToString();
+    } else {
+        return false;
+    }
+    return true;
+}
+
 bool getAddressesFromParams(const UniValue& params, std::vector<std::pair<uint160, int> > &addresses)
 {
     if (params[0].isStr()) {
@@ -471,9 +483,13 @@ UniValue getaddressmempool(const UniValue& params, bool fHelp)
     for (std::vector<std::pair<CMempoolAddressDeltaKey, CMempoolAddressDelta> >::iterator it = indexes.begin();
          it != indexes.end(); it++) {
 
+        std::string address;
+        if (!getAddressFromIndex(it->first.type, it->first.addressBytes, address)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
+        }
+
         UniValue delta(UniValue::VOBJ);
-        delta.push_back(Pair("addressType", (int)it->first.type));
-        delta.push_back(Pair("addressHash", it->first.addressBytes.GetHex()));
+        delta.push_back(Pair("address", address));
         delta.push_back(Pair("txid", it->first.txhash.GetHex()));
         delta.push_back(Pair("index", (int)it->first.index));
         delta.push_back(Pair("satoshis", it->second.amount));
@@ -528,11 +544,7 @@ UniValue getaddressutxos(const UniValue& params, bool fHelp)
     for (std::vector<std::pair<CAddressUnspentKey, CAddressUnspentValue> >::const_iterator it=unspentOutputs.begin(); it!=unspentOutputs.end(); it++) {
         UniValue output(UniValue::VOBJ);
         std::string address;
-        if (it->first.type == 2) {
-            address = CBitcoinAddress(CScriptID(it->first.hashBytes)).ToString();
-        } else if (it->first.type == 1) {
-            address = CBitcoinAddress(CKeyID(it->first.hashBytes)).ToString();
-        } else {
+        if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
         }
 
@@ -561,8 +573,7 @@ UniValue getaddressdeltas(const UniValue& params, bool fHelp)
             "    \"txid\"  (string) The related txid\n"
             "    \"index\"  (number) The related input or output index\n"
             "    \"height\"  (number) The block height\n"
-            "    \"hash\"  (string) The address hash\n"
-            "    \"type\"  (number) The address type 0 for pubkeyhash 1 for scripthash\n"
+            "    \"address\"  (string) The base58check encoded address\n"
             "  }\n"
             "]\n"
         );
@@ -595,13 +606,17 @@ UniValue getaddressdeltas(const UniValue& params, bool fHelp)
     UniValue result(UniValue::VARR);
 
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
+        std::string address;
+        if (!getAddressFromIndex(it->first.type, it->first.hashBytes, address)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Unknown address type");
+        }
+
         UniValue delta(UniValue::VOBJ);
         delta.push_back(Pair("satoshis", it->second));
         delta.push_back(Pair("txid", it->first.txhash.GetHex()));
         delta.push_back(Pair("index", (int)it->first.index));
         delta.push_back(Pair("height", it->first.blockHeight));
-        delta.push_back(Pair("hash", it->first.hashBytes.GetHex()));
-        delta.push_back(Pair("type", (int)it->first.type));
+        delta.push_back(Pair("address", address));
         result.push_back(delta);
     }
 

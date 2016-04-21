@@ -176,6 +176,7 @@ class AddressIndexTest(BitcoinTestFramework):
         for delta in deltas:
             balance3 += delta["satoshis"]
         assert_equal(balance3, change_amount)
+        assert_equal(deltas[0]["address"], address2)
 
         # Check that deltas can be returned from range of block heights
         deltas = self.nodes[1].getaddressdeltas({"addresses": [address2], "start": 113, "end": 113})
@@ -250,6 +251,7 @@ class AddressIndexTest(BitcoinTestFramework):
         assert_equal(len(mempool), 2)
         assert_equal(mempool[0]["txid"], memtxid1)
         assert_equal(mempool[1]["txid"], memtxid2)
+        assert_equal(mempool[0]["address"], address3)
 
         self.nodes[2].generate(1);
         self.sync_all();
