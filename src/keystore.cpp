@@ -19,6 +19,7 @@ bool CBasicKeyStore::GetPubKey(const CKeyID &address, CPubKey &vchPubKeyOut) con
 {
     CKey key;
     if (!GetKey(address, key)) {
+        LOCK(cs_KeyStore);
         WatchKeyMap::const_iterator it = mapWatchKeys.find(address);
         if (it != mapWatchKeys.end()) {
             vchPubKeyOut = it->second;
