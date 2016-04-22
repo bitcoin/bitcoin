@@ -6,6 +6,7 @@ src/bitcoind
 src/bitcoin-cli
 src/bitcoin-tx
 src/test/test_bitcoin
+src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
 
 # autoreconf
