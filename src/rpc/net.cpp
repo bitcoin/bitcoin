@@ -347,6 +347,7 @@ UniValue getaddednodeinfo(const UniValue& params, bool fHelp)
             obj.push_back(Pair("connected", false));
             UniValue addresses(UniValue::VARR);
             obj.push_back(Pair("addresses", addresses));
+            ret.push_back(obj);
         }
     }
 
