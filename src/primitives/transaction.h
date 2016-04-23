@@ -353,7 +353,7 @@ public:
     const int32_t nVersion;
     const std::vector<CTxIn> vin;
     const std::vector<CTxOut> vout;
-    CTxWitness wit;
+    CTxWitness wit; // Not const: can change without invalidating the txid cache
     const uint32_t nLockTime;
 
     /** Construct a CTransaction that qualifies as IsNull() */

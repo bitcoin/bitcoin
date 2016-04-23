@@ -635,6 +635,8 @@ public:
 
 struct CScriptWitness
 {
+    // Note that this encodes the data elements being pushed, rather than
+    // encoding them as a CScript that pushes them.
     std::vector<std::vector<unsigned char> > stack;
 
     // Some compilers complain without a default constructor
