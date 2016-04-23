@@ -15,6 +15,7 @@
 #include "util.h"             // for LogPrint()
 #include "utilstrencodings.h" // for GetTime()
 
+#include <stdlib.h>
 #include <limits>
 
 #ifndef WIN32
@@ -23,6 +24,12 @@
 
 #include <openssl/err.h>
 #include <openssl/rand.h>
+
+static void RandFailure()
+{
+    LogPrintf("Failed to read randomness, aborting\n");
+    abort();
+}
 
 static inline int64_t GetPerformanceCounter()
 {
@@ -91,17 +98,25 @@ static void GetOSRand(unsigned char *ent32)
 #ifdef WIN32
     HCRYPTPROV hProvider;
     int ret = CryptAcquireContextW(&hProvider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    assert(ret);
+    if (!ret) {
+        RandFailure();
+    }
     ret = CryptGenRandom(hProvider, 32, ent32);
-    assert(ret);
+    if (!ret) {
+        RandFailure();
+    }
     CryptReleaseContext(hProvider, 0);
 #else
     int f = open("/dev/urandom", O_RDONLY);
-    assert(f != -1);
+    if (f == -1) {
+        RandFailure();
+    }
     int have = 0;
     do {
         ssize_t n = read(f, ent32 + have, 32 - have);
-        assert(n > 0 && n <= 32 - have);
+        if (n <= 0 || n + have > 32) {
+            RandFailure();
+        }
         have += n;
     } while (have < 32);
     close(f);
@@ -111,8 +126,7 @@ static void GetOSRand(unsigned char *ent32)
 void GetRandBytes(unsigned char* buf, int num)
 {
     if (RAND_bytes(buf, num) != 1) {
-        LogPrintf("%s: OpenSSL RAND_bytes() failed with error: %s\n", __func__, ERR_error_string(ERR_get_error(), NULL));
-        assert(false);
+        RandFailure();
     }
 }
 
