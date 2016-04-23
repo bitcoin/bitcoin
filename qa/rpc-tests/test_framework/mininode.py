@@ -23,7 +23,7 @@ import asyncore
 import time
 import sys
 import random
-from util import *
+from .util import hex_str_to_bytes, bytes_to_hex_str
 from io import BytesIO
 from codecs import encode
 import hashlib
@@ -249,12 +249,12 @@ def ser_int_vector(l):
 
 # Deserialize from a hex string representation (eg from RPC)
 def FromHex(obj, hex_string):
-    obj.deserialize(BytesIO(hex_str_to_bytes(hex_string.encode('ascii'))))
+    obj.deserialize(BytesIO(hex_str_to_bytes(hex_string)))
     return obj
 
 # Convert a binary-serializable object to hex (eg for submission via RPC)
 def ToHex(obj):
-    return bytes_to_hex_str(obj.serialize()).decode('ascii')
+    return bytes_to_hex_str(obj.serialize())
 
 # Objects that map to bitcoind objects, which can be serialized/deserialized
 
@@ -408,7 +408,7 @@ class CScriptWitness(object):
 
     def __repr__(self):
         return "CScriptWitness(%s)" % \
-               (",".join([binascii.bytes_to_hex_str(x) for x in self.stack]))
+               (",".join([bytes_to_hex_str(x) for x in self.stack]))
 
     def is_null(self):
         if self.stack:
