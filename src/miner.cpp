@@ -121,7 +121,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
     bool fPrintPriority = GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
     uint64_t nBlockCost = 4000;
     uint64_t nBlockTx = 0;
-    unsigned int nBlockSigOpsCost = 400;
+    int64_t nBlockSigOpsCost = 400;
     int lastFewTxs = 0;
     CAmount nFees = 0;
 
@@ -231,7 +231,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
             if (!IsFinalTx(tx, nHeight, nLockTimeCutoff))
                 continue;
 
-            unsigned int nTxSigOpsCost = iter->GetSigOpCost();
+            int64_t nTxSigOpsCost = iter->GetSigOpCost();
             if (nBlockSigOpsCost + nTxSigOpsCost >= MAX_BLOCK_SIGOPS_COST) {
                 if (nBlockSigOpsCost > MAX_BLOCK_SIGOPS_COST - 8) {
                     break;
