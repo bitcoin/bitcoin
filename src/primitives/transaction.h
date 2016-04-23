@@ -283,10 +283,9 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
         if (tx.vin.size() == 0 && (nVersion & SERIALIZE_TRANSACTION_WITNESS)) {
             /* We read a dummy or an empty vin. */
             READWRITE(flags);
-            READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
-            READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
-            if (flags == 0 && tx.vin.size() != 0) {
-                throw std::ios_base::failure("Extended transaction format unnecessarily used");
+            if (flags != 0) {
+                READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
+                READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
             }
         } else {
             /* We read a non-empty vin. Assume a normal vout follows. */
@@ -310,7 +309,7 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
                 flags |= 1;
             }
         }
-        if (flags || ((nVersion & SERIALIZE_TRANSACTION_WITNESS) != 0 && tx.vin.size() == 0)) {
+        if (flags) {
             /* Use extended format in case witnesses are to be serialized. */
             std::vector<CTxIn> vinDummy;
             READWRITE(vinDummy);

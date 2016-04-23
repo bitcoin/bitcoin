@@ -496,7 +496,7 @@ UniValue decoderawtransaction(const UniValue& params, bool fHelp)
 
     CTransaction tx;
 
-    if (!DecodeHexTx(tx, params[0].get_str()))
+    if (!DecodeHexTx(tx, params[0].get_str(), true))
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed");
 
     UniValue result(UniValue::VOBJ);
