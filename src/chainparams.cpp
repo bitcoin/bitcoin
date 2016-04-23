@@ -93,7 +93,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1462060800; // May 1st, 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
 
-        // Deployment of SegWit.
+        // Deployment of SegWit (BIP141 and BIP143)
         consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nStartTime = 2000000000; // Far in the future
         consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nTimeout = 2100000000;
@@ -189,7 +189,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1456790400; // March 1st, 2016
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
 
-        // Deployment of SegWit.
+        // Deployment of SegWit (BIP141 and BIP143)
         consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].bit = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nStartTime = 2000000000; // Far in the future
         consensus.vDeployments[Consensus::DEPLOYMENT_WITNESS].nTimeout = 2100000000;
