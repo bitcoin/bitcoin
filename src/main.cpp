@@ -1052,7 +1052,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         return state.DoS(0, false, REJECT_NONSTANDARD, "premature-version2-tx");
     }
 
-    // Don't accept witness transactions before the final threshold passes
+    // Reject transactions with witness before segregated witness activates (override with -prematurewitness)
     if (!GetBoolArg("-prematurewitness",false) && !tx.wit.IsNull() && !IsWitnessEnabled(chainActive.Tip(), Params().GetConsensus())) {
         return state.DoS(0, false, REJECT_NONSTANDARD, "no-witness-yet", true);
     }
