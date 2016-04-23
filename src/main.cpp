@@ -3353,7 +3353,9 @@ bool IsWitnessEnabled(const CBlockIndex* pindexPrev, const Consensus::Params& pa
     return (VersionBitsState(pindexPrev, params, Consensus::DEPLOYMENT_WITNESS, versionbitscache) == THRESHOLD_ACTIVE);
 }
 
-void UpdateUncommitedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
+// Compute at which vout of the block's coinbase transaction the witness
+// commitment occurs, or -1 if not found.
+static int GetWitnessCommitmentIndex(const CBlock& block)
 {
     int commitpos = -1;
     for (size_t o = 0; o < block.vtx[0].vout.size(); o++) {
@@ -3361,6 +3363,12 @@ void UpdateUncommitedBlockStructures(CBlock& block, const CBlockIndex* pindexPre
             commitpos = o;
         }
     }
+    return commitpos;
+}
+
+void UpdateUncommitedBlockStructures(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
+{
+    int commitpos = GetWitnessCommitmentIndex(block);
     static const std::vector<unsigned char> nonce(32, 0x00);
     if (commitpos != -1 && IsWitnessEnabled(pindexPrev, consensusParams) && block.vtx[0].wit.IsEmpty()) {
         block.vtx[0].wit.vtxinwit.resize(1);
@@ -3372,12 +3380,7 @@ void UpdateUncommitedBlockStructures(CBlock& block, const CBlockIndex* pindexPre
 std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
     std::vector<unsigned char> commitment;
-    int commitpos = -1;
-    for (size_t o = 0; o < block.vtx[0].vout.size(); o++) {
-        if (block.vtx[0].vout[o].scriptPubKey.size() >= 38 && block.vtx[0].vout[o].scriptPubKey[0] == OP_RETURN && block.vtx[0].vout[o].scriptPubKey[1] == 0x24 && block.vtx[0].vout[o].scriptPubKey[2] == 0xaa && block.vtx[0].vout[o].scriptPubKey[3] == 0x21 && block.vtx[0].vout[o].scriptPubKey[4] == 0xa9 && block.vtx[0].vout[o].scriptPubKey[5] == 0xed) {
-            commitpos = o;
-        }
-    }
+    int commitpos = GetWitnessCommitmentIndex(block);
     bool fHaveWitness = false;
     for (size_t t = 1; t < block.vtx.size(); t++) {
         if (!block.vtx[t].wit.IsNull()) {
@@ -3472,12 +3475,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     //   multiple, the last one is used.
     bool fHaveWitness = false;
     if (IsWitnessEnabled(pindexPrev, consensusParams)) {
-        int commitpos = -1;
-        for (size_t o = 0; o < block.vtx[0].vout.size(); o++) {
-            if (block.vtx[0].vout[o].scriptPubKey.size() >= 38 && block.vtx[0].vout[o].scriptPubKey[0] == OP_RETURN && block.vtx[0].vout[o].scriptPubKey[1] == 0x24 && block.vtx[0].vout[o].scriptPubKey[2] == 0xaa && block.vtx[0].vout[o].scriptPubKey[3] == 0x21 && block.vtx[0].vout[o].scriptPubKey[4] == 0xa9 && block.vtx[0].vout[o].scriptPubKey[5] == 0xed) {
-                commitpos = o;
-            }
-        }
+        int commitpos = GetWitnessCommitmentIndex(block);
         if (commitpos != -1) {
             bool malleated = false;
             uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
