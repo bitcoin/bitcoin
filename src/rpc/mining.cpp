@@ -333,7 +333,7 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "      {\n"
             "         \"data\" : \"xxxx\",          (string) transaction data encoded in hexadecimal (byte-for-byte)\n"
             "         \"txid\" : \"xxxx\",          (string) transaction id encoded in little-endian hexadecimal\n"
-            "         \"hash\" : \"xxxx\",          (string) hash encoded in little-endian hexadecimal\n"
+            "         \"hash\" : \"xxxx\",          (string) hash encoded in little-endian hexadecimal (including witness data)\n"
             "         \"depends\" : [              (array) array of numbers \n"
             "             n                        (numeric) transactions before this one (by 1-based index in 'transactions' list) that must be present in the final block if this one is\n"
             "             ,...\n"
