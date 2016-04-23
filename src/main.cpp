@@ -3493,7 +3493,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
         }
     }
 
-    // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room from spam
+    // No witness data is allowed in blocks that don't commit to witness data, as this would otherwise leave room for spam
     if (!fHaveWitness) {
         for (size_t i = 0; i < block.vtx.size(); i++) {
             if (!block.vtx[i].wit.IsNull()) {
