@@ -1135,6 +1135,9 @@ public:
 
 UniValue addwitnessaddress(const UniValue& params, bool fHelp)
 {
+    if (!EnsureWalletIsAvailable(fHelp))
+        return NullUniValue;
+
     if (fHelp || params.size() < 1 || params.size() > 1)
     {
         string msg = "addwitnessaddress \"address\"\n"

@@ -332,6 +332,10 @@ UniValue createwitnessaddress(const UniValue& params, bool fHelp)
         throw runtime_error(msg);
     }
 
+    if (!IsHex(params[0].get_str())) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Script must be hex-encoded");
+    }
+
     std::vector<unsigned char> code = ParseHex(params[0].get_str());
     CScript script(code.begin(), code.end());
     CScript witscript = GetScriptForWitness(script);
