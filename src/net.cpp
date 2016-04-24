@@ -1100,8 +1100,10 @@ void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
     int progress; // This variable is incremented if something happens.  If it is zero at the bottom of the loop, we delay.  This solves spin loop issues where the select does not block but no bytes can be transferred (traffic shaping limited, for example).
+    bool fAquiredAllRecvLocks;
     while (true) {
         progress = 0;
+        fAquiredAllRecvLocks = true;
         stat_io_service.poll(); // BU instrumentation
         //
         // Disconnect nodes
@@ -1272,7 +1274,10 @@ void ThreadSocketHandler()
             if (FD_ISSET(pnode->hSocket, &fdsetRecv) || FD_ISSET(pnode->hSocket, &fdsetError)) {
                 TRY_LOCK(pnode->cs_vRecvMsg, lockRecv);
                 int64_t amt2Recv = receiveShaper.available(RECV_SHAPER_MIN_FRAG);
-                if (lockRecv && (amt2Recv > 0)) {
+                if (!lockRecv) {
+                    fAquiredAllRecvLocks = false;
+                }
+                else if (amt2Recv > 0) {
                     {
                         progress++;
                         // max of min makes sure amt is in a range reasonable for buffer allocation
@@ -1342,8 +1347,8 @@ void ThreadSocketHandler()
                 pnode->Release();
         }
 
-        if (progress == 0) // BU: Nothing happened even though select did not block.  So slow us down.
-            MilliSleep(50);
+        if (progress == 0 && fAquiredAllRecvLocks) // BU: Nothing happened even though select did not block.  So slow us down. 
+            MilliSleep(5);
     }
 }
 
