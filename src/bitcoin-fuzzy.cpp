@@ -86,6 +86,7 @@ int main(int argc, char **argv)
                 CBlock block;
                 ds >> block;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CTRANSACTION_DESERIALIZE:
         {
@@ -94,6 +95,7 @@ int main(int argc, char **argv)
                 CTransaction tx;
                 ds >> tx;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CBLOCKLOCATOR_DESERIALIZE:
         {
@@ -102,6 +104,7 @@ int main(int argc, char **argv)
                 CBlockLocator bl;
                 ds >> bl;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CBLOCKMERKLEROOT:
         {
@@ -112,6 +115,7 @@ int main(int argc, char **argv)
                 bool mutated;
                 BlockMerkleRoot(block, &mutated);
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CADDRMAN_DESERIALIZE:
         {
@@ -120,6 +124,7 @@ int main(int argc, char **argv)
                 CAddrMan am;
                 ds >> am;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CBLOCKHEADER_DESERIALIZE:
         {
@@ -128,6 +133,7 @@ int main(int argc, char **argv)
                 CBlockHeader bh;
                 ds >> bh;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CBANENTRY_DESERIALIZE:
         {
@@ -136,6 +142,7 @@ int main(int argc, char **argv)
                 CBanEntry be;
                 ds >> be;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CTXUNDO_DESERIALIZE:
         {
@@ -144,6 +151,7 @@ int main(int argc, char **argv)
                 CTxUndo tu;
                 ds >> tu;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CBLOCKUNDO_DESERIALIZE:
         {
@@ -152,6 +160,7 @@ int main(int argc, char **argv)
                 CBlockUndo bu;
                 ds >> bu;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CCOINS_DESERIALIZE:
         {
@@ -160,6 +169,7 @@ int main(int argc, char **argv)
                 CCoins block;
                 ds >> block;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CNETADDR_DESERIALIZE:
         {
@@ -168,6 +178,7 @@ int main(int argc, char **argv)
                 CNetAddr na;
                 ds >> na;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CSERVICE_DESERIALIZE:
         {
@@ -176,6 +187,7 @@ int main(int argc, char **argv)
                 CService s;
                 ds >> s;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CMESSAGEHEADER_DESERIALIZE:
         {
@@ -185,6 +197,7 @@ int main(int argc, char **argv)
                 CMessageHeader mh(pchMessageStart);
                 ds >> mh;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CADDRESS_DESERIALIZE:
         {
@@ -193,6 +206,7 @@ int main(int argc, char **argv)
                 CAddress a;
                 ds >> a;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CINV_DESERIALIZE:
         {
@@ -201,6 +215,7 @@ int main(int argc, char **argv)
                 CInv i;
                 ds >> i;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CBLOOMFILTER_DESERIALIZE:
         {
@@ -209,6 +224,7 @@ int main(int argc, char **argv)
                 CBloomFilter bf;
                 ds >> bf;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CDISKBLOCKINDEX_DESERIALIZE:
         {
@@ -217,6 +233,7 @@ int main(int argc, char **argv)
                 CDiskBlockIndex dbi;
                 ds >> dbi;
             } catch (const std::ios_base::failure& e) {return 0;}
+            break;
         }
         case CTXOUTCOMPRESSOR_DESERIALIZE:
         {
@@ -227,6 +244,7 @@ int main(int argc, char **argv)
             } catch (const std::ios_base::failure& e) {return 0;}
             
             CTxOutCompressor toc(to);
+            break;
         }
         default:
             return 0;
