@@ -27,13 +27,14 @@ struct EscrowTableEntry
 	QString seller;
 	QString arbiter;
 	QString offer;
+	QString offertitle;
 	QString offeraccept;
 	QString total;
 	QString status;
 	QString buyer;
     EscrowTableEntry() {}
-    EscrowTableEntry(Type type, const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer):
-        type(type), escrow(escrow), time(time), seller(seller), arbiter(arbiter), offer(offer), offeraccept(offeraccept), total(total), status(status), buyer(buyer){}
+    EscrowTableEntry(Type type, const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer):
+        type(type), escrow(escrow), time(time), seller(seller), arbiter(arbiter), offer(offer), offertitle(offertitle), offeraccept(offeraccept), total(total), status(status), buyer(buyer){}
 };
 
 struct EscrowTableEntryLessThan
@@ -79,6 +80,7 @@ public:
 			string status_str;
 			string offeraccept_str;
 			string offer_str;
+			string offertitle_str;
 			string total_str;
 			string buyer_str;
 			int unixTime;
@@ -94,6 +96,7 @@ public:
 					status_str = "";
 					offeraccept_str = "";
 					offer_str = "";
+					offertitle_str = "";
 					total_str = "";	
 					buyer_str = "";
 					const UniValue &arr = result.get_array();
@@ -130,6 +133,9 @@ public:
 						const UniValue& offer_value = find_value(o, "offer");
 						if (offer_value.type() == UniValue::VSTR)
 							offer_str = offer_value.get_str();
+						const UniValue& offertitle_value = find_value(o, "offertitle");
+						if (offertitle_value.type() == UniValue::VSTR)
+							offertitle_str = offertitle_value.get_str();
 						const UniValue& offeraccept_value = find_value(o, "offeracceptlink");
 						if (offeraccept_value.type() == UniValue::VSTR)
 							offeraccept_str = offeraccept_value.get_str();
@@ -144,7 +150,7 @@ public:
 						dateTime.setTime_t(unixTime);
 						time_str = dateTime.toString().toStdString();	
 
-						updateEntry(QString::fromStdString(name_str), QString::fromStdString(time_str), QString::fromStdString(seller_str), QString::fromStdString(arbiter_str), QString::fromStdString(offer_str), QString::fromStdString(offeraccept_str), QString::fromStdString(total_str), QString::fromStdString(status_str), QString::fromStdString(buyer_str), type, CT_NEW); 
+						updateEntry(QString::fromStdString(name_str), QString::fromStdString(time_str), QString::fromStdString(seller_str), QString::fromStdString(arbiter_str), QString::fromStdString(offer_str), QString::fromStdString(offertitle_str), QString::fromStdString(offeraccept_str), QString::fromStdString(total_str), QString::fromStdString(status_str), QString::fromStdString(buyer_str), type, CT_NEW); 
 					}
 				}
  			}
@@ -161,7 +167,7 @@ public:
         qSort(cachedEscrowTable.begin(), cachedEscrowTable.end(), EscrowTableEntryLessThan());
     }
 
-    void updateEntry(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer, EscrowModelType type, int statusi)
+    void updateEntry(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer, EscrowModelType type, int statusi)
     {
 		if(!parent || parent->modelType != type)
 		{
@@ -187,7 +193,7 @@ public:
                 break; 
             }
             parent->beginInsertRows(QModelIndex(), lowerIndex, lowerIndex);
-            cachedEscrowTable.insert(lowerIndex, EscrowTableEntry(newEntryType, escrow, time, seller, arbiter, offer, offeraccept, total, status, buyer));
+            cachedEscrowTable.insert(lowerIndex, EscrowTableEntry(newEntryType, escrow, time, seller, arbiter, offer, offertitle, offeraccept, total, status, buyer));
             parent->endInsertRows();
             break;
         case CT_UPDATED:
@@ -200,6 +206,7 @@ public:
             lower->seller = seller;
 			lower->arbiter = arbiter;
 			lower->offer = offer;
+			lower->offertitle = offertitle;
 			lower->offeraccept = offeraccept;
 			lower->total = total;
 			lower->status = status;
@@ -240,7 +247,7 @@ EscrowTableModel::EscrowTableModel(CWallet *wallet, WalletModel *parent,  Escrow
     QAbstractTableModel(parent),walletModel(parent),wallet(wallet),priv(0), modelType(type)
 {
 
-	columns << tr("Escrow") << tr("Time") <<  tr("Seller") << tr("Arbiter") << tr("Buyer") << tr("Offer") << tr("Offer Accept") << tr("Total") << tr("Status");		 
+	columns << tr("Escrow") << tr("Time") <<  tr("Seller") << tr("Arbiter") << tr("Buyer") << tr("Offer") << tr("Title") << tr("Confirmation") << tr("Total") << tr("Status");		 
     priv = new EscrowTablePriv(wallet, this);
 	refreshEscrowTable();
 }
@@ -289,6 +296,8 @@ QVariant EscrowTableModel::data(const QModelIndex &index, int role) const
             return rec->seller;
         case Offer:
             return rec->offer;
+        case OfferTitle:
+            return rec->offertitle;
         case OfferAccept:
             return rec->offeraccept;
         case Total:
@@ -379,6 +388,15 @@ bool EscrowTableModel::setData(const QModelIndex &index, const QVariant &value, 
             }
            
             break;
+        case OfferTitle:
+            // Do nothing, if old value == new value
+            if(rec->offertitle == value.toString())
+            {
+                editStatus = NO_CHANGES;
+                return false;
+            }
+           
+            break;
         case Seller:
             // Do nothing, if old value == new value
             if(rec->seller == value.toString())
@@ -461,13 +479,13 @@ QModelIndex EscrowTableModel::index(int row, int column, const QModelIndex &pare
     }
 }
 
-void EscrowTableModel::updateEntry(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer, EscrowModelType type, int statusi)
+void EscrowTableModel::updateEntry(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &offeraccept, const QString &total, const QString &status, const QString &buyer, EscrowModelType type, int statusi)
 {
     // Update escrow book model from Syscoin core
-    priv->updateEntry(escrow, time, seller, arbiter, offer, offeraccept, total, status, buyer, type, statusi);
+    priv->updateEntry(escrow, time, seller, arbiter, offer, offertitle, offeraccept, total, status, buyer, type, statusi);
 }
 
-QString EscrowTableModel::addRow(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offeraccept, const QString &total, const QString &status,  const QString &buyer)
+QString EscrowTableModel::addRow(const QString &escrow, const QString &time, const QString &seller, const QString &arbiter, const QString &offer, const QString &offertitle, const QString &offeraccept, const QString &total, const QString &status,  const QString &buyer)
 {
     std::string strEscrow = escrow.toStdString();
     editStatus = OK;

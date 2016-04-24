@@ -61,6 +61,7 @@ MyEscrowListPage::MyEscrowListPage(const PlatformStyle *platformStyle, QWidget *
 	
     // Context menu actions
     QAction *copyEscrowAction = new QAction(ui->copyEscrow->text(), this);
+	QAction *copyOfferAction = new QAction(tr("&Copy Offer ID"), this);
     releaseAction = new QAction(tr("Release Escrow"), this);
 	refundAction = new QAction(tr("Refund Escrow"), this);
 
@@ -71,6 +72,7 @@ MyEscrowListPage::MyEscrowListPage(const PlatformStyle *platformStyle, QWidget *
     // Build context menu
     contextMenu = new QMenu();
     contextMenu->addAction(copyEscrowAction);
+	contextMenu->addAction(copyOfferAction);
 	contextMenu->addAction(buyerMessageAction);
 	contextMenu->addAction(sellerMessageAction);
 	contextMenu->addAction(arbiterMessageAction);
@@ -79,6 +81,7 @@ MyEscrowListPage::MyEscrowListPage(const PlatformStyle *platformStyle, QWidget *
 	contextMenu->addAction(refundAction);
     // Connect signals for context menu actions
     connect(copyEscrowAction, SIGNAL(triggered()), this, SLOT(on_copyEscrow_clicked()));
+	connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
 	connect(releaseAction, SIGNAL(triggered()), this, SLOT(on_releaseButton_clicked()));
 	connect(refundAction, SIGNAL(triggered()), this, SLOT(on_refundButton_clicked()));
 
@@ -124,12 +127,13 @@ void MyEscrowListPage::setModel(WalletModel *walletModel, EscrowTableModel *mode
     // Set column widths
     ui->tableView->setColumnWidth(0, 50); //escrow id
     ui->tableView->setColumnWidth(1, 50); //time
-    ui->tableView->setColumnWidth(2, 250); //seller
-    ui->tableView->setColumnWidth(3, 250); //arbiter
-    ui->tableView->setColumnWidth(4, 250); //buyer
+    ui->tableView->setColumnWidth(2, 150); //seller
+    ui->tableView->setColumnWidth(3, 150); //arbiter
+    ui->tableView->setColumnWidth(4, 150); //buyer
     ui->tableView->setColumnWidth(5, 80); //offer
-    ui->tableView->setColumnWidth(6, 80); //offeraccept
-    ui->tableView->setColumnWidth(7, 0); //status
+	ui->tableView->setColumnWidth(6, 250); //offer title
+    ui->tableView->setColumnWidth(7, 80); //offeraccept
+    ui->tableView->setColumnWidth(8, 0); //status
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
@@ -147,7 +151,10 @@ void MyEscrowListPage::on_copyEscrow_clicked()
 {
     GUIUtil::copyEntryData(ui->tableView, EscrowTableModel::Escrow);
 }
-
+void MyEscrowListPage::on_copyOffer_clicked()
+{
+    GUIUtil::copyEntryData(ui->tableView, EscrowTableModel::Offer);
+}
 void MyEscrowListPage::on_releaseButton_clicked()
 {
  	if(!model)	
@@ -292,7 +299,8 @@ void MyEscrowListPage::on_exportButton_clicked()
     writer.addColumn("Arbiter", EscrowTableModel::Arbiter, Qt::EditRole);
 	writer.addColumn("Seller", EscrowTableModel::Seller, Qt::EditRole);
 	writer.addColumn("Offer", EscrowTableModel::Offer, Qt::EditRole);
-	writer.addColumn("OfferAccept", EscrowTableModel::OfferAccept, Qt::EditRole);
+	writer.addColumn("OfferTitle", EscrowTableModel::OfferTitle, Qt::EditRole);
+	writer.addColumn("Confirmation", EscrowTableModel::OfferAccept, Qt::EditRole);
 	writer.addColumn("Total", EscrowTableModel::Total, Qt::EditRole);
 	writer.addColumn("Status", EscrowTableModel::Status, Qt::EditRole);
     if(!writer.write())

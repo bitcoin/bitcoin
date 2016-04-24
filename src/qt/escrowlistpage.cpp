@@ -94,12 +94,13 @@ void EscrowListPage::setModel(WalletModel* walletModel, EscrowTableModel *model)
     // Set column widths
     ui->tableView->setColumnWidth(0, 50); //escrow id
     ui->tableView->setColumnWidth(1, 50); //time
-    ui->tableView->setColumnWidth(2, 250); //seller
-    ui->tableView->setColumnWidth(3, 250); //arbiter
-    ui->tableView->setColumnWidth(4, 250); //buyer
+    ui->tableView->setColumnWidth(2, 150); //seller
+    ui->tableView->setColumnWidth(3, 150); //arbiter
+    ui->tableView->setColumnWidth(4, 150); //buyer
     ui->tableView->setColumnWidth(5, 80); //offer
-    ui->tableView->setColumnWidth(6, 80); //offeraccept
-    ui->tableView->setColumnWidth(7, 0); //status
+	ui->tableView->setColumnWidth(6, 250); //offer title
+    ui->tableView->setColumnWidth(7, 80); //offeraccept
+    ui->tableView->setColumnWidth(8, 0); //status
 
     ui->tableView->horizontalHeader()->setStretchLastSection(true);
 
@@ -176,7 +177,8 @@ void EscrowListPage::on_exportButton_clicked()
     writer.addColumn("Arbiter", EscrowTableModel::Arbiter, Qt::EditRole);
 	writer.addColumn("Seller", EscrowTableModel::Seller, Qt::EditRole);
 	writer.addColumn("Offer", EscrowTableModel::Offer, Qt::EditRole);
-	writer.addColumn("OfferAccept", EscrowTableModel::OfferAccept, Qt::EditRole);
+	writer.addColumn("OfferTitle", EscrowTableModel::OfferTitle, Qt::EditRole);
+	writer.addColumn("Confirmation", EscrowTableModel::OfferAccept, Qt::EditRole);
 	writer.addColumn("Total", EscrowTableModel::Total, Qt::EditRole);
 	writer.addColumn("Status", EscrowTableModel::Status, Qt::EditRole);
     if(!writer.write())
@@ -226,6 +228,7 @@ void EscrowListPage::on_searchEscrow_clicked()
 		string status_str;
 		string offeraccept_str;
 		string offer_str;
+		string offertitle_str;
 		string total_str;	
 		string buyer_str;
 		int unixTime;
@@ -272,6 +275,7 @@ void EscrowListPage::on_searchEscrow_clicked()
 				status_str = "";
 				offeraccept_str = "";
 				offer_str = "";
+				offertitle_str = "";
 				total_str = "";
 				buyer_str = "";
 				
@@ -293,6 +297,10 @@ void EscrowListPage::on_searchEscrow_clicked()
 				const UniValue& offer_value = find_value(o, "offer");
 				if (offer_value.type() == UniValue::VSTR)
 					offer_str = offer_value.get_str();
+				const UniValue& offertitle_value = find_value(o, "offertitle");
+				if (offertitle_value.type() == UniValue::VSTR)
+					offertitle_str = offertitle_value.get_str();
+
 				const UniValue& offeraccept_value = find_value(o, "offeracceptlink");
 				if (offeraccept_value.type() == UniValue::VSTR)
 					offeraccept_str = offeraccept_value.get_str();
@@ -311,6 +319,7 @@ void EscrowListPage::on_searchEscrow_clicked()
 						QString::fromStdString(seller_str),
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
+						QString::fromStdString(offertitle_str),
 						QString::fromStdString(offeraccept_str),
 						QString::fromStdString(total_str),
 						QString::fromStdString(status_str),
@@ -319,6 +328,7 @@ void EscrowListPage::on_searchEscrow_clicked()
 						QString::fromStdString(seller_str),
 						QString::fromStdString(arbiter_str),
 						QString::fromStdString(offer_str),
+						QString::fromStdString(offertitle_str),
 						QString::fromStdString(offeraccept_str),
 						QString::fromStdString(total_str),
 						QString::fromStdString(status_str), 
