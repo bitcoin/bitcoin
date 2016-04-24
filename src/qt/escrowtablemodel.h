@@ -28,7 +28,7 @@ public:
         Arbiter = 3,  
 		Buyer = 4,
 		Offer = 5,
-		Offer = 6,
+		OfferTitle = 6,
 		OfferAccept = 7,
 		Total = 8,
 		Status = 9
