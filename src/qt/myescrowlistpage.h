@@ -51,6 +51,7 @@ private:
 	QAction *arbiterMessageAction;
 private Q_SLOTS:
     void on_copyEscrow_clicked();
+	void on_copyOffer_clicked();
     /** Export button clicked */
     void on_exportButton_clicked();
 	void on_refreshButton_clicked();
