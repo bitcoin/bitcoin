@@ -1627,6 +1627,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 		  throw runtime_error("failed to read from escrow DB");
 	CEscrow ca = vtxPos.back();
 	CTransaction offertx;
+	COffer offer;
 	if (!GetTxOfOffer(ca.vchOffer, offer, offertx))
 		throw runtime_error("failed to read from offer DB");
 	
@@ -1927,7 +1928,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
     BOOST_FOREACH(pairScan, escrowScan) {
 		const CEscrow &txEscrow = pairScan.second;
 		const string &escrow = stringFromVch(pairScan.first);
-		const string &offer = stringFromVch(txEscrow.vchOffer);
+		const string &offerstr = stringFromVch(txEscrow.vchOffer);
 		CPubKey SellerPubKey(txEscrow.vchSellerKey);
 		CSyscoinAddress selleraddy(SellerPubKey.GetID());
 		selleraddy = CSyscoinAddress(selleraddy.ToString());
@@ -1962,7 +1963,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
         CTransaction tx;
 		if (!GetSyscoinTransaction(txEscrow.nHeight, txEscrow.txHash, tx, Params().GetConsensus()))
 			continue;
-			COffer offer;
+		COffer offer;
 		CTransaction offertx;
 		if (!GetTxOfOffer(txEscrow.vchOffer, offer, offertx))
 			continue;
@@ -2045,7 +2046,7 @@ UniValue escrowscan(const UniValue& params, bool fHelp) {
         
 		if (!GetSyscoinTransaction(nHeight, txEscrow.txHash, tx, Params().GetConsensus()))
 			continue;
-			COffer offer;
+		COffer offer;
 		CTransaction offertx;
 		if (!GetTxOfOffer(txEscrow.vchOffer, offer, offertx))
 			continue;
