@@ -892,6 +892,13 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
             if (node->fDisconnect)
                 continue;
             vEvictionCandidates.push_back(CNodeRef(node));
+
+            // on occasion a node will connect but not complete it's initial ping/pong in a reasonable amount of time
+            // and will therefore be the lowest priority connection and disconnected first.
+            if (node->nPingNonceSent > 0 && node->nPingUsecTime == 0 && ((GetTime() - node->nTimeConnected) > 60)) {
+                node->fDisconnect = true;
+                return true;
+            }
         }
     }
 
@@ -901,25 +908,30 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
 
     // Deterministically select 4 peers to protect by netgroup.
     // An attacker cannot predict which netgroups will be protected.
-    static CompareNetGroupKeyed comparerNetGroupKeyed;
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), comparerNetGroupKeyed);
-    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(4, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+// BU:  this is not effective and not needed
+//    static CompareNetGroupKeyed comparerNetGroupKeyed;
+//    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), comparerNetGroupKeyed);
+//    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(4, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
 
-    if (vEvictionCandidates.empty()) return false;
+//    if (vEvictionCandidates.empty()) return false;
 
+    // BU: slot attack - using ping time is not affective against a slot attack since the attackers generally have the best ping time.
+    // BU: also, ping time does not necessarily mean a node is closer.  Nodes that are busy can have long ping times but be near in location.
     // Protect the 8 nodes with the best ping times.
     // An attacker cannot manipulate this metric without physically moving nodes closer to the target.
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeMinPingTime);
-    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(8, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
+// BU: this is not effectivve and actually gives the attackers a better chance since attacker ping time is usually very good.
+//    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeMinPingTime);
+//    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(8, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
 
-    if (vEvictionCandidates.empty()) return false;
+//    if (vEvictionCandidates.empty()) return false;
 
     // Protect the half of the remaining nodes which have been connected the longest.
     // This replicates the existing implicit behavior.
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
-    vEvictionCandidates.erase(vEvictionCandidates.end() - static_cast<int>(vEvictionCandidates.size() / 2), vEvictionCandidates.end());
+// BU: this also makes no sense since attackers can be the first to connect
+//    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
+//    vEvictionCandidates.erase(vEvictionCandidates.end() - static_cast<int>(vEvictionCandidates.size() / 2), vEvictionCandidates.end());
 
-    if (vEvictionCandidates.empty()) return false;
+//    if (vEvictionCandidates.empty()) return false;
 
     // Identify the network group with the most connections and youngest member.
     // (vEvictionCandidates is already sorted by reverse connect time)
@@ -1010,6 +1022,7 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         if (!AttemptToEvictConnection(whitelisted)) {
             // No connection to evict, disconnect the new connection
             LogPrint("net", "failed to find an eviction candidate - connection dropped (full)\n");
+LogPrintf("failed to find an eviction candidate - connection dropped (full)\n");
             CloseSocket(hSocket);
             return;
         }
