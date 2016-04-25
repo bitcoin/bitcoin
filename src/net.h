@@ -361,7 +361,7 @@ public:
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     CBloomFilter* pfilter;
-    CBloomFilter* pThinBlockFilter; // BU - Xtreme Thinblocks: a bloom filter which is separate from the one used by SPV wallets
+    CBloomFilter* pThinBlockFilter;
     int nRefCount;
     NodeId id;
 
@@ -501,11 +501,9 @@ public:
         nRefCount--;
     }
 
-    // BUIP010:
     bool ThinBlockCapable()
     {
-        if (nServices & NODE_XTHIN) return true;
-        return false;
+        return (nServices & NODE_XTHIN);
     }
 
 

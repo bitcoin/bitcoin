@@ -80,10 +80,10 @@ BOOST_AUTO_TEST_CASE(stat_testvectors)
     s4.timeout(boost::system::error_code());
     s5.timeout(boost::system::error_code());
     }
-  BOOST_CHECK(s1.History(1,0) == 29*5 + 20);  
-  BOOST_CHECK(s2.History(1,0) == (29*10 + 120)/30);  
-  BOOST_CHECK(s3.History(1,0) == 120000);  
-  BOOST_CHECK(s4.History(1,0) == 3.3); 
+  BOOST_CHECK(s1.History(1,0) == 29*5 + 20);
+  BOOST_CHECK(s2.History(1,0) == (29*10 + 120)/30);
+  BOOST_CHECK(s3.History(1,0) == 120000);
+  BOOST_CHECK(s4.History(1,0) == 3.3);
 
   statMinInterval=boost::posix_time::milliseconds(10); // boost::posix_time::seconds(1); // Speed things up
   for (int i=0;i<12;i++)
@@ -105,13 +105,13 @@ BOOST_AUTO_TEST_CASE(stat_testvectors)
     s4.timeout(boost::system::error_code());
     s5.timeout(boost::system::error_code());
     }
-  BOOST_CHECK(s1.History(2,0) > 0);  
-  BOOST_CHECK(s2.History(2,0) > 0);  
-  BOOST_CHECK(s3.History(2,0) == 120000);  
-  BOOST_CHECK(s4.History(2,0) == 3.3); 
+  BOOST_CHECK(s1.History(2,0) > 0);
+  BOOST_CHECK(s2.History(2,0) > 0);
+  BOOST_CHECK(s3.History(2,0) == 120000);
+  BOOST_CHECK(s4.History(2,0) == 3.3);
 
   int array[15];
-  
+
   BOOST_CHECK(s1.Series(0, array, 15) == 15);
   for (int i=0;i<15;i++)
     BOOST_CHECK(array[i] == 5);

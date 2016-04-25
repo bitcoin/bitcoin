@@ -47,7 +47,7 @@ CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP
 std::map<uint256, uint64_t> mapThinBlockTimer;
 
 /**
- *  BUIP010 Xtreme Thinblocks Section 
+ *  BUIP010 Xtreme Thinblocks Section
  */
 bool HaveConnectThinblockNodes()
 {
@@ -67,11 +67,11 @@ bool HaveConnectThinblockNodes()
     // Create a set used to check for cross connected nodes.
     // A cross connected node is one where we have a connect-thinblock connection to
     // but we also have another inbound connection which is also using
-    // connect-thinblock. In those cases we have created a dead-lock where no blocks 
-    // can be downloaded unless we also have at least one additional connect-thinblock 
+    // connect-thinblock. In those cases we have created a dead-lock where no blocks
+    // can be downloaded unless we also have at least one additional connect-thinblock
     // connection to a different node.
     std::set<std::string> nNotCrossConnected;
- 
+
     int nConnectionsOpen = 0;
     BOOST_FOREACH(const std::string& strAddrNode, mapMultiArgs["-connect-thinblock"]) {
         std::string strThinblockNode;
@@ -95,7 +95,7 @@ bool HaveConnectThinblockNodes()
     else if (nConnectionsOpen > 0)
         LogPrint("thin", "You have a cross connected thinblock node - we may download regular blocks until you resolve the issue\n");
     return false; // Connections are either not open or they are cross connected.
-} 
+}
 
 bool HaveThinblockNodes()
 {
@@ -135,7 +135,7 @@ void ClearThinBlockTimer(uint256 hash)
     }
 }
 
-bool IsThinBlocksEnabled() 
+bool IsThinBlocksEnabled()
 {
     bool fThinblocksEnabled = GetBoolArg("-use-thinblocks", true);
 
@@ -147,7 +147,7 @@ bool IsThinBlocksEnabled()
     return fThinblocksEnabled;
 }
 
-bool IsChainNearlySyncd() 
+bool IsChainNearlySyncd()
 {
     LOCK(cs_main);
     if(chainActive.Height() < pindexBestHeader->nHeight - 2)
@@ -217,9 +217,9 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
         }
     }
     LogPrint("thin", "Processed Block %s in %.2f seconds\n", inv.hash.ToString(), (double)(GetTimeMicros() - startTime) / 1000000.0);
-    
+
     // When we request a thinblock we may get back a regular block if it is smaller than a thinblock
-    // Therefore we have to remove the thinblock in flight if it exists and we also need to check that 
+    // Therefore we have to remove the thinblock in flight if it exists and we also need to check that
     // the block didn't arrive from some other peer.  This code ALSO cleans up the thin block that
     // was passed to us (&block), so do not use it after this.
     {
@@ -227,7 +227,7 @@ void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, c
         LOCK(cs_vNodes);
         BOOST_FOREACH(CNode* pnode, vNodes) {
             if (pnode->mapThinBlocksInFlight.count(inv.hash)) {
-                pnode->mapThinBlocksInFlight.erase(inv.hash); 
+                pnode->mapThinBlocksInFlight.erase(inv.hash);
                 pnode->thinBlockWaitingForTxns = -1;
                 pnode->thinBlock.SetNull();
             }
@@ -299,7 +299,7 @@ void CheckNodeSupportForThinBlocks()
         BOOST_FOREACH(string& strAddr, mapMultiArgs["-connect-thinblock"]) {
             if(CNode* pnode = FindNode(strAddr)) {
                 if(!pnode->ThinBlockCapable()) {
-                    LogPrintf("ERROR: You are trying to use connect-thinblocks but to a node that does not support it - Protocol Version: %d peer=%d\n", 
+                    LogPrintf("ERROR: You are trying to use connect-thinblocks but to a node that does not support it - Protocol Version: %d peer=%d\n",
                                pnode->nVersion, pnode->id);
                 }
             }
@@ -400,7 +400,7 @@ UniValue getstat(const UniValue& params, bool fHelp)
     if (params.size() < 3) count = 1;  // if a count is not specified, give the latest sample
     else
       {
-	if (!params[2].isNum()) 
+	if (!params[2].isNum())
 	  {
           try
 	    {
@@ -436,7 +436,7 @@ UniValue getstat(const UniValue& params, bool fHelp)
             "      ],\n"
             "    ...\n"
             "    },\n"
-            "  ...\n"            
+            "  ...\n"
             "  }\n"
             "\nExamples:\n" +
             HelpExampleCli("getstat", "") + HelpExampleRpc("getstat", "")
@@ -448,7 +448,7 @@ UniValue getstat(const UniValue& params, bool fHelp)
     if (params.size() < 2)
       seriesStr = "now";
     else seriesStr = params[1].get_str();
-    //uint_t series = 0; 
+    //uint_t series = 0;
     //if (series == "now") series |= 1;
     //if (series == "all") series = 0xfffffff;
 
@@ -466,7 +466,7 @@ UniValue getstat(const UniValue& params, bool fHelp)
 	    ustat.push_back(Pair(seriesStr,series));
 	  }
 
-        ret.push_back(ustat);  
+        ret.push_back(ustat);
       }
 
     return ret;

@@ -219,7 +219,7 @@ void AdvertizeLocal(CNode *pnode)
         }
         if (addrLocal.IsRoutable())
         {
-          // BU logs too often: LogPrintf("AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
+            LogPrintf("AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
             pnode->PushAddress(addrLocal);
         }
     }
@@ -758,7 +758,7 @@ void SocketSendData(CNode *pnode)
         assert(data.size() > pnode->nSendOffset);
         int nBytes = send(pnode->hSocket, &data[pnode->nSendOffset], data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         if (nBytes > 0) {
-            pnode->bytesSent += nBytes;  // BU stats
+            pnode->bytesSent += nBytes;
             pnode->nLastSend = GetTime();
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
@@ -1026,7 +1026,7 @@ void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
     while (true) {
-        stat_io_service.poll(); // BU instrumentation
+        stat_io_service.poll();
         //
         // Disconnect nodes
         //
@@ -1217,7 +1217,7 @@ void ThreadSocketHandler()
                                 pnode->CloseSocketDisconnect();
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;
-                            pnode->bytesReceived += nBytes;  // BU stats
+                            pnode->bytesReceived += nBytes;
                             pnode->RecordBytesRecv(nBytes);
                         }
                         else if (nBytes == 0)
@@ -1530,9 +1530,7 @@ void ThreadOpenConnections()
             }
             MilliSleep(500);
 
-           // BUIP010 Xtreme Thinblocks: begin section
            ConnectToThinBlockNodes();
-           // BUIP010 Xtreme Thinblocks: end section
         }
     }
 
@@ -1759,11 +1757,7 @@ void ThreadMessageHandler()
             boost::this_thread::interruption_point();
 
             // Send messages
-            {
-              //TRY_LOCK(pnode->cs_vSend, lockSend);
-              //  if (lockSend)
-              g_signals.SendMessages(pnode);
-            }
+            g_signals.SendMessages(pnode);
             boost::this_thread::interruption_point();
         }
 
@@ -1774,7 +1768,7 @@ void ThreadMessageHandler()
         }
 
         if (fSleep)
-            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(50));
+            messageHandlerCondition.timed_wait(lock, boost::posix_time::microsec_clock::universal_time() + boost::posix_time::milliseconds(100));
     }
 }
 
@@ -2383,26 +2377,21 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nNextInvSend = 0;
     fRelayTxes = false;
     pfilter = new CBloomFilter();
-    pThinBlockFilter = new CBloomFilter(); // BUIP010 - Xtreme Thinblocks
+    pThinBlockFilter = new CBloomFilter();
     nPingNonceSent = 0;
     nPingUsecStart = 0;
     nPingUsecTime = 0;
     fPingQueued = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
-    thinBlockWaitingForTxns = -1; // BUIP010 Xtreme Thinblocks
+    thinBlockWaitingForTxns = -1;
 
-    // BU instrumentation
     std::string xmledName;
-    if (addrNameIn != "") xmledName = addrNameIn;
+    if (addrNameIn != "")
+        xmledName = addrNameIn;
     else
-      {
-	xmledName="ip" + addr.ToStringIP() + "p" + addr.ToStringPort();
-      }
+        xmledName="ip" + addr.ToStringIP() + "p" + addr.ToStringPort();
     bytesSent.init("node/" + xmledName + "/bytesSent");
     bytesReceived.init("node/" + xmledName + "/bytesReceived");
-    //txReqLatency.init("node/" + xmledName + "/txLatency", STAT_OP_AVE);
-    //firstTx.init("node/" + xmledName + "/firstTxn");
-    //firstBlock.init("node/" + xmledName + "/firstBlock");
 
     {
         LOCK(cs_nLastNodeId);
@@ -2427,10 +2416,7 @@ CNode::~CNode()
 
     if (pfilter)
         delete pfilter;
-    // BUIP010 - Xtreme Thinblocks - begin section
-    if (pThinBlockFilter)
-        delete pThinBlockFilter;
-    // BUIP010 - Xtreme Thinblocks - end section
+    delete pThinBlockFilter;
 
     GetNodeSignals().FinalizeNode(GetId());
 }

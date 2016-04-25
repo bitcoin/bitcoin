@@ -63,7 +63,7 @@ public:
 
 template <class DataType,class RecordType=DataType> class CStat:public CStatBase
 {
-  
+
 public:
 
 protected:
@@ -104,7 +104,7 @@ name = "";
 }
 
   CStat& operator=(const DataType& arg) { value=arg; return *this;}
-  
+
   CStat& operator+=(const DataType& rhs) { value+=rhs; return *this; }
   CStat& operator-=(const DataType& rhs) { value-=rhs; return *this; }
 
@@ -220,7 +220,7 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
       // TODO: statistics.erase(this);
     }
 
-  CStatHistory& operator << (const DataType& rhs) 
+  CStatHistory& operator << (const DataType& rhs)
     {
 
       if (op & STAT_OP_SUM) this->value += rhs;
@@ -228,7 +228,7 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
       else if (op & STAT_OP_MAX) { if (this->value < rhs) this->value = rhs; }
       else if (op & STAT_OP_MIN) { if (this->value > rhs) this->value = rhs; }
 
-    return *this; 
+    return *this;
     }
 
   void Start()
@@ -289,7 +289,7 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
     return history[series][pos];
   }
 
-  void timeout(const boost::system::error_code &e) 
+  void timeout(const boost::system::error_code &e)
   {
     if (e) return;
 
@@ -317,7 +317,7 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
 	  {
 	    int start = loc[i];
             RecordType accumulator = RecordType();
-            
+
             // First time in the loop we need to assign
 	    start--;
             if (start<0) start+=STATISTICS_SAMPLES;  // Wrap around
@@ -331,22 +331,22 @@ CStatHistory(const std::string& name, unsigned int operation=STAT_OP_SUM):CStat<
                 if ((op & STAT_OP_SUM)||(op & STAT_OP_AVE)) accumulator += datapt;
                 else if (op & STAT_OP_MAX) { if (accumulator < datapt) accumulator = datapt; }
                 else if (op & STAT_OP_MIN) { if (accumulator > datapt) accumulator = datapt; }
-                
+
 	      }
             // All done accumulating.  Now store the data in the proper history field -- its going in the next series.
             if (op == STAT_OP_AVE) accumulator /= ((DataType) operateSampleCount[i]);
             history[i+1][loc[i+1]] = accumulator;
             loc[i+1]++;
-            if (loc[i+1] >= STATISTICS_SAMPLES) loc[i+1]=0;  // Wrap around                  
+            if (loc[i+1] >= STATISTICS_SAMPLES) loc[i+1]=0;  // Wrap around
 	  }
       }
     wait();
   }
 
 protected:
-  void wait() 
+  void wait()
    {
-      timer.expires_from_now(statMinInterval); 
+      timer.expires_from_now(statMinInterval);
       timer.async_wait(boost::bind(&CStatHistory::timeout, this, boost::asio::placeholders::error));
    }
 
@@ -395,7 +395,7 @@ public:
       if (val!=rhs.val) return false;
       if (max!=rhs.max) return false;
       if (samples != rhs.samples) return false;
-      return true;  
+      return true;
     }
 
   MinValMax& operator=(const NUM& rhs)
@@ -468,7 +468,7 @@ public:
       max /= rhs;
       return *this;
     }
-   
+
   operator UniValue() const
   {
     UniValue ret(UniValue::VOBJ);
@@ -506,10 +506,10 @@ template<class T, int NumBuckets> class LinearHistogram
 protected:
   int buckets[NumBuckets];
   T start;
-  T end; 
+  T end;
 public:
 LinearHistogram(T pstart, T pend):buckets(0), start(pstart), end(pend)
-  {   
+  {
   }
 };
 

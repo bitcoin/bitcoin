@@ -54,7 +54,7 @@ static const char* ppszTypeName[] =
     NetMsgType::THINBLOCK,
     NetMsgType::XTHINBLOCK,
     NetMsgType::XBLOCKTX,
-    NetMsgType::GET_XBLOCKTX,
+    NetMsgType::GET_XBLOCKTX
     // BUIP010 Xtreme Thinblocks - end section
 };
 
@@ -89,7 +89,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::XTHINBLOCK,
     NetMsgType::XBLOCKTX,
     NetMsgType::GET_XBLOCKTX,
-    NetMsgType::GET_XTHIN,
+    NetMsgType::GET_XTHIN
     // BUIP010 Xtreme Thinbocks - end section
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));

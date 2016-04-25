@@ -146,7 +146,7 @@ extern bool fAlerts;
 // Xpress Validation: begin section
 /**
  * Transactions that have already been accepted into the memory pool do not need to be
- * re-verified and can avoid having to do a second and expensive CheckInputs() when 
+ * re-verified and can avoid having to do a second and expensive CheckInputs() when
  * processing a new block.  (Protected by cs_main)
  */
 static std::set<uint256> setPreVerifiedTxHash;
