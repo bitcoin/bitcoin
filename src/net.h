@@ -320,6 +320,8 @@ typedef std::pair<uint64_t, uint64_t> filterDataset;
 
 struct NodeFilterStats
 {
+    filterDataset nTotalNodesConnected;
+    filterDataset nTotalNodesRequestedFiltering;
     filterDataset nFilterBlockCountInCycle;
     filterDataset nFilterBlockDataCountInCycle;
     filterDataset nFilterBlockTimeCountInCycle;
@@ -844,6 +846,12 @@ public:
 
     //!Collects statistics over the process of filtering the mempool content
     static void FilterStatsProcessMempoolPoll(uint64_t amountOfTransactions, int64_t processTime);
+
+    //!Collects statistics of how many nodes have been connected to us
+    static void FilterStatsCountNewNodeConnected();
+
+    //!Collects statistics of how many nodes have been set a filter
+    static void FilterStatsCountFilterLoad();
 
     //!Copy the filter stats struct
     static const NodeFilterStats FilterStatsGetGlobalStats();

@@ -6070,6 +6070,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             delete pfrom->pfilter;
             pfrom->pfilter = new CBloomFilter(filter);
             pfrom->pfilter->UpdateEmptyFull();
+            pfrom->FilterStatsCountFilterLoad();
         }
         pfrom->fRelayTxes = true;
     }
@@ -6597,7 +6598,7 @@ bool SendMessages(CNode* pto)
                 }
 
                 LOCK(pto->cs_filter);
-
+                int64_t nStart = GetTimeMillis();
                 for (const auto& txinfo : vtxinfo) {
                     const uint256& hash = txinfo.tx->GetHash();
                     CInv inv(MSG_TX, hash);
@@ -6617,7 +6618,7 @@ bool SendMessages(CNode* pto)
                     }
                     if (pto->pfilter) {
                         // collect statistics of mempool filter interaction
-                        CNode::FilterStatsProcessMempoolPoll(vtxid.size(), GetTimeMillis() - nStart);
+                        CNode::FilterStatsProcessMempoolPoll(vtxinfo.size(), GetTimeMillis() - nStart);
                     }
                 }
                 pto->timeLastMempoolReq = GetTime();

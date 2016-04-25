@@ -611,6 +611,8 @@ UniValue getfilterstats(const UniValue& params, bool fHelp)
     UniValue cycle(UniValue::VOBJ);
     cycle.push_back(Pair("time_in_timeframe", CNode::FilterStatsGetTimeInCycle()));
     cycle.push_back(Pair("timeframe", CNode::FilterStatsGetTimeframe()));
+    cycle.push_back(Pair("nodestotal_connected", CNode::FilterStatsGetValue(stats.nTotalNodesConnected)));
+    cycle.push_back(Pair("nodestotal_loadfilter", CNode::FilterStatsGetValue(stats.nTotalNodesRequestedFiltering)));
 
     UniValue blockStats(UniValue::VOBJ);
     blockStats.push_back(Pair("filteredblocks_count", CNode::FilterStatsGetValue(stats.nFilterBlockCountInCycle)));
@@ -627,6 +629,8 @@ UniValue getfilterstats(const UniValue& params, bool fHelp)
 
     // total
     UniValue total(UniValue::VOBJ);
+    total.push_back(Pair("nodestotal_connected", CNode::FilterStatsGetValue(stats.nTotalNodesConnected, true)));
+    total.push_back(Pair("nodestotal_loadfilter", CNode::FilterStatsGetValue(stats.nTotalNodesRequestedFiltering, true)));
 
     UniValue blockStatsTotal(UniValue::VOBJ);
     blockStatsTotal.push_back(Pair("filteredblocks_count", CNode::FilterStatsGetValue(stats.nFilterBlockCountInCycle, true)));
