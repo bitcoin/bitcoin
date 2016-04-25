@@ -339,7 +339,7 @@ uint64_t CNode::nMaxOutboundCycleStartTime = 0;
 
 CCriticalSection CNode::cs_globalFilterStats;
 uint64_t CNode::nTimeFilterStatsStart = GetTime();
-uint64_t CNode::nTimeframeFilter = 3600; //1 h
+uint64_t CNode::nTimeframeFilter = 60*60*24; //1 day
 NodeFilterStats CNode::globalFilterStats;
 
 CNode* FindNode(const CNetAddr& ip)
@@ -1092,6 +1092,10 @@ static void AcceptConnection(const ListenSocket& hListenSocket) {
         LOCK(cs_vNodes);
         vNodes.push_back(pnode);
     }
+
+    // increase the total amount of connected nodes counter
+    CNode::FilterStatsCountNewNodeConnected();
+    
 }
 
 void ThreadSocketHandler()
@@ -2365,6 +2369,22 @@ void CNode::FilterStatsProcessMempoolPoll(uint64_t amountOfTransactions, int64_t
     globalFilterStats.nFilterMempoolCountInCycle.second++;
     globalFilterStats.nFilterMempoolTimeCountInCycle.second += processTime;
     globalFilterStats.nFilterMempoolDataCountInCycle.second += amountOfTransactions;
+}
+
+void CNode::FilterStatsCountNewNodeConnected()
+{
+    LOCK(cs_globalFilterStats);
+
+    FilterStatsCheckTimeframe();
+    globalFilterStats.nTotalNodesConnected.second++;
+}
+
+void CNode::FilterStatsCountFilterLoad()
+{
+    LOCK(cs_globalFilterStats);
+
+    FilterStatsCheckTimeframe();
+    globalFilterStats.nTotalNodesRequestedFiltering.second++;
 }
 
 const NodeFilterStats CNode::FilterStatsGetGlobalStats()
