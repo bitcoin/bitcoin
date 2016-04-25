@@ -1626,7 +1626,9 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	if (!pescrowdb->ReadEscrow(vchEscrow, vtxPos) || vtxPos.empty())
 		  throw runtime_error("failed to read from escrow DB");
 	CEscrow ca = vtxPos.back();
-	
+	CTransaction offertx;
+	if (!GetTxOfOffer(ca.vchOffer, offer, offertx))
+		throw runtime_error("failed to read from offer DB");
 	
     string sHeight = strprintf("%llu", ca.nHeight);
     oEscrow.push_back(Pair("escrow", stringFromVch(vchEscrow)));
@@ -1653,6 +1655,7 @@ UniValue escrowinfo(const UniValue& params, bool fHelp) {
 	oEscrow.push_back(Pair("arbiter", arbiteraddy.aliasName));
 	oEscrow.push_back(Pair("buyer", buyeraddy.aliasName));
 	oEscrow.push_back(Pair("offer", stringFromVch(ca.vchOffer)));
+	oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 	oEscrow.push_back(Pair("offeracceptlink", stringFromVch(ca.vchOfferAcceptLink)));
 	oEscrow.push_back(Pair("systotal", ValueFromAmount(ca.nPricePerUnit * ca.nQty)));
 	int64_t nEscrowFee = GetEscrowArbiterFee(ca.nPricePerUnit * ca.nQty);
@@ -1723,7 +1726,10 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 			if (!DecodeEscrowTx(tx, op, nOut, vvch) || !IsEscrowOp(op))
 				continue;
 		}
-		
+		COffer offer;
+		CTransaction offertx;
+		if (!GetTxOfOffer(escrow.vchOffer, offer, offertx))
+			continue;
 		// skip this escrow if it doesn't match the given filter value
 		if (vchNameUniq.size() > 0 && vchNameUniq != vchName)
 			continue;
@@ -1757,6 +1763,7 @@ UniValue escrowlist(const UniValue& params, bool fHelp) {
 		oName.push_back(Pair("arbiter", arbiteraddy.aliasName));
 		oName.push_back(Pair("buyer", buyeraddy.aliasName));
 		oName.push_back(Pair("offer", stringFromVch(escrow.vchOffer)));
+		oName.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 		oName.push_back(Pair("offeracceptlink", stringFromVch(escrow.vchOfferAcceptLink)));
 
 		string sTotal = strprintf("%llu SYS", (escrow.nPricePerUnit/COIN)*escrow.nQty);
@@ -1819,6 +1826,10 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 				error("could not read txpos");
 				continue;
 			}
+			COffer offer;
+			CTransaction offertx;
+			if (!GetTxOfOffer(txPos2.vchOffer, offer, offertx))
+				continue;
             // decode txn, skip non-alias txns
             vector<vector<unsigned char> > vvch;
             int op, nOut;
@@ -1849,6 +1860,7 @@ UniValue escrowhistory(const UniValue& params, bool fHelp) {
 			oEscrow.push_back(Pair("arbiter", arbiteraddy.aliasName));
 			oEscrow.push_back(Pair("buyer", buyeraddy.aliasName));
 			oEscrow.push_back(Pair("offer", stringFromVch(txPos2.vchOffer)));
+			oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 			oEscrow.push_back(Pair("offeracceptlink", stringFromVch(txPos2.vchOfferAcceptLink)));
 
 			string sTotal = strprintf("%llu SYS", (txPos2.nPricePerUnit/COIN)*txPos2.nQty);
@@ -1950,7 +1962,10 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
         CTransaction tx;
 		if (!GetSyscoinTransaction(txEscrow.nHeight, txEscrow.txHash, tx, Params().GetConsensus()))
 			continue;
-
+			COffer offer;
+		CTransaction offertx;
+		if (!GetTxOfOffer(txEscrow.vchOffer, offer, offertx))
+			continue;
 		int expired = 0;
 
         UniValue oEscrow(UniValue::VOBJ);
@@ -1970,6 +1985,7 @@ UniValue escrowfilter(const UniValue& params, bool fHelp) {
 		oEscrow.push_back(Pair("arbiter", arbiteraddy.aliasName));
 		oEscrow.push_back(Pair("buyer", buyeraddy.aliasName));
 		oEscrow.push_back(Pair("offer", stringFromVch(txEscrow.vchOffer)));
+		oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 		oEscrow.push_back(Pair("offeracceptlink", stringFromVch(txEscrow.vchOfferAcceptLink)));
 
 		string sTotal = strprintf("%llu SYS", (txEscrow.nPricePerUnit/COIN)*txEscrow.nQty);
@@ -2029,7 +2045,10 @@ UniValue escrowscan(const UniValue& params, bool fHelp) {
         
 		if (!GetSyscoinTransaction(nHeight, txEscrow.txHash, tx, Params().GetConsensus()))
 			continue;
-
+			COffer offer;
+		CTransaction offertx;
+		if (!GetTxOfOffer(txEscrow.vchOffer, offer, offertx))
+			continue;
 
 		if(nHeight + GetEscrowExpirationDepth() - chainActive.Tip()->nHeight <= 0)
 		{
@@ -2057,6 +2076,7 @@ UniValue escrowscan(const UniValue& params, bool fHelp) {
 		oEscrow.push_back(Pair("arbiter", arbiteraddy.aliasName));
 		oEscrow.push_back(Pair("buyer", buyeraddy.aliasName));
 		oEscrow.push_back(Pair("offer", stringFromVch(txEscrow.vchOffer)));
+		oEscrow.push_back(Pair("offertitle", stringFromVch(offer.sTitle)));
 		oEscrow.push_back(Pair("offeracceptlink", stringFromVch(txEscrow.vchOfferAcceptLink)));
 		string sTotal = strprintf("%ll SYS", (txEscrow.nPricePerUnit/COIN)*txEscrow.nQty);
 		oEscrow.push_back(Pair("total", sTotal));
