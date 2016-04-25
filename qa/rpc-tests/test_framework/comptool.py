@@ -4,9 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
 
-from mininode import *
-from blockstore import BlockStore, TxStore
-from util import p2p_port
+from .mininode import *
+from .blockstore import BlockStore, TxStore
+from .util import p2p_port
 
 '''
 This is a tool for comparing two or more bitcoinds to each other
@@ -45,7 +45,7 @@ class RejectResult(object):
     '''
     Outcome that expects rejection of a transaction or block.
     '''
-    def __init__(self, code, reason=''):
+    def __init__(self, code, reason=b''):
         self.code = code
         self.reason = reason
     def match(self, other):
@@ -111,9 +111,9 @@ class TestNode(NodeConnCB):
             raise AssertionError("Got pong for unknown ping [%s]" % repr(message))
 
     def on_reject(self, conn, message):
-        if message.message == 'tx':
+        if message.message == b'tx':
             self.tx_reject_map[message.data] = RejectResult(message.code, message.reason)
-        if message.message == 'block':
+        if message.message == b'block':
             self.block_reject_map[message.data] = RejectResult(message.code, message.reason)
 
     def send_inv(self, obj):
