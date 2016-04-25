@@ -1572,6 +1572,9 @@ CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
 
 static void AlertNotify(const std::string& strMessage)
 {
+    // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user
+    strMiscWarning = strMessage;
+
     uiInterface.NotifyAlertChanged();
     std::string strCmd = GetArg("-alertnotify", "");
     if (strCmd.empty()) return;
@@ -1592,8 +1595,6 @@ static void AlertNotifyOnce(const std::string& strMessage)
     static bool fWarned = false;
 
     if (!fWarned) {
-      // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user
-      strMiscWarning = strMessage;
       AlertNotify(strMessage);
       fWarned = true;
     }
@@ -2148,7 +2149,6 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     }
     if (!strWarning.empty())
     {
-        strMiscWarning = strWarning;
         AlertNotify(strWarning);
         lastAlertTime = now;
     }
