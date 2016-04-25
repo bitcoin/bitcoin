@@ -425,18 +425,6 @@ static UniValue GetNetworksInfo()
     return networks;
 }
 
-
-static UniValue GetThinBlockStats()
-{
-    UniValue obj(UniValue::VOBJ);
-    bool enabled = IsThinBlocksEnabled();
-    obj.push_back(Pair("enabled", enabled));
-    if (enabled) {
-        obj.push_back(Pair("summary", CThinBlockStats::ToString()));
-    }
-    return obj;
-}
-
 UniValue getnetworkinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
@@ -501,7 +489,6 @@ UniValue getnetworkinfo(const UniValue& params, bool fHelp)
         }
     }
     obj.push_back(Pair("localaddresses", localAddresses));
-    obj.push_back(Pair("thinblockstats", GetThinBlockStats()));
     obj.push_back(Pair("warnings",       GetWarnings("statusbar")));
     return obj;
 }

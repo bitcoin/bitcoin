@@ -20,7 +20,6 @@
 #include "util.h"
 #include "validationinterface.h"
 #include "version.h"
-#include "stat.h"
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
@@ -33,15 +32,6 @@ using namespace std;
 const char* sampleNames[] = { "sec10", "min5", "hourly", "daily","monthly"};
 int operateSampleCount[] = { 30,       12,   24,  30 };
 int interruptIntervals[] = { 30,       30*12,   30*12*24,   30*12*24*30 };
-
-boost::posix_time::milliseconds statMinInterval(10000);
-boost::asio::io_service stat_io_service __attribute__((init_priority(101)));
-
-CStatMap statistics __attribute__((init_priority(102)));
-
-CStatHistory<unsigned int, MinValMax<unsigned int> > txAdded; //"memPool/txAdded");
-CStatHistory<uint64_t, MinValMax<uint64_t> > poolSize; // "memPool/size",STAT_OP_AVE);
-
 
 // BUIP010 Xtreme Thinblocks Variables
 std::map<uint256, uint64_t> mapThinBlockTimer;
@@ -354,120 +344,4 @@ void SendXThinBlock(CBlock &block, CNode* pfrom, const CInv &inv)
             LogPrint("thin", "Sent regular block instead - thinblock size: %d vs block size: %d => tx hashes: %d transactions: %d  peerid=%d\n", nSizeThinBlock, nSizeBlock, thinBlock.vTxHashes.size(), thinBlock.vMissingTx.size(), pfrom->id);
         }
     }
-}
-
-// Statistics:
-
-CStatBase* FindStatistic(const char* name)
-{
-  CStatMap::iterator item = statistics.find(name);
-  if (item != statistics.end())
-    return item->second;
-  return NULL;
-}
-
-UniValue getstatlist(const UniValue& params, bool fHelp)
-{
-  if (fHelp || (params.size() != 0))
-        throw runtime_error(
-            "getstatlist"
-            "\nReturns a list of all statistics available on this node.\n"
-            "\nArguments: None\n"
-            "\nResult:\n"
-            "  {\n"
-            "    \"name\" : (string) name of the statistic\n"
-            "    ...\n"
-            "  }\n"
-            "\nExamples:\n" +
-            HelpExampleCli("getstatlist", "") + HelpExampleRpc("getstatlist", ""));
-
-  CStatMap::iterator it;
-
-  UniValue ret(UniValue::VARR);
-  for (it = statistics.begin(); it != statistics.end(); ++it)
-    {
-    ret.push_back(it->first);
-    }
-
-  return ret;
-}
-
-UniValue getstat(const UniValue& params, bool fHelp)
-{
-    string specificIssue;
-
-    int count = 0;
-    if (params.size() < 3) count = 1;  // if a count is not specified, give the latest sample
-    else
-      {
-	if (!params[2].isNum())
-	  {
-          try
-	    {
-	      count =  boost::lexical_cast<int>(params[2].get_str());
-	    }
-          catch (const boost::bad_lexical_cast &)
-	    {
-            fHelp=true;
-            specificIssue = "Invalid argument 3 \"count\" -- not a number";
-  	    }
-	  }
-        else
-	  {
-	    count = params[2].get_int();
-	  }
-      }
-    if (fHelp || (params.size() < 1))
-        throw runtime_error(
-            "getstat"
-            "\nReturns the current settings for the network send and receive bandwidth and burst in kilobytes per second.\n"
-            "\nArguments: \n"
-            "1. \"statistic\"     (string, required) Specify what statistic you want\n"
-            "2. \"series\"  (string, optional) Specify what data series you want.  Options are \"now\",\"all\", \"sec10\", \"min5\", \"hourly\", \"daily\",\"monthly\".  Default is all.\n"
-            "3. \"count\"  (string, optional) Specify the number of samples you want.\n"
-
-            "\nResult:\n"
-            "  {\n"
-            "    \"<statistic name>\"\n"
-            "    {\n"
-            "    \"<series name>\"\n"
-            "      [\n"
-            "      <data>, (any type) The data points in the series\n"
-            "      ],\n"
-            "    ...\n"
-            "    },\n"
-            "  ...\n"
-            "  }\n"
-            "\nExamples:\n" +
-            HelpExampleCli("getstat", "") + HelpExampleRpc("getstat", "")
-            + "\n" + specificIssue);
-
-    UniValue ret(UniValue::VARR);
-
-    string seriesStr;
-    if (params.size() < 2)
-      seriesStr = "now";
-    else seriesStr = params[1].get_str();
-    //uint_t series = 0;
-    //if (series == "now") series |= 1;
-    //if (series == "all") series = 0xfffffff;
-
-    CStatBase* base = FindStatistic(params[0].get_str().c_str());
-    if (base)
-      {
-        UniValue ustat(UniValue::VOBJ);
-        if (seriesStr == "now")
-          {
-	    ustat.push_back(Pair("now", base->GetNow()));
-	  }
-        else
-	  {
-            UniValue series = base->GetSeries(seriesStr,count);
-	    ustat.push_back(Pair(seriesStr,series));
-	  }
-
-        ret.push_back(ustat);
-      }
-
-    return ret;
 }

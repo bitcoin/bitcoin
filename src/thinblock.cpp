@@ -6,12 +6,6 @@
 #include <sstream>
 #include <iomanip>
 
-// Start statistics at zero
-CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize",STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize",STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks",STAT_OP_SUM | STAT_KEEP);
-
-
 CThinBlock::CThinBlock(const CBlock& block, CBloomFilter& filter)
 {
     header = block.GetBlockHeader();
@@ -95,32 +89,3 @@ CXRequestThinBlockTx::CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>
     blockhash = blockHash;
     setCheapHashesToRequest = setHashesToRequest;
 }
-
-
-
-void CThinBlockStats::Update(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
-{
-	CThinBlockStats::nOriginalSize += nOriginalBlockSize;
-	CThinBlockStats::nThinSize += nThinBlockSize;
-	CThinBlockStats::nBlocks+=1;
-}
-
-
-std::string CThinBlockStats::ToString()
-{
-	static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
-	int i = 0;
-	double size = double( CThinBlockStats::nOriginalSize() - CThinBlockStats::nThinSize() );
-	while (size > 1024) {
-		size /= 1024;
-		i++;
-	}
-
-	std::ostringstream ss;
-	ss << std::fixed << std::setprecision(2);
-	ss << CThinBlockStats::nBlocks() << " thin " << ((CThinBlockStats::nBlocks()>1) ? "blocks have" : "block has") << " saved " << size << units[i] << " of bandwidth";
-	std::string s = ss.str();
-	return s;
-}
-
-

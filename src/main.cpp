@@ -5009,11 +5009,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      ((float) blockSize) / ((float) nSizeThinBlock)
                      );
 
-            // Update run-time statistics of thin block bandwidth savings
-            CThinBlockStats::Update(nSizeThinBlock, blockSize);
-            std::string ss = CThinBlockStats::ToString();
-            LogPrint("thin", "thin block stats: %s\n", ss.c_str());
-
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);  // clears the thin block
             BOOST_FOREACH(uint64_t &cheapHash, thinBlock.vTxHashes)
                 EraseOrphanTx(mapPartialTxHash[cheapHash]);
@@ -5113,11 +5108,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      ((float) blockSize) / ((float) nSizeThinBlock)
                      );
 
-            // Update run-time statistics of thin block bandwidth savings
-            CThinBlockStats::Update(nSizeThinBlock, blockSize);
-            std::string ss = CThinBlockStats::ToString();
-            LogPrint("thin", "thin block stats: %s\n", ss.c_str());
-
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);
             BOOST_FOREACH(uint256 &hash, thinBlock.vTxHashes)
                 EraseOrphanTx(hash);
@@ -5175,11 +5165,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                      nSizeThinBlockTx,
                      ((float) blockSize) / ( (float) pfrom->nSizeThinBlock + (float) nSizeThinBlockTx )
                      );
-
-            // Update run-time statistics of thin block bandwidth savings
-            CThinBlockStats::Update(nSizeThinBlockTx + pfrom->nSizeThinBlock, blockSize);
-            std::string ss = CThinBlockStats::ToString();
-            LogPrint("thin", "thin block stats: %s\n", ss.c_str());
 
             std::vector<CTransaction> vTx = pfrom->thinBlock.vtx;
             HandleBlockMessage(pfrom, strCommand, pfrom->thinBlock, inv);

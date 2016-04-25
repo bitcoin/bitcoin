@@ -758,7 +758,6 @@ void SocketSendData(CNode *pnode)
         assert(data.size() > pnode->nSendOffset);
         int nBytes = send(pnode->hSocket, &data[pnode->nSendOffset], data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         if (nBytes > 0) {
-            pnode->bytesSent += nBytes;
             pnode->nLastSend = GetTime();
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
@@ -1026,7 +1025,6 @@ void ThreadSocketHandler()
 {
     unsigned int nPrevNodeCount = 0;
     while (true) {
-        stat_io_service.poll();
         //
         // Disconnect nodes
         //
@@ -1217,7 +1215,6 @@ void ThreadSocketHandler()
                                 pnode->CloseSocketDisconnect();
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;
-                            pnode->bytesReceived += nBytes;
                             pnode->RecordBytesRecv(nBytes);
                         }
                         else if (nBytes == 0)
@@ -2390,8 +2387,6 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
         xmledName = addrNameIn;
     else
         xmledName="ip" + addr.ToStringIP() + "p" + addr.ToStringPort();
-    bytesSent.init("node/" + xmledName + "/bytesSent");
-    bytesReceived.init("node/" + xmledName + "/bytesReceived");
 
     {
         LOCK(cs_nLastNodeId);

@@ -413,8 +413,6 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
 
     nTransactionsUpdated++;
     totalTxSize += entry.GetTxSize();
-    txAdded +=1;  // BU
-    poolSize() = totalTxSize; // BU
     minerPolicyEstimator->processTransaction(entry, fCurrentEstimate);
 
     return true;

@@ -28,8 +28,6 @@
 #include <boost/foreach.hpp>
 #include <boost/signals2/signal.hpp>
 
-#include "stat.h"
-
 class CAddrMan;
 class CScheduler;
 class CNode;
@@ -426,18 +424,6 @@ public:
     int64_t nMinPingUsecTime;
     // Whether a ping is requested.
     bool fPingQueued;
-
-    // BU instrumentation
-    // track the number of bytes sent to this node
-    CStatHistory<unsigned int > bytesSent;
-    // track the number of bytes received from this node
-    CStatHistory<unsigned int > bytesReceived;
-    // track the average round trip latency for transaction requests to this node
-    // CStatHistory<unsigned int > txReqLatency;
-    // track the # of times this node is the first to send us a transaction INV
-    //CStatHistory<unsigned int> firstTx;
-    // track the # of times this node is the first to send us a block INV
-    //CStatHistory<unsigned int> firstBlock;
 
     CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNameIn = "", bool fInboundIn = false);
     ~CNode();
