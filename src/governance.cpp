@@ -536,13 +536,13 @@ CGovernanceObject::CGovernanceObject()
     strName = "unknown";
     nTime = 0;
 
-    nHashParent = uint256(0); //parent object, 0 is root
+    nHashParent = uint256(); //parent object, 0 is root
     nRevision = 0; //object revision in the system
-    nFeeTXHash = uint256(0); //fee-tx
+    nFeeTXHash = uint256(); //fee-tx
     
     // caching
     fValid = false;
-    nHash = uint256(0);
+    nHash = uint256();
 }
 
 CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn)
@@ -555,6 +555,20 @@ CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std
     nRevision = nRevisionIn; //object revision in the system
     nFeeTXHash = nFeeTXHashIn; //fee-tx    
     nTypeVersion = nTypeVersionIn;
+}
+
+CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
+{
+    strName = other.strName;
+    nTime = other.nTime;
+
+    nHashParent = other.nHashParent; //parent object, 0 is root
+    // nPriority = other.nPriorityIn;
+    nRevision = other.nRevision; //object revision in the system
+    nFeeTXHash = other.nFeeTXHash; //fee-tx    
+    // nTypeVersion = other.nTypeVersion;
+    //??
+    mapRegister = other.mapRegister;
 }
 
 bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral)
@@ -660,6 +674,10 @@ bool CGovernanceObject::NetworkWillPay()
 bool CGovernanceObject::IsEstablished() {
     //Proposals must be established to make it into a budget
     return (nTime < GetTime() - Params().GetConsensus().nBudgetProposalEstablishingTime);
+}
+
+void CGovernanceObject::CleanAndRemove(bool fSignatureCheck) {
+    // TODO: do smth here
 }
 
 void CGovernanceManager::CleanAndRemove(bool fSignatureCheck)

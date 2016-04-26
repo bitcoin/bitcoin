@@ -110,6 +110,7 @@ BITCOIN_CORE_H = \
   dsnotificationinterface.h \
   darksend-relay.h \
   governance.h \
+  governance-vote.h \
   flat-database.h \
   hash.h \
   httprpc.h \
@@ -208,6 +209,7 @@ libbitcoin_server_a_SOURCES = \
   init.cpp \
   dbwrapper.cpp \
   governance.cpp \
+  governance-vote.cpp \
   main.cpp \
   merkleblock.cpp \
   miner.cpp \

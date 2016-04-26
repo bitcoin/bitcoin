@@ -206,6 +206,8 @@ public:
 
     CGovernanceObject();
     CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn);
+    CGovernanceObject(const CGovernanceObject& other);
+
 
     void swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
     {

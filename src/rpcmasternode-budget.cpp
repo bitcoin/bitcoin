@@ -90,8 +90,8 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         uint256 hashParent = ParseHashV(params[0], "parameter 1");
 
-        int nRevision = SanitizeString(params[1].get_int());
-        int nTime = SanitizeString(params[2].get_int());
+        int nRevision = params[1].get_int();
+        int nTime = params[2].get_int();
 
         std::string strName = SanitizeString(params[3].get_str());
         if(strName != params[1].get_str())
@@ -102,7 +102,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, nTime, strName, uint256());
+        CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, strName, nTime, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
@@ -139,8 +139,8 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         uint256 hashParent = ParseHashV(params[0], "parameter 1");
 
-        int nRevision = SanitizeString(params[1].get_int());
-        int nTime = SanitizeString(params[2].get_int());
+        int nRevision = params[1].get_int();
+        int nTime = params[2].get_int();
 
         std::string strName = SanitizeString(params[3].get_str());
         if(strName != params[1].get_str())
@@ -148,7 +148,8 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         std::string strRegisters = params[4].get_str();
 
-        CGovernanceObject budgetProposalBroadcast(strName, GetTime(), 253370764800, uint256());
+        // CGovernanceObject budgetProposalBroadcast(strName, GetTime(), 253370764800, uint256());
+        CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, strName, nTime, uint256());
 
         std::string strError = "";
 
