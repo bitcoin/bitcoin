@@ -228,7 +228,6 @@ public:
 
     bool HasMinimumRequiredSupport();
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
-    bool IsEstablished();
     bool NetworkWillPay();
 
     std::string GetName() {return strName; }

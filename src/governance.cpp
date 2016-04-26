@@ -671,11 +671,6 @@ bool CGovernanceObject::NetworkWillPay()
     return true;
 }
 
-bool CGovernanceObject::IsEstablished() {
-    //Proposals must be established to make it into a budget
-    return (nTime < GetTime() - Params().GetConsensus().nBudgetProposalEstablishingTime);
-}
-
 void CGovernanceObject::CleanAndRemove(bool fSignatureCheck) {
     // TODO: do smth here
 }

@@ -25,13 +25,24 @@ class CBudgetVote;
 #define VOTE_OUTCOME_ABSTAIN  3
 // INTENTION OF MASTERNODES REGARDING ITEM
 
-#define VOTE_ACTION_NONE                0
-#define VOTE_ACTION_FUNDING             1 //SIGNAL TO FUND GOVOBJ
-#define VOTE_ACTION_VALID               2 //SIGNAL GOVOBJ IS VALID OR NOT
-#define VOTE_ACTION_DELETE              4 //SIGNAL TO DELETE NODE AND CHILDREN FROM SYSTEM
-#define VOTE_ACTION_CLEAR_REGISTERS     5 //SIGNAL TO CLEAR REGISTER DATA (DASHDRIVE or other outer-storage implementations)
-#define VOTE_ACTION_ENDORSED            6 //SIGNAL GOVOBJ IS ENDORSED BY REVIEW COMMITTEES
-#define VOTE_ACTION_RELEASE_BOUNTY1     7 //SIGNAL GOVOBJ IS ENDORSED BY REVIEW COMMITTEES
+#define VOTE_ACTION_NONE                0 // SIGNAL VARIOUS THINGS TO HAPPEN:
+#define VOTE_ACTION_FUNDING             1 //   -- fund this object for it's stated amount
+#define VOTE_ACTION_VALID               2 //   -- this object checks out to sentinel
+#define VOTE_ACTION_DELETE              3 //   -- this object should be deleted from memory entirely
+#define VOTE_ACTION_CLEAR_REGISTERS     4 //   -- this object's registers should be cleared (stored elsewhere, e.g. dashdrive)
+#define VOTE_ACTION_ENDORSED            5 //   -- officially endorsed by the network somehow (delegation)
+#define VOTE_ACTION_RELEASE_BOUNTY1     6 //   -- release the first bounty associated with this
+#define VOTE_ACTION_RELEASE_BOUNTY2     7 //   --     second
+#define VOTE_ACTION_RELEASE_BOUNTY3     8 //   --     third
+#define VOTE_ACTION_NOOP1               9 // FOR FURTHER EXPANSION
+#define VOTE_ACTION_NOOP2               10 // 
+#define VOTE_ACTION_NOOP3               11 // 
+#define VOTE_ACTION_NOOP4               12 // 
+#define VOTE_ACTION_NOOP5               13 // 
+#define VOTE_ACTION_NOOP6               14 // 
+#define VOTE_ACTION_NOOP7               15 // 
+#define VOTE_ACTION_CUSTOM_START        16 // SENTINEL CUSTOM ACTIONS 
+#define VOTE_ACTION_CUSTOM_END          35 //        16-35
 
 //
 // CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
