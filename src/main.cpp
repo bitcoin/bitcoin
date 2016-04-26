@@ -3701,9 +3701,8 @@ CBlockIndex * InsertBlockIndex(uint256 hash)
     return pindexNew;
 }
 
-bool static LoadBlockIndexDB()
+bool static LoadBlockIndexDB(const CChainParams& chainparams)
 {
-    const CChainParams& chainparams = Params();
     if (!pblocktree->LoadBlockIndexGuts())
         return false;
 
@@ -3934,10 +3933,10 @@ void UnloadBlockIndex()
     fHavePruned = false;
 }
 
-bool LoadBlockIndex()
+bool LoadBlockIndex(const CChainParams& chainparams)
 {
     // Load block index from databases
-    if (!fReindex && !LoadBlockIndexDB())
+    if (!fReindex && !LoadBlockIndexDB(chainparams))
         return false;
     return true;
 }
