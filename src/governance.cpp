@@ -144,9 +144,9 @@ CGovernanceObject *CGovernanceManager::FindProposal(const std::string &strName)
 
     std::map<uint256, CGovernanceObject>::iterator it = mapProposals.begin();
     while(it != mapProposals.end()){
-        if((*it).second.strName == strName && (*it).second.GetYesCount() > nYesCount){
+        if((*it).second.strName == strName && (*it).second.GetYesCount(VOTE_ACTION_FUNDING) > nYesCount){
             pbudgetProposal = &((*it).second);
-            nYesCount = pbudgetProposal->GetYesCount();
+            nYesCount = pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING);
         }
         ++it;
     }
@@ -166,7 +166,7 @@ CGovernanceObject *CGovernanceManager::FindProposal(uint256 nHash)
     return NULL;
 }
 
-std::vector<CGovernanceObject*> CGovernanceManager::GetAllProposals(int64_t nTimeIn)
+std::vector<CGovernanceObject*> CGovernanceManager::GetAllProposals(int64_t nMoreThanTime)
 {
     LOCK(cs);
 
@@ -175,7 +175,7 @@ std::vector<CGovernanceObject*> CGovernanceManager::GetAllProposals(int64_t nTim
     std::map<uint256, CGovernanceObject>::iterator it = mapProposals.begin();
     while(it != mapProposals.end())
     {
-        if((*it).second.nTime < nTimeIn) {
+        if((*it).second.nTime < nMoreThanTime) {
             ++it;
             continue;
         }
@@ -334,18 +334,18 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         }
 
         mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
-
         if(!budgetProposalBroadcast.IsValid(pCurrentBlockIndex, strError)) {
             LogPrintf("mprop - invalid budget proposal - %s\n", strError);
             return;
         }
 
-        CGovernanceObject budgetProposal(budgetProposalBroadcast);
-        if(AddProposal(budgetProposal)) {budgetProposalBroadcast.Relay();}
+        if(AddProposal(budgetProposalBroadcast))
+        {
+            budgetProposalBroadcast.Relay();
+        }
         masternodeSync.AddedBudgetItem(budgetProposalBroadcast.GetHash());
 
         LogPrintf("mprop - new budget - %s\n", budgetProposalBroadcast.GetHash().ToString());
-
         //We might have active votes for this proposal that are valid now
         CheckOrphanVotes();
     }
@@ -534,28 +534,33 @@ bool CGovernanceManager::AddOrUpdateVote(CBudgetVote& vote, std::string& strErro
 CGovernanceObject::CGovernanceObject()
 {
     strName = "unknown";
-    nStartTime = 0;
-    nEndTime = 0;
     nTime = 0;
-    fValid = true;
+
+    nHashParent = uint256(0); //parent object, 0 is root
+    nRevision = 0; //object revision in the system
+    nFeeTXHash = uint256(0); //fee-tx
+    
+    // caching
+    fValid = false;
+    nHash = uint256(0);
 }
 
-CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nPriorityIn, int nRevisionIn, int nTypeVersionIn, std::string strNameIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn)
+CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn)
 {
-    nHashParent = nHashParentIn
+    strName = "unknown";
+    nTime = 0;
+
+    nHashParent = nHashParentIn; //parent object, 0 is root
     nPriority = nPriorityIn;
-    nRevision = nRevisionIn;
+    nRevision = nRevisionIn; //object revision in the system
+    nFeeTXHash = nFeeTXHashIn; //fee-tx    
     nTypeVersion = nTypeVersionIn;
-    strName = strNameIn;
-    nStartTime = nStartTimeIn;
-    nEndTime = nEndTimeIn;
-    nFeeTXHash = nFeeTXHashIn;
 }
 
 bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral)
 {
-    if(GetNoCount() - GetYesCount() > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
-         strError = "Active removal";
+    if(GetNoCount(VOTE_ACTION_VALID) - GetYesCount(VOTE_ACTION_VALID) > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
+         strError = "Automated removal";
          return false;
     }
 
@@ -683,24 +688,28 @@ void CGovernanceManager::CleanAndRemove(bool fSignatureCheck)
     }
 }
 
-int CGovernanceObject::GetAbsoluteYesCount()
+/**
+*   Get specific vote counts for each outcome (funding, validity, etc)
+*/
+
+int CGovernanceObject::GetAbsoluteYesCount(int nVoteOutcomeIn)
 {
-    return governance.CountMatchingVotes(VOTE_TYPE_FUND, VOTE_OUTCOME_YES) - governance.CountMatchingVotes(VOTE_TYPE_FUND, VOTE_OUTCOME_NO);
+    return governance.CountMatchingVotes(nVoteOutcomeIn, VOTE_OUTCOME_YES) - governance.CountMatchingVotes(nVoteOutcomeIn, VOTE_OUTCOME_NO);
 }
 
-int CGovernanceObject::GetYesCount()
+int CGovernanceObject::GetYesCount(int nVoteOutcomeIn)
 {
-    return governance.CountMatchingVotes(VOTE_TYPE_FUND, VOTE_OUTCOME_YES);
+    return governance.CountMatchingVotes(nVoteOutcomeIn, VOTE_OUTCOME_YES);
 }
 
-int CGovernanceObject::GetNoCount()
+int CGovernanceObject::GetNoCount(int nVoteOutcomeIn)
 {
-    return governance.CountMatchingVotes(VOTE_TYPE_FUND, VOTE_OUTCOME_NO);
+    return governance.CountMatchingVotes(nVoteOutcomeIn, VOTE_OUTCOME_NO);
 }
 
-int CGovernanceObject::GetAbstainCount()
+int CGovernanceObject::GetAbstainCount(int nVoteOutcomeIn)
 {
-    return governance.CountMatchingVotes(VOTE_TYPE_FUND, VOTE_OUTCOME_ABSTAIN);
+    return governance.CountMatchingVotes(nVoteOutcomeIn, VOTE_OUTCOME_ABSTAIN);
 }
 
 void CGovernanceObject::Relay()

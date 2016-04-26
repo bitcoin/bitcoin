@@ -22,17 +22,19 @@ CBudgetVote::CBudgetVote()
 {
     vin = CTxIn();
     nProposalHash = uint256();
-    nVote = VOTE_ABSTAIN;
+    nVoteAction = VOTE_ACTION_NONE;
+    nVoteOutcome = VOTE_OUTCOME_NONE;
     nTime = 0;
     fValid = true;
     fSynced = false;
 }
 
-CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nProposalHashIn, int nVoteIn)
+CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nProposalHashIn, int nVoteActionIn, int nVoteOutcomeIn)
 {
     vin = vinIn;
     nProposalHash = nProposalHashIn;
-    nVote = nVoteIn;
+    nVoteAction = nVoteActionIn;
+    nVoteOutcome = nVoteOutcomeIn;
     nTime = GetAdjustedTime();
     fValid = true;
     fSynced = false;
@@ -73,8 +75,21 @@ bool CBudgetVote::IsValid(bool fSignatureCheck)
         return false;
     }
 
-    CMasternode* pmn = mnodeman.Find(vin);
+    // support up to 50 actions (implemented in sentinel)
+    if(nVoteAction > 50)
+    {
+        LogPrint("mngovernance", "CBudgetVote::IsValid() - Client attempted to vote on invalid action(%d) - %s\n", nVoteAction, GetHash().ToString());
+        return false;
+    }
 
+    // 0=none, 1=yes, 2=no, 3=abstain. Beyond that reject votes
+    if(nVoteOutcome > 3)
+    {
+        LogPrint("mngovernance", "CBudgetVote::IsValid() - Client attempted to vote on invalid outcome(%d) - %s\n", nVoteAction, GetHash().ToString());
+        return false;   
+    }
+
+    CMasternode* pmn = mnodeman.Find(vin);
     if(pmn == NULL)
     {
         LogPrint("mngovernance", "CBudgetVote::IsValid() - Unknown Masternode - %s\n", vin.ToString());

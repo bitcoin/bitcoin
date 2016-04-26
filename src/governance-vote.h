@@ -28,10 +28,10 @@ class CBudgetVote;
 #define VOTE_ACTION_NONE                0
 #define VOTE_ACTION_FUNDING             1 //SIGNAL TO FUND GOVOBJ
 #define VOTE_ACTION_VALID               2 //SIGNAL GOVOBJ IS VALID OR NOT
-#define VOTE_ACTION_UPTODATE            3 //SIGNAL ALL REQUIRED INFORMATION IS UP-TO-DATE (PROJECTS/MILESTONES/REPORTS)
 #define VOTE_ACTION_DELETE              4 //SIGNAL TO DELETE NODE AND CHILDREN FROM SYSTEM
 #define VOTE_ACTION_CLEAR_REGISTERS     5 //SIGNAL TO CLEAR REGISTER DATA (DASHDRIVE or other outer-storage implementations)
 #define VOTE_ACTION_ENDORSED            6 //SIGNAL GOVOBJ IS ENDORSED BY REVIEW COMMITTEES
+#define VOTE_ACTION_RELEASE_BOUNTY1     7 //SIGNAL GOVOBJ IS ENDORSED BY REVIEW COMMITTEES
 
 //
 // CBudgetVote - Allow a masternode node to vote and broadcast throughout the network
@@ -43,15 +43,15 @@ class CBudgetVote
 public:
     bool fValid; //if the vote is currently valid / counted
     bool fSynced; //if we've sent this to our peers
-    int nVoteType; // see VOTE_OUTCOMES above
+    int nVoteAction; // see VOTE_ACTIONS above
     CTxIn vinMasternode;
     uint256 nParentHash;
-    int nVoteOutcome;
+    int nVoteOutcome; // see VOTE_OUTCOMES above
     int64_t nTime;
     std::vector<unsigned char> vchSig;
 
     CBudgetVote();
-    CBudgetVote(CTxIn vinMasternode, uint256 nParentHash, int nVoteTypeIn, int nVoteOutcomeIn);
+    CBudgetVote(CTxIn vinMasternode, uint256 nParentHash, int nVoteActionIn, int nVoteOutcomeIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool IsValid(bool fSignatureCheck);
@@ -70,7 +70,7 @@ public:
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << vinMasternode;
         ss << nParentHash;
-        ss << nVoteType;
+        ss << nVoteAction;
         ss << nVoteOutcome;
         ss << nTime;
         return ss.GetHash();
@@ -83,7 +83,7 @@ public:
         READWRITE(vinMasternode);
         READWRITE(nParentHash);
         READWRITE(nVoteOutcome);
-        READWRITE(nVoteType);
+        READWRITE(nVoteAction);
         READWRITE(nTime);
         READWRITE(vchSig);
     }

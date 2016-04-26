@@ -105,7 +105,7 @@ public:
     CGovernanceObject *FindProposal(const std::string &strName);
     CGovernanceObject *FindProposal(uint256 nHash);
     
-    std::vector<CGovernanceObject*> GetAllProposals();
+    std::vector<CGovernanceObject*> GetAllProposals(int64_t nMoreThanTime);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
     bool AddProposal(CGovernanceObject& budgetProposal);
@@ -190,15 +190,10 @@ private:
 public:
 
     uint256 nHashParent; //parent object, 0 is root
-    int nPriority; //budget is sorted by this integer before funding votecount
     int nRevision; //object revision in the system
-    int64_t nTime; //time this object was created
-
     std::string strName; //org name, username, prop name, etc. 
-    int nStartTime;
-    int nEndTime;
-    CScript ownerAddress; //todo rename to addressOwner;
-    uint256 nFeeTXHash;
+    int64_t nTime; //time this object was created
+    uint256 nFeeTXHash; //fee-tx
     
     // caching
     bool fValid;
@@ -210,7 +205,24 @@ public:
 
 
     CGovernanceObject();
-    CGovernanceObject(uint256 nHashParentIn, int nPriorityIn, int nRevisionIn, int nTypeVersionIn, std::string strNameIn, int64_t nStartTimeIn, int64_t nEndTimeIn, uint256 nFeeTXHashIn);
+    CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn);
+
+    void swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
+    {
+        // enable ADL (not necessary in our case, but good practice)
+        using std::swap;
+
+        // by swapping the members of two classes,
+        // the two classes are effectively swapped
+        swap(first.strName, second.strName);
+        swap(first.nHashParent, second.nHashParent);
+        swap(first.nRevision, second.nRevision);
+        swap(first.nTime, second.nTime);
+        swap(first.nFeeTXHash, second.nFeeTXHash);
+        swap(first.fValid, second.fValid);
+        swap(first.nHash, second.nHash);     
+        first.mapRegister.swap(second.mapRegister);
+    }
 
     bool HasMinimumRequiredSupport();
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
@@ -218,13 +230,12 @@ public:
     bool NetworkWillPay();
 
     std::string GetName() {return strName; }
-    int GetStartTime() {return nStartTime;}
-    int GetEndTime() {return nEndTime;}
-    int IsActive(int64_t nTime) {return nTime > nStartTime && nTime < nEndTime;}
-    int GetAbsoluteYesCount();
-    int GetYesCount();
-    int GetNoCount();
-    int GetAbstainCount();
+
+    // get vote counts on each outcome
+    int GetAbsoluteYesCount(int nVoteOutcomeIn);
+    int GetYesCount(int nVoteOutcomeIn);
+    int GetNoCount(int nVoteOutcomeIn);
+    int GetAbstainCount(int nVoteOutcomeIn);
 
     void CleanAndRemove(bool fSignatureCheck);
     void Relay();
@@ -232,9 +243,7 @@ public:
     uint256 GetHash(){
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strName;
-        ss << nStartTime;
-        ss << nEndTime;
-        //ss << mapRegister;
+        // ss << mapRegister;
         uint256 h1 = ss.GetHash();
 
         return h1;
@@ -283,25 +292,36 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
-        /*
+        /**
+        *   Store all major data items in serialization for other clients
+        *   --
+        *
+        *
+        *    uint256 nHashParent; //parent object, 0 is root
+        *    int nRevision; //object revision in the system
+        *    std::string strName; //org name, username, prop name, etc. 
+        *    int64_t nTime; //time this object was created
+        *    uint256 nFeeTXHash; //fee-tx
+        *   
+        *    // caching
+        *    bool fValid;
+        *    uint256 nHash;
+        *
+        *    // Registers, these can be used for anything
+        *    //   -- check governance wiki for correct usage
+        *    std::map<int, CGovernanceObjectRegister> mapRegister;
+        *
+        *
+        */
 
-    uint256 nHashParent; //parent object, 0 is root
-    int nPriority; //budget is sorted by this integer before funding votecount
-    int nRevision; //object revision in the system
-    int64_t nTime; //time this object was created
-
-    std::string strName; //org name, username, prop name, etc. 
-    int nStartTime;
-    int nEndTime;
-    CScript ownerAddress; //todo rename to addressOwner;
-    uint256 nFeeTXHash;
-    */
-        READWRITE(LIMITED_STRING(strName, 20));
+        READWRITE(nHashParent);
+        READWRITE(nRevision);
+        READWRITE(LIMITED_STRING(strName, 64));
         READWRITE(nTime);
-        READWRITE(nStartTime);
-        READWRITE(nEndTime);
-        //READWRITE(mapRegister);
         READWRITE(nFeeTXHash);
+
+        // todo - 12.1 - serialize map
+        //READWRITE(mapRegister);
     }
 };
 

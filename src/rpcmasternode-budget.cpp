@@ -73,15 +73,13 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
                 "  get                - Get proposal hash(es) by proposal name\n"
                 "  list               - List all proposals\n"
                 "  diff               - List differences since last diff\n"
-                "  vote               - Vote on a proposal by single masternode (using dash.conf setup)\n"
-                "  vote-many          - Vote on a proposal by all masternodes (using masternode.conf setup)\n"
-                "  vote-alias         - Vote on a proposal by alias\n"
+                "  vote-alias         - Vote on a proposal by masternode alias\n"
                 );
 
     if(strCommand == "prepare")
     {
         if (params.size() != 7)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance prepare <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance prepare <parent-hash> <revision> <time> <name> <registers-hex>'");
 
         int nBlockMin = 0;
         LOCK(cs_main);
@@ -90,19 +88,21 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        std::string strName = SanitizeString(params[1].get_str());
+        uint256 hashParent = ParseHashV(params[0], "parameter 1");
 
-        //set block min
-        if(pindex != NULL) nBlockMin = pindex->nHeight;
+        int nRevision = SanitizeString(params[1].get_int());
+        int nTime = SanitizeString(params[2].get_int());
 
-        CBitcoinAddress address(params[5].get_str());
-        if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
+        std::string strName = SanitizeString(params[3].get_str());
+        if(strName != params[1].get_str())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name is invalid");
 
+        std::string strRegisters = params[4].get_str();
+        
         //*************************************************************************
 
         // create transaction 15 minutes into the future, to allow for confirmation time
-        CGovernanceObject budgetProposalBroadcast(strName, GetTime(), 253370764800, uint256());
+        CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, nTime, strName, uint256());
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
@@ -124,9 +124,9 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
     if(strCommand == "submit")
     {
         if (params.size() != 8)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance submit <proposal-name> <url> <payment-count> <block-start> <dash-address> <monthly-payment-dash> <fee-tx>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance submit <parent-hash> <revision> <time> <name> <registers-hex>'");
 
-        if(!masternodeSync.IsBlockchainSynced()){
+        if(!masternodeSync.IsBlockchainSynced()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
         }
 
@@ -137,14 +137,17 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        std::string strName = SanitizeString(params[1].get_str());
+        uint256 hashParent = ParseHashV(params[0], "parameter 1");
 
-        //set block min
-        if(pindex != NULL) nBlockMin = pindex->nHeight;
+        int nRevision = SanitizeString(params[1].get_int());
+        int nTime = SanitizeString(params[2].get_int());
 
-        // create new governance object
+        std::string strName = SanitizeString(params[3].get_str());
+        if(strName != params[1].get_str())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name is invalid");
 
-        uint256 hash = ParseHashV(params[7], "Proposal hash");
+        std::string strRegisters = params[4].get_str();
+
         CGovernanceObject budgetProposalBroadcast(strName, GetTime(), 253370764800, uint256());
 
         std::string strError = "";
@@ -166,110 +169,24 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
     }
 
-    if(strCommand == "vote-many")
-    {
-        if(params.size() != 3)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-many <proposal-hash> [yes|no]'");
-
-        uint256 hash;
-        std::string strVote;
-
-        hash = ParseHashV(params[1], "Proposal hash");
-        strVote = params[2].get_str();
-
-        int nVote = VOTE_OUTCOME_NONE;
-        if(strVote == "yes") nVote = VOTE_OUTCOME_YES;
-        if(strVote == "no") nVote = VOTE_OUTCOME_NO;
-        if(strVote == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
-        if(nVote == VOTE_OUTCOME_NONE)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes', 'no' or 'abstain'");
-
-        int success = 0;
-        int failed = 0;
-
-        std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
-        mnEntries = masternodeConfig.getEntries();
-
-        UniValue resultsObj(UniValue::VOBJ);
-
-        BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
-            std::string errorMessage;
-            std::vector<unsigned char> vchMasterNodeSignature;
-            std::string strMasterNodeSignMessage;
-
-            CPubKey pubKeyCollateralAddress;
-            CKey keyCollateralAddress;
-            CPubKey pubKeyMasternode;
-            CKey keyMasternode;
-
-            UniValue statusObj(UniValue::VOBJ);
-
-            if(!darkSendSigner.SetKey(mne.getPrivKey(), errorMessage, keyMasternode, pubKeyMasternode)){
-                failed++;
-                statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly: " + errorMessage));
-                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-                continue;
-            }
-
-            CMasternode* pmn = mnodeman.Find(pubKeyMasternode);
-            if(pmn == NULL)
-            {
-                failed++;
-                statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Can't find masternode by pubkey"));
-                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-                continue;
-            }
-
-            CBudgetVote vote(pmn->vin, hash, nVote, VOTE_ACTION_NONE);
-            if(!vote.Sign(keyMasternode, pubKeyMasternode)){
-                failed++;
-                statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Failure to sign."));
-                resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-                continue;
-            }
-
-
-            std::string strError = "";
-            if(governance.UpdateProposal(vote, NULL, strError)) {
-                governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-                vote.Relay();
-                success++;
-                statusObj.push_back(Pair("result", "success"));
-            } else {
-                failed++;
-                statusObj.push_back(Pair("result", strError.c_str()));
-            }
-
-            resultsObj.push_back(Pair(mne.getAlias(), statusObj));
-        }
-
-        UniValue returnObj(UniValue::VOBJ);
-        returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", success, failed)));
-        returnObj.push_back(Pair("detail", resultsObj));
-
-        return returnObj;
-    }
-
     if(strCommand == "vote-alias")
     {
         if(params.size() != 4)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-alias <proposal-hash> [yes|no] <alias-name>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-alias <object-hash> <vote-action> [yes|no|abstain] <alias-name>'");
 
         uint256 hash;
         std::string strVote;
 
-        hash = ParseHashV(params[1], "Proposal hash");
+        hash = ParseHashV(params[1], "Object hash");
         strVote = params[2].get_str();
         std::string strAlias = params[3].get_str();
+        int nVoteAction = params[4].get_int();
 
-        int nVote = VOTE_OUTCOME_NONE;
-        if(strVote == "yes") nVote = VOTE_OUTCOME_YES;
-        if(strVote == "no") nVote = VOTE_OUTCOME_NO;
-        if(strVote == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
-        if(nVote == VOTE_OUTCOME_NONE)
+        int nVoteOutcome = VOTE_OUTCOME_NONE;
+        if(strVote == "yes") nVoteOutcome = VOTE_OUTCOME_YES;
+        if(strVote == "no") nVoteOutcome = VOTE_OUTCOME_NO;
+        if(strVote == "abstain") nVoteOutcome = VOTE_OUTCOME_ABSTAIN;
+        if(nVoteOutcome == VOTE_OUTCOME_NONE)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes', 'no' or 'abstain'");
 
         int success = 0;
@@ -313,7 +230,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
                 continue;
             }
 
-            CBudgetVote vote(pmn->vin, hash, nVote, VOTE_ACTION_NONE);
+            CBudgetVote vote(pmn->vin, hash, nVoteOutcome, nVoteAction);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -344,49 +261,6 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         return returnObj;
     }
 
-    if(strCommand == "vote")
-    {
-        if (params.size() != 3)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote <proposal-hash> [yes|no]'");
-
-        uint256 hash = ParseHashV(params[1], "Proposal hash");
-        std::string strVote = params[2].get_str();
-
-        int nVote = VOTE_OUTCOME_NONE;
-        if(strVote == "yes") nVote = VOTE_OUTCOME_YES;
-        if(strVote == "no") nVote = VOTE_OUTCOME_NO;
-        if(strVote == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
-        if(nVote == VOTE_OUTCOME_NONE)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes', 'no' or 'abstain'");
-
-        CPubKey pubKeyMasternode;
-        CKey keyMasternode;
-        std::string errorMessage;
-
-        if(!darkSendSigner.SetKey(strMasterNodePrivKey, errorMessage, keyMasternode, pubKeyMasternode))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Error upon calling SetKey");
-
-        CMasternode* pmn = mnodeman.Find(activeMasternode.vin);
-        if(pmn == NULL)
-        {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + activeMasternode.vin.ToString());
-        }
-
-        CBudgetVote vote(activeMasternode.vin, hash, nVote, VOTE_ACTION_NONE);
-        if(!vote.Sign(keyMasternode, pubKeyMasternode)){
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to sign.");
-        }
-
-        std::string strError = "";
-        if(governance.UpdateProposal(vote, NULL, strError)){
-            governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
-            vote.Relay();
-            return "Voted successfully";
-        } else {
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Error voting : " + strError);
-        }
-    }
-
     if(strCommand == "list" || strCommand == "diff")
     {
         if (params.size() > 2)
@@ -415,11 +289,13 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
             bObj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
             bObj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
-            bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
-            bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
-            bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
-            bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
-            bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
+
+            // vote data for funding
+            bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)-(int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
+            bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)));
+            bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
+            bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(VOTE_ACTION_FUNDING)));
+            bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished(VOTE_ACTION_FUNDING)));
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(pindex, strError)));
