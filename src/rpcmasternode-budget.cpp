@@ -384,7 +384,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
     {
         if (params.size() != 3)
             throw runtime_error(
-                "Correct usage is 'mngovernance getvotes <governance-hash> <vote-outcome (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3)>'"
+                "Correct usage is 'mngovernance getvotes <governance-hash> <vote-outcome>'"
                 );
 
         uint256 hash = ParseHashV(params[1], "Governance hash");
@@ -424,13 +424,18 @@ UniValue mngovernancevoteraw(const UniValue& params, bool fHelp)
     int nMnTxIndex = params[1].get_int();
     CTxIn vin = CTxIn(hashMnTx, nMnTxIndex);
 
-    uint256 hashProposal = ParseHashV(params[2], "Proposal hash");
-    std::string strVoteOutcome = params[3].get_str();
-    std::string strVoteAction = params[4].get_str();
+    uint256 hashProposal = ParseHashV(params[2], "Governance hash");
+    std::string strVoteAction = params[3].get_str();
+    std::string strVoteOutcome = params[4].get_str();
 
-    int nVote = ConvertVoteAction(strVoteAction);
-    if(nVote == VOTE_OUTCOME_NONE || nVote == -1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "You can only vote 'yes', 'no' or 'abstain'");
+    int nVoteAction = ConvertVoteAction(strVoteAction);
+    if(nVoteAction == VOTE_OUTCOME_NONE || nVoteAction == -1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote action. Please use one of the following: 'yes', 'no' or 'abstain'");
+
+    int nVoteOutcome = ConvertVoteOutcome(strVoteOutcome);
+    if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteAction == -1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
+
 
     int64_t nTime = params[4].get_int64();
     std::string strSig = params[5].get_str();
@@ -446,7 +451,7 @@ UniValue mngovernancevoteraw(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + vin.ToString());
     }
 
-    CBudgetVote vote(vin, hashProposal, nVote, VOTE_ACTION_NONE);
+    CBudgetVote vote(vin, hashProposal, nVoteOutcome, VOTE_ACTION_NONE);
     vote.nTime = nTime;
     vote.vchSig = vchSig;
 
