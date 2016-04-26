@@ -209,7 +209,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
     if(strCommand == "vote-alias")
     {
         if(params.size() != 4)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-alias <object-hash> <vote-action> [yes|no|abstain] <alias-name>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-alias <governance-hash> <vote-action> [yes|no|abstain] <alias-name>'");
 
         uint256 hash;
         std::string strVote;
@@ -222,11 +222,11 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         int nVoteAction = ConvertVoteAction(strVoteAction);
         if(nVoteAction == VOTE_OUTCOME_NONE || nVoteAction == -1)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote action. Please use one of the following: 'yes', 'no' or 'abstain'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
 
         int nVoteOutcome = ConvertVoteOutcome(strVoteOutcome);
         if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteAction == -1)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote action. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
 
         int success = 0;
         int failed = 0;
@@ -430,11 +430,11 @@ UniValue mngovernancevoteraw(const UniValue& params, bool fHelp)
 
     int nVoteAction = ConvertVoteAction(strVoteAction);
     if(nVoteAction == VOTE_OUTCOME_NONE || nVoteAction == -1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote action. Please use one of the following: 'yes', 'no' or 'abstain'");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
 
     int nVoteOutcome = ConvertVoteOutcome(strVoteOutcome);
     if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteAction == -1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote action. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
 
 
     int64_t nTime = params[4].get_int64();
