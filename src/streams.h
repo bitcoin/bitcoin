@@ -240,7 +240,9 @@ public:
     CDataStream& ignore(int nSize)
     {
         // Ignore from the beginning of the buffer
-        assert(nSize >= 0);
+        if (nSize < 0) {
+            throw std::ios_base::failure("CDataStream::ignore(): nSize negative");
+        }
         unsigned int nReadPosNext = nReadPos + nSize;
         if (nReadPosNext >= vch.size())
         {
@@ -401,6 +403,20 @@ public:
             throw std::ios_base::failure("CAutoFile::read: file handle is NULL");
         if (fread(pch, 1, nSize, file) != nSize)
             throw std::ios_base::failure(feof(file) ? "CAutoFile::read: end of file" : "CAutoFile::read: fread failed");
+        return (*this);
+    }
+
+    CAutoFile& ignore(size_t nSize)
+    {
+        if (!file)
+            throw std::ios_base::failure("CAutoFile::ignore: file handle is NULL");
+        unsigned char data[4096];
+        while (nSize > 0) {
+            size_t nNow = std::min<size_t>(nSize, sizeof(data));
+            if (fread(data, 1, nNow, file) != nNow)
+                throw std::ios_base::failure(feof(file) ? "CAutoFile::ignore: end of file" : "CAutoFile::read: fread failed");
+            nSize -= nNow;
+        }
         return (*this);
     }
 
