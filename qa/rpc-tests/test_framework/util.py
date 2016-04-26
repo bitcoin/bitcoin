@@ -487,7 +487,7 @@ def assert_array_result(object_array, to_match, expected, should_not_find = Fals
         in object_array
         """
     if should_not_find == True:
-        expected = { }
+        assert_equal(expected, { })
     num_matched = 0
     for item in object_array:
         all_match = True
