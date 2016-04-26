@@ -1541,7 +1541,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
     }
 
-    SyncWithWallets(tx, NULL, NULL);
+    SyncWithWallets(tx, NULL);
 
     return true;
 }
@@ -2770,7 +2770,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     // Let wallets know transactions went from 1-confirmed to
     // 0-confirmed or conflicted:
     BOOST_FOREACH(const CTransaction &tx, block.vtx) {
-        SyncWithWallets(tx, pindexDelete->pprev, NULL);
+        SyncWithWallets(tx, pindexDelete->pprev);
     }
     return true;
 }
@@ -2785,7 +2785,7 @@ static int64_t nTimePostConnect = 0;
  * Connect a new block to chainActive. pblock is either NULL or a pointer to a CBlock
  * corresponding to pindexNew, to bypass loading it again from disk.
  */
-bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const CBlock* pblock)
+bool static ConnectTip(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexNew, const CBlock* pblock, std::list<CTransaction> &txConflicted, std::vector<std::tuple<CTransaction,CBlockIndex*,int> > &txChanged)
 {
     assert(pindexNew->pprev == chainActive.Tip());
     // Read block from disk.
@@ -2821,20 +2821,13 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
         return false;
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
-    // Remove conflicting transactions from the mempool.
-    list<CTransaction> txConflicted;
+    // Remove conflicting transactions from the mempool.;
     mempool.removeForBlock(pblock->vtx, pindexNew->nHeight, txConflicted, !IsInitialBlockDownload());
     // Update chainActive & related variables.
     UpdateTip(pindexNew, chainparams);
-    // Tell wallet about transactions that went from mempool
-    // to conflicted:
-    BOOST_FOREACH(const CTransaction &tx, txConflicted) {
-        SyncWithWallets(tx, pindexNew, NULL);
-    }
-    // ... and about transactions that got confirmed:
-    BOOST_FOREACH(const CTransaction &tx, pblock->vtx) {
-        SyncWithWallets(tx, pindexNew, pblock);
-    }
+
+    for(unsigned int i=0; i < pblock->vtx.size(); i++)
+        txChanged.push_back(std::make_tuple(pblock->vtx[i], pindexNew, i));
 
     int64_t nTime6 = GetTimeMicros(); nTimePostConnect += nTime6 - nTime5; nTimeTotal += nTime6 - nTime1;
     LogPrint("bench", "  - Connect postprocess: %.2fms [%.2fs]\n", (nTime6 - nTime5) * 0.001, nTimePostConnect * 0.000001);
@@ -2916,7 +2909,7 @@ static void PruneBlockIndexCandidates() {
  * Try to make some progress towards making pindexMostWork the active block.
  * pblock is either NULL or a pointer to a CBlock corresponding to pindexMostWork.
  */
-static bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const CBlock* pblock, bool& fInvalidFound)
+static bool ActivateBestChainStep(CValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const CBlock* pblock, bool& fInvalidFound, std::list<CTransaction>& txConflicted, std::vector<std::tuple<CTransaction,CBlockIndex*,int> >& txChanged)
 {
     AssertLockHeld(cs_main);
     const CBlockIndex *pindexOldTip = chainActive.Tip();
@@ -2949,7 +2942,7 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
 
         // Connect new blocks.
         BOOST_REVERSE_FOREACH(CBlockIndex *pindexConnect, vpindexToConnect) {
-            if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : NULL)) {
+            if (!ConnectTip(state, chainparams, pindexConnect, pindexConnect == pindexMostWork ? pblock : NULL, txConflicted, txChanged)) {
                 if (state.IsInvalid()) {
                     // The block violates a consensus rule.
                     if (!state.CorruptionPossible())
@@ -3024,6 +3017,8 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             break;
 
         const CBlockIndex *pindexFork;
+        std::list<CTransaction> txConflicted;
+        std::vector<std::tuple<CTransaction,CBlockIndex*,int> > txChanged;
         bool fInitialDownload;
         int nNewHeight;
         {
@@ -3038,7 +3033,7 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
                 return true;
 
             bool fInvalidFound = false;
-            if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, fInvalidFound))
+            if (!ActivateBestChainStep(state, chainparams, pindexMostWork, pblock && pblock->GetHash() == pindexMostWork->GetBlockHash() ? pblock : NULL, fInvalidFound, txConflicted, txChanged))
                 return false;
 
             if (fInvalidFound) {
@@ -3053,6 +3048,17 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
         // When we reach this point, we switched to a new tip (stored in pindexNewTip).
 
         // Notifications/callbacks that can run without cs_main
+
+        // throw all transactions though the signal-interface
+        // while _not_ holding the cs_main lock
+        BOOST_FOREACH(const CTransaction &tx, txConflicted)
+        {
+            SyncWithWallets(tx, pindexNewTip);
+        }
+        // ... and about transactions that got confirmed:
+        for(unsigned int i = 0; i < txChanged.size(); i++)
+            SyncWithWallets(std::get<0>(txChanged[i]), std::get<1>(txChanged[i]), std::get<2>(txChanged[i]));
+
         // Always notify the UI if a new block tip was connected
         if (pindexFork != pindexNewTip) {
             uiInterface.NotifyBlockTip(fInitialDownload, pindexNewTip);
