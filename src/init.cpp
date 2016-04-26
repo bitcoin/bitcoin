@@ -222,8 +222,8 @@ void PrepareShutdown()
     flatdb1.Dump(mnodeman);
     CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
     flatdb2.Dump(mnpayments);
-    // CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-    // flatdb3.Dump(governance);
+    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+    flatdb3.Dump(governance);
 
     StopTorControl();
     UnregisterNodeSignals(GetNodeSignals());
@@ -1829,9 +1829,9 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
     flatdb2.Load(mnpayments);
 
-    // CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
-    // flatdb3.Load(governance);
-    // governance.ClearSeen();
+    CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
+    flatdb3.Load(governance);
+    governance.ClearSeen();
 
     // ********************************************************* Step 11: setup DarkSend
 
