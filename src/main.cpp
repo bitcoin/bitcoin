@@ -4107,18 +4107,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 // Send stream from relay memory
                 bool pushed = false;
                 {
-                  CDataStream cd(0,0);
-                  if (1)
-                    {
-                      LOCK(cs_mapRelay);  // BU: We need to release this lock before push message or there is a potential deadlock because cs_vSend is often taken before cs_mapRelay
-                      map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
-                      if (mi != mapRelay.end()) {
-                        cd = (*mi).second; // I have to copy, because .second may be deleted once lock is released
-                        pushed = true;
-                      }
-                    }
-                    if (pushed) {
-                        pfrom->PushMessage(inv.GetCommand(), cd);
+                    LOCK(cs_mapRelay);
+                    map<CInv, CDataStream>::iterator mi = mapRelay.find(inv);
+                    if (mi != mapRelay.end()) {
+                        pfrom->PushMessage(inv.GetCommand(), (*mi).second);
                     }
                 }
                 if (!pushed && inv.type == MSG_TX) {
@@ -5648,9 +5640,6 @@ bool SendMessages(CNode* pto)
         TRY_LOCK(cs_main, lockMain); // Acquire cs_main for IsInitialBlockDownload() and CNodeState()
         if (!lockMain)
             return true;
-        TRY_LOCK(pto->cs_vSend, lockSend);
-        if (!lockSend)
-          return true;
 
         // Address refresh broadcast
         int64_t nNow = GetTimeMicros();
