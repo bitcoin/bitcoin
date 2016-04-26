@@ -351,6 +351,9 @@ void RPCConsole::setClientModel(ClientModel *model)
 
         connect(model, SIGNAL(mempoolSizeChanged(long,size_t)), this, SLOT(setMempoolSize(long,size_t)));
 
+        // BU:
+        connect(model, SIGNAL(transactionsPerSecondChanged(double)), this, SLOT(setTransactionsPerSecond(double)));
+
         // set up peer table
         ui->peerWidget->setModel(model->getPeerTableModel());
         ui->peerWidget->verticalHeader()->hide();
@@ -544,6 +547,16 @@ void RPCConsole::setMempoolSize(long numberOfTxs, size_t dynUsage)
     else
         ui->mempoolSize->setText(QString::number(dynUsage/1000000.0, 'f', 2) + " MB");
 }
+
+// BU: begin
+void RPCConsole::setTransactionsPerSecond(double nTxPerSec)
+{
+    if (nTxPerSec < 100)
+        ui->transactionsPerSecond->setText(QString::number(nTxPerSec, 'f', 2));
+    else
+        ui->transactionsPerSecond->setText(QString::number((uint64_t)nTxPerSec));
+}
+// BU: end
 
 void RPCConsole::on_lineEdit_returnPressed()
 {

@@ -1296,6 +1296,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
             if (!pool.exists(hash))
                 return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
         }
+
+        // BU: update tx per second when a tx is valid and accepted
+        pool.UpdateTransactionsPerSecond();
     }
 
     SyncWithWallets(tx, NULL);

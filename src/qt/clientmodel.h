@@ -58,6 +58,9 @@ public:
     //! Return the dynamic memory usage of the mempool
     size_t getMempoolDynamicUsage() const;
     
+    //! BU: Return the transactions per second that are accepted into the mempool
+    double getTransactionsPerSecond() const;
+
     quint64 getTotalBytesRecv() const;
     quint64 getTotalBytesSent() const;
 
@@ -95,6 +98,7 @@ Q_SIGNALS:
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);
     void alertsChanged(const QString &warnings);
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
+    void transactionsPerSecondChanged(double tansactionsPerSecond);  // BU:
 
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
