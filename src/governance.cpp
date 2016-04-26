@@ -551,10 +551,10 @@ CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std
     nTime = 0;
 
     nHashParent = nHashParentIn; //parent object, 0 is root
-    nPriority = nPriorityIn;
+    // nPriority = nPriorityIn;
     nRevision = nRevisionIn; //object revision in the system
     nFeeTXHash = nFeeTXHashIn; //fee-tx    
-    nTypeVersion = nTypeVersionIn;
+    // nTypeVersion = nTypeVersionIn;
 }
 
 CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
@@ -578,20 +578,20 @@ bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError
          return false;
     }
 
-    if(nEndTime < GetTime()) {
-        strError = "Expired Proposal";
-        return false;
-    }
+    // if(nEndTime < GetTime()) {
+    //     strError = "Expired Proposal";
+    //     return false;
+    // }
 
     if(!pindex) {
         strError = "Tip is NULL";
         return true;
     }
 
-    if(nAmount < 10000) {
-        strError = "Invalid proposal amount (minimum 10000)";
-        return false;
-    }
+    // if(nAmount < 10000) {
+    //     strError = "Invalid proposal amount (minimum 10000)";
+    //     return false;
+    // }
 
     if(strName.size() > 20) {
         strError = "Invalid proposal name, limit of 20 characters.";
@@ -603,10 +603,10 @@ bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError
         return false;
     }
 
-    if(address == CScript()) {
-        strError = "Invalid proposal Payment Address";
-        return false;
-    }
+    // if(address == CScript()) {
+    //     strError = "Invalid proposal Payment Address";
+    //     return false;
+    // }
 
     // 12.1 - add valid predicates
     //     this can be handled by configuration 
@@ -633,10 +633,10 @@ bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError
     /*
         TODO: There might be an issue with multisig in the coinbase on mainnet, we will add support for it in a future release.
     */
-    if(address.IsPayToScriptHash()) {
-        strError = "Multisig is not currently supported.";
-        return false;
-    }
+    // if(address.IsPayToScriptHash()) {
+    //     strError = "Multisig is not currently supported.";
+    //     return false;
+    // }
 
     // 12.1 move to pybrain
     // //can only pay out 10% of the possible coins (min value of coins)
@@ -663,10 +663,10 @@ bool CGovernanceObject::NetworkWillPay()
     std::string strError = "";
 
     // -- If GetAbsoluteYesCount is more than -10% of the network, flag as invalid
-    if(GetAbsoluteYesCount() < -(mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)) {
-        strError = "Voted Down";
-        return false;
-    }
+    // if(GetAbsoluteYesCount() < -(mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)) {
+    //     strError = "Voted Down";
+    //     return false;
+    // }
 
     return true;
 }
@@ -773,9 +773,9 @@ int CGovernanceManager::CountMatchingVotes(int nVoteTypeIn, int nVoteOutcomeIn)
         {
             if(!(*it3).second.IsValid(true))
             {
-                if((*it3).second.nVoteType == nVoteTypeIn && 
-                    (*it3).second.nVoteOutcome == nVoteOutcomeIn)
-                        nMatching++;
+                // if((*it3).second.nVoteType == nVoteTypeIn && 
+                //     (*it3).second.nVoteOutcome == nVoteOutcomeIn)
+                //         nMatching++;
             } else {
                 ++it3;
             }

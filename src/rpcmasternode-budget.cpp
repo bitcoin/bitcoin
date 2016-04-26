@@ -157,10 +157,10 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
         }
 
-        int nConf = 0;
-        if(!IsCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf, GOVERNANCE_FEE_TX)){
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError);
-        }
+        // int nConf = 0;
+        // if(!IsCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf, GOVERNANCE_FEE_TX)){
+        //     throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError);
+        // }
 
         governance.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
         budgetProposalBroadcast.Relay();
@@ -288,15 +288,15 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("Name",  pbudgetProposal->GetName()));
             bObj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
             bObj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
-            bObj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
-            bObj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
+            // bObj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
+            // bObj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
 
             // vote data for funding
             bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)-(int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
             bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)));
             bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
             bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(VOTE_ACTION_FUNDING)));
-            bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished(VOTE_ACTION_FUNDING)));
+            // bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished(VOTE_ACTION_FUNDING)));
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(pindex, strError)));
@@ -332,12 +332,12 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         obj.push_back(Pair("Name",  pbudgetProposal->GetName()));
         obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
         obj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
-        obj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
-        obj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
-        obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
-        obj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
-        obj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
-        obj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));        
+        // obj.push_back(Pair("StartTime",  (int64_t)pbudgetProposal->GetStartTime()));
+        // obj.push_back(Pair("EndTime",    (int64_t)pbudgetProposal->GetEndTime()));
+        // obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount()-(int64_t)pbudgetProposal->GetNoCount()));
+        // obj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount()));
+        // obj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount()));
+        // obj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount()));
         obj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished()));
 
         std::string strError = "";
