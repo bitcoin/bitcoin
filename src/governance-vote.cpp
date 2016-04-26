@@ -20,19 +20,20 @@
 
 CBudgetVote::CBudgetVote()
 {
-    // vin = CTxIn();
-    // nProposalHash = uint256();
+    vinMasternode = CTxIn();
+    nParentHash = uint256();
     nVoteAction = VOTE_ACTION_NONE;
     nVoteOutcome = VOTE_OUTCOME_NONE;
     nTime = 0;
     fValid = true;
     fSynced = false;
+    vchSig.clear();
 }
 
-CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nProposalHashIn, int nVoteActionIn, int nVoteOutcomeIn)
+CBudgetVote::CBudgetVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, int nVoteActionIn, int nVoteOutcomeIn)
 {
-    // vin = vinIn;
-    // nProposalHash = nProposalHashIn;
+    vinMasternode = vinMasternodeIn;
+    nParentHash = nParentHashIn;
     nVoteAction = nVoteActionIn;
     nVoteOutcome = nVoteOutcomeIn;
     nTime = GetAdjustedTime();
@@ -53,17 +54,18 @@ bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     CKey keyCollateralAddress;
 
     std::string errorMessage;
-    // std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
+    std::string strMessage = vinMasternode.prevout.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+        boost::lexical_cast<std::string>(nVoteAction) + "|" + boost::lexical_cast<std::string>(nVoteOutcome) + "|" + boost::lexical_cast<std::string>(nTime);
 
-    // if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
-    //     LogPrintf("CBudgetVote::Sign - Error upon calling SignMessage");
-    //     return false;
-    // }
+    if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
+        LogPrintf("CBudgetVote::Sign - Error upon calling SignMessage");
+        return false;
+    }
 
-    // if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage)) {
-    //     LogPrintf("CBudgetVote::Sign - Error upon calling VerifyMessage");
-    //     return false;
-    // }
+    if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage)) {
+        LogPrintf("CBudgetVote::Sign - Error upon calling VerifyMessage");
+        return false;
+    }
 
     return true;
 }
@@ -89,22 +91,23 @@ bool CBudgetVote::IsValid(bool fSignatureCheck)
         return false;   
     }
 
-    // CMasternode* pmn = mnodeman.Find(vin);
-    // if(pmn == NULL)
-    // {
-    //     LogPrint("mngovernance", "CBudgetVote::IsValid() - Unknown Masternode - %s\n", vin.ToString());
-    //     return false;
-    // }
+    CMasternode* pmn = mnodeman.Find(vinMasternode);
+    if(pmn == NULL)
+    {
+        LogPrint("mngovernance", "CBudgetVote::IsValid() - Unknown Masternode - %s\n", vinMasternode.ToString());
+        return false;
+    }
 
     if(!fSignatureCheck) return true;
 
     std::string errorMessage;
-    // std::string strMessage = vin.prevout.ToStringShort() + nProposalHash.ToString() + boost::lexical_cast<std::string>(nVote) + boost::lexical_cast<std::string>(nTime);
+    std::string strMessage = vinMasternode.prevout.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+        boost::lexical_cast<std::string>(nVoteAction) + "|" + boost::lexical_cast<std::string>(nVoteOutcome) + "|" + boost::lexical_cast<std::string>(nTime);
 
-    // if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
-    //     LogPrintf("CBudgetVote::IsValid() - Verify message failed - Error: %s\n", errorMessage);
-    //     return false;
-    // }
+    if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
+        LogPrintf("CBudgetVote::IsValid() - Verify message failed - Error: %s\n", errorMessage);
+        return false;
+    }
 
     return true;
 }

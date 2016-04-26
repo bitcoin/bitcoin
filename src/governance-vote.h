@@ -51,7 +51,7 @@ public:
     std::vector<unsigned char> vchSig;
 
     CBudgetVote();
-    CBudgetVote(CTxIn vinMasternode, uint256 nParentHash, int nVoteActionIn, int nVoteOutcomeIn);
+    CBudgetVote(CTxIn vinMasternodeIn, uint256 nParentHashIn, int nVoteActionIn, int nVoteOutcomeIn);
 
     bool Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode);
     bool IsValid(bool fSignatureCheck);
