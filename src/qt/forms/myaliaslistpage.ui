@@ -76,6 +76,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="editButton">
+       <property name="toolTip">
+        <string>Edit selected alias</string>
+       </property>
        <property name="text">
         <string>Edit</string>
        </property>
@@ -83,6 +86,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="transferButton">
+       <property name="toolTip">
+        <string>Transfer selected alias</string>
+       </property>
        <property name="text">
         <string>Transfer</string>
        </property>
@@ -96,6 +102,9 @@
          <height>48</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Refresh alias list</string>
+       </property>
        <property name="text">
         <string>&amp;Refresh</string>
        </property>
@@ -103,6 +112,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="newPubKey">
+       <property name="toolTip">
+        <string>Create a new public key used for transferring aliases</string>
+       </property>
        <property name="text">
         <string>New Public Key</string>
        </property>
@@ -110,6 +122,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="whitelistButton">
+       <property name="toolTip">
+        <string>Open list of affiliates associated with this alias</string>
+       </property>
        <property name="text">
         <string>Affiliations</string>
        </property>

@@ -66,6 +66,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="releaseButton">
+       <property name="toolTip">
+        <string>Release selected escrow to merchant</string>
+       </property>
        <property name="text">
         <string>Release Escrow</string>
        </property>
@@ -79,6 +82,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="refundButton">
+       <property name="toolTip">
+        <string>Refund selected escrow back to buyer</string>
+       </property>
        <property name="text">
         <string>Refund Escrow</string>
        </property>
@@ -86,22 +92,31 @@
      </item>
      <item>
       <widget class="QPushButton" name="buyerMessageButton">
+       <property name="toolTip">
+        <string>Send message to buyer</string>
+       </property>
        <property name="text">
-        <string>Send Message To Buyer</string>
+        <string>Send Msg To Buyer</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="sellerMessageButton">
+       <property name="toolTip">
+        <string>Send message to seller</string>
+       </property>
        <property name="text">
-        <string>Send Message To Seller</string>
+        <string>Send Msg To Seller</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="arbiterMessageButton">
+       <property name="toolTip">
+        <string>Send message to arbiter</string>
+       </property>
        <property name="text">
-        <string>Send Message To Arbiter</string>
+        <string>Send Msg To Arbiter</string>
        </property>
       </widget>
      </item>
@@ -112,6 +127,9 @@
          <width>16777215</width>
          <height>48</height>
         </size>
+       </property>
+       <property name="toolTip">
+        <string>Refresh your list of escrows</string>
        </property>
        <property name="text">
         <string>&amp;Refresh</string>

@@ -52,6 +52,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="openBtcWalletButton">
+       <property name="toolTip">
+        <string>Open your local Bitcoin client</string>
+       </property>
        <property name="text">
         <string>Open BTC Wallet</string>
        </property>
@@ -59,6 +62,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="confirmButton">
+       <property name="toolTip">
+        <string>Confirm this payment on the Bitcoin blockchain</string>
+       </property>
        <property name="text">
         <string>&amp;Confirm Payment</string>
        </property>
