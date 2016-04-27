@@ -729,7 +729,6 @@ padding-right:5px;
 
 QWidget .QFrame#frame { /* Wallet Balance */
 min-width:490px;
-overflow:auto;
 }
 
 QWidget .QFrame#frame > .QLabel {
