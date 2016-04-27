@@ -28,7 +28,8 @@ static void bench_ecdh_setup(void* arg) {
         0xa2, 0xba, 0xd1, 0x84, 0xf8, 0x83, 0xc6, 0x9f
     };
 
-    data->ctx = secp256k1_context_create(0);
+    /* create a context with no capabilities */
+    data->ctx = secp256k1_context_create(SECP256K1_FLAGS_TYPE_CONTEXT);
     for (i = 0; i < 32; i++) {
         data->scalar[i] = i + 1;
     }
