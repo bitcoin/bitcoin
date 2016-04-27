@@ -5196,6 +5196,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             }
         }
 
+        if (block.nTime > GetTime() - (24 * 60 * 60)) {
+            LOCK(cs_vNodes);
+            BOOST_FOREACH(CNode* pnode, vNodes) {
+                if (pnode->nVersion >= FEEFILTER_VERSION) {
+                    pnode->PushMessage("mempool");
+                }
+            }
+        }
     }
 
 
