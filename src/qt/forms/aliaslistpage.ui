@@ -106,7 +106,7 @@
      <item>
       <widget class="QPushButton" name="messageButton">
        <property name="text">
-        <string>Send Message</string>
+        <string>Send Msg</string>
        </property>
       </widget>
      </item>

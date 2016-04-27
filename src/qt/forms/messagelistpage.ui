@@ -41,8 +41,11 @@
          <height>48</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Send a new message</string>
+       </property>
        <property name="text">
-        <string>New Message</string>
+        <string>New Msg</string>
        </property>
       </widget>
      </item>
@@ -52,12 +55,15 @@
         <string>Copy the currently selected message to the system clipboard</string>
        </property>
        <property name="text">
-        <string>&amp;Copy Message ID</string>
+        <string>&amp;Copy Msg ID</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="detailButton">
+       <property name="toolTip">
+        <string>Get message details</string>
+       </property>
        <property name="text">
         <string>Details</string>
        </property>
@@ -65,6 +71,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="refreshButton">
+       <property name="toolTip">
+        <string>Refresh message list</string>
+       </property>
        <property name="text">
         <string>&amp;Refresh</string>
        </property>

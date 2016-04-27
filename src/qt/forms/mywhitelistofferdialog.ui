@@ -62,6 +62,9 @@
          <height>48</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Refresh your affiliate list for this offer</string>
+       </property>
        <property name="text">
         <string>&amp;Refresh</string>
        </property>

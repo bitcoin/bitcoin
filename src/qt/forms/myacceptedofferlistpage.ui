@@ -62,6 +62,9 @@
          <height>48</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Refresh your accepted offer list</string>
+       </property>
        <property name="text">
         <string>&amp;Refresh</string>
        </property>
@@ -79,6 +82,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="detailButton">
+       <property name="toolTip">
+        <string>Details of the currently accepted offer</string>
+       </property>
        <property name="text">
         <string>Details</string>
        </property>
@@ -86,13 +92,19 @@
      </item>
      <item>
       <widget class="QPushButton" name="messageButton">
+       <property name="toolTip">
+        <string>Send message to buyer</string>
+       </property>
        <property name="text">
-        <string>Send Message To Buyer</string>
+        <string>Send Msg To Buyer</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="btcButton">
+       <property name="toolTip">
+        <string>Check Bitcoin payment for this offer</string>
+       </property>
        <property name="text">
         <string>Check BTC Payment</string>
        </property>

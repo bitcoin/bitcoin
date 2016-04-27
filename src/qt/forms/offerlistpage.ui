@@ -105,6 +105,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="resellButton">
+       <property name="toolTip">
+        <string>Resell this offer for a commission</string>
+       </property>
        <property name="text">
         <string>Resell</string>
        </property>
@@ -112,6 +115,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="purchaseButton">
+       <property name="toolTip">
+        <string>Purchase this offer</string>
+       </property>
        <property name="text">
         <string>Purchase</string>
        </property>
@@ -119,8 +125,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="messageButton">
+       <property name="toolTip">
+        <string>Send message to seller</string>
+       </property>
        <property name="text">
-        <string>Send Message To Seller</string>
+        <string>Send Msg To Seller</string>
        </property>
       </widget>
      </item>

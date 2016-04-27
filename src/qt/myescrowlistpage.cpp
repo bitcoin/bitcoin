@@ -65,9 +65,9 @@ MyEscrowListPage::MyEscrowListPage(const PlatformStyle *platformStyle, QWidget *
     releaseAction = new QAction(tr("Release Escrow"), this);
 	refundAction = new QAction(tr("Refund Escrow"), this);
 
-    buyerMessageAction = new QAction(tr("Send Message To Buyer"), this);
-	sellerMessageAction = new QAction(tr("Send Message To Seller"), this);
-	arbiterMessageAction = new QAction(tr("Send Message To Arbiter"), this);
+    buyerMessageAction = new QAction(tr("Send Msg To Buyer"), this);
+	sellerMessageAction = new QAction(tr("Send Msg To Seller"), this);
+	arbiterMessageAction = new QAction(tr("Send Msg To Arbiter"), this);
 
     // Build context menu
     contextMenu = new QMenu();

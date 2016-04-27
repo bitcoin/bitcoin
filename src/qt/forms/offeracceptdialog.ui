@@ -31,6 +31,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="acceptBtcButton">
+       <property name="toolTip">
+        <string>Pay with Bitcoin</string>
+       </property>
        <property name="text">
         <string>Pay with BTC</string>
        </property>
@@ -41,6 +44,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="acceptButton">
+       <property name="toolTip">
+        <string>Pay with Syscoin</string>
+       </property>
        <property name="text">
         <string>&amp;Pay with SYS</string>
        </property>
