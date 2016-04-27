@@ -48,9 +48,9 @@ InMessageListPage::InMessageListPage(const PlatformStyle *platformStyle, QWidget
     // Context menu actions
     QAction *copyGuidAction = new QAction(ui->copyMessage->text(), this);
     QAction *copySubjectAction = new QAction(tr("Copy &Subject"), this);
-	QAction *copyMessageAction = new QAction(tr("Copy &Message"), this);
-	QAction *newMessageAction = new QAction(tr("&New Message"), this);
-	QAction *replyMessageAction = new QAction(tr("&Reply Message"), this);
+	QAction *copyMessageAction = new QAction(tr("Copy &Msg"), this);
+	QAction *newMessageAction = new QAction(tr("&New Msg"), this);
+	QAction *replyMessageAction = new QAction(tr("&Reply Msg"), this);
 	QAction *detailsAction = new QAction(tr("&Details"), this);
     // Build context menu
     contextMenu = new QMenu();

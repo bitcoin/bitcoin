@@ -62,6 +62,9 @@
          <height>48</height>
         </size>
        </property>
+       <property name="toolTip">
+        <string>Refresh accepted offer list</string>
+       </property>
        <property name="text">
         <string>&amp;Refresh</string>
        </property>
@@ -79,6 +82,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="detailButton">
+       <property name="toolTip">
+        <string>Details of the selected accepted offer</string>
+       </property>
        <property name="text">
         <string>Details</string>
        </property>
@@ -86,8 +92,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="messageButton">
+       <property name="toolTip">
+        <string>Send message to the seller</string>
+       </property>
        <property name="text">
-        <string>Send Message To Seller</string>
+        <string>Send Msg To Seller</string>
        </property>
       </widget>
      </item>

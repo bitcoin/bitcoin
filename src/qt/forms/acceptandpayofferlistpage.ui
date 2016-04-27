@@ -118,6 +118,9 @@
        </item>
        <item row="2" column="1">
         <widget class="QPushButton" name="lookupButton">
+         <property name="toolTip">
+          <string>Lookup the OfferID from the blockchain DB</string>
+         </property>
          <property name="text">
           <string>&amp;Lookup Offer</string>
          </property>
@@ -369,6 +372,9 @@
    </item>
    <item>
     <widget class="QPushButton" name="acceptButton">
+     <property name="toolTip">
+      <string>Purchase this offer</string>
+     </property>
      <property name="text">
       <string>&amp;Accept Offer</string>
      </property>
