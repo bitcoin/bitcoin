@@ -3471,7 +3471,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, CBlockIn
     // * The coinbase scriptWitness is a stack of a single 32-byte vector, containing a witness nonce (unconstrained).
     // * We build a merkle tree with all those witness hashes as leaves (similar to the hashMerkleRoot in the block header).
     // * The must be at least one output whose scriptPubKey is a single 36-byte push, the first 4 bytes of which are
-    //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256(witness root, witness nonce). In case there are
+    //   {0xaa, 0x21, 0xa9, 0xed}, and the following 32 bytes are SHA256^2(witness root, witness nonce). In case there are
     //   multiple, the last one is used.
     bool fHaveWitness = false;
     if (IsWitnessEnabled(pindexPrev, consensusParams)) {
