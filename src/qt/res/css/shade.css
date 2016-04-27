@@ -700,16 +700,16 @@ QDialog#HelpMessageDialog QScrollBar:vertical, QDialog#HelpMessageDialog QScroll
 border:0;
 }
 
-/* About Dash Dialog */
+/* About Sys Dialog */
 QDialog#AboutDialog {
 background-color:#F8F6F6;
 }
 
-QDialog#AboutDialog QLabel#label, QDialog#AboutDialog QLabel#copyrightLabel, QDialog#AboutDialog QLabel#label_2 { /* About Dash Contents */
+QDialog#AboutDialog QLabel#label, QDialog#AboutDialog QLabel#copyrightLabel, QDialog#AboutDialog QLabel#label_2 { /* About Sys Contents */
 margin-left:10px;
 }
 
-QDialog#AboutDialog QLabel#label_2 { /* Margin for About Dash text */
+QDialog#AboutDialog QLabel#label_2 { /* Margin for About Sys text */
 margin-right:10px;
 }
 
@@ -729,6 +729,7 @@ padding-right:5px;
 
 QWidget .QFrame#frame { /* Wallet Balance */
 min-width:490px;
+overflow:auto;
 }
 
 QWidget .QFrame#frame > .QLabel {
