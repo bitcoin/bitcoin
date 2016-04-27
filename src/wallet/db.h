@@ -307,7 +307,7 @@ public:
         return Write(std::string("version"), nVersion);
     }
 
-    bool static Rewrite(const std::string& strFile, const char* pszSkip = NULL);
+    bool static Rewrite(const std::string& strFile, int nSerVersion, const char* pszSkip = NULL);
 };
 
 #endif // BITCOIN_WALLET_DB_H

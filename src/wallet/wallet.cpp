@@ -602,7 +602,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // Need to completely rewrite the wallet file; if we don't, bdb might keep
         // bits of the unencrypted private key in slack space in the database file.
-        CDB::Rewrite(strWalletFile);
+        CDB::Rewrite(strWalletFile, CLIENT_VERSION | SERIALIZE_TRANSACTION_WITNESS);
 
     }
     NotifyStatusChanged(this);
@@ -2382,7 +2382,7 @@ DBErrors CWallet::LoadWallet(bool& fFirstRunRet)
     DBErrors nLoadWalletRet = CWalletDB(strWalletFile,"cr+").LoadWallet(this);
     if (nLoadWalletRet == DB_NEED_REWRITE)
     {
-        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        if (CDB::Rewrite(strWalletFile, CLIENT_VERSION | SERIALIZE_TRANSACTION_WITNESS, "\x04pool"))
         {
             LOCK(cs_wallet);
             setKeyPool.clear();
@@ -2408,7 +2408,7 @@ DBErrors CWallet::ZapSelectTx(vector<uint256>& vHashIn, vector<uint256>& vHashOu
     DBErrors nZapSelectTxRet = CWalletDB(strWalletFile,"cr+").ZapSelectTx(this, vHashIn, vHashOut);
     if (nZapSelectTxRet == DB_NEED_REWRITE)
     {
-        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        if (CDB::Rewrite(strWalletFile, CLIENT_VERSION | SERIALIZE_TRANSACTION_WITNESS, "\x04pool"))
         {
             LOCK(cs_wallet);
             setKeyPool.clear();
@@ -2434,7 +2434,7 @@ DBErrors CWallet::ZapWalletTx(std::vector<CWalletTx>& vWtx)
     DBErrors nZapWalletTxRet = CWalletDB(strWalletFile,"cr+").ZapWalletTx(this, vWtx);
     if (nZapWalletTxRet == DB_NEED_REWRITE)
     {
-        if (CDB::Rewrite(strWalletFile, "\x04pool"))
+        if (CDB::Rewrite(strWalletFile, CLIENT_VERSION | SERIALIZE_TRANSACTION_WITNESS, "\x04pool"))
         {
             LOCK(cs_wallet);
             setKeyPool.clear();

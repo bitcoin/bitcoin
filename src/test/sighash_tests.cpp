@@ -82,7 +82,7 @@ uint256 static SignatureHashOld(CScript scriptCode, const CTransaction& txTo, un
     }
 
     // Serialize and hash
-    CHashWriter ss(SER_GETHASH, 0);
+    CHashWriter ss(SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
     ss << txTmp << nHashType;
     return ss.GetHash();
 }
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(sighash_from_data)
           sigHashHex = test[4].get_str();
 
           uint256 sh;
-          CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION);
+          CDataStream stream(ParseHex(raw_tx), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_WITNESS);
           stream >> tx;
 
           CValidationState state;

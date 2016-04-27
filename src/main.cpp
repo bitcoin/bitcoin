@@ -619,7 +619,7 @@ bool AddOrphanTx(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(c
     // have been mined or received.
     // 10,000 orphans, each of which is at most 5,000 bytes big is
     // at most 500 megabytes of orphans:
-    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION);
+    unsigned int sz = tx.GetSerializeSize(SER_NETWORK, CTransaction::CURRENT_VERSION | SERIALIZE_TRANSACTION_WITNESS);
     if (sz > 5000)
     {
         LogPrint("mempool", "ignoring large orphan tx (size: %u, hash: %s)\n", sz, hash.ToString());
@@ -963,7 +963,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     if (tx.vout.empty())
         return state.DoS(10, false, REJECT_INVALID, "bad-txns-vout-empty");
     // Size limits (this doesn't take the witness into account, as that hasn't been checked for malleability)
-    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_BASE_SIZE)
+    if (::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_BLOCK_BASE_SIZE)
         return state.DoS(100, false, REJECT_INVALID, "bad-txns-oversize");
 
     // Check for negative or overflow output values
@@ -3303,7 +3303,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     // checks that use witness data may be performed here.
 
     // Size limits
-    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_BASE_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MAX_BLOCK_BASE_SIZE)
+    if (block.vtx.empty() || block.vtx.size() > MAX_BLOCK_BASE_SIZE || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) > MAX_BLOCK_BASE_SIZE)
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
@@ -4639,7 +4639,7 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
                         assert(!"cannot load block from disk");
                     if (inv.type == MSG_BLOCK)
-                        pfrom->PushMessage(NetMsgType::BLOCK, block);
+                        pfrom->PushMessageWithFlag(SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::BLOCK, block);
                     else if (inv.type == MSG_WITNESS_BLOCK)
                         pfrom->PushMessageWithFlag(SERIALIZE_TRANSACTION_WITNESS, NetMsgType::BLOCK, block);
                     else // MSG_FILTERED_BLOCK)
@@ -4684,14 +4684,14 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     LOCK(cs_mapRelay);
                     map<uint256, CTransaction>::iterator mi = mapRelay.find(inv.hash);
                     if (mi != mapRelay.end()) {
-                        pfrom->PushMessageWithFlag(inv.type == MSG_WITNESS_TX ? SERIALIZE_TRANSACTION_WITNESS : 0, NetMsgType::TX, (*mi).second);
+                        pfrom->PushMessageWithFlag(inv.type == MSG_WITNESS_TX ? SERIALIZE_TRANSACTION_WITNESS : SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::TX, (*mi).second);
                         pushed = true;
                     }
                 }
                 if (!pushed && (inv.type == MSG_TX || inv.type == MSG_WITNESS_TX)) {
                     CTransaction tx;
                     if (mempool.lookup(inv.hash, tx)) {
-                        pfrom->PushMessageWithFlag(inv.type == MSG_WITNESS_TX ? SERIALIZE_TRANSACTION_WITNESS : 0, NetMsgType::TX, tx);
+                        pfrom->PushMessageWithFlag(inv.type == MSG_WITNESS_TX ? SERIALIZE_TRANSACTION_WITNESS : SERIALIZE_TRANSACTION_NO_WITNESS, NetMsgType::TX, tx);
                         pushed = true;
                     }
                 }

@@ -353,7 +353,7 @@ bool CDBEnv::RemoveDb(const string& strFile)
     return (rc == 0);
 }
 
-bool CDB::Rewrite(const string& strFile, const char* pszSkip)
+bool CDB::Rewrite(const string& strFile, int nSerVersion, const char* pszSkip)
 {
     while (true) {
         {
@@ -385,8 +385,8 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                     Dbc* pcursor = db.GetCursor();
                     if (pcursor)
                         while (fSuccess) {
-                            CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-                            CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+                            CDataStream ssKey(SER_DISK, nSerVersion);
+                            CDataStream ssValue(SER_DISK, nSerVersion);
                             int ret = db.ReadAtCursor(pcursor, ssKey, ssValue, DB_NEXT);
                             if (ret == DB_NOTFOUND) {
                                 pcursor->close();

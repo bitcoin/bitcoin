@@ -266,7 +266,7 @@ UniValue importprunedfunds(const UniValue& params, bool fHelp)
     uint256 hashTx = tx.GetHash();
     CWalletTx wtx(pwalletMain,tx);
 
-    CDataStream ssMB(ParseHexV(params[1], "proof"), SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssMB(ParseHexV(params[1], "proof"), SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_WITNESS);
     CMerkleBlock merkleBlock;
     ssMB >> merkleBlock;
 

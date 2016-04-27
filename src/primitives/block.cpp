@@ -38,5 +38,5 @@ int64_t GetBlockCost(const CBlock& block)
     // serialization with and without witness data. As witness_size is equal to
     // total_size - base_size, this formula is identical to:
     // cost = base_size * 3 + total_size.
-    return ::GetSerializeSize(block, SER_NETWORK, 0) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(block, SER_NETWORK, SERIALIZE_TRANSACTION_WITNESS);
+    return ::GetSerializeSize(block, SER_NETWORK, SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(block, SER_NETWORK, SERIALIZE_TRANSACTION_WITNESS);
 }

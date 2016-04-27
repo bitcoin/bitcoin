@@ -12,6 +12,7 @@
 #include "uint256.h"
 
 static const int SERIALIZE_TRANSACTION_WITNESS = 0x40000000;
+static const int SERIALIZE_TRANSACTION_NO_WITNESS = 0x20000000;
 
 static const int WITNESS_SCALE_FACTOR = 4;
 
@@ -277,10 +278,12 @@ template<typename Stream, typename Operation, typename TxType>
 inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, int nType, int nVersion) {
     READWRITE(*const_cast<int32_t*>(&tx.nVersion));
     unsigned char flags = 0;
+    /* Verify that exactly one of SERIALIZE_TRANSACTION_WITNESS and SERIALIZE_TRANSACTION_NO_WITESS is set */
+    assert(!(nVersion & SERIALIZE_TRANSACTION_WITNESS) ^ !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS));
     if (ser_action.ForRead()) {
         /* Try to read the vin. In case the dummy is there, this will be read as an empty vector. */
         READWRITE(*const_cast<std::vector<CTxIn>*>(&tx.vin));
-        if (tx.vin.size() == 0 && (nVersion & SERIALIZE_TRANSACTION_WITNESS)) {
+        if (tx.vin.size() == 0 && !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
             /* We read a dummy or an empty vin. */
             READWRITE(flags);
             if (flags != 0) {
@@ -292,7 +295,7 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
             READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
         }
         const_cast<CTxWitness*>(&tx.wit)->SetNull();
-        if ((flags & 1) && (nVersion & SERIALIZE_TRANSACTION_WITNESS)) {
+        if ((flags & 1) && !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
             /* The witness flag is present, and we support witnesses. */
             flags ^= 1;
             const_cast<CTxWitness*>(&tx.wit)->vtxinwit.resize(tx.vin.size());
@@ -303,7 +306,7 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
             throw std::ios_base::failure("Unknown transaction optional data");
         }
     } else {
-        if (nVersion & SERIALIZE_TRANSACTION_WITNESS) {
+        if (!(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
             /* Check whether witnesses need to be serialized. */
             if (!tx.wit.IsNull()) {
                 flags |= 1;

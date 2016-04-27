@@ -64,12 +64,12 @@ CMutableTransaction::CMutableTransaction(const CTransaction& tx) : nVersion(tx.n
 
 uint256 CMutableTransaction::GetHash() const
 {
-    return SerializeHash(*this, SER_GETHASH, 0);
+    return SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
 }
 
 void CTransaction::UpdateHash() const
 {
-    *const_cast<uint256*>(&hash) = SerializeHash(*this, SER_GETHASH, 0);
+    *const_cast<uint256*>(&hash) = SerializeHash(*this, SER_GETHASH, SERIALIZE_TRANSACTION_NO_WITNESS);
 }
 
 uint256 CTransaction::GetWitnessHash() const
@@ -151,5 +151,5 @@ std::string CTransaction::ToString() const
 
 int64_t GetTransactionCost(const CTransaction& tx)
 {
-    return ::GetSerializeSize(tx, SER_NETWORK, 0) * (WITNESS_SCALE_FACTOR -1) + ::GetSerializeSize(tx, SER_NETWORK, SERIALIZE_TRANSACTION_WITNESS);
+    return ::GetSerializeSize(tx, SER_NETWORK, SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR -1) + ::GetSerializeSize(tx, SER_NETWORK, SERIALIZE_TRANSACTION_WITNESS);
 }
