@@ -146,7 +146,7 @@ class BitcoinTestFramework(object):
             print("key not found: "+ str(e))
             traceback.print_tb(sys.exc_info()[2])
         except Exception as e:
-            print("Unexpected exception caught during testing: "+str(e))
+            print("Unexpected exception caught during testing: " + repr(e))
             traceback.print_tb(sys.exc_info()[2])
 
         if not self.options.noshutdown:
