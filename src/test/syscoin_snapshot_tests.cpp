@@ -26,7 +26,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	printf("Generating 101 blocks to start the mainnet\n");
 	GenerateMainNetBlocks(101, "mainnet1");
 
-	int numberOfTxPerBlock = 1000;
+	int numberOfTxPerBlock = 250;
 	double nTotal  =0;
 	std::string sendManyString = "";
 	for(int i =0;i<paymentAmounts.size();i++)
