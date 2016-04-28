@@ -2883,6 +2883,28 @@ static bool ActivateBestChainStep(CValidationState& state, const CChainParams& c
     return true;
 }
 
+static void NotifyHeaderTip() {
+    bool fNotify = false;
+    bool fInitialBlockDownload = false;
+    static CBlockIndex* pindexHeaderOld = NULL;
+    CBlockIndex* pindexHeader = NULL;
+    {
+        LOCK(cs_main);
+        if (!setBlockIndexCandidates.empty()) {
+            pindexHeader = *setBlockIndexCandidates.rbegin();
+        }
+        if (pindexHeader != pindexHeaderOld) {
+            fNotify = true;
+            fInitialBlockDownload = IsInitialBlockDownload();
+            pindexHeaderOld = pindexHeader;
+        }
+    }
+    // Send block tip changed notifications without cs_main
+    if (fNotify) {
+        uiInterface.NotifyHeaderTip(fInitialBlockDownload, pindexHeader);
+    }
+}
+
 /**
  * Make the best chain active, in multiple steps. The result is either failure
  * or an activated best chain. pblock is either NULL or a pointer to a block
@@ -3499,6 +3521,8 @@ bool ProcessNewBlock(CValidationState& state, const CChainParams& chainparams, c
             return error("%s: AcceptBlock FAILED", __func__);
     }
 
+    NotifyHeaderTip();
+
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
@@ -4054,6 +4078,16 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                     LogPrint("reindex", "Block Import: already had block %s at height %d\n", hash.ToString(), mapBlockIndex[hash]->nHeight);
                 }
 
+                // Activate the genesis block so normal node progress can continue
+                if (hash == chainparams.GetConsensus().hashGenesisBlock) {
+                    CValidationState state;
+                    if (!ActivateBestChain(state, chainparams)) {
+                        break;
+                    }
+                }
+
+                NotifyHeaderTip();
+
                 // Recursively process earlier encountered successors of this block
                 deque<uint256> queue;
                 queue.push_back(hash);
@@ -4077,6 +4111,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
                         }
                         range.first++;
                         mapBlocksUnknownParent.erase(it);
+                        NotifyHeaderTip();
                     }
                 }
             } catch (const std::exception& e) {
@@ -5088,6 +5123,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
 
+        {
         LOCK(cs_main);
 
         if (nCount == 0) {
@@ -5171,6 +5207,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         }
 
         CheckBlockIndex(chainparams.GetConsensus());
+        }
+
+        NotifyHeaderTip();
     }
 
     else if (strCommand == NetMsgType::BLOCK && !fImporting && !fReindex) // Ignore blocks received while importing
