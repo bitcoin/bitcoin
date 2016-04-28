@@ -39,7 +39,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
     arith_uint256 PastDifficultyAveragePrev;
 
     if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin) {
-        return Params().ProofOfWorkLimit().GetCompact();
+        return nProofOfWorkLimit.GetCompact();
     }
 
     for (unsigned int i = 1; BlockReading && BlockReading->nHeight > 0; i++) {
@@ -64,7 +64,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
 
     arith_uint256 bnNew(PastDifficultyAverage);
 
-    int64_t _nTargetTimespan = CountBlocks * Params().GetConsensus().nPowTargetSpacing;
+    int64_t _nTargetTimespan = CountBlocks * params.nPowTargetSpacing;
 
     if (nActualTimespan < _nTargetTimespan/3)
         nActualTimespan = _nTargetTimespan/3;
@@ -75,7 +75,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
     bnNew *= nActualTimespan;
     bnNew /= _nTargetTimespan;
 
-    if (bnNew > nProofOfWorkLimit)){
+    if (bnNew > nProofOfWorkLimit){
         bnNew = nProofOfWorkLimit;
     }
 
