@@ -17,7 +17,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
 	return CalculateNextWorkRequired(pindexLast, params);
 }
 // SYSCOIN DGW diff algo
-unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
+unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
 
 	/* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dashpay.io */
