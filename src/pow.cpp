@@ -14,7 +14,7 @@
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
-	return CalculateNextWorkRequired(indexLast, params);
+	return CalculateNextWorkRequired(pindexLast, params);
 }
 // SYSCOIN DGW diff algo
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Consensus::Params& params)
@@ -22,12 +22,12 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, const Cons
 
 	/* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dashpay.io */
     // Genesis block
-    if (pindexLast == NULL)
-        return nProofOfWorkLimit;
-    if (params.fPowNoRetargeting)
-        return pindexLast->nBits;
 
 	const arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
+    if (pindexLast == NULL)
+        return nProofOfWorkLimit.GetCompact();
+    if (params.fPowNoRetargeting)
+        return pindexLast->nBits;
     const CBlockIndex *BlockLastSolved = pindexLast;
     const CBlockIndex *BlockReading = pindexLast;
     int64_t nActualTimespan = 0;
