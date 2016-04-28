@@ -71,8 +71,7 @@ private:
     /** Mutex protects entire object */
     CWaitableCriticalSection cs;
     CConditionVariable cond;
-    /* XXX in C++11 we can use std::unique_ptr here and avoid manual cleanup */
-    std::deque<WorkItem*> queue;
+    std::deque<std::unique_ptr<WorkItem>> queue;
     bool running;
     size_t maxDepth;
     int numThreads;
@@ -101,15 +100,11 @@ public:
                                  numThreads(0)
     {
     }
-    /*( Precondition: worker threads have all stopped
+    /** Precondition: worker threads have all stopped
      * (call WaitExit)
      */
     ~WorkQueue()
     {
-        while (!queue.empty()) {
-            delete queue.front();
-            queue.pop_front();
-        }
     }
     /** Enqueue a work item */
     bool Enqueue(WorkItem* item)
@@ -118,7 +113,7 @@ public:
         if (queue.size() >= maxDepth) {
             return false;
         }
-        queue.push_back(item);
+        queue.emplace_back(std::unique_ptr<WorkItem>(item));
         cond.notify_one();
         return true;
     }
@@ -127,18 +122,17 @@ public:
     {
         ThreadCounter count(*this);
         while (running) {
-            WorkItem* i = 0;
+            std::unique_ptr<WorkItem> i;
             {
                 boost::unique_lock<boost::mutex> lock(cs);
                 while (running && queue.empty())
                     cond.wait(lock);
                 if (!running)
                     break;
-                i = queue.front();
+                i = std::move(queue.front());
                 queue.pop_front();
             }
             (*i)();
-            delete i;
         }
     }
     /** Interrupt and exit loops */
