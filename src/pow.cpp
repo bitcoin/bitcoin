@@ -14,7 +14,7 @@
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
-	return CalculateNextWorkRequired(pindexLast, params);
+	return CalculateNextWorkRequired(pindexLast, 0, params);
 }
 // SYSCOIN DGW diff algo
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
