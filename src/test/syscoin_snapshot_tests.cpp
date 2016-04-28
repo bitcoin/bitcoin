@@ -26,7 +26,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	printf("Generating 101 blocks to start the mainnet\n");
 	GenerateMainNetBlocks(101, "mainnet1");
 
-	int numberOfTxPerBlock = 250;
+	int numberOfTxPerBlock = 1000;
 	double nTotal  =0;
 	std::string sendManyString = "";
 	for(int i =0;i<paymentAmounts.size();i++)
@@ -78,7 +78,7 @@ bool IsMainNetAlreadyCreated()
 	UniValue r;
 	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", "getinfo", false));
 	height = find_value(r.get_obj(), "blocks").get_int();
-	return height > 0;
+	return height > 1;
 }
 BOOST_AUTO_TEST_CASE (generate_and_verify_snapshot)
 {
