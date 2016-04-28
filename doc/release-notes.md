@@ -43,6 +43,19 @@ RPC low-level changes
   32-bit and 64-bit platforms, and the txids were missing in the hashed data. This has been
   fixed, but this means that the output will be different than from previous versions.
 
+C++11 and Python 3
+-------------------
+
+Various code modernizations have been done. The Bitcoin Core code base has
+started using C++11. This means that a C++11-capable compiler is now needed for
+building. Effectively this means GCC 4.7 or higher, or Clang 3.3 or higher.
+
+When cross-compiling for a target that doesn't have C++11 libraries, configure with
+`./configure --enable-glibc-back-compat ... LDFLAGS=-static-libstdc++`.
+
+For running the functional tests in `qa/rpc-tests`, Python3.4 or higher is now
+required.
+
 0.13.0 Change log
 =================
 
