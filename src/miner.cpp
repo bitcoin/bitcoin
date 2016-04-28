@@ -138,7 +138,12 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         if (chainparams.MineBlocksOnDemand())
             pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
 
-        // Decide whether to include witness transactions (temporary)
+        // Decide whether to include witness transactions
+        // This is only needed in case the witness softfork activation is reverted
+        // (which would require a very deep reorganization) or when
+        // -promiscuousmempoolflags is used.
+        // TODO: replace this with a call to main to assess validity of a mempool
+        // transaction (which in most cases can be a no-op).
         bool fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus());
 
         int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
