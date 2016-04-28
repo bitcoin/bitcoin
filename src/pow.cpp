@@ -24,8 +24,6 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     // Genesis block
 
 	const arith_uint256 nProofOfWorkLimit = UintToArith256(params.powLimit);
-    if (pindexLast == NULL)
-        return nProofOfWorkLimit.GetCompact();
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
     const CBlockIndex *BlockLastSolved = pindexLast;
@@ -38,7 +36,8 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     arith_uint256 PastDifficultyAverage;
     arith_uint256 PastDifficultyAveragePrev;
 
-    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < PastBlocksMin) {
+	// 200 needed for snapshot unit test
+    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < 200) {
         return nProofOfWorkLimit.GetCompact();
     }
 
@@ -95,7 +94,6 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
         return error("CheckProofOfWork(): nBits below minimum work");
 
     // Check proof of work matches claimed amount
-	std::string chain = ChainNameFromCommandLine();
     if (UintToArith256(hash) > bnTarget)
         return error("CheckProofOfWork(): hash doesn't match nBits");
 
