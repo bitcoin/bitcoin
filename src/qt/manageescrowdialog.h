@@ -6,10 +6,7 @@
 namespace Ui {
     class ManageEscrowDialog;
 }
-class MessageTableModel;
-class WalletModel;
 QT_BEGIN_NAMESPACE
-class QDataWidgetMapper;
 QT_END_NAMESPACE
 
 /** Dialog for editing an address and associated information.
