@@ -183,6 +183,7 @@ QT_MOC_CPP = \
   qt/moc_messagetablemodel.cpp \
   qt/moc_editaliasdialog.cpp \
   qt/moc_newmessagedialog.cpp \
+  qt/moc_manageescrowdialog.cpp \
   qt/moc_messageinfodialog.cpp \
   qt/moc_inmessagelistpage.cpp \
   qt/moc_outmessagelistpage.cpp \
