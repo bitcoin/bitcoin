@@ -156,7 +156,7 @@ void ManageEscrowDialog::on_refundButton_clicked()
 			QMessageBox::Ok, QMessageBox::Ok);
 	}
 }
-EscrowType ManageEscrowDialog::findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter)
+ManageEscrowDialog::EscrowType ManageEscrowDialog::findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter)
 {
 	if(isYourAlias(buyer))
 		return EscrowType::Buyer;
