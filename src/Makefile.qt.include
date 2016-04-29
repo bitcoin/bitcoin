@@ -101,6 +101,7 @@ QT_FORMS_UI = \
   qt/forms/aliaslistpage.ui \
   qt/forms/editaliasdialog.ui \
   qt/forms/newmessagedialog.ui \
+  qt/forms/manageescrowdialog.ui \
   qt/forms/messageinfodialog.ui \
   qt/forms/escrowlistpage.ui \
   qt/forms/myescrowlistpage.ui \
@@ -295,6 +296,7 @@ SYSCOIN_QT_H = \
   qt/messagetablemodel.h \
   qt/editaliasdialog.h \
   qt/newmessagedialog.h \
+  qt/manageescrowdialog.h \
   qt/messageinfodialog.h \
   qt/inmessagelistpage.h \
   qt/outmessagelistpage.h \
@@ -454,6 +456,7 @@ SYSCOIN_QT_CPP += \
   qt/messagetablemodel.cpp \
   qt/editaliasdialog.cpp \
   qt/newmessagedialog.cpp \
+  qt/manageescrowdialog.cpp \
   qt/messageinfodialog.cpp \
   qt/inmessagelistpage.cpp \
   qt/outmessagelistpage.cpp \

@@ -44,11 +44,6 @@ private:
     QSortFilterProxyModel *proxyModel;
     QMenu *contextMenu;
     QString newEscrowToSelect;
-	QAction *releaseAction;
-	QAction *refundAction;
-	QAction *buyerMessageAction;
-	QAction *sellerMessageAction;
-	QAction *arbiterMessageAction;
 private Q_SLOTS:
     void on_copyEscrow_clicked();
 	void on_copyOffer_clicked();
@@ -58,8 +53,7 @@ private Q_SLOTS:
 	void on_buyerMessageButton_clicked();
 	void on_sellerMessageButton_clicked();
 	void on_arbiterMessageButton_clicked();
-	void on_releaseButton_clicked();
-	void on_refundButton_clicked();
+	void on_manageButton_clicked();
     /** Spawn contextual menu (right mouse menu) for cert book entry */
     void contextualMenu(const QPoint &point);
     /** New entry/entries were added to cert table */
