@@ -25,7 +25,7 @@ public:
 		Arbiter,
 		None
     };
-    explicit ManageEscrowDialog(const QString &escrow, const QString &buyer, const QString &seller, const QString &arbiter, const QString &offertitle, const QString &total, QWidget *parent = 0);
+    explicit ManageEscrowDialog(const QString &escrow, const QString &buyer, const QString &seller, const QString &arbiter, const QString &status, const QString &offertitle, const QString &total,QWidget *parent = 0);
     ~ManageEscrowDialog();
 
 	bool isYourAlias(const QString &alias);
