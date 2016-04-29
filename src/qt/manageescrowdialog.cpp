@@ -52,7 +52,7 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, QWidget *parent) :
 	{
 		if(escrowType == Buyer)
 		{
-			ui->manageInfo2->setText(tr("The escrow has been released to the seller. You may communicate with your arbiter or seller via Syscoin messages."));
+			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The escrow has been released to the seller. You may communicate with your arbiter or seller via Syscoin messages."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
@@ -64,7 +64,7 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, QWidget *parent) :
 		}
 		else if(escrowType == Arbiter)
 		{
-			ui->manageInfo2->setText(tr("The escrow has been released to the seller. You're job is done, if you were the one to release the coins you will recieve a commission as soon as the seller claims his payment."));
+			ui->manageInfo2->setText(tr("You are the <b>arbiter</b> of the offer held in escrow. The escrow has been released to the seller. You're job is done, if you were the one to release the coins you will recieve a commission as soon as the seller claims his payment."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
@@ -79,13 +79,13 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, QWidget *parent) :
 		}
 		else if(escrowType == Seller)
 		{
-			ui->manageInfo2->setText(tr("The escrow has been refunded back to the buyer."));
+			ui->manageInfo2->setText(tr("You are the <b>seller</b> of the offer held in escrow. The escrow has been refunded back to the buyer."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
 		else if(escrowType == Arbiter)
 		{
-			ui->manageInfo2->setText(tr("The escrow has been refunded back to the buyer. You're job is done, if you were the one to refund the coins you will recieve a commission as soon as the buyer claims his refund."));
+			ui->manageInfo2->setText(tr("You are the <b>arbiter</b> of the offer held in escrow. The escrow has been refunded back to the buyer. You're job is done, if you were the one to refund the coins you will recieve a commission as soon as the buyer claims his refund."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
