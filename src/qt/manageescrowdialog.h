@@ -19,12 +19,12 @@ class ManageEscrowDialog : public QDialog
     Q_OBJECT
 
 public:
-    enum EscrowType {
+    typedef enum EscrowType {
         Buyer,
         Seller,
 		Arbiter,
 		None
-    };
+    } EscrowType;
     explicit ManageEscrowDialog(const QString &escrow, const QString &buyer, const QString &seller, const QString &arbiter, const QString &status, const QString &offertitle, const QString &total,QWidget *parent = 0);
     ~ManageEscrowDialog();
 
