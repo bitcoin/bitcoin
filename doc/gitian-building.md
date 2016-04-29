@@ -310,7 +310,7 @@ Clone the git repositories for bitcoin and Gitian.
 ```bash
 git clone https://github.com/devrandom/gitian-builder.git
 git clone https://github.com/bitcoin/bitcoin
-git clone https://github.com/bitcoin/gitian.sigs.git
+git clone https://github.com/bitcoin-core/gitian.sigs.git
 ```
 
 Setting up the Gitian image
@@ -441,7 +441,7 @@ Then when building, override the remote URLs that gbuild would otherwise pull fr
 ```bash
 
 cd /some/root/path/
-git clone https://github.com/bitcoin/bitcoin-detached-sigs.git
+git clone https://github.com/bitcoin-core/bitcoin-detached-sigs.git
 
 BTCPATH=/some/root/path/bitcoin.git
 SIGPATH=/some/root/path/bitcoin-detached-sigs.git
@@ -473,5 +473,5 @@ Uploading signatures
 ---------------------
 
 After building and signing you can push your signatures (both the `.assert` and `.assert.sig` files) to the
-[bitcoin/gitian.sigs](https://github.com/bitcoin/gitian.sigs/) repository, or if that's not possible create a pull
+[bitcoin-core/gitian.sigs](https://github.com/bitcoin-core/gitian.sigs/) repository, or if that's not possible create a pull
 request. You can also mail the files to Wladimir (laanwj@gmail.com) and he will commit them.
