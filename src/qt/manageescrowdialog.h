@@ -39,13 +39,13 @@ private:
     bool saveCurrentRow();
 	void loadAliases();
     Ui::ManageEscrowDialog *ui;
-    QDataWidgetMapper *mapper;
-	WalletModel* walletModel;
 	QString escrow;
 	QString buyer;
 	QString seller;
 	QString arbiter;
 	QString status;
+	QString offertitle;
+	QString total;
 };
 
 #endif // MANAGEESCROWDIALOG_H
