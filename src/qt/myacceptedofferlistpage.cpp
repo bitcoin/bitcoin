@@ -148,6 +148,7 @@ bool MyAcceptedOfferListPage::lookup(const QString &lookupid, const QString &acc
 void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 	if(reply->error() != QNetworkReply::NoError) {
 		ui->btcButton->setText(m_buttonText);
+		ui->btcButton->setEnabled(true);
         QMessageBox::critical(this, windowTitle(),
             tr("Error making request: ") + reply->errorString(),
                 QMessageBox::Ok, QMessageBox::Ok);
@@ -170,6 +171,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 			if(statusValue.get_str() != "success")
 			{
 				ui->btcButton->setText(m_buttonText);
+				ui->btcButton->setEnabled(true);
 				QMessageBox::critical(this, windowTitle(),
 					tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
 						QMessageBox::Ok, QMessageBox::Ok);
@@ -191,6 +193,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 			if(unconfirmed)
 			{
 				ui->btcButton->setText(m_buttonText);
+				ui->btcButton->setEnabled(true);
 				QMessageBox::critical(this, windowTitle(),
 					tr("Payment transaction found but it has not been confirmed by the Bitcoin blockchain yet! Please try again later."),
 						QMessageBox::Ok, QMessageBox::Ok);
@@ -215,6 +218,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 							if(valueAmount >= dblPrice)
 							{
 								ui->btcButton->setText(m_buttonText);
+								ui->btcButton->setEnabled(true);
 								QMessageBox::information(this, windowTitle(),
 									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3. It is recommended that you confirm payment by opening your Bitcoin wallet and seeing the funds in your account.").arg(m_strBTCTxId).arg(height).arg(time),
 									QMessageBox::Ok, QMessageBox::Ok);
@@ -230,6 +234,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 	else
 	{
 		ui->btcButton->setText(m_buttonText);
+		ui->btcButton->setEnabled(true);
 		QMessageBox::critical(this, windowTitle(),
 			tr("Cannot parse JSON response: ") + str,
 				QMessageBox::Ok, QMessageBox::Ok);
@@ -238,6 +243,7 @@ void MyAcceptedOfferListPage::slotConfirmedFinished(QNetworkReply * reply){
 	
 	reply->deleteLater();
 	ui->btcButton->setText(m_buttonText);
+	ui->btcButton->setEnabled(true);
 	QMessageBox::warning(this, windowTitle(),
 		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
 			QMessageBox::Ok, QMessageBox::Ok);	
@@ -247,6 +253,7 @@ void MyAcceptedOfferListPage::CheckPaymentInBTC(const QString &strBTCTxId, const
 	dblPrice = price.toDouble();
 	m_buttonText = ui->btcButton->text();
 	ui->btcButton->setText(tr("Please Wait..."));
+	ui->btcButton->setEnabled(false);
 	m_strAddress = address;
 	m_strBTCTxId = strBTCTxId;
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this);  
