@@ -117,6 +117,7 @@ OfferAcceptDialogBTC::~OfferAcceptDialogBTC()
 void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	if(reply->error() != QNetworkReply::NoError) {
 		ui->confirmButton->setText(m_buttonText);
+		ui->confirmButton->setEnabled(true);
         QMessageBox::critical(this, windowTitle(),
             tr("Error making request: ") + reply->errorString(),
                 QMessageBox::Ok, QMessageBox::Ok);
@@ -124,7 +125,6 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	}
 	double valueAmount = 0;
 	QString time;
-	int height;
 		
 	QByteArray bytes = reply->readAll();
 	QString str = QString::fromUtf8(bytes.data(), bytes.size());
@@ -139,6 +139,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 			if(statusValue.get_str() != "success")
 			{
 				ui->confirmButton->setText(m_buttonText);
+				ui->confirmButton->setEnabled(true);
 				QMessageBox::critical(this, windowTitle(),
 					tr("Transaction status not successful: ") + QString::fromStdString(statusValue.get_str()),
 						QMessageBox::Ok, QMessageBox::Ok);
@@ -146,9 +147,6 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 			}
 		}
 		UniValue dataObj = find_value(outerObj, "data");
-		UniValue heightValue = find_value(dataObj, "block");
-		if (heightValue.isNum())
-			height = heightValue.get_int();
 		UniValue timeValue = find_value(dataObj, "time_utc");
 		if (timeValue.isStr())
 			time = QString::fromStdString(timeValue.get_str());
@@ -171,8 +169,9 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 							if(valueAmount >= dblPrice)
 							{
 								ui->confirmButton->setText(m_buttonText);
+								ui->confirmButton->setEnabled(true);
 								QMessageBox::information(this, windowTitle(),
-									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected in block %2 at %3.").arg(ui->btctxidEdit->text().trimmed()).arg(height).arg(time),
+									tr("Transaction ID %1 was found in the Bitcoin blockchain! Full payment has been detected at %3.").arg(ui->btctxidEdit->text().trimmed()).arg(height).arg(time),
 									QMessageBox::Ok, QMessageBox::Ok);
 								acceptOffer();
 								return;
@@ -187,6 +186,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	else
 	{
 		ui->confirmButton->setText(m_buttonText);
+		ui->confirmButton->setEnabled(true);
 		QMessageBox::critical(this, windowTitle(),
 			tr("Cannot parse JSON response: ") + str,
 				QMessageBox::Ok, QMessageBox::Ok);
@@ -195,6 +195,7 @@ void OfferAcceptDialogBTC::slotConfirmedFinished(QNetworkReply * reply){
 	
 	reply->deleteLater();
 	ui->confirmButton->setText(m_buttonText);
+	ui->confirmButton->setEnabled(true);
 	QMessageBox::warning(this, windowTitle(),
 		tr("Payment not found in the Bitcoin blockchain! Please try again later."),
 			QMessageBox::Ok, QMessageBox::Ok);	
@@ -203,6 +204,7 @@ void OfferAcceptDialogBTC::CheckPaymentInBTC()
 {
 	m_buttonText = ui->confirmButton->text();
 	ui->confirmButton->setText(tr("Please Wait..."));
+	ui->confirmButton->setEnabled(false);
 	QNetworkAccessManager *nam = new QNetworkAccessManager(this); 
 	connect(nam, SIGNAL(finished(QNetworkReply *)), this, SLOT(slotConfirmedFinished(QNetworkReply *)));
 	QUrl url("http://btc.blockr.io/api/v1/tx/info/" + ui->btctxidEdit->text().trimmed());
