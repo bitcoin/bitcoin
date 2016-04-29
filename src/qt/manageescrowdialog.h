@@ -6,8 +6,6 @@
 namespace Ui {
     class ManageEscrowDialog;
 }
-QT_BEGIN_NAMESPACE
-QT_END_NAMESPACE
 
 /** Dialog for editing an address and associated information.
  */
