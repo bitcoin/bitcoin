@@ -12,19 +12,14 @@ using namespace std;
 extern const CRPCTable tableRPC;
 ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buyer, const QString &seller, const QString &arbiter, const QString &status, const QString &offertitle, const QString &total,QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ManageEscrowDialog), mapper(0), escrow(escrow), buyer(buyer), seller(seller), arbiter(arbiter), status(status),offertitle(offertitle), total(total), model(0), walletModel(0)
+    ui(new Ui::ManageEscrowDialog), escrow(escrow), buyer(buyer), seller(seller), arbiter(arbiter), status(status),offertitle(offertitle), total(total)
 {
     ui->setupUi(this);
 	EscrowType escrowType = findYourEscrowRoleFromAliases(buyer, seller, arbiter);
-	if(escrowType == EscrowType::None)
-	{
-		ui->manageInfo2->setText(tr("You cannot manage this escrow because you are do not own one of either the buyer, seller or arbiter aliases."));
-		return;
-	}
 	ui->manageInfo->setText(tr("You are managing escrow ID: <b>%1</b> of an offer for <b>%2</b> totalling <b>%3</b>SYS. The buyer is <b>%4</b>, seller is <b>%5</b> and arbiter is <b>%6</b>").arg(escrow).arg(offertitle).arg(total).arg(buyer).arg(seller).arg(arbiter));
-	if(escrowType == EscrowType::None)
+	if(escrowType == None)
 	{
-		ui->manageInfo2->setText(tr("You cannot manage this escrow because you are do not own one of either the buyer, seller or arbiter aliases."));
+		ui->manageInfo2->setText(tr("You cannot manage this escrow because you do not own one of either the buyer, seller or arbiter aliases."));
 		ui->releaseButton->setEnabled(false);
 		ui->refundButton->setEnabled(false);
 	}
