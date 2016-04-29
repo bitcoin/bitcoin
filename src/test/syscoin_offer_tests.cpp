@@ -341,6 +341,10 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	// should fail: offer accept on offer with expired cert
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept node2alias2 " + offerguid + " 1 message"), runtime_error);
 	BOOST_CHECK_THROW(r = CallRPC("node2", "offeraccept_nocheck node2alias2 " + offerguid + " 1 message"), runtime_error);	
+
+	// should fail: generate a cert offer using an expired cert
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew SYS_RATES node1alias2 category title 1 0.05 description USD " + certguid), runtime_error);
+	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck node1alias2 category title 1 0.05 description USD " + certguid), runtime_error);	
 }
 
 BOOST_AUTO_TEST_SUITE_END ()
