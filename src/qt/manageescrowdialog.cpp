@@ -189,7 +189,7 @@ bool ManageEscrowDialog::isYourAlias(const QString &alias)
 
 		if (result.type() == UniValue::VOBJ)
 		{
-			const UniValue& o = input.get_obj();
+			const UniValue& o = result.get_obj();
 			const UniValue& mine_value = find_value(o, "ismine");
 			if (mine_value.type() == UniValue::VBOOL)
 				return mine_value.get_bool();		
