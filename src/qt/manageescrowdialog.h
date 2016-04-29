@@ -20,12 +20,13 @@ public:
 		Arbiter,
 		None
     };
-    explicit ManageEscrowDialog(const QString &escrow, const QString &buyer, const QString &seller, const QString &arbiter, const QString &status, const QString &offertitle, const QString &total,QWidget *parent = 0);
+    explicit ManageEscrowDialog(const QString &escrow, QWidget *parent = 0);
     ~ManageEscrowDialog();
 
 	bool isYourAlias(const QString &alias);
+	bool loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total);
 	ManageEscrowDialog::EscrowType findYourEscrowRoleFromAliases(const QString &buyer, const QString &seller, const QString &arbiter);
-
+	
 public Q_SLOTS:
 	void on_releaseButton_clicked();
 	void on_refundButton_clicked();
@@ -33,12 +34,6 @@ public Q_SLOTS:
 private:
     Ui::ManageEscrowDialog *ui;
 	QString escrow;
-	QString buyer;
-	QString seller;
-	QString arbiter;
-	QString status;
-	QString offertitle;
-	QString total;
 };
 
 #endif // MANAGEESCROWDIALOG_H
