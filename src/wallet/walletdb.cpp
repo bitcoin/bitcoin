@@ -3,6 +3,9 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+// prevents undefined reference to boost::filesystem::detail::copy_file with C++11
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+
 #include "wallet/walletdb.h"
 
 #include "base58.h"
