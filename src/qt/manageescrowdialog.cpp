@@ -9,13 +9,21 @@
 using namespace std;
 
 extern const CRPCTable tableRPC;
-ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buyer, const QString &seller, const QString &arbiter, const QString &status, const QString &offertitle, const QString &total,QWidget *parent) :
+ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, QWidget *parent) :
     QDialog(parent),
-    ui(new Ui::ManageEscrowDialog), escrow(escrow), buyer(buyer), seller(seller), arbiter(arbiter), status(status),offertitle(offertitle), total(total)
+    ui(new Ui::ManageEscrowDialog), escrow(escrow)
 {
     ui->setupUi(this);
+	QString buyer, seller, arbiter, status, offertitle, total;
+	if(!loadEscrow(escrow, buyer, seller, arbiter, status, offertitle, total))
+	{
+		ui->manageInfo2->setText(tr("Cannot find this escrow on the network, please try again later."));
+		ui->releaseButton->setEnabled(false);
+		ui->refundButton->setEnabled(false);
+		return;
+	}
 	EscrowType escrowType = findYourEscrowRoleFromAliases(buyer, seller, arbiter);
-	ui->manageInfo->setText(tr("You are managing escrow ID: <b>%1</b> of an offer for <b>%2</b> totalling <b>%3</b>SYS. The buyer is <b>%4</b>, seller is <b>%5</b> and arbiter is <b>%6</b>").arg(escrow).arg(offertitle).arg(total).arg(buyer).arg(seller).arg(arbiter));
+	ui->manageInfo->setText(tr("You are managing escrow ID: <b>%1</b> of an offer for <b>%2</b> totalling <b>%3</b>. The buyer is <b>%4</b>, seller is <b>%5</b> and arbiter is <b>%6</b>").arg(escrow).arg(offertitle).arg(total).arg(buyer).arg(seller).arg(arbiter));
 	if(escrowType == None)
 	{
 		ui->manageInfo2->setText(tr("You cannot manage this escrow because you do not own one of either the buyer, seller or arbiter aliases."));
@@ -44,7 +52,7 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 	{
 		if(escrowType == Buyer)
 		{
-			ui->manageInfo2->setText(tr("The escrow has already been released to the seller. You may communicate with your arbiter or seller via Syscoin messages."));
+			ui->manageInfo2->setText(tr("The escrow has been released to the seller. You may communicate with your arbiter or seller via Syscoin messages."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
@@ -56,7 +64,7 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 		}
 		else if(escrowType == Arbiter)
 		{
-			ui->manageInfo2->setText(tr("The escrow has already been released to the seller. You're job is done, if you were the one to release the coins you will recieve a commission as soon as the seller claims his payment."));
+			ui->manageInfo2->setText(tr("The escrow has been released to the seller. You're job is done, if you were the one to release the coins you will recieve a commission as soon as the seller claims his payment."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
@@ -71,13 +79,13 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 		}
 		else if(escrowType == Seller)
 		{
-			ui->manageInfo2->setText(tr("The escrow has already been refunded back to the buyer."));
+			ui->manageInfo2->setText(tr("The escrow has been refunded back to the buyer."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
 		else if(escrowType == Arbiter)
 		{
-			ui->manageInfo2->setText(tr("The escrow has already been refunded back to the buyer. You're job is done, if you were the one to refund the coins you will recieve a commission as soon as the buyer claims his refund."));
+			ui->manageInfo2->setText(tr("The escrow has been refunded back to the buyer. You're job is done, if you were the one to refund the coins you will recieve a commission as soon as the buyer claims his refund."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
@@ -88,12 +96,72 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 		ui->refundButton->setEnabled(false);
 		ui->releaseButton->setEnabled(false);
 	}
+	else if(status == "pending")
+	{		
+		ui->manageInfo2->setText(tr("The escrow is still pending a confirmation by the network. Please try again later."));
+		ui->refundButton->setEnabled(false);
+		ui->releaseButton->setEnabled(false);
+	}
 	else
 	{
 		ui->manageInfo2->setText(tr("The escrow status was not recognized. Please contact the Syscoin team."));
 		ui->refundButton->setEnabled(false);
 		ui->releaseButton->setEnabled(false);
 	}
+}
+bool ManageEscrowDialog::loadEscrow(const QString &escrow, QString &buyer, QString &seller, QString &arbiter, QString &status, QString &offertitle, QString &total)
+{
+	string strMethod = string("escrowlist");
+    UniValue params(UniValue::VARR); 
+	UniValue result;
+	try {
+		result = tableRPC.execute(strMethod, params);
+		if (result.type() == UniValue::VARR)
+		{
+			const UniValue &arr = result.get_array();
+		    for (unsigned int idx = 0; idx < arr.size(); idx++) {
+			    const UniValue& input = arr[idx];
+				if (input.type() != UniValue::VOBJ)
+					continue;
+				const UniValue& o = input.get_obj();
+		
+				const UniValue& name_value = find_value(o, "escrow");
+				if (name_value.type() == UniValue::VSTR)
+					name_str = name_value.get_str();
+				if(QString::fromStdString(name_str) != escrow)
+					continue;
+				const UniValue& seller_value = find_value(o, "seller");
+				if (seller_value.type() == UniValue::VSTR)
+					seller = QString::fromStdString(seller_value.get_str());
+				const UniValue& arbiter_value = find_value(o, "arbiter");
+				if (arbiter_value.type() == UniValue::VSTR)
+					arbiter = QString::fromStdString(arbiter_value.get_str());
+				const UniValue& buyer_value = find_value(o, "buyer");
+				if (buyer_value.type() == UniValue::VSTR)
+					buyer = QString::fromStdString(buyer_value.get_str());
+				const UniValue& offertitle_value = find_value(o, "offertitle");
+				if (offertitle_value.type() == UniValue::VSTR)
+					offertitle = QString::fromStdString(offertitle_value.get_str());
+				const UniValue& total_value = find_value(o, "total");
+				if (total_value.type() == UniValue::VSTR)
+					total = QString::fromStdString(total_value.get_str());
+				const UniValue& status_value = find_value(o, "status");
+				if (status_value.type() == UniValue::VSTR)
+					status = QString::fromStdString(status_value.get_str());
+				return true;
+				
+			}
+		}
+	}
+	catch (UniValue& objError)
+	{
+		return false;
+	}
+	catch(std::exception& e)
+	{
+		return false;
+	}
+	return false;
 }
 void ManageEscrowDialog::on_cancelButton_clicked()
 {

@@ -162,15 +162,8 @@ void MyEscrowListPage::on_manageButton_clicked()
     {
         return;
     }
-	QString buyer = selection.at(0).data(EscrowTableModel::BuyerRole).toString();
-	QString seller = selection.at(0).data(EscrowTableModel::SellerRole).toString();
 	QString escrow = selection.at(0).data(EscrowTableModel::EscrowRole).toString();
-	QString arbiter = selection.at(0).data(EscrowTableModel::ArbiterRole).toString();
-	QString status = selection.at(0).data(EscrowTableModel::StatusRole).toString();
-	QString title = selection.at(0).data(EscrowTableModel::OfferTitleRole).toString();
-	QString total = selection.at(0).data(EscrowTableModel::TotalRole).toString();
-	// send message to seller
-	ManageEscrowDialog dlg(escrow, buyer, seller, arbiter, status, title, total);   
+	ManageEscrowDialog dlg(escrow);   
 	dlg.exec();
 }
 void MyEscrowListPage::on_buyerMessageButton_clicked()
