@@ -21,7 +21,7 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 		ui->manageInfo2->setText(tr("You cannot manage this escrow because you are do not own one of either the buyer, seller or arbiter aliases."));
 		return;
 	}
-	ui->manageInfo->setText(tr("You are managing escrow ID: <b>%1</b> of an offer for <b>%2</b> totalling <b>%3</b>SYS. The buyer is <b>%4</b>, seller is <b>%5</b> and arbiter is <b>%6</b>").arg(QString::fromStdString(escrow).arg(QString::fromStdString(offertitle).arg(QString::fromStdString(total).arg(QString::fromStdString(buyer).arg(QString::fromStdString(seller).arg(QString::fromStdString(arbiter));
+	ui->manageInfo->setText(tr("You are managing escrow ID: <b>%1</b> of an offer for <b>%2</b> totalling <b>%3</b>SYS. The buyer is <b>%4</b>, seller is <b>%5</b> and arbiter is <b>%6</b>").arg(escrow).arg(offertitle).arg(total).arg(buyer).arg(seller).arg(arbiter));
 	if(escrowType == EscrowType::None)
 	{
 		ui->manageInfo2->setText(tr("You cannot manage this escrow because you are do not own one of either the buyer, seller or arbiter aliases."));
@@ -30,17 +30,17 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 	}
 	else if(status == "in-escrow")
 	{
-		if(escrowType == EscrowType::Buyer)
+		if(escrowType == Buyer)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow, you may release the coins to the seller once you have confirmed that you have recieved the item as per the description of the offer."));
 			ui->refundButton->setEnabled(false);
 		}
-		else if(escrowType == EscrowType::Seller)
+		else if(escrowType == Seller)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>seller</b> of the offer held in escrow, you may refund the coins back to the buyer."));
 			ui->releaseButton->setEnabled(false);
 		}
-		else if(escrowType == EscrowType::Arbiter)
+		else if(escrowType == Arbiter)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>arbiter</b> of the offer held in escrow, you may refund the coins back to the buyer if you have evidence that the seller did not honour the agreement to ship the offer item. You may also release the coins to the seller if the buyer has not released. You may use Syscoin messages to communicate with the buyer and seller to ensure you have adequeate proof for your decision."));
 		}
@@ -48,19 +48,19 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 	}
 	else if(status == "escrow released")
 	{
-		if(escrowType == EscrowType::Buyer)
+		if(escrowType == Buyer)
 		{
 			ui->manageInfo2->setText(tr("The escrow has already been released to the seller. You may communicate with your arbiter or seller via Syscoin messages."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
-		else if(escrowType == EscrowType::Seller)
+		else if(escrowType == Seller)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>seller</b> of the offer held in escrow. The payment of coins have been released to you, you may claim them now."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setText(tr("Claim Payment"));
 		}
-		else if(escrowType == EscrowType::Arbiter)
+		else if(escrowType == Arbiter)
 		{
 			ui->manageInfo2->setText(tr("The escrow has already been released to the seller. You're job is done, if you were the one to release the coins you will recieve a commission as soon as the seller claims his payment."));
 			ui->refundButton->setEnabled(false);
@@ -69,19 +69,19 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 	}
 	else if(status == "escrow refunded")
 	{
-		if(escrowType == EscrowType::Buyer)
+		if(escrowType == Buyer)
 		{
 			ui->manageInfo2->setText(tr("You are the <b>buyer</b> of the offer held in escrow. The coins have been refunded back to you, you may claim them now."));
 			ui->refundButton->setText(tr("Claim Refund"));
 			ui->releaseButton->setEnabled(false);
 		}
-		else if(escrowType == EscrowType::Seller)
+		else if(escrowType == Seller)
 		{
 			ui->manageInfo2->setText(tr("The escrow has already been refunded back to the buyer."));
 			ui->refundButton->setEnabled(false);
 			ui->releaseButton->setEnabled(false);
 		}
-		else if(escrowType == EscrowType::Arbiter)
+		else if(escrowType == Arbiter)
 		{
 			ui->manageInfo2->setText(tr("The escrow has already been refunded back to the buyer. You're job is done, if you were the one to refund the coins you will recieve a commission as soon as the buyer claims his refund."));
 			ui->refundButton->setEnabled(false);
