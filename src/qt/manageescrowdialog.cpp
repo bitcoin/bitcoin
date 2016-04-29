@@ -113,13 +113,15 @@ bool ManageEscrowDialog::loadEscrow(const QString &escrow, QString &buyer, QStri
 {
 	string strMethod = string("escrowlist");
     UniValue params(UniValue::VARR); 
-	UniValue result;
+	UniValue result ;
+	string name_str;
 	try {
 		result = tableRPC.execute(strMethod, params);
 		if (result.type() == UniValue::VARR)
 		{
 			const UniValue &arr = result.get_array();
 		    for (unsigned int idx = 0; idx < arr.size(); idx++) {
+				name_str = "";
 			    const UniValue& input = arr[idx];
 				if (input.type() != UniValue::VOBJ)
 					continue;
