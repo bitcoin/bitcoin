@@ -36,8 +36,6 @@ public Q_SLOTS:
 	void on_refundButton_clicked();
 	void on_cancelButton_clicked();
 private:
-    bool saveCurrentRow();
-	void loadAliases();
     Ui::ManageEscrowDialog *ui;
 	QString escrow;
 	QString buyer;
