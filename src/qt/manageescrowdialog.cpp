@@ -95,8 +95,6 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, const QString &buy
 		ui->refundButton->setEnabled(false);
 		ui->releaseButton->setEnabled(false);
 	}
-    mapper = new QDataWidgetMapper(this);
-    mapper->setSubmitPolicy(QDataWidgetMapper::ManualSubmit);
 }
 void ManageEscrowDialog::on_cancelButton_clicked()
 {
