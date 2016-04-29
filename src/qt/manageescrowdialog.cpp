@@ -4,7 +4,6 @@
 #include "guiutil.h"
 #include "syscoingui.h"
 #include "ui_interface.h"
-#include <QDataWidgetMapper>
 #include <QMessageBox>
 #include "rpcserver.h"
 using namespace std;
