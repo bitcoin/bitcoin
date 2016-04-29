@@ -162,7 +162,7 @@ ManageEscrowDialog::EscrowType ManageEscrowDialog::findYourEscrowRoleFromAliases
 		return Buyer;
 	else if(isYourAlias(seller))
 		return Seller;
-	else if(isYourArbiter(arbiter))
+	else if(isYourAlias(arbiter))
 		return Arbiter;
 	else
 		return None;
