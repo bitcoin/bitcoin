@@ -3,6 +3,7 @@
 
 #include "guiutil.h"
 #include "syscoingui.h"
+#include "platformstyle.h"
 #include "ui_interface.h"
 #include <QMessageBox>
 #include "rpcserver.h"
@@ -14,6 +15,8 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, QWidget *parent) :
     ui(new Ui::ManageEscrowDialog), escrow(escrow)
 {
     ui->setupUi(this);
+	QString theme = GUIUtil::getThemeName();  
+	ui->aboutEscrow->setPixmap(QPixmap(":/images/" + theme + "/escrow"));
 	QString buyer, seller, arbiter, status, offertitle, total;
 	if(!loadEscrow(escrow, buyer, seller, arbiter, status, offertitle, total))
 	{
@@ -44,7 +47,7 @@ ManageEscrowDialog::ManageEscrowDialog(const QString &escrow, QWidget *parent) :
 		}
 		else if(escrowType == Arbiter)
 		{
-			ui->manageInfo2->setText(tr("You are the <b>arbiter</b> of the offer held in escrow, you may refund the coins back to the buyer if you have evidence that the seller did not honour the agreement to ship the offer item. You may also release the coins to the seller if the buyer has not released. You may use Syscoin messages to communicate with the buyer and seller to ensure you have adequeate proof for your decision."));
+			ui->manageInfo2->setText(tr("You are the <b>arbiter</b> of the offer held in escrow, you may refund the coins back to the buyer if you have evidence that the seller did not honour the agreement to ship the offer item. You may also release the coins to the seller if the buyer has not released. You may use Syscoin messages to communicate with the buyer and seller to ensure you have adequate proof for your decision."));
 		}
 
 	}
