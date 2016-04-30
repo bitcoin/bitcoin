@@ -1591,7 +1591,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 		std::string chain = ChainNameFromCommandLine();
 		if (chain == CBaseChainParams::MAIN || chain == CBaseChainParams::REGTEST)
 		{
-			// SYSCOIN snapshot for old chain based on block 850k + 15 mill dev fund
+			// SYSCOIN snapshot for old chain based on block 880440 + 15 mill dev fund
 			return 459200578 * COIN + 15000000 * COIN;
 		}
 	}
