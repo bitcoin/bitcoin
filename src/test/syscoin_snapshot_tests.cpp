@@ -27,6 +27,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	GenerateMainNetBlocks(101, "mainnet1");
 
 	int numberOfTxPerBlock = 1000;
+	int totalTx = 0;
 	double nTotal  =0;
 	std::string sendManyString = "";
 	for(int i =0;i<paymentAmounts.size();i++)
@@ -35,9 +36,10 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 			sendManyString += ",";
 		sendManyString += "\\\"" + paymentAmounts[i].address + "\\\":" + paymentAmounts[i].amount;
 		nTotal += atof(paymentAmounts[i].amount.c_str());
+		totalTx++;
 		if(i != 0 && (i%numberOfTxPerBlock) == 0)
 		{
-			printf("strSendMany #%d, total %f\n", currentTx, nTotal);
+			printf("strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
 			SendSnapShotPayment(sendManyString);
 			GenerateMainNetBlocks(1, "mainnet1");
 			sendManyString = "";
@@ -46,7 +48,7 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 	}
 	if(sendManyString != "") 
 	{
-		printf("FINAL strSendMany #%d, total %f\n", currentTx, nTotal);
+		printf("FINAL strSendMany #%d, total %f, num txs %d\n", currentTx, nTotal, totalTx);
 		SendSnapShotPayment(sendManyString);
 		GenerateMainNetBlocks(1, "mainnet1");
 	}
