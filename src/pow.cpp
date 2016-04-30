@@ -37,7 +37,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     arith_uint256 PastDifficultyAveragePrev;
 
 	// 110 needed for snapshot unit test
-    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < 110) {
+    if (BlockLastSolved == NULL || BlockLastSolved->nHeight == 0 || BlockLastSolved->nHeight < 150) {
         return nProofOfWorkLimit.GetCompact();
     }
 
