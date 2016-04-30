@@ -3030,7 +3030,7 @@ std::string CWallet::GetWalletHelpString(bool showDebug)
                                                             CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)));
     strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
                                                             CURRENCY_UNIT, FormatMoney(payTxFee.GetFeePerK())));
-    strUsage += HelpMessageOpt("-rescan", _("Rescan the block chain for missing wallet transactions on startup"));
+    strUsage += HelpMessageOpt("-rescan=<n>", _("Rescan the block chain for missing wallet transactions on startup starting from block n (default: 0)"));
     strUsage += HelpMessageOpt("-salvagewallet", _("Attempt to recover private keys from a corrupt wallet on startup"));
     if (showDebug)
         strUsage += HelpMessageOpt("-sendfreetransactions", strprintf(_("Send transactions as zero-fee transactions if possible (default: %u)"), DEFAULT_SEND_FREE_TRANSACTIONS));
@@ -3141,7 +3141,7 @@ bool CWallet::InitLoadWallet()
 
     CBlockIndex *pindexRescan = chainActive.Tip();
     if (GetBoolArg("-rescan", false))
-        pindexRescan = chainActive.Genesis();
+        pindexRescan = chainActive[GetArg("-rescan", 0)];
     else
     {
         CWalletDB walletdb(walletFile);
