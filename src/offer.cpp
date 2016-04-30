@@ -1318,8 +1318,6 @@ UniValue offernew_nocheck(const UniValue& params, bool fHelp) {
 	if(params.size() >= 8) {
 		vchCert = vchFromValue(params[7]);
 		CTransaction txCert;
-		if(nQty <= 0)
-			throw runtime_error("qty must be greator than 0 for a cert offer");		
 		// make sure this cert is still valid
 		if (GetTxOfCert( vchCert, theCert, txCert)) {
 			CPubKey currentCertKey(theCert.vchPubKey);

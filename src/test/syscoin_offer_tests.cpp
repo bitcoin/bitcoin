@@ -347,4 +347,25 @@ BOOST_AUTO_TEST_CASE (generate_certofferexpired)
 	BOOST_CHECK_THROW(r = CallRPC("node1", "offernew_nocheck node1alias2 category title 1 0.05 description USD " + certguid), runtime_error);	
 }
 
+BOOST_AUTO_TEST_CASE (generate_offerlink_offlinenode)
+{
+	UniValue r;
+
+	GenerateBlocks(200);
+	GenerateBlocks(200, "node2");
+	GenerateBlocks(200, "node3");
+
+	AliasNew("node1", "selleralias15", "changeddata1");
+	AliasNew("node2", "selleralias16", "changeddata1");
+
+	// generate a good offer
+	string offerguid = OfferNew("node1", "selleralias15", "category", "title", "100", "0.05", "description", "USD");
+
+	StopNode("node1");
+
+	string lofferguid = OfferLink("node2", "selleralias16", offerguid, "5", "newdescription");
+
+	StartNode("node1");
+}
+
 BOOST_AUTO_TEST_SUITE_END ()
