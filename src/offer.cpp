@@ -2047,7 +2047,7 @@ UniValue offerwhitelist(const UniValue& params, bool fHelp) {
 }
 
 UniValue offerupdate(const UniValue& params, bool fHelp) {
-	if (fHelp || params.size() < 5 || params.size() > 10)
+	if (fHelp || params.size() < 5 || params.size() > 11)
 		throw runtime_error(
 		"offerupdate <aliaspeg> <alias> <guid> <category> <title> <quantity> <price> [description] [private=0] [cert. guid] [exclusive resell=1]\n"
 						"Perform an update on an offer you control.\n"
