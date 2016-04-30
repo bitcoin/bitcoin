@@ -491,6 +491,7 @@ endif
 RES_IMAGES = \
   qt/res/images/shade/shade_about.png \
   qt/res/images/shade/shade_aboutbtc.png \
+  qt/res/images/shade/shade_escrow.png \
   qt/res/images/shade/shade_overview.png \
   qt/res/images/shade/shade_splash.png \
   qt/res/images/shade/shade_logo_horizontal.png \
