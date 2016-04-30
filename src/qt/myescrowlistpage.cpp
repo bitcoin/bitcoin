@@ -5,6 +5,7 @@
 #include "ui_myescrowlistpage.h"
 #include "escrowtablemodel.h"
 #include "newmessagedialog.h"
+#include "manageescrowdialog.h"
 #include "clientmodel.h"
 #include "platformstyle.h"
 #include "optionsmodel.h"
@@ -35,8 +36,7 @@ MyEscrowListPage::MyEscrowListPage(const PlatformStyle *platformStyle, QWidget *
 		ui->arbiterMessageButton->setIcon(QIcon());
 		ui->sellerMessageButton->setIcon(QIcon());
 		ui->buyerMessageButton->setIcon(QIcon());
-		ui->refundButton->setIcon(QIcon());
-		ui->releaseButton->setIcon(QIcon());
+		ui->manageButton->setIcon(QIcon());
 		ui->copyEscrow->setIcon(QIcon());
 		ui->refreshButton->setIcon(QIcon());
 
@@ -47,8 +47,7 @@ MyEscrowListPage::MyEscrowListPage(const PlatformStyle *platformStyle, QWidget *
 		ui->arbiterMessageButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/outmail"));
 		ui->sellerMessageButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/outmail"));
 		ui->buyerMessageButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/outmail"));
-		ui->refundButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/escrow1"));
-		ui->releaseButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/escrow1"));
+		ui->manageButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/escrow1"));
 		ui->copyEscrow->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/editcopy"));
 		ui->refreshButton->setIcon(platformStyle->SingleColorIcon(":/icons/" + theme + "/refresh"));
 		
@@ -62,12 +61,11 @@ MyEscrowListPage::MyEscrowListPage(const PlatformStyle *platformStyle, QWidget *
     // Context menu actions
     QAction *copyEscrowAction = new QAction(ui->copyEscrow->text(), this);
 	QAction *copyOfferAction = new QAction(tr("&Copy Offer ID"), this);
-    releaseAction = new QAction(tr("Release Escrow"), this);
-	refundAction = new QAction(tr("Refund Escrow"), this);
+    QAction *manageAction = new QAction(tr("Manage Escrow"), this);
 
-    buyerMessageAction = new QAction(tr("Send Msg To Buyer"), this);
-	sellerMessageAction = new QAction(tr("Send Msg To Seller"), this);
-	arbiterMessageAction = new QAction(tr("Send Msg To Arbiter"), this);
+    QAction *buyerMessageAction = new QAction(tr("Send Msg To Buyer"), this);
+	QAction *sellerMessageAction = new QAction(tr("Send Msg To Seller"), this);
+	QAction *arbiterMessageAction = new QAction(tr("Send Msg To Arbiter"), this);
 
     // Build context menu
     contextMenu = new QMenu();
@@ -77,13 +75,11 @@ MyEscrowListPage::MyEscrowListPage(const PlatformStyle *platformStyle, QWidget *
 	contextMenu->addAction(sellerMessageAction);
 	contextMenu->addAction(arbiterMessageAction);
     contextMenu->addSeparator();
-	contextMenu->addAction(releaseAction);
-	contextMenu->addAction(refundAction);
+	contextMenu->addAction(manageAction);
     // Connect signals for context menu actions
     connect(copyEscrowAction, SIGNAL(triggered()), this, SLOT(on_copyEscrow_clicked()));
 	connect(copyOfferAction, SIGNAL(triggered()), this, SLOT(on_copyOffer_clicked()));
-	connect(releaseAction, SIGNAL(triggered()), this, SLOT(on_releaseButton_clicked()));
-	connect(refundAction, SIGNAL(triggered()), this, SLOT(on_refundButton_clicked()));
+	connect(manageAction, SIGNAL(triggered()), this, SLOT(on_manageButton_clicked()));
 
 	connect(buyerMessageAction, SIGNAL(triggered()), this, SLOT(on_buyerMessageButton_clicked()));
 	connect(sellerMessageAction, SIGNAL(triggered()), this, SLOT(on_sellerMessageButton_clicked()));
@@ -155,7 +151,7 @@ void MyEscrowListPage::on_copyOffer_clicked()
 {
     GUIUtil::copyEntryData(ui->tableView, EscrowTableModel::Offer);
 }
-void MyEscrowListPage::on_releaseButton_clicked()
+void MyEscrowListPage::on_manageButton_clicked()
 {
  	if(!model)	
 		return;
@@ -167,63 +163,8 @@ void MyEscrowListPage::on_releaseButton_clicked()
         return;
     }
 	QString escrow = selection.at(0).data(EscrowTableModel::EscrowRole).toString();
-	UniValue params(UniValue::VARR);
-	string strMethod = string("escrowrelease");
-	params.push_back(escrow.toStdString());
-	try {
-		UniValue result = tableRPC.execute(strMethod, params);
-		QMessageBox::information(this, windowTitle(),
-		tr("Escrow released successfully!"),
-			QMessageBox::Ok, QMessageBox::Ok);
-	}
-	catch (UniValue& objError)
-	{
-		string strError = find_value(objError, "message").get_str();
-		QMessageBox::critical(this, windowTitle(),
-        tr("Error releasing escrow: \"%1\"").arg(QString::fromStdString(strError)),
-			QMessageBox::Ok, QMessageBox::Ok);
-	}
-	catch(std::exception& e)
-	{
-		QMessageBox::critical(this, windowTitle(),
-            tr("General exception releasing escrow"),
-			QMessageBox::Ok, QMessageBox::Ok);
-	}	
-}
-void MyEscrowListPage::on_refundButton_clicked()
-{
-	if(!model)	
-		return;
-	if(!ui->tableView->selectionModel())
-        return;
-    QModelIndexList selection = ui->tableView->selectionModel()->selectedRows();
-    if(selection.isEmpty())
-    {
-        return;
-    }
-	QString escrow = selection.at(0).data(EscrowTableModel::EscrowRole).toString();
-	UniValue params(UniValue::VARR);
-	string strMethod = string("escrowrefund");
-	params.push_back(escrow.toStdString());
-	try {
-		UniValue result = tableRPC.execute(strMethod, params);
-		QMessageBox::information(this, windowTitle(),
-		tr("Escrow refunded successfully!"),
-			QMessageBox::Ok, QMessageBox::Ok);
-	}
-	catch (UniValue& objError)
-	{
-		string strError = find_value(objError, "message").get_str();
-		QMessageBox::critical(this, windowTitle(),
-        tr("Error refunding escrow: \"%1\"").arg(QString::fromStdString(strError)),
-			QMessageBox::Ok, QMessageBox::Ok);
-	}
-	catch(std::exception& e)
-	{
-		QMessageBox::critical(this, windowTitle(),
-            tr("General exception refunding escrow"),
-			QMessageBox::Ok, QMessageBox::Ok);
-	}
+	ManageEscrowDialog dlg(escrow);   
+	dlg.exec();
 }
 void MyEscrowListPage::on_buyerMessageButton_clicked()
 {
