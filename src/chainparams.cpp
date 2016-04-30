@@ -148,13 +148,11 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x0000072d66e51ab87de265765cc8bdd2d229a4307c672a1b3d5af692519cf765"));
         assert(genesis.hashMerkleRoot == uint256S("0x5215c5a2af9b63f2550b635eb2b354bb13645fd8fa31275394eb161944303065"));
-       /* vSeeds.push_back(CDNSSeedData("syscoin.sipa.be", "seed.syscoin.sipa.be")); // Pieter Wuille
-        vSeeds.push_back(CDNSSeedData("bluematt.me", "dnsseed.bluematt.me")); // Matt Corallo
-        vSeeds.push_back(CDNSSeedData("dashjr.org", "dnsseed.syscoin.dashjr.org")); // Luke Dashjr
-        vSeeds.push_back(CDNSSeedData("syscoinstats.com", "seed.syscoinstats.com")); // Christian Decker
-        vSeeds.push_back(CDNSSeedData("xf2.org", "bitseed.xf2.org")); // Jeff Garzik
-        vSeeds.push_back(CDNSSeedData("syscoin.jonasschnelli.ch", "seed.syscoin.jonasschnelli.ch")); // Jonas Schnelli
-*/
+        vSeeds.push_back(CDNSSeedData("seed1.syscoin.org", "seed1.syscoin.org"));
+        vSeeds.push_back(CDNSSeedData("seed2.syscoin.org", "seed2.syscoin.org"));
+        vSeeds.push_back(CDNSSeedData("seed3.syscoin.org", "seed3.syscoin.org"));
+        vSeeds.push_back(CDNSSeedData("seed4.syscoin.org", "seed4.syscoin.org"))
+
 		// SYSCOIN/BITCOIN key prefixes
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
@@ -166,8 +164,8 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
 
-        vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
-		vFixedSeeds.clear();
+        //vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
+		//vFixedSeeds.clear();
         fMiningRequiresPeers = true;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
