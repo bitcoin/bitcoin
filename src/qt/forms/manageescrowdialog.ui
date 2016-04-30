@@ -90,7 +90,7 @@
     </layout>
    </item>
    <item row="0" column="0">
-    <widget class="QLabel" name="escrowInfo">
+    <widget class="QLabel" name="aboutEscrow">
      <property name="text">
       <string/>
      </property>
