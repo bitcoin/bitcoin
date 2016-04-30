@@ -53,8 +53,8 @@ BOOST_AUTO_TEST_CASE (generate_sendmoneytoalias)
 	BOOST_CHECK_THROW(CallRPC("node1", "sendtoaddress sendnode2 1.335"), runtime_error);
 	GenerateBlocks(1);
 	BOOST_CHECK_NO_THROW(r = CallRPC("node2", "getinfo"));
-	// 0.545 since 1 block matures
-	balanceBefore += 1.335*COIN + 0.545*COIN;
+	// 54.13 since 1 block matures
+	balanceBefore += 1.335*COIN + 54.13*COIN;
 	CAmount balanceAfter = AmountFromValue(find_value(r.get_obj(), "balance"));
 	BOOST_CHECK_EQUAL(balanceBefore, balanceAfter);
 }

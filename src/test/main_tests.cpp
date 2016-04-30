@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     const Consensus::Params& consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
 	// SYSCOIN snapshot
     CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 32479526; nHeight++) {
+    for (int nHeight = 0; nHeight < 27856853; nHeight++) {
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
         nSum += nSubsidy;
     }
