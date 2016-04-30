@@ -18,7 +18,7 @@ void SendSnapShotPayment(const std::string &strSend)
 	std::string strSendMany = "sendmany \"\" {" + strSend + "}";
 	UniValue r;
 	
-	BOOST_CHECK_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
+	BOOST_CHECK_NO_THROW(r = CallRPC("mainnet1", strSendMany, false), runtime_error);
 }
 void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 {
@@ -56,6 +56,8 @@ void GenerateSnapShot(const std::vector<PaymentAmount> &paymentAmounts)
 }
 void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 {
+	int countTx = 0;
+	int rejectTx = 0;
     UniValue tests = read_json(std::string(json_tests::utxo, json_tests::utxo + sizeof(json_tests::utxo)));
     for (unsigned int idx = 0; idx < tests.size(); idx++) {
         UniValue test = tests[idx];
@@ -70,10 +72,15 @@ void GetUTXOs(std::vector<PaymentAmount> &paymentAmounts)
 		CAmount amountInSys1 = test[1].get_int64();
 		// don't transfer less than 1 coin utxo's
 		if(amountInSys1 <= COIN)
+		{
+			rejectTx++;
 			continue;
+		}
+		countTx++;
         payment.amount = ValueFromAmount(amountInSys1).write();
 		paymentAmounts.push_back(payment);
     }
+	printf("Read %d total utxo sets, rejected %d, valid %d\n", rejectTx+countTx, rejectTx, countTx);
 }
 bool IsMainNetAlreadyCreated()
 {
