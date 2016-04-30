@@ -110,6 +110,18 @@ void StartNode(const string &dataDir, bool regTest)
 	}
 	printf("Done!\n");
 }
+
+void StopNode (const string &dataDir) {
+	printf("Stopping %s..\n", dataDir.c_str());
+	try{
+		CallRPC(dataDir, "stop");
+	}
+	catch(const runtime_error& error)
+	{
+	}
+	MilliSleep(3000);
+}
+
 UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest)
 {
 	UniValue val;
