@@ -65,28 +65,18 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="releaseButton">
+      <widget class="QPushButton" name="manageButton">
        <property name="toolTip">
         <string>Release selected escrow to merchant</string>
        </property>
        <property name="text">
-        <string>Release Escrow</string>
+        <string>Manage Escrow</string>
        </property>
        <property name="iconSize">
         <size>
          <width>16</width>
          <height>16</height>
         </size>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="refundButton">
-       <property name="toolTip">
-        <string>Refund selected escrow back to buyer</string>
-       </property>
-       <property name="text">
-        <string>Refund Escrow</string>
        </property>
       </widget>
      </item>

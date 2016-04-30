@@ -41,7 +41,9 @@ public:
 		BuyerRole,
 		SellerRole,
 		ArbiterRole,
-		StatusRole
+		StatusRole,
+		OfferTitleRole,
+		TotalRole
     };
 
     /** Return status of edit/insert operation */
