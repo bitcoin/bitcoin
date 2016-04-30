@@ -151,7 +151,7 @@ public:
         vSeeds.push_back(CDNSSeedData("seed1.syscoin.org", "seed1.syscoin.org"));
         vSeeds.push_back(CDNSSeedData("seed2.syscoin.org", "seed2.syscoin.org"));
         vSeeds.push_back(CDNSSeedData("seed3.syscoin.org", "seed3.syscoin.org"));
-        vSeeds.push_back(CDNSSeedData("seed4.syscoin.org", "seed4.syscoin.org"))
+        vSeeds.push_back(CDNSSeedData("seed4.syscoin.org", "seed4.syscoin.org"));
 
 		// SYSCOIN/BITCOIN key prefixes
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
