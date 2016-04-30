@@ -328,6 +328,14 @@ QVariant EscrowTableModel::data(const QModelIndex &index, int role) const
     {
         return rec->status;
     }
+    else if (role == OfferTitleRole)
+    {
+        return rec->offertitle;
+    }
+    else if (role == TotalRole)
+    {
+        return rec->total;
+    }
     return QVariant();
 }
 
