@@ -8,6 +8,7 @@ using namespace std;
  */
 UniValue CallRPC(const string &dataDir, const string& commandWithArgs, bool regTest = true);
 void StartNode(const string &dataDir, bool regTest = true);
+void StopNode(const string &dataDir="node1");
 void StartNodes();
 void StartMainNetNodes();
 void StopMainNetNodes();
