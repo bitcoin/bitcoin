@@ -21,7 +21,7 @@ class WalletTest (BitcoinTestFramework):
 
     def setup_chain(self):
         print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 4)
+        initialize_chain_clean(self.options.tmpdir, 5)
 
     def setup_network(self, split=False):
         self.nodes = start_nodes(3, self.options.tmpdir)
@@ -296,6 +296,44 @@ class WalletTest (BitcoinTestFramework):
         assert_array_result(self.nodes[1].listunspent(),
                            {"address": address_to_import},
                            {"spendable": True})
+
+        # Import address, private key, and public key with rescanning from a specified block height
+        # 1. Send some coins to generate four new UTXOs.
+        address_to_import = self.nodes[2].getnewaddress()
+        for x in xrange(4):
+            self.nodes[0].sendtoaddress(address_to_import, 1)
+            self.nodes[0].generate(1)
+            self.sync_all()
+        self.nodes[0].generate(1) # Generate one extra block to make the last tx 2 blocks deep.
+        self.sync_all()
+
+        # 2. Import address from node2 to node1
+        cur_height = self.nodes[1].getblockcount()
+        self.nodes[1].importaddress(address_to_import, "", True, False, cur_height - 1)
+
+        # 3. Validate that there is only one UTXO from the imported address
+        assert_equal(len(self.nodes[1].listunspent(1, 9999999, [address_to_import])), 1)
+
+        # 4. Import public key of address from node2 to node0
+        pub_key = self.nodes[2].validateaddress(address_to_import)['pubkey']
+        self.nodes[1].importpubkey(pub_key, "", True, cur_height - 2)
+
+        # 5. Validate that there are only three UTXO from the imported public key
+        assert_equal(len(self.nodes[1].listunspent(1, 9999999, [address_to_import])), 2)
+
+        # 6. Import private key of address from node2 to node1
+        priv_key = self.nodes[2].dumpprivkey(address_to_import)
+        self.nodes[1].importprivkey(priv_key, "", True, cur_height - 3)
+
+        # 7. Validate that there are only two UTXO from the imported private key
+        assert_equal(len(self.nodes[1].listunspent(1, 9999999, [address_to_import])), 3)
+
+        # Reset by rescanning all
+        stop_nodes(self.nodes)
+        wait_bitcoinds()
+        self.nodes = start_nodes(3, self.options.tmpdir, [["-rescan"]] * 3)
+        connect_nodes_bi(self.nodes,0,1)
+        connect_nodes_bi(self.nodes,1,2)
 
         # Mine a block from node0 to an address from node1
         cbAddr = self.nodes[1].getnewaddress()
