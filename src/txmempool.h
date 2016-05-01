@@ -12,6 +12,7 @@
 #include "amount.h"
 #include "coins.h"
 #include "primitives/transaction.h"
+#include "refmap.h"
 #include "sync.h"
 
 #undef foreach
@@ -477,7 +478,7 @@ private:
     void UpdateChild(txiter entry, txiter child, bool add);
 
 public:
-    std::map<COutPoint, CInPoint> mapNextTx;
+    refmap<COutPoint, CInPoint> mapNextTx;
     std::map<uint256, std::pair<double, CAmount> > mapDeltas;
 
     /** Create a new CTxMemPool.

@@ -150,7 +150,7 @@ void CTxMemPool::UpdateTransactionsFromBlock(const std::vector<uint256> &vHashes
         auto iter = mapNextTx.lower_bound(COutPoint(hash, 0));
         // First calculate the children, and update setMemPoolChildren to
         // include them, and update their setMemPoolParents to include this tx.
-        for (; iter != mapNextTx.end() && iter->first.hash == hash; ++iter) {
+        for (; iter != mapNextTx.end() && iter->first->hash == hash; ++iter) {
             const uint256 &childHash = iter->second.ptx->GetHash();
             txiter childIter = mapTx.find(childHash);
             assert(childIter != mapTx.end());
@@ -368,8 +368,8 @@ void CTxMemPool::pruneSpent(const uint256 &hashTx, CCoins &coins)
     auto it = mapNextTx.lower_bound(COutPoint(hashTx, 0));
 
     // iterate over all COutPoints in mapNextTx whose hash equals the provided hashTx
-    while (it != mapNextTx.end() && it->first.hash == hashTx) {
-        coins.Spend(it->first.n); // and remove those outputs from coins
+    while (it != mapNextTx.end() && it->first->hash == hashTx) {
+        coins.Spend(it->first->n); // and remove those outputs from coins
         it++;
     }
 }
@@ -414,7 +414,7 @@ bool CTxMemPool::addUnchecked(const uint256& hash, const CTxMemPoolEntry &entry,
     const CTransaction& tx = newit->GetTx();
     std::set<uint256> setParentTransactions;
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
-        mapNextTx[tx.vin[i].prevout] = CInPoint(&tx, i);
+        mapNextTx[&tx.vin[i].prevout] = CInPoint(&tx, i);
         setParentTransactions.insert(tx.vin[i].prevout.hash);
     }
     // Don't bother worrying about child transactions of this one.
@@ -703,7 +703,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         CTxMemPool::setEntries setChildrenCheck;
         auto iter = mapNextTx.lower_bound(COutPoint(it->GetTx().GetHash(), 0));
         int64_t childSizes = 0;
-        for (; iter != mapNextTx.end() && iter->first.hash == it->GetTx().GetHash(); ++iter) {
+        for (; iter != mapNextTx.end() && iter->first->hash == it->GetTx().GetHash(); ++iter) {
             txiter childit = mapTx.find(iter->second.ptx->GetHash());
             assert(childit != mapTx.end()); // mapNextTx points to in-mempool transactions
             if (setChildrenCheck.insert(childit).second) {
@@ -745,7 +745,7 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         assert(it2 != mapTx.end());
         assert(&tx == it->second.ptx);
         assert(tx.vin.size() > it->second.n);
-        assert(it->first == it->second.ptx->vin[it->second.n].prevout);
+        assert(*it->first == it->second.ptx->vin[it->second.n].prevout);
     }
 
     assert(totalTxSize == checkTotal);
@@ -1045,7 +1045,7 @@ void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<uint256>* pvNoSpendsRe
                     if (exists(txin.prevout.hash))
                         continue;
                     auto it = mapNextTx.lower_bound(COutPoint(txin.prevout.hash, 0));
-                    if (it == mapNextTx.end() || it->first.hash != txin.prevout.hash)
+                    if (it == mapNextTx.end() || it->first->hash != txin.prevout.hash)
                         pvNoSpendsRemaining->push_back(txin.prevout.hash);
                 }
             }
