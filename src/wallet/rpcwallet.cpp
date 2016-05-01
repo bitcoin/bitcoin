@@ -1401,9 +1401,12 @@ UniValue listreceivedbyaccount(const UniValue& params, bool fHelp)
 
 static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
 {
+	// SYSCOIN address is v1 address by default for backward compatibility, v2 address is new scheme
     CSyscoinAddress addr;
-    if (addr.Set(dest))
+    if (addr.Set(dest, true))
         entry.push_back(Pair("address", addr.ToString()));
+    if (addr.Set(dest))
+        entry.push_back(Pair("v2address", addr.ToString()));
 }
 
 void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDepth, bool fLong, UniValue& ret, const isminefilter& filter)
