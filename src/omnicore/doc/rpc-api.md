@@ -1095,7 +1095,7 @@ Get detailed information and trade matches for orders on the distributed token e
   "propertyiddesired" : n,                      // (number) the identifier of the tokens desired in exchange
   "propertyiddesiredisdivisible" : true|false,  // (boolean) whether the desired tokens are divisible
   "amountdesired" : "n.nnnnnnnn",               // (string) the amount of tokens initially desired
-  "unitprice" : "n.nnnnnnnnnnn..."              // (string) the unit price nominated in OMNI or TOMNI
+  "unitprice" : "n.nnnnnnnnnnn..."              // (string) the unit price (shown in the property desired)
   "status" : "status"                           // (string) the status of the order ("open", "cancelled", "filled", ...)
   "canceltxid" : "hash",                        // (string) the hash of the transaction that cancelled the order (if cancelled)
   "matches": [                                  // (array of JSON objects) a list of matched orders and executed trades
@@ -1232,7 +1232,7 @@ Retrieves the history of orders on the distributed exchange for the supplied add
     "propertyiddesired" : n,                      // (number) the identifier of the tokens desired in exchange
     "propertyiddesiredisdivisible" : true|false,  // (boolean) whether the desired tokens are divisible
     "amountdesired" : "n.nnnnnnnn",               // (string) the amount of tokens initially desired
-    "unitprice" : "n.nnnnnnnnnnn..."              // (string) the unit price nominated in OMNI or TOMNI
+    "unitprice" : "n.nnnnnnnnnnn..."              // (string) the unit price (shown in the property desired)
     "status" : "status"                           // (string) the status of the order ("open", "cancelled", "filled", ...)
     "canceltxid" : "hash",                        // (string) the hash of the transaction that cancelled the order (if cancelled)
     "matches": [                                  // (array of JSON objects) a list of matched orders and executed trades

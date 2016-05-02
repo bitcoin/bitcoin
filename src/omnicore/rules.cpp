@@ -163,6 +163,7 @@ CMainConsensusParams::CMainConsensusParams()
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
     SPCROWDCROSSOVER_FEATURE_BLOCK = 999999;
+    TRADEALLPAIRS_FEATURE_BLOCK = 999999;
 }
 
 /**
@@ -198,6 +199,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
     SPCROWDCROSSOVER_FEATURE_BLOCK = 999999;
+    TRADEALLPAIRS_FEATURE_BLOCK = 999999;
 }
 
 /**
@@ -233,6 +235,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
     SPCROWDCROSSOVER_FEATURE_BLOCK = 999999;
+    TRADEALLPAIRS_FEATURE_BLOCK = 999999;
 }
 
 //! Consensus parameters for mainnet
@@ -393,6 +396,10 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
             MutableConsensusParams().SPCROWDCROSSOVER_FEATURE_BLOCK = activationBlock;
             featureName = "Disable crowdsale ecosystem crossovers";
         break;
+        case FEATURE_TRADEALLPAIRS:
+            MutableConsensusParams().TRADEALLPAIRS_FEATURE_BLOCK = activationBlock;
+            featureName = "Allow trading all pairs on the Distributed Exchange";
+        break;
         default:
             featureName = "Unknown feature";
             supported = false;
@@ -442,6 +449,9 @@ bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
             break;
         case FEATURE_SPCROWDCROSSOVER:
             activationBlock = params.SPCROWDCROSSOVER_FEATURE_BLOCK;
+            break;
+        case FEATURE_TRADEALLPAIRS:
+            activationBlock = params.TRADEALLPAIRS_FEATURE_BLOCK;
             break;
         default:
             return false;

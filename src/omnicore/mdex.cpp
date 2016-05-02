@@ -343,19 +343,20 @@ std::string CMPMetaDEx::displayUnitPrice() const
 /**
  * Used for display of unit prices with 50 decimal places at RPC layer.
  *
- * Automatically returns unit or inverse price as needed.
+ * Note: unit price is no longer always shown in OMNI and/or inverted
  */
 std::string CMPMetaDEx::displayFullUnitPrice() const
 {
-    // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
-    rational_t tempUnitPrice;
-    if ((getProperty() == OMNI_PROPERTY_MSC) || (getProperty() == OMNI_PROPERTY_TMSC)) {
-        tempUnitPrice = inversePrice();
-        if (!isPropertyDivisible(getDesProperty())) tempUnitPrice = tempUnitPrice/COIN;
-    } else {
-        tempUnitPrice = unitPrice();
-        if (!isPropertyDivisible(getProperty())) tempUnitPrice = tempUnitPrice/COIN;
-    }
+    rational_t tempUnitPrice = unitPrice();
+
+    /* Matching types require no action (divisible/divisible or indivisible/indivisible)
+       Non-matching types require adjustment for display purposes
+           divisible/indivisible   : *COIN
+           indivisible/divisible   : /COIN
+    */
+    if ( isPropertyDivisible(getProperty()) && !isPropertyDivisible(getDesProperty()) ) tempUnitPrice = tempUnitPrice*COIN;
+    if ( !isPropertyDivisible(getProperty()) && isPropertyDivisible(getDesProperty()) ) tempUnitPrice = tempUnitPrice/COIN;
+
     std::string unitPriceStr = xToString(tempUnitPrice);
     return unitPriceStr;
 }

@@ -330,7 +330,6 @@ void populateRPCTypeMetaDExTrade(CMPTransaction& omniObj, Object& txobj, bool ex
 {
     CMPMetaDEx metaObj(omniObj);
 
-    // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
     bool propertyIdForSaleIsDivisible = isPropertyDivisible(omniObj.getProperty());
     bool propertyIdDesiredIsDivisible = isPropertyDivisible(metaObj.getDesProperty());
     std::string unitPriceStr = metaObj.displayFullUnitPrice();
@@ -350,7 +349,6 @@ void populateRPCTypeMetaDExCancelPrice(CMPTransaction& omniObj, Object& txobj, b
 {
     CMPMetaDEx metaObj(omniObj);
 
-    // unit price display adjustment based on divisibility and always showing prices in MSC/TMSC
     bool propertyIdForSaleIsDivisible = isPropertyDivisible(omniObj.getProperty());
     bool propertyIdDesiredIsDivisible = isPropertyDivisible(metaObj.getDesProperty());
     std::string unitPriceStr = metaObj.displayFullUnitPrice();
