@@ -566,7 +566,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 					theAlias.vchPrivateValue = dbAlias.vchPrivateValue;	
 			}
 			// if transfer
-			if(!vtxPos.back().vchPubKey != theAlias.vchPubKey)
+			if(vtxPos.back().vchPubKey != theAlias.vchPubKey)
 			{
 				CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
 				CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
