@@ -47,7 +47,7 @@ public:
     // Rolls back the cache to an earlier state (eg in event of a reorg) - block is *inclusive* (ie entries=block will get deleted)
     void RollBackCache(int block);
     // Zeros a property in the fee cache
-    void ClearCache(const uint32_t &propertyId);
+    void ClearCache(const uint32_t &propertyId, int block);
     // Adds a fee to the cache (eg on a completed trade)
     void AddFee(const uint32_t &propertyId, int block, const uint64_t &amount);
     // Evaluates fee caches for all properties against threshold and executes distribution if threshold met

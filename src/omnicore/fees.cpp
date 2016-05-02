@@ -59,17 +59,33 @@ int64_t COmniFeeCache::GetCachedAmount(const uint32_t &propertyId)
 }
 
 // Zeros a property in the fee cache
-void COmniFeeCache::ClearCache(const uint32_t &propertyId)
+void COmniFeeCache::ClearCache(const uint32_t &propertyId, int block)
 {
-//TODO: this needs to be re-written.  In the scenario that a rollback occurs immediately after a distribution, the cache cannot be rolled back from its empty state
-
+    if (msc_debug_fees) PrintToLog("ClearCache starting (block %d, property ID %d)...\n", block, propertyId);
     const std::string key = strprintf("%010d", propertyId);
-    leveldb::Status status = pdb->Delete(writeoptions, key);
+    std::set<feeCacheItem> sCacheHistoryItems = GetCacheHistory(propertyId);
+    if (msc_debug_fees) PrintToLog("   Iterating cache history (%d items)...\n",sCacheHistoryItems.size());
+    std::string newValue;
+    if (!sCacheHistoryItems.empty()) {
+        for (std::set<feeCacheItem>::iterator it = sCacheHistoryItems.begin(); it != sCacheHistoryItems.end(); it++) {
+            feeCacheItem tempItem = *it;
+            if (tempItem.first == block) continue;
+            if (!newValue.empty()) newValue += ",";
+            newValue += strprintf("%d:%d", tempItem.first, tempItem.second);
+            if (msc_debug_fees) PrintToLog("      Readding entry: block %d amount %d\n", tempItem.first, tempItem.second);
+        }
+        if (!newValue.empty()) newValue += ",";
+    }
+    if (msc_debug_fees) PrintToLog("   Adding zero valued entry: block %d\n", block);
+    newValue += strprintf("%d:%d", block, 0);
+    leveldb::Status status = pdb->Put(writeoptions, key, newValue);
     assert(status.ok());
     ++nWritten;
-    if (msc_debug_fees) PrintToLog("Clearing cache entry for property %d [%s]\n", propertyId, status.ToString());
-}
 
+    PruneCache(propertyId, block);
+
+    if (msc_debug_fees) PrintToLog("Cleared cache for property %d block %d [%s]\n", propertyId, block, status.ToString());
+}
 
 // Adds a fee to the cache (eg on a completed trade)
 void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t &amount)
@@ -180,7 +196,7 @@ void COmniFeeCache::DistributeCache(const uint32_t &propertyId, int block)
 
     // final check to ensure the entire fee cache was distributed, then empty the cache
     assert(sent_so_far == cachedAmount);
-    ClearCache(propertyId);
+    ClearCache(propertyId, block);
 }
 
 // Prunes entries over 50 blocks old from the entry for a property

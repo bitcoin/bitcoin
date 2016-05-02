@@ -275,7 +275,6 @@ fi
 printf "\nPerforming a small trade to take fee cache to 0.1 and trigger distribution for property 4\n"
 printf "   * Executing the trade\n"
 ./src/omnicore-cli --regtest omni_sendtrade $ADDR 4 0.09999999 1 0.8 >null
-./src/omnicore-cli --regtest setgenerate true 1 >null
 ./src/omnicore-cli --regtest omni_sendtrade $ADDR 1 0.8 4 0.09999999 >null
 ./src/omnicore-cli --regtest setgenerate true 1 >null
 printf "   * Verifiying the results\n"
@@ -337,6 +336,124 @@ if [ $BALANCE == "9999.95000000" ]
     PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
+fi
+printf "\nRolling back the chain to orphan a block and the last trade to test reorg protection (disconnecting 1 block from tip and mining a replacement)\n"
+printf "   * Executing the rollback\n"
+BLOCK=$(./src/omnicore-cli --regtest getblockcount)
+BLOCKHASH=$(./src/omnicore-cli --regtest getblockhash $(($BLOCK)))
+./src/omnicore-cli --regtest invalidateblock $BLOCKHASH >null
+PREVBLOCK=$(./src/omnicore-cli --regtest getblockcount)
+printf "   * Clearing the mempool\n"
+./src/omnicore-cli --regtest clearmempool >null
+printf "   * Verifiying the results\n"
+printf "      # Checking the block count has been reduced by 1... "
+EXPBLOCK=$((BLOCK-1))
+if [ $EXPBLOCK == $PREVBLOCK ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $PREVBLOCK
+    FAIL=$((FAIL+1))
+fi
+printf "   * Mining a replacement block\n"
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "   * Verifiying the results\n"
+NEWBLOCK=$(./src/omnicore-cli --regtest getblockcount)
+NEWBLOCKHASH=$(./src/omnicore-cli --regtest getblockhash $(($BLOCK)))
+printf "      # Checking the block count is the same as before the rollback... "
+if [ $BLOCK == $NEWBLOCK ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $NEWBLOCK
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking the block hash is different from before the rollback... "
+if [ $BLOCKHASH == $NEWBLOCKHASH ]
+  then
+    printf "FAIL (result:%s)\n" $NEWBLOCKHASH
+    FAIL=$((FAIL+1))
+  else
+    printf "PASS\n"
+    PASS=$((PASS+1))
+fi
+printf "      # Checking the fee cache now again has 0.09995001 fee cached for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.09995001" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking %s balance has been rolled back to 0... " ${ADDRESS[1]}
+BALANCE=$(./src/omnicore-cli --regtest omni_getbalance ${ADDRESS[1]} 4 | grep balance | cut -d '"' -f4)
+if [ $BALANCE == "0.00000000" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking %s balance has been rolled back to 0... " ${ADDRESS[2]}
+BALANCE=$(./src/omnicore-cli --regtest omni_getbalance ${ADDRESS[2]} 4 | grep balance | cut -d '"' -f4)
+if [ $BALANCE == "0.00000000" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking %s balance has been rolled back to 0... " ${ADDRESS[3]}
+BALANCE=$(./src/omnicore-cli --regtest omni_getbalance ${ADDRESS[3]} 4 | grep balance | cut -d '"' -f4)
+if [ $BALANCE == "0.00000000" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking %s balance has been rolled back to 0... " ${ADDRESS[4]}
+BALANCE=$(./src/omnicore-cli --regtest omni_getbalance ${ADDRESS[4]} 4 | grep balance | cut -d '"' -f4)
+if [ $BALANCE == "0.00000000" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking %s balance has been rolled back to 9999.90004999... " $ADDR
+BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 4 | grep balance | cut -d '"' -f4)
+if [ $BALANCE == "9999.90004999" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
+fi
+printf "\nPerforming a small trade to take fee cache to 0.1 and retrigger distribution for property 4\n"
+printf "   * Executing the trade\n"
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 4 0.09999999 1 0.8 >null
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 1 0.8 4 0.09999999 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "   * Verifiying the results\n"
+printf "      # Checking distribution was triggered and the fee cache is now empty for property 4... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 4 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0.00000000" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
     FAIL=$((FAIL+1))
 fi
 printf "\nTesting a trade against self that results in a 1 willet fee for property 4 (1.0 OMNI for 0.00002 #4)\n"
