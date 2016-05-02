@@ -565,23 +565,24 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				if(theAlias.vchPrivateValue.empty())
 					theAlias.vchPrivateValue = dbAlias.vchPrivateValue;	
 			}
+			// if transfer
+			if(!vtxPos.back().vchPubKey != theAlias.vchPubKey)
+			{
+				CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
+				CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
+				// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
+				if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
+				{
+					theAlias.vchPubKey = vtxPos.back().vchPubKey;
+					LogPrintf("CheckAliasInputs() : Warning, Cannot transfer an alias that points to another alias. Pubkey was not updated");
+				}
+			}
 		}
 	
 
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
-		// if transfer
-		if(!vtxPos.empty() && vtxPos.back().vchPubKey != theAlias.vchPubKey)
-		{
-			CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
-			CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
-			// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
-			if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
-			{
-				theAlias.vchPubKey = vtxPos.back().vchPubKey;
-				LogPrintf("CheckAliasInputs() : Warning, Cannot transfer an alias that points to another alias. Pubkey was not updated");
-			}
-		}
+
 		PutToAliasList(vtxPos, theAlias);
 		CPubKey PubKey(theAlias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
