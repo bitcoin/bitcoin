@@ -48,7 +48,6 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1ve
 {
   secp256k1_context *ctx = (secp256k1_context*)ctx_l;
 
-  int result;
   unsigned char* data = (unsigned char*) (*env)->GetDirectBufferAddress(env, byteBufferObject);
   const unsigned char* sigdata = {  (unsigned char*) (data + 32) };
   const unsigned char* pubdata = { (unsigned char*) (data + siglen + 32) };
@@ -60,13 +59,15 @@ SECP256K1_API jint JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1ve
 
   if( ret ) {
     ret = secp256k1_ec_pubkey_parse(ctx, &pubkey, pubdata, publen);
+
+    if( ret ) {
+      ret = secp256k1_ecdsa_verify(ctx, &sig, data, &pubkey);
+    }
   }
 
   (void)classObject;
 
-  result = secp256k1_ecdsa_verify(ctx, &sig, data, &pubkey);
-
-  return result;
+  return ret;
 }
 
 SECP256K1_API jobjectArray JNICALL Java_org_bitcoin_NativeSecp256k1_secp256k1_1ecdsa_1sign
