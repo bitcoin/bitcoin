@@ -136,18 +136,19 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
     pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
-    return CSyscoinAddress(keyID).ToString();
+	// SYSCOIN to send v1 address by default
+    return CSyscoinAddress(keyID, true).ToString();
 }
-// SYSCOIN support old sys
-UniValue getv1address(const UniValue& params, bool fHelp)
+// SYSCOIN
+UniValue getv2address(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
     
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "getv1address ( \"account\" )\n"
-			"\nReturns a new Syscoin1 (starts with S) address for receiving payments.\n"
+            "getv2address ( \"account\" )\n"
+			"\nReturns a new Syscoin (starts with 1) address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
@@ -177,7 +178,7 @@ UniValue getv1address(const UniValue& params, bool fHelp)
 
     pwalletMain->SetAddressBook(keyID, strAccount, "receive");
 
-    return CSyscoinAddress(keyID, true).ToString();
+    return CSyscoinAddress(keyID).ToString();
 }
 
 CSyscoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
