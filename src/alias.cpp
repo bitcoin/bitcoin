@@ -539,15 +539,6 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 				}
 				if(vtxPos.empty())
 					return error("CheckAliasInputs() : No alias found to update");
-				// if transfer
-				if(vtxPos.back().vchPubKey != theAlias.vchPubKey)
-				{
-					CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
-					CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
-					// make sure xfer to pubkey doesn't point to an alias already 
-					if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
-						return error("CheckAliasInputs() : Cannot transfer an alias that points to another alias");
-				}
 				break;
 		default:
 			return error(
@@ -579,11 +570,21 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
-
+		// if transfer
+		if(vtxPos.back().vchPubKey != theAlias.vchPubKey)
+		{
+			CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
+			CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
+			// make sure xfer to pubkey doesn't point to an alias already, otherwise don't assign pubkey to alias
+			if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
+			{
+				theAlias.vchPubKey = vtxPos.back().vchPubKey;
+				LogPrintf("CheckAliasInputs() : Warning, Cannot transfer an alias that points to another alias. Pubkey was not updated");
+			}
+		}
 		PutToAliasList(vtxPos, theAlias);
 		CPubKey PubKey(theAlias.vchPubKey);
 		CSyscoinAddress address(PubKey.GetID());
-
 		if (!paliasdb->WriteAlias(vvchArgs[0], vchFromString(address.ToString()), vtxPos))
 			return error( "CheckAliasInputs() :  failed to write to alias DB");
 		
