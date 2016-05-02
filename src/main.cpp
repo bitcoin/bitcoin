@@ -1592,7 +1592,7 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 		if (chain == CBaseChainParams::MAIN || chain == CBaseChainParams::REGTEST)
 		{
 			// SYSCOIN snapshot for old chain based on block 880440 + 15 mill dev fund
-			return 459200578 * COIN + 15000000 * COIN;
+			return 459206182 * COIN + 15000000 * COIN;
 		}
 	}
 	CAmount nSubsidy = 0;
