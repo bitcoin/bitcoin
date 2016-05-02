@@ -10,7 +10,7 @@ BOOST_AUTO_TEST_SUITE(omnicore_version_tests)
 
 BOOST_AUTO_TEST_CASE(version_comparison)
 {
-    BOOST_CHECK(OMNICORE_VERSION > 900300); // Master Core v0.0.9.3
+    BOOST_CHECK(OMNICORE_VERSION > 1000000); // Omni Core v0.0.10.0
 }
 
 /**
@@ -22,18 +22,18 @@ BOOST_AUTO_TEST_CASE(version_comparison)
 
 BOOST_AUTO_TEST_CASE(version_string)
 {
-    BOOST_CHECK_EQUAL(OmniCoreVersion(), "0.0.10-rel");
+    BOOST_CHECK_EQUAL(OmniCoreVersion(), "0.0.11-dev");
 }
 
 BOOST_AUTO_TEST_CASE(version_number)
 {
-    BOOST_CHECK_EQUAL(OMNICORE_VERSION, 1000000);
+    BOOST_CHECK_EQUAL(OMNICORE_VERSION, 1100000);
 }
 
 BOOST_AUTO_TEST_CASE(config_package_version)
 {
     // the package version is used in the file names:
-    BOOST_CHECK_EQUAL(PACKAGE_VERSION, "0.0.10.0-rel");
+    BOOST_CHECK_EQUAL(PACKAGE_VERSION, "0.0.11.0-dev");
 }
 
 
