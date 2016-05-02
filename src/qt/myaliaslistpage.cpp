@@ -221,7 +221,7 @@ void MyAliasListPage::on_newPubKey_clicked()
 		QApplication::clipboard()->setText(resQStr, QClipboard::Clipboard);
 		QApplication::clipboard()->setText(resQStr, QClipboard::Selection);
 		QMessageBox::information(this, tr("New Public Key For Alias Transfer"),
-			resQStr + tr(" has been copied to your clipboard!"),
+			resQStr + tr(" has been copied to your clipboard! IMPORTANT: This key is for one-time use only! Do not re-use public keys for multiple aliases or transfers."),
 			QMessageBox::Ok, QMessageBox::Ok);
 		
 	}
