@@ -27,6 +27,7 @@
 
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <memory>
 #include <queue>
 
 using namespace std;

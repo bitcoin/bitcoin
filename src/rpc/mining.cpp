@@ -21,6 +21,7 @@
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 
+#include <memory>
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
