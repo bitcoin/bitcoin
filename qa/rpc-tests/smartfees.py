@@ -23,7 +23,7 @@ SCRIPT_SIG = ["0451025175", "0451025275"]
 def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee_increment):
     '''
     Create and send a transaction with a random fee.
-    The transaction pays to a trival P2SH script, and assumes that its inputs
+    The transaction pays to a trivial P2SH script, and assumes that its inputs
     are of the same form.
     The function takes a list of confirmed outputs and unconfirmed outputs
     and attempts to use the confirmed list first for its inputs.
@@ -53,7 +53,7 @@ def small_txpuzzle_randfee(from_node, conflist, unconflist, amount, min_fee, fee
     outputs = OrderedDict([(P2SH_1, total_in - amount - fee),
                            (P2SH_2, amount)])
     rawtx = from_node.createrawtransaction(inputs, outputs)
-    # Createrawtransaction constructions a transaction that is ready to be signed
+    # createrawtransaction constructs a transaction that is ready to be signed.
     # These transactions don't need to be signed, but we still have to insert the ScriptSig
     # that will satisfy the ScriptPubKey.
     completetx = rawtx[0:10]
@@ -223,7 +223,7 @@ class EstimateFeeTest(BitcoinTestFramework):
             sync_mempools(self.nodes[0:3],.1)
             mined = mining_node.getblock(mining_node.generate(1)[0],True)["tx"]
             sync_blocks(self.nodes[0:3],.1)
-            #update which txouts are confirmed
+            # update which txouts are confirmed
             newmem = []
             for utx in self.memutxo:
                 if utx["txid"] in mined:
