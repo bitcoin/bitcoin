@@ -571,7 +571,7 @@ bool CheckAliasInputs(const CTransaction &tx, int op, int nOut, const vector<vec
 		theAlias.nHeight = nHeight;
 		theAlias.txHash = tx.GetHash();
 		// if transfer
-		if(vtxPos.back().vchPubKey != theAlias.vchPubKey)
+		if(vtxPos.back() && vtxPos.back().vchPubKey != theAlias.vchPubKey)
 		{
 			CPubKey xferKey  = CPubKey(theAlias.vchPubKey);	
 			CSyscoinAddress myAddress = CSyscoinAddress(xferKey.GetID());
