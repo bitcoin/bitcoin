@@ -187,8 +187,11 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
     {
         CTxDestination dest = address.Get();
         string currentAddress = address.ToString();
-        ret.push_back(Pair("address", currentAddress));
-
+		// SYSCOIN v1 addy by default
+		CSyscoinAddress v1addr;
+		v1addr.Set(dest, true);
+        ret.push_back(Pair("address", v1addr.ToString()));
+		ret.push_back(Pair("v2address", currentAddress));	
         CScript scriptPubKey = GetScriptForDestination(dest);
         ret.push_back(Pair("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end())));
 
@@ -306,7 +309,12 @@ UniValue createmultisig(const UniValue& params, bool fHelp)
     CSyscoinAddress address(innerID);
 
     UniValue result(UniValue::VOBJ);
-    result.push_back(Pair("address", address.ToString()));
+	// SYSCOIN v1 addy by default
+    CTxDestination dest = address.Get();
+	CSyscoinAddress v1addr;
+	v1addr.Set(dest, true);
+    result.push_back(Pair("address", v1addr.ToString()));
+    result.push_back(Pair("v2address", address.ToString()));
     result.push_back(Pair("redeemScript", HexStr(inner.begin(), inner.end())));
 
     return result;
