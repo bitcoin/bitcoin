@@ -1283,10 +1283,15 @@ UniValue ListReceived(const UniValue& params, bool fByAccounts)
         }
         else
         {
+			// SYSCOIN v1 addy by default
+			CTxDestination dest = address.Get();
+			CSyscoinAddress v1addr;
+			v1addr.Set(dest, true);
             UniValue obj(UniValue::VOBJ);
             if(fIsWatchonly)
                 obj.push_back(Pair("involvesWatchonly", true));
-            obj.push_back(Pair("address",       address.ToString()));
+            obj.push_back(Pair("address",       v1addr.ToString()));
+			obj.push_back(Pair("v2address",       address.ToString()));
             obj.push_back(Pair("account",       strAccount));
             obj.push_back(Pair("amount",        ValueFromAmount(nAmount)));
             obj.push_back(Pair("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf)));
@@ -2463,7 +2468,11 @@ UniValue listunspent(const UniValue& params, bool fHelp)
         entry.push_back(Pair("vout", out.i));
         CTxDestination address;
         if (ExtractDestination(out.tx->vout[out.i].scriptPubKey, address)) {
-            entry.push_back(Pair("address", CSyscoinAddress(address).ToString()));
+			// SYSCOIN v1 addy by default
+			CSyscoinAddress v1addr;
+			v1addr.Set(address, true);
+            entry.push_back(Pair("address", v1addr.ToString()));
+			entry.push_back(Pair("v2address", CSyscoinAddress(address).ToString()));
             if (pwalletMain->mapAddressBook.count(address))
                 entry.push_back(Pair("account", pwalletMain->mapAddressBook[address].name));
         }
