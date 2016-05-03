@@ -169,8 +169,9 @@ void OfferListPage::on_messageButton_clicked()
         return;
     }
 	QString offerAlias = selection.at(0).data(OfferTableModel::AliasRole).toString();
+	QString offerTitle = selection.at(0).data(OfferTableModel::TitleRole).toString();
 	// send message to seller
-	NewMessageDialog dlg(NewMessageDialog::NewMessage, offerAlias);   
+	NewMessageDialog dlg(NewMessageDialog::NewMessage, offerAlias, offerTitle);   
 	dlg.exec();
 
 
