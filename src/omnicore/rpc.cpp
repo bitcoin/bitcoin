@@ -186,7 +186,7 @@ Value omni_getfeedistribution(const Array& params, bool fHelp)
 
     bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
     if (!found) {
-        return response; // TODO: should we error here or just return empty?
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee distribution ID does not exist");
     }
     response.push_back(Pair("distributionid", id));
     response.push_back(Pair("propertyid", (uint64_t)propertyId));
@@ -257,7 +257,10 @@ Value omni_getfeedistributions(const Array& params, bool fHelp)
             int64_t total = 0;
             Object responseObj;
             bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
-            if (!found) continue; // TODO: trap this error?
+            if (!found) {
+                PrintToLog("Fee History Error - Distribution data not found for distribution ID %d but it was included in GetDistributionsForProperty(prop %d)\n", id, prop);
+                continue;
+            }
             responseObj.push_back(Pair("distributionid", id));
             responseObj.push_back(Pair("propertyid", (uint64_t)propertyId));
             responseObj.push_back(Pair("block", block));

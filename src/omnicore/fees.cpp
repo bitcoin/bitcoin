@@ -328,8 +328,7 @@ void COmniFeeHistory::printAll()
 // Count Fee History DB records
 int COmniFeeHistory::CountRecords()
 {
-    // TODO: research if there is a faster way to get the total number of records in levelDB
-
+    // No faster way to count than to iterate - "There is no way to implement Count more efficiently inside leveldb than outside."
     int count = 0;
     leveldb::Iterator* it = NewIterator();
     for(it->SeekToFirst(); it->Valid(); it->Next()) {
