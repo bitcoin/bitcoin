@@ -162,7 +162,7 @@ void COmniFeeCache::RollBackCache(int block)
                 }
                 leveldb::Status status = pdb->Put(writeoptions, key, newValue);
                 assert(status.ok());
-                if (msc_debug_fees) PrintToLog("Rolling back fee cache for property %d, new=%s [%s])\n", propertyId, newValue, status.ToString());
+                PrintToLog("Rolling back fee cache for property %d, new=%s [%s])\n", propertyId, newValue, status.ToString());
             }
         }
     }
@@ -339,10 +339,29 @@ int COmniFeeHistory::CountRecords()
     return count;
 }
 
-// Roll back history in event of reorg
+// Roll back history in event of reorg, block is inclusive
 void COmniFeeHistory::RollBackHistory(int block)
 {
-//TODO
+    assert(pdb);
+
+    std::set<int> sDistributions;
+    leveldb::Iterator* it = NewIterator();
+    for (it->SeekToFirst(); it->Valid(); it->Next()) {
+        std::string strValue = it->value().ToString();
+        std::string strKey = it->key().ToString();
+        std::vector<std::string> vFeeHistoryDetail;
+        boost::split(vFeeHistoryDetail, strValue, boost::is_any_of(":"), boost::token_compress_on);
+        if (4 != vFeeHistoryDetail.size()) {
+            PrintToLog("ERROR: vFeeHistoryDetail has unexpected number of elements: %d !\n", vFeeHistoryDetail.size());
+            continue; // bad data
+        }
+        int feeBlock = boost::lexical_cast<int>(vFeeHistoryDetail[0]);
+        if (feeBlock >= block) {
+            PrintToLog("%s() deleting from fee history DB: %s %s\n", __FUNCTION__, strKey, strValue);
+            pdb->Delete(writeoptions, strKey);
+        }
+    }
+    delete it;
 }
 
 // Retrieve fee distributions for a property
