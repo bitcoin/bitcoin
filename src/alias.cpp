@@ -1030,8 +1030,6 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
 	if (vchPrivateValue.size() > MAX_VALUE_LENGTH)
 		throw runtime_error("alias public value cannot exceed 1023 bytes!");
-	if (vchPublicValue.size() == 0)
-		throw runtime_error("cannot update alias public field to an empty value");
 	vector<unsigned char> vchPubKeyByte;
 
 	CWalletTx wtx;
@@ -1050,6 +1048,7 @@ UniValue aliasupdate(const UniValue& params, bool fHelp) {
 		if (paliasdb->ExistsAddress(vchFromString(myAddress.ToString())))
 			throw runtime_error("You must transfer to a public key that's not associated with any other alias");
 	}
+
 
 	EnsureWalletIsUnlocked();
 	CTransaction tx;
