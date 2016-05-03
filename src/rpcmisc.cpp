@@ -191,7 +191,7 @@ UniValue validateaddress(const UniValue& params, bool fHelp)
 		CSyscoinAddress v1addr;
 		v1addr.Set(dest, true);
 		string addressStr = params[0].get_str();
-		if(addressStr[0] == "S")
+		if(addressStr[0] == 'S')
 			ret.push_back(Pair("address", v1addr.ToString()));
 		else
 			ret.push_back(Pair("address", currentAddress));
