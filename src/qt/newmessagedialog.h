@@ -23,7 +23,7 @@ public:
         NewMessage,
         ReplyMessage
     };
-    explicit NewMessageDialog(Mode mode, const QString &to=QString(""), QWidget *parent = 0);
+    explicit NewMessageDialog(Mode mode, const QString &to=QString(""), const QString &title=QString(""), QWidget *parent = 0);
     ~NewMessageDialog();
 
     void setModel(WalletModel*,MessageTableModel *model);

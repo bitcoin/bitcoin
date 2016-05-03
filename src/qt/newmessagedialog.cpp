@@ -12,7 +12,7 @@
 using namespace std;
 
 extern const CRPCTable tableRPC;
-NewMessageDialog::NewMessageDialog(Mode mode, const QString &to, QWidget *parent) :
+NewMessageDialog::NewMessageDialog(Mode mode, const QString &to, const QString &title, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::NewMessageDialog), mapper(0), mode(mode), model(0), walletModel(0)
 {
@@ -22,6 +22,10 @@ NewMessageDialog::NewMessageDialog(Mode mode, const QString &to, QWidget *parent
 	{
 		ui->toEdit->setEnabled(false);
 		ui->toEdit->setText(to);
+	}
+	if(title != QString(""))
+	{
+		ui->topicEdit->setText(title);
 	}
     switch(mode)
     {
