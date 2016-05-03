@@ -49,7 +49,7 @@ public:
     // Zeros a property in the fee cache
     void ClearCache(const uint32_t &propertyId, int block);
     // Adds a fee to the cache (eg on a completed trade)
-    void AddFee(const uint32_t &propertyId, int block, const uint64_t &amount);
+    void AddFee(const uint32_t &propertyId, int block, const int64_t &amount);
     // Evaluates fee caches for all properties against threshold and executes distribution if threshold met
     void EvalCache(const uint32_t &propertyId, int block);
     // Performs distribution of fees

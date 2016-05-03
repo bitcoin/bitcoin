@@ -14,6 +14,9 @@
 
 #include "leveldb/db.h"
 
+#include "main.h"
+
+#include <limits.h>
 #include <stdint.h>
 
 #include <boost/algorithm/string.hpp>
@@ -88,7 +91,7 @@ void COmniFeeCache::ClearCache(const uint32_t &propertyId, int block)
 }
 
 // Adds a fee to the cache (eg on a completed trade)
-void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t &amount)
+void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t &amount)
 {
     if (msc_debug_fees) PrintToLog("Starting AddFee for prop %d (block %d amount %d)...\n", propertyId, block, amount);
 
@@ -97,7 +100,14 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const uint64_t
     if (msc_debug_fees) PrintToLog("   Current cached amount %d\n", currentCachedAmount);
 
     // Add new fee and rewrite record
-    int64_t newCachedAmount = currentCachedAmount + amount; // TODO: should be some overflow detection in here
+    if ((currentCachedAmount > 0) && (amount > INT64_MAX - currentCachedAmount)) {
+        // overflow - there is no way the fee cache should exceed the maximum possible number of tokens, not safe to continue
+        const std::string& msg = strprintf("Shutting down due to fee cache overflow (block %d property %d current %d amount %d)\n", block, propertyId, currentCachedAmount, amount);
+        PrintToLog(msg);
+        if (!GetBoolArg("-overrideforcedshutdown", false)) AbortNode(msg, msg);
+    }
+    int64_t newCachedAmount = currentCachedAmount + amount;
+
     if (msc_debug_fees) PrintToLog("   New cached amount %d\n", newCachedAmount);
     const std::string key = strprintf("%010d", propertyId);
     std::set<feeCacheItem> sCacheHistoryItems = GetCacheHistory(propertyId);
