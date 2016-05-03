@@ -3196,11 +3196,9 @@ void CMPSTOList::printStats()
 }
 
 /**
- * This function deletes records of STO receivers above a specific block from the STO database.
+ * This function deletes records of STO receivers above/equal to a specific block from the STO database.
  *
  * Returns the number of records changed.
- *
- * NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
  */
 int CMPSTOList::deleteAboveBlock(int blockNum)
 {
@@ -3216,7 +3214,7 @@ int CMPSTOList::deleteAboveBlock(int blockNum)
           std::vector<std::string> vecSTORecordFields;
           boost::split(vecSTORecordFields, vecSTORecords[i], boost::is_any_of(":"), boost::token_compress_on);
           if (4 != vecSTORecordFields.size()) continue;
-          if (atoi(vecSTORecordFields[1]) <= blockNum) {
+          if (atoi(vecSTORecordFields[1]) < blockNum) {
               newValue += vecSTORecords[i].append(","); // STO before the reorg, add data back to new value string
           } else {
               needsUpdate = true;
@@ -3455,7 +3453,11 @@ void CMPTradeList::recordMatchedTrade(const uint256 txid1, const uint256 txid2, 
   }
 }
 
-// delete any trades after blockNum
+/**
+ * This function deletes records of trades above/equal to a specific block from the trade database.
+ *
+ * Returns the number of records changed.
+ */
 int CMPTradeList::deleteAboveBlock(int blockNum)
 {
   leveldb::Slice skey, svalue;
@@ -3590,9 +3592,10 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
     if (reorgRecoveryMode > 0) {
         reorgRecoveryMode = 0; // clear reorgRecovery here as this is likely re-entrant
 
-        p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true); // inclusive
-        t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight - 1); // deleteAboveBlock functions are non-inclusive (>blocknum not >=blocknum)
-        s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight - 1);
+        // NOTE: The blockNum parameter is inclusive, so deleteAboveBlock(1000) will delete records in block 1000 and above.
+        p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
+        t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
+        s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight);
         reorgRecoveryMaxHeight = 0;
 
         nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
