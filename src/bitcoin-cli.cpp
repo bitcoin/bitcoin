@@ -314,7 +314,7 @@ int main(int argc, char* argv[])
     SetupEnvironment();
     if (!SetupNetworking()) {
         fprintf(stderr, "Error: Initializing networking failed\n");
-        exit(1);
+        return EXIT_FAILURE;
     }
 
     try {
