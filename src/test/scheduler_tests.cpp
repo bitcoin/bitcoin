@@ -28,6 +28,11 @@ static void microTask(CScheduler& s, boost::mutex& mutex, int& counter, int delt
     }
 }
 
+// NOTE: If you see a warning about this function being "defined but
+// not used [-Wunused-function]" the Bitcoin developers would rather
+// have you fix the test than this warning, and are using the warning
+// as a reminder that the test should be fixed. See pull request #7169
+// & #8003.
 static void MicroSleep(uint64_t n)
 {
 #if defined(HAVE_WORKING_BOOST_SLEEP_FOR)
