@@ -1252,8 +1252,8 @@
 ["0x27 0x302402107777777777777777777777777777777702108777777777777777777777777777777701", "0 CHECKSIG NOT", "DERSIG", "SIG_DER", "Negative S is incorrectly encoded for DERSIG"],
 
 ["Some basic segwit checks"],
-[["00"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "WITNESS", "EVAL_FALSE", "Invalid witness script"],
-[["51"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "WITNESS", "WITNESS_PROGRAM_MISMATCH", "Witness script hash mismatch"],
+[["00"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "EVAL_FALSE", "Invalid witness script"],
+[["51"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "P2SH,WITNESS", "WITNESS_PROGRAM_MISMATCH", "Witness script hash mismatch"],
 [["00"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Invalid witness script without WITNESS"],
 [["51"], "", "0 0x206e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d", "", "OK", "Witness script hash mismatch without WITNESS"],
 
