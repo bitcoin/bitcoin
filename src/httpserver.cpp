@@ -44,8 +44,8 @@ static const size_t MAX_HEADERS_SIZE = 8192;
 class HTTPWorkItem : public HTTPClosure
 {
 public:
-    HTTPWorkItem(HTTPRequest* req, const std::string &path, const HTTPRequestHandler& func):
-        req(req), path(path), func(func)
+    HTTPWorkItem(std::unique_ptr<HTTPRequest> req, const std::string &path, const HTTPRequestHandler& func):
+        req(std::move(req)), path(path), func(func)
     {
     }
     void operator()()
@@ -281,7 +281,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
 
     // Dispatch to worker thread
     if (i != iend) {
-        std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(hreq.release(), path, i->handler));
+        std::unique_ptr<HTTPWorkItem> item(new HTTPWorkItem(std::move(hreq), path, i->handler));
         assert(workQueue);
         if (workQueue->Enqueue(item.get()))
             item.release(); /* if true, queue took ownership */
