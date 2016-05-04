@@ -1593,8 +1593,11 @@ bool fLargeWorkForkFound = false;
 bool fLargeWorkInvalidChainFound = false;
 CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
 
-static void AlertNotify(const std::string& strMessage, bool fThread)
+static void AlertNotify(const std::string& strMessage)
 {
+    // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user
+    strMiscWarning = strMessage;
+
     uiInterface.NotifyAlertChanged();
     std::string strCmd = GetArg("-alertnotify", "");
     if (strCmd.empty()) return;
@@ -1607,10 +1610,17 @@ static void AlertNotify(const std::string& strMessage, bool fThread)
     safeStatus = singleQuote+safeStatus+singleQuote;
     boost::replace_all(strCmd, "%s", safeStatus);
 
-    if (fThread)
-        boost::thread t(runCommand, strCmd); // thread runs free
-    else
-        runCommand(strCmd);
+    boost::thread t(runCommand, strCmd); // thread runs free
+}
+
+static void AlertNotifyOnce(const std::string& strMessage)
+{
+    static bool fWarned = false;
+
+    if (!fWarned) {
+      AlertNotify(strMessage);
+      fWarned = true;
+    }
 }
 
 void CheckForkWarningConditions()
@@ -1632,7 +1642,7 @@ void CheckForkWarningConditions()
         {
             std::string warning = std::string("'Warning: Large-work fork detected, forking after block ") +
                 pindexBestForkBase->phashBlock->ToString() + std::string("'");
-            AlertNotify(warning, true);
+            AlertNotify(warning);
         }
         if (pindexBestForkTip && pindexBestForkBase)
         {
@@ -2162,8 +2172,7 @@ void PartitionCheck(bool (*initialDownloadCheck)(), CCriticalSection& cs, const 
     }
     if (!strWarning.empty())
     {
-        strMiscWarning = strWarning;
-        AlertNotify(strWarning, true);
+        AlertNotify(strWarning);
         lastAlertTime = now;
     }
 }
@@ -2586,7 +2595,6 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
     cvBlockChange.notify_all();
 
     // Check the version of the last 100 blocks to see if we need to upgrade:
-    static bool fWarned = false;
     if (!IsInitialBlockDownload())
     {
         int nUpgraded = 0;
@@ -2596,11 +2604,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
             ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
             if (state == THRESHOLD_ACTIVE || state == THRESHOLD_LOCKED_IN) {
                 if (state == THRESHOLD_ACTIVE) {
-                    strMiscWarning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
-                    if (!fWarned) {
-                        AlertNotify(strMiscWarning, true);
-                        fWarned = true;
-                    }
+                    AlertNotifyOnce(strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit));
                 } else {
                     LogPrintf("%s: unknown new rules are about to activate (versionbit %i)\n", __func__, bit);
                 }
@@ -2617,12 +2621,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams& chainParams) {
             LogPrintf("%s: %d of last 100 blocks have unexpected version\n", __func__, nUpgraded);
         if (nUpgraded > 100/2)
         {
-            // strMiscWarning is read by GetWarnings(), called by Qt and the JSON-RPC code to warn the user:
-            strMiscWarning = _("Warning: Unknown block versions being mined! It's possible unknown rules are in effect");
-            if (!fWarned) {
-                AlertNotify(strMiscWarning, true);
-                fWarned = true;
-            }
+            AlertNotifyOnce(_("Warning: Unknown block versions being mined! It's possible unknown rules are in effect"));
         }
     }
 }
