@@ -949,7 +949,7 @@ bool CConnman::AttemptToEvictConnection()
 
     if (vEvictionCandidates.empty()) return false;
 
-    // Protect the 8 nodes with the best ping times.
+    // Protect the 8 nodes with the lowest minimum ping time.
     // An attacker cannot manipulate this metric without physically moving nodes closer to the target.
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeMinPingTime);
     vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(8, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
@@ -971,7 +971,7 @@ bool CConnman::AttemptToEvictConnection()
     if (vEvictionCandidates.empty()) return false;
 
     // Protect the half of the remaining nodes which have been connected the longest.
-    // This replicates the existing implicit behavior.
+    // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
     std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
     vEvictionCandidates.erase(vEvictionCandidates.end() - static_cast<int>(vEvictionCandidates.size() / 2), vEvictionCandidates.end());
 
