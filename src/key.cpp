@@ -374,28 +374,90 @@ bool CKey::SetCompactSignature(uint256 hash, const std::vector<unsigned char>& v
     return false;
 }
 
-bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSigParam)
+static bool ParseLength(
+        const std::vector<unsigned char>::iterator& begin,
+        const std::vector<unsigned char>::iterator& end,
+        size_t& nLengthRet,
+        size_t& nLengthSizeRet)
+{
+    std::vector<unsigned char>::iterator it = begin;
+    if (it == end)
+        return false;
+
+    nLengthRet = *it;
+    nLengthSizeRet = 1;
+
+    if (!(nLengthRet & 0x80))
+        return true;
+
+    unsigned char nLengthBytes = nLengthRet & 0x7f;
+
+    nLengthRet = 0;
+    for (unsigned char i = 0; i < nLengthBytes; i++)
+    {
+        it++;
+        if (it == end)
+            return false;
+        nLengthRet = (nLengthRet << 8) | *it;
+        if (nLengthRet > 0x7f)
+            return false;
+        nLengthSizeRet++;
+    }
+    return true;
+}
+
+static bool NormalizeSignature(std::vector<unsigned char>& vchSig)
 {
     // Prevent the problem described here: https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2015-July/009697.html
     // by removing the extra length bytes
+
+    if (vchSig.size() < 2 || vchSig[0] != 0x30)
+        return false;
+
+    size_t nTotalLength, nTotalLengthSize;
+    if (!ParseLength(vchSig.begin() + 1, vchSig.end(), nTotalLength, nTotalLengthSize))
+        return false;
+
+    size_t nRStart = 1 + nTotalLengthSize;
+    if (vchSig.size() < nRStart + 2 || vchSig[nRStart] != 0x02)
+        return false;
+
+    size_t nRLength, nRLengthSize;
+    if (!ParseLength(vchSig.begin() + nRStart + 1, vchSig.end(), nRLength, nRLengthSize))
+        return false;
+    const size_t nRDataStart = nRStart + 1 + nRLengthSize;
+    std::vector<unsigned char> R(vchSig.begin() + nRDataStart, vchSig.begin() + nRDataStart + nRLength);
+
+    size_t nSStart = nRStart + 1 + nRLengthSize + nRLength;
+    if (vchSig.size() < nSStart + 2 || vchSig[nSStart] != 0x02)
+        return false;
+
+    size_t nSLength, nSLengthSize;
+    if (!ParseLength(vchSig.begin() + nSStart + 1, vchSig.end(), nSLength, nSLengthSize))
+        return false;
+    const size_t nSDataStart = nSStart + 1 + nSLengthSize;
+    std::vector<unsigned char> S(vchSig.begin() + nSDataStart, vchSig.begin() + nSDataStart + nSLength);
+
+    vchSig.clear();
+    vchSig.reserve(2 + 2 + R.size() + 2 + S.size());
+    vchSig.push_back(0x30);
+    vchSig.push_back(2 + R.size() + 2 + S.size());
+    vchSig.push_back(0x02);
+    vchSig.push_back(R.size());
+    vchSig.insert(vchSig.end(), R.begin(), R.end());
+    vchSig.push_back(0x02);
+    vchSig.push_back(S.size());
+    vchSig.insert(vchSig.end(), S.begin(), S.end());
+
+    return true;
+}
+
+bool CKey::Verify(uint256 hash, const std::vector<unsigned char>& vchSigParam)
+{
     std::vector<unsigned char> vchSig(vchSigParam.begin(), vchSigParam.end());
-    if (vchSig.size() > 1 && vchSig[1] & 0x80)
-    {
-        unsigned char nLengthBytes = vchSig[1] & 0x7f;
 
-        if (vchSig.size() < 2 + nLengthBytes)
-            return false;
-
-        if (nLengthBytes > 4)
-        {
-            unsigned char nExtraBytes = nLengthBytes - 4;
-            for (unsigned char i = 0; i < nExtraBytes; i++)
-                if (vchSig[2 + i])
-                    return false;
-            vchSig.erase(vchSig.begin() + 2, vchSig.begin() + 2 + nExtraBytes);
-            vchSig[1] = 0x80 | (nLengthBytes - nExtraBytes);
-        }
-    }
+    if (!NormalizeSignature(vchSig))
+        return false;
 
     if (vchSig.empty())
         return false;
