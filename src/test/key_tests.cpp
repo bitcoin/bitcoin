@@ -144,4 +144,29 @@ BOOST_AUTO_TEST_CASE(key_test1)
     }
 }
 
+BOOST_AUTO_TEST_CASE(long_signature_length_test)
+{
+  uint256 hash("c5564b4312dbea29d4a5601a77084fd5bb8ec62210aa05dcf0c0d48063044609");
+  CKey key;
+  key.SetPubKey(ParseHex("03d4b1beb94313fc4395e38b4ba4ea74f62c5ecec2454c49cbf21d4262803b5469"));
+
+  {
+      // R length on 5 bytes
+      const std::vector<unsigned char>& vchSigParam(ParseHex("304a0285000000002100d1c453ddcaae9215a24fc86d50916b66117839d163402d9ed21a1f4aba3173e302200ce3d43a4c4841a340c267c9fa1f3aa43c1e51c0d5043e91a85c954e14c6b91f"));
+      BOOST_CHECK(key.Verify(hash, vchSigParam));
+  }
+
+  {
+      // R and S lengths on 5 bytes
+      const std::vector<unsigned char>& vchSigParam(ParseHex("304f0285000000002100d1c453ddcaae9215a24fc86d50916b66117839d163402d9ed21a1f4aba3173e3028500000000200ce3d43a4c4841a340c267c9fa1f3aa43c1e51c0d5043e91a85c954e14c6b91f"));
+      BOOST_CHECK(key.Verify(hash, vchSigParam));
+  }
+
+  {
+      // R and global lengths on 5 bytes
+      const std::vector<unsigned char>& vchSigParam(ParseHex("3085000000004a0285000000002100d1c453ddcaae9215a24fc86d50916b66117839d163402d9ed21a1f4aba3173e302200ce3d43a4c4841a340c267c9fa1f3aa43c1e51c0d5043e91a85c954e14c6b91f"));
+      BOOST_CHECK(key.Verify(hash, vchSigParam));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
