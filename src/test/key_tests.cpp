@@ -167,6 +167,19 @@ BOOST_AUTO_TEST_CASE(long_signature_length_test)
       const std::vector<unsigned char>& vchSigParam(ParseHex("3085000000004a0285000000002100d1c453ddcaae9215a24fc86d50916b66117839d163402d9ed21a1f4aba3173e302200ce3d43a4c4841a340c267c9fa1f3aa43c1e51c0d5043e91a85c954e14c6b91f"));
       BOOST_CHECK(key.Verify(hash, vchSigParam));
   }
+
+  {
+      // R length on 8 bytes
+      const std::vector<unsigned char>& vchSigParam(ParseHex("304d0288000000000000002100d1c453ddcaae9215a24fc86d50916b66117839d163402d9ed21a1f4aba3173e302200ce3d43a4c4841a340c267c9fa1f3aa43c1e51c0d5043e91a85c954e14c6b91f"));
+      BOOST_CHECK(key.Verify(hash, vchSigParam));
+  }
+
+  {
+      // R length on 9 bytes
+      // Rejected by OpenSSL 64 bits, so it should be always rejected
+      const std::vector<unsigned char>& vchSigParam(ParseHex("304e028900000000000000002100d1c453ddcaae9215a24fc86d50916b66117839d163402d9ed21a1f4aba3173e302200ce3d43a4c4841a340c267c9fa1f3aa43c1e51c0d5043e91a85c954e14c6b91f"));
+      BOOST_CHECK(!key.Verify(hash, vchSigParam));
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

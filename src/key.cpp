@@ -392,6 +392,10 @@ static bool ParseLength(
 
     unsigned char nLengthBytes = nLengthRet & 0x7f;
 
+    // Lengths on more than 8 bytes are rejected by OpenSSL 64 bits
+    if (nLengthBytes > 8)
+        return false;
+
     nLengthRet = 0;
     for (unsigned char i = 0; i < nLengthBytes; i++)
     {
