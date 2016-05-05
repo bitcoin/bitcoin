@@ -1235,7 +1235,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                         CleanupBlockRevFiles();
                 }
 
-                if (!LoadBlockIndex()) {
+                if (!LoadBlockIndex(chainparams)) {
                     strLoadError = _("Error loading block database");
                     break;
                 }
@@ -1354,7 +1354,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         nLocalServices &= ~NODE_NETWORK;
         if (!fReindex) {
             uiInterface.InitMessage(_("Pruning blockstore..."));
-            PruneAndFlush();
+            PruneAndFlush(chainparams);
         }
     }
 
