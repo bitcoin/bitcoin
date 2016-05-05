@@ -295,18 +295,18 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     LOCK(cs_budget);
 
     // todo - 12.1 - change to MNGOVERNANCEVOTESYNC
-    if (strCommand == NetMsgType::mngovernanceVOTESYNC) { //Masternode vote sync
+    if (strCommand == NetMsgType::MNGOVERNANCEVOTESYNC) { //Masternode vote sync
         uint256 nProp;
         vRecv >> nProp;
 
         if(Params().NetworkIDString() == CBaseChainParams::MAIN){
             if(nProp == uint256()) {
-                if(pfrom->HasFulfilledRequest(NetMsgType::mngovernanceVOTESYNC)) {
+                if(pfrom->HasFulfilledRequest(NetMsgType::MNGOVERNANCEVOTESYNC)) {
                     LogPrintf("mnvs - peer already asked me for the list\n");
                     Misbehaving(pfrom->GetId(), 20);
                     return;
                 }
-                pfrom->FulfilledRequest(NetMsgType::mngovernanceVOTESYNC);
+                pfrom->FulfilledRequest(NetMsgType::MNGOVERNANCEVOTESYNC);
             }
         }
 
@@ -316,7 +316,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     }
 
     // todo - 12.1 - change to MNGOVERNANCEPROPOSAL
-    if (strCommand == NetMsgType::mngovernancePROPOSAL) { //Masternode Proposal
+    if (strCommand == NetMsgType::MNGOVERNANCEPROPOSAL) { //Masternode Proposal
         CGovernanceObject budgetProposalBroadcast;
         vRecv >> budgetProposalBroadcast;
 
@@ -351,7 +351,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     }
 
     // todo - 12.1 - change to MNGOVERNANCEVOTE
-    if (strCommand == NetMsgType::mngovernanceVOTE) { //Masternode Vote
+    if (strCommand == NetMsgType::MNGOVERNANCEVOTE) { //Masternode Vote
         CBudgetVote vote;
         vRecv >> vote;
         vote.fValid = true;
@@ -494,7 +494,7 @@ bool CGovernanceManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::st
             mapOrphanMasternodeBudgetVotes[vote.nParentHash] = vote;
 
             if(!askedForSourceProposalOrBudget.count(vote.nParentHash)){
-                pfrom->PushMessage(NetMsgType::mngovernanceVOTESYNC, vote.nParentHash);
+                pfrom->PushMessage(NetMsgType::MNGOVERNANCEVOTESYNC, vote.nParentHash);
                 askedForSourceProposalOrBudget[vote.nParentHash] = GetTime();
             }
         }
