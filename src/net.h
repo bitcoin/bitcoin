@@ -357,7 +357,7 @@ public:
     // a) it allows us to not relay tx invs before receiving the peer's version message
     // b) the peer may tell us in its version message that we should not relay tx invs
     //    unless it loads a bloom filter.
-    bool fRelayTxes;
+    bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
@@ -397,7 +397,13 @@ public:
 
     // inventory based relay
     CRollingBloomFilter filterInventoryKnown;
-    std::vector<CInv> vInventoryToSend;
+    // Set of transaction ids we still have to announce.
+    // They are sorted by the mempool before relay, so the order is not important.
+    std::set<uint256> setInventoryTxToSend;
+    // List of block ids we still have announce.
+    // There is no final sorting before sending, as they are always sent immediately
+    // and in the order requested.
+    std::vector<uint256> vInventoryBlockToSend;
     CCriticalSection cs_inventory;
     std::set<uint256> setAskFor;
     std::multimap<int64_t, CInv> mapAskFor;
@@ -405,6 +411,8 @@ public:
     // Used for headers announcements - unfiltered blocks to relay
     // Also protected by cs_inventory
     std::vector<uint256> vBlockHashesToAnnounce;
+    // Used for BIP35 mempool sending, also protected by cs_inventory
+    bool fSendMempool;
 
     // Ping time measurement:
     // The pong reply we're expecting, or 0 if no pong expected.
@@ -517,11 +525,13 @@ public:
 
     void PushInventory(const CInv& inv)
     {
-        {
-            LOCK(cs_inventory);
-            if (inv.type == MSG_TX && filterInventoryKnown.contains(inv.hash))
-                return;
-            vInventoryToSend.push_back(inv);
+        LOCK(cs_inventory);
+        if (inv.type == MSG_TX) {
+            if (!filterInventoryKnown.contains(inv.hash)) {
+                setInventoryTxToSend.insert(inv.hash);
+            }
+        } else if (inv.type == MSG_BLOCK) {
+            vInventoryBlockToSend.push_back(inv.hash);
         }
     }
 
