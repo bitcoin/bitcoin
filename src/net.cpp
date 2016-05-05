@@ -1729,7 +1729,6 @@ void ThreadMessageHandler()
     boost::mutex condition_mutex;
     boost::unique_lock<boost::mutex> lock(condition_mutex);
 
-    SetThreadPriority(THREAD_PRIORITY_BELOW_NORMAL);
     while (true)
     {
         vector<CNode*> vNodesCopy;
