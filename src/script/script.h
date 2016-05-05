@@ -9,6 +9,7 @@
 #include "crypto/common.h"
 #include "prevector.h"
 
+#include <algorithm>
 #include <assert.h>
 #include <climits>
 #include <limits>
@@ -574,16 +575,30 @@ public:
         if (b.empty())
             return nFound;
         iterator pc = begin();
+        iterator copied = begin();
+        size_t nShift = 0;
         opcodetype opcode;
         do
         {
             while (end() - pc >= (long)b.size() && memcmp(&pc[0], &b[0], b.size()) == 0)
             {
-                pc = erase(pc, pc + b.size());
+                // Lazy copy-in-place if there is a match:
+                if (nShift == 0) copied = pc;
+                else copied = std::copy(copied+nShift, pc, copied);
+                pc += b.size();
+                nShift += b.size();
                 ++nFound;
             }
         }
         while (GetOp(pc, opcode));
+
+        if (nShift > 0)
+        {
+            if (copied+nShift != end())
+                copied = std::copy(copied+nShift, end(), copied);
+            erase(copied, end());
+        }
+
         return nFound;
     }
     int Find(opcodetype op) const
