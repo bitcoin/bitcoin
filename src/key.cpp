@@ -396,18 +396,35 @@ static bool ParseLength(
     if (nLengthBytes > 8)
         return false;
 
-    nLengthRet = 0;
+    int64 nLength = 0;
     for (unsigned char i = 0; i < nLengthBytes; i++)
     {
         it++;
         if (it == end)
             return false;
-        nLengthRet = (nLengthRet << 8) | *it;
-        if (nLengthRet > 0x7f)
+        nLength = (nLength << 8) | *it;
+        if (nLength > 0x7fffffff)
             return false;
         nLengthSizeRet++;
     }
+    nLengthRet = nLength;
     return true;
+}
+
+static std::vector<unsigned char> EncodeLength(size_t nLength)
+{
+    std::vector<unsigned char> vchRet;
+    if (nLength < 0x80)
+        vchRet.push_back(nLength);
+    else
+    {
+        vchRet.push_back(0x84);
+        vchRet.push_back((nLength >> 24) & 0xff);
+        vchRet.push_back((nLength >> 16) & 0xff);
+        vchRet.push_back((nLength >> 8) & 0xff);
+        vchRet.push_back(nLength & 0xff);
+    }
+    return vchRet;
 }
 
 static bool NormalizeSignature(std::vector<unsigned char>& vchSig)
@@ -442,15 +459,23 @@ static bool NormalizeSignature(std::vector<unsigned char>& vchSig)
     const size_t nSDataStart = nSStart + 1 + nSLengthSize;
     std::vector<unsigned char> S(vchSig.begin() + nSDataStart, vchSig.begin() + nSDataStart + nSLength);
 
+    std::vector<unsigned char> vchRLength = EncodeLength(R.size());
+    std::vector<unsigned char> vchSLength = EncodeLength(S.size());
+
+    nTotalLength = 1 + vchRLength.size() + R.size() + 1 + vchSLength.size() + S.size();
+    std::vector<unsigned char> vchTotalLength = EncodeLength(nTotalLength);
+
     vchSig.clear();
-    vchSig.reserve(2 + 2 + R.size() + 2 + S.size());
+    vchSig.reserve(1 + vchTotalLength.size() + nTotalLength);
     vchSig.push_back(0x30);
-    vchSig.push_back(2 + R.size() + 2 + S.size());
+    vchSig.insert(vchSig.end(), vchTotalLength.begin(), vchTotalLength.end());
+
     vchSig.push_back(0x02);
-    vchSig.push_back(R.size());
+    vchSig.insert(vchSig.end(), vchRLength.begin(), vchRLength.end());
     vchSig.insert(vchSig.end(), R.begin(), R.end());
+
     vchSig.push_back(0x02);
-    vchSig.push_back(S.size());
+    vchSig.insert(vchSig.end(), vchSLength.begin(), vchSLength.end());
     vchSig.insert(vchSig.end(), S.begin(), S.end());
 
     return true;
