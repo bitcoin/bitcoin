@@ -412,11 +412,11 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
     return NullUniValue;
 }
 
-UniValue MNGOVERNANCEVOTEraw(const UniValue& params, bool fHelp)
+UniValue voteraw(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 6)
         throw runtime_error(
-                "MNGOVERNANCEVOTEraw <masternode-tx-hash> <masternode-tx-index> <governance-hash> <vote-outcome> [yes|no|abstain] <time> <vote-sig>\n"
+                "voteraw <masternode-tx-hash> <masternode-tx-index> <governance-hash> <vote-outcome> [yes|no|abstain] <time> <vote-sig>\n"
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
                 );
 
