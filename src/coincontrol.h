@@ -18,7 +18,9 @@ public:
     bool fAllowWatchOnly;
     //! Minimum absolute fee (not per kilobyte)
     CAmount nMinimumTotalFee;
-    //! Feerate to use (0 = estimate fee with payTxFee fallback)
+    //! Override estimated feerate
+    bool fOverrideFeeRate;
+    //! Feerate to use if overrideFeeRate is true
     CFeeRate nFeeRate;
 
     CCoinControl()
@@ -34,6 +36,7 @@ public:
         setSelected.clear();
         nMinimumTotalFee = 0;
         nFeeRate = CFeeRate(0);
+        fOverrideFeeRate = false;
     }
 
     bool HasSelected() const
