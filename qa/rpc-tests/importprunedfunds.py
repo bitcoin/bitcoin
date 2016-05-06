@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -23,7 +23,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         import time
         begintime = int(time.time())
 
-        print "Mining blocks..."
+        print("Mining blocks...")
         self.nodes[0].generate(101)
 
         # sync

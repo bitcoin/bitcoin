@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,7 +28,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         send_value = satoshi_round((value - fee)/num_outputs)
         inputs = [ {'txid' : parent_txid, 'vout' : vout} ]
         outputs = {}
-        for i in xrange(num_outputs):
+        for i in range(num_outputs):
             outputs[node.getnewaddress()] = send_value
         rawtx = node.createrawtransaction(inputs, outputs)
         signedtx = node.signrawtransaction(rawtx)
@@ -48,7 +48,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         fee = Decimal("0.0001")
         # MAX_ANCESTORS transactions off a confirmed tx should be fine
         chain = []
-        for i in xrange(MAX_ANCESTORS):
+        for i in range(MAX_ANCESTORS):
             (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, 0, value, fee, 1)
             value = sent_value
             chain.append(txid)
@@ -84,7 +84,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         try:
             self.chain_transaction(self.nodes[0], txid, vout, value, fee, 1)
         except JSONRPCException as e:
-            print "too-long-ancestor-chain successfully rejected"
+            print("too-long-ancestor-chain successfully rejected")
 
         # Check that prioritising a tx before it's added to the mempool works
         # First clear the mempool by mining a block.
@@ -121,22 +121,22 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # First create one parent tx with 10 children
         (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, vout, value, fee, 10)
         parent_transaction = txid
-        for i in xrange(10):
+        for i in range(10):
             transaction_package.append({'txid': txid, 'vout': i, 'amount': sent_value})
 
-        for i in xrange(MAX_DESCENDANTS):
+        for i in range(MAX_DESCENDANTS):
             utxo = transaction_package.pop(0)
             try:
                 (txid, sent_value) = self.chain_transaction(self.nodes[0], utxo['txid'], utxo['vout'], utxo['amount'], fee, 10)
-                for j in xrange(10):
+                for j in range(10):
                     transaction_package.append({'txid': txid, 'vout': j, 'amount': sent_value})
                 if i == MAX_DESCENDANTS - 2:
                     mempool = self.nodes[0].getrawmempool(True)
                     assert_equal(mempool[parent_transaction]['descendantcount'], MAX_DESCENDANTS)
             except JSONRPCException as e:
-                print e.error['message']
+                print(e.error['message'])
                 assert_equal(i, MAX_DESCENDANTS - 1)
-                print "tx that would create too large descendant package successfully rejected"
+                print("tx that would create too large descendant package successfully rejected")
 
         # TODO: check that node1's mempool is as expected
 
@@ -171,7 +171,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         send_value = satoshi_round((value - fee)/2)
         inputs = [ {'txid' : txid, 'vout' : vout} ]
         outputs = {}
-        for i in xrange(2):
+        for i in range(2):
             outputs[self.nodes[0].getnewaddress()] = send_value
         rawtx = self.nodes[0].createrawtransaction(inputs, outputs)
         signedtx = self.nodes[0].signrawtransaction(rawtx)
@@ -185,7 +185,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         # Create tx2-7
         vout = 1
         txid = tx0_id
-        for i in xrange(6):
+        for i in range(6):
             (txid, sent_value) = self.chain_transaction(self.nodes[0], txid, vout, value, fee, 1)
             vout = 0
             value = sent_value

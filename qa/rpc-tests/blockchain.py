@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -50,15 +50,15 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
-        assert_equal(res[u'total_amount'], Decimal('98214.28571450'))
-        assert_equal(res[u'transactions'], 200)
-        assert_equal(res[u'height'], 200)
-        assert_equal(res[u'txouts'], 200)
+        assert_equal(res['total_amount'], Decimal('98214.28571450'))
+        assert_equal(res['transactions'], 200)
+        assert_equal(res['height'], 200)
+        assert_equal(res['txouts'], 200)
         size = res['disk_size']
         assert size > 6400
         assert size < 64000
-        assert_equal(len(res[u'bestblock']), 64)
-        assert_equal(len(res[u'hash_serialized_2']), 64)
+        assert_equal(len(res['bestblock']), 64)
+        assert_equal(len(res['hash_serialized_2']), 64)
 
         print("Test that gettxoutsetinfo() works for blockchain with just the genesis block")
         b1hash = node.getblockhash(1)

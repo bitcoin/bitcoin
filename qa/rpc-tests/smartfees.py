@@ -1,5 +1,5 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014-2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -260,7 +260,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.confutxo = self.txouts # Start with the set of confirmed txouts after splitting
         print("Will output estimates for 1/2/3/6/15/25 blocks")
 
-        for i in xrange(2):
+        for i in range(2):
             print("Creating transactions and mining them with a block size that can't keep up")
             # Create transactions and mine 10 small blocks with node 2, but create txs faster than we can mine
             self.transact_and_mine(10, self.nodes[2])

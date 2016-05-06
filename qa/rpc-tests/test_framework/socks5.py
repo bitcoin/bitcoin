@@ -1,11 +1,12 @@
-# Copyright (c) 2015 The Bitcoin Core developers
+#!/usr/bin/env python3
+# Copyright (c) 2015-2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
 Dummy Socks5 server for testing.
 '''
-from __future__ import print_function, division, unicode_literals
-import socket, threading, Queue
+
+import socket, threading, queue
 import traceback, sys
 
 ### Protocol constants
@@ -132,7 +133,7 @@ class Socks5Server(object):
         self.s.listen(5)
         self.running = False
         self.thread = None
-        self.queue = Queue.Queue() # report connections and exceptions to client
+        self.queue = queue.Queue() # report connections and exceptions to client
 
     def run(self):
         while self.running:
