@@ -4,6 +4,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "base58.h"
 #include "miner.h"
 #include "pubkey.h"
 
@@ -30,6 +31,7 @@
 
 #include <boost/tuple/tuple.hpp>
 #include <queue>
+#include <script/standard.cpp>
 
 using namespace std;
 
@@ -556,7 +558,6 @@ CScript Mining::ScriptForCoinbase(const string &coinbase)
         answer << ToByteVector(data) << OP_CHECKSIG;
         return answer;
     }
-
     throw std::runtime_error("pubkey not in recognized format");
 }
 

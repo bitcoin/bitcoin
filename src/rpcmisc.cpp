@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (C) 2016 Tom Zander <tomz@freedommail.ch>
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -395,4 +396,31 @@ UniValue setmocktime(const UniValue& params, bool fHelp)
     }
 
     return NullUniValue;
+}
+
+UniValue createaddress(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 0)
+        throw runtime_error(
+            "createaddress\n"
+            "\nCreates a new address and returns the public and private keys, after which the server immediately forgets the address and keys\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"address\" : \"bitcoinaddress\", (string) The bitcoin address\n"
+            "  \"pubkey\"  : \"hex\",            (string) The raw (hex encoded) pubkey\n"
+            "  \"private\" : \"hex\",            (string) The hex encoded private key\n"
+            "}\n"
+        );
+
+    CKey key;
+    key.MakeNewKey(true);
+
+    // return all useful descriptions of key
+    UniValue ret(UniValue::VOBJ);
+    CPubKey vchAddress = key.GetPubKey();
+    ret.push_back(Pair("address", CBitcoinAddress(vchAddress.GetID()).ToString()));
+    ret.push_back(Pair("pubkey", HexStr(vchAddress.begin(), vchAddress.end())));
+    ret.push_back(Pair("private", CBitcoinSecret(key).ToString()));
+
+    return ret;
 }
