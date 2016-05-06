@@ -438,7 +438,7 @@ class CTxWitness(object):
         self.vtxinwit = []
 
     def deserialize(self, f):
-        for i in xrange(len(self.vtxinwit)):
+        for i in range(len(self.vtxinwit)):
             self.vtxinwit[i].deserialize(f)
 
     def serialize(self):
@@ -525,7 +525,7 @@ class CTransaction(object):
             if (len(self.wit.vtxinwit) != len(self.vin)):
                 # vtxinwit must have the same length as vin
                 self.wit.vtxinwit = self.wit.vtxinwit[:len(self.vin)]
-                for i in xrange(len(self.wit.vtxinwit), len(self.vin)):
+                for i in range(len(self.wit.vtxinwit), len(self.vin)):
                     self.wit.vtxinwit.append(CTxinWitness())
             r += self.wit.serialize()
         r += struct.pack("<I", self.nLockTime)

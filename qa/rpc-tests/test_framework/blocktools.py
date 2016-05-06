@@ -27,7 +27,7 @@ WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
 # According to BIP141, blocks with witness rules active must commit to the
 # hash of all in-block transactions including witness.
-def add_witness_commitment(block, nonce=0L):
+def add_witness_commitment(block, nonce=0):
     # First calculate the merkle root of the block's
     # transactions, with witnesses.
     witness_nonce = nonce

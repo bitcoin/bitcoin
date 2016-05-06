@@ -906,9 +906,9 @@ def SignatureHash(script, txTo, inIdx, hashtype):
 # for version 0 witnesses.
 def SegwitVersion1SignatureHash(script, txTo, inIdx, hashtype, amount):
 
-    hashPrevouts = 0L
-    hashSequence = 0L
-    hashOutputs = 0L
+    hashPrevouts = 0
+    hashSequence = 0
+    hashOutputs = 0
 
     if not (hashtype & SIGHASH_ANYONECANPAY):
         serialize_prevouts = bytes()
