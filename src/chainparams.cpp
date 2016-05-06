@@ -190,8 +190,8 @@ public:
 
         // Deployment of SegWit (BIP141 and BIP143)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 2000000000; // Far in the future
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 2100000000;
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1462060800; // May 1st 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
 
         pchMessageStart[0] = 0x0b;
         pchMessageStart[1] = 0x11;
