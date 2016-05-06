@@ -1009,6 +1009,7 @@ static UniValue BIP9SoftForkDesc(const Consensus::Params& consensusParams, Conse
     }
     rv.push_back(Pair("startTime", consensusParams.vDeployments[id].nStartTime));
     rv.push_back(Pair("timeout", consensusParams.vDeployments[id].nTimeout));
+    rv.push_back(Pair("since", VersionBitsTipStateSinceHeight(consensusParams, id)));
     return rv;
 }
 
@@ -1053,7 +1054,8 @@ UniValue getblockchaininfo(const UniValue& params, bool fHelp)
             "        \"status\": \"xxxx\",    (string) one of \"defined\", \"started\", \"locked_in\", \"active\", \"failed\"\n"
             "        \"bit\": xx,             (numeric) the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)\n"
             "        \"startTime\": xx,       (numeric) the minimum median time past of a block at which the bit gains its meaning\n"
-            "        \"timeout\": xx          (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
+            "        \"timeout\": xx,         (numeric) the median time past of a block at which the deployment is considered failed if not yet locked in\n"
+            "        \"since\": xx            (numeric) height of the first block to which the status applies\n"
             "     }\n"
             "  }\n"
             "}\n"
