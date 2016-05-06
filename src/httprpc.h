@@ -9,6 +9,7 @@
 #include <map>
 
 class HTTPRequest;
+class UniValue;
 
 /** Start HTTP RPC subsystem.
  * Precondition; HTTP and RPC has been started.
@@ -33,5 +34,14 @@ void InterruptREST();
  * Precondition; HTTP and RPC has been stopped.
  */
 void StopREST();
+
+/** Handles authentication, checks httpbase-auth header.
+ * Write authorize header if required.
+ * Responses true/false and populates the HTTPRequest
+ */
+bool HTTPReq_HandleAuth(HTTPRequest* req);
+
+/** populates HTTPRequest with the UniValue objError and the JSONRPC request id */
+void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const UniValue& id);
 
 #endif

@@ -41,6 +41,11 @@
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #endif
+#ifdef ENABLE_LIGHTWALLET
+#include "lightwallet/db.h"
+#include "lightwallet/wallet.h"
+#include "lightwallet/walletdb.h"
+#endif
 #include <stdint.h>
 #include <stdio.h>
 
@@ -379,6 +384,9 @@ std::string HelpMessage(HelpMessageMode mode)
 
 #ifdef ENABLE_WALLET
     strUsage += CWallet::GetWalletHelpString(showDebug);
+#endif
+#ifdef ENABLE_LIGHTWALLET
+    strUsage += Lightwallet::CWallet::GetWalletHelpString(showDebug);
 #endif
 
 #if ENABLE_ZMQ
@@ -901,6 +909,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!fDisableWallet)
         RegisterWalletRPCCommands(tableRPC);
 #endif
+#ifdef ENABLE_LIGHTWALLET
+    bool fDisableLightWallet = GetBoolArg("-disablelightwallet", false);
+    if (!fDisableLightWallet)
+        Lightwallet::RegisterWalletRPCCommands(tableRPC);
+#endif
 
     nConnectTimeout = GetArg("-timeout", DEFAULT_CONNECT_TIMEOUT);
     if (nConnectTimeout <= 0)
@@ -930,6 +943,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (!CWallet::ParameterInteraction())
         return false;
 #endif // ENABLE_WALLET
+#ifdef ENABLE_LIGHTWALLET
+    if (!Lightwallet::CWallet::ParameterInteraction())
+        return false;
+#endif // ENABLE_LIGHTWALLET
 
     fIsBareMultisigStd = GetBoolArg("-permitbaremultisig", DEFAULT_PERMIT_BAREMULTISIG);
     fAcceptDatacarrier = GetBoolArg("-datacarrier", DEFAULT_ACCEPT_DATACARRIER);
@@ -1028,6 +1045,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
             return false;
     } // (!fDisableWallet)
 #endif // ENABLE_WALLET
+#ifdef ENABLE_LIGHTWALLET
+    if (!fDisableLightWallet) {
+        if (!Lightwallet::CWallet::Verify())
+            return false;
+    }
+#endif // ENABLE_LIGHTWALLET
     // ********************************************************* Step 6: network initialization
 
     RegisterNodeSignals(GetNodeSignals());
@@ -1341,10 +1364,21 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         if (!pwalletMain)
             return false;
     }
-#else // ENABLE_WALLET
-    LogPrintf("No wallet support compiled in!\n");
 #endif // !ENABLE_WALLET
+#ifdef ENABLE_LIGHTWALLET
+    if (fDisableLightWallet) {
+        Lightwallet::pwalletMain = NULL;
+        LogPrintf("LightWallet disabled!\n");
+    } else {
+        Lightwallet::CWallet::InitLoadWallet();
+        if (!Lightwallet::pwalletMain)
+            return false;
+    }
+#endif // ENABLE_LIGHTWALLET
 
+#if !defined(ENABLE_WALLET) && !defined(ENABLE_LIGHTWALLET)
+    LogPrintf("No wallet support compiled in!\n");
+#endif
     // ********************************************************* Step 9: data directory maintenance
 
     // if pruning, unset the service bit and perform the initial blockstore prune
@@ -1424,6 +1458,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
         // Run a thread to flush wallet periodically
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
+    }
+#endif
+#ifdef ENABLE_LIGHTWALLET
+    if (Lightwallet::pwalletMain) {
+        // Add wallet transactions that aren't already in a block to mapTransactions
+        Lightwallet::pwalletMain->ReacceptWalletTransactions();
+
+        // Run a thread to flush wallet periodically
+        threadGroup.create_thread(boost::bind(&Lightwallet::ThreadFlushWalletDB, boost::ref(Lightwallet::pwalletMain->strWalletFile)));
     }
 #endif
 

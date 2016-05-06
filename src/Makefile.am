@@ -22,6 +22,7 @@ BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
+LIBBITCOIN_LIGHTWALLET=libbitcoin_lightwallet.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
@@ -45,6 +46,10 @@ EXTRA_LIBRARIES += \
 if ENABLE_WALLET
 BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
 EXTRA_LIBRARIES += libbitcoin_wallet.a
+endif
+if ENABLE_LIGHTWALLET
+BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
+EXTRA_LIBRARIES += libbitcoin_lightwallet.a
 endif
 if ENABLE_ZMQ
 EXTRA_LIBRARIES += libbitcoin_zmq.a
@@ -98,6 +103,12 @@ BITCOIN_CORE_H = \
   key.h \
   keystore.h \
   dbwrapper.h \
+  lightwallet/crypter.h \
+  lightwallet/db.h \
+  lightwallet/rpcwallet.h \
+  lightwallet/wallet.h \
+  lightwallet/wallet_ismine.h \
+  lightwallet/walletdb.h \
   limitedmap.h \
   main.h \
   memusage.h \
@@ -221,6 +232,21 @@ libbitcoin_wallet_a_SOURCES = \
   policy/rbf.cpp \
   $(BITCOIN_CORE_H)
 
+# wallet: shared between bitcoind and bitcoin-qt, but only linked
+# when wallet enabled
+libbitcoin_lightwallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_lightwallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoin_lightwallet_a_SOURCES = \
+  lightwallet/crypter.cpp \
+  lightwallet/db.cpp \
+  lightwallet/rpcdump.cpp \
+  lightwallet/rpcwallet.cpp \
+  lightwallet/wallet.cpp \
+  lightwallet/wallet_ismine.cpp \
+  lightwallet/walletdb.cpp \
+  policy/rbf.cpp \
+  $(BITCOIN_CORE_H)
+	
 # crypto primitives library
 crypto_libbitcoin_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES)
 crypto_libbitcoin_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -359,6 +385,10 @@ if ENABLE_WALLET
 bitcoind_LDADD += libbitcoin_wallet.a
 endif
 
+if ENABLE_LIGHTWALLET
+bitcoind_LDADD += libbitcoin_lightwallet.a
+endif
+
 bitcoind_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 
 # bitcoin-cli binary #
@@ -430,6 +460,8 @@ CLEANFILES += support/*.gcda support/*.gcno
 CLEANFILES += univalue/*.gcda univalue/*.gcno
 CLEANFILES += wallet/*.gcda wallet/*.gcno
 CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
+CLEANFILES += lightwallet/*.gcda lightwallet/*.gcno
+CLEANFILES += lightwallet/test/*.gcda lightwallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 
 DISTCLEANFILES = obj/build.h
