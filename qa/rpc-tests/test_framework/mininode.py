@@ -1,7 +1,12 @@
-# mininode.py - Bitcoin P2P network half-a-node
-#
-# Distributed under the MIT/X11 software license, see the accompanying
+#!/usr/bin/env python3
+# Copyright (c) 2010 ArtForz -- public domain half-a-node
+# Copyright (c) 2012 Jeff Garzik
+# Copyright (c) 2010-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#
+# mininode.py - Bitcoin P2P network half-a-node
 #
 # This python code was modified from ArtForz' public domain  half-a-node, as
 # found in the mini-node branch of http://github.com/jgarzik/pynode.
@@ -34,12 +39,12 @@ import copy
 
 BIP0031_VERSION = 60000
 MY_VERSION = 60001  # past bip-31 for ping/pong
-MY_SUBVERSION = b"/python-mininode-tester:0.0.2/"
+MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 
 MAX_INV_SZ = 50000
 MAX_BLOCK_SIZE = 1000000
 
-COIN = 100000000L # 1 btc in satoshis
+COIN = 100000000 # 1 btc in satoshis
 
 # Keep our own socket map for asyncore, so that we can track disconnects
 # ourselves (to workaround an issue with closing an asyncore socket when 
@@ -73,20 +78,18 @@ def deser_string(f):
         nit = struct.unpack("<Q", f.read(8))[0]
     return f.read(nit)
 
-
 def ser_string(s):
     if len(s) < 253:
         return struct.pack("B", len(s)) + s
     elif len(s) < 0x10000:
         return struct.pack("<BH", 253, len(s)) + s
-    elif len(s) < 0x100000000L:
+    elif len(s) < 0x100000000:
         return struct.pack("<BI", 254, len(s)) + s
     return struct.pack("<BQ", 255, len(s)) + s
 
-
 def deser_uint256(f):
-    r = 0L
-    for i in xrange(8):
+    r = 0
+    for i in range(8):
         t = struct.unpack("<I", f.read(4))[0]
         r += t << (i * 32)
     return r
@@ -94,23 +97,23 @@ def deser_uint256(f):
 
 def ser_uint256(u):
     rs = b""
-    for i in xrange(8):
-        rs += struct.pack("<I", u & 0xFFFFFFFFL)
+    for i in range(8):
+        rs += struct.pack("<I", u & 0xFFFFFFFF)
         u >>= 32
     return rs
 
 
 def uint256_from_str(s):
-    r = 0L
+    r = 0
     t = struct.unpack("<IIIIIIII", s[:32])
-    for i in xrange(8):
+    for i in range(8):
         r += t[i] << (i * 32)
     return r
 
 
 def uint256_from_compact(c):
     nbytes = (c >> 24) & 0xFF
-    v = (c & 0xFFFFFFL) << (8 * (nbytes - 3))
+    v = (c & 0xFFFFFF) << (8 * (nbytes - 3))
     return v
 
 
@@ -123,7 +126,7 @@ def deser_vector(f, c):
     elif nit == 255:
         nit = struct.unpack("<Q", f.read(8))[0]
     r = []
-    for i in xrange(nit):
+    for i in range(nit):
         t = c()
         t.deserialize(f)
         r.append(t)
@@ -136,7 +139,7 @@ def ser_vector(l):
         r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
         r = struct.pack("<BH", 253, len(l))
-    elif len(l) < 0x100000000L:
+    elif len(l) < 0x100000000:
         r = struct.pack("<BI", 254, len(l))
     else:
         r = struct.pack("<BQ", 255, len(l))
@@ -154,7 +157,7 @@ def deser_uint256_vector(f):
     elif nit == 255:
         nit = struct.unpack("<Q", f.read(8))[0]
     r = []
-    for i in xrange(nit):
+    for i in range(nit):
         t = deser_uint256(f)
         r.append(t)
     return r
@@ -166,7 +169,7 @@ def ser_uint256_vector(l):
         r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
         r = struct.pack("<BH", 253, len(l))
-    elif len(l) < 0x100000000L:
+    elif len(l) < 0x100000000:
         r = struct.pack("<BI", 254, len(l))
     else:
         r = struct.pack("<BQ", 255, len(l))
@@ -184,7 +187,7 @@ def deser_string_vector(f):
     elif nit == 255:
         nit = struct.unpack("<Q", f.read(8))[0]
     r = []
-    for i in xrange(nit):
+    for i in range(nit):
         t = deser_string(f)
         r.append(t)
     return r
@@ -196,7 +199,7 @@ def ser_string_vector(l):
         r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
         r = struct.pack("<BH", 253, len(l))
-    elif len(l) < 0x100000000L:
+    elif len(l) < 0x100000000:
         r = struct.pack("<BI", 254, len(l))
     else:
         r = struct.pack("<BQ", 255, len(l))
@@ -214,7 +217,7 @@ def deser_int_vector(f):
     elif nit == 255:
         nit = struct.unpack("<Q", f.read(8))[0]
     r = []
-    for i in xrange(nit):
+    for i in range(nit):
         t = struct.unpack("<i", f.read(4))[0]
         r.append(t)
     return r
@@ -226,7 +229,7 @@ def ser_int_vector(l):
         r = struct.pack("B", len(l))
     elif len(l) < 0x10000:
         r = struct.pack("<BH", 253, len(l))
-    elif len(l) < 0x100000000L:
+    elif len(l) < 0x100000000:
         r = struct.pack("<BI", 254, len(l))
     else:
         r = struct.pack("<BQ", 255, len(l))
@@ -277,7 +280,7 @@ class CInv(object):
         1: "TX",
         2: "Block"}
 
-    def __init__(self, t=0, h=0L):
+    def __init__(self, t=0, h=0):
         self.type = t
         self.hash = h
 
@@ -528,7 +531,7 @@ class CBlock(CBlockHeader):
             hashes.append(ser_uint256(tx.sha256))
         while len(hashes) > 1:
             newhashes = []
-            for i in xrange(0, len(hashes), 2):
+            for i in range(0, len(hashes), 2):
                 i2 = min(i+1, len(hashes)-1)
                 newhashes.append(hash256(hashes[i] + hashes[i2]))
             hashes = newhashes
@@ -781,7 +784,7 @@ class msg_getblocks(object):
 
     def __init__(self):
         self.locator = CBlockLocator()
-        self.hashstop = 0L
+        self.hashstop = 0
 
     def deserialize(self, f):
         self.locator = CBlockLocator()
@@ -869,7 +872,7 @@ class msg_ping_prebip31(object):
 class msg_ping(object):
     command = b"ping"
 
-    def __init__(self, nonce=0L):
+    def __init__(self, nonce=0):
         self.nonce = nonce
 
     def deserialize(self, f):
@@ -941,7 +944,7 @@ class msg_getheaders(object):
 
     def __init__(self):
         self.locator = CBlockLocator()
-        self.hashstop = 0L
+        self.hashstop = 0
 
     def deserialize(self, f):
         self.locator = CBlockLocator()
@@ -989,7 +992,7 @@ class msg_reject(object):
         self.message = b""
         self.code = 0
         self.reason = b""
-        self.data = 0L
+        self.data = 0
 
     def deserialize(self, f):
         self.message = deser_string(f)
@@ -1030,7 +1033,7 @@ def wait_until(predicate, attempts=float('inf'), timeout=float('inf')):
 class msg_feefilter(object):
     command = b"feefilter"
 
-    def __init__(self, feerate=0L):
+    def __init__(self, feerate=0):
         self.feerate = feerate
 
     def deserialize(self, f):
@@ -1079,10 +1082,10 @@ class NodeConnCB(object):
             time.sleep(deliver_sleep)
         with mininode_lock:
             try:
-                getattr(self, 'on_' + message.command)(conn, message)
+                getattr(self, 'on_' + message.command.decode('ascii'))(conn, message)
             except:
-                print "ERROR delivering %s (%s)" % (repr(message),
-                                                    sys.exc_info()[0])
+                print("ERROR delivering %s (%s)" % (repr(message),
+                                                    sys.exc_info()[0]))
 
     def on_version(self, conn, message):
         if message.nVersion >= 209:
@@ -1200,8 +1203,8 @@ class NodeConn(asyncore.dispatcher):
         vt.addrFrom.ip = "0.0.0.0"
         vt.addrFrom.port = 0
         self.send_message(vt, True)
-        print 'MiniNode: Connecting to Bitcoin Node IP # ' + dstaddr + ':' \
-            + str(dstport)
+        print('MiniNode: Connecting to Bitcoin Node IP # ' + dstaddr + ':' \
+            + str(dstport))
 
         try:
             self.connect((dstaddr, dstport))
@@ -1294,7 +1297,9 @@ class NodeConn(asyncore.dispatcher):
                     self.show_debug_msg("Unknown command: '" + command + "' " +
                                         repr(msg))
         except Exception as e:
-            print 'got_data:', repr(e)
+            print('got_data:', repr(e))
+            # import  traceback
+            # traceback.print_tb(sys.exc_info()[2])
 
     def send_message(self, message, pushbuf=False):
         if self.state != "connected" and not pushbuf:
