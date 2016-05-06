@@ -452,8 +452,8 @@ Then when building, override the remote URLs that gbuild would otherwise pull fr
 cd /some/root/path/
 git clone https://github.com/dashpay/dash-detached-sigs.git
 
-BTCPATH=/some/root/path/dash.git
-SIGPATH=/some/root/path/dash-detached-sigs.git
+BTCPATH=/some/root/path/dash
+SIGPATH=/some/root/path/dash-detached-sigs
 
 ./bin/gbuild --url dash=${BTCPATH},signature=${SIGPATH} ../dash/contrib/gitian-descriptors/gitian-win-signer.yml
 ```
