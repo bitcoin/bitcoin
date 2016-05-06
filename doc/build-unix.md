@@ -128,7 +128,7 @@ Dependency Build Instructions: Fedora
 -------------------------------------
 Build requirements:
 
-    sudo dnf install libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel
+    sudo dnf install gcc-c++ libtool make autoconf automake openssl-devel libevent-devel boost-devel libdb4-devel libdb4-cxx-devel
 
 Optional:
 
@@ -136,7 +136,7 @@ Optional:
 
 To build with Qt 5 (recommended) you need the following:
 
-    sudo dnf install qt5-qttools-devel qtr5-qtbase-devel protobuf-devel
+    sudo dnf install qt5-qttools-devel qt5-qtbase-devel protobuf-devel
 
 libqrencode (optional) can be installed with:
 
