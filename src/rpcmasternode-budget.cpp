@@ -46,7 +46,7 @@ int ConvertVoteOutcome(std::string strVoteOutcome)
 
     // convert custom sentinel outcomes to integer and store
     try {
-        int  i = std::stoi(strVoteOutcome);
+        int  i = boost::lexical_cast<int>(strVoteOutcome);
         if(i < VOTE_ACTION_CUSTOM_START || i > VOTE_ACTION_CUSTOM_END) return -1;
         return i;
     }

@@ -108,31 +108,33 @@ inline uint64_t le64toh(uint64_t little_endian_64bits)
 #else // WORDS_BIGENDIAN
 
 #if HAVE_DECL_HTOBE16 == 0
-inline uint16_t htobe16(uint16_t host_16bits)
+/*inline uint16_t htobe16(uint16_t host_16bits)
 {
     return bswap_16(host_16bits);
-}
+} */
 #endif // HAVE_DECL_HTOBE16
 
 #if HAVE_DECL_HTOLE16 == 0
-inline uint16_t htole16(uint16_t host_16bits)
+/*inline uint16_t htole16(uint16_t host_16bits)
 {
     return host_16bits;
-}
+} */
 #endif // HAVE_DECL_HTOLE16
 
 #if HAVE_DECL_BE16TOH == 0
+/*
 inline uint16_t be16toh(uint16_t big_endian_16bits)
 {
     return bswap_16(big_endian_16bits);
-}
+} */
 #endif // HAVE_DECL_BE16TOH
 
 #if HAVE_DECL_LE16TOH == 0
-inline uint16_t le16toh(uint16_t little_endian_16bits)
+/*
+inlineuint16_t le16toh(uint16_t little_endian_16bits)
 {
     return little_endian_16bits;
-}
+    } */
 #endif // HAVE_DECL_LE16TOH
 
 #if HAVE_DECL_HTOBE32 == 0
