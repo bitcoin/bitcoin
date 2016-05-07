@@ -4737,7 +4737,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                     std::vector<uint256> vOrphanHashes;
                                     for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                         vOrphanHashes.push_back((*mi).first);
-                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
                                     ss << inv2;
                                     ss << filterMemPool;
                                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -4753,7 +4753,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                     std::vector<uint256> vOrphanHashes;
                                     for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                         vOrphanHashes.push_back((*mi).first);
-                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                                    BuildSeededBloomFilter(filterMemPool, vOrphanHashes, inv2.hash);
                                     ss << inv2;
                                     ss << filterMemPool;
                                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -5271,7 +5271,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->thinBlock.vtx.push_back(tx);
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
-        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
+        LogPrint("thin", "Thinblock %s waiting for: %d, unnecessary: %d, txs: %d full: %d\n", inv.hash.ToString(), pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
@@ -5375,7 +5375,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             pfrom->thinBlock.vtx.push_back(tx);
         }
         pfrom->thinBlockWaitingForTxns = missingCount;
-        LogPrint("thin", "thinblock waiting for: %d, unnecessary: %d, txs: %d full: %d\n", pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
+        LogPrint("thin", "Thinblock %s waiting for: %d, unnecessary: %d, txs: %d full: %d\n", inv.hash.ToString(), pfrom->thinBlockWaitingForTxns, unnecessaryCount, pfrom->thinBlock.vtx.size(), mapMissingTx.size());
 
         if (pfrom->thinBlockWaitingForTxns == 0) {
             // We have all the transactions now that are in this block: try to reassemble and process.
@@ -6231,7 +6231,7 @@ bool SendMessages(CNode* pto)
                             std::vector<uint256> vOrphanHashes;
                             for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                 vOrphanHashes.push_back((*mi).first);
-                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes, pindex->GetBlockHash());
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);
@@ -6247,7 +6247,7 @@ bool SendMessages(CNode* pto)
                             std::vector<uint256> vOrphanHashes;
                             for (map<uint256, COrphanTx>::iterator mi = mapOrphanTransactions.begin(); mi != mapOrphanTransactions.end(); ++mi)
                                 vOrphanHashes.push_back((*mi).first);
-                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes);
+                            BuildSeededBloomFilter(filterMemPool, vOrphanHashes, pindex->GetBlockHash());
                             ss << CInv(MSG_XTHINBLOCK, pindex->GetBlockHash());
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);

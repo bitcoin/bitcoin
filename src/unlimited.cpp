@@ -622,7 +622,7 @@ bool IsChainNearlySyncd()
     return true;
 }
 
-void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& vOrphanHashes)
+void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& vOrphanHashes, uint256 hash)
 {
     LogPrint("thin", "Starting creation of bloom filter\n");
     seed_insecure_rand();
