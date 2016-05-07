@@ -2464,7 +2464,8 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     CAmount nFeeOut;
     string strFailReason;
 
-    if(!pwalletMain->FundTransaction(tx, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, changeAddress))
+    CReserveKey reservekey(pwalletMain);
+    if(!pwalletMain->FundTransaction(tx, reservekey, nFeeOut, overrideEstimatedFeerate, feeRate, changePosition, strFailReason, includeWatching, lockUnspents, changeAddress))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strFailReason);
 
     UniValue result(UniValue::VOBJ);

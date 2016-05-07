@@ -316,9 +316,8 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     if (ui->optInRBF->isChecked())
     {
-        questionString.append("<hr /><span style='color:#aa0000;'>");
-        questionString.append(tr("This transaction is replacable (optin-RBF)!"));
-        questionString.append("</span>");
+        questionString.append("<hr />");
+        questionString.append(tr("This transaction signals replaceability"));
     }
 
     SendConfirmationDialog confirmationDialog(tr("Confirm send coins"),
