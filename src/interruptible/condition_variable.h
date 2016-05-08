@@ -72,9 +72,9 @@ public:
         lock_type lock(m_condvar, user_lock);
         this_thread::interruption_point();
         while (!pred()) {
-            bool ret = m_condvar.wait_until(lock, abs_time) == std::cv_status::timeout;
+            auto ret = m_condvar.wait_until(lock, abs_time);
             this_thread::interruption_point();
-            if (!ret)
+            if (ret == std::cv_status::timeout)
                 return pred();
         }
         return true;
