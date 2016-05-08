@@ -6,11 +6,18 @@
 
 namespace interruptible
 {
+
+thread_group::~thread_group()
+{
+    for (auto&& thread : m_threads)
+        delete thread;
+}
+
 void thread_group::add_thread(interruptible::thread* rhs)
 {
     if (rhs != nullptr) {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_threads.emplace_back(rhs);
+        m_threads.push_back(rhs);
     }
 }
 
@@ -18,7 +25,7 @@ void thread_group::remove_thread(interruptible::thread* rhs)
 {
     if (rhs != nullptr) {
         std::lock_guard<std::mutex> lock(m_mutex);
-        m_threads.remove_if([rhs](const std::unique_ptr<interruptible::thread>& it) { return rhs->get_id() == it->get_id(); });
+        m_threads.remove_if([rhs](const interruptible::thread* it) { return rhs->get_id() == it->get_id(); });
     }
 }
 

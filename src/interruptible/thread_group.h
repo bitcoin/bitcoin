@@ -21,11 +21,18 @@ public:
     thread_group& operator=(const thread_group&) = delete;
 
     template <typename T, typename... Args>
-    void create_thread(T&& func, Args&&... args)
+    interruptible::thread* create_thread(T&& func, Args&&... args)
     {
-        auto thread_ptr(new interruptible::thread(std::forward<T>(func), std::forward<Args>(args)...));
-        m_threads.emplace_back(thread_ptr);
+        std::unique_ptr<interruptible::thread> thread_ptr(new interruptible::thread(std::forward<T>(func), std::forward<Args>(args)...));
+        if(thread_ptr) {
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_threads.push_back(thread_ptr.get());
+            }
+        }
+        return thread_ptr.release();
     }
+    ~thread_group();
 
     void add_thread(interruptible::thread* rhs);
     void remove_thread(interruptible::thread* rhs);
@@ -35,7 +42,7 @@ public:
 
 private:
     mutable std::mutex m_mutex;
-    std::list<std::unique_ptr<interruptible::thread> > m_threads;
+    std::list<interruptible::thread*> m_threads;
 };
 }
 
