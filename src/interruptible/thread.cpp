@@ -10,7 +10,7 @@ void interruptible::thread::start_thread(std::function<void()>&& func)
 {
     m_data = std::make_shared<interruptible::detail::thread_data>();
     auto run_thread_func = [func, this] {
-        interruptible::this_thread::detail::set_thread_data(m_data.get());
+        interruptible::this_thread::detail::set_thread_data(m_data);
         try {
             func();
         }

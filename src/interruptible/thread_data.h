@@ -55,6 +55,11 @@ public:
         return m_thread_interruption_enabled;
     }
 
+    bool should_interrupt() const
+    {
+        return m_thread_interruption_enabled && m_interrupted;
+    }
+
     std::unique_lock<std::mutex> set_cond(std::condition_variable_any* cond)
     {
         std::unique_lock<std::mutex> lock(m_wake_mutex);
@@ -73,10 +78,9 @@ public:
         return m_thread;
     }
 
+private:
     std::mutex m_wake_mutex;
     std::condition_variable_any* m_cond_wake_ptr = nullptr;
-
-private:
     bool m_thread_interruption_enabled = true;
     std::atomic<bool> m_interrupted;
     std::thread m_thread;

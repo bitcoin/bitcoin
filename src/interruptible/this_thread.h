@@ -22,10 +22,7 @@ namespace detail
 {
 std::unique_lock<std::mutex> set_cond(std::condition_variable_any* cond);
 void unset_cond(std::unique_lock<std::mutex>&& lock);
-::interruptible::detail::thread_data* get_thread_data();
-void set_thread_data(::interruptible::detail::thread_data* indata);
-void interrupt();
-bool check_interrupt();
+void set_thread_data(const std::shared_ptr<::interruptible::detail::thread_data>& indata);
 bool enable_interruption(bool thread_interruption_enabled);
 void sleep_until(std::chrono::time_point<std::chrono::steady_clock> endtime);
 }
