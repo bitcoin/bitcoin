@@ -25,6 +25,7 @@ void long_loop()
 static void long_sleep()
 {
     interruptible::this_thread::sleep_for(std::chrono::seconds(wait_time));
+    BOOST_CHECK(false);
 }
 
 
@@ -36,6 +37,7 @@ static void condvar_wait()
     auto start = std::chrono::steady_clock::now();
     while (std::chrono::steady_clock::now() - start < wait_time)
         cond.wait(lock);
+    BOOST_CHECK(false);
 }
 
 static void condvar_wait_pred()
@@ -45,6 +47,7 @@ static void condvar_wait_pred()
     interruptible::condition_variable cond;
     auto start = std::chrono::steady_clock::now();
     cond.wait(lock, [&] {return std::chrono::steady_clock::now() - start >= wait_time; });
+    BOOST_CHECK(false);
 }
 
 static void condvar_wait_for()
@@ -55,6 +58,7 @@ static void condvar_wait_for()
     auto start = std::chrono::steady_clock::now();
     while (std::chrono::steady_clock::now() - start < wait_time)
         cond.wait_for(lock, wait_time);
+    BOOST_CHECK(false);
 }
 
 static void condvar_wait_for_pred()
@@ -64,6 +68,7 @@ static void condvar_wait_for_pred()
     interruptible::condition_variable cond;
     auto start = std::chrono::steady_clock::now();
     cond.wait_for(lock, wait_time, [&] {return std::chrono::steady_clock::now() - start >= wait_time; });
+    BOOST_CHECK(false);
 }
 
 static void condvar_wait_until()
@@ -73,8 +78,9 @@ static void condvar_wait_until()
     interruptible::condition_variable cond;
     auto start = std::chrono::steady_clock::now();
     auto end = start + wait_time;
-    while (std::chrono::steady_clock::now() - start < wait_time)
+    while (std::chrono::steady_clock::now() < end)
         cond.wait_until(lock, end);
+    BOOST_CHECK(false);
 }
 
 static void condvar_wait_until_pred()
@@ -84,7 +90,8 @@ static void condvar_wait_until_pred()
     interruptible::condition_variable cond;
     auto start = std::chrono::steady_clock::now();
     auto end = start + wait_time;
-    cond.wait_until(lock, end, [&] {return std::chrono::steady_clock::now() - start >= wait_time; });
+    cond.wait_until(lock, end, [&] {return std::chrono::steady_clock::now() >= end; });
+    BOOST_CHECK(false);
 }
 
 static void catcher(std::function<void()>&& func)
