@@ -172,8 +172,7 @@ def runtests():
                 test_list.append(t)
 
     if print_help:
-        # Help should be the same for all scripts, so just
-        # call the first and exit
+        # Only print help of the first script and exit
         subprocess.check_call(RPC_TESTS_DIR + test_list[0] + ' -h', shell=True)
         sys.exit(0)
 
