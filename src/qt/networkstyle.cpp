@@ -62,6 +62,9 @@ NetworkStyle::NetworkStyle(const QString &appName, const int iconColorHueShift, 
     appName(appName),
     titleAddText(qApp->translate("SplashScreen", titleAddText))
 {
+    // Allow for separate UI settings for testnets
+    QApplication::setApplicationName(appName);
+    // Grab theme from settings
     QString theme = GUIUtil::getThemeName();
     // load pixmap
     QPixmap appIconPixmap(":/icons/bitcoin");
