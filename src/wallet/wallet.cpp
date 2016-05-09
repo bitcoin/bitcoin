@@ -295,7 +295,7 @@ void CWallet::SetBestChain(const CBlockLocator& loc)
     walletdb.WriteBestBlock(loc);
 }
 
-bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn, bool fExplicit)
+bool CWallet::SetMinVersion(enum WalletFeature nVersion, bool fExplicit)
 {
     LOCK(cs_wallet); // nWalletVersion
     if (nWalletVersion >= nVersion)
@@ -312,11 +312,8 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, CWalletDB* pwalletdbIn,
 
     if (fFileBacked)
     {
-        CWalletDB* pwalletdb = pwalletdbIn ? pwalletdbIn : new CWalletDB(strWalletFile);
         if (nWalletVersion > 40000)
             pwalletdb->WriteMinVersion(nWalletVersion);
-        if (!pwalletdbIn)
-            delete pwalletdb;
     }
 
     return true;
@@ -561,7 +558,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         }
 
         // Encryption was introduced in version 0.4.0
-        SetMinVersion(FEATURE_WALLETCRYPT, pwalletdb, true);
+        SetMinVersion(FEATURE_WALLETCRYPT, true);
 
         if (fFileBacked)
         {
