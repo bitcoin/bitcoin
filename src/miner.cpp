@@ -286,7 +286,7 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         LogPrintf("CreateNewBlock(): total size %u txs: %u fees: %ld sigops %d\n", nBlockSize, nBlockTx, nFees, nBlockSigOps);
 
         // Compute final coinbase transaction.
-        //txNew.vout[0].nValue = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+        txNew.vout[0].nValue = nFees + GetBlockSubsidy(pindexPrev->nBits, nHeight, chainparams.GetConsensus());
         txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
         pblock->vtx[0] = txNew;
         pblocktemplate->vTxFees[0] = -nFees;
@@ -408,20 +408,22 @@ void static BitcoinMiner(const CChainParams& chainparams)
             throw std::runtime_error("No coinbase script available (mining requires a wallet)");
 
         while (true) {
-            if (chainparams.MiningRequiresPeers()) {
-                // Busy-wait for the network to come online so we don't waste time mining
-                // on an obsolete chain. In regtest mode we expect to fly solo.
-                do {
-                    bool fvNodesEmpty;
-                    {
-                        LOCK(cs_vNodes);
-                        fvNodesEmpty = vNodes.empty();
-                    }
-                    if (!fvNodesEmpty && !IsInitialBlockDownload())
-                        break;
-                    MilliSleep(1000);
-                } while (true);
-            }
+            // 12.1: testing note -- disabled for now
+            // if (chainparams.MiningRequiresPeers()) {
+            //     // Busy-wait for the network to come online so we don't waste time mining
+            //     // on an obsolete chain. In regtest mode we expect to fly solo.
+            //     do {
+            //         bool fvNodesEmpty;
+            //         {
+            //             LOCK(cs_vNodes);
+            //             fvNodesEmpty = vNodes.empty();
+            //         }
+            //         if (!fvNodesEmpty && !IsInitialBlockDownload())
+            //             break;
+            //         MilliSleep(1000);
+            //     } while (true);
+            // }
+
 
             //
             // Create new block

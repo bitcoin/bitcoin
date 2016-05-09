@@ -803,6 +803,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     CAmount nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
+        printf("%s\n", tx.ToString().c_str());
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
         if (txout.nValue > MAX_MONEY)
@@ -1447,23 +1448,11 @@ int64_t GetTotalCoinEstimate(int nHeight)
 
     // TODO: This could be vastly improved, look at GetBlockValue for a better method
     
-    //2 million coins in first two days
-    if(nHeight > 5076) {
-        nTotalCoins += 2021642;
-    }
-
     /* these values are taken from the block explorer */
-    if(nHeight > 17000) {
-        nTotalCoins += 3267692-2021642;
-    } 
-
-    if(nHeight > 34000) {
-        nTotalCoins += 3688775-3267692; 
-    }
-
-    if(nHeight > 68000) {
-        nTotalCoins += 4277615-3688775;    
-    }
+    if(nHeight > 5076) nTotalCoins += 2021642;
+    if(nHeight > 17000) nTotalCoins += 3267692-2021642;
+    if(nHeight > 34000) nTotalCoins += 3688775-3267692; 
+    if(nHeight > 68000) nTotalCoins += 4277615-3688775;    
 
     if(nHeight > 68000*2) {
         nTotalCoins += 4649913.99999995-4277615;    
