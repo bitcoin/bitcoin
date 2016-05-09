@@ -2259,11 +2259,9 @@ void ThreadCheckDarkSendPool()
             {
                 mnodeman.CheckAndRemove();
                 mnodeman.ProcessMasternodeConnections();
-                mnpayments.CleanPaymentList();
+                mnpayments.CheckAndRemove();
                 CleanTransactionLocksList();
             }
-
-            //if(c % MASTERNODES_DUMP_SECONDS == 0) DumpMasternodes();
 
             darkSendPool.CheckTimeout();
             darkSendPool.CheckForCompleteQueue();

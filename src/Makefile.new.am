@@ -110,8 +110,12 @@ BITCOIN_CORE_H = \
   dsnotificationinterface.h \
   darksend-relay.h \
   governance.h \
+  governance-brain.h \
+  governance-classes.h \
+  governance-categories.h \
+  governance-keys.h \
+  governance-types.h \
   governance-vote.h \
-  flat-database.h \
   hash.h \
   httprpc.h \
   httpserver.h \
@@ -208,8 +212,6 @@ libbitcoin_server_a_SOURCES = \
   httpserver.cpp \
   init.cpp \
   dbwrapper.cpp \
-  governance.cpp \
-  governance-vote.cpp \
   main.cpp \
   merkleblock.cpp \
   miner.cpp \
@@ -221,7 +223,6 @@ libbitcoin_server_a_SOURCES = \
   rest.cpp \
   rpcblockchain.cpp \
   rpcmasternode.cpp \
-  rpcmasternode-budget.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
@@ -256,11 +257,16 @@ libbitcoin_wallet_a_SOURCES = \
   darksend.cpp \
   dsnotificationinterface.cpp \
   darksend-relay.cpp \
+  governance.cpp \
+  governance-brain.cpp \ 
+  governance-classes.cpp \
+  governance-keys.cpp \
+  governance-vote.cpp \
   instantx.cpp \
   masternode.cpp \
+  masternodeconfig.cpp \
   masternode-payments.cpp \
   masternode-sync.cpp \
-  masternodeconfig.cpp \
   masternodeman.cpp \
   keepass.cpp \
   wallet/crypter.cpp \

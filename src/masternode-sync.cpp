@@ -6,7 +6,7 @@
 #include "activemasternode.h"
 #include "masternode-sync.h"
 #include "masternode-payments.h"
-#include "masternode-budget.h"
+#include "governance.h"
 #include "masternode.h"
 #include "masternodeman.h"
 #include "spork.h"
@@ -92,18 +92,6 @@ void CMasternodeSync::AddedMasternodeWinner(uint256 hash)
     } else {
         lastMasternodeWinner = GetTime();
         mapSeenSyncMNW.insert(make_pair(hash, 1));
-    }
-}
-
-void CMasternodeSync::AddedBudgetItem(uint256 hash)
-{
-    if(budget.mapSeenMasternodeBudgetProposals.count(hash) || budget.mapSeenMasternodeBudgetVotes.count(hash) ||
-        budget.mapSeenFinalizedBudgets.count(hash) || budget.mapSeenFinalizedBudgetVotes.count(hash)) {
-        lastBudgetItem = GetTime();
-        mapSeenSyncBudget[hash]++;
-    } else {
-        lastBudgetItem = GetTime();
-        mapSeenSyncBudget.insert(make_pair(hash, 1));
     }
 }
 
@@ -271,7 +259,7 @@ void CMasternodeSync::Process()
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
                 uint256 n = uint256();
-                pnode->PushMessage(NetMsgType::MNBUDGETVOTESYNC, n); //sync masternode votes
+                pnode->PushMessage(NetMsgType::MNGOVERNANCEVOTESYNC, n); //sync masternode votes
             } else {
                 RequestedMasternodeAssets = MASTERNODE_SYNC_FINISHED;
             }
@@ -363,42 +351,6 @@ void CMasternodeSync::Process()
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
-            // MODE : MASTERNODE_SYNC_BUDGET
-            if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
-                // shall we move onto the next asset
-                if(countBudgetItemProp > 0 && countBudgetItemFin)
-                {
-                    if(budget.CountProposalInventoryItems() >= (sumBudgetItemProp / countBudgetItemProp)*0.9)
-                    {
-                        if(budget.CountFinalizedInventoryItems() >= (sumBudgetItemFin / countBudgetItemFin)*0.9)
-                        {
-                            GetNextAsset();
-                            return;
-                        }
-                    }
-                }
-
-                //we'll start rejecting votes if we accidentally get set as synced too soon, this allows plenty of time
-                if(lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){
-                    GetNextAsset();
-
-                    //try to activate our masternode if possible
-                    activeMasternode.ManageStatus();
-                    return;
-                }
-
-                // requesting is the last thing we do, incase we needed to move to the next asset and we've requested from each peer already
-
-                if(pnode->HasFulfilledRequest("busync")) continue;
-                pnode->FulfilledRequest("busync");
-
-                uint256 n = uint256();
-                pnode->PushMessage(NetMsgType::MNBUDGETVOTESYNC, n); //sync masternode votes
-                RequestedMasternodeAttempt++;
-
-                return; //this will cause each peer to get one request each six seconds for the various assets we need
-            }
-
         }
     }
 }
@@ -406,4 +358,11 @@ void CMasternodeSync::Process()
 void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     pCurrentBlockIndex = pindex;
+}
+
+
+void CMasternodeSync::AddedBudgetItem(uint256 hash)
+{
+    // skip this for now
+    return;
 }

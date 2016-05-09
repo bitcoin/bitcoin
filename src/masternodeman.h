@@ -19,9 +19,7 @@
 using namespace std;
 
 class CMasternodeMan;
-
 extern CMasternodeMan mnodeman;
-void DumpMasternodes();
 
 /** Access to the MN database (mncache.dat)
  */

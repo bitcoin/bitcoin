@@ -19,7 +19,7 @@
 #include "init.h"
 #include "instantx.h"
 #include "darksend.h"
-#include "masternode-budget.h"
+#include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
 #include "masternodeman.h"
@@ -803,6 +803,7 @@ bool CheckTransaction(const CTransaction& tx, CValidationState &state)
     CAmount nValueOut = 0;
     BOOST_FOREACH(const CTxOut& txout, tx.vout)
     {
+        printf("%s\n", tx.ToString().c_str());
         if (txout.nValue < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-vout-negative");
         if (txout.nValue > MAX_MONEY)
@@ -1447,23 +1448,11 @@ int64_t GetTotalCoinEstimate(int nHeight)
 
     // TODO: This could be vastly improved, look at GetBlockValue for a better method
     
-    //2 million coins in first two days
-    if(nHeight > 5076) {
-        nTotalCoins += 2021642;
-    }
-
     /* these values are taken from the block explorer */
-    if(nHeight > 17000) {
-        nTotalCoins += 3267692-2021642;
-    } 
-
-    if(nHeight > 34000) {
-        nTotalCoins += 3688775-3267692; 
-    }
-
-    if(nHeight > 68000) {
-        nTotalCoins += 4277615-3688775;    
-    }
+    if(nHeight > 5076) nTotalCoins += 2021642;
+    if(nHeight > 17000) nTotalCoins += 3267692-2021642;
+    if(nHeight > 34000) nTotalCoins += 3688775-3267692; 
+    if(nHeight > 68000) nTotalCoins += 4277615-3688775;    
 
     if(nHeight > 68000*2) {
         nTotalCoins += 4649913.99999995-4277615;    
@@ -1511,17 +1500,9 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
     // LogPrintf("height %u diff %4.2f reward %i \n", nPrevHeight, dDiff, nSubsidy);
     nSubsidy *= COIN;
 
-    // TODO: Remove this to further unify logic among mainnet/testnet/whatevernet,
-    //       use single formula instead (the one that is for current mainnet).
-    //       Probably a good idea to use a significally lower consensusParams.nSubsidyHalvingInterval
-    //       for testnet (like 10 times for example) to see the effect of halving there faster.
-    //       Will require testnet restart.
-    if(Params().NetworkIDString() == CBaseChainParams::TESTNET){
-        for(int i = 46200; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
-    } else {
-        // yearly decline of production by 7.1% per year, projected 21.3M coins max by year 2050.
-        for(int i = consensusParams.nSubsidyHalvingInterval; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
-    }
+    // updated - 12.1 - unified logic
+    // yearly decline of production by 7.1% per year, projected 21.3M coins max by year 2050.
+    for(int i = consensusParams.nSubsidyHalvingInterval; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
 
     // Hard fork to reduce the block reward by 10 extra percent (allowing budget super-blocks)
     if(nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) nSubsidy -= nSubsidy/10;
@@ -4405,16 +4386,10 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return mnpayments.mapMasternodePayeeVotes.count(inv.hash);
 
     case MSG_BUDGET_VOTE:
-        return budget.mapSeenMasternodeBudgetVotes.count(inv.hash);
+        return governance.mapSeenMasternodeBudgetVotes.count(inv.hash);
 
     case MSG_BUDGET_PROPOSAL:
-        return budget.mapSeenMasternodeBudgetProposals.count(inv.hash);
-
-    case MSG_BUDGET_FINALIZED:
-        return budget.mapSeenFinalizedBudgets.count(inv.hash);
-
-    case MSG_BUDGET_FINALIZED_VOTE:
-        return budget.mapSeenFinalizedBudgetVotes.count(inv.hash);
+        return governance.mapSeenMasternodeBudgetProposals.count(inv.hash);
 
     case MSG_MASTERNODE_ANNOUNCE:
         return mnodeman.mapSeenMasternodeBroadcast.count(inv.hash);
@@ -4582,41 +4557,21 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    if(budget.mapSeenMasternodeBudgetVotes.count(inv.hash)){
+                    if(governance.mapSeenMasternodeBudgetVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetVotes[inv.hash];
-                        pfrom->PushMessage(NetMsgType::MNBUDGETVOTE, ss);
+                        ss << governance.mapSeenMasternodeBudgetVotes[inv.hash];
+                        pfrom->PushMessage(NetMsgType::MNGOVERNANCEVOTE, ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    if(budget.mapSeenMasternodeBudgetProposals.count(inv.hash)){
+                    if(governance.mapSeenMasternodeBudgetProposals.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << budget.mapSeenMasternodeBudgetProposals[inv.hash];
-                        pfrom->PushMessage(NetMsgType::MNBUDGETPROPOSAL, ss);
-                        pushed = true;
-                    }
-                }
-
-                if (!pushed && inv.type == MSG_BUDGET_FINALIZED_VOTE) {
-                    if(budget.mapSeenFinalizedBudgetVotes.count(inv.hash)){
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << budget.mapSeenFinalizedBudgetVotes[inv.hash];
-                        pfrom->PushMessage(NetMsgType::MNBUDGETFINALVOTE, ss);
-                        pushed = true;
-                    }
-                }
-
-                if (!pushed && inv.type == MSG_BUDGET_FINALIZED) {
-                    if(budget.mapSeenFinalizedBudgets.count(inv.hash)){
-                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-                        ss.reserve(1000);
-                        ss << budget.mapSeenFinalizedBudgets[inv.hash];
-                        pfrom->PushMessage(NetMsgType::MNBUDGETFINAL, ss);
+                        ss << governance.mapSeenMasternodeBudgetProposals[inv.hash];
+                        pfrom->PushMessage(NetMsgType::MNGOVERNANCEPROPOSAL, ss);
                         pushed = true;
                     }
                 }
@@ -5682,7 +5637,6 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
             //probably one the extensions
             darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
             mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
-            budget.ProcessMessage(pfrom, strCommand, vRecv);
             mnpayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
             ProcessMessageInstantX(pfrom, strCommand, vRecv);
             ProcessSpork(pfrom, strCommand, vRecv);

@@ -120,7 +120,7 @@ UniValue debug(const UniValue& params, bool fHelp)
         throw runtime_error(
             "debug ( 0|1|addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool"
             "|mempoolrej|net|proxy|prune|http|libevent|tor|zmq|"
-            "dash|darksend|instantx|masternode|keepass|mnpayments|mnbudget )\n"
+            "dash|darksend|instantx|masternode|keepass|mnpayments|mngovernance )\n"
             "Change debug category on the fly. Specify single category or use comma to specify many.\n"
             "\nExamples:\n"
             + HelpExampleCli("debug", "dash")
