@@ -297,8 +297,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             CCoins &coins = result[tx.GetHash()];
             coins.FromTx(tx, height);
 
-            CValidationState dummy;
-            UpdateCoins(tx, dummy, *(stack.back()), height);
+            UpdateCoins(tx, *(stack.back()), height);
         }
 
         // Once every 1000 iterations and at the end, verify the full cache.
