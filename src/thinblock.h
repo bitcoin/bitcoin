@@ -110,19 +110,28 @@ private:
 	static CStatHistory<uint64_t> nBlocks;
         static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksInBound;
         static std::map<int64_t, std::pair<uint64_t, uint64_t> > mapThinBlocksOutBound;
+        static std::map<int64_t, uint64_t> mapBloomFiltersOutBound;
+        static std::map<int64_t, uint64_t> mapBloomFiltersInBound;
         static std::map<int64_t, double> mapThinBlockResponseTime;
         static std::map<int64_t, double> mapThinBlockValidationTime;
+        static std::map<int64_t, int> mapThinBlocksInBoundReRequestedTx;
 
 public:
 	static void UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
 	static void UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize);
+        static void UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize);
+        static void UpdateInBoundBloomFilter(uint64_t nBloomFilterSize);
 	static void UpdateResponseTime(double nResponseTime);
 	static void UpdateValidationTime(double nValidationTime);
+	static void UpdateInBoundReRequestedTx(int nReRequestedTx);
 	static std::string ToString();
         static std::string InBoundPercentToString();
         static std::string OutBoundPercentToString();
+        static std::string InBoundBloomFiltersToString();
+        static std::string OutBoundBloomFiltersToString();
         static std::string ResponseTimeToString();
         static std::string ValidationTimeToString();
+        static std::string ReRequestedTxToString();
 };
 
 

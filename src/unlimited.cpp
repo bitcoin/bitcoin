@@ -643,7 +643,9 @@ void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& v
          filterMemPool.insert(vMemPoolHashes[i]);
     for (uint64_t i = 0; i < vOrphanHashes.size(); i++)
          filterMemPool.insert(vOrphanHashes[i]);
-    LogPrint("thin", "Created bloom filter: %d bytes\n",::GetSerializeSize(filterMemPool, SER_NETWORK, PROTOCOL_VERSION));
+    uint64_t nSizeFilter = ::GetSerializeSize(filterMemPool, SER_NETWORK, PROTOCOL_VERSION);
+    LogPrint("thin", "Created bloom filter: %d bytes\n", nSizeFilter);
+    CThinBlockStats::UpdateOutBoundBloomFilter(nSizeFilter);
 }
 
 void LoadFilter(CNode *pfrom, CBloomFilter *filter)
@@ -660,6 +662,7 @@ void LoadFilter(CNode *pfrom, CBloomFilter *filter)
     }
     uint64_t nSizeFilter = ::GetSerializeSize(*pfrom->pThinBlockFilter, SER_NETWORK, PROTOCOL_VERSION);
     LogPrint("thin", "Thinblock Bloom filter size: %d\n", nSizeFilter);
+    CThinBlockStats::UpdateInBoundBloomFilter(nSizeFilter);
 }
 
 void HandleBlockMessage(CNode *pfrom, const string &strCommand, CBlock &block, const CInv &inv)

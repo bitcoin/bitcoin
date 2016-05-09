@@ -9,11 +9,14 @@
 #include <iomanip>
 
 // Start statistics at zero
-CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize",STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize",STAT_OP_SUM | STAT_KEEP);
-CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks",STAT_OP_SUM | STAT_KEEP);
+CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize", STAT_OP_SUM | STAT_KEEP);
+CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize", STAT_OP_SUM | STAT_KEEP);
+CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks", STAT_OP_SUM | STAT_KEEP);
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
+std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
+std::map<int64_t, uint64_t> CThinBlockStats::mapBloomFiltersInBound;
+std::map<int64_t, uint64_t> CThinBlockStats::mapBloomFiltersOutBound;
 std::map<int64_t, double> CThinBlockStats::mapThinBlockResponseTime;
 std::map<int64_t, double> CThinBlockStats::mapThinBlockValidationTime;
 
@@ -103,6 +106,7 @@ CXRequestThinBlockTx::CXRequestThinBlockTx(uint256 blockHash, std::set<uint64_t>
 
 void CThinBlockStats::UpdateInBound(uint64_t nThinBlockSize, uint64_t nOriginalBlockSize)
 {
+    // Update InBound thinblock tracking information
     CThinBlockStats::nOriginalSize += nOriginalBlockSize;
     CThinBlockStats::nThinSize += nThinBlockSize;
     CThinBlockStats::nBlocks += 1;
@@ -128,6 +132,30 @@ void CThinBlockStats::UpdateOutBound(uint64_t nThinBlockSize, uint64_t nOriginal
     for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksOutBound.begin(); mi != CThinBlockStats::mapThinBlocksOutBound.end(); ++mi) {
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapThinBlocksOutBound.erase(mi);
+    }
+}
+
+void CThinBlockStats::UpdateOutBoundBloomFilter(uint64_t nBloomFilterSize)
+{
+    CThinBlockStats::mapBloomFiltersOutBound[GetTimeMillis()] = nBloomFilterSize;
+
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapBloomFiltersOutBound.erase(mi);
+    }
+}
+
+void CThinBlockStats::UpdateInBoundBloomFilter(uint64_t nBloomFilterSize)
+{
+    CThinBlockStats::mapBloomFiltersInBound[GetTimeMillis()] = nBloomFilterSize;
+
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapBloomFiltersInBound.erase(mi);
     }
 }
 
@@ -158,6 +186,19 @@ void CThinBlockStats::UpdateValidationTime(double nValidationTime)
             if ((*mi).first < nTimeCutoff)
                 CThinBlockStats::mapThinBlockValidationTime.erase(mi);
         }
+    }
+}
+
+void CThinBlockStats::UpdateInBoundReRequestedTx(int nReRequestedTx)
+{
+    // Update InBound thinblock tracking information
+    CThinBlockStats::mapThinBlocksInBoundReRequestedTx[GetTimeMillis()] = nReRequestedTx;
+
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, int>::iterator mi = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin(); mi != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapThinBlocksInBoundReRequestedTx.erase(mi);
     }
 }
 
@@ -193,7 +234,7 @@ std::string CThinBlockStats::InBoundPercentToString()
 
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(1);
-    ss << "Compression for Inbound  thinblocks (last 24hrs): " << nCompressionRate << "%";
+    ss << "Compression for " << CThinBlockStats::mapThinBlocksInBound.size() << " Inbound  thinblocks (last 24hrs): " << nCompressionRate << "%";
     return ss.str();
 }
 
@@ -213,10 +254,61 @@ std::string CThinBlockStats::OutBoundPercentToString()
 
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(1);
-    ss << "Compression for Outbound thinblocks (last 24hrs): " << nCompressionRate << "%";
+    ss << "Compression for " << CThinBlockStats::mapThinBlocksOutBound.size() << " Outbound thinblocks (last 24hrs): " << nCompressionRate << "%";
     return ss.str();
 }
 
+// Calculate the average inbound xthin bloom filter size
+std::string CThinBlockStats::InBoundBloomFiltersToString()
+{
+    uint64_t nInBoundBloomFilters = 0;
+    uint64_t nInBoundBloomFilterSize = 0;
+    double avgBloomSize = 0;
+    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
+        nInBoundBloomFilterSize += (*mi).second;
+        nInBoundBloomFilters += 1;
+    }
+    if (nInBoundBloomFilters > 0)
+        avgBloomSize = (double)nInBoundBloomFilterSize / nInBoundBloomFilters;
+
+    static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    int i = 0;
+    while (avgBloomSize > 1000) {
+	avgBloomSize /= 1000;
+	i++;
+    }
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(1);
+    ss << "Inbound bloom filter size (last 24hrs) AVG: " << avgBloomSize << units[i];
+    return ss.str();
+}
+
+// Calculate the average inbound xthin bloom filter size
+std::string CThinBlockStats::OutBoundBloomFiltersToString()
+{
+    uint64_t nOutBoundBloomFilters = 0;
+    uint64_t nOutBoundBloomFilterSize = 0;
+    double avgBloomSize = 0;
+    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
+        nOutBoundBloomFilterSize += (*mi).second;
+        nOutBoundBloomFilters += 1;
+    }
+    if (nOutBoundBloomFilters > 0)
+        avgBloomSize = (double)nOutBoundBloomFilterSize / nOutBoundBloomFilters;
+
+    static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    int i = 0;
+    while (avgBloomSize > 1000) {
+	avgBloomSize /= 1000;
+	i++;
+    }
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(1);
+    ss << "Outbound bloom filter size (last 24hrs) AVG: " << avgBloomSize << units[i];
+    return ss.str();
+}
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::ResponseTimeToString()
 {
@@ -243,7 +335,7 @@ std::string CThinBlockStats::ResponseTimeToString()
 
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(2);
-    ss << "Response time   (last 24hrs): AVG:" << nResponseTimeAverage << ", 95th pcntl:" << nPercentile;
+    ss << "Response time   (last 24hrs) AVG:" << nResponseTimeAverage << ", 95th pcntl:" << nPercentile;
     return ss.str();
 }
 
@@ -273,7 +365,26 @@ std::string CThinBlockStats::ValidationTimeToString()
 
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(2);
-    ss << "Validation time (last 24hrs): AVG:" << nValidationTimeAverage << ", 95th pcntl:" << nPercentile;
+    ss << "Validation time (last 24hrs) AVG:" << nValidationTimeAverage << ", 95th pcntl:" << nPercentile;
     return ss.str();
 }
 
+// Calculate the xthin percentage compression over the last 24 hours
+std::string CThinBlockStats::ReRequestedTxToString()
+{
+    double nReRequestRate = 0;
+    uint64_t nTotalReRequests = 0;
+    uint64_t nTotalReRequestedTxs = 0;
+    for (std::map<int64_t, int>::iterator mi = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin(); mi != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end(); ++mi) {
+        nTotalReRequests += 1;
+        nTotalReRequestedTxs += (*mi).second;
+    }
+
+    if ( CThinBlockStats::mapThinBlocksInBound.size() > 0)
+        nReRequestRate = 100 * (double)nTotalReRequests / CThinBlockStats::mapThinBlocksInBound.size();
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(1);
+    ss << "Re-request rate (last 24hrs): " << nReRequestRate << "% Total re-requests:" << nTotalReRequests;
+    return ss.str();
+}

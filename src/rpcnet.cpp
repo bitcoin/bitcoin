@@ -426,6 +426,9 @@ static UniValue GetThinBlockStats()
         obj.push_back(Pair("summary", CThinBlockStats::OutBoundPercentToString()));
         obj.push_back(Pair("summary", CThinBlockStats::ResponseTimeToString()));
         obj.push_back(Pair("summary", CThinBlockStats::ValidationTimeToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::OutBoundBloomFiltersToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::InBoundBloomFiltersToString()));
+        obj.push_back(Pair("summary", CThinBlockStats::ReRequestedTxToString()));
     }
     return obj;
 }
