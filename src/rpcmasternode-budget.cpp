@@ -114,7 +114,8 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
     if(strCommand == "prepare")
     {
-        if (params.size() != 7)
+        printf("%d\n", params.size());
+        if (params.size() != 6)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance prepare <parent-hash> <revision> <time> <name> <registers-hex>'");
 
         int nBlockMin = 0;
@@ -124,16 +125,19 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        uint256 hashParent = ParseHashV(params[0], "parameter 1");
+        uint256 hashParent;
+        if(params[1].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
+            hashParent = uint256();
+        } else {
+            hashParent = ParseHashV(params[1], "fee-tx hash, parameter 1");
+        }
 
-        int nRevision = params[1].get_int();
-        int nTime = params[2].get_int();
-
-        std::string strName = SanitizeString(params[3].get_str());
-        if(strName != params[1].get_str())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name is invalid");
-
-        std::string strRegisters = params[4].get_str();
+        std::string strRevision = params[2].get_str();
+        std::string strTime = params[3].get_str();
+        int nRevision = boost::lexical_cast<int>(strRevision);
+        int nTime = boost::lexical_cast<int>(strTime);
+        std::string strName = SanitizeString(params[4].get_str());
+        std::string strRegisters = params[5].get_str();
         
         //*************************************************************************
 
@@ -142,7 +146,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         std::string strError = "";
         if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
 
         CWalletTx wtx;
         if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), false)){
@@ -159,8 +163,8 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
     if(strCommand == "submit")
     {
-        if (params.size() != 8)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance submit <parent-hash> <revision> <time> <name> <registers-hex>'");
+        if (params.size() != 7)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance submit <fee-tx> <parent-hash> <revision> <time> <name> <registers-hex>'");
 
         if(!masternodeSync.IsBlockchainSynced()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
@@ -173,16 +177,15 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::vector<CMasternodeConfig::CMasternodeEntry> mnEntries;
         mnEntries = masternodeConfig.getEntries();
 
-        uint256 hashParent = ParseHashV(params[0], "parameter 1");
+        uint256 fee_tx = ParseHashV(params[1], "fee-tx hash, parameter 1");
+        uint256 hashParent = ParseHashV(params[2], "parent object hash, parameter 2");
 
-        int nRevision = params[1].get_int();
-        int nTime = params[2].get_int();
-
-        std::string strName = SanitizeString(params[3].get_str());
-        if(strName != params[1].get_str())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Name is invalid");
-
-        std::string strRegisters = params[4].get_str();
+        std::string strRevision = params[3].get_str();
+        std::string strTime = params[4].get_str();
+        int nRevision = boost::lexical_cast<int>(strRevision);
+        int nTime = boost::lexical_cast<int>(strTime);
+        std::string strName = SanitizeString(params[5].get_str());
+        std::string strRegisters = params[6].get_str();
 
         // CGovernanceObject budgetProposalBroadcast(strName, GetTime(), 253370764800, uint256());
         CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, strName, nTime, uint256());
@@ -190,7 +193,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::string strError = "";
 
         if(!budgetProposalBroadcast.IsValid(pindex, strError)){
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
         }
 
         // int nConf = 0;

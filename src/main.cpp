@@ -1511,17 +1511,9 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
     // LogPrintf("height %u diff %4.2f reward %i \n", nPrevHeight, dDiff, nSubsidy);
     nSubsidy *= COIN;
 
-    // TODO: Remove this to further unify logic among mainnet/testnet/whatevernet,
-    //       use single formula instead (the one that is for current mainnet).
-    //       Probably a good idea to use a significally lower consensusParams.nSubsidyHalvingInterval
-    //       for testnet (like 10 times for example) to see the effect of halving there faster.
-    //       Will require testnet restart.
-    if(Params().NetworkIDString() == CBaseChainParams::TESTNET){
-        for(int i = 46200; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
-    } else {
-        // yearly decline of production by 7.1% per year, projected 21.3M coins max by year 2050.
-        for(int i = consensusParams.nSubsidyHalvingInterval; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
-    }
+    // updated - 12.1 - unified logic
+    // yearly decline of production by 7.1% per year, projected 21.3M coins max by year 2050.
+    for(int i = consensusParams.nSubsidyHalvingInterval; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
 
     // Hard fork to reduce the block reward by 10 extra percent (allowing budget super-blocks)
     if(nPrevHeight > consensusParams.nBudgetPaymentsStartBlock) nSubsidy -= nSubsidy/10;
