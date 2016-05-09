@@ -19,15 +19,25 @@ sudo apt-get install python3-zmq
 Running tests
 =============
 
-You can run any single test by calling `qa/pull-tester/rpc-tests.py <testname>`.
+You can run any single test by calling
 
-Or you can run any combination of tests by calling `qa/pull-tester/rpc-tests.py <testname1> <testname2> <testname3> ...`
+    qa/pull-tester/rpc-tests.py <testname>
 
-Run the regression test suite with `qa/pull-tester/rpc-tests.py`
+Or you can run any combination of tests by calling
 
-Run all possible tests with `qa/pull-tester/rpc-tests.py -extended`
+    qa/pull-tester/rpc-tests.py <testname1> <testname2> <testname3> ...
 
-Possible options:
+Run the regression test suite with
+
+    qa/pull-tester/rpc-tests.py
+
+Run all possible tests with
+
+    qa/pull-tester/rpc-tests.py -extended
+
+If you want to create a basic coverage report for the rpc test suite, append `--coverage`.
+
+Possible options, which apply to each individual test run:
 
 ```
   -h, --help            show this help message and exit
