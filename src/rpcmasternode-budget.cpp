@@ -114,7 +114,6 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
     if(strCommand == "prepare")
     {
-        printf("%d\n", params.size());
         if (params.size() != 6)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance prepare <parent-hash> <revision> <time> <name> <registers-hex>'");
 
