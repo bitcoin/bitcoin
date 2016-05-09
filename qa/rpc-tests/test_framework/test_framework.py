@@ -6,7 +6,8 @@
 
 # Base class for RPC testing
 
-# Add python-bitcoinrpc to module search path:
+import logging
+import optparse
 import os
 import sys
 import time       # BU added
@@ -28,8 +29,9 @@ from .util import (
     enable_coverage,
     check_json_precision,
     initialize_chain_clean,
+    PortSeed,
 )
-from .authproxy import AuthServiceProxy, JSONRPCException
+from .authproxy import JSONRPCException
 
 
 class BitcoinTestFramework(object):
@@ -121,7 +123,7 @@ class BitcoinTestFramework(object):
         """
         argsOverride: pass your own values for sys.argv in this field (or pass None) to use sys.argv
         bitcoinConfDict:  Pass a dictionary of values you want written to bitcoin.conf.  If you have a key with multiple values, pass a list of the values as the value, for example:
-        { "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }        
+        { "debug":["net","blk","thin","lck","mempool","req","bench","evict"] }
         This framework provides values for the necessary fields (like regtest=1).  But you can override these
         defaults by setting them in this dictionary.
 
@@ -141,6 +143,8 @@ class BitcoinTestFramework(object):
                           help="Root directory for datadirs")
         parser.add_option("--tracerpc", dest="trace_rpc", default=False, action="store_true",
                           help="Print out all RPC calls as they are made")
+        parser.add_option("--portseed", dest="port_seed", default=os.getpid(), type='int',
+                          help="The seed to use for assigning port numbers (default: current process id)")
         parser.add_option("--coveragedir", dest="coveragedir",
                           help="Write tested RPC commands into this directory")
         # BU: added for tests using randomness (e.g. excessive.py)
@@ -158,11 +162,12 @@ class BitcoinTestFramework(object):
         print("Random seed: %s" % self.randomseed)
 
         if self.options.trace_rpc:
-            import logging
             logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
         if self.options.coveragedir:
             enable_coverage(self.options.coveragedir)
+
+        PortSeed.n = self.options.port_seed
 
         os.environ['PATH'] = self.options.srcdir+":"+self.options.srcdir+"/qt:"+os.environ['PATH']
 
