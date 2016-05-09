@@ -102,7 +102,7 @@ class BitcoinTestFramework(object):
                           help="Leave bitcoinds and test.* datadir on exit or error")
         parser.add_option("--noshutdown", dest="noshutdown", default=False, action="store_true",
                           help="Don't stop bitcoinds after the test execution")
-        parser.add_option("--srcdir", dest="srcdir", default="../../src",
+        parser.add_option("--srcdir", dest="srcdir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__))+"/../../../src"),
                           help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
         parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                           help="Root directory for datadirs")
