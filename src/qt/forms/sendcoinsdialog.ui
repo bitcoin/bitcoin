@@ -1324,7 +1324,7 @@
           </size>
          </property>
          <property name="text">
-          <string>PrivacyProtect</string>
+          <string>PrivateSend</string>
          </property>
          <property name="checked">
           <bool>false</bool>

@@ -466,10 +466,10 @@ void OverviewPage::darkSendStatus()
 
     QString strStatus = QString(darkSendPool.GetStatus().c_str());
 
-    QString s = tr("Last PrivacyProtect message:\n") + strStatus;
+    QString s = tr("Last PrivateSend message:\n") + strStatus;
 
     if(s != ui->darksendStatus->text())
-        LogPrintf("Last PrivacyProtect message: %s\n", strStatus.toStdString());
+        LogPrintf("Last PrivateSend message: %s\n", strStatus.toStdString());
 
     ui->darksendStatus->setText(s);
 
@@ -491,8 +491,8 @@ void OverviewPage::darksendAuto(){
 void OverviewPage::darksendReset(){
     darkSendPool.Reset();
 
-    QMessageBox::warning(this, tr("PrivacyProtect"),
-        tr("PrivacyProtect was successfully reset."),
+    QMessageBox::warning(this, tr("PrivateSend"),
+        tr("PrivateSend was successfully reset."),
         QMessageBox::Ok, QMessageBox::Ok);
 }
 
@@ -501,8 +501,8 @@ void OverviewPage::toggleDarksend(){
     // Popup some information on first mixing
     QString hasMixed = settings.value("hasMixed").toString();
     if(hasMixed.isEmpty()){
-        QMessageBox::information(this, tr("PrivacyProtect"),
-                tr("If you don't want to see internal PrivacyProtect fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab."),
+        QMessageBox::information(this, tr("PrivateSend"),
+                tr("If you don't want to see internal PrivateSend fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab."),
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
     }
@@ -511,8 +511,8 @@ void OverviewPage::toggleDarksend(){
         float minAmount = 1.49 * COIN;
         if(balance < minAmount){
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, minAmount));
-            QMessageBox::warning(this, tr("PrivacyProtect"),
-                tr("PrivacyProtect requires at least %1 to use.").arg(strMinAmount),
+            QMessageBox::warning(this, tr("PrivateSend"),
+                tr("PrivateSend requires at least %1 to use.").arg(strMinAmount),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
@@ -525,10 +525,10 @@ void OverviewPage::toggleDarksend(){
             {
                 //unlock was cancelled
                 darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
-                QMessageBox::warning(this, tr("PrivacyProtect"),
-                    tr("Wallet is locked and user declined to unlock. Disabling PrivacyProtect."),
+                QMessageBox::warning(this, tr("PrivateSend"),
+                    tr("Wallet is locked and user declined to unlock. Disabling PrivateSend."),
                     QMessageBox::Ok, QMessageBox::Ok);
-                if (fDebug) LogPrintf("Wallet is locked and user declined to unlock. Disabling PrivacyProtect.\n");
+                if (fDebug) LogPrintf("Wallet is locked and user declined to unlock. Disabling PrivateSend.\n");
                 return;
             }
         }

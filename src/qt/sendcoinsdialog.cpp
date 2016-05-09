@@ -272,7 +272,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     if(ui->checkInstantX->isChecked()) {
         recipients[0].useInstantX = true;
         strFunds += " ";
-        strFunds += tr("and InstantX");
+        strFunds += tr("and InstantSend");
     } else {
         recipients[0].useInstantX = false;
     }
