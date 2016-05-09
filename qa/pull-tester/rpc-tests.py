@@ -82,9 +82,9 @@ if ENABLE_ZMQ:
     try:
         import zmq
     except ImportError as e:
-        print("ERROR: \"import zmq\" failed. Set ENABLE_ZMQ=0 or " \
+        print("WARNING: \"import zmq\" failed. Set ENABLE_ZMQ=0 or " \
             "to run zmq tests, see dependency info in /qa/README.md.")
-        raise e
+        ENABLE_ZMQ=0
 
 #Tests
 testScripts = [
