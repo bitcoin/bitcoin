@@ -980,7 +980,7 @@ UniValue reconsiderblock(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
 
         CBlockIndex* pblockindex = mapBlockIndex[hash];
-        ReconsiderBlock(pblockindex);
+        ResetBlockFailureFlags(pblockindex);
     }
 
     CValidationState state;
