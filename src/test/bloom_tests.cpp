@@ -514,11 +514,14 @@ BOOST_AUTO_TEST_CASE(rolling_bloom)
         if (i >= 100)
             BOOST_CHECK(rb1.contains(data[i-100]));
         rb1.insert(data[i]);
+        BOOST_CHECK(rb1.contains(data[i]));
     }
 
     // Insert 999 more random entries:
     for (int i = 0; i < 999; i++) {
-        rb1.insert(RandomData());
+        std::vector<unsigned char> d = RandomData();
+        rb1.insert(d);
+        BOOST_CHECK(rb1.contains(d));
     }
     // Sanity check to make sure the filter isn't just filling up:
     nHits = 0;
