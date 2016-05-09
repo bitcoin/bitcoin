@@ -328,8 +328,9 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         std::string strError = "";
         int nConf = 0;
         if(!IsCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf, GOVERNANCE_FEE_TX)){
-            LogPrintf("Governance Object FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
-            if(nConf >= 1) vecImmatureBudgetProposals.push_back(budgetProposalBroadcast);
+            LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
+            //todo 12.1
+            //if(nConf >= 1) vecImmatureBudgetProposals.push_back(budgetProposalBroadcast);
             return;
         }
 
