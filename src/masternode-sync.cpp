@@ -359,3 +359,10 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindex)
 {
     pCurrentBlockIndex = pindex;
 }
+
+
+void CMasternodeSync::AddedBudgetItem(uint256 hash)
+{
+    // skip this for now
+    return;
+}
