@@ -242,9 +242,10 @@ class RPCTestHandler:
             # Add tests
             self.num_running += 1
             t = self.test_list.pop(0)
+            port_seed = ["--portseed=%s" % len(self.test_list)]
             self.jobs.append((t,
                               time.time(),
-                              subprocess.Popen((RPC_TESTS_DIR + t).split() + self.flags,
+                              subprocess.Popen((RPC_TESTS_DIR + t).split() + self.flags + port_seed,
                                                universal_newlines=True,
                                                stdout=subprocess.PIPE,
                                                stderr=subprocess.PIPE)))
