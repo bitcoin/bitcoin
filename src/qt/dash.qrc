@@ -47,8 +47,6 @@
         <file alias="drkblue_editcopy">res/icons/drkblue/drkblue_editcopy.png</file>
         <file alias="drkblue_remove">res/icons/drkblue/drkblue_remove.png</file>
         <file alias="browse">res/icons/drkblue/browse.png</file>
-        <file alias="open">res/icons/drkblue/open.png</file>
-        <file alias="info">res/icons/drkblue/info.png</file>
         <file alias="about">res/icons/drkblue/about.png</file>
         <file alias="about_qt">res/icons/drkblue/about_qt.png</file>
         <file alias="verify">res/icons/drkblue/verify.png</file>
@@ -98,8 +96,6 @@
         <file alias="drkblue_editcopy">res/icons/crownium/drkblue_editcopy.png</file>
         <file alias="drkblue_remove">res/icons/crownium/drkblue_remove.png</file>
         <file alias="browse">res/icons/crownium/browse.png</file>
-        <file alias="open">res/icons/crownium/open.png</file>
-        <file alias="info">res/icons/crownium/info.png</file>
         <file alias="about">res/icons/crownium/about.png</file>
         <file alias="about_qt">res/icons/crownium/about_qt.png</file>
         <file alias="verify">res/icons/crownium/verify.png</file>
@@ -149,8 +145,6 @@
         <file alias="drkblue_editcopy">res/icons/light/drkblue_editcopy.png</file>
         <file alias="drkblue_remove">res/icons/light/drkblue_remove.png</file>
         <file alias="browse">res/icons/light/browse.png</file>
-        <file alias="open">res/icons/light/open.png</file>
-        <file alias="info">res/icons/light/info.png</file>
         <file alias="about">res/icons/light/about.png</file>
         <file alias="about_qt">res/icons/light/about_qt.png</file>
         <file alias="verify">res/icons/light/verify.png</file>
@@ -200,8 +194,6 @@
         <file alias="drkblue_editcopy">res/icons/trad/drkblue_editcopy.png</file>
         <file alias="drkblue_remove">res/icons/trad/drkblue_remove.png</file>
         <file alias="browse">res/icons/trad/browse.png</file>
-        <file alias="open">res/icons/trad/open.png</file>
-        <file alias="info">res/icons/trad/info.png</file>
         <file alias="about">res/icons/trad/about.png</file>
         <file alias="about_qt">res/icons/trad/about_qt.png</file>
         <file alias="verify">res/icons/trad/verify.png</file>

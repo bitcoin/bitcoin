@@ -209,8 +209,6 @@ RES_ICONS = \
   qt/res/icons/drkblue/tx_mined.png \
   qt/res/icons/drkblue/about.png \
   qt/res/icons/drkblue/about_qt.png \
-  qt/res/icons/drkblue/info.png \
-  qt/res/icons/drkblue/open.png \
   qt/res/icons/drkblue/verify.png \
   qt/res/icons/crownium/add.png \
   qt/res/icons/crownium/address-book.png \
@@ -258,8 +256,6 @@ RES_ICONS = \
   qt/res/icons/crownium/tx_mined.png \
   qt/res/icons/crownium/about.png \
   qt/res/icons/crownium/about_qt.png \
-  qt/res/icons/crownium/info.png \
-  qt/res/icons/crownium/open.png \
   qt/res/icons/crownium/verify.png \
   qt/res/icons/light/add.png \
   qt/res/icons/light/address-book.png \
@@ -307,8 +303,6 @@ RES_ICONS = \
   qt/res/icons/light/tx_mined.png \
   qt/res/icons/light/about.png \
   qt/res/icons/light/about_qt.png \
-  qt/res/icons/light/info.png \
-  qt/res/icons/light/open.png \
   qt/res/icons/light/verify.png \
   qt/res/icons/trad/add.png \
   qt/res/icons/trad/address-book.png \
@@ -356,8 +350,6 @@ RES_ICONS = \
   qt/res/icons/trad/tx_mined.png \
   qt/res/icons/trad/about.png \
   qt/res/icons/trad/about_qt.png \
-  qt/res/icons/trad/info.png \
-  qt/res/icons/trad/open.png \
   qt/res/icons/trad/verify.png
 
 BITCOIN_QT_CPP = \
