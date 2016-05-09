@@ -764,7 +764,7 @@ public:
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
-    bool AddAccountingEntry(const CAccountingEntry&, CWalletDB & pwalletdb);
+    bool AddAccountingEntry(const CAccountingEntry&);
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;

@@ -2304,9 +2304,9 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
     return true;
 }
 
-bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry, CWalletDB & pwalletdb)
+bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry)
 {
-    if (!pwalletdb.WriteAccountingEntry_Backend(acentry))
+    if (!pwalletdb->WriteAccountingEntry_Backend(acentry))
         return false;
 
     laccentries.push_back(acentry);

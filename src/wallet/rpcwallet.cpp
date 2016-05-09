@@ -850,7 +850,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
     debit.nTime = nNow;
     debit.strOtherAccount = strTo;
     debit.strComment = strComment;
-    pwalletMain->AddAccountingEntry(debit, walletdb);
+    pwalletMain->AddAccountingEntry(debit);
 
     // Credit
     CAccountingEntry credit;
@@ -860,7 +860,7 @@ UniValue movecmd(const UniValue& params, bool fHelp)
     credit.nTime = nNow;
     credit.strOtherAccount = strFrom;
     credit.strComment = strComment;
-    pwalletMain->AddAccountingEntry(credit, walletdb);
+    pwalletMain->AddAccountingEntry(credit);
 
     if (!walletdb.TxnCommit())
         throw JSONRPCError(RPC_DATABASE_ERROR, "database error");
