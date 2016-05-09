@@ -616,8 +616,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>828</width>
-        <height>67</height>
+        <width>830</width>
+        <height>69</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2" stretch="0,1">
@@ -1324,7 +1324,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Darksend</string>
+          <string>PrivateSend</string>
          </property>
          <property name="checked">
           <bool>false</bool>

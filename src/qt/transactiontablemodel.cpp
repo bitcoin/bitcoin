@@ -371,7 +371,7 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
     case TransactionRecord::RecvFromOther:
         return tr("Received from");
     case TransactionRecord::RecvWithDarksend:
-        return tr("Received via Darksend");
+        return tr("Received via PrivateSend");
     case TransactionRecord::SendToAddress:
     case TransactionRecord::SendToOther:
         return tr("Sent to");
@@ -381,15 +381,15 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Mined");
 
     case TransactionRecord::DarksendDenominate:
-        return tr("Darksend Denominate");
+        return tr("PrivateSend Denominate");
     case TransactionRecord::DarksendCollateralPayment:
-        return tr("Darksend Collateral Payment");
+        return tr("PrivateSend Collateral Payment");
     case TransactionRecord::DarksendMakeCollaterals:
-        return tr("Darksend Make Collateral Inputs");
+        return tr("PrivateSend Make Collateral Inputs");
     case TransactionRecord::DarksendCreateDenominations:
-        return tr("Darksend Create Denominations");
+        return tr("PrivateSend Create Denominations");
     case TransactionRecord::Darksent:
-        return tr("Darksent");
+        return tr("PrivateSend");
 
     default:
         return QString();

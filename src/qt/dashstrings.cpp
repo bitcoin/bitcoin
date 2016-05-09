@@ -42,19 +42,19 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Create new files with system default permissions, instead of umask 077 (only "
 "effective with disabled wallet functionality)"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Darksend uses exact denominated amounts to send funds, you might simply need "
+"PrivateSend uses exact denominated amounts to send funds, you might simply need "
 "to anonymize some more coins."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Delete all wallet transactions and only recover those parts of the "
 "blockchain through -rescan on startup"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Disable all Dash specific functionality (Masternodes, Darksend, InstantX, "
+"Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, "
 "Budgeting) (0-1, default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Distributed under the MIT software license, see the accompanying file "
 "COPYING or <http://www.opensource.org/licenses/mit-license.php>."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Enable instantx, show confirmations for locked transactions (bool, default: "
+"Enable InstantSend, show confirmations for locked transactions (bool, default: "
 "%s)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Enable use of automated darksend for funds stored in this wallet (0-1, "
@@ -97,7 +97,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "In this mode -genproclimit controls how many blocks are generated "
 "immediately."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"InstantX requires inputs with at least 6 confirmations, you might need to "
+"InstantSend requires inputs with at least 6 confirmations, you might need to "
 "wait a few minutes and try again."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
@@ -120,7 +120,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Output debugging information (default: %u, supplying <category> is optional)"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Provide liquidity to Darksend by infrequently mixing coins on a continual "
+"Provide liquidity to PrivateSend by infrequently mixing coins on a continual "
 "basis (0-100, default: %u, 1=very frequent, high fees, 100=very infrequent, "
 "low fees)"),
 QT_TRANSLATE_NOOP("dash-core", ""
@@ -164,9 +164,9 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to bind to %s on this computer. Dash Core is probably already running."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Unable to locate enough Darksend denominated funds for this transaction."),
+"Unable to locate enough PrivateSend denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Unable to locate enough Darksend non-denominated funds for this transaction "
+"Unable to locate enough PrivateSend non-denominated funds for this transaction "
 "that are not equal 1000 DASH."),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Unable to locate enough funds for this transaction that are not equal 1000 "
@@ -239,10 +239,10 @@ QT_TRANSLATE_NOOP("dash-core", "Copyright (C) 2014-%i The Dash Core Developers")
 QT_TRANSLATE_NOOP("dash-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("dash-core", "Could not parse -rpcbind value %s as network address"),
 QT_TRANSLATE_NOOP("dash-core", "Could not parse masternode.conf"),
-QT_TRANSLATE_NOOP("dash-core", "Darksend is idle."),
-QT_TRANSLATE_NOOP("dash-core", "Darksend options:"),
-QT_TRANSLATE_NOOP("dash-core", "Darksend request complete:"),
-QT_TRANSLATE_NOOP("dash-core", "Darksend request incomplete:"),
+QT_TRANSLATE_NOOP("dash-core", "PrivateSend is idle."),
+QT_TRANSLATE_NOOP("dash-core", "PrivateSend options:"),
+QT_TRANSLATE_NOOP("dash-core", "PrivateSend request complete:"),
+QT_TRANSLATE_NOOP("dash-core", "PrivateSend request incomplete:"),
 QT_TRANSLATE_NOOP("dash-core", "Debugging/Testing options:"),
 QT_TRANSLATE_NOOP("dash-core", "Disable safemode, override a real safe mode event (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Discover own IP address (default: 1 when listening and no -externalip)"),
@@ -267,7 +267,7 @@ QT_TRANSLATE_NOOP("dash-core", "Error: Can't select current denominated inputs")
 QT_TRANSLATE_NOOP("dash-core", "Error: Disk space is low!"),
 QT_TRANSLATE_NOOP("dash-core", "Error: Unsupported argument -tor found, use -onion."),
 QT_TRANSLATE_NOOP("dash-core", "Error: Wallet locked, unable to create transaction!"),
-QT_TRANSLATE_NOOP("dash-core", "Error: You already have pending entries in the Darksend pool"),
+QT_TRANSLATE_NOOP("dash-core", "Error: You already have pending entries in the PrivateSend pool"),
 QT_TRANSLATE_NOOP("dash-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("dash-core", "Failed to read block"),
 QT_TRANSLATE_NOOP("dash-core", "Fee (in DASH/kB) to add to transactions you send (default: %s)"),
@@ -287,7 +287,7 @@ QT_TRANSLATE_NOOP("dash-core", "Incorrect or no genesis block found. Wrong datad
 QT_TRANSLATE_NOOP("dash-core", "Information"),
 QT_TRANSLATE_NOOP("dash-core", "Initialization sanity check failed. Dash Core is shutting down."),
 QT_TRANSLATE_NOOP("dash-core", "Input is not valid."),
-QT_TRANSLATE_NOOP("dash-core", "InstantX options:"),
+QT_TRANSLATE_NOOP("dash-core", "InstantSend options:"),
 QT_TRANSLATE_NOOP("dash-core", "Insufficient funds."),
 QT_TRANSLATE_NOOP("dash-core", "Invalid -onion address: '%s'"),
 QT_TRANSLATE_NOOP("dash-core", "Invalid -proxy address: '%s'"),
@@ -305,8 +305,8 @@ QT_TRANSLATE_NOOP("dash-core", "KeePassHttp id for the established association")
 QT_TRANSLATE_NOOP("dash-core", "KeePassHttp key for AES encrypted communication with KeePass"),
 QT_TRANSLATE_NOOP("dash-core", "Keep N DASH anonymized (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
-QT_TRANSLATE_NOOP("dash-core", "Last Darksend was too recent."),
-QT_TRANSLATE_NOOP("dash-core", "Last successful Darksend action was too recent."),
+QT_TRANSLATE_NOOP("dash-core", "Last PrivateSend was too recent."),
+QT_TRANSLATE_NOOP("dash-core", "Last successful PrivateSend action was too recent."),
 QT_TRANSLATE_NOOP("dash-core", "Limit size of signature cache to <n> entries (default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", "Line: %d"),
 QT_TRANSLATE_NOOP("dash-core", "Listen for JSON-RPC connections on <port> (default: %u or testnet: %u)"),
@@ -420,7 +420,7 @@ QT_TRANSLATE_NOOP("dash-core", "Use UPnP to map the listening port (default: %u)
 QT_TRANSLATE_NOOP("dash-core", "Use UPnP to map the listening port (default: 1 when listening)"),
 QT_TRANSLATE_NOOP("dash-core", "Use the test network"),
 QT_TRANSLATE_NOOP("dash-core", "Username for JSON-RPC connections"),
-QT_TRANSLATE_NOOP("dash-core", "Value more than Darksend pool maximum allows."),
+QT_TRANSLATE_NOOP("dash-core", "Value more than PrivateSend pool maximum allows."),
 QT_TRANSLATE_NOOP("dash-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("dash-core", "Verifying wallet..."),
 QT_TRANSLATE_NOOP("dash-core", "Wallet %s resides outside data directory %s"),

@@ -413,6 +413,7 @@ endif
 RES_IMAGES = \
   qt/res/images/drkblue/about.png \
   qt/res/images/drkblue/splash.png \
+  qt/res/images/drkblue/splash_testnet.png \
   qt/res/images/drkblue/dash_logo_horizontal.png \
   qt/res/images/drkblue/drkblue_downArrow.png \
   qt/res/images/drkblue/drkblue_downArrow_small.png \
@@ -424,6 +425,7 @@ RES_IMAGES = \
   qt/res/images/drkblue/drkblue_walletFrame.png \
   qt/res/images/crownium/about.png \
   qt/res/images/crownium/splash.png \
+  qt/res/images/crownium/splash_testnet.png \
   qt/res/images/crownium/dash_logo_horizontal.png \
   qt/res/images/crownium/drkblue_downArrow.png \
   qt/res/images/crownium/drkblue_downArrow_small.png \
@@ -435,6 +437,7 @@ RES_IMAGES = \
   qt/res/images/crownium/drkblue_walletFrame.png \
   qt/res/images/light/about.png \
   qt/res/images/light/splash.png \
+  qt/res/images/light/splash_testnet.png \
   qt/res/images/light/dash_logo_horizontal.png \
   qt/res/images/light/drkblue_downArrow.png \
   qt/res/images/light/drkblue_downArrow_small.png \
@@ -446,6 +449,7 @@ RES_IMAGES = \
   qt/res/images/light/drkblue_walletFrame.png \
   qt/res/images/trad/about.png \
   qt/res/images/trad/splash.png \
+  qt/res/images/trad/splash_testnet.png \
   qt/res/images/trad/dash_logo_horizontal.png \
   qt/res/images/trad/drkblue_downArrow.png \
   qt/res/images/trad/drkblue_downArrow_small.png \

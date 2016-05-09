@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Configure Darksend</string>
+   <string>Configure PrivateSend</string>
   </property>
   <widget class="QPushButton" name="buttonBasic">
    <property name="geometry">

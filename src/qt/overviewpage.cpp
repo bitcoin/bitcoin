@@ -158,9 +158,9 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
             ui->frameDarksend->setEnabled(false);
         } else {
             if(!fEnableDarksend){
-                ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
+                ui->toggleDarksend->setText(tr("Start Mixing"));
             } else {
-                ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
+                ui->toggleDarksend->setText(tr("Stop Mixing"));
             }
             timer = new QTimer(this);
             connect(timer, SIGNAL(timeout()), this, SLOT(darkSendStatus()));
@@ -448,7 +448,7 @@ void OverviewPage::darkSendStatus()
 
             ui->darksendEnabled->setText(tr("Disabled"));
             ui->darksendStatus->setText("");
-            ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
+            ui->toggleDarksend->setText(tr("Start Mixing"));
         }
 
         return;
@@ -466,10 +466,10 @@ void OverviewPage::darkSendStatus()
 
     QString strStatus = QString(darkSendPool.GetStatus().c_str());
 
-    QString s = tr("Last Darksend message:\n") + strStatus;
+    QString s = tr("Last PrivateSend message:\n") + strStatus;
 
     if(s != ui->darksendStatus->text())
-        LogPrintf("Last Darksend message: %s\n", strStatus.toStdString());
+        LogPrintf("Last PrivateSend message: %s\n", strStatus.toStdString());
 
     ui->darksendStatus->setText(s);
 
@@ -491,8 +491,8 @@ void OverviewPage::darksendAuto(){
 void OverviewPage::darksendReset(){
     darkSendPool.Reset();
 
-    QMessageBox::warning(this, tr("Darksend"),
-        tr("Darksend was successfully reset."),
+    QMessageBox::warning(this, tr("PrivateSend"),
+        tr("PrivateSend was successfully reset."),
         QMessageBox::Ok, QMessageBox::Ok);
 }
 
@@ -501,8 +501,8 @@ void OverviewPage::toggleDarksend(){
     // Popup some information on first mixing
     QString hasMixed = settings.value("hasMixed").toString();
     if(hasMixed.isEmpty()){
-        QMessageBox::information(this, tr("Darksend"),
-                tr("If you don't want to see internal Darksend fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab."),
+        QMessageBox::information(this, tr("PrivateSend"),
+                tr("If you don't want to see internal PrivateSend fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab."),
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
     }
@@ -511,8 +511,8 @@ void OverviewPage::toggleDarksend(){
         float minAmount = 1.49 * COIN;
         if(balance < minAmount){
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, minAmount));
-            QMessageBox::warning(this, tr("Darksend"),
-                tr("Darksend requires at least %1 to use.").arg(strMinAmount),
+            QMessageBox::warning(this, tr("PrivateSend"),
+                tr("PrivateSend requires at least %1 to use.").arg(strMinAmount),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
@@ -525,10 +525,10 @@ void OverviewPage::toggleDarksend(){
             {
                 //unlock was cancelled
                 darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
-                QMessageBox::warning(this, tr("Darksend"),
-                    tr("Wallet is locked and user declined to unlock. Disabling Darksend."),
+                QMessageBox::warning(this, tr("PrivateSend"),
+                    tr("Wallet is locked and user declined to unlock. Disabling PrivateSend."),
                     QMessageBox::Ok, QMessageBox::Ok);
-                if (fDebug) LogPrintf("Wallet is locked and user declined to unlock. Disabling Darksend.\n");
+                if (fDebug) LogPrintf("Wallet is locked and user declined to unlock. Disabling PrivateSend.\n");
                 return;
             }
         }
@@ -539,10 +539,10 @@ void OverviewPage::toggleDarksend(){
     darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
 
     if(!fEnableDarksend){
-        ui->toggleDarksend->setText(tr("Start Darksend Mixing"));
+        ui->toggleDarksend->setText(tr("Start Mixing"));
         darkSendPool.UnlockCoins();
     } else {
-        ui->toggleDarksend->setText(tr("Stop Darksend Mixing"));
+        ui->toggleDarksend->setText(tr("Stop Mixing"));
 
         /* show darksend configuration if client has defaults set */
 

@@ -40,9 +40,9 @@ void DarksendConfig::clickBasic()
 
     QString strAmount(BitcoinUnits::formatWithUnit(
         model->getOptionsModel()->getDisplayUnit(), 1000 * COIN));
-    QMessageBox::information(this, tr("Darksend Configuration"),
+    QMessageBox::information(this, tr("PrivateSend Configuration"),
         tr(
-            "Darksend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash's configuration screen."
+            "PrivateSend was successfully set to basic (%1 and 2 rounds). You can change this at any time by opening Dash's configuration screen."
         ).arg(strAmount)
     );
 
@@ -55,9 +55,9 @@ void DarksendConfig::clickHigh()
 
     QString strAmount(BitcoinUnits::formatWithUnit(
         model->getOptionsModel()->getDisplayUnit(), 1000 * COIN));
-    QMessageBox::information(this, tr("Darksend Configuration"),
+    QMessageBox::information(this, tr("PrivateSend Configuration"),
         tr(
-            "Darksend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash's configuration screen."
+            "PrivateSend was successfully set to high (%1 and 8 rounds). You can change this at any time by opening Dash's configuration screen."
         ).arg(strAmount)
     );
 
@@ -70,9 +70,9 @@ void DarksendConfig::clickMax()
 
     QString strAmount(BitcoinUnits::formatWithUnit(
         model->getOptionsModel()->getDisplayUnit(), 1000 * COIN));
-    QMessageBox::information(this, tr("Darksend Configuration"),
+    QMessageBox::information(this, tr("PrivateSend Configuration"),
         tr(
-            "Darksend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash's configuration screen."
+            "PrivateSend was successfully set to maximum (%1 and 16 rounds). You can change this at any time by opening Dash's configuration screen."
         ).arg(strAmount)
     );
 
