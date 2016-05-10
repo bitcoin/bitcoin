@@ -379,19 +379,21 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
         return error("Proxy failed to accept request");
     }
     if (pchRet2[1] != 0x00) {
+        // Failures to connect to a peer that are not proxy errors
         CloseSocket(hSocket);
         switch (pchRet2[1])
         {
-            case 0x01: return error("Proxy error: general failure");
-            case 0x02: return error("Proxy error: connection not allowed");
-            case 0x03: return error("Proxy error: network unreachable");
-            case 0x04: return error("Proxy error: host unreachable");
-            case 0x05: return error("Proxy error: connection refused");
-            case 0x06: return error("Proxy error: TTL expired");
-            case 0x07: return error("Proxy error: protocol error");
-            case 0x08: return error("Proxy error: address type not supported");
-            default:   return error("Proxy error: unknown");
+            case 0x01: LogPrintf("Socks5() connect to %s:%d failed: general failure\n", strDest, port); break;
+            case 0x02: LogPrintf("Socks5() connect to %s:%d failed: connection not allowed\n", strDest, port); break;
+            case 0x03: LogPrintf("Socks5() connect to %s:%d failed: network unreachable\n", strDest, port); break;
+            case 0x04: LogPrintf("Socks5() connect to %s:%d failed: host unreachable\n", strDest, port); break;
+            case 0x05: LogPrintf("Socks5() connect to %s:%d failed: connection refused\n", strDest, port); break;
+            case 0x06: LogPrintf("Socks5() connect to %s:%d failed: TTL expired\n", strDest, port); break;
+            case 0x07: LogPrintf("Socks5() connect to %s:%d failed: protocol error\n", strDest, port); break;
+            case 0x08: LogPrintf("Socks5() connect to %s:%d failed: address type not supported\n", strDest, port); break;
+            default:   LogPrintf("Socks5() connect to %s:%d failed: unknown\n", strDest, port);
         }
+        return false;
     }
     if (pchRet2[2] != 0x00) {
         CloseSocket(hSocket);
