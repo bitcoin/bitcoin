@@ -799,3 +799,21 @@ UniValue estimatesmartpriority(const UniValue& params, bool fHelp)
     result.push_back(Pair("blocks", answerFound));
     return result;
 }
+
+UniValue setcoinbase(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "setcoinbase pubkey\n"
+            "\nwhen called this registers a public key to be used as a coinbase for subsequent\n"
+            "calls to getblocktemplate\n"
+            "\nArguments:\n"
+            "1. pubkey     (hex)  the raw (hex encoded) pubkey\n"
+            "\n"
+            );
+
+
+    auto script = Mining::ScriptForCoinbase(params[0].get_str());
+    Mining::instance()->SetCoinbase(script);
+    return  UniValue(UniValue::VOBJ);
+}
