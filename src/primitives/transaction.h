@@ -297,7 +297,6 @@ inline void SerializeTransaction(TxType& tx, Stream& s, Operation ser_action, in
             /* We read a non-empty vin. Assume a normal vout follows. */
             READWRITE(*const_cast<std::vector<CTxOut>*>(&tx.vout));
         }
-        const_cast<CTxWitness*>(&tx.wit)->SetNull();
         if ((flags & 1) && !(nVersion & SERIALIZE_TRANSACTION_NO_WITNESS)) {
             /* The witness flag is present, and we support witnesses. */
             flags ^= 1;
