@@ -1343,7 +1343,7 @@
           </size>
          </property>
          <property name="text">
-          <string>InstantX</string>
+          <string>InstantSend</string>
          </property>
         </widget>
        </item>
