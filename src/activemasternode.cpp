@@ -124,6 +124,10 @@ void CActiveMasternode::ManageStatus()
                 return;
             }
 
+            //update to masternode list
+            LogPrintf("CActiveMasternode::ManageStatus() - Update Masternode List\n");
+            mnodeman.UpdateMasternodeList(mnb);
+
             //send to all peers
             LogPrintf("CActiveMasternode::ManageStatus() - Relay broadcast vin = %s\n", vin.ToString());
             mnb.Relay();
