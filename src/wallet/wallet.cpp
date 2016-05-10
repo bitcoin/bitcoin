@@ -368,6 +368,7 @@ void CWallet::Flush(bool shutdown)
 
 bool CWallet::Verify()
 {
+    LogPrintf("Using BerkeleyDB version %s\n", DbEnv::version(0, 0, 0));
     std::string walletFile = GetArg("-wallet", DEFAULT_WALLET_DAT);
 
     LogPrintf("Using wallet %s\n", walletFile);
