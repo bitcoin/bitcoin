@@ -90,7 +90,7 @@ public:
         consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        /** 
+        /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
@@ -244,12 +244,11 @@ public:
         strDarksendPoolDummyAddress = "y1EZuxhhNMAUofTBEeLqGE1bJrpC2TWRNp";
         checkpointData = (CCheckpointData) {
             boost::assign::map_list_of
-            ( 261, uint256S("00000c26026d0815a7e2ce4fa270775f61403c040647ff2c3091f99e894a4618"))
-            ( 77900, uint256S("00000007e5ec67e2a626c07b7d66673c3dd8df0aed5018ca984b99fba2b71024"))
-            ( 82313, uint256S("000000156a313af1d69fe855609175b276996235e8f4f7da41b10e4a7a750a19")),
-            1405699509,
-            201,
-            500
+            ( 261, uint256S("00000c26026d0815a7e2ce4fa270775f61403c040647ff2c3091f99e894a4618")),
+            1423410572, // * UNIX timestamp of last checkpoint block
+            264,        // * total number of transactions between genesis and last checkpoint
+                        //   (the tx=... number in the SetBestChain debug.log lines)
+            500         // * estimated number of transactions per day after checkpoint
         };
 
     }
