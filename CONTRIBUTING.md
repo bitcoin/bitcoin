@@ -17,13 +17,13 @@ To contribute a patch, the workflow is as follows:
   - Create topic branch
   - Commit patches
 
-The project coding conventions in [doc/developer-notes.md](doc/developer-notes.md) must be adhered to.
+The project coding conventions in the [developer notes](doc/developer-notes.md) must be adhered to.
 
 In general [commits should be atomic](https://en.wikipedia.org/wiki/Atomic_commit#Atomic_commit_convention) and diffs should be easy to read. For this reason do not mix any formatting fixes or code moves with actual code changes.
 
 Commit messages should be verbose by default consisting of a short subject line (50 chars max), a blank line and detailed explanatory text as separate paragraph(s); unless the title alone is self-explanatory (like "Corrected typo in main.cpp") then a single title line is sufficient. Commit messages should be helpful to people reading your code in the future, so explain the reasoning for your decisions. Further explanation [here](http://chris.beams.io/posts/git-commit/).
 
-If a particular commit references another issue, please add the reference, for example "refs #1234", or "fixes #4321". Using "fixes or closes" keywords will cause the corresponding issue to be closed when the pull request is merged.
+If a particular commit references another issue, please add the reference, for example `refs #1234`, or `fixes #4321`. Using the `fixes` or `closes` keywords will cause the corresponding issue to be closed when the pull request is merged.
 
 Please refer to the [Git manual](https://git-scm.com/doc) for more information about Git.
 
@@ -35,13 +35,27 @@ The title of the pull request should be prefixed by the component or area that t
     Consensus: Add new opcode for BIP-XXXX OP_CHECKAWESOMESIG
     Net: Automatically create hidden service, listen on Tor
     Qt: Add feed bump button
-    Trivial: fix typo
+    Trivial: Fix typo in main.cpp
 
-If a pull request is specifically not to be considered for merging (yet) please prefix the title with [WIP] or use [Tasks Lists](https://github.com/blog/1375-task-lists-in-gfm-issues-pulls-comments) in the body of the pull request to indicate tasks are pending.
+If a pull request is specifically not to be considered for merging (yet) please prefix the title with [WIP] or use [Tasks Lists](https://help.github.com/articles/basic-writing-and-formatting-syntax/#task-lists) in the body of the pull request to indicate tasks are pending.
 
 The body of the pull request should contain enough description about what the patch does together with any justification/reasoning. You should include references to any discussions (for example other tickets or mailing list discussions).
 
-At this stage one should expect comments and review from other contributors. You can add more commits to your pull request by committing them locally and pushing to your fork until you have satisfied all feedback. If your pull request is accepted for merging, you may be asked by a maintainer to squash and or rebase your commits before it will be merged. The length of time required for peer review is unpredictable and will vary from patch to patch.
+At this stage one should expect comments and review from other contributors. You can add more commits to your pull request by committing them locally and pushing to your fork until you have satisfied all feedback.
+
+Squashing Commits
+---------------------------
+If your pull request is accepted for merging, you may be asked by a maintainer to squash and or [rebase](https://git-scm.com/docs/git-rebase) your commits before it will be merged. The basic squashing workflow is shown below.
+
+    git checkout your_branch_name
+    git rebase -i HEAD~n
+    # n is normally the number of commits in the pull
+    # set commits from 'pick' to 'squash', save and quit
+    # on the next screen, edit/refine commit messages
+    # save and quit
+    git push -f # (force push to GitHub)
+
+The length of time required for peer review is unpredictable and will vary from pull request to pull request.
 
 
 Pull Request Philosophy
@@ -61,7 +75,7 @@ Refactoring is a necessary part of any software project's evolution. The followi
 
 There are three categories of refactoring, code only moves, code style fixes, code refactoring. In general refactoring pull requests should not mix these three kinds of activity in order to make refactoring pull requests easy to review and uncontroversial. In all cases, refactoring PRs must not change the behaviour of code within the pull request (bugs must be preserved as is).
 
-Project maintainers aim for a quick turnaround on refactoring pull requests, so where possible keep them short, uncomplex and easy to verify. 
+Project maintainers aim for a quick turnaround on refactoring pull requests, so where possible keep them short, uncomplex and easy to verify.
 
 
 "Decision Making" Process
@@ -69,7 +83,7 @@ Project maintainers aim for a quick turnaround on refactoring pull requests, so 
 
 The following applies to code changes to the Bitcoin Core project (and related projects such as libsecp256k1), and is not to be confused with overall Bitcoin Network Protocol consensus changes.
 
-Whether a pull request is merged into Bitcoin Core rests with the project merge maintainers and ultimately the project lead. 
+Whether a pull request is merged into Bitcoin Core rests with the project merge maintainers and ultimately the project lead.
 
 Maintainers will take into consideration if a patch is in line with the general principles of the project; meets the minimum standards for inclusion; and will judge the general consensus of contributors.
 
