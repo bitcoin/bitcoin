@@ -177,6 +177,7 @@ class AddressIndexTest(BitcoinTestFramework):
             balance3 += delta["satoshis"]
         assert_equal(balance3, change_amount)
         assert_equal(deltas[0]["address"], address2)
+        assert_equal(deltas[0]["blockindex"], 1)
 
         # Check that entire range will be queried
         deltasAll = self.nodes[1].getaddressdeltas({"addresses": [address2]})

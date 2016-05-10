@@ -672,6 +672,7 @@ UniValue getaddressdeltas(const UniValue& params, bool fHelp)
         delta.push_back(Pair("satoshis", it->second));
         delta.push_back(Pair("txid", it->first.txhash.GetHex()));
         delta.push_back(Pair("index", (int)it->first.index));
+        delta.push_back(Pair("blockindex", (int)it->first.txindex));
         delta.push_back(Pair("height", it->first.blockHeight));
         delta.push_back(Pair("address", address));
         result.push_back(delta);
