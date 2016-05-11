@@ -4104,8 +4104,16 @@ bool RewindBlockIndex(const Consensus::Params& params)
             pindexIter->nSequenceId = 0;
             // Make sure it gets written.
             setDirtyBlockIndex.insert(pindexIter);
-            // Update setBlockIndexCandidates
+            // Update indexes
             setBlockIndexCandidates.erase(pindexIter);
+            std::pair<std::multimap<CBlockIndex*, CBlockIndex*>::iterator, std::multimap<CBlockIndex*, CBlockIndex*>::iterator> ret = mapBlocksUnlinked.equal_range(pindexIter->pprev);
+            while (ret.first != ret.second) {
+                if (ret.first->second == pindexIter) {
+                    mapBlocksUnlinked.erase(ret.first++);
+                } else {
+                    ++ret.first;
+                }
+            }
         } else if (pindexIter->IsValid(BLOCK_VALID_TRANSACTIONS) && pindexIter->nChainTx) {
             setBlockIndexCandidates.insert(pindexIter);
         }
