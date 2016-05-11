@@ -122,7 +122,7 @@ std::vector<CAmount> darkSendDenominations;
 string strBudgetMode = "";
 
 const char * const BITCOIN_CONF_FILENAME = "dash.conf";
-const char * const BITCOIN_PID_FILENAME = "dash.pid";
+const char * const BITCOIN_PID_FILENAME = "dashd.pid";
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
