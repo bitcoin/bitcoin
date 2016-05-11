@@ -4060,13 +4060,13 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
     return true;
 }
 
-bool RewindBlockIndex(const Consensus::Params& params)
+bool RewindBlockIndex(const CChainParams& params)
 {
     LOCK(cs_main);
 
     int nHeight = 1;
     while (nHeight <= chainActive.Height()) {
-        if (IsWitnessEnabled(chainActive[nHeight - 1], params) && !(chainActive[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
+        if (IsWitnessEnabled(chainActive[nHeight - 1], params.GetConsensus()) && !(chainActive[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
             break;
         }
         nHeight++;
@@ -4076,7 +4076,7 @@ bool RewindBlockIndex(const Consensus::Params& params)
     CValidationState state;
     CBlockIndex* pindex = chainActive.Tip();
     while (chainActive.Height() >= nHeight) {
-        if (!DisconnectTip(state, params, true)) {
+        if (!DisconnectTip(state, params.GetConsensus(), true)) {
             return error("RewindBlockIndex: unable to disconnect block at height %i", pindex->nHeight);
         }
         // Occasionally flush state to disk.
@@ -4089,7 +4089,7 @@ bool RewindBlockIndex(const Consensus::Params& params)
     // to disk before writing the chainstate, resulting in a failure to continue if interrupted.
     for (BlockMap::iterator it = mapBlockIndex.begin(); it != mapBlockIndex.end(); it++) {
         CBlockIndex* pindexIter = it->second;
-        if (IsWitnessEnabled(pindexIter->pprev, params) && !(pindexIter->nStatus & BLOCK_OPT_WITNESS)) {
+        if (IsWitnessEnabled(pindexIter->pprev, params.GetConsensus()) && !(pindexIter->nStatus & BLOCK_OPT_WITNESS)) {
             // Reduce validity
             pindexIter->nStatus = std::min<unsigned int>(pindexIter->nStatus & BLOCK_VALID_MASK, BLOCK_VALID_TREE) | (pindexIter->nStatus & ~BLOCK_VALID_MASK);
             // Remove have-data flags.
@@ -4121,7 +4121,7 @@ bool RewindBlockIndex(const Consensus::Params& params)
 
     PruneBlockIndexCandidates();
 
-    CheckBlockIndex(params);
+    CheckBlockIndex(params.GetConsensus());
 
     if (!FlushStateToDisk(state, FLUSH_STATE_ALWAYS)) {
         return false;
