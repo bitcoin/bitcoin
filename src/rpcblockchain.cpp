@@ -285,10 +285,12 @@ UniValue getblockhashes(const UniValue& params, bool fHelp)
             "1. high         (numeric, required) The newer block timestamp\n"
             "2. low          (numeric, required) The older block timestamp\n"
             "\nResult:\n"
-            "["
+            "[\n"
             "  \"hash\"         (string) The block hash\n"
-            "]"
+            "]\n"
             "\nExamples:\n"
+            + HelpExampleCli("getblockhashes", "1231614698 1231024505")
+            + HelpExampleRpc("getblockhashes", "1231614698, 1231024505")
         );
 
     unsigned int high = params[0].get_int();
