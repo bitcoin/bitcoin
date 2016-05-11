@@ -72,6 +72,7 @@ public:
 protected:
     void changeEvent(QEvent *e);
     void closeEvent(QCloseEvent *event);
+    void showEvent(QShowEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
     bool eventFilter(QObject *object, QEvent *event);
