@@ -91,7 +91,7 @@ enum
     //
     SCRIPT_VERIFY_WITNESS = (1U << 11),
 
-    // Making v2-v16 witness program non-standard
+    // Making v1-v16 witness program non-standard
     //
     SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM = (1U << 12),
 };
