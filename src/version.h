@@ -39,7 +39,4 @@ static const int SENDHEADERS_VERSION = 70012;
 //! "feefilter" tells peers to filter invs to you by fee starts with this version
 static const int FEEFILTER_VERSION = 70013;
 
-//! Version after which witness support potentially exists
-static const int WITNESS_VERSION = 70013;
-
 #endif // BITCOIN_VERSION_H
