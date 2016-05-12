@@ -780,8 +780,6 @@ public:
     static uint64_t GetMaxOutboundTimeLeftInCycle();
 };
 
-
-
 class CTransaction;
 void RelayTransaction(const CTransaction& tx, CFeeRate feerate);
 
