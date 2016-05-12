@@ -6,6 +6,8 @@
 #define BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H
 
 #include "zmqabstractnotifier.h"
+#include "validationinterface.h"
+#include "txmempool.h"
 
 class CBlockIndex;
 
@@ -28,28 +30,53 @@ public:
     void Shutdown();
 };
 
-class CZMQPublishHashBlockNotifier : public CZMQAbstractPublishNotifier
+//! Publish notifier that listens to validation events
+class CZMQValidationPublishNotifier : public CZMQAbstractPublishNotifier, public CValidationInterface
 {
 public:
-    bool NotifyBlock(const CBlockIndex *pindex);
+    CZMQValidationPublishNotifier();
+    ~CZMQValidationPublishNotifier();
+
+    // Child classes should override one or more of these from CValidationInterface:
+    // void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, const CBlock* pblock);
+    // void UpdatedBlockTip(const CBlockIndex *pindex);
 };
 
-class CZMQPublishHashTransactionNotifier : public CZMQAbstractPublishNotifier
+class CZMQPublishHashBlockNotifier : public CZMQValidationPublishNotifier
 {
 public:
-    bool NotifyTransaction(const CTransaction &transaction);
+    void UpdatedBlockTip(const CBlockIndex *pindex);
 };
 
-class CZMQPublishRawBlockNotifier : public CZMQAbstractPublishNotifier
+class CZMQPublishHashTransactionNotifier : public CZMQValidationPublishNotifier
 {
 public:
-    bool NotifyBlock(const CBlockIndex *pindex);
+    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, const CBlock* pblock);
 };
 
-class CZMQPublishRawTransactionNotifier : public CZMQAbstractPublishNotifier
+class CZMQPublishRawBlockNotifier : public CZMQValidationPublishNotifier
 {
 public:
-    bool NotifyTransaction(const CTransaction &transaction);
+    void UpdatedBlockTip(const CBlockIndex *pindex);
+};
+
+class CZMQPublishRawTransactionNotifier : public CZMQValidationPublishNotifier
+{
+public:
+    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, const CBlock* pblock);
+};
+
+class CZMQPublishMempoolNotifier : public CZMQAbstractPublishNotifier
+{
+public:
+    CZMQPublishMempoolNotifier(CTxMemPool *mempoolIn);
+    ~CZMQPublishMempoolNotifier();
+
+    void NotifyEntryAdded(const CTxMemPoolEntry &entry);
+    void NotifyEntryRemoved(const CTxMemPoolEntry &entry, MemPoolRemovalReason reason);
+
+private:
+    CTxMemPool *mempool;
 };
 
 #endif // BITCOIN_ZMQ_ZMQPUBLISHNOTIFIER_H

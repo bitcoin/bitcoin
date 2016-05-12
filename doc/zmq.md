@@ -60,6 +60,7 @@ Currently, the following notifications are supported:
     -zmqpubhashblock=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
+    -zmqpubmempool=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
@@ -84,6 +85,85 @@ Client side, then, the ZeroMQ subscriber socket must have the
 ZMQ_SUBSCRIBE option set to one or either of these prefixes (for
 instance, just `hash`); without doing so will result in no messages
 arriving. Please see `contrib/zmq/zmq_sub.py` for a working example.
+
+## Notification types
+
+### hashtx
+
+`hashtx` (enabled by `-zmqpubhashtx`) is broadcasted on every incoming,
+accepted transaction.
+
+The body is 32 bytes, and contains the binary hash of the transaction.
+
+### hashblock
+
+`hashblock` (enabled by `-zmqpubhashblock`) is broadcasted on every incoming,
+accepted block.
+
+The body is 32 bytes, and contains the binary hash of the block.
+
+### rawtx
+
+`rawtx` (enabled by `-zmqpubrawtx`) is broadcasted on every incoming, accepted
+transaction.
+
+The body has a variable length, and contains the raw binary data of the transaction.
+
+### rawblock
+
+`rawblock` (enabled by `-zmqpubrawblock`) is broadcasted on every incoming,
+accepted block.
+
+The body has a variable length, and contains the raw binary data of the block.
+
+### mempooladd
+
+`mempooladd` (enabled by `-zmqpubmempool`) is broadcasted on every transaction
+that is added to the mempool.
+
+The body is 44 bytes.
+
+| Offset  | Type (size)   | Description  |
+| -------:|:------------- |:------------ |
+| 0       | hash (32)     | Hash of the transaction |
+| 32      | uint64 (8)    | Fee posted with transaction (absolute, not per kB) |
+| 40      | uint32 (4)    | Size of transaction |
+
+Values are in little-endian, independent of the platform.
+
+### mempoolremove
+
+`mempoolremove` (enabled by `-zmqpubmempool`) is broadcasted on every
+transaction that is removed from the mempool.
+
+The body is 33 bytes.
+
+| Offset  | Type (size)   | Description  |
+| -------:|:------------- |:------------ |
+| 0       | hash (32)     | Hash of the transaction |
+| 32      | enum (1)      | Reason for removal (see below) |
+
+The reason can have the following values:
+
+| Enum    | Id            | Description  |
+| -------:|:------------- |:------------ |
+| 0       | `UNKNOWN`     | Manually removed or unknown reason |
+| 1       | `EXPIRY`      | Expired from mempool |
+| 2       | `SIZELIMIT`   | Removed in size limiting |
+| 3       | `REORG`       | Removed for reorganization |
+| 4       | `BLOCK`       | Removed for block |
+| 5       | `REPLACED`    | Removed for conflict (replaced) |
+
+Note that future versions may add further removal reasons, so it is
+recommended to treat any unknown value as `UNKNOWN`.
+
+## Note about transaction and block hashes
+
+The 32-byte transaction and block hashes in notifications are byte-by-byte
+reversed compared to their in-memory representation.
+
+They match the order of the hexadecimal representation as used in the debug log
+as well as RPC.
 
 ## Remarks
 

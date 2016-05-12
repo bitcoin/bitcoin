@@ -11,21 +11,18 @@
 
 class CBlockIndex;
 class CZMQAbstractNotifier;
+class CTxMemPool;
 
-class CZMQNotificationInterface : public CValidationInterface
+class CZMQNotificationInterface
 {
 public:
     virtual ~CZMQNotificationInterface();
 
-    static CZMQNotificationInterface* CreateWithArguments(const std::map<std::string, std::string> &args);
+    static CZMQNotificationInterface* CreateWithArguments(const std::map<std::string, std::string> &args, CTxMemPool *mempool);
 
 protected:
     bool Initialize();
     void Shutdown();
-
-    // CValidationInterface
-    void SyncTransaction(const CTransaction& tx, const CBlockIndex *pindex, const CBlock* pblock);
-    void UpdatedBlockTip(const CBlockIndex *pindex);
 
 private:
     CZMQNotificationInterface();
