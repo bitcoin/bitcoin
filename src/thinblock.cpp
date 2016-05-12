@@ -221,6 +221,13 @@ std::string CThinBlockStats::ToString()
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::InBoundPercentToString()
 {
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksInBound.begin(); mi != CThinBlockStats::mapThinBlocksInBound.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapThinBlocksInBound.erase(mi);
+    }
+
     double nCompressionRate = 0;
     uint64_t nThinSizeTotal = 0;
     uint64_t nOriginalSizeTotal = 0;
@@ -241,6 +248,13 @@ std::string CThinBlockStats::InBoundPercentToString()
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::OutBoundPercentToString()
 {
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, std::pair<uint64_t, uint64_t> >::iterator mi = CThinBlockStats::mapThinBlocksOutBound.begin(); mi != CThinBlockStats::mapThinBlocksOutBound.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapThinBlocksOutBound.erase(mi);
+    }
+
     double nCompressionRate = 0;
     uint64_t nThinSizeTotal = 0;
     uint64_t nOriginalSizeTotal = 0;
@@ -261,6 +275,13 @@ std::string CThinBlockStats::OutBoundPercentToString()
 // Calculate the average inbound xthin bloom filter size
 std::string CThinBlockStats::InBoundBloomFiltersToString()
 {
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersInBound.begin(); mi != CThinBlockStats::mapBloomFiltersInBound.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapBloomFiltersInBound.erase(mi);
+    }
+
     uint64_t nInBoundBloomFilters = 0;
     uint64_t nInBoundBloomFilterSize = 0;
     double avgBloomSize = 0;
@@ -287,6 +308,13 @@ std::string CThinBlockStats::InBoundBloomFiltersToString()
 // Calculate the average inbound xthin bloom filter size
 std::string CThinBlockStats::OutBoundBloomFiltersToString()
 {
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, uint64_t>::iterator mi = CThinBlockStats::mapBloomFiltersOutBound.begin(); mi != CThinBlockStats::mapBloomFiltersOutBound.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapBloomFiltersOutBound.erase(mi);
+    }
+
     uint64_t nOutBoundBloomFilters = 0;
     uint64_t nOutBoundBloomFilterSize = 0;
     double avgBloomSize = 0;
@@ -372,6 +400,13 @@ std::string CThinBlockStats::ValidationTimeToString()
 // Calculate the xthin percentage compression over the last 24 hours
 std::string CThinBlockStats::ReRequestedTxToString()
 {
+    // Delete any entries that are more than 24 hours old
+    int64_t nTimeCutoff = GetTimeMillis() - 60*60*24*1000;
+    for (std::map<int64_t, int>::iterator mi = CThinBlockStats::mapThinBlocksInBoundReRequestedTx.begin(); mi != CThinBlockStats::mapThinBlocksInBoundReRequestedTx.end(); ++mi) {
+        if ((*mi).first < nTimeCutoff)
+            CThinBlockStats::mapThinBlocksInBoundReRequestedTx.erase(mi);
+    }
+
     double nReRequestRate = 0;
     uint64_t nTotalReRequests = 0;
     uint64_t nTotalReRequestedTxs = 0;
