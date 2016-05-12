@@ -4742,7 +4742,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                     ss << filterMemPool;
                                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
                                     MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+                                    LogPrint("thin", "Requesting Thinblock %s by INV from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                                 }
                             }
                             else {
@@ -4757,10 +4757,10 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                                     ss << inv2;
                                     ss << filterMemPool;
                                     pfrom->PushMessage(NetMsgType::GET_XTHIN, ss);
-                                    LogPrint("thin", "Requesting Thinblock %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+                                    LogPrint("thin", "Requesting Thinblock %s by INV from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                                 }
                                 else {
-                                    LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+                                    LogPrint("thin", "Requesting Regular Block %s by INV from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                                     vToFetch.push_back(inv2);
                                 }
                                 MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
@@ -4769,7 +4769,7 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
                         else {
                             vToFetch.push_back(inv2);
                             MarkBlockAsInFlight(pfrom->GetId(), inv.hash, chainparams.GetConsensus());
-                            LogPrint("thin", "Requesting Regular Block %s from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
+                            LogPrint("thin", "Requesting Regular Block %s by INV from peer %s (%d)\n", inv2.hash.ToString(), pfrom->addrName.c_str(),pfrom->id);
                         }
                         // BUIP010 Xtreme Thinblocks: end section
                     }
@@ -6236,7 +6236,7 @@ bool SendMessages(CNode* pto)
                             ss << filterMemPool;
                             pto->PushMessage(NetMsgType::GET_XTHIN, ss);
                             MarkBlockAsInFlight(pto->GetId(), pindex->GetBlockHash(), consensusParams, pindex);
-                            LogPrint("thin", "Requesting thinblock %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
+                            LogPrint("thin", "Requesting Thinblock %s (%d) from peer %s (%d)\n", pindex->GetBlockHash().ToString(),
                                      pindex->nHeight, pto->addrName.c_str(), pto->id);
                         }
                     }
