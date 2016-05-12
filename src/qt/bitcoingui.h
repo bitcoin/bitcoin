@@ -218,6 +218,9 @@ private Q_SLOTS:
 
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
+    
+    /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
+    void setTrayIconVisible(bool);
 };
 
 class UnitDisplayStatusBarControl : public QLabel

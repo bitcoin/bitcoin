@@ -505,6 +505,16 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Window">
        <item>
+        <widget class="QCheckBox" name="hideTrayIcon">
+         <property name="toolTip">
+          <string>&amp;Hide the icon from the system tray.</string>
+         </property>
+         <property name="text">
+          <string>Hide tray icon</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="minimizeToTray">
          <property name="toolTip">
           <string>Show only a tray icon after minimizing the window.</string>
