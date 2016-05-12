@@ -158,7 +158,7 @@ static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
 // shutdown thing.
 //
 
-volatile bool fRequestShutdown = false;
+volatile sig_atomic_t fRequestShutdown = false;
 
 void StartShutdown()
 {
