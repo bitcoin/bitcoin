@@ -92,6 +92,16 @@ public:
         vSeeds.push_back(CDNSSeedData("seed6.zeta-coin.com", "seed6.zeta-coin.com"));
         vSeeds.push_back(CDNSSeedData("seed7.zeta-coin.com", "seed7.zeta-coin.com"));
         vSeeds.push_back(CDNSSeedData("seed8.zeta-coin.com", "seed8.zeta-coin.com"));
+        vSeeds.push_back(CDNSSeedData("seed1.zetac.org", "seed1.zetac.org"));
+        vSeeds.push_back(CDNSSeedData("seed2.zetac.org", "seed2.zetac.org"));
+        vSeeds.push_back(CDNSSeedData("seed3.zetac.org", "seed3.zetac.org"));
+        vSeeds.push_back(CDNSSeedData("seed4.zetac.org", "seed4.zetac.org"));
+        vSeeds.push_back(CDNSSeedData("seed5.zetac.org", "seed5.zetac.org"));
+        vSeeds.push_back(CDNSSeedData("seed6.zetac.org", "seed6.zetac.org"));
+        vSeeds.push_back(CDNSSeedData("seed7.zetac.org", "seed7.zetac.org"));
+        vSeeds.push_back(CDNSSeedData("seed8.zetac.org", "seed8.zetac.org"));
+        vSeeds.push_back(CDNSSeedData("zet2.ignorelist.com", "zet2.ignorelist.com"));
+        vSeeds.push_back(CDNSSeedData("zet.strangled.net", "zet.strangled.net"));	
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,80);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,9);
