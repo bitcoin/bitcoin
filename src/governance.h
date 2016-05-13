@@ -44,6 +44,11 @@ extern std::vector<CGovernanceObject> vecImmatureBudgetProposals;
 extern std::map<uint256, int64_t> askedForSourceProposalOrBudget;
 extern CGovernanceManager governance;
 
+// FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
+#define SEEN_OBJECT_IS_VALID          0
+#define SEEN_OBJECT_ERROR_INVALID     1
+#define SEEN_OBJECT_ERROR_IMMATURE    2
+
 //Check the collateral transaction for the budget proposal/finalized budget
 extern bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf, CAmount minFee);
 
@@ -67,17 +72,16 @@ public:
     mutable CCriticalSection cs;
     
     // keep track of the scanning errors I've seen
-    map<uint256, CGovernanceObject> mapProposals;
+    map<uint256, CGovernanceObject> mapObjects;
 
     // todo - 12.1 - move to private for better encapsulation 
-    std::map<uint256, CGovernanceObject> mapSeenMasternodeBudgetProposals;
-    std::map<uint256, CBudgetVote> mapSeenMasternodeBudgetVotes;
+    std::map<uint256, int> mapSeenMasternodeBudgetProposals;
     std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
-    //       parent hash       vote hash     vote
-    std::map<uint256, std::map<uint256, CBudgetVote> > mapVotes;
+    std::map<uint256, int> mapSeenMasternodeBudgetVotes;
+    std::map<uint256, CBudgetVote> mapVotes;
 
     CGovernanceManager() {
-        mapProposals.clear();
+        mapObjects.clear();
     }
 
     void ClearSeen() {
@@ -90,7 +94,7 @@ public:
         return mapSeenMasternodeBudgetProposals.size() + mapSeenMasternodeBudgetVotes.size();
     }
 
-    int sizeProposals() {return (int)mapProposals.size();}
+    int sizeProposals() {return (int)mapObjects.size();}
 
     // description: incremental sync with our peers
     // note: incremental syncing seems excessive, well just have clients ask for specific objects and their votes
@@ -114,14 +118,14 @@ public:
     bool PropExists(uint256 nHash);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void CleanAndRemove(bool fSignatureCheck);
-    int CountMatchingVotes(int nVoteTypeIn, int nVoteOutcomeIn);
+    int CountMatchingAbsoluteVotes(int nVoteTypeIn, int nVoteOutcomeIn);
 
     void CheckOrphanVotes();
     void Clear(){
         LOCK(cs);
 
         LogPrintf("Budget object cleared\n");
-        mapProposals.clear();
+        mapObjects.clear();
         mapSeenMasternodeBudgetProposals.clear();
         mapSeenMasternodeBudgetVotes.clear();
         mapOrphanMasternodeBudgetVotes.clear();
@@ -136,7 +140,7 @@ public:
         READWRITE(mapSeenMasternodeBudgetProposals);
         READWRITE(mapSeenMasternodeBudgetVotes);
         READWRITE(mapOrphanMasternodeBudgetVotes);
-        READWRITE(mapProposals);
+        READWRITE(mapObjects);
         READWRITE(mapVotes);
     }
 
@@ -195,14 +199,20 @@ public:
     int64_t nTime; //time this object was created
     uint256 nFeeTXHash; //fee-tx
     
-    // caching
-    bool fValid;
+    // caching -- one per voting mechanism -- see governance-vote.h for more information
+    bool fCachedFunding;
+    bool fCachedValid;
+    bool fCachedDelete;
+    bool fCachedClearRegisters;
+    bool fCachedEndorsed;
+    bool fCachedReleaseBounty1;
+    bool fCachedReleaseBounty2;
+    bool fCachedReleaseBounty3;
+
     uint256 nHash;
 
-    // Registers, these can be used for anything
-    //   -- check governance wiki for correct usage
-    std::map<int, CGovernanceObjectRegister> mapRegister;
-
+    // Data field - can be used for anything
+    std::string strData;
 
     CGovernanceObject();
     CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn);
@@ -221,9 +231,19 @@ public:
         swap(first.nRevision, second.nRevision);
         swap(first.nTime, second.nTime);
         swap(first.nFeeTXHash, second.nFeeTXHash);
-        swap(first.fValid, second.fValid);
+
+        // swap all cached valid flags
+        swap(first.fCachedFunding, second.fCachedFunding);
+        swap(first.fCachedValid, second.fCachedValid);
+        swap(first.fCachedDelete, second.fCachedDelete);
+        swap(first.fCachedClearRegisters, second.fCachedClearRegisters);
+        swap(first.fCachedEndorsed, second.fCachedEndorsed);
+        swap(first.fCachedReleaseBounty1, second.fCachedReleaseBounty1);
+        swap(first.fCachedReleaseBounty2, second.fCachedReleaseBounty2);
+        swap(first.fCachedReleaseBounty3, second.fCachedReleaseBounty3);
+
         swap(first.nHash, second.nHash);     
-        first.mapRegister.swap(second.mapRegister);
+        swap(first.strData, second.strData);     
     }
 
     bool HasMinimumRequiredSupport();
@@ -242,9 +262,18 @@ public:
     void Relay();
 
     uint256 GetHash(){
+
+        /*
+        uint256 nHashParent; //parent object, 0 is root
+        int nRevision; //object revision in the system
+        std::string strName; //org name, username, prop name, etc. 
+        int64_t nTime; //time this object was created
+        uint256 nFeeTXHash; //fee-tx
+        */
+
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strName;
-        // ss << mapRegister;
+        ss << strData;
         uint256 h1 = ss.GetHash();
 
         return h1;
@@ -258,33 +287,18 @@ public:
     *   believes they're accurate. Otherwise the masternodes will vote them down 
     *   and we'll delete them from memory (fee-loss attack). 
     *
-    *   - This system is designed to allow virtually any usage
-    *   - No protocol changes are needed
-    *   - Abuse will just be simply automatically deleted
-    *   - Masternodes could read this data and do all sorts of things
-    *
-    *   Contractor: Mailing address, contact info (5 strings)
-    *   Company: BitcoinAddress, UserHash, repeat (automate core team payments?)
-    *   Contract: CAmount, nDenomination(int)
-    *   Proposal:    
-    *   MasternodePaymentsBlock: BlockStart, Masternode1, 2, 3... 
-    *   Arbitration: UserId1, UserId2, TxHash, ContractHash
     
     */
 
-    bool AddRegister(std::string& strError, int nTypeIn, std::string strIn)
+    bool SetData(std::string& strError, std::string strDataIn)
     {
-        if(strIn.size() > 64)
+        if(strDataIn.size() > 512*4)
         {
             strError = "Too big.";
             return false;
         }
 
-        char regbuff[64];
-        strncpy(regbuff, strIn.c_str(), sizeof(regbuff));
-
-        CGovernanceObjectRegister newRegister(nTypeIn, regbuff);
-        mapRegister.insert(make_pair(1 , newRegister));
+        strData = strDataIn;
         return true;
     }
 

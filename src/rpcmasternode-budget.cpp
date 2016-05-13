@@ -177,7 +177,12 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         uint256 fee_tx = ParseHashV(params[1], "fee-tx hash, parameter 1");
-        uint256 hashParent = ParseHashV(params[2], "parent object hash, parameter 2");
+        uint256 hashParent;
+        if(params[2].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
+            hashParent = uint256();
+        } else {
+            hashParent = ParseHashV(params[2], "parent object hash, parameter 2");
+        }
 
         std::string strRevision = params[3].get_str();
         std::string strTime = params[4].get_str();
@@ -186,11 +191,9 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::string strName = SanitizeString(params[5].get_str());
         std::string strRegisters = params[6].get_str();
 
-        // CGovernanceObject budgetProposalBroadcast(strName, GetTime(), 253370764800, uint256());
-        CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, strName, nTime, uint256());
+        CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, strName, nTime, fee_tx);
 
         std::string strError = "";
-
         if(!budgetProposalBroadcast.IsValid(pindex, strError)){
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
         }
@@ -200,7 +203,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         //     throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError);
         // }
 
-        governance.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), budgetProposalBroadcast));
+        governance.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_IS_VALID));
         budgetProposalBroadcast.Relay();
         governance.AddProposal(budgetProposalBroadcast);
 
@@ -283,7 +286,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
             std::string strError = "";
             if(governance.UpdateProposal(vote, NULL, strError)) {
-                governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+                governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
                 vote.Relay();
                 success++;
                 statusObj.push_back(Pair("result", "success"));
@@ -318,11 +321,15 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             pindex = chainActive.Tip();
         }
 
-        std::vector<CGovernanceObject*> winningProps = governance.GetAllProposals(governance.GetLastDiffTime());
+        int nStartTime = 0; //list
+        if(strCommand == "diff") nStartTime = governance.GetLastDiffTime();
+
+        std::vector<CGovernanceObject*> winningProps = governance.GetAllProposals(nStartTime);
         governance.UpdateLastDiffTime(GetTime());
+
         BOOST_FOREACH(CGovernanceObject* pbudgetProposal, winningProps)
         {
-            if(strShow == "valid" && !pbudgetProposal->fValid) continue;
+            if(strShow == "valid" && !pbudgetProposal->fCachedValid) continue;
 
             UniValue bObj(UniValue::VOBJ);
             bObj.push_back(Pair("Name",  pbudgetProposal->GetName()));
@@ -334,12 +341,12 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)));
             bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
             bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(VOTE_ACTION_FUNDING)));
-            // bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished(VOTE_ACTION_FUNDING)));
+            //bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished(VOTE_ACTION_FUNDING)));
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(pindex, strError)));
             bObj.push_back(Pair("IsValidReason",  strError.c_str()));
-            bObj.push_back(Pair("fValid",  pbudgetProposal->fValid));
+            bObj.push_back(Pair("fCachedValid",  pbudgetProposal->fCachedValid));
 
             resultObj.push_back(Pair(pbudgetProposal->GetName(), bObj));
         }
@@ -377,7 +384,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         std::string strError = "";
         obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(chainActive.Tip(), strError)));
-        obj.push_back(Pair("fValid",  pbudgetProposal->fValid));
+        obj.push_back(Pair("fValid",  pbudgetProposal->fCachedValid));
 
         return obj;
     }
@@ -463,7 +470,7 @@ UniValue voteraw(const UniValue& params, bool fHelp)
 
     std::string strError = "";
     if(governance.UpdateProposal(vote, NULL, strError)){
-        governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), vote));
+        governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
         vote.Relay();
         return "Voted successfully";
     } else {
