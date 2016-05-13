@@ -12,6 +12,7 @@
 CStatHistory<uint64_t> CThinBlockStats::nOriginalSize("thin/blockSize", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nThinSize("thin/thinSize", STAT_OP_SUM | STAT_KEEP);
 CStatHistory<uint64_t> CThinBlockStats::nBlocks("thin/numBlocks", STAT_OP_SUM | STAT_KEEP);
+CStatHistory<uint64_t> CThinBlockStats::nMempoolLimiterBytesSaved("nSize", STAT_OP_SUM | STAT_KEEP);
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksInBound;
 std::map<int64_t, int> CThinBlockStats::mapThinBlocksInBoundReRequestedTx;
 std::map<int64_t, std::pair<uint64_t, uint64_t> > CThinBlockStats::mapThinBlocksOutBound;
@@ -200,6 +201,11 @@ void CThinBlockStats::UpdateInBoundReRequestedTx(int nReRequestedTx)
         if ((*mi).first < nTimeCutoff)
             CThinBlockStats::mapThinBlocksInBoundReRequestedTx.erase(mi);
     }
+}
+
+void CThinBlockStats::UpdateMempoolLimiterBytesSaved(unsigned int nBytesSaved)
+{
+    CThinBlockStats::nMempoolLimiterBytesSaved += nBytesSaved;
 }
 
 std::string CThinBlockStats::ToString()
@@ -421,5 +427,21 @@ std::string CThinBlockStats::ReRequestedTxToString()
     std::ostringstream ss;
     ss << std::fixed << std::setprecision(1);
     ss << "Re-request rate (last 24hrs): " << nReRequestRate << "% Total re-requests:" << nTotalReRequests;
+    return ss.str();
+}
+
+std::string CThinBlockStats::MempoolLimiterBytesSavedToString()
+{
+    static const char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+    int i = 0;
+    double size = (double)CThinBlockStats::nMempoolLimiterBytesSaved();
+    while (size > 1000) {
+	size /= 1000;
+	i++;
+    }
+
+    std::ostringstream ss;
+    ss << std::fixed << std::setprecision(2);
+    ss << "Thinblock mempool limiting has saved " << size << units[i] << " of bandwidth";
     return ss.str();
 }
