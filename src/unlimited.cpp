@@ -604,14 +604,7 @@ void ClearThinBlockTimer(uint256 hash)
 
 bool IsThinBlocksEnabled() 
 {
-    bool fThinblocksEnabled = GetBoolArg("-use-thinblocks", true);
-
-    // Enabling the XTHIN service should really be in init.cpp but because
-    // we want to avoid possile future merge conflicts with Core we can enable
-    // it here as it has little performance impact.
-    if (fThinblocksEnabled)
-        nLocalServices |= NODE_XTHIN;
-    return fThinblocksEnabled;
+    return GetBoolArg("-use-thinblocks", true);
 }
 
 bool IsChainNearlySyncd() 

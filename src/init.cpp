@@ -1055,6 +1055,11 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     if (GetBoolArg("-peerbloomfilters", true))
         nLocalServices |= NODE_BLOOM;
 
+    //BUIP010 Xtreme Thinblocks: begin section Initialize XTHIN service
+    if (GetBoolArg("-use-thinblocks", true))
+        nLocalServices |= NODE_XTHIN;
+    // BUIP010 Xtreme Thinblocks: begin section
+
 #if 0 // BUIP004: mempool replacement is not allowed    
     fEnableReplacement = GetBoolArg("-mempoolreplacement", DEFAULT_ENABLE_REPLACEMENT);
     if ((!fEnableReplacement) && mapArgs.count("-mempoolreplacement")) {
