@@ -5,8 +5,6 @@
 
 # Exercise the wallet keypool, and interaction with wallet encryption/locking
 
-# Add python-bitcoinrpc to module search path:
-
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
 
@@ -65,12 +63,13 @@ class KeyPoolTest(BitcoinTestFramework):
         except JSONRPCException as e:
             assert(e.error['code']==-12)
 
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = False
+        self.num_nodes = 1
 
     def setup_network(self):
-        self.nodes = start_nodes(1, self.options.tmpdir)
+        self.nodes = self.setup_nodes()
 
 if __name__ == '__main__':
     KeyPoolTest().main()

@@ -111,8 +111,10 @@ class AcceptBlockTest(BitcoinTestFramework):
                           default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to test")
 
-    def setup_chain(self):
-        initialize_chain_clean(self.options.tmpdir, 2)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 2
 
     def setup_network(self):
         # Node0 will be used to test behavior of processing unrequested blocks
