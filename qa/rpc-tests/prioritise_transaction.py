@@ -14,11 +14,11 @@ from test_framework.mininode import COIN, MAX_BLOCK_SIZE
 class PrioritiseTransactionTest(BitcoinTestFramework):
 
     def __init__(self):
-        self.txouts = gen_return_txouts()
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 1
 
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 1)
+        self.txouts = gen_return_txouts()
 
     def setup_network(self):
         self.nodes = []

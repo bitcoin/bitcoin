@@ -11,9 +11,10 @@ from test_framework.util import *
 
 class ReindexTest(BitcoinTestFramework):
 
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 1)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 1
 
     def setup_network(self):
         self.nodes = []
