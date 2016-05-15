@@ -146,10 +146,9 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
 
 CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
 {
-    CWalletDB walletdb(pwalletMain->strWalletFile);
-
     CAccount account;
-    walletdb.ReadAccount(strAccount, account);
+
+    pwalletMain->ReadAccount(strAccount, account);
 
     if (!bForceNew) {
         if (!account.vchPubKey.IsValid())
@@ -174,7 +173,7 @@ CBitcoinAddress GetAccountAddress(string strAccount, bool bForceNew=false)
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
 
         pwalletMain->SetAddressBook(account.vchPubKey.GetID(), strAccount, "receive");
-        walletdb.WriteAccount(strAccount, account);
+        pwalletMain->WriteAccount(strAccount, account);
     }
 
     return CBitcoinAddress(account.vchPubKey.GetID());

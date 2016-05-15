@@ -751,6 +751,8 @@ public:
 
     bool AddAccountingEntry(const CAccountingEntry&, CWalletDB & pwalletdb);
     bool Move(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment);
+    bool ReadAccount(const std::string& strAccount, CAccount& account);
+    bool WriteAccount(const std::string& strAccount, const CAccount& account);
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;

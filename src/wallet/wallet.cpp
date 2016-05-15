@@ -2345,6 +2345,18 @@ bool CWallet::Move(std::string strFrom, std::string strTo, CAmount nAmount, std:
     return true;
 }
 
+bool CWallet::ReadAccount(const std::string& strAccount, CAccount& account)
+{
+    CWalletDB walletdb(strWalletFile);
+    return walletdb.ReadAccount(strAccount, account);
+}
+
+bool CWallet::WriteAccount(const std::string& strAccount, const CAccount& account)
+{
+    CWalletDB walletdb(strWalletFile);
+    return walletdb.WriteAccount(strAccount, account);
+}
+
 CAmount CWallet::GetRequiredFee(unsigned int nTxBytes)
 {
     return std::max(minTxFee.GetFee(nTxBytes), ::minRelayTxFee.GetFee(nTxBytes));
