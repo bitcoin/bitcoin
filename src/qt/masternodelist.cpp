@@ -26,8 +26,27 @@ MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *pare
 
     ui->startButton->setEnabled(false);
 
-    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    ui->tableWidget_2->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    int columnAliasWidth = 100;
+    int columnAddressWidth = 150;
+    int columnProtocolWidth = 60;
+    int columnStatusWidth = 80;
+    int columnActiveWidth = 130;
+    int columnLastSeenWidth = 150;
+
+    ui->tableWidgetMyMasternodes->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    ui->tableWidgetMyMasternodes->setColumnWidth(0, columnAliasWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(1, columnAddressWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(2, columnProtocolWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(3, columnStatusWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(4, columnActiveWidth);
+    ui->tableWidgetMyMasternodes->setColumnWidth(5, columnLastSeenWidth);
+
+    ui->tableWidgetMasternodes->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    ui->tableWidgetMasternodes->setColumnWidth(0, columnAddressWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(1, columnProtocolWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(2, columnStatusWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(3, columnActiveWidth);
+    ui->tableWidgetMasternodes->setColumnWidth(4, columnLastSeenWidth);
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
@@ -48,7 +67,7 @@ void MasternodeList::setClientModel(ClientModel *model)
     if(model)
     {
         // try to update list when masternode count changes
-        connect(clientModel, SIGNAL(strMasternodesChanged()), this, SLOT(updateNodeList()));
+        connect(clientModel, SIGNAL(strMasternodesChanged(const QString &strMasternodes)), this, SLOT(updateNodeList()));
     }
 }
 
@@ -133,9 +152,9 @@ void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString
     bool bFound = false;
     int nodeRow = 0;
 
-    for(int i=0; i < ui->tableWidget_2->rowCount(); i++)
+    for(int i=0; i < ui->tableWidgetMyMasternodes->rowCount(); i++)
     {
-        if(ui->tableWidget_2->item(i, 0)->text() == alias)
+        if(ui->tableWidgetMyMasternodes->item(i, 0)->text() == alias)
         {
             bFound = true;
             nodeRow = i;
@@ -144,8 +163,8 @@ void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString
     }
 
     if(nodeRow == 0 && !bFound) {
-        nodeRow = ui->tableWidget_2->rowCount();
-        ui->tableWidget_2->insertRow(nodeRow);
+        nodeRow = ui->tableWidgetMyMasternodes->rowCount();
+        ui->tableWidgetMyMasternodes->insertRow(nodeRow);
     }
 
     QTableWidgetItem *aliasItem = new QTableWidgetItem(alias);
@@ -156,13 +175,13 @@ void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString
     QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pmn ? pmn->lastPing.sigTime : 0)));
     QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(pmn ? CBitcoinAddress(pmn->pubkey.GetID()).ToString() : ""));
 
-    ui->tableWidget_2->setItem(nodeRow, 0, aliasItem);
-    ui->tableWidget_2->setItem(nodeRow, 1, addrItem);
-    ui->tableWidget_2->setItem(nodeRow, 2, protocolItem);
-    ui->tableWidget_2->setItem(nodeRow, 3, statusItem);
-    ui->tableWidget_2->setItem(nodeRow, 4, activeSecondsItem);
-    ui->tableWidget_2->setItem(nodeRow, 5, lastSeenItem);
-    ui->tableWidget_2->setItem(nodeRow, 6, pubkeyItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 0, aliasItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 1, addrItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 2, protocolItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 3, statusItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 4, activeSecondsItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 5, lastSeenItem);
+    ui->tableWidgetMyMasternodes->setItem(nodeRow, 6, pubkeyItem);
 }
 
 void MasternodeList::updateMyNodeList(bool reset) {
@@ -176,7 +195,7 @@ void MasternodeList::updateMyNodeList(bool reset) {
     if(timeTillUpdate > 0 && !reset) return;
     lastMyListUpdate = GetTime();
 
-    ui->tableWidget->setSortingEnabled(false);
+    ui->tableWidgetMasternodes->setSortingEnabled(false);
     BOOST_FOREACH(CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
         CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
         CMasternode *pmn = mnodeman.Find(vin);
@@ -184,7 +203,7 @@ void MasternodeList::updateMyNodeList(bool reset) {
         updateMyMasternodeInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), QString::fromStdString(mne.getPrivKey()), QString::fromStdString(mne.getTxHash()),
             QString::fromStdString(mne.getOutputIndex()), pmn);
     }
-    ui->tableWidget->setSortingEnabled(true);
+    ui->tableWidgetMasternodes->setSortingEnabled(true);
 
     // reset "timer"
     ui->secondsLabel->setText("0");
@@ -204,9 +223,9 @@ void MasternodeList::updateNodeList()
 
     QString strToFilter;
     ui->countLabel->setText("Updating...");
-    ui->tableWidget->setSortingEnabled(false);
-    ui->tableWidget->clearContents();
-    ui->tableWidget->setRowCount(0);
+    ui->tableWidgetMasternodes->setSortingEnabled(false);
+    ui->tableWidgetMasternodes->clearContents();
+    ui->tableWidgetMasternodes->setRowCount(0);
     std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
 
     BOOST_FOREACH(CMasternode& mn, vMasternodes)
@@ -231,17 +250,17 @@ void MasternodeList::updateNodeList()
             if (!strToFilter.contains(strCurrentFilter)) continue;
         }
 
-        ui->tableWidget->insertRow(0);
-        ui->tableWidget->setItem(0, 0, addressItem);
-        ui->tableWidget->setItem(0, 1, protocolItem);
-        ui->tableWidget->setItem(0, 2, statusItem);
-        ui->tableWidget->setItem(0, 3, activeSecondsItem);
-        ui->tableWidget->setItem(0, 4, lastSeenItem);
-        ui->tableWidget->setItem(0, 5, pubkeyItem);
+        ui->tableWidgetMasternodes->insertRow(0);
+        ui->tableWidgetMasternodes->setItem(0, 0, addressItem);
+        ui->tableWidgetMasternodes->setItem(0, 1, protocolItem);
+        ui->tableWidgetMasternodes->setItem(0, 2, statusItem);
+        ui->tableWidgetMasternodes->setItem(0, 3, activeSecondsItem);
+        ui->tableWidgetMasternodes->setItem(0, 4, lastSeenItem);
+        ui->tableWidgetMasternodes->setItem(0, 5, pubkeyItem);
     }
 
-    ui->countLabel->setText(QString::number(ui->tableWidget->rowCount()));
-    ui->tableWidget->setSortingEnabled(true);
+    ui->countLabel->setText(QString::number(ui->tableWidgetMasternodes->rowCount()));
+    ui->tableWidgetMasternodes->setSortingEnabled(true);
 
 }
 
@@ -253,14 +272,14 @@ void MasternodeList::on_filterLineEdit_textChanged(const QString &filterString) 
 void MasternodeList::on_startButton_clicked()
 {
     // Find selected node alias
-    QItemSelectionModel* selectionModel = ui->tableWidget_2->selectionModel();
+    QItemSelectionModel* selectionModel = ui->tableWidgetMyMasternodes->selectionModel();
     QModelIndexList selected = selectionModel->selectedRows();
     if(selected.count() == 0)
         return;
 
     QModelIndex index = selected.at(0);
     int r = index.row();
-    std::string strAlias = ui->tableWidget_2->item(r, 0)->text().toStdString();
+    std::string strAlias = ui->tableWidgetMyMasternodes->item(r, 0)->text().toStdString();
 
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm masternode start"),
@@ -356,9 +375,9 @@ void MasternodeList::on_startMissingButton_clicked()
     StartAll("start-missing");
 }
 
-void MasternodeList::on_tableWidget_2_itemSelectionChanged()
+void MasternodeList::on_tableWidgetMyMasternodes_itemSelectionChanged()
 {
-    if(ui->tableWidget_2->selectedItems().count() > 0)
+    if(ui->tableWidgetMyMasternodes->selectedItems().count() > 0)
     {
         ui->startButton->setEnabled(true);
     }

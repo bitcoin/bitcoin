@@ -325,7 +325,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(historyAction);
 
     if (masternodeConfig.getCount()) {
-        masternodeAction = new QAction(QIcon(":/icons/bitcoin"), tr("&Masternodes"), this);
+        masternodeAction = new QAction(QIcon(":/icons/" + theme + "/masternodes"), tr("&Masternodes"), this);
         masternodeAction->setStatusTip(tr("Browse masternodes"));
         masternodeAction->setToolTip(masternodeAction->statusTip());
         masternodeAction->setCheckable(true);

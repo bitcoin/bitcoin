@@ -51,7 +51,7 @@
        </property>
        <widget class="QWidget" name="tabMyMasternodes">
         <attribute name="title">
-         <string>My masternodes</string>
+         <string>My Masternodes</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_2">
          <item row="0" column="0">
@@ -74,7 +74,7 @@
             </layout>
            </item>
            <item>
-            <widget class="QTableWidget" name="tableWidget_2">
+            <widget class="QTableWidget" name="tableWidgetMyMasternodes">
              <property name="minimumSize">
               <size>
                <width>695</width>
@@ -106,7 +106,7 @@
              </column>
              <column>
               <property name="text">
-               <string>IP/Onion</string>
+               <string>Address</string>
               </property>
              </column>
              <column>
@@ -204,11 +204,11 @@
        </widget>
        <widget class="QWidget" name="tabAllMasternodes">
         <attribute name="title">
-         <string>All masternodes</string>
+         <string>All Masternodes</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout">
          <item row="1" column="0">
-          <widget class="QTableWidget" name="tableWidget">
+          <widget class="QTableWidget" name="tableWidgetMasternodes">
            <property name="editTriggers">
             <set>QAbstractItemView::NoEditTriggers</set>
            </property>
