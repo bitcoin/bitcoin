@@ -750,6 +750,7 @@ public:
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
 
     bool AddAccountingEntry(const CAccountingEntry&, CWalletDB & pwalletdb);
+    bool Move(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment);
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
