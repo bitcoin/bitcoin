@@ -161,6 +161,8 @@ class BitcoinTestFramework(object):
         random.seed(self.randomseed)
         print("Random seed: %s" % self.randomseed)
 
+        self.options.tmpdir += '/' + str(self.options.port_seed)
+
         if self.options.trace_rpc:
             logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
