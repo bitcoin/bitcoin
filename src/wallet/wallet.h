@@ -617,15 +617,16 @@ public:
 
     void OpenDB()
     {
+        if (pwalletdb) return;
         pwalletdb = new CWalletDB(strWalletFile, "cr+");
     }
 
     void CloseDB()
     {
-        if (pwalletdb) {
-            delete pwalletdb;
-            pwalletdb = NULL;
-        }
+        if (!pwalletdb) return;
+
+        delete pwalletdb;
+        pwalletdb = NULL;
     }
 
     void SetNull()

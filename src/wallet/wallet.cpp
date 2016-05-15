@@ -145,7 +145,7 @@ bool CWallet::AddCryptedKey(const CPubKey &vchPubKey,
         return true;
     {
         LOCK(cs_wallet);
-        assert(pwalletdb != NULL);
+        OpenDB();
         return pwalletdb->WriteCryptedKey(vchPubKey,
                                           vchCryptedSecret,
                                           mapKeyMetadata[vchPubKey.GetID()]);
@@ -312,8 +312,10 @@ bool CWallet::SetMinVersion(enum WalletFeature nVersion, bool fExplicit)
 
     if (fFileBacked)
     {
-        if (nWalletVersion > 40000)
+        if (nWalletVersion > 40000) {
+            OpenDB();
             pwalletdb->WriteMinVersion(nWalletVersion);
+        }
     }
 
     return true;
@@ -502,7 +504,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
         return false;
 
     if (fFileBacked) {
-        assert(pwalletdb != NULL);
+        OpenDB();
     }
 
     CKeyingMaterial vMasterKey;
@@ -593,6 +595,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 int64_t CWallet::IncOrderPosNext()
 {
     AssertLockHeld(cs_wallet); // nOrderPosNext
+    OpenDB();
     int64_t nRet = nOrderPosNext++;
     pwalletdb->WriteOrderPosNext(nOrderPosNext);
     return nRet;
@@ -719,9 +722,12 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
         LogPrintf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
 
         // Write to disk
-        if (fInsertedNew || fUpdated)
-            if (!pwalletdb->WriteTx(wtx))
+        if (fInsertedNew || fUpdated) {
+            OpenDB();
+            if (!pwalletdb->WriteTx(wtx)) {
                 return false;
+            }
+        }
 
         // Break debit/credit balance caches:
         wtx.MarkDirty();
@@ -2303,6 +2309,7 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
 
 bool CWallet::AddAccountingEntry(const CAccountingEntry& acentry)
 {
+    OpenDB();
     if (!pwalletdb->WriteAccountingEntry_Backend(acentry))
         return false;
 

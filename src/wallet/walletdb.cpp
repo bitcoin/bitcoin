@@ -903,10 +903,16 @@ void ThreadFlushWalletDB(const string& strFile)
     }
 }
 
-bool BackupWallet(const CWallet& wallet, const string& strDest)
+bool BackupWallet(CWallet& wallet, const string& strDest)
 {
     if (!wallet.fFileBacked)
         return false;
+
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.CloseDB();
+    }
+
     while (true)
     {
         {
