@@ -4322,8 +4322,10 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                         pfrom->PushMessage(NetMsgType::BLOCK, block);
 
                     // BUIP010 Xtreme Thinblocks: begin section
-                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK)               
+                    else if (inv.type == MSG_THINBLOCK || inv.type == MSG_XTHINBLOCK) {
+                        LogPrint("thin", "Sending xthin by INV queue getdata message\n");
                         SendXThinBlock(block, pfrom, inv);
+                    }
                     // BUIP010 Xtreme Thinblocks: end section
 
                     else // MSG_FILTERED_BLOCK)
@@ -5161,8 +5163,14 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         vRecv >> inv >> filterMemPool;
 
         LoadFilter(pfrom, &filterMemPool);
-        pfrom->vRecvGetData.insert(pfrom->vRecvGetData.end(), inv);
-        ProcessGetData(pfrom, chainparams.GetConsensus());
+
+        BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
+        CBlock block;
+        const Consensus::Params& consensusParams = Params().GetConsensus();
+        if (!ReadBlockFromDisk(block, (*mi).second, consensusParams))
+            assert(!"cannot load block from disk");
+
+        SendXThinBlock(block, pfrom, inv);
     }
     else if (strCommand == NetMsgType::XTHINBLOCK  && !fImporting && !fReindex) // Ignore blocks received while importing
     {
