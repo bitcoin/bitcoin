@@ -883,6 +883,8 @@ public:
 
     /* Wallets parameter interaction */
     static bool ParameterInteraction();
+
+    bool BackupWallet(const std::string& strDest);
 };
 
 /** A key allocated from the key pool. */
