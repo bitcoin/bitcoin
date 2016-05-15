@@ -617,8 +617,9 @@ void CWallet::MarkDirty()
     }
 }
 
-bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletDB* pwalletdb)
+bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet)
 {
+    CWalletDB walletdb(strWalletFile, "cr+");
     uint256 hash = wtxIn.GetHash();
 
     if (fFromLoadWallet)
@@ -648,7 +649,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
         if (fInsertedNew)
         {
             wtx.nTimeReceived = GetAdjustedTime();
-            wtx.nOrderPos = IncOrderPosNext(pwalletdb);
+            wtx.nOrderPos = IncOrderPosNext(&walletdb);
             wtxOrdered.insert(make_pair(wtx.nOrderPos, TxPair(&wtx, (CAccountingEntry*)0)));
 
             wtx.nTimeSmart = wtx.nTimeReceived;
@@ -730,7 +731,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFromLoadWallet, CWalletD
 
         // Write to disk
         if (fInsertedNew || fUpdated)
-            if (!pwalletdb->WriteTx(wtx))
+            if (!walletdb.WriteTx(wtx))
                 return false;
 
         // Break debit/credit balance caches:
@@ -785,11 +786,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransaction& tx, const CBlock* pbl
             if (pblock)
                 wtx.SetMerkleBranch(*pblock);
 
-            // Do not flush the wallet here for performance reasons
-            // this is safe, as in case of a crash, we rescan the necessary blocks on startup through our SetBestChain-mechanism
-            CWalletDB walletdb(strWalletFile, "r+", false);
-
-            return AddToWallet(wtx, false, &walletdb);
+            return AddToWallet(wtx, false);
         }
     }
     return false;
@@ -2268,17 +2265,12 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
         LOCK2(cs_main, cs_wallet);
         LogPrintf("CommitTransaction:\n%s", wtxNew.ToString());
         {
-            // This is only to keep the database open to defeat the auto-flush for the
-            // duration of this scope.  This is the only place where this optimization
-            // maybe makes sense; please don't do it anywhere else.
-            CWalletDB* pwalletdb = fFileBacked ? new CWalletDB(strWalletFile,"r+") : NULL;
-
             // Take key pair from key pool so it won't be used again
             reservekey.KeepKey();
 
             // Add tx to wallet, because if it has change it's also ours,
             // otherwise just for transaction history.
-            AddToWallet(wtxNew, false, pwalletdb);
+            AddToWallet(wtxNew, false);
 
             // Notify that old coins are spent
             set<CWalletTx*> setCoins;
@@ -2288,9 +2280,6 @@ bool CWallet::CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey)
                 coin.BindWallet(this);
                 NotifyTransactionChanged(this, coin.GetHash(), CT_UPDATED);
             }
-
-            if (fFileBacked)
-                delete pwalletdb;
         }
 
         // Track how many getdata requests our transaction gets
