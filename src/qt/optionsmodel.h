@@ -48,6 +48,7 @@ public:
         SpendZeroConfChange,    // bool
         DarksendRounds,         // int
         AnonymizeDashAmount,    // int
+        ShowMasternodesTab,     // bool
         Listen,                 // bool
         OptionIDRowCount,
     };
