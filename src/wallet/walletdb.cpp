@@ -400,7 +400,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (wtx.nOrderPos == -1)
                 wss.fAnyUnordered = true;
 
-            pwallet->AddToWallet(wtx, true, NULL);
+            pwallet->AddToWallet(wtx, true);
         }
         else if (strType == "acentry")
         {
@@ -903,10 +903,16 @@ void ThreadFlushWalletDB(const string& strFile)
     }
 }
 
-bool BackupWallet(const CWallet& wallet, const string& strDest)
+bool BackupWallet(CWallet& wallet, const string& strDest)
 {
     if (!wallet.fFileBacked)
         return false;
+
+    {
+        LOCK(wallet.cs_wallet);
+        wallet.CloseDB();
+    }
+
     while (true)
     {
         {
