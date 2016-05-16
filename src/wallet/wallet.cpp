@@ -599,12 +599,9 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 int64_t CWallet::IncOrderPosNext(CWalletDB *pwalletdb)
 {
     AssertLockHeld(cs_wallet); // nOrderPosNext
+    assert(pwalletdb);
     int64_t nRet = nOrderPosNext++;
-    if (pwalletdb) {
-        pwalletdb->WriteOrderPosNext(nOrderPosNext);
-    } else {
-        CWalletDB(strWalletFile).WriteOrderPosNext(nOrderPosNext);
-    }
+    pwalletdb->WriteOrderPosNext(nOrderPosNext);
     return nRet;
 }
 

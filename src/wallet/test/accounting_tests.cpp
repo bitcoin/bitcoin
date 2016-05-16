@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(acc_orderupgrade)
 
     ae.nTime = 1333333330;
     ae.strOtherAccount = "d";
-    ae.nOrderPos = pwalletMain->IncOrderPosNext();
+    ae.nOrderPos = pwalletMain->IncOrderPosNext(&walletdb);
     pwalletMain->AddAccountingEntry(ae, walletdb);
 
     GetResults(walletdb, results);
