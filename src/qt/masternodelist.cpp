@@ -67,7 +67,7 @@ void MasternodeList::setClientModel(ClientModel *model)
     if(model)
     {
         // try to update list when masternode count changes
-        connect(clientModel, SIGNAL(strMasternodesChanged(const QString &strMasternodes)), this, SLOT(updateNodeList()));
+        connect(clientModel, SIGNAL(strMasternodesChanged(QString)), this, SLOT(updateNodeList()));
     }
 }
 
