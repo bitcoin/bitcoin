@@ -2474,7 +2474,7 @@ bool CConnman::DisconnectNode(NodeId id)
     return false;
 }
 
-void CConnman::RelayTransaction(const CTransaction& tx, CFeeRate feerate)
+void CConnman::RelayTransaction(const CTransaction& tx)
 {
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss.reserve(10000);
@@ -2488,10 +2488,10 @@ void CConnman::RelayTransaction(const CTransaction& tx, CFeeRate feerate)
     } else { // MSG_TX
         ss << tx;
     }
-    RelayTransaction(tx, feerate, ss);
+    RelayTransaction(tx, ss);
 }
 
-void CConnman::RelayTransaction(const CTransaction& tx, CFeeRate feerate, const CDataStream& ss)
+void CConnman::RelayTransaction(const CTransaction& tx, const CDataStream& ss)
 {
     uint256 hash = tx.GetHash();
     int nInv = static_cast<bool>(CPrivateSend::GetDSTX(hash)) ? MSG_DSTX :
