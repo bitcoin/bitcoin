@@ -95,13 +95,22 @@ class SpentIndexTest(BitcoinTestFramework):
         self.nodes[0].importprivkey(privkey)
         signed_tx2 = self.nodes[0].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         txid2 = self.nodes[0].sendrawtransaction(signed_tx2["hex"], True)
+
+        # Check the mempool index
+        self.sync_all()
+        txVerbose3 = self.nodes[1].getrawtransaction(txid2, 1)
+        assert_equal(txVerbose3["vin"][0]["address"], address2)
+        assert_equal(txVerbose3["vin"][0]["value"], Decimal(unspent[0]["amount"]))
+        assert_equal(txVerbose3["vin"][0]["valueSat"], amount)
+
+        # Check the database index
         self.nodes[0].generate(1)
         self.sync_all()
 
-        txVerbose3 = self.nodes[3].getrawtransaction(txid2, 1)
-        assert_equal(txVerbose3["vin"][0]["address"], address2)
-        assert_equal(txVerbose2["vin"][0]["value"], Decimal(unspent[0]["amount"]))
-        assert_equal(txVerbose2["vin"][0]["valueSat"], amount)
+        txVerbose4 = self.nodes[3].getrawtransaction(txid2, 1)
+        assert_equal(txVerbose4["vin"][0]["address"], address2)
+        assert_equal(txVerbose4["vin"][0]["value"], Decimal(unspent[0]["amount"]))
+        assert_equal(txVerbose4["vin"][0]["valueSat"], amount)
 
         print "Passed\n"
 

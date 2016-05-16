@@ -1415,8 +1415,15 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState &state, const C
 
         // Store transaction in memory
         pool.addUnchecked(hash, entry, setAncestors, !IsInitialBlockDownload());
+
+        // Add memory address index
         if (fAddressIndex) {
             pool.addAddressIndex(entry, view);
+        }
+
+        // Add memory spent index
+        if (fSpentIndex) {
+            pool.addSpentIndex(entry, view);
         }
 
         // trim mempool and check if tx was trimmed
@@ -1459,6 +1466,9 @@ bool GetSpentIndex(CSpentIndexKey &key, CSpentIndexValue &value)
 {
     if (!fSpentIndex)
         return false;
+
+    if (mempool.getSpentIndex(key, value))
+        return true;
 
     if (!pblocktree->ReadSpentIndex(key, value))
         return error("unable to get spent info");
