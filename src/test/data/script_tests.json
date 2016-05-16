@@ -700,6 +700,8 @@
 ["0x17 0x3014020002107777777777777777777777777777777701", "0 CHECKSIG NOT", "", "OK", "Zero-length R is correctly encoded"],
 ["0x17 0x3014021077777777777777777777777777777777020001", "0 CHECKSIG NOT", "", "OK", "Zero-length S is correctly encoded for DERSIG"],
 ["0x27 0x302402107777777777777777777777777777777702108777777777777777777777777777777701", "0 CHECKSIG NOT", "", "OK", "Negative S is correctly encoded"],
+ 
+["2147483648", "NOP3", "CHECKSEQUENCEVERIFY", "OK", "CSV passes if stack top bit 1 << 31 is set"],
 
 ["", "DEPTH", "P2SH,STRICTENC",   "EVAL_FALSE", "Test the test: we should have an empty stack after scriptSig evaluation"],
 ["  ", "DEPTH", "P2SH,STRICTENC", "EVAL_FALSE", "and multiple spaces should not change that."],
@@ -855,7 +857,7 @@
 ["2 2 LSHIFT", "8 EQUAL", "P2SH,STRICTENC", "DISABLED_OPCODE", "disabled"],
 ["2 1 RSHIFT", "1 EQUAL", "P2SH,STRICTENC", "DISABLED_OPCODE", "disabled"],
 
-["1","NOP1 CHECKLOCKTIMEVERIFY NOP3 NOP4 NOP5 NOP6 NOP7 NOP8 NOP9 NOP10 2 EQUAL", "P2SH,STRICTENC", "EVAL_FALSE"],
+["1", "NOP1 CHECKLOCKTIMEVERIFY NOP3 NOP4 NOP5 NOP6 NOP7 NOP8 NOP9 NOP10 2 EQUAL", "P2SH,STRICTENC", "EVAL_FALSE"],
 ["'NOP_1_to_10' NOP1 CHECKLOCKTIMEVERIFY NOP3 NOP4 NOP5 NOP6 NOP7 NOP8 NOP9 NOP10","'NOP_1_to_11' EQUAL", "P2SH,STRICTENC", "EVAL_FALSE"],
 
 ["Ensure 100% coverage of discouraged NOPS"],
@@ -1820,5 +1822,12 @@
     "P2SH with CLEANSTACK"
 ],
 
+["CHECKSEQUENCEVERIFY tests"], 
+["", "NOP3", "CHECKSEQUENCEVERIFY", "INVALID_STACK_OPERATION", "CSV automatically fails on a empty stack"],
+["-1", "NOP3", "CHECKSEQUENCEVERIFY", "NEGATIVE_LOCKTIME", "CSV automatically fails if stack top is negative"],
+["0x0100", "NOP3", "CHECKSEQUENCEVERIFY,MINIMALDATA", "UNKNOWN_ERROR", "CSV fails if stack top is not minimally encoded"],
+["0", "NOP3", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME", "CSV fails if stack top bit 1 << 31 is set and the tx version < 2"],
+["4294967296", "NOP3", "CHECKSEQUENCEVERIFY", "UNSATISFIED_LOCKTIME",
+  "CSV fails if stack top bit 1 << 31 is not set, and tx version < 2"],
 ["The End"]
 ]
