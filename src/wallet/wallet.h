@@ -753,6 +753,7 @@ public:
     bool Move(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment);
     bool ReadAccount(const std::string& strAccount, CAccount& account);
     bool WriteAccount(const std::string& strAccount, const CAccount& account);
+    CAmount GetAccountBalance(const std::string& strAccount, int nMinDepth, const isminefilter& filter);
 
     static CFeeRate minTxFee;
     static CFeeRate fallbackFee;
