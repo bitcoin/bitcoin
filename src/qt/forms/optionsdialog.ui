@@ -38,16 +38,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="showMasternodesTab">
-         <property name="toolTip">
-          <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
-         </property>
-         <property name="text">
-          <string>Show Masternodes Tab</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2_Main">
          <item>
           <widget class="QLabel" name="databaseCacheLabel">
@@ -229,6 +219,16 @@
             </property>
             <property name="text">
              <string>Enable coin &amp;control features</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="showMasternodesTab">
+            <property name="toolTip">
+             <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
+            </property>
+            <property name="text">
+             <string>Show Masternodes Tab</string>
             </property>
            </widget>
           </item>
