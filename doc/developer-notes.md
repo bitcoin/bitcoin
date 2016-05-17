@@ -5,7 +5,9 @@ Various coding styles have been used during the history of the codebase,
 and the result is not very consistent. However, we're now trying to converge to
 a single style, so please use it in new code. Old code will be converted
 gradually.
-- Basic rules specified in src/.clang-format. Use a recent clang-format-3.5 to format automatically.
+- Basic rules specified in [src/.clang-format](/src/.clang-format).
+  Use a recent clang-format to format automatically using one of the [dev scripts]
+  (/contrib/devtools/README.md#clang-formatpy).
   - Braces on new lines for namespaces, classes, functions, methods.
   - Braces on the same line for everything else.
   - 4 space indentation (no tabs) for every block except namespaces.
