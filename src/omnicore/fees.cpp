@@ -100,7 +100,7 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t 
     if (msc_debug_fees) PrintToLog("   Current cached amount %d\n", currentCachedAmount);
 
     // Add new fee and rewrite record
-    if ((currentCachedAmount > 0) && (amount > INT64_MAX - currentCachedAmount)) {
+    if ((currentCachedAmount > 0) && (amount > std::numeric_limits<int64_t>::max() - currentCachedAmount)) {
         // overflow - there is no way the fee cache should exceed the maximum possible number of tokens, not safe to continue
         const std::string& msg = strprintf("Shutting down due to fee cache overflow (block %d property %d current %d amount %d)\n", block, propertyId, currentCachedAmount, amount);
         PrintToLog(msg);
