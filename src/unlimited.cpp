@@ -607,6 +607,27 @@ bool IsThinBlocksEnabled()
     return GetBoolArg("-use-thinblocks", true);
 }
 
+bool CanThinBlockBeDownloaded(CNode* pto)
+{
+    if (pto->ThinBlockCapable() && !GetBoolArg("-connect-thinblock-force", false))
+        return true;
+    else if (pto->ThinBlockCapable() && GetBoolArg("-connect-thinblock-force", false)) {
+        // If connect-thinblock-force is true then we have to check that this node is in fact a connect-thinblock node.
+
+        // When -connect-thinblock-force is true we will only download thinblocks from a peer or peers that
+        // are using -connect-thinblock=<ip>.  This is an undocumented setting used for setting up performance testing
+        // of thinblocks, such as, going over the GFC and needing to have thinblocks always come from the same peer or 
+        // group of peers.  Also, this is a one way street.  Thinblocks will flow ONLY from the remote peer to the peer
+        // that has invoked -connect-thinblock.
+
+        // Check if this node is also a connect-thinblock node
+        BOOST_FOREACH(const std::string& strAddrNode, mapMultiArgs["-connect-thinblock"])
+            if (pto->addrName == strAddrNode)
+                return true;
+    }
+    return false;
+}
+
 bool IsChainNearlySyncd() 
 {
     LOCK(cs_main);
