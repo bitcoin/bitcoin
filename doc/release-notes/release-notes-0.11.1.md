@@ -108,7 +108,7 @@ outrageous memory usage on nodes due to the mempool ballooning. This is a
 temporary measure, bridging the time until a dynamic method for determining
 this fee is merged (which will be in 0.12).
 
-(see https://github.com/syscoin/syscoin/pull/6793, as well as the 0.11
+(see https://github.com/bitcoin/bitcoin/pull/6793, as well as the 0.11
 release notes, in which this value was suggested)
 
 0.11.1 Change log
