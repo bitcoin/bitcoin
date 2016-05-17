@@ -307,7 +307,7 @@ class WalletTest (BitcoinTestFramework):
         # Check that the txid and balance is found by node1
         self.nodes[1].gettransaction(cbTxId)
 
-        #check if wallet or blochchain maintenance changes the balance
+        # check if wallet or blockchain maintenance changes the balance
         self.sync_all()
         blocks = self.nodes[0].generate(2)
         self.sync_all()
@@ -333,7 +333,8 @@ class WalletTest (BitcoinTestFramework):
             '-reindex',
             '-zapwallettxes=1',
             '-zapwallettxes=2',
-            '-salvagewallet',
+            # disabled until issue is fixed: https://github.com/bitcoin/bitcoin/issues/7463
+            # '-salvagewallet',
         ]
         for m in maintenance:
             print("check " + m)
@@ -353,4 +354,4 @@ class WalletTest (BitcoinTestFramework):
         assert_equal(len(self.nodes[0].listsinceblock(blocks[1])["transactions"]), 0)
 
 if __name__ == '__main__':
-    WalletTest ().main ()
+    WalletTest().main()
