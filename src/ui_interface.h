@@ -96,6 +96,9 @@ public:
     /** New block has been accepted */
     boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyBlockTip;
 
+    /** Best header has changed */
+    boost::signals2::signal<void (bool, const CBlockIndex *)> NotifyHeaderTip;
+
     /** Banlist did change. */
     boost::signals2::signal<void (void)> BannedListChanged;
 };
