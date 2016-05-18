@@ -13,8 +13,8 @@ The following are some helpful notes on how to run Bitcoin on your native platfo
 
 Unpack the files into a directory and run:
 
-- bin/32/bitcoin-qt (GUI, 32-bit) or bin/32/bitcoind (headless, 32-bit)
-- bin/64/bitcoin-qt (GUI, 64-bit) or bin/64/bitcoind (headless, 64-bit)
+- `bin/bitcoin-qt` (GUI) or
+- `bin/bitcoind` (headless)
 
 ### Windows
 
