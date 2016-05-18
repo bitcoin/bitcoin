@@ -171,4 +171,19 @@ unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char
 
 void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char header, const unsigned char data[32], unsigned char output[64]);
 
+/** SipHash-2-4, using a uint64_t-based (rather than byte-based) interface */
+class CSipHasher
+{
+private:
+    uint64_t v[4];
+    int count;
+
+public:
+    CSipHasher(uint64_t k0, uint64_t k1);
+    CSipHasher& Write(uint64_t data);
+    uint64_t Finalize() const;
+};
+
+uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);
+
 #endif // BITCOIN_HASH_H
