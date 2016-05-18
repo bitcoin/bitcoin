@@ -761,20 +761,18 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman& connma
     // Relay to a limited number of other nodes
     // Use deterministic randomness to send to the same nodes for 24 hours
     // at a time so the addrKnowns of the chosen nodes prevent repeats
-    static uint256 hashSalt;
-    if (hashSalt.IsNull())
-        hashSalt = GetRandHash();
+    static uint64_t salt0 = 0, salt1 = 0;
+    while (salt0 == 0 && salt1 == 0) {
+        GetRandBytes((unsigned char*)&salt0, sizeof(salt0));
+        GetRandBytes((unsigned char*)&salt1, sizeof(salt1));
+    }
     uint64_t hashAddr = addr.GetHash();
-    uint256 hashRand = ArithToUint256(UintToArith256(hashSalt) ^ (hashAddr<<32) ^ ((GetTime()+hashAddr)/(24*60*60)));
-    hashRand = Hash(BEGIN(hashRand), END(hashRand));
-    std::multimap<uint256, CNode*> mapMix;
+    multimap<uint64_t, CNode*> mapMix;
+    const CSipHasher hasher = CSipHasher(salt0, salt1).Write(hashAddr << 32).Write((GetTime() + hashAddr) / (24*60*60));
 
-    auto sortfunc = [&mapMix, &hashRand](CNode* pnode) {
+    auto sortfunc = [&mapMix, &hasher](CNode* pnode) {
         if (pnode->nVersion >= CADDR_TIME_VERSION) {
-            unsigned int nPointer;
-            memcpy(&nPointer, &pnode, sizeof(nPointer));
-            uint256 hashKey = ArithToUint256(UintToArith256(hashRand) ^ nPointer);
-            hashKey = Hash(BEGIN(hashKey), END(hashKey));
+            uint64_t hashKey = CSipHasher(hasher).Write(pnode->id).Finalize();
             mapMix.emplace(hashKey, pnode);
         }
     };
