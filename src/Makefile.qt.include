@@ -28,6 +28,7 @@ QT_FORMS_UI = \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
   qt/forms/intro.ui \
+  qt/forms/masternodelist.ui \
   qt/forms/openuridialog.ui \
   qt/forms/optionsdialog.ui \
   qt/forms/overviewpage.ui \
@@ -58,6 +59,7 @@ QT_MOC_CPP = \
   qt/moc_intro.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
+  qt/moc_masternodelist.cpp \
   qt/moc_notificator.cpp \
   qt/moc_openuridialog.cpp \
   qt/moc_optionsdialog.cpp \
@@ -126,6 +128,7 @@ BITCOIN_QT_H = \
   qt/intro.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
+  qt/masternodelist.h \
   qt/networkstyle.h \
   qt/notificator.h \
   qt/openuridialog.h \
@@ -194,6 +197,7 @@ RES_ICONS = \
   qt/res/icons/drkblue/key.png \
   qt/res/icons/drkblue/lock_closed.png \
   qt/res/icons/drkblue/lock_open.png \
+  qt/res/icons/drkblue/masternodes.png \
   qt/res/icons/drkblue/overview.png \
   qt/res/icons/drkblue/quit.png \
   qt/res/icons/drkblue/receive.png \
@@ -241,6 +245,7 @@ RES_ICONS = \
   qt/res/icons/crownium/key.png \
   qt/res/icons/crownium/lock_closed.png \
   qt/res/icons/crownium/lock_open.png \
+  qt/res/icons/crownium/masternodes.png \
   qt/res/icons/crownium/overview.png \
   qt/res/icons/crownium/quit.png \
   qt/res/icons/crownium/receive.png \
@@ -288,6 +293,7 @@ RES_ICONS = \
   qt/res/icons/light/key.png \
   qt/res/icons/light/lock_closed.png \
   qt/res/icons/light/lock_open.png \
+  qt/res/icons/light/masternodes.png \
   qt/res/icons/light/overview.png \
   qt/res/icons/light/quit.png \
   qt/res/icons/light/receive.png \
@@ -335,6 +341,7 @@ RES_ICONS = \
   qt/res/icons/trad/key.png \
   qt/res/icons/trad/lock_closed.png \
   qt/res/icons/trad/lock_open.png \
+  qt/res/icons/trad/masternodes.png \
   qt/res/icons/trad/overview.png \
   qt/res/icons/trad/quit.png \
   qt/res/icons/trad/receive.png \
@@ -388,6 +395,7 @@ BITCOIN_QT_CPP += \
   qt/coincontroltreewidget.cpp \
   qt/darksendconfig.cpp \
   qt/editaddressdialog.cpp \
+  qt/masternodelist.cpp \
   qt/openuridialog.cpp \
   qt/overviewpage.cpp \
   qt/paymentrequestplus.cpp \

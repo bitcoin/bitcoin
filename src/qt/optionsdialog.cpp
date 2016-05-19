@@ -184,6 +184,7 @@ void OptionsDialog::setModel(OptionsModel *model)
     connect(ui->theme, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
+    connect(ui->showMasternodesTab, SIGNAL(clicked(bool)), this, SLOT(showRestartWarning()));
 }
 
 void OptionsDialog::setMapper()
@@ -226,6 +227,7 @@ void OptionsDialog::setMapper()
     /* Darksend Rounds */
     mapper->addMapping(ui->darksendRounds, OptionsModel::DarksendRounds);
     mapper->addMapping(ui->anonymizeDash, OptionsModel::AnonymizeDashAmount);
+    mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
 
 }
 

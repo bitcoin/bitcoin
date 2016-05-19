@@ -21,6 +21,7 @@
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
+#include "masternodeconfig.h"
 #endif
 
 #include <QNetworkProxy>
@@ -79,6 +80,9 @@ void OptionsModel::Init(bool resetSettings)
         settings.setValue("digits", "2");
     if (!settings.contains("theme"))
         settings.setValue("theme", "");
+
+    if (!settings.contains("fShowMasternodesTab"))
+        settings.setValue("fShowMasternodesTab", masternodeConfig.getCount());
 
     // These are shared with the core or have a command-line parameter
     // and we want command-line parameters to overwrite the GUI settings.
@@ -239,6 +243,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("nDarksendRounds");
         case AnonymizeDashAmount:
             return settings.value("nAnonymizeDashAmount");
+        case ShowMasternodesTab:
+            return settings.value("fShowMasternodesTab");
 #endif
         case DisplayUnit:
             return nDisplayUnit;
@@ -375,6 +381,12 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 nAnonymizeDashAmount = value.toInt();
                 settings.setValue("nAnonymizeDashAmount", nAnonymizeDashAmount);
                 Q_EMIT anonymizeDashAmountChanged();
+            }
+            break;
+        case ShowMasternodesTab:
+            if (settings.value("fShowMasternodesTab") != value) {
+                settings.setValue("fShowMasternodesTab", value);
+                setRestartRequired(true);
             }
             break;
 #endif

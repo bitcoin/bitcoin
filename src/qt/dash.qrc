@@ -29,6 +29,7 @@
         <file alias="add">res/icons/drkblue/add.png</file>
         <file alias="edit">res/icons/drkblue/edit.png</file>
         <file alias="history">res/icons/drkblue/history.png</file>
+        <file alias="masternodes">res/icons/drkblue/masternodes.png</file>
         <file alias="overview">res/icons/drkblue/overview.png</file>
         <file alias="export">res/icons/drkblue/export.png</file>
         <file alias="synced">res/icons/drkblue/synced.png</file>
@@ -78,6 +79,7 @@
         <file alias="add">res/icons/crownium/add.png</file>
         <file alias="edit">res/icons/crownium/edit.png</file>
         <file alias="history">res/icons/crownium/history.png</file>
+        <file alias="masternodes">res/icons/crownium/masternodes.png</file>
         <file alias="overview">res/icons/crownium/overview.png</file>
         <file alias="export">res/icons/crownium/export.png</file>
         <file alias="synced">res/icons/crownium/synced.png</file>
@@ -127,6 +129,7 @@
         <file alias="add">res/icons/light/add.png</file>
         <file alias="edit">res/icons/light/edit.png</file>
         <file alias="history">res/icons/light/history.png</file>
+        <file alias="masternodes">res/icons/light/masternodes.png</file>
         <file alias="overview">res/icons/light/overview.png</file>
         <file alias="export">res/icons/light/export.png</file>
         <file alias="synced">res/icons/light/synced.png</file>
@@ -176,6 +179,7 @@
         <file alias="add">res/icons/trad/add.png</file>
         <file alias="edit">res/icons/trad/edit.png</file>
         <file alias="history">res/icons/trad/history.png</file>
+        <file alias="masternodes">res/icons/trad/masternodes.png</file>
         <file alias="overview">res/icons/trad/overview.png</file>
         <file alias="export">res/icons/trad/export.png</file>
         <file alias="synced">res/icons/trad/synced.png</file>
