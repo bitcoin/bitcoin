@@ -487,8 +487,8 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
 
     LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd - Accepted Masternode entry\n");
 
-    if(GetInputAge(vin) < GetMasternodeConfirmationsRequired()){
-        LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Input must have at least %d confirmations\n", GetMasternodeConfirmationsRequired());
+    if(GetInputAge(vin) < Params().GetConsensus().nMasternodeMinimumConfirmations){
+        LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Input must have at least %d confirmations\n", Params().GetConsensus().nMasternodeMinimumConfirmations);
         // maybe we miss few blocks, let this mnb to be checked again later
         mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
         masternodeSync.mapSeenSyncMNB.erase(GetHash());
@@ -496,7 +496,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
     }
 
     // verify that sig time is legit in past
-    // should be at least not earlier than block when 1000 DASH tx got GetMasternodeConfirmationsRequired()()
+    // should be at least not earlier than block when 1000 DASH tx got nMasternodeMinimumConfirmations
     uint256 hashBlock = uint256();
     CTransaction tx2;
     GetTransaction(vin.prevout.hash, tx2, Params().GetConsensus(), hashBlock, true);
@@ -506,11 +506,11 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
         if (mi != mapBlockIndex.end() && (*mi).second)
         {
             CBlockIndex* pMNIndex = (*mi).second; // block for 1000 DASH tx -> 1 confirmation
-            CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + GetMasternodeConfirmationsRequired() - 1]; // block where tx got GetMasternodeConfirmationsRequired()()
+            CBlockIndex* pConfIndex = chainActive[pMNIndex->nHeight + Params().GetConsensus().nMasternodeMinimumConfirmations - 1]; // block where tx got nMasternodeMinimumConfirmations
             if(pConfIndex->GetBlockTime() > sigTime)
             {
                 LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Bad sigTime %d for Masternode %20s %105s (%i conf block is at %d)\n",
-                          sigTime, addr.ToString(), vin.ToString(), GetMasternodeConfirmationsRequired(), pConfIndex->GetBlockTime());
+                          sigTime, addr.ToString(), vin.ToString(), Params().GetConsensus().nMasternodeMinimumConfirmations, pConfIndex->GetBlockTime());
                 return false;
             }
         }

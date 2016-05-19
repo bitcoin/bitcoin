@@ -513,24 +513,25 @@ bool CGovernanceManager::AddOrUpdateVote(CBudgetVote& vote, std::string& strErro
 {
     LOCK(cs);
 
-    // uint256 hash = vote.vinMasternode.prevout.GetHash();
-    // uint256 hash2 = vote.nParentHash;
+    // store newest vote per action
+    arith_uint256 a = UintToArith256(vote.nParentHash) + vote.nVoteAction;
+    uint256 hash2 = ArithToUint256(a);
 
-    // if(mapVotes[hash2].count(hash))
-    // {
-    //     if(mapVotes[hash2][hash].nTime > vote.nTime){
-    //         strError = strprintf("new vote older than existing vote - %s", vote.GetHash().ToString());
-    //         LogPrint("mngovernance", "CGovernanceObject::AddOrUpdateVote - %s\n", strError);
-    //         return false;
-    //     }
-    //     if(vote.nTime - mapVotes[hash2][hash].nTime < BUDGET_VOTE_UPDATE_MIN){
-    //         strError = strprintf("time between votes is too soon - %s - %lli", vote.GetHash().ToString(), vote.nTime - mapVotes[hash2][hash].nTime);
-    //         LogPrint("mngovernance", "CGovernanceObject::AddOrUpdateVote - %s\n", strError);
-    //         return false;
-    //     }
-    // }
+    if(mapVotes.count(hash2))
+    {
+        if(mapVotes[hash2].nTime > vote.nTime){
+            strError = strprintf("new vote older than existing vote - %s", vote.GetHash().ToString());
+            LogPrint("mngovernance", "CGovernanceObject::AddOrUpdateVote - %s\n", strError);
+            return false;
+        }
+        if(vote.nTime - mapVotes[hash2].nTime < BUDGET_VOTE_UPDATE_MIN){
+            strError = strprintf("time between votes is too soon - %s - %lli", vote.GetHash().ToString(), vote.nTime - mapVotes[hash2].nTime);
+            LogPrint("mngovernance", "CGovernanceObject::AddOrUpdateVote - %s\n", strError);
+            return false;
+        }
+    }
 
-    // mapVotes[hash2][hash] = vote;
+    mapVotes[hash2] = vote;
     return true;
 }
 
@@ -614,26 +615,6 @@ bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError
         return false;
     }
 
-    // if(address == CScript()) {
-    //     strError = "Invalid proposal Payment Address";
-    //     return false;
-    // }
-
-    // 12.1 - add valid predicates
-    //     this can be handled by configuration 
-    // found = false
-    // if strName[:10] = "proposal="; found = true;
-    // if strName[:10] = "contract="; found = true;
-    // if strName[:10] = "project="; found = true;
-    // if strName[:10] = "employee="; found = true;
-    // if strName[:10] = "project-milestone="; found = true;
-    // if strName[:10] = "project-report="; found = true;
-
-    // if not found: return false
-
-    // automatically expire
-    // if(GetTime() > nExpirationTime) return false;
-
     if(fCheckCollateral){
         int nConf = 0;
         if(!IsCollateralValid(nFeeTXHash, GetHash(), strError, nTime, nConf, GOVERNANCE_FEE_TX)){
@@ -660,29 +641,6 @@ bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError
     return true;
 }
 
-bool CGovernanceObject::NetworkWillPay()
-{
-    /**
-    * vote nVoteType 1 to 10
-    * --------------------------
-    *
-    * 
-    * // note: if the vote is not passing and we're before the starttime, it's invalid
-    * // note: plain english version - if funding votes nocount > funding votes yescount and GetTime() < nStartTime: return false
-    * if votecount(VOTE_TYPE_FUNDING, "no") > votecount(VOTE_TYPE_FUNDING, "yes") && GetTime() < nStartTime: return false
-    */
-
-    std::string strError = "";
-
-    // -- If GetAbsoluteYesCount is more than -10% of the network, flag as invalid
-    // if(GetAbsoluteYesCount() < -(mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10)) {
-    //     strError = "Voted Down";
-    //     return false;
-    // }
-
-    return true;
-}
-
 void CGovernanceObject::CleanAndRemove(bool fSignatureCheck) {
     // TODO: do smth here
 }
@@ -695,17 +653,17 @@ void CGovernanceManager::CleanAndRemove(bool fSignatureCheck)
     *
     */
 
-    std::map<uint256, CBudgetVote>::iterator it2 = mapVotes.begin();
-    while(it2 != mapVotes.end()){
-        if(!(*it2).second.IsValid(fSignatureCheck))
-        {
-            // 12.1 - log to specialized handle (govobj?)
-            LogPrintf("CGovernanceManager::CleanAndRemove - Proposal/Budget is known, activating and removing orphan vote\n");
-            mapVotes.erase(it2++);
-        } else {
-            ++it2;
-        }
-    }
+    // std::map<uint256, CBudgetVote>::iterator it2 = mapVotes.begin();
+    // while(it2 != mapVotes.end()){
+    //     if(!(*it2).second.IsValid(fSignatureCheck))
+    //     {
+    //         // 12.1 - log to specialized handle (govobj?)
+    //         LogPrintf("CGovernanceManager::CleanAndRemove - Proposal/Budget is known, activating and removing orphan vote\n");
+    //         mapVotes.erase(it2++);
+    //     } else {
+    //         ++it2;
+    //     }
+    // }
 }
 
 /**
@@ -742,9 +700,10 @@ std::string CGovernanceManager::ToString() const
 {
     std::ostringstream info;
 
-    info << "Proposals: " << (int)mapObjects.size() <<
+    info << "Governance Objects: " << (int)mapObjects.size() <<
             ", Seen Budgets: " << (int)mapSeenMasternodeBudgetProposals.size() <<
-            ", Seen Budget Votes: " << (int)mapSeenMasternodeBudgetVotes.size();
+            ", Seen Budget Votes: " << (int)mapSeenMasternodeBudgetVotes.size() <<
+            ", Vote Count: " << (int)mapVotes.size();
 
     return info.str();
 }
@@ -770,9 +729,11 @@ int CGovernanceManager::CountMatchingAbsoluteVotes(int nVoteActionIn, int nVoteO
 
     std::map<uint256, CBudgetVote>::iterator it2 = mapVotes.begin();
     while(it2 != mapVotes.end()){
-        if(!(*it2).second.IsValid(true) && (*it2).second.nVoteAction == nVoteActionIn)
+        //if(!(*it2).second.IsValid(true) && (*it2).second.nVoteAction == nVoteActionIn)
+        if((*it2).second.IsValid(true) && (*it2).second.nVoteAction == nVoteActionIn)
         {
             nCount += ((*it2).second.nVoteOutcome == nVoteOutcomeIn ? 1 : 0);
+            ++it2;
         } else {
             ++it2;
         }

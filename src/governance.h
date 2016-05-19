@@ -76,8 +76,8 @@ public:
 
     // todo - 12.1 - move to private for better encapsulation 
     std::map<uint256, int> mapSeenMasternodeBudgetProposals;
-    std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
     std::map<uint256, int> mapSeenMasternodeBudgetVotes;
+    std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
     std::map<uint256, CBudgetVote> mapVotes;
 
     CGovernanceManager() {
@@ -248,7 +248,6 @@ public:
 
     bool HasMinimumRequiredSupport();
     bool IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral=true);
-    bool NetworkWillPay();
 
     std::string GetName() {return strName; }
 
