@@ -291,6 +291,21 @@ struct ProxyCredentials
     std::string password;
 };
 
+std::string Socks5ErrorString(int err)
+{
+    switch(err) {
+        case 0x01: return "general failure";
+        case 0x02: return "connection not allowed";
+        case 0x03: return "network unreachable";
+        case 0x04: return "host unreachable";
+        case 0x05: return "connection refused";
+        case 0x06: return "TTL expired";
+        case 0x07: return "protocol error";
+        case 0x08: return "address type not supported";
+        default:   return "unknown";
+    }
+}
+
 /** Connect using SOCKS5 (as described in RFC1928) */
 static bool Socks5(const std::string& strDest, int port, const ProxyCredentials *auth, SOCKET& hSocket)
 {
@@ -382,18 +397,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     if (pchRet2[1] != 0x00) {
         // Failures to connect to a peer that are not proxy errors
         CloseSocket(hSocket);
-        switch (pchRet2[1])
-        {
-            case 0x01: LogPrintf("Socks5() connect to %s:%d failed: general failure\n", strDest, port); break;
-            case 0x02: LogPrintf("Socks5() connect to %s:%d failed: connection not allowed\n", strDest, port); break;
-            case 0x03: LogPrintf("Socks5() connect to %s:%d failed: network unreachable\n", strDest, port); break;
-            case 0x04: LogPrintf("Socks5() connect to %s:%d failed: host unreachable\n", strDest, port); break;
-            case 0x05: LogPrintf("Socks5() connect to %s:%d failed: connection refused\n", strDest, port); break;
-            case 0x06: LogPrintf("Socks5() connect to %s:%d failed: TTL expired\n", strDest, port); break;
-            case 0x07: LogPrintf("Socks5() connect to %s:%d failed: protocol error\n", strDest, port); break;
-            case 0x08: LogPrintf("Socks5() connect to %s:%d failed: address type not supported\n", strDest, port); break;
-            default:   LogPrintf("Socks5() connect to %s:%d failed: unknown\n", strDest, port);
-        }
+        LogPrintf("Socks5() connect to %s:%d failed: %s\n", strDest, port, Socks5ErrorString(pchRet2[1]));
         return false;
     }
     if (pchRet2[2] != 0x00) {
