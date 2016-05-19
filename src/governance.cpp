@@ -545,7 +545,7 @@ CGovernanceObject::CGovernanceObject()
     
     // caching
     fCachedFunding = false;
-    fCachedValid = false;
+    fCachedValid = true;
     fCachedDelete = false;
     fCachedClearRegisters = false;
     fCachedEndorsed = false;

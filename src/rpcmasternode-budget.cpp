@@ -22,7 +22,7 @@
 
 using namespace std;
 
-int ConvertVoteAction(std::string strVoteAction)
+int ConvertVoteOutcome(std::string strVoteAction)
 {
     int nVote = -1;
     if(strVoteAction == "yes") nVote = VOTE_OUTCOME_YES;
@@ -32,7 +32,7 @@ int ConvertVoteAction(std::string strVoteAction)
     return nVote;
 }
 
-int ConvertVoteOutcome(std::string strVoteOutcome)
+int ConvertVoteAction(std::string strVoteOutcome)
 {
     if(strVoteOutcome == "none") return 0;
     if(strVoteOutcome == "funding") return 1;
@@ -109,7 +109,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
                 "  get                - Get proposal hash(es) by proposal name\n"
                 "  list               - List all proposals\n"
                 "  diff               - List differences since last diff\n"
-                "  vote-alias         - Vote on a proposal by masternode alias\n"
+                "  vote-alias         - Vote on a governance object by masternode alias\n"
                 );
 
     if(strCommand == "prepare")
@@ -162,6 +162,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
     if(strCommand == "submit")
     {
+        printf("%d\n", (int)params.size());
         if (params.size() != 7)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance submit <fee-tx> <parent-hash> <revision> <time> <name> <registers-hex>'");
 
@@ -213,18 +214,17 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
     if(strCommand == "vote-alias")
     {
-        if(params.size() != 4)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-alias <governance-hash> <vote-action> [yes|no|abstain] <alias-name>'");
+        if(params.size() != 5)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance vote-alias <governance-hash> [funding|valid|delete] [yes|no|abstain] <alias-name>'");
 
         uint256 hash;
         std::string strVote;
 
         hash = ParseHashV(params[1], "Object hash");
-        strVote = params[2].get_str();
-        std::string strAlias = params[3].get_str();
-        std::string strVoteAction = params[4].get_str();
-        std::string strVoteOutcome = params[5].get_str();
-
+        std::string strVoteAction = params[2].get_str();
+        std::string strVoteOutcome = params[3].get_str();
+        std::string strAlias = params[4].get_str();
+        
         int nVoteAction = ConvertVoteAction(strVoteAction);
         if(nVoteAction == VOTE_OUTCOME_NONE || nVoteAction == -1)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");

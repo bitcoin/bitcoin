@@ -11,6 +11,7 @@ DASHLOG="mnbudget,mnpayments"
 DASHDEBUG="lldb --"
 DASHBINARY="./dashd"
 DASHNETWORK="testnet" #mainnet, testnet, regtest
+DASHDIR=".dash-develop"
 #DASHBINARY="./dash-qt"
 
 touch_logs()
@@ -98,21 +99,21 @@ cmd_dash()
   if [ "$1 $2" = "set mode" ]; then return; fi;
 
   #---- generic commands
-  if [ "$1" = "start" ]; then $DASHDEBUG $DASHBINARY --datadir=/Users/$HOMEUSER/.dash --debug=$DASHLOG -logthreadnames; return; fi;
-  if [ "$1 $2" = "hard start" ]; then $DASHDEBUG $DASHBINARY --datadir=/Users/$HOMEUSER/.dash --debug=$DASHLOG -reindex -logthreadnames; return; fi;
+  if [ "$1" = "start" ]; then $DASHDEBUG $DASHBINARY --datadir=/Users/$HOMEUSER/$DASHDIR --debug=$DASHLOG -logthreadnames; return; fi;
+  if [ "$1 $2" = "hard start" ]; then $DASHDEBUG $DASHBINARY --datadir=/Users/$HOMEUSER/$DASHDIR --debug=$DASHLOG -reindex -logthreadnames; return; fi;
   if [ "$1" = "cd" ]; then cd ~/Desktop/dash-develop; return; fi;
 
-  #---- tail .dash/network/debug.log
-  if [ "$1 $DASHNETWORK" = "tail testnet" ]; then cd ~/.dash/testnet3 && tail -f debug.log ; return; fi;
-  if [ "$1 $DASHNETWORK" = "tail mainnet" ]; then cd ~/.dash/ && tail -f debug.log ; return; fi;
-  if [ "$1 $DASHNETWORK" = "tail regtest" ]; then cd ~/.dash/regtest && tail -f debug.log ; return; fi;
+  #---- tail $DASHDIR/network/debug.log
+  if [ "$1 $DASHNETWORK" = "tail testnet" ]; then cd ~/$DASHDIR/testnet3 && tail -f debug.log ; return; fi;
+  if [ "$1 $DASHNETWORK" = "tail mainnet" ]; then cd ~/$DASHDIR/ && tail -f debug.log ; return; fi;
+  if [ "$1 $DASHNETWORK" = "tail regtest" ]; then cd ~/$DASHDIR/regtest && tail -f debug.log ; return; fi;
 
   array=$@;
   array="${array[@]:3}";
 
   echo $array;
   #----- cli commands
-  if [ "$1" = "cli" ]; then cd ~/Desktop/dash-develop && ./dash-cli --datadir=/Users/$HOMEUSER/.dash $array ; return; fi;
+  if [ "$1" = "cli" ]; then cd ~/Desktop/dash-develop && ./dash-cli --datadir=/Users/$HOMEUSER/$DASHDIR $array; return; fi;
 
   echo "unknown dash command. see 'dash help'"
 }

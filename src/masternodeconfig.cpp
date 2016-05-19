@@ -20,6 +20,8 @@ bool CMasternodeConfig::read(std::string& strErr) {
     boost::filesystem::path pathMasternodeConfigFile = GetMasternodeConfigFile();
     boost::filesystem::ifstream streamConfig(pathMasternodeConfigFile);
 
+    LogPrintf("loading masternode file at %s\n", pathMasternodeConfigFile.c_str());
+
     if (!streamConfig.good()) {
         FILE* configFile = fopen(pathMasternodeConfigFile.string().c_str(), "a");
         if (configFile != NULL) {

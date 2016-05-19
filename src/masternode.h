@@ -13,7 +13,8 @@
 #include "main.h"
 #include "timedata.h"
 
-#define MASTERNODE_MIN_CONFIRMATIONS           15
+#define MASTERNODE_MIN_CONFIRMATIONS_TEST           1
+#define MASTERNODE_MIN_CONFIRMATIONS_MAIN           15
 #define MASTERNODE_MIN_MNP_SECONDS             (10*60)
 #define MASTERNODE_MIN_MNB_SECONDS             (5*60)
 #define MASTERNODE_PING_SECONDS                (5*60)
@@ -29,6 +30,14 @@ class CMasternodePing;
 extern map<int64_t, uint256> mapCacheBlockHashes;
 
 bool GetBlockHash(uint256& hash, int nBlockHeight);
+
+int GetMasternodeConfirmationsRequired()
+{
+    if(Params().NetworkIDString() == CBaseChainParams::MAIN)
+        return MASTERNODE_MIN_CONFIRMATIONS_MAIN;
+    else
+        return MASTERNODE_MIN_CONFIRMATIONS_TEST;
+}
 
 
 //

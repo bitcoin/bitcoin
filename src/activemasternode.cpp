@@ -96,7 +96,7 @@ void CActiveMasternode::ManageStatus()
 
         if(GetMasterNodeVin(vin, pubKeyCollateralAddress, keyCollateralAddress)) {
 
-            if(GetInputAge(vin) < MASTERNODE_MIN_CONFIRMATIONS){
+            if(GetInputAge(vin) < GetMasternodeConfirmationsRequired()){
                 status = ACTIVE_MASTERNODE_INPUT_TOO_NEW;
                 notCapableReason = strprintf("%s - %d confirmations", GetStatus(), GetInputAge(vin));
                 LogPrintf("CActiveMasternode::ManageStatus() - %s\n", notCapableReason);
@@ -153,7 +153,7 @@ std::string CActiveMasternode::GetStatus() {
     switch (status) {
     case ACTIVE_MASTERNODE_INITIAL: return "Node just started, not yet activated";
     case ACTIVE_MASTERNODE_SYNC_IN_PROCESS: return "Sync in progress. Must wait until sync is complete to start Masternode";
-    case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return strprintf("Masternode input must have at least %d confirmations", MASTERNODE_MIN_CONFIRMATIONS);
+    case ACTIVE_MASTERNODE_INPUT_TOO_NEW: return strprintf("Masternode input must have at least %d confirmations", GetMasternodeConfirmationsRequired());
     case ACTIVE_MASTERNODE_NOT_CAPABLE: return "Not capable masternode: " + notCapableReason;
     case ACTIVE_MASTERNODE_STARTED: return "Masternode successfully started";
     default: return "unknown";
