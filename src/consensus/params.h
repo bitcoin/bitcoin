@@ -22,6 +22,7 @@ struct Params {
     int nBudgetPaymentsCycleBlocks;
     int nBudgetPaymentsWindowBlocks;
     int nBudgetProposalEstablishingTime; // in seconds
+    int nMasternodeMinimumConfirmations;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
