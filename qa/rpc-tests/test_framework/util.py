@@ -35,6 +35,8 @@ PORT_MIN = 11000
 # The number of ports to "reserve" for p2p and rpc, each
 PORT_RANGE = 5000
 
+BITCOIND_PROC_WAIT_TIMEOUT = 60
+
 
 class PortSeed:
     # Must be initialized with a unique integer for each process
@@ -332,7 +334,7 @@ def stop_node(node, i):
         node.stop()
     except http.client.CannotSendRequest as e:
         print("WARN: Unable to stop node: " + repr(e))
-    bitcoind_processes[i].wait()
+    bitcoind_processes[i].wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
     del bitcoind_processes[i]
 
 def stop_nodes(nodes):
@@ -350,7 +352,7 @@ def set_node_times(nodes, t):
 def wait_bitcoinds():
     # Wait for all bitcoinds to cleanly exit
     for bitcoind in bitcoind_processes.values():
-        bitcoind.wait()
+        bitcoind.wait(timeout=BITCOIND_PROC_WAIT_TIMEOUT)
     bitcoind_processes.clear()
 
 def connect_nodes(from_connection, node_num):
