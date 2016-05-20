@@ -32,10 +32,11 @@ test that enforcement has triggered
 class BIP9SoftForksTest(ComparisonTestFramework):
 
     def __init__(self):
+        super().__init__()
         self.num_nodes = 1
 
     def setup_network(self):
-        self.nodes = start_nodes(1, self.options.tmpdir,
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir,
                                  extra_args=[['-debug', '-whitelist=127.0.0.1']],
                                  binary=[self.options.testbinary])
 

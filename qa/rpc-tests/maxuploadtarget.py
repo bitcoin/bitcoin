@@ -80,17 +80,19 @@ class TestNode(NodeConnCB):
         return success
 
 class MaxUploadTest(BitcoinTestFramework):
-    def __init__(self):
-        self.utxo = []
-        self.txouts = gen_return_txouts()
  
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
                           default=os.getenv("BITCOIND", "bitcoind"),
                           help="bitcoind binary to test")
 
-    def setup_chain(self):
-        initialize_chain_clean(self.options.tmpdir, 2)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 1
+
+        self.utxo = []
+        self.txouts = gen_return_txouts()
 
     def setup_network(self):
         # Start a node with maxuploadtarget of 200 MB (/24h)
