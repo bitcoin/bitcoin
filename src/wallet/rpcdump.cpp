@@ -79,14 +79,15 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
     
-    if (fHelp || params.size() < 1 || params.size() > 3)
+    if (fHelp || params.size() < 1 || params.size() > 4)
         throw runtime_error(
-            "importprivkey \"bitcoinprivkey\" ( \"label\" rescan )\n"
+            "importprivkey \"bitcoinprivkey\" ( \"label\" rescan fromheight )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
             "\nArguments:\n"
             "1. \"bitcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+            "4. fromheight	     (numeric, optional, default=0) If rescanning, start rescanning from this height\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
             "\nExamples:\n"
             "\nDump a private key\n"
@@ -145,7 +146,13 @@ UniValue importprivkey(const UniValue& params, bool fHelp)
         pwalletMain->nTimeFirstKey = 1; // 0 would be considered 'no value'
 
         if (fRescan) {
-            pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+            
+        // Get the start height
+        CBlockIndex *start = chainActive.Genesis();
+        if (params.size() > 3 && fRescan)
+            start = chainActive[params[3].get_int()];
+
+            pwalletMain->ScanForWalletTransactions(start, true);
         }
     }
 
@@ -184,15 +191,16 @@ UniValue importaddress(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
     
-    if (fHelp || params.size() < 1 || params.size() > 4)
+    if (fHelp || params.size() < 1 || params.size() > 5)
         throw runtime_error(
-            "importaddress \"address\" ( \"label\" rescan p2sh )\n"
+            "importaddress \"address\" ( \"label\" rescan p2sh fromheight )\n"
             "\nAdds a script (in hex) or address that can be watched as if it were in your wallet but cannot be used to spend.\n"
             "\nArguments:\n"
             "1. \"script\"           (string, required) The hex-encoded script (or address)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "4. p2sh                 (boolean, optional, default=false) Add the P2SH version of the script as well\n"
+            "5. fromheight	     (numeric, optional, default=0) If rescanning, start rescanning from this height\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
             "If you have the full public key, you should call importpubkey instead of this.\n"
             "\nExamples:\n"
@@ -238,7 +246,12 @@ UniValue importaddress(const UniValue& params, bool fHelp)
 
     if (fRescan)
     {
-        pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+        // Get the start height
+        CBlockIndex* start = chainActive.Genesis();
+        if (params.size() > 4 && fRescan)
+            start = chainActive[params[4].get_int()];
+
+        pwalletMain->ScanForWalletTransactions(start, true);
         pwalletMain->ReacceptWalletTransactions();
     }
 
@@ -353,14 +366,15 @@ UniValue importpubkey(const UniValue& params, bool fHelp)
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
 
-    if (fHelp || params.size() < 1 || params.size() > 4)
+    if (fHelp || params.size() < 1 || params.size() > 5)
         throw runtime_error(
-            "importpubkey \"pubkey\" ( \"label\" rescan )\n"
+            "importpubkey \"pubkey\" ( \"label\" rescan fromheight )\n"
             "\nAdds a public key (in hex) that can be watched as if it were in your wallet but cannot be used to spend.\n"
             "\nArguments:\n"
             "1. \"pubkey\"           (string, required) The hex-encoded public key\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
-            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
+            "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"			
+            "4. fromheight	     (numeric, optional, default=0) If rescanning, start rescanning from this height\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
             "\nExamples:\n"
             "\nImport a public key with rescan\n"
@@ -398,7 +412,13 @@ UniValue importpubkey(const UniValue& params, bool fHelp)
 
     if (fRescan)
     {
-        pwalletMain->ScanForWalletTransactions(chainActive.Genesis(), true);
+        
+        // Get the start height
+        CBlockIndex* start = chainActive.Genesis();
+        if (params.size() > 3 && fRescan)
+            start = chainActive[params[3].get_int()];
+
+        pwalletMain->ScanForWalletTransactions(start, true);
         pwalletMain->ReacceptWalletTransactions();
     }
 
