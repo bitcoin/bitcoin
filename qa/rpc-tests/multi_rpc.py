@@ -8,24 +8,30 @@
 #
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import str_to_b64str, assert_equal
 
+import os
 import http.client
 import urllib.parse
 
 class HTTPBasicsTest (BitcoinTestFramework):
-    def setup_nodes(self):
-        return start_nodes(4, self.options.tmpdir)
+
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = False
+        self.num_nodes = 1
 
     def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+        super().setup_chain()
         #Append rpcauth to bitcoin.conf before initialization
         rpcauth = "rpcauth=rt:93648e835a54c573682c2eb19f882535$7681e9c5b74bdd85e78166031d2058e1069b3ed7ed967c93fc63abba06f31144"
         rpcauth2 = "rpcauth=rt2:f8607b1a88861fac29dfccf9b52ff9f$ff36a0c23c8c62b4846112e50fa888416e94c17bfd4c42f88fd8f55ec6a3137e"
         with open(os.path.join(self.options.tmpdir+"/node0", "bitcoin.conf"), 'a') as f:
             f.write(rpcauth+"\n")
             f.write(rpcauth2+"\n")
+
+    def setup_network(self):
+        self.nodes = self.setup_nodes()
 
     def run_test(self):
 
