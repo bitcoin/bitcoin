@@ -48,6 +48,14 @@ MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *pare
     ui->tableWidgetMasternodes->setColumnWidth(3, columnActiveWidth);
     ui->tableWidgetMasternodes->setColumnWidth(4, columnLastSeenWidth);
 
+    ui->tableWidgetMyMasternodes->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    QAction *startAliasAction = new QAction(tr("Start alias"), this);
+    contextMenu = new QMenu();
+    contextMenu->addAction(startAliasAction);
+    connect(ui->tableWidgetMyMasternodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
+    connect(startAliasAction, SIGNAL(triggered()), this, SLOT(on_startButton_clicked()));
+
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateNodeList()));
     connect(timer, SIGNAL(timeout()), this, SLOT(updateMyNodeList()));
@@ -76,8 +84,14 @@ void MasternodeList::setWalletModel(WalletModel *model)
     this->walletModel = model;
 }
 
-void MasternodeList::StartAlias(std::string strAlias) {
+void MasternodeList::showContextMenu(const QPoint &point)
+{
+    QTableWidgetItem *item = ui->tableWidgetMyMasternodes->itemAt(point);
+    if(item) contextMenu->exec(QCursor::pos());
+}
 
+void MasternodeList::StartAlias(std::string strAlias)
+{
     std::string statusObj;
     statusObj += "<center>Alias: " + strAlias;
 
@@ -106,8 +120,8 @@ void MasternodeList::StartAlias(std::string strAlias) {
     msg.exec();
 }
 
-void MasternodeList::StartAll(std::string strCommand) {
-
+void MasternodeList::StartAll(std::string strCommand)
+{
     int total = 0;
     int successful = 0;
     int fail = 0;
