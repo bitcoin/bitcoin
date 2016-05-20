@@ -6,65 +6,17 @@
 # **** change these each project, so that the default is correct usually ****
 #
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source $DIR/misc.bash
+
 HOMEUSER="evan"
 DASHLOG="mnbudget,mnpayments"
 DASHDEBUG="lldb --"
-DASHBINARY="./dashd"
 DASHNETWORK="testnet" #mainnet, testnet, regtest
-DASHDIR=".dash-develop"
-#DASHBINARY="./dash-qt"
+DASHDIR="./dash/develop"
+DASHBINARY="./dash/bin/develop/dashd"
 
-touch_logs()
-{  
-  touch ~/.dash/debug.log;
-  for ((i=2;i<=9;i++));
-  do
-     touch ~/.dash$i/debug.log;
-  done
-}
-
-stop_cluster()
-{  
-  ./dash-cli --datadir=/Users/$HOMEUSER/.dash stop
-  for ((i=2;i<=9;i++));
-  do
-     echo "stopping dash$i "
-    ./dash-cli --datadir=/Users/$HOMEUSER/.dash$i stop
-  done
-}
-
-start_cluster()
-{  
-  for ((i=1;i<=9;i++));
-  do
-    echo "starting dash$i "
-    ./dashd --datadir=/Users/$HOMEUSER/.dash$i --daemon
-  done
-}
-
-cmd_cluster()
-{  
-  array=$@;
-  re='^[0-9]$'
-  locked="any";
-  if [[ $1 =~ $re ]] ; then
-    #if the first parameter is a number, we'll assume we want to execute that specific daemon
-    locked=$1;
-    array="${array[@]:1}";
-  fi; 
-
-  for ((i=1;i<=9;i++));
-  do
-    if [ $locked == $i ] ; then
-      echo "dash$i $array"
-      ./dash-cli --datadir=/Users/$HOMEUSER/.dash$i $array
-    fi;
-    if [ $locked = "any" ] ; then
-      echo "dash$i "
-      ./dash-cli --datadir=/Users/$HOMEUSER/.dash$i $array
-    fi;
-  done
-}
+source misc.bash
 
 cmd_dash()
 {
@@ -96,6 +48,8 @@ cmd_dash()
   #---- setup binaries
   if [ "$1 $2 $3" = "set mode qt" ]; then DASHBINARY="./dash-qt";echo "qt mode on"; return; fi;
   if [ "$1 $2 $3" = "set mode daemon" ]; then DASHBINARY="./dashd";echo "daemon mode on"; return; fi;
+  if [ "$1 $2 $3" = "set mode testnet" ]; then DASHBINARY="./dash-qt";echo "qt mode on"; return; fi;
+  if [ "$1 $2 $3" = "set mode mainnet" ]; then DASHBINARY="./dashd";echo "daemon mode on"; return; fi;
   if [ "$1 $2" = "set mode" ]; then return; fi;
 
   #---- generic commands
