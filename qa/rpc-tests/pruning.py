@@ -20,13 +20,13 @@ def calc_usage(blockdir):
 class PruneTest(BitcoinTestFramework):
 
     def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 3
+
         self.utxo = []
         self.address = ["",""]
         self.txouts = gen_return_txouts()
-
-    def setup_chain(self):
-        print("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 3)
 
     def setup_network(self):
         self.nodes = []

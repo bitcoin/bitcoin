@@ -29,6 +29,7 @@ class FullBlockTest(ComparisonTestFramework):
     ''' Can either run this test as 1 node with expected answers, or two and compare them. 
         Change the "outcome" variable from each TestInstance object to only do the comparison. '''
     def __init__(self):
+        super().__init__()
         self.num_nodes = 1
         self.block_heights = {}
         self.coinbase_key = CECKey()

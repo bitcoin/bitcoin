@@ -24,7 +24,7 @@ def run_bind_test(tmpdir, allow_ips, connect_to, addresses, expected):
     if allow_ips:
         base_args += ['-rpcallowip=' + x for x in allow_ips]
     binds = ['-rpcbind='+addr for addr in addresses]
-    nodes = start_nodes(1, tmpdir, [base_args + binds], connect_to)
+    nodes = start_nodes(self.num_nodes, tmpdir, [base_args + binds], connect_to)
     try:
         pid = bitcoind_processes[0].pid
         assert_equal(set(get_bind_addrs(pid)), set(expected))
@@ -38,7 +38,7 @@ def run_allowip_test(tmpdir, allow_ips, rpchost, rpcport):
     at a non-localhost IP.
     '''
     base_args = ['-disablewallet', '-nolisten'] + ['-rpcallowip='+x for x in allow_ips]
-    nodes = start_nodes(1, tmpdir, [base_args])
+    nodes = start_nodes(self.num_nodes, tmpdir, [base_args])
     try:
         # connect to node through non-loopback interface
         url = "http://rt:rt@%s:%d" % (rpchost, rpcport,)

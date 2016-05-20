@@ -68,6 +68,11 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=CScript([1])):
 
 class ReplaceByFeeTest(BitcoinTestFramework):
 
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 1
+        self.setup_clean_chain = False
+
     def setup_network(self):
         self.nodes = []
         self.nodes.append(start_node(0, self.options.tmpdir, ["-maxorphantx=1000", "-debug",

@@ -26,6 +26,11 @@ class GetBlockTemplateLPTest(BitcoinTestFramework):
     Test longpolling with getblocktemplate.
     '''
 
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 4
+        self.setup_clean_chain = False
+
     def run_test(self):
         print("Warning: this test will take about 70 seconds in the best case. Be patient.")
         wait_to_sync(self.nodes[0])

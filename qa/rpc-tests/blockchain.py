@@ -13,7 +13,6 @@ from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.authproxy import JSONRPCException
 from test_framework.util import (
-    initialize_chain,
     assert_equal,
     assert_raises,
     assert_is_hex_string,
@@ -32,12 +31,13 @@ class BlockchainTest(BitcoinTestFramework):
 
     """
 
-    def setup_chain(self):
-        print("Initializing test directory " + self.options.tmpdir)
-        initialize_chain(self.options.tmpdir)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = False
+        self.num_nodes = 1
 
     def setup_network(self, split=False):
-        self.nodes = start_nodes(1, self.options.tmpdir)
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir)
         self.is_network_split = False
         self.sync_all()
 

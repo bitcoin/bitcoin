@@ -46,6 +46,12 @@ class TestNode(SingleNodeConnCB):
         self.sync_with_ping()
 
 class FeeFilterTest(BitcoinTestFramework):
+
+    def __init__(self):
+        super().__init__()
+        self.num_nodes = 2
+        self.setup_clean_chain = False
+
     def setup_network(self):
         # Node1 will be used to generate txs which should be relayed from Node0
         # to our test node
