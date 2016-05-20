@@ -6,8 +6,9 @@
 #include "sync.h"
 #include "util.h"
 
-#include <QWidget>
+#include <QMenu>
 #include <QTimer>
+#include <QWidget>
 
 #define MASTERNODELIST_UPDATE_SECONDS            5
 #define MY_MASTERNODELIST_UPDATE_SECONDS        60
@@ -37,6 +38,9 @@ public:
     void StartAlias(std::string strAlias);
     void StartAll(std::string strCommand = "start-all");
 
+private:
+    QMenu *contextMenu;
+
 public Q_SLOTS:
     void updateMyMasternodeInfo(QString alias, QString addr, QString privkey, QString txHash, QString txIndex, CMasternode *pmn);
     void updateMyNodeList(bool reset = false);
@@ -53,6 +57,7 @@ private:
     QString strCurrentFilter;
 
 private Q_SLOTS:
+    void showContextMenu(const QPoint &);
     void on_filterLineEdit_textChanged(const QString &filterString);
     void on_startButton_clicked();
     void on_startAllButton_clicked();
