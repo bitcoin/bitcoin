@@ -82,7 +82,6 @@ public:
     void add(std::string alias, std::string ip, std::string privKey, std::string txHash, std::string outputIndex);
 
     std::vector<CMasternodeEntry>& getEntries() {
-        printf("%d\n", (int)entries.size());
         return entries;
     }
 

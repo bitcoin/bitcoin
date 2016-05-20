@@ -201,22 +201,25 @@ public:
         int64_t nStart = GetTimeMillis();
 
         LogPrintf("Verifying %s format...\n", strFilename);
-        ReadResult readResult = Read(objToSave, true);
 
-        // there was an error and it was not an error on file opening => do not proceed
-        if (readResult == FileError)
-            LogPrintf("Missing file - %s, will try to recreate\n", strFilename);
-        else if (readResult != Ok)
-        {
-            LogPrintf("Error reading %s: ", strFilename);
-            if(readResult == IncorrectFormat)
-                LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-            else
-            {
-                LogPrintf("file format is unknown or invalid, please fix it manually\n");
-                return false;
-            }
-        }
+        // 12.1 -- pls fix -- causing corruption of the dat files ---
+
+        // ReadResult readResult = Read(objToSave, true);
+
+        // // there was an error and it was not an error on file opening => do not proceed
+        // if (readResult == FileError)
+        //     LogPrintf("Missing file - %s, will try to recreate\n", strFilename);
+        // else if (readResult != Ok)
+        // {
+        //     LogPrintf("Error reading %s: ", strFilename);
+        //     if(readResult == IncorrectFormat)
+        //         LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+        //     else
+        //     {
+        //         LogPrintf("file format is unknown or invalid, please fix it manually\n");
+        //         return false;
+        //     }
+        // }
 
         LogPrintf("Writting info to %s...\n", strFilename);
         Write(objToSave);
