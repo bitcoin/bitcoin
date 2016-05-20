@@ -173,6 +173,7 @@ public:
 
     bool Load(T& objToLoad)
     {
+        LogPrintf("Reading info from %s...\n", strFilename);
         ReadResult readResult = Read(objToLoad);
         if (readResult == FileError)
             LogPrintf("Missing file - %s, will try to recreate\n", strFilename);
@@ -189,10 +190,6 @@ public:
                 return false;
             }
         }
-
-        LogPrintf("Reading info from %s...\n", strFilename);
-        Read(objToLoad);
-
         return true;
     }
 
@@ -201,25 +198,23 @@ public:
         int64_t nStart = GetTimeMillis();
 
         LogPrintf("Verifying %s format...\n", strFilename);
+        T tmpObjToLoad;
+        ReadResult readResult = Read(tmpObjToLoad, true);
 
-        // 12.1 -- pls fix -- causing corruption of the dat files ---
-
-        // ReadResult readResult = Read(objToSave, true);
-
-        // // there was an error and it was not an error on file opening => do not proceed
-        // if (readResult == FileError)
-        //     LogPrintf("Missing file - %s, will try to recreate\n", strFilename);
-        // else if (readResult != Ok)
-        // {
-        //     LogPrintf("Error reading %s: ", strFilename);
-        //     if(readResult == IncorrectFormat)
-        //         LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
-        //     else
-        //     {
-        //         LogPrintf("file format is unknown or invalid, please fix it manually\n");
-        //         return false;
-        //     }
-        // }
+        // there was an error and it was not an error on file opening => do not proceed
+        if (readResult == FileError)
+            LogPrintf("Missing file - %s, will try to recreate\n", strFilename);
+        else if (readResult != Ok)
+        {
+            LogPrintf("Error reading %s: ", strFilename);
+            if(readResult == IncorrectFormat)
+                LogPrintf("magic is ok but data has invalid format, will try to recreate\n");
+            else
+            {
+                LogPrintf("file format is unknown or invalid, please fix it manually\n");
+                return false;
+            }
+        }
 
         LogPrintf("Writting info to %s...\n", strFilename);
         Write(objToSave);
