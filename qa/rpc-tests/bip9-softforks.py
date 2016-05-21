@@ -85,7 +85,7 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         raise IndexError ('key:"%s" not found' % key)
 
 
-    def test_BIP(self, bipName, activated_version, invalidate, invalidatePostSignature):
+    def test_BIP(self, bipName, activated_version, invalidate, invalidatePostSignature, bitno):
         # generate some coins for later
         self.coinbase_blocks = self.nodes[0].generate(2)
         self.height = 3  # height of the next block to build
@@ -94,6 +94,11 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         self.last_block_time = time.time()
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'defined')
+        tmpl = self.nodes[0].getblocktemplate({})
+        assert(bipName not in tmpl['rules'])
+        assert(bipName not in tmpl['vbavailable'])
+        assert_equal(tmpl['vbrequired'], 0)
+        assert_equal(tmpl['version'], 0x20000000)
 
         # Test 1
         # Advance from DEFINED to STARTED
@@ -101,6 +106,11 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'started')
+        tmpl = self.nodes[0].getblocktemplate({})
+        assert(bipName not in tmpl['rules'])
+        assert_equal(tmpl['vbavailable'][bipName], bitno)
+        assert_equal(tmpl['vbrequired'], 0)
+        assert(tmpl['version'] & activated_version)
 
         # Test 2
         # Fail to achieve LOCKED_IN 100 out of 144 signal bit 1
@@ -112,6 +122,11 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'started')
+        tmpl = self.nodes[0].getblocktemplate({})
+        assert(bipName not in tmpl['rules'])
+        assert_equal(tmpl['vbavailable'][bipName], bitno)
+        assert_equal(tmpl['vbrequired'], 0)
+        assert(tmpl['version'] & activated_version)
 
         # Test 3
         # 108 out of 144 signal bit 1 to achieve LOCKED_IN
@@ -123,6 +138,8 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
+        tmpl = self.nodes[0].getblocktemplate({})
+        assert(bipName not in tmpl['rules'])
 
         # Test 4
         # 143 more version 536870913 blocks (waiting period-1)
@@ -130,6 +147,8 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance(test_blocks, sync_every_block=False)
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'locked_in')
+        tmpl = self.nodes[0].getblocktemplate({})
+        assert(bipName not in tmpl['rules'])
 
         # Test 5
         # Check that the new rule is enforced
@@ -153,6 +172,11 @@ class BIP9SoftForksTest(ComparisonTestFramework):
         yield TestInstance([[block, True]])
 
         assert_equal(self.get_bip9_status(bipName)['status'], 'active')
+        tmpl = self.nodes[0].getblocktemplate({})
+        assert(bipName in tmpl['rules'])
+        assert(bipName not in tmpl['vbavailable'])
+        assert_equal(tmpl['vbrequired'], 0)
+        assert(not (tmpl['version'] & (1 << bitno)))
 
         # Test 6
         # Check that the new sequence lock rules are enforced
@@ -187,9 +211,9 @@ class BIP9SoftForksTest(ComparisonTestFramework):
 
     def get_tests(self):
         for test in itertools.chain(
-                self.test_BIP('csv', 536870913, self.sequence_lock_invalidate, self.donothing),
-                self.test_BIP('csv', 536870913, self.mtp_invalidate, self.donothing),
-                self.test_BIP('csv', 536870913, self.donothing, self.csv_invalidate)
+                self.test_BIP('csv', 0x20000001, self.sequence_lock_invalidate, self.donothing, 0),
+                self.test_BIP('csv', 0x20000001, self.mtp_invalidate, self.donothing, 0),
+                self.test_BIP('csv', 0x20000001, self.donothing, self.csv_invalidate, 0)
         ):
             yield test
 
