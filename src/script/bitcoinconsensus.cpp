@@ -91,7 +91,7 @@ static int verify_script(const unsigned char *scriptPubKey, unsigned int scriptP
     }
 }
 
-int bitcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, uint64_t amount,
+int bitcoinconsensus_verify_script_with_amount(const unsigned char *scriptPubKey, unsigned int scriptPubKeyLen, int64_t amount,
                                     const unsigned char *txTo        , unsigned int txToLen,
                                     unsigned int nIn, unsigned int flags, bitcoinconsensus_error* err)
 {
