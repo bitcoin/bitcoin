@@ -100,7 +100,21 @@ WalletView::WalletView(QWidget *parent):
     exTabHolder->addTab(tradeHistoryTab,tr("Trade History"));
     exTabHolder->addTab(cancelTab,tr("Cancel Orders"));
     exvbox->addWidget(exTabHolder);
+
+    /* - temporarily disable the MetaDEx UI
     exchangePage->setLayout(exvbox);
+    */
+    QVBoxLayout *tmpVLayout = new QVBoxLayout();
+    QLabel *tmpLabelA = new QLabel(this);
+    QLabel *tmpLabelB = new QLabel(this);
+    tmpLabelA->setText("Please note:");
+    tmpLabelB->setText("The UI trading interface is disabled in this release and will be reactivated in a future release.  RPC calls are still available.");
+    tmpVLayout->addWidget(tmpLabelA);
+    tmpVLayout->addWidget(tmpLabelB);
+    tmpVLayout->addStretch();
+    exchangePage->setLayout(tmpVLayout);
+    /* - end temporarily disable MetaDEx UI
+    */
 
     // toolbox page
     toolboxPage = new QWidget(this);
