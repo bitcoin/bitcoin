@@ -3,6 +3,7 @@
 # shell anyone uses today supports it, so its probably fine
 
 DIR=$(dirname "$0")
+[ "/${DIR#/}" != "$DIR" ] && DIR=$(dirname "$(pwd)/$0")
 
 echo "Please verify all commits in the following list are not evil:"
 git log "$DIR"
