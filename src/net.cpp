@@ -761,6 +761,7 @@ int SocketSendData(CNode* pnode)
         if (nBytes > 0) {
             progress++;  // BU
             pnode->bytesSent += nBytes;  // BU stats
+            pnode->nActivityBytes += nBytes;
             pnode->nLastSend = GetTime();
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
@@ -847,6 +848,12 @@ static bool ReverseCompareNodeTimeConnected(const CNodeRef &a, const CNodeRef &b
     return a->nTimeConnected > b->nTimeConnected;
 }
 
+// BU: connection slot exhaustion mitigation
+static bool CompareNodeActivityBytes(const CNodeRef &a, const CNodeRef &b)
+{
+    return a->nActivityBytes < b->nActivityBytes;
+}
+
 class CompareNetGroupKeyed
 {
     std::vector<unsigned char> vchSecretKey;
@@ -881,6 +888,7 @@ public:
 
 static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     std::vector<CNodeRef> vEvictionCandidates;
+    std::vector<CNodeRef> vEvictionCandidatesByActivity;
     {
         LOCK(cs_vNodes);
 
@@ -901,6 +909,7 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
             }
         }
     }
+    vEvictionCandidatesByActivity = vEvictionCandidates;
 
     if (vEvictionCandidates.empty()) return false;
 
@@ -915,26 +924,30 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
 
 //    if (vEvictionCandidates.empty()) return false;
 
-    // BU: slot attack - using ping time is not affective against a slot attack since the attackers generally have the best ping time.
-    // BU: also, ping time does not necessarily mean a node is closer.  Nodes that are busy can have long ping times but be near in location.
+// BU: slot attack - using ping time is not affective against a slot attack since the attackers generally have the best ping time.
+// BU: also, ping time does not necessarily mean a node is closer.  Nodes that are busy can have long ping times but be near in location.
+// BU: this is not effective and actually gives the attackers a better chance since attacker ping time is usually very good because ping time
+// has a great deal to do with node activity and attackers typically do not have much activity. Remember, this is not the same ping time as a network
+// ping, this is a node ping/pong message which has to not only traverse the network but also be processed by the node and sent back.
     // Protect the 8 nodes with the best ping times.
     // An attacker cannot manipulate this metric without physically moving nodes closer to the target.
-// BU: this is not effectivve and actually gives the attackers a better chance since attacker ping time is usually very good.
 //    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeMinPingTime);
 //    vEvictionCandidates.erase(vEvictionCandidates.end() - std::min(8, static_cast<int>(vEvictionCandidates.size())), vEvictionCandidates.end());
 
 //    if (vEvictionCandidates.empty()) return false;
 
+// BU: this also makes no sense since attackers can be the first to connect and also regular nodes often connect and disconnect causing them
+// to go down in the rank while the attackers increase in rank.
     // Protect the half of the remaining nodes which have been connected the longest.
     // This replicates the existing implicit behavior.
-// BU: this also makes no sense since attackers can be the first to connect
 //    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
 //    vEvictionCandidates.erase(vEvictionCandidates.end() - static_cast<int>(vEvictionCandidates.size() / 2), vEvictionCandidates.end());
 
 //    if (vEvictionCandidates.empty()) return false;
 
     // Identify the network group with the most connections and youngest member.
-    // (vEvictionCandidates is already sorted by reverse connect time)
+    // (vEvictionCandidates is sorted by reverse connect time)
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), ReverseCompareNodeTimeConnected);
     std::vector<unsigned char> naMostConnections;
     unsigned int nMostConnections = 0;
     int64_t nMostConnectionsTime = 0;
@@ -955,13 +968,22 @@ static bool AttemptToEvictConnection(bool fPreferNewConnection) {
     vEvictionCandidates = mapAddrCounts[naMostConnections];
 
     // Do not disconnect peers if there is only one unprotected connection from their network group.
-    if (vEvictionCandidates.size() <= 1)
-        // unless we prefer the new connection (for whitelisted peers)
-        if (!fPreferNewConnection)
-            return false;
+    if (vEvictionCandidates.size() > 1) {
+        // Disconnect from the network group with the most connections
+        vEvictionCandidates[0]->fDisconnect = true;
+        return true;
+    }
 
-    // Disconnect from the network group with the most connections
-    vEvictionCandidates[0]->fDisconnect = true;
+    // If we get here then we prioritize connections based on activity.  The least active incoming peer is
+    // de-prioritized based on bytes in and bytes out.  A whitelisted peer will always get a connection and there is
+    // no need here to check whether the peer is whitelisted or not.
+    std::sort(vEvictionCandidatesByActivity.begin(), vEvictionCandidatesByActivity.end(), CompareNodeActivityBytes);
+    vEvictionCandidatesByActivity[0]->fDisconnect = true;
+    LogPrintf("Node disconnected as too inactive %d bytes activity peer %s\n", vEvictionCandidatesByActivity[0]->nActivityBytes, vEvictionCandidatesByActivity[0]->addrName);
+    int i =0;
+    for (i = 0; i <= vEvictionCandidatesByActivity.size()-1; i++) {
+        LogPrintf("Node %s bytes %d candidate %d\n", vEvictionCandidatesByActivity[i]->addrName,  vEvictionCandidatesByActivity[i]->nActivityBytes, i);
+    }
 
     return true;
 }
@@ -1231,6 +1253,7 @@ void ThreadSocketHandler()
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;
                             pnode->bytesReceived += nBytes;  // BU stats
+                            pnode->nActivityBytes += nBytes;
                             pnode->RecordBytesRecv(nBytes);
                         } else if (nBytes == 0) {
                             // socket closed gracefully
@@ -2308,6 +2331,7 @@ CNode::CNode(SOCKET hSocketIn, const CAddress& addrIn, const std::string& addrNa
     nLastRecv = 0;
     nSendBytes = 0;
     nRecvBytes = 0;
+    nActivityBytes = 0; // BU connection slot exhaustion mitigation
     nTimeConnected = GetTime();
     nTimeOffset = 0;
     addr = addrIn;
