@@ -342,34 +342,45 @@ Value omni_getfeetrigger(const Array& params, bool fHelp)
 // Provides the fee share the wallet (or specific address) will receive from fee distributions
 Value omni_getfeeshare(const Array& params, bool fHelp)
 {
-    if (fHelp || params.size() > 1)
+    if (fHelp || params.size() > 2)
         throw runtime_error(
-            "omni_getfeeshare [ address ]\n"
+            "omni_getfeeshare [ address ] [ ecosystem ]\n"
             "\nReturns the percentage share of fees distribution applied to the wallet (default) or address (if supplied).\n"
             "\nArguments:\n"
             "1. address              (string, optional) retrieve the fee share for the supplied address\n"
+            "2. ecosystem            (number, optional) the ecosystem to check the fee share (1 for main ecosystem, 2 for test ecosystem)\n"
             "\nResult:\n"
             "[                       (array of JSON objects)\n"
             "  {\n"
-            "    \"propertyid\" : nnnnnnn,          (number) the property id\n"
-            "    \"cachedfees\" : \"n.nnnnnnnn\",   (string) the amount of fees cached for this property\n"
+            "    \"address\" : nnnnnnn,          (number) the property id\n"
+            "    \"feeshare\" : \"n.nnnnnnnn\",   (string) the percentage of fees this address will receive based on current state\n"
             "  },\n"
             "  ...\n"
             "]\n"
             "\nExamples:\n"
-            + HelpExampleCli("omni_getfeeshare", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\"")
-            + HelpExampleRpc("omni_getfeeshare", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\"")
+            + HelpExampleCli("omni_getfeeshare", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
+            + HelpExampleRpc("omni_getfeeshare", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1")
         );
 
     std::string address;
+    uint8_t ecosystem = 1;
     if (0 < params.size()) {
         address = ParseAddress(params[0]);
+    }
+    if (1 < params.size()) {
+        ecosystem = ParseEcosystem(params[1]);
     }
 
     Array response;
     bool addObj = false;
 
-    OwnerAddrType receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_MSC, COIN);
+    OwnerAddrType receiversSet;
+    if (ecosystem == 1) {
+        receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_MSC, COIN);
+    } else {
+        receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_TMSC, COIN);
+    }
+
     for (OwnerAddrType::reverse_iterator it = receiversSet.rbegin(); it != receiversSet.rend(); ++it) {
         addObj = false;
         if (address.empty()) {

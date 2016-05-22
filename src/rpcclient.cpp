@@ -133,6 +133,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_getseedblocks", 1 },
     { "omni_getmetadexhash", 0 },
     { "omni_getfeecache", 0 },
+    { "omni_getfeeshare", 1 },
     { "omni_getfeetrigger", 0 },
     { "omni_getfeedistribution", 0 },
     { "omni_getfeedistributions", 0 },

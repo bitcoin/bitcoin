@@ -37,6 +37,9 @@ printf "   * Creating an indivisible test property\n"
 printf "   * Creating a divisible test property\n"
 ./src/omnicore-cli --regtest omni_sendissuancefixed $ADDR 1 2 0 "Z_TestCat" "Z_TestSubCat" "Z_DivisTestProperty" "Z_TestURL" "Z_TestData" 10000 >null
 ./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "   * Creating an indivisible test property in the test ecosystem\n"
+./src/omnicore-cli --regtest omni_sendissuancefixed $ADDR 2 1 0 "Z_TestCat" "Z_TestSubCat" "Z_IndivisTestProperty" "Z_TestURL" "Z_TestData" 10000000 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
 printf "   * Generating addresses to use as fee recipients (OMNI holders)\n"
 ADDRESS=()
 for i in {1..6}
@@ -127,6 +130,16 @@ fi
 printf "   * Checking %s has a 50 percent share of fees... " $ADDR
 FEESHARE=$(./src/omnicore-cli --regtest omni_getfeeshare $ADDR | grep feeshare | cut -d '"' -f4)
 if [ $FEESHARE == "50.0000%" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $FEESHARE
+    FAIL=$((FAIL+1))
+fi
+printf "   * Checking %s has a 100 percent share of fees in the test ecosystem... " $ADDR
+FEESHARE=$(./src/omnicore-cli --regtest omni_getfeeshare $ADDR 2 | grep feeshare | cut -d '"' -f4)
+if [ $FEESHARE == "100.0000%" ]
   then
     printf "PASS\n"
     PASS=$((PASS+1))
@@ -338,6 +351,7 @@ if [ $BALANCE == "9999.95000000" ]
     printf "FAIL (result:%s)\n" $BALANCE
     FAIL=$((FAIL+1))
 fi
+./src/omnicore-cli --regtest omni_getfeetrigger 2147483651
 printf "\nRolling back the chain to orphan a block and the last trade to test reorg protection (disconnecting 1 block from tip and mining a replacement)\n"
 printf "   * Executing the rollback\n"
 BLOCK=$(./src/omnicore-cli --regtest getblockcount)
@@ -594,6 +608,63 @@ if [ $CACHEDFEE == "0.00000003" ]
     PASS=$((PASS+1))
   else
     printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "\nAdding some test ecosystem volume to trigger distribution\n"
+printf "   * Executing the trades\n"
+for i in {1..9}
+do
+    ./src/omnicore-cli --regtest omni_sendtrade $ADDR 2147483651 20000 2 10.0 >null
+    ./src/omnicore-cli --regtest setgenerate true 1 >null
+    ./src/omnicore-cli --regtest omni_sendtrade $ADDR 2 10.0 2147483651 20000 >null
+    ./src/omnicore-cli --regtest setgenerate true 1 >null
+done
+printf "   * Verifiying the results\n"
+printf "      # Checking the fee cache now has 90 fee cached for property 2147483651... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 2147483651 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "90" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking the trading address now owns 9999910 of property 2147483651... "
+BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 2147483651 | grep balance | cut -d '"' -f4)
+if [ $BALANCE == "9999910" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $BALANCE
+    FAIL=$((FAIL+1))
+fi
+printf "\nTriggering distribution in the test ecosystem for property 2147483651\n"
+printf "   * Executing the trade\n"
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 2147483651 20000 2 10.0 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+./src/omnicore-cli --regtest omni_sendtrade $ADDR 2 10.0 2147483651 20000 >null
+./src/omnicore-cli --regtest setgenerate true 1 >null
+printf "   * Verifiying the results\n"
+printf "      # Checking distribution was triggered and the fee cache is now empty for property 2147483651... "
+CACHEDFEE=$(./src/omnicore-cli --regtest omni_getfeecache 2147483651 | grep cachedfee | cut -d '"' -f4)
+if [ $CACHEDFEE == "0" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $CACHEDFEE
+    FAIL=$((FAIL+1))
+fi
+printf "      # Checking %s received 100 fee share... " $ADDR
+BALANCE=$(./src/omnicore-cli --regtest omni_getbalance $ADDR 2147483651 | grep balance | cut -d '"' -f4)
+if [ $BALANCE == "10000000" ]
+  then
+    printf "PASS\n"
+    PASS=$((PASS+1))
+  else
+    printf "FAIL (result:%s)\n" $BALANCE
     FAIL=$((FAIL+1))
 fi
 printf "\n"

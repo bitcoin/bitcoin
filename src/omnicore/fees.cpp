@@ -183,7 +183,13 @@ void COmniFeeCache::DistributeCache(const uint32_t &propertyId, int block)
 
     int64_t cachedAmount = GetCachedAmount(propertyId);
 
-    OwnerAddrType receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_MSC, cachedAmount);
+    OwnerAddrType receiversSet;
+    if (isTestEcosystemProperty(propertyId)) {
+        receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_TMSC, cachedAmount);
+    } else {
+        receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_MSC, cachedAmount);
+    }
+
     uint64_t numberOfReceivers = receiversSet.size(); // there will always be addresses holding OMNI, so no need to check size>0
     PrintToLog("Starting fee distribution for property %d to %d recipients...\n", propertyId, numberOfReceivers);
 
