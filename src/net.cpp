@@ -689,6 +689,15 @@ bool CNode::ReceiveMsgBytes(const char* pch, unsigned int nBytes)
         nBytes -= handled;
 
         if (msg.complete()) {
+            // BU: connection slot attackk mitigation.  We don't count PONG responses as bytes received. We don't want to include
+            //     bytes sent or received for nodes that just connect and listen to INV messages.
+            std::string strCommand = msg.hdr.GetCommand();
+            if (strCommand != NetMsgType::PONG &&
+                strCommand != NetMsgType::PING &&
+                strCommand != NetMsgType::ADDR &&
+                strCommand != NetMsgType::VERSION &&
+                strCommand != NetMsgType::VERACK)
+                nActivityBytes += msg.hdr.nMessageSize;
             msg.nTime = GetTimeMicros();
             messageHandlerCondition.notify_one();
         }
@@ -761,7 +770,6 @@ int SocketSendData(CNode* pnode)
         if (nBytes > 0) {
             progress++;  // BU
             pnode->bytesSent += nBytes;  // BU stats
-            pnode->nActivityBytes += nBytes;
             pnode->nLastSend = GetTime();
             pnode->nSendBytes += nBytes;
             pnode->nSendOffset += nBytes;
@@ -1253,7 +1261,6 @@ void ThreadSocketHandler()
                             pnode->nLastRecv = GetTime();
                             pnode->nRecvBytes += nBytes;
                             pnode->bytesReceived += nBytes;  // BU stats
-                            pnode->nActivityBytes += nBytes;
                             pnode->RecordBytesRecv(nBytes);
                         } else if (nBytes == 0) {
                             // socket closed gracefully
@@ -2490,6 +2497,20 @@ void CNode::EndMessage() UNLOCK_FUNCTION(cs_vSend)
     memcpy((char*)&ssSend[CMessageHeader::CHECKSUM_OFFSET], &nChecksum, sizeof(nChecksum));
 
     LogPrint("net", "(%d bytes) peer=%d\n", nSize, id);
+
+    // BU: connection slot attack mitigation.  We don't want to add bytes for outgoing INV or PING
+    //     messages since attackers will often just connect and listen to INV messages.  We want to make
+    //     sure that connected nodes are really doing useful work in sending us data or requesting data.
+    char strCommand[CMessageHeader::COMMAND_SIZE + 1];
+    strncpy(strCommand, &(*(ssSend.begin() + MESSAGE_START_SIZE)), CMessageHeader::COMMAND_SIZE);
+    strCommand[CMessageHeader::COMMAND_SIZE] = '\0';
+    if (strcmp(strCommand, NetMsgType::PING) != 0 && 
+        strcmp(strCommand, NetMsgType::PONG) != 0 &&
+        strcmp(strCommand, NetMsgType::ADDR) != 0 &&
+        strcmp(strCommand, NetMsgType::VERSION) != 0 &&
+        strcmp(strCommand, NetMsgType::VERACK) != 0 &&
+        strcmp(strCommand, NetMsgType::INV) != 0)
+        nActivityBytes += nSize;
 
     std::deque<CSerializeData>::iterator it = vSendMsg.insert(vSendMsg.end(), CSerializeData());
     ssSend.GetAndClear(*it);
