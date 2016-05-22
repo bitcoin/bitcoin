@@ -51,13 +51,22 @@ BOOST_AUTO_TEST_CASE(siphash)
 {
     CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
     BOOST_CHECK_EQUAL(hasher.Finalize(),  0x726fdb47dd0e0e31ull);
-    hasher.Write(0x0706050403020100ULL);
+    static const unsigned char t0[1] = {0};
+    hasher.Write(t0, 1);
+    BOOST_CHECK_EQUAL(hasher.Finalize(),  0x74f839c593dc67fdull);
+    static const unsigned char t1[7] = {1,2,3,4,5,6,7};
+    hasher.Write(t1, 7);
     BOOST_CHECK_EQUAL(hasher.Finalize(),  0x93f5f5799a932462ull);
     hasher.Write(0x0F0E0D0C0B0A0908ULL);
     BOOST_CHECK_EQUAL(hasher.Finalize(),  0x3f2acc7f57c29bdbull);
-    hasher.Write(0x1716151413121110ULL);
-    BOOST_CHECK_EQUAL(hasher.Finalize(),  0xb8ad50c6f649af94ull);
-    hasher.Write(0x1F1E1D1C1B1A1918ULL);
+    static const unsigned char t2[2] = {16,17};
+    hasher.Write(t2, 2);
+    BOOST_CHECK_EQUAL(hasher.Finalize(),  0x4bc1b3f0968dd39cull);
+    static const unsigned char t3[9] = {18,19,20,21,22,23,24,25,26};
+    hasher.Write(t3, 9);
+    BOOST_CHECK_EQUAL(hasher.Finalize(),  0x2f2e6163076bcfadull);
+    static const unsigned char t4[5] = {27,28,29,30,31};
+    hasher.Write(t4, 5);
     BOOST_CHECK_EQUAL(hasher.Finalize(),  0x7127512f72f27cceull);
     hasher.Write(0x2726252423222120ULL);
     BOOST_CHECK_EQUAL(hasher.Finalize(),  0x0e3ea96b5304a7d0ull);
