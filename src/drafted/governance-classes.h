@@ -140,7 +140,6 @@ private:
 public:
     CDashNetwork(UniValue objIn)
     {
-        //TODO : 12.1 - error checking
         strName = objIn["name"].get_str();
         strURL = objIn["name"].get_str();
 

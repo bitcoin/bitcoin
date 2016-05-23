@@ -86,6 +86,10 @@ public:
         return ss.GetHash();
     }
 
+    uint256 GetParentHash(){
+        return nParentHash;
+    }
+
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
