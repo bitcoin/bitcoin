@@ -22,26 +22,17 @@
 using namespace std;
 extern CCriticalSection cs_budget;
 
-// note: is there a reason these are static? 
-//         http://stackoverflow.com/questions/3709207/c-semantics-of-static-const-vs-const 
-static const CAmount BUDGET_FEE_TX = (5*COIN);
-static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
-static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
-static const int64_t CONTRACT_ACTIVATION_TIME = 60*60*24*14;
-
-
 class CGovernanceManager;
 class CGovernanceObject;
 class CGovernanceVote;
 class CNode;
 
-// todo - 12.1 - change BUDGET_ to GOVERNANCE_ (cherry pick)
 static const CAmount GOVERNANCE_FEE_TX = (5*COIN);
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
 
-extern std::vector<CGovernanceObject> vecImmatureBudgetProposals;
-extern std::map<uint256, int64_t> askedForSourceProposalOrBudget;
+extern std::vector<CGovernanceObject> vecImmatureGovernanceObjects;
+extern std::map<uint256, int64_t> mapAskedForGovernanceObject;
 extern CGovernanceManager governance;
 
 // FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
