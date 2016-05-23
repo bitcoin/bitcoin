@@ -129,17 +129,18 @@ void CGovernanceManager::CheckAndRemove()
 
     // 12.1 -- disabled -- use "delete" voting mechanism 
  
-    // if(!pCurrentBlockIndex) return;
+    if(!pCurrentBlockIndex) return;
 
-    // std::string strError = "";
+    std::string strError = "";
 
-    // std::map<uint256, CGovernanceObject>::iterator it2 = mapObjects.begin();
-    // while(it2 != mapObjects.end())
-    // {
-    //     CGovernanceObject* pbudgetProposal = &((*it2).second);
-    //     pbudgetProposal->fValid = pbudgetProposal->IsValid(pCurrentBlockIndex, strError);
-    //     ++it2;
-    // }
+    std::map<uint256, CGovernanceObject>::iterator it2 = mapObjects.begin();
+    while(it2 != mapObjects.end())
+    {
+        CGovernanceObject* pbudgetProposal = &((*it2).second);
+
+        pbudgetProposal->UpdateLocalValidity(pCurrentBlockIndex);
+        ++it2;
+    }
 }
 
 CGovernanceObject *CGovernanceManager::FindProposal(const std::string &strName)
@@ -671,22 +672,22 @@ void CGovernanceManager::CleanAndRemove(bool fSignatureCheck)
 
 int CGovernanceObject::GetAbsoluteYesCount(int nVoteSignalIn)
 {
-    return governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_YES) - governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_NO);
+    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_YES) - governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_NO);
 }
 
 int CGovernanceObject::GetYesCount(int nVoteSignalIn)
 {
-    return governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_YES);
+    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_YES);
 }
 
 int CGovernanceObject::GetNoCount(int nVoteSignalIn)
 {
-    return governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_NO);
+    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_NO);
 }
 
 int CGovernanceObject::GetAbstainCount(int nVoteSignalIn)
 {
-    return governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_ABSTAIN);
+    return governance.CountMatchingVotes((*this), nVoteSignalIn, VOTE_OUTCOME_ABSTAIN);
 }
 
 void CGovernanceObject::Relay()
@@ -716,7 +717,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
         NewBlock();
 }
 
-int CGovernanceManager::CountMatchingVotes(int nVoteSignalIn, int nVoteOutcomeIn)
+int CGovernanceManager::CountMatchingVotes(CGovernanceObject& govobj, int nVoteSignalIn, int nVoteOutcomeIn)
 {
     /*
     *   
@@ -728,7 +729,7 @@ int CGovernanceManager::CountMatchingVotes(int nVoteSignalIn, int nVoteOutcomeIn
 
     std::map<uint256, CGovernanceVote>::iterator it2 = mapVotes.begin();
     while(it2 != mapVotes.end()){
-        if((*it2).second.fValid && (*it2).second.nVoteSignal == nVoteSignalIn)
+        if((*it2).second.fValid && (*it2).second.nVoteSignal == nVoteSignalIn && (*it2).second.GetParentHash() == govobj.GetHash())
         {
             nCount += ((*it2).second.nVoteOutcome == nVoteOutcomeIn ? 1 : 0);
             ++it2;

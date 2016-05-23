@@ -102,7 +102,7 @@ public:
     
     std::vector<CGovernanceObject*> GetAllProposals(int64_t nMoreThanTime);
 
-    int CountMatchingVotes(int nVoteSignalIn, int nVoteOutcomeIn);
+    int CountMatchingVotes(CGovernanceObject& govobj, int nVoteSignalIn, int nVoteOutcomeIn);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
     bool AddGovernanceObject (CGovernanceObject& budgetProposal);
@@ -117,7 +117,7 @@ public:
     void Clear(){
         LOCK(cs);
 
-        LogPrintf("Budget object cleared\n");
+        LogPrintf("Governance object manager was cleared\n");
         mapObjects.clear();
         mapSeenGovernanceObjects.clear();
         mapSeenVotes.clear();
@@ -163,6 +163,11 @@ public:
     uint256 nFeeTXHash; //fee-tx
     std::string strData; // Data field - can be used for anything
 
+    // set by IsValid()
+    bool fCachedLocalValidity;
+    std::string strLocalValidityError;
+
+    // set via sentinel voting mechanisms
     // caching -- one per voting mechanism -- see governance-vote.h for more information
     bool fCachedFunding;
     bool fCachedValid;
@@ -177,6 +182,8 @@ public:
     CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn);
     CGovernanceObject(const CGovernanceObject& other);
 
+    // Update local validity : store the values in memory
+    void UpdateLocalValidity(const CBlockIndex *pCurrentBlockIndex) {fCachedLocalValidity = IsValid(pCurrentBlockIndex, strLocalValidityError);};
 
     void swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
     {
