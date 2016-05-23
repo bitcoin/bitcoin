@@ -10,6 +10,7 @@
 #include "masternodeman.h"
 #include "wallet/wallet.h"
 #include "init.h"
+#include "guiutil.h"
 
 #include <QTimer>
 #include <QMessageBox>
@@ -27,11 +28,11 @@ MasternodeList::MasternodeList(const PlatformStyle *platformStyle, QWidget *pare
     ui->startButton->setEnabled(false);
 
     int columnAliasWidth = 100;
-    int columnAddressWidth = 150;
+    int columnAddressWidth = 200;
     int columnProtocolWidth = 60;
     int columnStatusWidth = 80;
     int columnActiveWidth = 130;
-    int columnLastSeenWidth = 150;
+    int columnLastSeenWidth = 130;
 
     ui->tableWidgetMyMasternodes->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     ui->tableWidgetMyMasternodes->setColumnWidth(0, columnAliasWidth);
@@ -186,7 +187,7 @@ void MasternodeList::updateMyMasternodeInfo(QString alias, QString addr, QString
     QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(pmn ? pmn->protocolVersion : -1));
     QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(pmn ? pmn->Status() : "MISSING"));
     QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(pmn ? (pmn->lastPing.sigTime - pmn->sigTime) : 0)));
-    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", pmn ? pmn->lastPing.sigTime : 0)));
+    QTableWidgetItem *lastSeenItem = new QTableWidgetItem(GUIUtil::dateTimeStr(pmn ? pmn->lastPing.sigTime : 0));
     QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(pmn ? CBitcoinAddress(pmn->pubkey.GetID()).ToString() : ""));
 
     ui->tableWidgetMyMasternodes->setItem(nodeRow, 0, aliasItem);
@@ -250,7 +251,7 @@ void MasternodeList::updateNodeList()
         QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(mn.protocolVersion));
         QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(mn.Status()));
         QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(mn.lastPing.sigTime - mn.sigTime)));
-        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M:%S", mn.lastPing.sigTime)));
+        QTableWidgetItem *lastSeenItem = new QTableWidgetItem(GUIUtil::dateTimeStr(mn.lastPing.sigTime));
         QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(CBitcoinAddress(mn.pubkey.GetID()).ToString()));
 
         if (strCurrentFilter != "")
