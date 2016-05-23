@@ -23,8 +23,8 @@ class CNode;
 CGovernanceManager governance;
 CCriticalSection cs_budget;
 
-std::map<uint256, int64_t> askedForSourceProposalOrBudget;
-std::vector<CGovernanceObject> vecImmatureBudgetProposals;
+std::map<uint256, int64_t> mapAskedForGovernanceObject;
+std::vector<CGovernanceObject> vecImmatureGovernanceObjects;
 
 int nSubmittedFinalBudget;
 
@@ -79,11 +79,11 @@ bool IsCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::st
     nConf = conf;
 
     //if we're syncing we won't have instantX information, so accept 1 confirmation 
-    if(conf >= BUDGET_FEE_CONFIRMATIONS){
+    if(conf >= GOVERNANCE_FEE_CONFIRMATIONS){
         strError = "valid";
         return true;
     } else {
-        strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", BUDGET_FEE_CONFIRMATIONS, conf);
+        strError = strprintf("Collateral requires at least %d confirmations - %d confirmations", GOVERNANCE_FEE_CONFIRMATIONS, conf);
         LogPrintf ("CGovernanceObject::IsCollateralValid - %s - %d confirmations\n", strError, conf);
         return false;
     }
@@ -94,28 +94,28 @@ void CGovernanceManager::CheckOrphanVotes()
     LOCK(cs);
 
     std::string strError = "";
-    std::map<uint256, CBudgetVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
-    while(it1 != mapOrphanMasternodeBudgetVotes.end()){
-        if(UpdateProposal(((*it1).second), NULL, strError)){
+    std::map<uint256, CGovernanceVote>::iterator it1 = mapOrphanVotes.begin();
+    while(it1 != mapOrphanVotes.end()){
+        if(UpdateGovernanceObject(((*it1).second), NULL, strError)){
             LogPrintf("CGovernanceManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
-            mapOrphanMasternodeBudgetVotes.erase(it1++);
+            mapOrphanVotes.erase(it1++);
         } else {
             ++it1;
         }
     }
 }
 
-bool CGovernanceManager::AddProposal(CGovernanceObject& budgetProposal)
+bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& budgetProposal)
 {
     LOCK(cs);
     std::string strError = "";
     if(!budgetProposal.IsValid(pCurrentBlockIndex, strError)) {
-        LogPrintf("CGovernanceManager::AddProposal - invalid governance object - %s\n", strError);
+        LogPrintf("CGovernanceManager::AddGovernanceObject - invalid governance object - %s\n", strError);
         return false;
     }
 
     if(mapObjects.count(budgetProposal.GetHash())) {
-        LogPrintf("CGovernanceManager::AddProposal - already have governance object - %s\n", strError);
+        LogPrintf("CGovernanceManager::AddGovernanceObject - already have governance object - %s\n", strError);
         return false;
     }
 
@@ -151,9 +151,9 @@ CGovernanceObject *CGovernanceManager::FindProposal(const std::string &strName)
 
     std::map<uint256, CGovernanceObject>::iterator it = mapObjects.begin();
     while(it != mapObjects.end()){
-        if((*it).second.strName == strName && (*it).second.GetYesCount(VOTE_ACTION_FUNDING) > nYesCount){
+        if((*it).second.strName == strName && (*it).second.GetYesCount(VOTE_SIGNAL_FUNDING) > nYesCount){
             pbudgetProposal = &((*it).second);
-            nYesCount = pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING);
+            nYesCount = pbudgetProposal->GetYesCount(VOTE_SIGNAL_FUNDING);
         }
         ++it;
     }
@@ -252,12 +252,12 @@ void CGovernanceManager::NewBlock()
 
     //remove invalid votes once in a while (we have to check the signatures and validity of every vote, somewhat CPU intensive)
 
-    std::map<uint256, int64_t>::iterator it = askedForSourceProposalOrBudget.begin();
-    while(it != askedForSourceProposalOrBudget.end()){
+    std::map<uint256, int64_t>::iterator it = mapAskedForGovernanceObject.begin();
+    while(it != mapAskedForGovernanceObject.end()){
         if((*it).second > GetTime() - (60*60*24)){
             ++it;
         } else {
-            askedForSourceProposalOrBudget.erase(it++);
+            mapAskedForGovernanceObject.erase(it++);
         }
     }
 
@@ -267,8 +267,8 @@ void CGovernanceManager::NewBlock()
         ++it2;
     }
 
-    std::vector<CGovernanceObject>::iterator it4 = vecImmatureBudgetProposals.begin();
-    while(it4 != vecImmatureBudgetProposals.end())
+    std::vector<CGovernanceObject>::iterator it4 = vecImmatureGovernanceObjects.begin();
+    while(it4 != vecImmatureGovernanceObjects.end())
     {
         std::string strError = "";
         int nConf = 0;
@@ -280,15 +280,15 @@ void CGovernanceManager::NewBlock()
         // 12.1 -- fix below
         // if(!(*it4).IsValid(pCurrentBlockIndex, strError)) {
         //     LogPrintf("mprop (immature) - invalid budget proposal - %s\n", strError);
-        //     it4 = vecImmatureBudgetProposals.erase(it4); 
+        //     it4 = vecImmatureGovernanceObjects.erase(it4); 
         //     continue;
         // }
 
         // CGovernanceObject budgetProposal((*it4));
-        // if(AddProposal(budgetProposal)) {(*it4).Relay();}
+        // if(AddGovernanceObject(budgetProposal)) {(*it4).Relay();}
 
         // LogPrintf("mprop (immature) - new budget - %s\n", (*it4).GetHash().ToString());
-        // it4 = vecImmatureBudgetProposals.erase(it4); 
+        // it4 = vecImmatureGovernanceObjects.erase(it4); 
     }
 
 }
@@ -325,7 +325,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         CGovernanceObject budgetProposalBroadcast;
         vRecv >> budgetProposalBroadcast;
 
-        if(mapSeenMasternodeBudgetProposals.count(budgetProposalBroadcast.GetHash())){
+        if(mapSeenGovernanceObjects.count(budgetProposalBroadcast.GetHash())){
             // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
             masternodeSync.AddedBudgetItem(budgetProposalBroadcast.GetHash());
             return;
@@ -336,21 +336,21 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         if(!IsCollateralValid(budgetProposalBroadcast.nFeeTXHash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf, GOVERNANCE_FEE_TX)){
             LogPrintf("Proposal FeeTX is not valid - %s - %s\n", budgetProposalBroadcast.nFeeTXHash.ToString(), strError);
             //todo 12.1
-            //if(nConf >= 1) vecImmatureBudgetProposals.push_back(budgetProposalBroadcast);
+            //if(nConf >= 1) vecImmatureGovernanceObjects.push_back(budgetProposalBroadcast);
             return;
         }
 
         if(!budgetProposalBroadcast.IsValid(pCurrentBlockIndex, strError)) {
-            mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_ERROR_INVALID));
+            mapSeenGovernanceObjects.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_ERROR_INVALID));
             LogPrintf("mprop - invalid budget proposal - %s\n", strError);
             return;
         }
 
-        if(AddProposal(budgetProposalBroadcast))
+        if(AddGovernanceObject(budgetProposalBroadcast))
         {
             budgetProposalBroadcast.Relay();
         }
-        mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_IS_VALID));
+        mapSeenGovernanceObjects.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_IS_VALID));
         masternodeSync.AddedBudgetItem(budgetProposalBroadcast.GetHash());
 
         LogPrintf("mprop - new budget - %s\n", budgetProposalBroadcast.GetHash().ToString());
@@ -359,11 +359,11 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
     }
 
     if (strCommand == NetMsgType::MNGOVERNANCEVOTE) { //Masternode Vote
-        CBudgetVote vote;
+        CGovernanceVote vote;
         vRecv >> vote;
         vote.fValid = true;
 
-        if(mapSeenMasternodeBudgetVotes.count(vote.GetHash())){
+        if(mapSeenVotes.count(vote.GetHash())){
             masternodeSync.AddedBudgetItem(vote.GetHash());
             return;
         }
@@ -375,7 +375,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             return;
         }
 
-        mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
+        mapSeenVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
         if(!vote.IsValid(true)){
             LogPrintf("mvote - signature invalid\n");
             if(masternodeSync.IsSynced()) Misbehaving(pfrom->GetId(), 20);
@@ -385,7 +385,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         }
 
         std::string strError = "";
-        if(UpdateProposal(vote, pfrom, strError)) {
+        if(UpdateGovernanceObject(vote, pfrom, strError)) {
             vote.Relay();
             masternodeSync.AddedBudgetItem(vote.GetHash());
         }
@@ -409,7 +409,7 @@ bool CGovernanceManager::PropExists(uint256 nHash)
 // {
 //     LOCK(cs);
 
-//     std::map<uint256, std::map<uint256, CBudgetVote> >::iterator it1 = mapVotes.begin();
+//     std::map<uint256, std::map<uint256, CGovernanceVote> >::iterator it1 = mapVotes.begin();
 //     while(it1 != mapVotes.end()){
 //         (*it1).second.second.fSynced = false;
 //         ++it1;
@@ -430,7 +430,7 @@ bool CGovernanceManager::PropExists(uint256 nHash)
 //     // this could screw up syncing, so let's log it
 //     LogPrintf("CGovernanceManager::MarkSynced\n");
 
-//     std::map<uint256, std::map<uint256, CBudgetVote> >::iterator it1 = mapVotes.begin();
+//     std::map<uint256, std::map<uint256, CGovernanceVote> >::iterator it1 = mapVotes.begin();
 //     while(it1 != mapVotes.end()){
 //         if((*it1).second.second.fValid)
 //             (*it1).second.second.fSynced = true;
@@ -458,8 +458,8 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
     int nInvCount = 0;
 
     // sync gov objects
-    std::map<uint256, int>::iterator it1 = mapSeenMasternodeBudgetProposals.begin();
-    while(it1 != mapSeenMasternodeBudgetProposals.end()){
+    std::map<uint256, int>::iterator it1 = mapSeenGovernanceObjects.begin();
+    while(it1 != mapSeenGovernanceObjects.end()){
         CGovernanceObject* pbudgetProposal = FindProposal((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fCachedValid && ((nProp == uint256() || ((*it1).first == nProp)))){
             // Push the inventory budget proposal message over to the other client
@@ -470,7 +470,7 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
     }
 
     // sync votes
-    std::map<uint256, CBudgetVote>::iterator it2 = mapVotes.begin();
+    std::map<uint256, CGovernanceVote>::iterator it2 = mapVotes.begin();
     while(it2 != mapVotes.end()){
         pfrom->PushInventory(CInv(MSG_BUDGET_VOTE, (*it2).first));
         nInvCount++;
@@ -482,7 +482,7 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
     LogPrintf("CGovernanceManager::Sync - sent %d items\n", nInvCount);
 }
 
-bool CGovernanceManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError)
+bool CGovernanceManager::UpdateGovernanceObject(CGovernanceVote& vote, CNode* pfrom, std::string& strError)
 {
     LOCK(cs);
 
@@ -492,12 +492,12 @@ bool CGovernanceManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::st
             //   otherwise we'll think a full sync succeeded when they return a result
             if(!masternodeSync.IsSynced()) return false;
 
-            LogPrintf("CGovernanceManager::UpdateProposal - Unknown proposal %d, asking for source proposal\n", vote.nParentHash.ToString());
-            mapOrphanMasternodeBudgetVotes[vote.nParentHash] = vote;
+            LogPrintf("CGovernanceManager::UpdateGovernanceObject - Unknown proposal %d, asking for source proposal\n", vote.nParentHash.ToString());
+            mapOrphanVotes[vote.nParentHash] = vote;
 
-            if(!askedForSourceProposalOrBudget.count(vote.nParentHash)){
+            if(!mapAskedForGovernanceObject.count(vote.nParentHash)){
                 pfrom->PushMessage(NetMsgType::MNGOVERNANCEVOTESYNC, vote.nParentHash);
-                askedForSourceProposalOrBudget[vote.nParentHash] = GetTime();
+                mapAskedForGovernanceObject[vote.nParentHash] = GetTime();
             }
         }
 
@@ -509,12 +509,12 @@ bool CGovernanceManager::UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::st
     return AddOrUpdateVote(vote, strError);
 }
 
-bool CGovernanceManager::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
+bool CGovernanceManager::AddOrUpdateVote(CGovernanceVote& vote, std::string& strError)
 {
     LOCK(cs);
 
     // store newest vote per action
-    arith_uint256 a = UintToArith256(vote.nParentHash) + vote.nVoteAction;
+    arith_uint256 a = UintToArith256(vote.nParentHash) + vote.nVoteSignal;
     uint256 hash2 = ArithToUint256(a);
 
     if(mapVotes.count(hash2))
@@ -524,7 +524,7 @@ bool CGovernanceManager::AddOrUpdateVote(CBudgetVote& vote, std::string& strErro
             LogPrint("mngovernance", "CGovernanceObject::AddOrUpdateVote - %s\n", strError);
             return false;
         }
-        if(vote.nTime - mapVotes[hash2].nTime < BUDGET_VOTE_UPDATE_MIN){
+        if(vote.nTime - mapVotes[hash2].nTime < GOVERNANCE_UPDATE_MIN){
             strError = strprintf("time between votes is too soon - %s - %lli", vote.GetHash().ToString(), vote.nTime - mapVotes[hash2].nTime);
             LogPrint("mngovernance", "CGovernanceObject::AddOrUpdateVote - %s\n", strError);
             return false;
@@ -554,7 +554,6 @@ CGovernanceObject::CGovernanceObject()
     fCachedReleaseBounty2 = false;
     fCachedReleaseBounty3 = false;
 
-    nHash = uint256();
 }
 
 CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn)
@@ -585,7 +584,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
 
 bool CGovernanceObject::IsValid(const CBlockIndex* pindex, std::string& strError, bool fCheckCollateral)
 {
-    if(GetNoCount(VOTE_ACTION_VALID) - GetYesCount(VOTE_ACTION_VALID) > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
+    if(GetNoCount(VOTE_SIGNAL_VALID) - GetYesCount(VOTE_SIGNAL_VALID) > mnodeman.CountEnabled(MIN_BUDGET_PEER_PROTO_VERSION)/10){
          strError = "Automated removal";
          return false;
     }
@@ -653,7 +652,7 @@ void CGovernanceManager::CleanAndRemove(bool fSignatureCheck)
     *
     */
 
-    // std::map<uint256, CBudgetVote>::iterator it2 = mapVotes.begin();
+    // std::map<uint256, CGovernanceVote>::iterator it2 = mapVotes.begin();
     // while(it2 != mapVotes.end()){
     //     if(!(*it2).second.IsValid(fSignatureCheck))
     //     {
@@ -670,24 +669,24 @@ void CGovernanceManager::CleanAndRemove(bool fSignatureCheck)
 *   Get specific vote counts for each outcome (funding, validity, etc)
 */
 
-int CGovernanceObject::GetAbsoluteYesCount(int nVoteOutcomeIn)
+int CGovernanceObject::GetAbsoluteYesCount(int nVoteSignalIn)
 {
-    return governance.CountMatchingAbsoluteVotes(nVoteOutcomeIn, VOTE_OUTCOME_YES) - governance.CountMatchingAbsoluteVotes(nVoteOutcomeIn, VOTE_OUTCOME_NO);
+    return governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_YES) - governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_NO);
 }
 
-int CGovernanceObject::GetYesCount(int nVoteOutcomeIn)
+int CGovernanceObject::GetYesCount(int nVoteSignalIn)
 {
-    return governance.CountMatchingAbsoluteVotes(nVoteOutcomeIn, VOTE_OUTCOME_YES);
+    return governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_YES);
 }
 
-int CGovernanceObject::GetNoCount(int nVoteOutcomeIn)
+int CGovernanceObject::GetNoCount(int nVoteSignalIn)
 {
-    return governance.CountMatchingAbsoluteVotes(nVoteOutcomeIn, VOTE_OUTCOME_NO);
+    return governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_NO);
 }
 
-int CGovernanceObject::GetAbstainCount(int nVoteOutcomeIn)
+int CGovernanceObject::GetAbstainCount(int nVoteSignalIn)
 {
-    return governance.CountMatchingAbsoluteVotes(nVoteOutcomeIn, VOTE_OUTCOME_ABSTAIN);
+    return governance.CountMatchingVotes(nVoteSignalIn, VOTE_OUTCOME_ABSTAIN);
 }
 
 void CGovernanceObject::Relay()
@@ -701,8 +700,8 @@ std::string CGovernanceManager::ToString() const
     std::ostringstream info;
 
     info << "Governance Objects: " << (int)mapObjects.size() <<
-            ", Seen Budgets: " << (int)mapSeenMasternodeBudgetProposals.size() <<
-            ", Seen Budget Votes: " << (int)mapSeenMasternodeBudgetVotes.size() <<
+            ", Seen Budgets: " << (int)mapSeenGovernanceObjects.size() <<
+            ", Seen Budget Votes: " << (int)mapSeenVotes.size() <<
             ", Vote Count: " << (int)mapVotes.size();
 
     return info.str();
@@ -717,7 +716,7 @@ void CGovernanceManager::UpdatedBlockTip(const CBlockIndex *pindex)
         NewBlock();
 }
 
-int CGovernanceManager::CountMatchingAbsoluteVotes(int nVoteActionIn, int nVoteOutcomeIn)
+int CGovernanceManager::CountMatchingVotes(int nVoteSignalIn, int nVoteOutcomeIn)
 {
     /*
     *   
@@ -727,10 +726,9 @@ int CGovernanceManager::CountMatchingAbsoluteVotes(int nVoteActionIn, int nVoteO
 
     int nCount = 0;
 
-    std::map<uint256, CBudgetVote>::iterator it2 = mapVotes.begin();
+    std::map<uint256, CGovernanceVote>::iterator it2 = mapVotes.begin();
     while(it2 != mapVotes.end()){
-        //if(!(*it2).second.IsValid(true) && (*it2).second.nVoteAction == nVoteActionIn)
-        if((*it2).second.IsValid(true) && (*it2).second.nVoteAction == nVoteActionIn)
+        if((*it2).second.fValid && (*it2).second.nVoteSignal == nVoteSignalIn)
         {
             nCount += ((*it2).second.nVoteOutcome == nVoteOutcomeIn ? 1 : 0);
             ++it2;

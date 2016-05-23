@@ -22,26 +22,17 @@
 using namespace std;
 extern CCriticalSection cs_budget;
 
-// note: is there a reason these are static? 
-//         http://stackoverflow.com/questions/3709207/c-semantics-of-static-const-vs-const 
-static const CAmount BUDGET_FEE_TX = (5*COIN);
-static const int64_t BUDGET_FEE_CONFIRMATIONS = 6;
-static const int64_t BUDGET_VOTE_UPDATE_MIN = 60*60;
-static const int64_t CONTRACT_ACTIVATION_TIME = 60*60*24*14;
-
-
 class CGovernanceManager;
 class CGovernanceObject;
-class CBudgetVote;
+class CGovernanceVote;
 class CNode;
 
-// todo - 12.1 - change BUDGET_ to GOVERNANCE_ (cherry pick)
 static const CAmount GOVERNANCE_FEE_TX = (5*COIN);
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_UPDATE_MIN = 60*60;
 
-extern std::vector<CGovernanceObject> vecImmatureBudgetProposals;
-extern std::map<uint256, int64_t> askedForSourceProposalOrBudget;
+extern std::vector<CGovernanceObject> vecImmatureGovernanceObjects;
+extern std::map<uint256, int64_t> mapAskedForGovernanceObject;
 extern CGovernanceManager governance;
 
 // FOR SEEN MAP ARRAYS - GOVERNANCE OBJECTS AND VOTES
@@ -75,23 +66,23 @@ public:
     map<uint256, CGovernanceObject> mapObjects;
 
     // todo - 12.1 - move to private for better encapsulation 
-    std::map<uint256, int> mapSeenMasternodeBudgetProposals;
-    std::map<uint256, int> mapSeenMasternodeBudgetVotes;
-    std::map<uint256, CBudgetVote> mapOrphanMasternodeBudgetVotes;
-    std::map<uint256, CBudgetVote> mapVotes;
+    std::map<uint256, int> mapSeenGovernanceObjects;
+    std::map<uint256, int> mapSeenVotes;
+    std::map<uint256, CGovernanceVote> mapOrphanVotes;
+    std::map<uint256, CGovernanceVote> mapVotes;
 
     CGovernanceManager() {
         mapObjects.clear();
     }
 
     void ClearSeen() {
-        mapSeenMasternodeBudgetProposals.clear();
-        mapSeenMasternodeBudgetVotes.clear();
+        mapSeenGovernanceObjects.clear();
+        mapSeenVotes.clear();
     }
 
     int CountProposalInventoryItems()
     {
-        return mapSeenMasternodeBudgetProposals.size() + mapSeenMasternodeBudgetVotes.size();
+        return mapSeenGovernanceObjects.size() + mapSeenVotes.size();
     }
 
     int sizeProposals() {return (int)mapObjects.size();}
@@ -111,14 +102,16 @@ public:
     
     std::vector<CGovernanceObject*> GetAllProposals(int64_t nMoreThanTime);
 
+    int CountMatchingVotes(int nVoteSignalIn, int nVoteOutcomeIn);
+
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    bool AddProposal(CGovernanceObject& budgetProposal);
-    bool UpdateProposal(CBudgetVote& vote, CNode* pfrom, std::string& strError);
-    bool AddOrUpdateVote(CBudgetVote& vote, std::string& strError);
+    bool AddGovernanceObject (CGovernanceObject& budgetProposal);
+    bool UpdateGovernanceObject(CGovernanceVote& vote, CNode* pfrom, std::string& strError);
+    bool AddOrUpdateVote(CGovernanceVote& vote, std::string& strError);
     bool PropExists(uint256 nHash);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void CleanAndRemove(bool fSignatureCheck);
-    int CountMatchingAbsoluteVotes(int nVoteTypeIn, int nVoteOutcomeIn);
+    void CheckAndRemove();
 
     void CheckOrphanVotes();
     void Clear(){
@@ -126,20 +119,19 @@ public:
 
         LogPrintf("Budget object cleared\n");
         mapObjects.clear();
-        mapSeenMasternodeBudgetProposals.clear();
-        mapSeenMasternodeBudgetVotes.clear();
-        mapOrphanMasternodeBudgetVotes.clear();
+        mapSeenGovernanceObjects.clear();
+        mapSeenVotes.clear();
+        mapOrphanVotes.clear();
     }
-    void CheckAndRemove();
     std::string ToString() const;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(mapSeenMasternodeBudgetProposals);
-        READWRITE(mapSeenMasternodeBudgetVotes);
-        READWRITE(mapOrphanMasternodeBudgetVotes);
+        READWRITE(mapSeenGovernanceObjects);
+        READWRITE(mapSeenVotes);
+        READWRITE(mapOrphanVotes);
         READWRITE(mapObjects);
         READWRITE(mapVotes);
     }
@@ -147,35 +139,6 @@ public:
     void UpdatedBlockTip(const CBlockIndex *pindex);
     int64_t GetLastDiffTime() {return nTimeLastDiff;}
     void UpdateLastDiffTime(int64_t nTimeIn) {nTimeLastDiff=nTimeIn;}
-};
-
-/**
-* Governance objects can hold any type of data
-* --------------------------------------------
-*
-*/
-
-class CGovernanceObjectRegister
-{
-private:
-    int nType;
-    std::string strReg;
-
-public:
-    CGovernanceObjectRegister(int nTypeIn, char* strRegIn)
-    {
-        nType = nTypeIn;
-        strReg = strRegIn;
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        //for syncing with other clients
-        READWRITE(nType);
-        READWRITE(LIMITED_STRING(strReg, 255));
-    }
 };
 
 /**
@@ -198,7 +161,8 @@ public:
     std::string strName; //org name, username, prop name, etc. 
     int64_t nTime; //time this object was created
     uint256 nFeeTXHash; //fee-tx
-    
+    std::string strData; // Data field - can be used for anything
+
     // caching -- one per voting mechanism -- see governance-vote.h for more information
     bool fCachedFunding;
     bool fCachedValid;
@@ -208,11 +172,6 @@ public:
     bool fCachedReleaseBounty1;
     bool fCachedReleaseBounty2;
     bool fCachedReleaseBounty3;
-
-    uint256 nHash;
-
-    // Data field - can be used for anything
-    std::string strData;
 
     CGovernanceObject();
     CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn);
@@ -231,6 +190,7 @@ public:
         swap(first.nRevision, second.nRevision);
         swap(first.nTime, second.nTime);
         swap(first.nFeeTXHash, second.nFeeTXHash);
+        swap(first.strData, second.strData);     
 
         // swap all cached valid flags
         swap(first.fCachedFunding, second.fCachedFunding);
@@ -242,8 +202,6 @@ public:
         swap(first.fCachedReleaseBounty2, second.fCachedReleaseBounty2);
         swap(first.fCachedReleaseBounty3, second.fCachedReleaseBounty3);
 
-        swap(first.nHash, second.nHash);     
-        swap(first.strData, second.strData);     
     }
 
     bool HasMinimumRequiredSupport();
@@ -252,10 +210,10 @@ public:
     std::string GetName() {return strName; }
 
     // get vote counts on each outcome
-    int GetAbsoluteYesCount(int nVoteOutcomeIn);
-    int GetYesCount(int nVoteOutcomeIn);
-    int GetNoCount(int nVoteOutcomeIn);
-    int GetAbstainCount(int nVoteOutcomeIn);
+    int GetAbsoluteYesCount(int nVoteSignalIn);
+    int GetYesCount(int nVoteSignalIn);
+    int GetNoCount(int nVoteSignalIn);
+    int GetAbstainCount(int nVoteSignalIn);
 
     void CleanAndRemove(bool fSignatureCheck);
     void Relay();
@@ -333,9 +291,7 @@ public:
         READWRITE(LIMITED_STRING(strName, 64));
         READWRITE(nTime);
         READWRITE(nFeeTXHash);
-
-        // todo - 12.1 - serialize map
-        //READWRITE(mapRegister);
+        READWRITE(strData);
     }
 };
 

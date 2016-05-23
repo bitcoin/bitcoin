@@ -22,32 +22,32 @@
 
 using namespace std;
 
-int ConvertVoteOutcome(std::string strVoteAction)
+int ConvertVoteOutcome(std::string strVoteOutcome)
 {
     int nVote = -1;
-    if(strVoteAction == "yes") nVote = VOTE_OUTCOME_YES;
-    if(strVoteAction == "no") nVote = VOTE_OUTCOME_NO;
-    if(strVoteAction == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
-    if(strVoteAction == "none") nVote = VOTE_OUTCOME_NONE;
+    if(strVoteOutcome == "yes") nVote = VOTE_OUTCOME_YES;
+    if(strVoteOutcome == "no") nVote = VOTE_OUTCOME_NO;
+    if(strVoteOutcome == "abstain") nVote = VOTE_OUTCOME_ABSTAIN;
+    if(strVoteOutcome == "none") nVote = VOTE_OUTCOME_NONE;
     return nVote;
 }
 
-int ConvertVoteAction(std::string strVoteOutcome)
+int ConvertVoteSignal(std::string strVoteSignal)
 {
-    if(strVoteOutcome == "none") return 0;
-    if(strVoteOutcome == "funding") return 1;
-    if(strVoteOutcome == "valid") return 2;
-    if(strVoteOutcome == "delete") return 3;
-    if(strVoteOutcome == "clear_registers") return 4;
-    if(strVoteOutcome == "endorsed") return 5;
-    if(strVoteOutcome == "release_bounty1") return 6;
-    if(strVoteOutcome == "release_bounty2") return 7;
-    if(strVoteOutcome == "release_bounty3") return 8;
+    if(strVoteSignal == "none") return 0;
+    if(strVoteSignal == "funding") return 1;
+    if(strVoteSignal == "valid") return 2;
+    if(strVoteSignal == "delete") return 3;
+    if(strVoteSignal == "clear_registers") return 4;
+    if(strVoteSignal == "endorsed") return 5;
+    if(strVoteSignal == "release_bounty1") return 6;
+    if(strVoteSignal == "release_bounty2") return 7;
+    if(strVoteSignal == "release_bounty3") return 8;
 
     // convert custom sentinel outcomes to integer and store
     try {
-        int  i = boost::lexical_cast<int>(strVoteOutcome);
-        if(i < VOTE_ACTION_CUSTOM_START || i > VOTE_ACTION_CUSTOM_END) return -1;
+        int  i = boost::lexical_cast<int>(strVoteSignal);
+        if(i < VOTE_SIGNAL_CUSTOM_START || i > VOTE_SIGNAL_CUSTOM_END) return -1;
         return i;
     }
     catch(std::exception const & e)
@@ -117,7 +117,6 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         if (params.size() != 6)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance prepare <parent-hash> <revision> <time> <name> <registers-hex>'");
 
-        int nBlockMin = 0;
         LOCK(cs_main);
         CBlockIndex* pindex = chainActive.Tip();
 
@@ -170,7 +169,6 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
         }
 
-        int nBlockMin = 0;
         LOCK(cs_main);
         CBlockIndex* pindex = chainActive.Tip();
 
@@ -204,9 +202,9 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         //     throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError);
         // }
 
-        governance.mapSeenMasternodeBudgetProposals.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_IS_VALID));
+        governance.mapSeenGovernanceObjects.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_IS_VALID));
         budgetProposalBroadcast.Relay();
-        governance.AddProposal(budgetProposalBroadcast);
+        governance.AddGovernanceObject(budgetProposalBroadcast);
 
         return budgetProposalBroadcast.GetHash().ToString();
 
@@ -225,13 +223,13 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::string strVoteOutcome = params[3].get_str();
         std::string strAlias = params[4].get_str();
         
-        int nVoteAction = ConvertVoteAction(strVoteAction);
-        if(nVoteAction == VOTE_OUTCOME_NONE || nVoteAction == -1)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
+        int nVoteSignal = ConvertVoteSignal(strVoteAction);
+        if(nVoteSignal == VOTE_SIGNAL_NONE || nVoteSignal == -1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal. Please use one of the following: 'yes', 'no' or 'abstain'");
 
         int nVoteOutcome = ConvertVoteOutcome(strVoteOutcome);
-        if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteAction == -1)
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote action. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
+        if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteOutcome == -1)
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
 
         int success = 0;
         int failed = 0;
@@ -274,7 +272,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
                 continue;
             }
 
-            CBudgetVote vote(pmn->vin, hash, nVoteOutcome, nVoteAction);
+            CGovernanceVote vote(pmn->vin, hash, nVoteOutcome, nVoteSignal);
             if(!vote.Sign(keyMasternode, pubKeyMasternode)){
                 failed++;
                 statusObj.push_back(Pair("result", "failed"));
@@ -285,8 +283,8 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
 
             std::string strError = "";
-            if(governance.UpdateProposal(vote, NULL, strError)) {
-                governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
+            if(governance.UpdateGovernanceObject(vote, NULL, strError)) {
+                governance.mapSeenVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
                 vote.Relay();
                 success++;
                 statusObj.push_back(Pair("result", "success"));
@@ -337,11 +335,11 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             bObj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
 
             // vote data for funding
-            bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)-(int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
-            bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)));
-            bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
-            bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(VOTE_ACTION_FUNDING)));
-            //bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished(VOTE_ACTION_FUNDING)));
+            bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_SIGNAL_FUNDING)-(int64_t)pbudgetProposal->GetNoCount(VOTE_SIGNAL_FUNDING)));
+            bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_SIGNAL_FUNDING)));
+            bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(VOTE_SIGNAL_FUNDING)));
+            bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(VOTE_SIGNAL_FUNDING)));
+            //bObj.push_back(Pair("IsEstablished",  pbudgetProposal->IsEstablished(VOTE_SIGNAL_FUNDING)));
 
             std::string strError = "";
             bObj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(pindex, strError)));
@@ -377,10 +375,10 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         obj.push_back(Pair("Name",  pbudgetProposal->GetName()));
         obj.push_back(Pair("Hash",  pbudgetProposal->GetHash().ToString()));
         obj.push_back(Pair("FeeTXHash",  pbudgetProposal->nFeeTXHash.ToString()));
-        obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)-(int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
-        obj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_ACTION_FUNDING)));
-        obj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(VOTE_ACTION_FUNDING)));
-        obj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(VOTE_ACTION_FUNDING)));
+        obj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_SIGNAL_FUNDING)-(int64_t)pbudgetProposal->GetNoCount(VOTE_SIGNAL_FUNDING)));
+        obj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(VOTE_SIGNAL_FUNDING)));
+        obj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(VOTE_SIGNAL_FUNDING)));
+        obj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(VOTE_SIGNAL_FUNDING)));
 
         std::string strError = "";
         obj.push_back(Pair("IsValid",  pbudgetProposal->IsValid(chainActive.Tip(), strError)));
@@ -397,11 +395,11 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
                 );
 
         uint256 hash = ParseHashV(params[1], "Governance hash");
-        std::string strVoteOutcome = params[2].get_str();
-        int nVoteOutcome = ConvertVoteOutcome(strVoteOutcome);
-        if(nVoteOutcome == -1)
+        std::string strVoteSignal = params[2].get_str();
+        int nVoteSignal = ConvertVoteSignal(strVoteSignal);
+        if(nVoteSignal == -1)
         {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
         }
 
         CGovernanceObject* pbudgetProposal = governance.FindProposal(hash);
@@ -410,10 +408,10 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");
 
         UniValue bObj(UniValue::VOBJ);
-        bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount(nVoteOutcome)-(int64_t)pbudgetProposal->GetNoCount(nVoteOutcome)));
-        bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(nVoteOutcome)));
-        bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(nVoteOutcome)));
-        bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(nVoteOutcome)));
+        bObj.push_back(Pair("AbsoluteYesCount",  (int64_t)pbudgetProposal->GetYesCount(nVoteSignal)-(int64_t)pbudgetProposal->GetNoCount(nVoteSignal)));
+        bObj.push_back(Pair("YesCount",  (int64_t)pbudgetProposal->GetYesCount(nVoteSignal)));
+        bObj.push_back(Pair("NoCount",  (int64_t)pbudgetProposal->GetNoCount(nVoteSignal)));
+        bObj.push_back(Pair("AbstainCount",  (int64_t)pbudgetProposal->GetAbstainCount(nVoteSignal)));
 
         return bObj;
     }
@@ -434,15 +432,15 @@ UniValue voteraw(const UniValue& params, bool fHelp)
     CTxIn vin = CTxIn(hashMnTx, nMnTxIndex);
 
     uint256 hashProposal = ParseHashV(params[2], "Governance hash");
-    std::string strVoteAction = params[3].get_str();
-    std::string strVoteOutcome = params[4].get_str();
+    std::string strVoteOutcome = params[3].get_str();
+    std::string strVoteSignal = params[4].get_str();
 
-    int nVoteAction = ConvertVoteAction(strVoteAction);
-    if(nVoteAction == VOTE_OUTCOME_NONE || nVoteAction == -1)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
+    int nVoteSignal = ConvertVoteSignal(strVoteSignal);
+    if(nVoteSignal == VOTE_OUTCOME_NONE || nVoteSignal == -1)
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal. Please use one of the following: 'yes', 'no' or 'abstain'");
 
     int nVoteOutcome = ConvertVoteOutcome(strVoteOutcome);
-    if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteAction == -1)
+    if(nVoteOutcome == VOTE_OUTCOME_NONE || nVoteOutcome == -1)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote action. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
 
 
@@ -460,7 +458,7 @@ UniValue voteraw(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + vin.ToString());
     }
 
-    CBudgetVote vote(vin, hashProposal, nVoteOutcome, VOTE_ACTION_NONE);
+    CGovernanceVote vote(vin, hashProposal, nVoteOutcome, VOTE_SIGNAL_NONE);
     vote.nTime = nTime;
     vote.vchSig = vchSig;
 
@@ -469,8 +467,8 @@ UniValue voteraw(const UniValue& params, bool fHelp)
     }
 
     std::string strError = "";
-    if(governance.UpdateProposal(vote, NULL, strError)){
-        governance.mapSeenMasternodeBudgetVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
+    if(governance.UpdateGovernanceObject(vote, NULL, strError)){
+        governance.mapSeenVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
         vote.Relay();
         return "Voted successfully";
     } else {
