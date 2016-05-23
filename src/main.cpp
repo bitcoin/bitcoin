@@ -7,6 +7,7 @@
 
 #include "addrman.h"
 #include "arith_uint256.h"
+#include "blockchain.h"
 #include "chainparams.h"
 #include "checkpoints.h"
 #include "checkqueue.h"
