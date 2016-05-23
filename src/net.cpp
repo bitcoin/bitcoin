@@ -2070,15 +2070,27 @@ void RelayTransaction(const CTransaction& tx)
 {
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss.reserve(10000);
-    ss << tx;
+    uint256 hash = tx.GetHash();
+    if(mapDarksendBroadcastTxes.count(hash)) { // MSG_DSTX
+        ss <<
+            mapDarksendBroadcastTxes[hash].tx <<
+            mapDarksendBroadcastTxes[hash].vin <<
+            mapDarksendBroadcastTxes[hash].vchSig <<
+            mapDarksendBroadcastTxes[hash].sigTime;
+    } else if(mapTxLockReq.count(hash)) { // MSG_TXLOCK_REQUEST
+        ss << mapTxLockReq[hash];
+    } else { // MSG_TX
+        ss << tx;
+    }
     RelayTransaction(tx, ss);
 }
 
 void RelayTransaction(const CTransaction& tx, const CDataStream& ss)
 {
-    int nInv = mapDarksendBroadcastTxes.count(tx.GetHash()) ? MSG_DSTX :
-                (mapTxLockReq.count(tx.GetHash()) ? MSG_TXLOCK_REQUEST : MSG_TX);
-    CInv inv(nInv, tx.GetHash());
+    uint256 hash = tx.GetHash();
+    int nInv = mapDarksendBroadcastTxes.count(hash) ? MSG_DSTX :
+                (mapTxLockReq.count(hash) ? MSG_TXLOCK_REQUEST : MSG_TX);
+    CInv inv(nInv, hash);
     {
         LOCK(cs_mapRelay);
         // Expire old relay messages
