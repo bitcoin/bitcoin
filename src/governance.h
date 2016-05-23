@@ -77,7 +77,7 @@ public:
     // todo - 12.1 - move to private for better encapsulation 
     std::map<uint256, int> mapSeenGovernanceObjects;
     std::map<uint256, int> mapSeenVotes;
-    std::map<uint256, CGovernanceVote> mapOrphanMasternodeBudgetVotes;
+    std::map<uint256, CGovernanceVote> mapOrphanVotes;
     std::map<uint256, CGovernanceVote> mapVotes;
 
     CGovernanceManager() {
@@ -114,8 +114,8 @@ public:
     int CountMatchingVotes(int nVoteSignalIn, int nVoteOutcomeIn);
 
     bool IsBudgetPaymentBlock(int nBlockHeight);
-    bool AddProposal(CGovernanceObject& budgetProposal);
-    bool UpdateProposal(CGovernanceVote& vote, CNode* pfrom, std::string& strError);
+    bool AddGovernanceObject (CGovernanceObject& budgetProposal);
+    bool UpdateGovernanceObject(CGovernanceVote& vote, CNode* pfrom, std::string& strError);
     bool AddOrUpdateVote(CGovernanceVote& vote, std::string& strError);
     bool PropExists(uint256 nHash);
     std::string GetRequiredPaymentsString(int nBlockHeight);
@@ -130,7 +130,7 @@ public:
         mapObjects.clear();
         mapSeenGovernanceObjects.clear();
         mapSeenVotes.clear();
-        mapOrphanMasternodeBudgetVotes.clear();
+        mapOrphanVotes.clear();
     }
     std::string ToString() const;
 
@@ -140,7 +140,7 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
         READWRITE(mapSeenGovernanceObjects);
         READWRITE(mapSeenVotes);
-        READWRITE(mapOrphanMasternodeBudgetVotes);
+        READWRITE(mapOrphanVotes);
         READWRITE(mapObjects);
         READWRITE(mapVotes);
     }

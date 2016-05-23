@@ -94,28 +94,28 @@ void CGovernanceManager::CheckOrphanVotes()
     LOCK(cs);
 
     std::string strError = "";
-    std::map<uint256, CGovernanceVote>::iterator it1 = mapOrphanMasternodeBudgetVotes.begin();
-    while(it1 != mapOrphanMasternodeBudgetVotes.end()){
-        if(UpdateProposal(((*it1).second), NULL, strError)){
+    std::map<uint256, CGovernanceVote>::iterator it1 = mapOrphanVotes.begin();
+    while(it1 != mapOrphanVotes.end()){
+        if(UpdateGovernanceObject(((*it1).second), NULL, strError)){
             LogPrintf("CGovernanceManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
-            mapOrphanMasternodeBudgetVotes.erase(it1++);
+            mapOrphanVotes.erase(it1++);
         } else {
             ++it1;
         }
     }
 }
 
-bool CGovernanceManager::AddProposal(CGovernanceObject& budgetProposal)
+bool CGovernanceManager::AddGovernanceObject(CGovernanceObject& budgetProposal)
 {
     LOCK(cs);
     std::string strError = "";
     if(!budgetProposal.IsValid(pCurrentBlockIndex, strError)) {
-        LogPrintf("CGovernanceManager::AddProposal - invalid governance object - %s\n", strError);
+        LogPrintf("CGovernanceManager::AddGovernanceObject - invalid governance object - %s\n", strError);
         return false;
     }
 
     if(mapObjects.count(budgetProposal.GetHash())) {
-        LogPrintf("CGovernanceManager::AddProposal - already have governance object - %s\n", strError);
+        LogPrintf("CGovernanceManager::AddGovernanceObject - already have governance object - %s\n", strError);
         return false;
     }
 
@@ -285,7 +285,7 @@ void CGovernanceManager::NewBlock()
         // }
 
         // CGovernanceObject budgetProposal((*it4));
-        // if(AddProposal(budgetProposal)) {(*it4).Relay();}
+        // if(AddGovernanceObject(budgetProposal)) {(*it4).Relay();}
 
         // LogPrintf("mprop (immature) - new budget - %s\n", (*it4).GetHash().ToString());
         // it4 = vecImmatureBudgetProposals.erase(it4); 
@@ -346,7 +346,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
             return;
         }
 
-        if(AddProposal(budgetProposalBroadcast))
+        if(AddGovernanceObject(budgetProposalBroadcast))
         {
             budgetProposalBroadcast.Relay();
         }
@@ -385,7 +385,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
         }
 
         std::string strError = "";
-        if(UpdateProposal(vote, pfrom, strError)) {
+        if(UpdateGovernanceObject(vote, pfrom, strError)) {
             vote.Relay();
             masternodeSync.AddedBudgetItem(vote.GetHash());
         }
@@ -482,7 +482,7 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
     LogPrintf("CGovernanceManager::Sync - sent %d items\n", nInvCount);
 }
 
-bool CGovernanceManager::UpdateProposal(CGovernanceVote& vote, CNode* pfrom, std::string& strError)
+bool CGovernanceManager::UpdateGovernanceObject(CGovernanceVote& vote, CNode* pfrom, std::string& strError)
 {
     LOCK(cs);
 
@@ -492,8 +492,8 @@ bool CGovernanceManager::UpdateProposal(CGovernanceVote& vote, CNode* pfrom, std
             //   otherwise we'll think a full sync succeeded when they return a result
             if(!masternodeSync.IsSynced()) return false;
 
-            LogPrintf("CGovernanceManager::UpdateProposal - Unknown proposal %d, asking for source proposal\n", vote.nParentHash.ToString());
-            mapOrphanMasternodeBudgetVotes[vote.nParentHash] = vote;
+            LogPrintf("CGovernanceManager::UpdateGovernanceObject - Unknown proposal %d, asking for source proposal\n", vote.nParentHash.ToString());
+            mapOrphanVotes[vote.nParentHash] = vote;
 
             if(!askedForSourceProposalOrBudget.count(vote.nParentHash)){
                 pfrom->PushMessage(NetMsgType::MNGOVERNANCEVOTESYNC, vote.nParentHash);

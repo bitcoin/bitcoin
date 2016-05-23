@@ -204,7 +204,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         governance.mapSeenGovernanceObjects.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_IS_VALID));
         budgetProposalBroadcast.Relay();
-        governance.AddProposal(budgetProposalBroadcast);
+        governance.AddGovernanceObject(budgetProposalBroadcast);
 
         return budgetProposalBroadcast.GetHash().ToString();
 
@@ -283,7 +283,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
 
             std::string strError = "";
-            if(governance.UpdateProposal(vote, NULL, strError)) {
+            if(governance.UpdateGovernanceObject(vote, NULL, strError)) {
                 governance.mapSeenVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
                 vote.Relay();
                 success++;
@@ -467,7 +467,7 @@ UniValue voteraw(const UniValue& params, bool fHelp)
     }
 
     std::string strError = "";
-    if(governance.UpdateProposal(vote, NULL, strError)){
+    if(governance.UpdateGovernanceObject(vote, NULL, strError)){
         governance.mapSeenVotes.insert(make_pair(vote.GetHash(), SEEN_OBJECT_IS_VALID));
         vote.Relay();
         return "Voted successfully";
