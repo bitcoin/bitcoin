@@ -294,7 +294,7 @@ Value omni_getfeetrigger(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "omni_getfeetrigger [ propertyid ]\n"
+            "omni_getfeetrigger ( propertyid )\n"
             "\nReturns the amount of fees required in the cache to trigger distribution.\n"
             "\nArguments:\n"
             "1. propertyid           (number, optional) filter the results on this property id\n"
@@ -344,7 +344,7 @@ Value omni_getfeeshare(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 2)
         throw runtime_error(
-            "omni_getfeeshare [ address ] [ ecosystem ]\n"
+            "omni_getfeeshare ( address ecosystem )\n"
             "\nReturns the percentage share of fees distribution applied to the wallet (default) or address (if supplied).\n"
             "\nArguments:\n"
             "1. address              (string, optional) retrieve the fee share for the supplied address\n"
@@ -365,7 +365,11 @@ Value omni_getfeeshare(const Array& params, bool fHelp)
     std::string address;
     uint8_t ecosystem = 1;
     if (0 < params.size()) {
-        address = ParseAddress(params[0]);
+        if ("*" != params[0].get_str()) { //ParseAddressOrEmpty doesn't take wildcards
+            address = ParseAddressOrEmpty(params[0]);
+        } else {
+            address = "*";
+        }
     }
     if (1 < params.size()) {
         ecosystem = ParseEcosystem(params[1]);
@@ -387,7 +391,7 @@ Value omni_getfeeshare(const Array& params, bool fHelp)
             if (IsMyAddress(it->second)) {
                 addObj = true;
             }
-        } else if (address == it->second) {
+        } else if (address == it->second || address == "*") {
             addObj = true;
         }
         if (addObj) {
@@ -411,7 +415,7 @@ Value omni_getfeecache(const Array& params, bool fHelp)
 {
     if (fHelp || params.size() > 1)
         throw runtime_error(
-            "omni_getfeecache [ propertyid ]\n"
+            "omni_getfeecache ( propertyid )\n"
             "\nReturns the amount of fees cached for distribution.\n"
             "\nArguments:\n"
             "1. propertyid           (number, optional) filter the results on this property id\n"
