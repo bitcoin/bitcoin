@@ -6,7 +6,12 @@
 #ifndef BITCOIN_BLOCKCHAIN_H
 #define BITCOIN_BLOCKCHAIN_H
 
+#include "consensus/validation.h"
+#include "primitives/block.h"
+
 class CBlockchain {
+public:
+    static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
 };
 
 #endif // BITCOIN_BLOCKCHAIN_H
