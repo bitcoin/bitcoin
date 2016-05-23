@@ -57,7 +57,7 @@ struct sortProposalsByVotes {
 //         if(pfinalizedBudget && pfinalizedBudget->fValid){
 
 //             //mark votes
-//             std::map<uint256, CBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
+//             std::map<uint256, CGovernanceVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
 //             while(it4 != pfinalizedBudget->mapVotes.end()){
 //                 if((*it4).second.fValid)
 //                     (*it4).second.fSynced = true;
@@ -80,7 +80,7 @@ struct sortProposalsByVotes {
 //         if(pfinalizedBudget && pfinalizedBudget->fValid){
 
 //             //send votes
-//             std::map<uint256, CBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
+//             std::map<uint256, CGovernanceVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
 //             while(it4 != pfinalizedBudget->mapVotes.end()){
 //                 (*it4).second.fSynced = false;
 //                 ++it4;
@@ -117,7 +117,7 @@ void CBudgetManager::Sync(CNode* pfrom, uint256 nProp, bool fPartial)
             nInvCount++;
 
             //send votes
-            std::map<uint256, CBudgetVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
+            std::map<uint256, CGovernanceVote>::iterator it4 = pfinalizedBudget->mapVotes.begin();
             while(it4 != pfinalizedBudget->mapVotes.end()){
                 if((*it4).second.fValid) {
                     if((fPartial && !(*it4).second.fSynced) || !fPartial) {
@@ -201,7 +201,7 @@ void CBudgetManager::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
     }
 
     if (strCommand == NetMsgType::MNGOVERNANCEFINALVOTE) { //Finalized Budget Vote
-        CBudgetVote vote;
+        CGovernanceVote vote;
         vRecv >> vote;
         vote.fValid = true;
 
@@ -402,7 +402,7 @@ bool CBudgetManager::HasNextFinalizedBudget()
     return false;
 }
 
-bool CBudgetManager::UpdateFinalizedBudget(CBudgetVote& vote, CNode* pfrom, std::string& strError)
+bool CBudgetManager::UpdateFinalizedBudget(CGovernanceVote& vote, CNode* pfrom, std::string& strError)
 {
     LOCK(cs);
 
@@ -562,7 +562,7 @@ void CBudgetManager::CheckOrphanVotes()
 
     std::string strError = "";
 
-    std::map<uint256, CBudgetVote>::iterator it2 = mapOrphanFinalizedBudgetVotes.begin();
+    std::map<uint256, CGovernanceVote>::iterator it2 = mapOrphanFinalizedBudgetVotes.begin();
     while(it2 != mapOrphanFinalizedBudgetVotes.end()){
         if(UpdateFinalizedBudget(((*it2).second),NULL, strError)){
             LogPrintf("CBudgetManager::CheckOrphanVotes - Proposal/Budget is known, activating and removing orphan vote\n");
@@ -654,7 +654,7 @@ CFinalizedBudget::CFinalizedBudget(const CFinalizedBudget& other)
     fAutoChecked = false;
 }
 
-bool CFinalizedBudget::AddOrUpdateVote(CBudgetVote& vote, std::string& strError)
+bool CFinalizedBudget::AddOrUpdateVote(CGovernanceVote& vote, std::string& strError)
 {
     LOCK(cs);
 
@@ -757,7 +757,7 @@ void CFinalizedBudget::AutoCheck()
 // If masternode voted for a proposal, but is now invalid -- remove the vote
 void CFinalizedBudget::CleanAndRemove(bool fSignatureCheck)
 {
-    std::map<uint256, CBudgetVote>::iterator it = mapVotes.begin();
+    std::map<uint256, CGovernanceVote>::iterator it = mapVotes.begin();
 
     while(it != mapVotes.end()) {
         (*it).second.fValid = (*it).second.IsValid(fSignatureCheck);
@@ -906,7 +906,7 @@ void CFinalizedBudget::SubmitVote()
         return;
     }
 
-    CBudgetVote vote(activeMasternode.vin, GetHash());
+    CGovernanceVote vote(activeMasternode.vin, GetHash());
     if(!vote.Sign(keyMasternode, pubKeyMasternode)){
         LogPrintf("CFinalizedBudget::SubmitVote - Failure to sign.");
         return;
@@ -957,7 +957,7 @@ void CFinalizedBudget::Relay()
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
 
-CBudgetVote::CBudgetVote()
+CGovernanceVote::CGovernanceVote()
 {
     vin = CTxIn();
     nBudgetHash = uint256();
@@ -967,7 +967,7 @@ CBudgetVote::CBudgetVote()
     fSynced = false;
 }
 
-CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn)
+CGovernanceVote::CGovernanceVote(CTxIn vinIn, uint256 nBudgetHashIn)
 {
     vin = vinIn;
     nBudgetHash = nBudgetHashIn;
@@ -977,13 +977,13 @@ CBudgetVote::CBudgetVote(CTxIn vinIn, uint256 nBudgetHashIn)
     fSynced = false;
 }
 
-void CBudgetVote::Relay()
+void CGovernanceVote::Relay()
 {
     CInv inv(MSG_BUDGET_FINALIZED_VOTE, GetHash());
     RelayInv(inv, MIN_BUDGET_PEER_PROTO_VERSION);
 }
 
-bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
+bool CGovernanceVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
 {
     // Choose coins to use
     CPubKey pubKeyCollateralAddress;
@@ -993,22 +993,22 @@ bool CBudgetVote::Sign(CKey& keyMasternode, CPubKey& pubKeyMasternode)
     std::string strMessage = vin.prevout.ToStringShort() + nBudgetHash.ToString() + boost::lexical_cast<std::string>(nTime);
 
     if(!darkSendSigner.SignMessage(strMessage, errorMessage, vchSig, keyMasternode)) {
-        LogPrintf("CBudgetVote::Sign - Error upon calling SignMessage");
+        LogPrintf("CGovernanceVote::Sign - Error upon calling SignMessage");
         return false;
     }
 
     if(!darkSendSigner.VerifyMessage(pubKeyMasternode, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CBudgetVote::Sign - Error upon calling VerifyMessage");
+        LogPrintf("CGovernanceVote::Sign - Error upon calling VerifyMessage");
         return false;
     }
 
     return true;
 }
 
-bool CBudgetVote::IsValid(bool fSignatureCheck)
+bool CGovernanceVote::IsValid(bool fSignatureCheck)
 {
     if(nTime > GetTime() + (60*60)){
-        LogPrint("mngovernance", "CBudgetVote::IsValid() - vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
+        LogPrint("mngovernance", "CGovernanceVote::IsValid() - vote is too far ahead of current time - %s - nTime %lli - Max Time %lli\n", GetHash().ToString(), nTime, GetTime() + (60*60));
         return false;
     }
 
@@ -1016,7 +1016,7 @@ bool CBudgetVote::IsValid(bool fSignatureCheck)
 
     if(pmn == NULL)
     {
-        LogPrint("mngovernance", "CBudgetVote::IsValid() - Unknown Masternode\n");
+        LogPrint("mngovernance", "CGovernanceVote::IsValid() - Unknown Masternode\n");
         return false;
     }
 
@@ -1026,7 +1026,7 @@ bool CBudgetVote::IsValid(bool fSignatureCheck)
     std::string strMessage = vin.prevout.ToStringShort() + nBudgetHash.ToString() + boost::lexical_cast<std::string>(nTime);
 
     if(!darkSendSigner.VerifyMessage(pmn->pubkey2, vchSig, strMessage, errorMessage)) {
-        LogPrintf("CBudgetVote::IsValid() - Verify message failed\n");
+        LogPrintf("CGovernanceVote::IsValid() - Verify message failed\n");
         return false;
     }
 

@@ -4356,10 +4356,10 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return mnpayments.mapMasternodePayeeVotes.count(inv.hash);
 
     case MSG_BUDGET_VOTE:
-        return governance.mapSeenMasternodeBudgetVotes.count(inv.hash);
+        return governance.mapSeenVotes.count(inv.hash);
 
     case MSG_BUDGET_PROPOSAL:
-        return governance.mapSeenMasternodeBudgetProposals.count(inv.hash);
+        return governance.mapSeenGovernanceObjects.count(inv.hash);
 
     case MSG_MASTERNODE_ANNOUNCE:
         return mnodeman.mapSeenMasternodeBroadcast.count(inv.hash);
@@ -4527,20 +4527,20 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
                 if (!pushed && inv.type == MSG_BUDGET_VOTE) {
-                    if(governance.mapSeenMasternodeBudgetVotes.count(inv.hash)){
+                    if(governance.mapSeenVotes.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << governance.mapSeenMasternodeBudgetVotes[inv.hash];
+                        ss << governance.mapSeenVotes[inv.hash];
                         pfrom->PushMessage(NetMsgType::MNGOVERNANCEVOTE, ss);
                         pushed = true;
                     }
                 }
 
                 if (!pushed && inv.type == MSG_BUDGET_PROPOSAL) {
-                    if(governance.mapSeenMasternodeBudgetProposals.count(inv.hash)){
+                    if(governance.mapSeenGovernanceObjects.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << governance.mapSeenMasternodeBudgetProposals[inv.hash];
+                        ss << governance.mapSeenGovernanceObjects[inv.hash];
                         pfrom->PushMessage(NetMsgType::MNGOVERNANCEPROPOSAL, ss);
                         pushed = true;
                     }

@@ -11,7 +11,7 @@
 
 using namespace std;
 
-class CBudgetVote;
+class CGovernanceVote;
 
 /**
 *	Triggers and Settings - 12.2
