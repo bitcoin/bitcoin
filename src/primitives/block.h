@@ -97,20 +97,6 @@ public:
         *((CBlockHeader*)this) = header;
     }
 
-    static bool VersionKnown(int32_t nVersion, int32_t voteBits)
-    {
-        if (nVersion >= 1 && nVersion <= 4)
-            return true;
-        // BIP009 / versionbits:
-        if (nVersion & BIP_009_MASK)
-        {
-            uint32_t v = nVersion & ~BIP_009_MASK;
-            if ((v & ~voteBits) == 0)
-                return true;
-        }
-        return false;
-    }
-
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
