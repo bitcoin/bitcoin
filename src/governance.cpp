@@ -136,9 +136,10 @@ void CGovernanceManager::CheckAndRemove()
     std::map<uint256, CGovernanceObject>::iterator it2 = mapObjects.begin();
     while(it2 != mapObjects.end())
     {
-        CGovernanceObject* pbudgetProposal = &((*it2).second);
+        CGovernanceObject* pObj = &((*it2).second);
 
-        pbudgetProposal->UpdateLocalValidity(pCurrentBlockIndex);
+        pObj->UpdateLocalValidity(pCurrentBlockIndex);
+        pObj->UpdateSentinelVariables(pCurrentBlockIndex);
         ++it2;
     }
 }

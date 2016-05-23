@@ -184,6 +184,22 @@ public:
 
     // Update local validity : store the values in memory
     void UpdateLocalValidity(const CBlockIndex *pCurrentBlockIndex) {fCachedLocalValidity = IsValid(pCurrentBlockIndex, strLocalValidityError);};
+    void UpdateSentinelEngine(const CBlockIndex *pCurrentBlockIndex)
+    {
+        /*
+        #define VOTE_SIGNAL_NONE                0 // SIGNAL VARIOUS THINGS TO HAPPEN:
+        #define VOTE_SIGNAL_FUNDING             1 //   -- fund this object for it's stated amount
+        #define VOTE_SIGNAL_VALID               2 //   -- this object checks out to sentinel
+        #define VOTE_SIGNAL_DELETE              3 //   -- this object should be deleted from memory entirely
+        #define VOTE_SIGNAL_CLEAR_REGISTERS     4 //   -- this object's registers should be cleared (stored elsewhere, e.g. dashdrive)
+        #define VOTE_SIGNAL_ENDORSED            5 //   -- officially endorsed by the network somehow (delegation)
+        #define VOTE_SIGNAL_RELEASE_BOUNTY1     6 //   -- release the first bounty associated with this
+        #define VOTE_SIGNAL_RELEASE_BOUNTY2     7 //   --     second
+        #define VOTE_SIGNAL_RELEASE_BOUNTY3     8 //   --     third
+        */
+
+
+    }
 
     void swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
     {
@@ -225,6 +241,7 @@ public:
     void CleanAndRemove(bool fSignatureCheck);
     void Relay();
 
+
     uint256 GetHash(){
 
         /*
@@ -236,7 +253,10 @@ public:
         */
 
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << nHashParent;
+        ss << nRevision;
         ss << strName;
+        ss << nTime;
         ss << strData;
         uint256 h1 = ss.GetHash();
 
@@ -256,6 +276,7 @@ public:
 
     bool SetData(std::string& strError, std::string strDataIn)
     {
+        // (assumption) this is equal to pythons len(strData) > 512*4, I think 
         if(strDataIn.size() > 512*4)
         {
             strError = "Too big.";
