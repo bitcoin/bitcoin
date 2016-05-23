@@ -11,6 +11,8 @@
 
 class CBlockchain {
 public:
+    /** Context-independent validity checks */
+    static bool CheckTransaction(const CTransaction& tx, CValidationState& state);
     static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
 };
 
