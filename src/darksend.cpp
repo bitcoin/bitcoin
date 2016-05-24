@@ -320,19 +320,25 @@ void CDarksendPool::ProcessMessageDarksend(CNode* pfrom, std::string& strCommand
         vector<CTxIn> sigs;
         vRecv >> sigs;
 
-        bool success = false;
-        int count = 0;
+        bool success = true;
+        int nSigIndex = 0;
+        int nSigsCount = (int)sigs.size();
 
         BOOST_FOREACH(const CTxIn item, sigs)
         {
-            if(AddScriptSig(item)) success = true;
-            LogPrint("darksend", " -- sigs count %d %d\n", (int)sigs.size(), count);
-            count++;
+            nSigIndex++;
+            if(!AddScriptSig(item)) {
+                success = false;
+                break;
+            }
+            LogPrint("darksend", "DSSIGNFINALTX - AddScriptSig %d/%d - success\n", nSigIndex, nSigsCount);
         }
 
         if(success){
-            darkSendPool.Check();
-            RelayStatus(darkSendPool.sessionID, darkSendPool.GetState(), darkSendPool.GetEntriesCount(), MASTERNODE_RESET);
+            Check();
+            RelayStatus(sessionID, GetState(), GetEntriesCount(), MASTERNODE_RESET);
+        } else {
+            LogPrint("darksend", "DSSIGNFINALTX - AddScriptSig failed at %d/%d, session %d\n", nSigIndex, nSigsCount, sessionID);
         }
     } else if (strCommand == NetMsgType::DSFINALTX) { //Darksend Final tx
         if (pfrom->nVersion < MIN_POOL_PEER_PROTO_VERSION) {
