@@ -195,10 +195,10 @@ void CMasternodeSync::ClearFulfilledRequest()
 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-        pnode->ClearFulfilledRequest("getspork");
-        pnode->ClearFulfilledRequest("mnsync");
-        pnode->ClearFulfilledRequest("mnwsync");
-        pnode->ClearFulfilledRequest("busync");
+        pnode->ClearFulfilledRequest("spork-sync");
+        pnode->ClearFulfilledRequest("masternode-winner-sync");
+        pnode->ClearFulfilledRequest("governance-sync");
+        pnode->ClearFulfilledRequest("masternode-sync");
     }
 }
 
