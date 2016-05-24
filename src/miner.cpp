@@ -347,6 +347,11 @@ void BlockAssembler::addScoreTxs()
             clearedTxs.pop();
         }
 
+        // If tx already in block, skip  (added by addPriorityTxs)
+        if (inBlock.count(iter)) {
+            continue;
+        }
+
         // If tx is dependent on other mempool txs which haven't yet been included
         // then put it in the waitSet
         if (isStillDependent(iter)) {
