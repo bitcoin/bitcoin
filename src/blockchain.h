@@ -6,10 +6,13 @@
 #ifndef BITCOIN_BLOCKCHAIN_H
 #define BITCOIN_BLOCKCHAIN_H
 
+#include "chainparams.h"
 #include "consensus/validation.h"
 #include "primitives/block.h"
 
 class CBlockchain {
+protected:
+    static bool CheckBlockHeader(const CChainParams chainParams, const CBlockHeader& block, CValidationState& state, int64_t nAdjustedTime, bool fCheckPOW = true);
 public:
     /** Context-independent validity checks */
     static bool CheckTransaction(const CTransaction& tx, CValidationState& state);

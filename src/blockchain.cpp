@@ -45,12 +45,16 @@
 #include <boost/thread.hpp>
 
 bool CBlockchain::CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW) {
+    return CheckBlockHeader(Params(), block, state, GetAdjustedTime(), fCheckPOW);
+}
+
+bool CBlockchain::CheckBlockHeader(const CChainParams chainParams, const CBlockHeader& block, CValidationState& state, int64_t nAdjustedTime, bool fCheckPOW) {
     // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, Params().GetConsensus()))
+    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, chainParams.GetConsensus()))
         return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
 
     // Check timestamp
-    if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
+    if (block.GetBlockTime() > nAdjustedTime + 2 * 60 * 60)
         return state.Invalid(false, REJECT_INVALID, "time-too-new", "block timestamp too far in the future");
 
     return true;
