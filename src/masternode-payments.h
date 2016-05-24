@@ -29,7 +29,7 @@ extern CMasternodePayments mnpayments;
 #define MNPAYMENTS_SIGNATURES_REQUIRED           6
 #define MNPAYMENTS_SIGNATURES_TOTAL              10
 
-void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 bool IsReferenceNode(CTxIn& vin);
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight);
 std::string GetRequiredPaymentsString(int nBlockHeight);
@@ -225,7 +225,6 @@ class CMasternodePayments
 {
 private:
     int nSyncedFromPeer;
-    int nLastBlockHeight;
     // Keep track of current block index
     const CBlockIndex *pCurrentBlockIndex;
 
@@ -236,7 +235,6 @@ public:
 
     CMasternodePayments() {
         nSyncedFromPeer = 0;
-        nLastBlockHeight = 0;
     }
 
     void Clear() {
@@ -271,7 +269,7 @@ public:
     }
 
     int GetMinMasternodePaymentsProto();
-    void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees);
     std::string ToString() const;

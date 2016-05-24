@@ -5604,9 +5604,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (found)
         {
             //probably one the extensions
-            darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
+            darkSendPool.ProcessMessage(pfrom, strCommand, vRecv);
             mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
-            mnpayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
+            mnpayments.ProcessMessage(pfrom, strCommand, vRecv);
             ProcessMessageInstantX(pfrom, strCommand, vRecv);
             ProcessSpork(pfrom, strCommand, vRecv);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
