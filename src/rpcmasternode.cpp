@@ -467,45 +467,46 @@ UniValue masternode(const UniValue& params, bool fHelp)
         return obj;
     }
 
-    /*
-        Shows which masternode wins by score each block
-    */
-    if (strCommand == "calcscore")
-    {
+    // 12.1 -- remove?
+    // /*
+    //     Shows which masternode wins by score each block
+    // */
+    // if (strCommand == "calcscore")
+    // {
 
-        int nHeight;
-        {
-            LOCK(cs_main);
-            CBlockIndex* pindex = chainActive.Tip();
-            if(!pindex) return NullUniValue;
+    //     int nHeight;
+    //     {
+    //         LOCK(cs_main);
+    //         CBlockIndex* pindex = chainActive.Tip();
+    //         if(!pindex) return NullUniValue;
 
-            nHeight = pindex->nHeight;
-        }
+    //         nHeight = pindex->nHeight;
+    //     }
 
-        int nLast = 10;
+    //     int nLast = 10;
 
-        if (params.size() >= 2){
-            nLast = atoi(params[1].get_str());
-        }
-        UniValue obj(UniValue::VOBJ);
+    //     if (params.size() >= 2){
+    //         nLast = atoi(params[1].get_str());
+    //     }
+    //     UniValue obj(UniValue::VOBJ);
 
-        std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
-        for(int i = nHeight - nLast; i < nHeight + 20; i++){
-            arith_uint256 nHigh = 0;
-            CMasternode *pBestMasternode = NULL;
-            BOOST_FOREACH(CMasternode& mn, vMasternodes) {
-                arith_uint256 n = UintToArith256(mn.CalculateScore(1, i - 100));
-                if(n > nHigh){
-                    nHigh = n;
-                    pBestMasternode = &mn;
-                }
-            }
-            if(pBestMasternode)
-                obj.push_back(Pair(strprintf("%d", i), pBestMasternode->vin.prevout.ToStringShort().c_str()));
-        }
+    //     std::vector<CMasternode> vMasternodes = mnodeman.GetFullMasternodeVector();
+    //     for(int i = nHeight - nLast; i < nHeight + 20; i++){
+    //         arith_uint256 nHigh = 0;
+    //         CMasternode *pBestMasternode = NULL;
+    //         BOOST_FOREACH(CMasternode& mn, vMasternodes) {
+    //             arith_uint256 n = UintToArith256(mn.CalculateScore(1, i - 100));
+    //             if(n > nHigh){
+    //                 nHigh = n;
+    //                 pBestMasternode = &mn;
+    //             }
+    //         }
+    //         if(pBestMasternode)
+    //             obj.push_back(Pair(strprintf("%d", i), pBestMasternode->vin.prevout.ToStringShort().c_str()));
+    //     }
 
-        return obj;
-    }
+    //     return obj;
+    // }
 
     return NullUniValue;
 }
