@@ -840,14 +840,6 @@ bool CMasternodeMan::CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, i
         return false;
     }
 
-    // make sure the vout that was signed is related to the transaction that spawned the Masternode
-    //  - this is expensive, so it's only done once per Masternode
-    if(!darkSendSigner.IsVinAssociatedWithPubkey(mnb.vin, mnb.pubkey)) {
-        LogPrintf("CMasternodeMan::CheckMnbAndUpdateMasternodeList - Got mismatched pubkey and vin\n");
-        nDos = 33;
-        return false;
-    }
-
     // make sure it's still unspent
     //  - this is checked later by .check() in many places and by ThreadCheckDarkSendPool()
     if(mnb.CheckInputsAndAdd(nDos)) {
