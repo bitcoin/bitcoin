@@ -130,8 +130,54 @@
          </property>
         </spacer>
        </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabWallet">
+      <attribute name="title">
+       <string>W&amp;allet</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_Wallet">
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_4_Main">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Expert</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QCheckBox" name="coinControlFeatures">
+            <property name="toolTip">
+             <string>Whether to show coin control features or not.</string>
+            </property>
+            <property name="text">
+             <string>Enable coin &amp;control features</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="showMasternodesTab">
+            <property name="toolTip">
+             <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
+            </property>
+            <property name="text">
+             <string>Show Masternodes Tab</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="spendZeroConfChange">
+            <property name="toolTip">
+             <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
+            </property>
+            <property name="text">
+             <string>&amp;Spend unconfirmed change</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_4_Wallet">
          <item>
           <widget class="QLabel" name="label">
            <property name="toolTip">
@@ -198,52 +244,6 @@
           </widget>
          </item>
         </layout>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabWallet">
-      <attribute name="title">
-       <string>W&amp;allet</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_Wallet">
-       <item>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>Expert</string>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <item>
-           <widget class="QCheckBox" name="coinControlFeatures">
-            <property name="toolTip">
-             <string>Whether to show coin control features or not.</string>
-            </property>
-            <property name="text">
-             <string>Enable coin &amp;control features</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="showMasternodesTab">
-            <property name="toolTip">
-             <string>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</string>
-            </property>
-            <property name="text">
-             <string>Show Masternodes Tab</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="spendZeroConfChange">
-            <property name="toolTip">
-             <string>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</string>
-            </property>
-            <property name="text">
-             <string>&amp;Spend unconfirmed change</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer_Wallet">
