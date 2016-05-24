@@ -42,13 +42,11 @@ const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
 const char *MNWINNER="mnw";
 const char *MNWINNERSSYNC="mnget";
-const char *MNSCANERROR="mn scan error"; // TODO ???
 const char *MNGOVERNANCEVOTESYNC="mnvs";
 const char *MNGOVERNANCEVOTE="mvote";
 const char *MNGOVERNANCEPROPOSAL="mprop";
 const char *MNGOVERNANCEFINAL="fbs";
 const char *MNGOVERNANCEFINALVOTE="fbvote";
-const char *MNQUORUM="mn quorum"; // TODO ???
 const char *MNANNOUNCE="mnb";
 const char *MNPING="mnp";
 const char *DSACCEPT="dsa";
@@ -74,12 +72,10 @@ static const char* ppszTypeName[] =
     NetMsgType::IXLOCKVOTE,
     NetMsgType::SPORK,
     NetMsgType::MNWINNER,
-    NetMsgType::MNSCANERROR,
     NetMsgType::MNGOVERNANCEVOTE,
     NetMsgType::MNGOVERNANCEPROPOSAL,
     NetMsgType::MNGOVERNANCEFINAL,
     NetMsgType::MNGOVERNANCEFINALVOTE,
-    NetMsgType::MNQUORUM,
     NetMsgType::MNANNOUNCE,
     NetMsgType::MNPING,
     NetMsgType::DSTX
@@ -118,13 +114,11 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETSPORKS,
     NetMsgType::MNWINNER,
     NetMsgType::MNWINNERSSYNC,
-    NetMsgType::MNSCANERROR,
     NetMsgType::MNGOVERNANCEVOTESYNC,
     NetMsgType::MNGOVERNANCEVOTE,
     NetMsgType::MNGOVERNANCEPROPOSAL,
     NetMsgType::MNGOVERNANCEFINAL,
     NetMsgType::MNGOVERNANCEFINALVOTE,
-    NetMsgType::MNQUORUM,
     NetMsgType::MNANNOUNCE,
     NetMsgType::MNPING,
     NetMsgType::DSACCEPT,
