@@ -121,7 +121,7 @@
              </column>
              <column>
               <property name="text">
-               <string>Active (secs)</string>
+               <string>Active</string>
               </property>
              </column>
              <column>
@@ -241,7 +241,7 @@
            </column>
            <column>
             <property name="text">
-             <string>Active (secs)</string>
+             <string>Active</string>
             </property>
            </column>
            <column>
