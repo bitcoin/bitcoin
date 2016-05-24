@@ -273,9 +273,9 @@ void CMasternodeSync::Process()
         */
 
         // ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
-        if(!pnode->HasFulfilledRequest("getspork"))
+        if(!pnode->HasFulfilledRequest("spork-sync"))
         {
-            pnode->FulfilledRequest("getspork");
+            pnode->FulfilledRequest("spork-sync");
             pnode->PushMessage(NetMsgType::GETSPORKS); //get current network sporks
         }
 
@@ -305,8 +305,8 @@ void CMasternodeSync::Process()
 
                 // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
 
-                if(pnode->HasFulfilledRequest("mnsync")) continue;
-                pnode->FulfilledRequest("mnsync");
+                if(pnode->HasFulfilledRequest("masternode-sync")) continue;
+                pnode->FulfilledRequest("masternode-sync");
 
                 //see if we've synced the masternode list
                 /* note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock) */
@@ -343,8 +343,8 @@ void CMasternodeSync::Process()
 
                 // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
 
-                if(pnode->HasFulfilledRequest("mnwsync")) continue;
-                pnode->FulfilledRequest("mnwsync");
+                if(pnode->HasFulfilledRequest("masternode-winner-sync")) continue;
+                pnode->FulfilledRequest("masternode-winner-sync");
 
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
@@ -382,8 +382,8 @@ void CMasternodeSync::Process()
 
                 // requesting is the last thing we do, incase we needed to move to the next asset and we've requested from each peer already
 
-                if(pnode->HasFulfilledRequest("busync")) continue;
-                pnode->FulfilledRequest("busync");
+                if(pnode->HasFulfilledRequest("governance-sync")) continue;
+                pnode->FulfilledRequest("governance-sync");
 
                 uint256 n = uint256();
                 pnode->PushMessage(NetMsgType::MNGOVERNANCEVOTESYNC, n); //sync masternode votes
