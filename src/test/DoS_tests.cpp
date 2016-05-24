@@ -47,6 +47,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
     CNode::ClearBanned();
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
+    GetNodeSignals().InitializeNode(dummyNode1.GetId(), &dummyNode1);
     dummyNode1.nVersion = 1;
     Misbehaving(dummyNode1.GetId(), 100); // Should get banned
     SendMessages(&dummyNode1, *connman);
@@ -55,6 +56,7 @@ BOOST_AUTO_TEST_CASE(DoS_banning)
 
     CAddress addr2(ip(0xa0b0c002), NODE_NONE);
     CNode dummyNode2(INVALID_SOCKET, addr2, "", true);
+    GetNodeSignals().InitializeNode(dummyNode2.GetId(), &dummyNode2);
     dummyNode2.nVersion = 1;
     Misbehaving(dummyNode2.GetId(), 50);
     SendMessages(&dummyNode2, *connman);
@@ -71,6 +73,7 @@ BOOST_AUTO_TEST_CASE(DoS_banscore)
     mapArgs["-banscore"] = "111"; // because 11 is my favorite number
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
     CNode dummyNode1(INVALID_SOCKET, addr1, "", true);
+    GetNodeSignals().InitializeNode(dummyNode1.GetId(), &dummyNode1);
     dummyNode1.nVersion = 1;
     Misbehaving(dummyNode1.GetId(), 100);
     SendMessages(&dummyNode1, *connman);
@@ -92,6 +95,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
 
     CAddress addr(ip(0xa0b0c001), NODE_NONE);
     CNode dummyNode(INVALID_SOCKET, addr, "", true);
+    GetNodeSignals().InitializeNode(dummyNode.GetId(), &dummyNode);
     dummyNode.nVersion = 1;
 
     Misbehaving(dummyNode.GetId(), 100);
