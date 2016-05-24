@@ -462,6 +462,14 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
         else mnodeman.Remove(pmn->vin);
     }
 
+    if(GetInputAge(vin) < Params().GetConsensus().nMasternodeMinimumConfirmations){
+        LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Input must have at least %d confirmations\n", Params().GetConsensus().nMasternodeMinimumConfirmations);
+        // maybe we miss few blocks, let this mnb to be checked again later
+        mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
+        masternodeSync.mapSeenSyncMNB.erase(GetHash());
+        return false;
+    }
+
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
     CTxOut vout = CTxOut(999.99*COIN, darkSendPool.collateralPubKey);
@@ -485,13 +493,14 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
         }
     }
 
-    LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd - Accepted Masternode entry\n");
+    LogPrint("masternode", "CMasternodeBroadcast::CheckInputsAndAdd - Accepted Masternode entry to mempool (dry-run mode)\n");
 
-    if(GetInputAge(vin) < Params().GetConsensus().nMasternodeMinimumConfirmations){
-        LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Input must have at least %d confirmations\n", Params().GetConsensus().nMasternodeMinimumConfirmations);
-        // maybe we miss few blocks, let this mnb to be checked again later
-        mnodeman.mapSeenMasternodeBroadcast.erase(GetHash());
-        masternodeSync.mapSeenSyncMNB.erase(GetHash());
+
+    // make sure the vout that was signed is related to the transaction that spawned the Masternode
+    //  - this is expensive, so it's only done once per Masternode
+    if(!darkSendSigner.IsVinAssociatedWithPubkey(vin, pubkey)) {
+        LogPrintf("CMasternodeMan::CheckInputsAndAdd - Got mismatched pubkey and vin\n");
+        nDos = 33;
         return false;
     }
 
@@ -515,6 +524,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
             }
         }
     }
+
     LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
     CMasternode mn(*this);
     mnodeman.Add(mn);
