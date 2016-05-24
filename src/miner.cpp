@@ -74,7 +74,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 BlockAssembler::BlockAssembler(const CChainParams& _chainparams)
     : chainparams(_chainparams)
 {
-   // Largest block you're willing to create:
+    // Largest block you're willing to create:
     nBlockMaxSize = GetArg("-blockmaxsize", DEFAULT_BLOCK_MAX_SIZE);
     // Limit to between 1K and MAX_BLOCK_SIZE-1K for sanity:
     nBlockMaxSize = std::max((unsigned int)1000, std::min((unsigned int)(MAX_BLOCK_SIZE-1000), nBlockMaxSize));
@@ -260,6 +260,11 @@ void BlockAssembler::addScoreTxs()
         else {
             iter = clearedTxs.top();
             clearedTxs.pop();
+        }
+
+        // If tx already in block, skip  (added by addPriorityTxs)
+        if (inBlock.count(iter)) {
+            continue;
         }
 
         // If tx is dependent on other mempool txs which haven't yet been included
