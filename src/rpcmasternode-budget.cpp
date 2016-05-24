@@ -359,7 +359,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         uint256 hash = ParseHashV(params[1], "Proposal hash");
 
-        CGovernanceObject* pbudgetProposal = governance.FindProposal(hash);
+        CGovernanceObject* pbudgetProposal = governance.FindGovernanceObject(hash);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
@@ -402,7 +402,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
         }
 
-        CGovernanceObject* pbudgetProposal = governance.FindProposal(hash);
+        CGovernanceObject* pbudgetProposal = governance.FindGovernanceObject(hash);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");

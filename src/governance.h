@@ -13,6 +13,7 @@
 #include "base58.h"
 #include "masternode.h"
 #include "governance-vote.h"
+#include "masternodeman.cpp"
 #include <boost/lexical_cast.hpp>
 #include "init.h"
 
@@ -97,8 +98,8 @@ public:
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
 
-    CGovernanceObject *FindProposal(const std::string &strName);
-    CGovernanceObject *FindProposal(uint256 nHash);
+    CGovernanceObject *FindGovernanceObject(const std::string &strName);
+    CGovernanceObject *FindGovernanceObject(uint256 nHash);
     
     std::vector<CGovernanceObject*> GetAllProposals(int64_t nMoreThanTime);
 
@@ -172,11 +173,7 @@ public:
     bool fCachedFunding;
     bool fCachedValid;
     bool fCachedDelete;
-    bool fCachedClearRegisters;
     bool fCachedEndorsed;
-    bool fCachedReleaseBounty1;
-    bool fCachedReleaseBounty2;
-    bool fCachedReleaseBounty3;
 
     CGovernanceObject();
     CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn);
@@ -184,21 +181,28 @@ public:
 
     // Update local validity : store the values in memory
     void UpdateLocalValidity(const CBlockIndex *pCurrentBlockIndex) {fCachedLocalValidity = IsValid(pCurrentBlockIndex, strLocalValidityError);};
-    void UpdateSentinelEngine(const CBlockIndex *pCurrentBlockIndex)
+    void UpdateSentinelVariables(const CBlockIndex *pCurrentBlockIndex)
     {
         /*
-        #define VOTE_SIGNAL_NONE                0 // SIGNAL VARIOUS THINGS TO HAPPEN:
         #define VOTE_SIGNAL_FUNDING             1 //   -- fund this object for it's stated amount
         #define VOTE_SIGNAL_VALID               2 //   -- this object checks out to sentinel
         #define VOTE_SIGNAL_DELETE              3 //   -- this object should be deleted from memory entirely
-        #define VOTE_SIGNAL_CLEAR_REGISTERS     4 //   -- this object's registers should be cleared (stored elsewhere, e.g. dashdrive)
         #define VOTE_SIGNAL_ENDORSED            5 //   -- officially endorsed by the network somehow (delegation)
-        #define VOTE_SIGNAL_RELEASE_BOUNTY1     6 //   -- release the first bounty associated with this
-        #define VOTE_SIGNAL_RELEASE_BOUNTY2     7 //   --     second
-        #define VOTE_SIGNAL_RELEASE_BOUNTY3     8 //   --     third
         */
 
+        int nMnCount = mnodeman.CountEnabled();
+        int nAbsYesVoteReq = nMnCount / 10;
 
+        // set all flags to false
+        fCachedFunding = false;
+        fCachedValid = false;
+        fCachedDelete = false;
+        fCachedEndorsed = false;
+
+        if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsYesVoteReq) fCachedFunding = true;
+        if(GetAbsoluteYesCount(VOTE_SIGNAL_VALID) >= nAbsYesVoteReq) fCachedValid = true;
+        if(GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsYesVoteReq) fCachedDelete = true;
+        if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsYesVoteReq) fCachedEndorsed = true;
     }
 
     void swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
@@ -219,12 +223,7 @@ public:
         swap(first.fCachedFunding, second.fCachedFunding);
         swap(first.fCachedValid, second.fCachedValid);
         swap(first.fCachedDelete, second.fCachedDelete);
-        swap(first.fCachedClearRegisters, second.fCachedClearRegisters);
         swap(first.fCachedEndorsed, second.fCachedEndorsed);
-        swap(first.fCachedReleaseBounty1, second.fCachedReleaseBounty1);
-        swap(first.fCachedReleaseBounty2, second.fCachedReleaseBounty2);
-        swap(first.fCachedReleaseBounty3, second.fCachedReleaseBounty3);
-
     }
 
     bool HasMinimumRequiredSupport();
