@@ -355,44 +355,44 @@ void CMasternodeSync::Process()
             }
         }
 
-        // if (pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) {
-        //     // MODE : MASTERNODE_SYNC_BUDGET
-        //     if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
-        //         // shall we move onto the next asset
-        //         if(countBudgetItemProp > 0 && countBudgetItemFin)
-        //         {
-        //             if(governance.CountProposalInventoryItems() >= (sumBudgetItemProp / countBudgetItemProp)*0.9)
-        //             {
-        //                 if(governance.CountFinalizedInventoryItems() >= (sumBudgetItemFin / countBudgetItemFin)*0.9)
-        //                 {
-        //                     GetNextAsset();
-        //                     return;
-        //                 }
-        //             }
-        //         }
+        if (pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) {
+            // MODE : MASTERNODE_SYNC_BUDGET
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
+                // shall we move onto the next asset
+                // if(countBudgetItemProp > 0 && countBudgetItemFin)
+                // {
+                //     if(governance.CountProposalInventoryItems() >= (sumBudgetItemProp / countBudgetItemProp)*0.9)
+                //     {
+                //         if(governance.CountFinalizedInventoryItems() >= (sumBudgetItemFin / countBudgetItemFin)*0.9)
+                //         {
+                //             GetNextAsset();
+                //             return;
+                //         }
+                //     }
+                // }
 
-        //         //we'll start rejecting votes if we accidentally get set as synced too soon, this allows plenty of time
-        //         if(lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){
-        //             GetNextAsset();
+                //we'll start rejecting votes if we accidentally get set as synced too soon, this allows plenty of time
+                if(lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){
+                    GetNextAsset();
 
-        //             //try to activate our masternode if possible
-        //             activeMasternode.ManageStatus();
-        //             return;
-        //         }
+                    //try to activate our masternode if possible
+                    activeMasternode.ManageStatus();
+                    return;
+                }
 
-        //         // requesting is the last thing we do, incase we needed to move to the next asset and we've requested from each peer already
+                // requesting is the last thing we do, incase we needed to move to the next asset and we've requested from each peer already
 
-        //         if(pnode->HasFulfilledRequest("busync")) continue;
-        //         pnode->FulfilledRequest("busync");
+                if(pnode->HasFulfilledRequest("busync")) continue;
+                pnode->FulfilledRequest("busync");
 
-        //         uint256 n = uint256();
-        //         pnode->PushMessage(NetMsgType::MNBUDGETVOTESYNC, n); //sync masternode votes
-        //         RequestedMasternodeAttempt++;
+                uint256 n = uint256();
+                pnode->PushMessage(NetMsgType::MNGOVERNANCEVOTESYNC, n); //sync masternode votes
+                RequestedMasternodeAttempt++;
 
-        //         return; //this will cause each peer to get one request each six seconds for the various assets we need
-        //     }
+                return; //this will cause each peer to get one request each six seconds for the various assets we need
+            }
 
-        // }
+        }
     }
 }
 
