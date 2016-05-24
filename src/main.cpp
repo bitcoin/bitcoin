@@ -348,7 +348,8 @@ void InitializeNode(NodeId nodeid, const CNode *pnode) {
     state.address = pnode->addr;
 }
 
-void FinalizeNode(NodeId nodeid) {
+void FinalizeNode(NodeId nodeid, bool& fUpdateConnectionTime) {
+    fUpdateConnectionTime = false;
     LOCK(cs_main);
     CNodeState *state = State(nodeid);
 
@@ -356,7 +357,7 @@ void FinalizeNode(NodeId nodeid) {
         nSyncStarted--;
 
     if (state->nMisbehavior == 0 && state->fCurrentlyConnected) {
-        AddressCurrentlyConnected(state->address);
+        fUpdateConnectionTime = true;
     }
 
     BOOST_FOREACH(const QueuedBlock& entry, state->vBlocksInFlight) {
