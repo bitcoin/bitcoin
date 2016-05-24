@@ -221,7 +221,8 @@ void PrepareShutdown()
     GenerateBitcoins(false, 0, Params());
     StopNode();
 
-    // todo - 12.1 - magic strings as const
+    // STORE DATA CACHES INTO SERIALIZED DAT FILES
+
     CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
     flatdb1.Dump(mnodeman);
     CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
@@ -1824,7 +1825,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 10: Load cache data
 
-    // todo - 12.1 - magic strings as const
+    // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
+
     uiInterface.InitMessage(_("Loading masternode cache..."));
     CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
     flatdb1.Load(mnodeman);

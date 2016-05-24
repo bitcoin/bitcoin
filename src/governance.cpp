@@ -412,13 +412,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
 }
 
-//todo - 12.1 - terrible name - maybe DoesObjectExist?
-bool CGovernanceManager::PropExists(uint256 nHash)
-{
-    if(mapObjects.count(nHash)) return true;
-    return false;
-}
-
 // description: incremental sync with our peers
 // note: incremental syncing seems excessive, well just have clients ask for specific objects and their votes
 // note: 12.1 - remove

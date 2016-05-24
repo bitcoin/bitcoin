@@ -6,18 +6,6 @@
 #include "main.h"
 #include "init.h"
 
-// todo 12.1 - remove the unused
-#include "governance.h"
-#include "masternode.h"
-#include "darksend.h"
-#include "governance.h"
-#include "masternodeman.h"
-#include "masternode-sync.h"
-#include "util.h"
-//#include "addrman.h"
-//#include <boost/filesystem.hpp>
-//#include <boost/lexical_cast.hpp>
-
 CBudgetManager budget;
 CCriticalSection cs_budget;
 

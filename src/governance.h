@@ -109,7 +109,6 @@ public:
     bool AddGovernanceObject (CGovernanceObject& budgetProposal);
     bool UpdateGovernanceObject(CGovernanceVote& vote, CNode* pfrom, std::string& strError);
     bool AddOrUpdateVote(CGovernanceVote& vote, std::string& strError);
-    bool PropExists(uint256 nHash);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void CleanAndRemove(bool fSignatureCheck);
     void CheckAndRemove();
