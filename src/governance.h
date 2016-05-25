@@ -13,7 +13,7 @@
 #include "base58.h"
 #include "masternode.h"
 #include "governance-vote.h"
-#include "masternodeman.cpp"
+#include "masternodeman.h"
 #include <boost/lexical_cast.hpp>
 #include "init.h"
 
