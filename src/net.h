@@ -9,8 +9,6 @@
 #include "amount.h"
 #include "bloom.h"
 #include "compat.h"
-#include "crypto/common.h"
-#include "crypto/sha256.h"
 #include "limitedmap.h"
 #include "netbase.h"
 #include "protocol.h"
@@ -337,7 +335,7 @@ public:
     int64_t nLastRecv;
     int64_t nTimeConnected;
     int64_t nTimeOffset;
-    CAddress addr;
+    const CAddress addr;
     std::string addrName;
     CService addrLocal;
     int nVersion;
@@ -365,7 +363,7 @@ public:
     int nRefCount;
     NodeId id;
 
-    std::vector<unsigned char> vchKeyedNetGroup;
+    const uint64_t nKeyedNetGroup;
 protected:
 
     // Denial-of-service detection/prevention
@@ -454,22 +452,8 @@ private:
     CNode(const CNode&);
     void operator=(const CNode&);
 
-    void CalculateKeyedNetGroup() {
-        static std::vector<unsigned char> vchSecretKey;
-        if (vchSecretKey.empty()) {
-            vchSecretKey.resize(32, 0);
-            GetRandBytes(vchSecretKey.data(), vchSecretKey.size());
-        }
+    static uint64_t CalculateKeyedNetGroup(const CAddress& ad);
 
-        std::vector<unsigned char> vchNetGroup(this->addr.GetGroup());
-
-        CSHA256 hash;
-        hash.Write(begin_ptr(vchNetGroup), vchNetGroup.size());
-        hash.Write(begin_ptr(vchSecretKey), vchSecretKey.size());
-
-        vchKeyedNetGroup.resize(32, 0);
-        hash.Finalize(begin_ptr(vchKeyedNetGroup));
-    }
 public:
 
     NodeId GetId() const {
