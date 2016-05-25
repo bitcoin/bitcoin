@@ -338,11 +338,21 @@ fi
 
 if test x"$use_jni" != x"no"; then
   AX_JNI_INCLUDE_DIR
+  have_jni_dependencies=yes
+  if test x"$enable_module_schnorr" = x"no"; then
+    have_jni_dependencies=no
+  fi
+  if test x"$enable_module_ecdh" = x"no"; then
+    have_jni_dependencies=no
+  fi
   if test "x$JNI_INCLUDE_DIRS" = "x"; then
+    have_jni_dependencies=no
+  fi
+  if test "x$have_jni_dependencies" = "xno"; then
     if test x"$use_jni" = x"yes"; then
-      AC_MSG_ERROR([jni support explicitly requested but headers were not found])
+      AC_MSG_ERROR([jni support explicitly requested but headers/dependencies were not found. Enable ECDH and Schnorr and try again.])
     fi
-    AC_MSG_WARN([jni headers not found. jni support disabled])
+    AC_MSG_WARN([jni headers/dependencies not found. jni support disabled])
     use_jni=no
   else
     use_jni=yes
