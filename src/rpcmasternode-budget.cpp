@@ -38,11 +38,9 @@ int ConvertVoteSignal(std::string strVoteSignal)
     if(strVoteSignal == "funding") return 1;
     if(strVoteSignal == "valid") return 2;
     if(strVoteSignal == "delete") return 3;
-    if(strVoteSignal == "clear_registers") return 4;
-    if(strVoteSignal == "endorsed") return 5;
-    if(strVoteSignal == "release_bounty1") return 6;
-    if(strVoteSignal == "release_bounty2") return 7;
-    if(strVoteSignal == "release_bounty3") return 8;
+    if(strVoteSignal == "endorsed") return 4;
+
+    // ID FIVE THROUGH CUSTOM_START ARE TO BE USED BY GOVERNANCE ENGINE / TRIGGER SYSTEM
 
     // convert custom sentinel outcomes to integer and store
     try {
@@ -59,35 +57,7 @@ int ConvertVoteSignal(std::string strVoteSignal)
 }
 
 /**
-*    NOTE: 12.1 - code needs to be rewritten, much of it's in the incorrect context
-*
-*    Governance Object Creation and Voting
-*    -------------------------------------------------------
-*
-*       This code allows users to create new types of objects. To correctly use the system
-*       please see the governance wiki and code-as-law implementation. Any conflicting entries will be 
-*       automatically downvoted and deleted, requiring resubmission to correct. 
-*
-*    command structure:
-*
-*       For instructions on creating registers, see dashbrain
-*
-*
-*       governance prepare new nTypeIn nParentID "name" epoch-start epoch-end register1 register2 register3
-*           >> fee transaction hash
-*       
-*       governance submit fee-hash nTypeIn nParentID, "name", epoch-start, epoch-end, fee-hash, register1, register2, register3
-*           >> governance object hash
-*       
-*       governance vote(-alias|many) type hash yes|no|abstain
-*           >> success|failure
-*       
-*       governance list
-*           >> flat data representation of the governance system
-*           >> NOTE: this shouldn't be altered, we'll analyze the system outside of this project
-*
-*       governance get hash
-*           >> show one proposal
+*    MN GOVERNANCE RPC COMMAND
 *
 */
 
@@ -359,7 +329,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
         uint256 hash = ParseHashV(params[1], "Proposal hash");
 
-        CGovernanceObject* pbudgetProposal = governance.FindProposal(hash);
+        CGovernanceObject* pbudgetProposal = governance.FindGovernanceObject(hash);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown proposal");
@@ -402,7 +372,7 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote signal. Please using one of the following: (funding|valid|delete|clear_registers|endorsed|release_bounty1|release_bounty2|release_bounty3) OR `custom sentinel code` "); 
         }
 
-        CGovernanceObject* pbudgetProposal = governance.FindProposal(hash);
+        CGovernanceObject* pbudgetProposal = governance.FindGovernanceObject(hash);
 
         if(pbudgetProposal == NULL)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown governance-hash");

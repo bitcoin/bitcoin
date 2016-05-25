@@ -13,6 +13,7 @@
 #include "base58.h"
 #include "masternode.h"
 #include "governance-vote.h"
+#include "masternodeman.h"
 #include <boost/lexical_cast.hpp>
 #include "init.h"
 
@@ -97,8 +98,8 @@ public:
     void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     void NewBlock();
 
-    CGovernanceObject *FindProposal(const std::string &strName);
-    CGovernanceObject *FindProposal(uint256 nHash);
+    CGovernanceObject *FindGovernanceObject(const std::string &strName);
+    CGovernanceObject *FindGovernanceObject(uint256 nHash);
     
     std::vector<CGovernanceObject*> GetAllProposals(int64_t nMoreThanTime);
 
@@ -108,7 +109,6 @@ public:
     bool AddGovernanceObject (CGovernanceObject& budgetProposal);
     bool UpdateGovernanceObject(CGovernanceVote& vote, CNode* pfrom, std::string& strError);
     bool AddOrUpdateVote(CGovernanceVote& vote, std::string& strError);
-    bool PropExists(uint256 nHash);
     std::string GetRequiredPaymentsString(int nBlockHeight);
     void CleanAndRemove(bool fSignatureCheck);
     void CheckAndRemove();
@@ -172,11 +172,7 @@ public:
     bool fCachedFunding;
     bool fCachedValid;
     bool fCachedDelete;
-    bool fCachedClearRegisters;
     bool fCachedEndorsed;
-    bool fCachedReleaseBounty1;
-    bool fCachedReleaseBounty2;
-    bool fCachedReleaseBounty3;
 
     CGovernanceObject();
     CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn);
@@ -184,6 +180,29 @@ public:
 
     // Update local validity : store the values in memory
     void UpdateLocalValidity(const CBlockIndex *pCurrentBlockIndex) {fCachedLocalValidity = IsValid(pCurrentBlockIndex, strLocalValidityError);};
+    void UpdateSentinelVariables(const CBlockIndex *pCurrentBlockIndex)
+    {
+        /*
+        #define VOTE_SIGNAL_FUNDING             1 //   -- fund this object for it's stated amount
+        #define VOTE_SIGNAL_VALID               2 //   -- this object checks out to sentinel
+        #define VOTE_SIGNAL_DELETE              3 //   -- this object should be deleted from memory entirely
+        #define VOTE_SIGNAL_ENDORSED            5 //   -- officially endorsed by the network somehow (delegation)
+        */
+
+        int nMnCount = mnodeman.CountEnabled();
+        int nAbsYesVoteReq = nMnCount / 10;
+
+        // set all flags to false
+        fCachedFunding = false;
+        fCachedValid = false;
+        fCachedDelete = false;
+        fCachedEndorsed = false;
+
+        if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsYesVoteReq) fCachedFunding = true;
+        if(GetAbsoluteYesCount(VOTE_SIGNAL_VALID) >= nAbsYesVoteReq) fCachedValid = true;
+        if(GetAbsoluteYesCount(VOTE_SIGNAL_DELETE) >= nAbsYesVoteReq) fCachedDelete = true;
+        if(GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED) >= nAbsYesVoteReq) fCachedEndorsed = true;
+    }
 
     void swap(CGovernanceObject& first, CGovernanceObject& second) // nothrow
     {
@@ -203,12 +222,7 @@ public:
         swap(first.fCachedFunding, second.fCachedFunding);
         swap(first.fCachedValid, second.fCachedValid);
         swap(first.fCachedDelete, second.fCachedDelete);
-        swap(first.fCachedClearRegisters, second.fCachedClearRegisters);
         swap(first.fCachedEndorsed, second.fCachedEndorsed);
-        swap(first.fCachedReleaseBounty1, second.fCachedReleaseBounty1);
-        swap(first.fCachedReleaseBounty2, second.fCachedReleaseBounty2);
-        swap(first.fCachedReleaseBounty3, second.fCachedReleaseBounty3);
-
     }
 
     bool HasMinimumRequiredSupport();
@@ -225,6 +239,7 @@ public:
     void CleanAndRemove(bool fSignatureCheck);
     void Relay();
 
+
     uint256 GetHash(){
 
         /*
@@ -236,7 +251,10 @@ public:
         */
 
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << nHashParent;
+        ss << nRevision;
         ss << strName;
+        ss << nTime;
         ss << strData;
         uint256 h1 = ss.GetHash();
 
@@ -256,6 +274,7 @@ public:
 
     bool SetData(std::string& strError, std::string strDataIn)
     {
+        // (assumption) this is equal to pythons len(strData) > 512*4, I think 
         if(strDataIn.size() > 512*4)
         {
             strError = "Too big.";

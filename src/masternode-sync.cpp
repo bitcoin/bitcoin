@@ -195,10 +195,10 @@ void CMasternodeSync::ClearFulfilledRequest()
 
     BOOST_FOREACH(CNode* pnode, vNodes)
     {
-        pnode->ClearFulfilledRequest("getspork");
-        pnode->ClearFulfilledRequest("mnsync");
-        pnode->ClearFulfilledRequest("mnwsync");
-        pnode->ClearFulfilledRequest("busync");
+        pnode->ClearFulfilledRequest("spork-sync");
+        pnode->ClearFulfilledRequest("masternode-winner-sync");
+        pnode->ClearFulfilledRequest("governance-sync");
+        pnode->ClearFulfilledRequest("masternode-sync");
     }
 }
 
@@ -213,6 +213,7 @@ void CMasternodeSync::Process()
     int nMnCount = mnodeman.CountEnabled();
 
     // RESET SYNCING INCASE OF FAILURE
+
     {
         if(IsSynced()) {
             /* 
@@ -272,9 +273,9 @@ void CMasternodeSync::Process()
         */
 
         // ALWAYS ASK FOR SPORKS AS WE SYNC (we skip this mode now)
-        if(!pnode->HasFulfilledRequest("getspork"))
+        if(!pnode->HasFulfilledRequest("spork-sync"))
         {
-            pnode->FulfilledRequest("getspork");
+            pnode->FulfilledRequest("spork-sync");
             pnode->PushMessage(NetMsgType::GETSPORKS); //get current network sporks
         }
 
@@ -286,7 +287,8 @@ void CMasternodeSync::Process()
 
         if (pnode->nVersion >= mnpayments.GetMinMasternodePaymentsProto()) {
 
-            // MODE : MASTERNODE_SYNC_LIST
+            // SYNC MASTERNODE LIST FROM OTHER CONNECTED CLIENTS
+
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_LIST) {
 
                 // shall we move onto the next asset?
@@ -303,8 +305,8 @@ void CMasternodeSync::Process()
 
                 // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
 
-                if(pnode->HasFulfilledRequest("mnsync")) continue;
-                pnode->FulfilledRequest("mnsync");
+                if(pnode->HasFulfilledRequest("masternode-sync")) continue;
+                pnode->FulfilledRequest("masternode-sync");
 
                 //see if we've synced the masternode list
                 /* note: Is this activing up? It's probably related to int CMasternodeMan::GetEstimatedMasternodes(int nBlock) */
@@ -315,7 +317,8 @@ void CMasternodeSync::Process()
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
-            // MODE : MASTERNODE_SYNC_MNW
+            // SYNC MASTERNODE WINNERS FROM OTHER CONNECTED CLIENTS
+
             if(RequestedMasternodeAssets == MASTERNODE_SYNC_MNW) {
 
                 // Shall we move onto the next asset?
@@ -340,13 +343,51 @@ void CMasternodeSync::Process()
 
                 // requesting is the last thing we do (incase we needed to move to the next asset and we've requested from each peer already)
 
-                if(pnode->HasFulfilledRequest("mnwsync")) continue;
-                pnode->FulfilledRequest("mnwsync");
+                if(pnode->HasFulfilledRequest("masternode-winner-sync")) continue;
+                pnode->FulfilledRequest("masternode-winner-sync");
 
                 int nMnCount = mnodeman.CountEnabled();
                 pnode->PushMessage(NetMsgType::MNWINNERSSYNC, nMnCount); //sync payees
                 RequestedMasternodeAttempt++;
 
+
+                return; //this will cause each peer to get one request each six seconds for the various assets we need
+            }
+        }
+
+        if (pnode->nVersion >= MIN_BUDGET_PEER_PROTO_VERSION) {
+            // MODE : MASTERNODE_SYNC_BUDGET
+            if(RequestedMasternodeAssets == MASTERNODE_SYNC_BUDGET){
+                // shall we move onto the next asset
+                // if(countBudgetItemProp > 0 && countBudgetItemFin)
+                // {
+                //     if(governance.CountProposalInventoryItems() >= (sumBudgetItemProp / countBudgetItemProp)*0.9)
+                //     {
+                //         if(governance.CountFinalizedInventoryItems() >= (sumBudgetItemFin / countBudgetItemFin)*0.9)
+                //         {
+                //             GetNextAsset();
+                //             return;
+                //         }
+                //     }
+                // }
+
+                //we'll start rejecting votes if we accidentally get set as synced too soon, this allows plenty of time
+                if(lastBudgetItem < GetTime() - MASTERNODE_SYNC_TIMEOUT){
+                    GetNextAsset();
+
+                    //try to activate our masternode if possible
+                    activeMasternode.ManageStatus();
+                    return;
+                }
+
+                // requesting is the last thing we do, incase we needed to move to the next asset and we've requested from each peer already
+
+                if(pnode->HasFulfilledRequest("governance-sync")) continue;
+                pnode->FulfilledRequest("governance-sync");
+
+                uint256 n = uint256();
+                pnode->PushMessage(NetMsgType::MNGOVERNANCEVOTESYNC, n); //sync masternode votes
+                RequestedMasternodeAttempt++;
 
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }

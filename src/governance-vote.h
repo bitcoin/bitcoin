@@ -27,20 +27,20 @@ class CGovernanceVote;
 
 #define VOTE_SIGNAL_NONE                0 // SIGNAL VARIOUS THINGS TO HAPPEN:
 #define VOTE_SIGNAL_FUNDING             1 //   -- fund this object for it's stated amount
-#define VOTE_SIGNAL_VALID               2 //   -- this object checks out to sentinel
+#define VOTE_SIGNAL_VALID               2 //   -- this object checks out in sentinel engine
 #define VOTE_SIGNAL_DELETE              3 //   -- this object should be deleted from memory entirely
-#define VOTE_SIGNAL_CLEAR_REGISTERS     4 //   -- this object's registers should be cleared (stored elsewhere, e.g. dashdrive)
-#define VOTE_SIGNAL_ENDORSED            5 //   -- officially endorsed by the network somehow (delegation)
-#define VOTE_SIGNAL_RELEASE_BOUNTY1     6 //   -- release the first bounty associated with this
-#define VOTE_SIGNAL_RELEASE_BOUNTY2     7 //   --     second
-#define VOTE_SIGNAL_RELEASE_BOUNTY3     8 //   --     third
-#define VOTE_SIGNAL_NOOP1               9 // FOR FURTHER EXPANSION
-#define VOTE_SIGNAL_NOOP2               10 // 
-#define VOTE_SIGNAL_NOOP3               11 // 
-#define VOTE_SIGNAL_NOOP4               12 // 
-#define VOTE_SIGNAL_NOOP5               13 // 
-#define VOTE_SIGNAL_NOOP6               14 // 
-#define VOTE_SIGNAL_NOOP7               15 // 
+#define VOTE_SIGNAL_ENDORSED            4 //   -- officially endorsed by the network somehow (delegation)
+#define VOTE_SIGNAL_NOOP1               5 // FOR FURTHER EXPANSION
+#define VOTE_SIGNAL_NOOP2               6 // 
+#define VOTE_SIGNAL_NOOP3               7 // 
+#define VOTE_SIGNAL_NOOP4               8 // 
+#define VOTE_SIGNAL_NOOP5               9 // 
+#define VOTE_SIGNAL_NOOP6               10 // 
+#define VOTE_SIGNAL_NOOP7               11 // 
+#define VOTE_SIGNAL_NOOP8               12 // 
+#define VOTE_SIGNAL_NOOP9               13 // 
+#define VOTE_SIGNAL_NOOP10              14 // 
+#define VOTE_SIGNAL_NOOP11              15 // 
 #define VOTE_SIGNAL_CUSTOM_START        16 // SENTINEL CUSTOM ACTIONS 
 #define VOTE_SIGNAL_CUSTOM_END          35 //        16-35
 

@@ -1499,7 +1499,6 @@ CAmount GetBlockSubsidy(int nPrevBits, int nPrevHeight, const Consensus::Params&
     // LogPrintf("height %u diff %4.2f reward %i \n", nPrevHeight, dDiff, nSubsidy);
     nSubsidy *= COIN;
 
-    // updated - 12.1 - unified logic
     // yearly decline of production by 7.1% per year, projected 21.3M coins max by year 2050.
     for(int i = consensusParams.nSubsidyHalvingInterval; i <= nPrevHeight; i += consensusParams.nSubsidyHalvingInterval) nSubsidy -= nSubsidy/14;
 
@@ -5605,9 +5604,9 @@ bool static ProcessMessage(CNode* pfrom, string strCommand, CDataStream& vRecv, 
         if (found)
         {
             //probably one the extensions
-            darkSendPool.ProcessMessageDarksend(pfrom, strCommand, vRecv);
+            darkSendPool.ProcessMessage(pfrom, strCommand, vRecv);
             mnodeman.ProcessMessage(pfrom, strCommand, vRecv);
-            mnpayments.ProcessMessageMasternodePayments(pfrom, strCommand, vRecv);
+            mnpayments.ProcessMessage(pfrom, strCommand, vRecv);
             ProcessMessageInstantX(pfrom, strCommand, vRecv);
             ProcessSpork(pfrom, strCommand, vRecv);
             masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);

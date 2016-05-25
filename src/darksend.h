@@ -360,7 +360,7 @@ public:
      *        dssub    | Darksend Subscribe To
      * \param vRecv
      */
-    void ProcessMessageDarksend(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
 
     void InitCollateralAddress(){
         SetCollateralAddress(Params().DarksendPoolDummyAddress());

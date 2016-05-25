@@ -6,18 +6,6 @@
 #include "main.h"
 #include "init.h"
 
-// todo 12.1 - remove the unused
-#include "governance.h"
-#include "masternode.h"
-#include "darksend.h"
-#include "governance.h"
-#include "masternodeman.h"
-#include "masternode-sync.h"
-#include "util.h"
-//#include "addrman.h"
-//#include <boost/filesystem.hpp>
-//#include <boost/lexical_cast.hpp>
-
 CBudgetManager budget;
 CCriticalSection cs_budget;
 
@@ -783,7 +771,7 @@ std::string CFinalizedBudget::GetProposals()
     std::string ret = "";
 
     BOOST_FOREACH(CTxBudgetPayment& budgetPayment, vecBudgetPayments){
-        CGovernanceObject* pbudgetProposal = governance.FindProposal(budgetPayment.nProposalHash);
+        CGovernanceObject* pbudgetProposal = governance.FindGovernanceObject(budgetPayment.nProposalHash);
 
         std::string token = budgetPayment.nProposalHash.ToString();
 
@@ -807,7 +795,7 @@ std::string CFinalizedBudget::GetStatus()
             continue;
         }
 
-        CGovernanceObject* pbudgetProposal =  governance.FindProposal(budgetPayment.nProposalHash);
+        CGovernanceObject* pbudgetProposal =  governance.FindGovernanceObject(budgetPayment.nProposalHash);
         if(!pbudgetProposal){
             if(retBadHashes == ""){
                 retBadHashes = "Unknown proposal hash! Check this proposal before voting" + budgetPayment.nProposalHash.ToString();

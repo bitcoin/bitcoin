@@ -127,8 +127,20 @@ void CGovernanceManager::CheckAndRemove()
 {
     LogPrintf("CGovernanceManager::CheckAndRemove \n");
 
-    // 12.1 -- disabled -- use "delete" voting mechanism 
- 
+    // DELETE OBJECTS WHICH MASTERNODE HAS FLAGGED DELETE=TRUE
+
+    std::map<uint256, CGovernanceObject>::iterator it = mapObjects.begin();
+    while(it != mapObjects.end())
+    {
+        CGovernanceObject* pObj = &((*it).second);
+
+        pObj->UpdateLocalValidity(pCurrentBlockIndex);
+        pObj->UpdateSentinelVariables(pCurrentBlockIndex);
+        ++it;
+    }
+
+    // UPDATE CACHING MECHANISMS FOR GOVERNANCE OBJECTS
+
     if(!pCurrentBlockIndex) return;
 
     std::string strError = "";
@@ -136,14 +148,18 @@ void CGovernanceManager::CheckAndRemove()
     std::map<uint256, CGovernanceObject>::iterator it2 = mapObjects.begin();
     while(it2 != mapObjects.end())
     {
-        CGovernanceObject* pbudgetProposal = &((*it2).second);
+        CGovernanceObject* pObj = &((*it2).second);
 
-        pbudgetProposal->UpdateLocalValidity(pCurrentBlockIndex);
+        // UPDATE LOCAL VALIDITY AGAINST CRYPTO DATA
+        pObj->UpdateLocalValidity(pCurrentBlockIndex);
+
+        // UPDATE SENTINEL SIGNALING VARIABLES
+        pObj->UpdateSentinelVariables(pCurrentBlockIndex);
         ++it2;
     }
 }
 
-CGovernanceObject *CGovernanceManager::FindProposal(const std::string &strName)
+CGovernanceObject *CGovernanceManager::FindGovernanceObject(const std::string &strName)
 {
     //find the prop with the highest yes count
 
@@ -164,7 +180,7 @@ CGovernanceObject *CGovernanceManager::FindProposal(const std::string &strName)
     return pbudgetProposal;
 }
 
-CGovernanceObject *CGovernanceManager::FindProposal(uint256 nHash)
+CGovernanceObject *CGovernanceManager::FindGovernanceObject(uint256 nHash)
 {
     LOCK(cs);
 
@@ -396,13 +412,6 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, std::string& strCommand, C
 
 }
 
-//todo - 12.1 - terrible name - maybe DoesObjectExist?
-bool CGovernanceManager::PropExists(uint256 nHash)
-{
-    if(mapObjects.count(nHash)) return true;
-    return false;
-}
-
 // description: incremental sync with our peers
 // note: incremental syncing seems excessive, well just have clients ask for specific objects and their votes
 // note: 12.1 - remove
@@ -458,10 +467,11 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
 
     int nInvCount = 0;
 
-    // sync gov objects
+    // SYNC GOVERNANCE OBJECTS WITH OTHER CLIENT
+
     std::map<uint256, int>::iterator it1 = mapSeenGovernanceObjects.begin();
     while(it1 != mapSeenGovernanceObjects.end()){
-        CGovernanceObject* pbudgetProposal = FindProposal((*it1).first);
+        CGovernanceObject* pbudgetProposal = FindGovernanceObject((*it1).first);
         if(pbudgetProposal && pbudgetProposal->fCachedValid && ((nProp == uint256() || ((*it1).first == nProp)))){
             // Push the inventory budget proposal message over to the other client
             pfrom->PushInventory(CInv(MSG_BUDGET_PROPOSAL, (*it1).first));
@@ -470,7 +480,8 @@ void CGovernanceManager::Sync(CNode* pfrom, uint256 nProp)
         ++it1;
     }
 
-    // sync votes
+    // SYNC OUR GOVERNANCE OBJECT VOTES WITH THEIR GOVERNANCE OBJECT VOTES
+
     std::map<uint256, CGovernanceVote>::iterator it2 = mapVotes.begin();
     while(it2 != mapVotes.end()){
         pfrom->PushInventory(CInv(MSG_BUDGET_VOTE, (*it2).first));
@@ -549,11 +560,7 @@ CGovernanceObject::CGovernanceObject()
     fCachedFunding = false;
     fCachedValid = true;
     fCachedDelete = false;
-    fCachedClearRegisters = false;
     fCachedEndorsed = false;
-    fCachedReleaseBounty1 = false;
-    fCachedReleaseBounty2 = false;
-    fCachedReleaseBounty3 = false;
 
 }
 
