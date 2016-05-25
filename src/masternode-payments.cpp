@@ -662,12 +662,28 @@ bool CMasternodePaymentWinner::IsValid(CNode* pnode, std::string& strError)
 
 bool CMasternodePayments::ProcessBlock(int nBlockHeight)
 {
-    if(!fMasterNode) return false;
+    // DETERMINE IF WE SHOULD BE VOTING FOR THE NEXT PAYEE
 
-    CMasternodePaymentWinner newWinner(activeMasternode.vin);
+    if(!fMasterNode) return false;
+    
+    int n = mnodeman.GetMasternodeRank(activeMasternode.vin, nBlockHeight-100, MIN_MNW_PEER_PROTO_VERSION);        
+       
+    if(n == -1)       
+    {     
+        LogPrint("mnpayments", "CMasternodePayments::ProcessBlock - Unknown Masternode\n");       
+        return false;     
+    }     
+
+    if(n > MNPAYMENTS_SIGNATURES_TOTAL)       
+    {     
+        LogPrint("mnpayments", "CMasternodePayments::ProcessBlock - Masternode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, n);        
+        return false;     
+    }      
+
 
     // LOCATE THE NEXT MASTERNODE WHICH SHOULD BE PAID
 
+    CMasternodePaymentWinner newWinner(activeMasternode.vin);
     {
         LogPrintf("CMasternodePayments::ProcessBlock() Start nHeight %d - vin %s. \n", nBlockHeight, activeMasternode.vin.ToString());
 
@@ -693,6 +709,8 @@ bool CMasternodePayments::ProcessBlock(int nBlockHeight)
             LogPrintf("CMasternodePayments::ProcessBlock() Failed to find masternode to pay\n");
         }
     }
+
+    // SIGN MESSAGE TO NETWORK WITH OUR MASTERNODE KEYS
 
     std::string errorMessage;
     CPubKey pubKeyMasternode;
