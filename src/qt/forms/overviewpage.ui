@@ -1034,8 +1034,8 @@
          <widget class="QPushButton" name="darksendReset">
           <property name="geometry">
            <rect>
-            <x>220</x>
-            <y>319</y>
+            <x>230</x>
+            <y>320</y>
             <width>221</width>
             <height>28</height>
            </rect>
