@@ -41,6 +41,7 @@ class TestNode(NodeConnCB):
         self.ping_counter = 1
         self.last_pong = msg_pong(0)
         self.sleep_time = 0.05
+        self.getdataset = set()
 
     def add_connection(self, conn):
         self.connection = conn
@@ -57,6 +58,8 @@ class TestNode(NodeConnCB):
         self.last_block.calc_sha256()
 
     def on_getdata(self, conn, message):
+        for inv in message.inv:
+            self.getdataset.add(inv.hash)
         self.last_getdata = message
 
     def on_pong(self, conn, message):
@@ -114,6 +117,16 @@ class TestNode(NodeConnCB):
             self.send_message(msg_inv(inv=[CInv(2, block.sha256)]))
         self.wait_for_getdata()
         return
+
+    def announce_block(self, block, use_header):
+        with mininode_lock:
+            self.last_getdata = None
+        if use_header:
+            msg = msg_headers()
+            msg.headers = [ CBlockHeader(block) ]
+            self.send_message(msg)
+        else:
+            self.send_message(msg_inv(inv=[CInv(2, block.sha256)]))
 
     def request_block(self, blockhash, inv_type, timeout=60):
         with mininode_lock:
@@ -920,6 +933,7 @@ class SegWitTest(BitcoinTestFramework):
 
     # Test that block requests to NODE_WITNESS peer are with MSG_WITNESS_FLAG
     # This is true regardless of segwit activation.
+    # Also test that we don't ask for blocks from unupgraded peers
     def test_block_relay(self, segwit_activated):
         print("\tTesting block relay")
 
@@ -927,7 +941,6 @@ class SegWitTest(BitcoinTestFramework):
         # witness blocks.
         # Test announcing a block via inv results in a getdata, and that
         # announcing a version 4 or random VB block with a header results in a getdata
-
         block1 = self.build_next_block()
         block1.solve()
 
@@ -985,6 +998,19 @@ class SegWitTest(BitcoinTestFramework):
             assert_equal(wit_block.serialize(False), non_wit_block.serialize())
             assert_equal(wit_block.serialize(True), block.serialize(True))
 
+            # Upgraded node should not ask for blocks from unupgraded
+            block4 = self.build_next_block(nVersion=4)
+            block4.solve()
+            self.old_node.getdataset = set()
+            # Blocks can be requested via direct-fetch (immediately upon processing the announcement)
+            # or via parallel download (with an indeterminate delay from processing the announcement)
+            # so to test that a block is NOT requested, we could guess a time period to sleep for,
+            # and then check. We can avoid the sleep() by taking advantage of transaction getdata's
+            # being processed after block getdata's, and announce a transaction as well,
+            # and then check to see if that particular getdata has been received.
+            self.old_node.announce_block(block4, use_header=False)
+            self.old_node.announce_tx_and_wait_for_getdata(block4.vtx[0])
+            assert(block4.sha256 not in self.old_node.getdataset)
 
     # Verify that future segwit upgraded transactions are non-standard,
     # but valid in blocks. Can run this before and after segwit activation.
