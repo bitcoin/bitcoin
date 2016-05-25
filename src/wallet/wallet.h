@@ -631,8 +631,8 @@ public:
      */
     bool SelectCoinsMinConf(const CAmount& nTargetValue, int nConfMine, int nConfTheirs, std::vector<COutput> vCoins, std::set<std::pair<const CWalletTx*,unsigned int> >& setCoinsRet, CAmount& nValueRet) const;
 
-    bool SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const;
-    bool SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, CAmount& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax);
+    bool SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax) const;
+    bool SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax);
     bool SelectCoinsDarkDenominated(CAmount nTargetValue, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet) const;
     bool HasCollateralInputs(bool fOnlyConfirmed = true) const;
     bool IsCollateralAmount(CAmount nInputAmount) const;
@@ -641,9 +641,9 @@ public:
     CAmount GetTotalValue(std::vector<CTxIn> vCoins);
 
     // get the Darksend chain depth for a given input
-    int GetRealInputDarksendRounds(CTxIn in, int rounds) const;
+    int GetRealInputPrivateSendRounds(CTxIn in, int rounds) const;
     // respect current settings
-    int GetInputDarksendRounds(CTxIn in) const;
+    int GetInputPrivateSendRounds(CTxIn in) const;
 
     bool IsDenominated(const CTxIn &txin) const;
     bool IsDenominated(const CTransaction& tx) const;

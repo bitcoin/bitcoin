@@ -57,7 +57,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 "Enable InstantSend, show confirmations for locked transactions (bool, default: "
 "%s)"),
 QT_TRANSLATE_NOOP("dash-core", ""
-"Enable use of automated darksend for funds stored in this wallet (0-1, "
+"Enable use of automated privatesend for funds stored in this wallet (0-1, "
 "default: %u)"),
 QT_TRANSLATE_NOOP("dash-core", ""
 "Enter regression test mode, which uses a special chain in which blocks can "

@@ -344,11 +344,11 @@ static const CRPCCommand vRPCCommands[] =
     { "dash",               "spork",                  &spork,                  true  },
     { "dash",               "getpoolinfo",            &getpoolinfo,            true  },
 #ifdef ENABLE_WALLET
-    { "dash",               "darksend",               &darksend,               false },
+    { "dash",               "privatesend",            &privatesend,            false },
 
     /* Wallet */
     { "wallet",             "keepass",                &keepass,                true },
-    { "wallet",             "sendtoaddressix",        &sendtoaddressix,        false },
+    { "wallet",             "instantsendtoaddress",   &instantsendtoaddress,   false },
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true  },
     { "wallet",             "backupwallet",           &backupwallet,           true  },
     { "wallet",             "dumpprivkey",            &dumpprivkey,            true  },

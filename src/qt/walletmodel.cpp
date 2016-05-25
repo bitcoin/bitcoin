@@ -130,13 +130,13 @@ void WalletModel::pollBalanceChanged()
     if(!lockWallet)
         return;
 
-    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks || nDarksendRounds != cachedDarksendRounds || cachedTxLocks != nCompleteTXLocks)
+    if(fForceCheckBalanceChanged || chainActive.Height() != cachedNumBlocks || nPrivateSendRounds != cachedPrivateSendRounds || cachedTxLocks != nCompleteTXLocks)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = chainActive.Height();
-        cachedDarksendRounds = nDarksendRounds;
+        cachedPrivateSendRounds = nPrivateSendRounds;
 
         checkBalanceChanged();
         if(transactionTableModel)

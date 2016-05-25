@@ -19,11 +19,11 @@
 #include <iomanip>
 #include <univalue.h>
 
-UniValue darksend(const UniValue& params, bool fHelp)
+UniValue privatesend(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "darksend \"command\"\n"
+            "privatesend \"command\"\n"
             "\nArguments:\n"
             "1. \"command\"        (string or set of strings, required) The command to execute\n"
             "\nAvailable commands:\n"
@@ -40,14 +40,14 @@ UniValue darksend(const UniValue& params, bool fHelp)
         if(fMasterNode)
             return "Mixing is not supported from masternodes";
 
-        fEnableDarksend = true;
+        fEnablePrivateSend = true;
         bool result = darkSendPool.DoAutomaticDenominating();
-//        fEnableDarksend = result;
+//        fEnablePrivateSend = result;
         return "Mixing " + (result ? "started successfully" : ("start failed: " + darkSendPool.GetStatus() + ", will retry"));
     }
 
     if(params[0].get_str() == "stop"){
-        fEnableDarksend = false;
+        fEnablePrivateSend = false;
         return "Mixing was stopped";
     }
 
@@ -60,7 +60,7 @@ UniValue darksend(const UniValue& params, bool fHelp)
         return "Mixing status: " + darkSendPool.GetStatus();
     }
 
-    return "Unknown command, please see \"help darksend\"";
+    return "Unknown command, please see \"help privatesend\"";
 }
 
 UniValue getpoolinfo(const UniValue& params, bool fHelp)

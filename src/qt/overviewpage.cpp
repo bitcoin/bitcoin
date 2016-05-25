@@ -157,7 +157,7 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
             ui->darksendReset->setText("(" + tr("Disabled") + ")");
             ui->frameDarksend->setEnabled(false);
         } else {
-            if(!fEnableDarksend){
+            if(!fEnablePrivateSend){
                 ui->toggleDarksend->setText(tr("Start Mixing"));
             } else {
                 ui->toggleDarksend->setText(tr("Stop Mixing"));
@@ -337,7 +337,7 @@ void OverviewPage::updateDarksendProgress()
 
         // when balance is zero just show info from settings
         strAnonymizeDashAmount = strAnonymizeDashAmount.remove(strAnonymizeDashAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
-        strAmountAndRounds = strAnonymizeDashAmount + " / " + tr("%n Rounds", "", nDarksendRounds);
+        strAmountAndRounds = strAnonymizeDashAmount + " / " + tr("%n Rounds", "", nPrivateSendRounds);
 
         ui->labelAmountRounds->setToolTip(tr("No inputs detected"));
         ui->labelAmountRounds->setText(strAmountAndRounds);
@@ -369,7 +369,7 @@ void OverviewPage::updateDarksendProgress()
         ui->labelAmountRounds->setToolTip(tr("Found enough compatible inputs to anonymize %1")
                                           .arg(strAnonymizeDashAmount));
         strAnonymizeDashAmount = strAnonymizeDashAmount.remove(strAnonymizeDashAmount.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
-        strAmountAndRounds = strAnonymizeDashAmount + " / " + tr("%n Rounds", "", nDarksendRounds);
+        strAmountAndRounds = strAnonymizeDashAmount + " / " + tr("%n Rounds", "", nPrivateSendRounds);
     } else {
         QString strMaxToAnonymize = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, nMaxToAnonymize, false, BitcoinUnits::separatorAlways);
         ui->labelAmountRounds->setToolTip(tr("Not enough compatible inputs to anonymize <span style='color:red;'>%1</span>,<br>"
@@ -379,7 +379,7 @@ void OverviewPage::updateDarksendProgress()
         strMaxToAnonymize = strMaxToAnonymize.remove(strMaxToAnonymize.indexOf("."), BitcoinUnits::decimals(nDisplayUnit) + 1);
         strAmountAndRounds = "<span style='color:red;'>" +
                 QString(BitcoinUnits::factor(nDisplayUnit) == 1 ? "" : "~") + strMaxToAnonymize +
-                " / " + tr("%n Rounds", "", nDarksendRounds) + "</span>";
+                " / " + tr("%n Rounds", "", nPrivateSendRounds) + "</span>";
     }
     ui->labelAmountRounds->setText(strAmountAndRounds);
 
@@ -406,7 +406,7 @@ void OverviewPage::updateDarksendProgress()
 
     // apply some weights to them ...
     float denomWeight = 1;
-    float anonNormWeight = nDarksendRounds;
+    float anonNormWeight = nPrivateSendRounds;
     float anonFullWeight = 2;
     float fullWeight = denomWeight + anonNormWeight + anonFullWeight;
     // ... and calculate the whole progress
@@ -422,7 +422,7 @@ void OverviewPage::updateDarksendProgress()
                           tr("Denominated") + ": %2%<br/>" +
                           tr("Mixed") + ": %3%<br/>" +
                           tr("Anonymized") + ": %4%<br/>" +
-                          tr("Denominated inputs have %5 of %n rounds on average", "", nDarksendRounds))
+                          tr("Denominated inputs have %5 of %n rounds on average", "", nPrivateSendRounds))
             .arg(progress).arg(denomPart).arg(anonNormPart).arg(anonFullPart)
             .arg(nAverageAnonymizedRounds);
     ui->darksendProgress->setToolTip(strToolPip);
@@ -440,7 +440,7 @@ void OverviewPage::darkSendStatus()
     if(((nBestHeight - darkSendPool.cachedNumBlocks) / (GetTimeMillis() - nLastDSProgressBlockTime + 1) > 1)) return;
     nLastDSProgressBlockTime = GetTimeMillis();
 
-    if(!fEnableDarksend) {
+    if(!fEnablePrivateSend) {
         if(nBestHeight != darkSendPool.cachedNumBlocks)
         {
             darkSendPool.cachedNumBlocks = nBestHeight;
@@ -506,7 +506,7 @@ void OverviewPage::toggleDarksend(){
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
     }
-    if(!fEnableDarksend){
+    if(!fEnablePrivateSend){
         int64_t balance = currentBalance;
         float minAmount = 1.49 * COIN;
         if(balance < minAmount){
@@ -535,10 +535,10 @@ void OverviewPage::toggleDarksend(){
 
     }
 
-    fEnableDarksend = !fEnableDarksend;
+    fEnablePrivateSend = !fEnablePrivateSend;
     darkSendPool.cachedNumBlocks = std::numeric_limits<int>::max();
 
-    if(!fEnableDarksend){
+    if(!fEnablePrivateSend){
         ui->toggleDarksend->setText(tr("Start Mixing"));
         darkSendPool.UnlockCoins();
     } else {

@@ -1030,7 +1030,7 @@ CAmount CWallet::GetDebit(const CTxIn &txin, const isminefilter& filter) const
 }
 
 // Recursively determine the rounds of a given input (How deep is the Darksend chain for a given input)
-int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
+int CWallet::GetRealInputPrivateSendRounds(CTxIn in, int rounds) const
 {
     static std::map<uint256, CMutableTransaction> mDenomWtxes;
 
@@ -1046,7 +1046,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         // not known yet, let's add it
         if(mdwi == mDenomWtxes.end())
         {
-            LogPrint("darksend", "GetInputDarksendRounds INSERTING %s\n", hash.ToString());
+            LogPrint("privatesend", "GetInputPrivateSendRounds INSERTING %s\n", hash.ToString());
             mDenomWtxes[hash] = CMutableTransaction(*wtx);
         }
         // found and it's not an initial value, just return it
@@ -1060,14 +1060,14 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         if(nout >= wtx->vout.size())
         {
             // should never actually hit this
-            LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
+            LogPrint("privatesend", "GetInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, -4);
             return -4;
         }
 
         if(pwalletMain->IsCollateralAmount(wtx->vout[nout].nValue))
         {
             mDenomWtxes[hash].vout[nout].nRounds = -3;
-            LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("privatesend", "GetInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -1075,7 +1075,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         if(/*rounds == 0 && */!IsDenominatedAmount(wtx->vout[nout].nValue)) //NOT DENOM
         {
             mDenomWtxes[hash].vout[nout].nRounds = -2;
-            LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("privatesend", "GetInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -1088,7 +1088,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         if(!fAllDenoms)
         {
             mDenomWtxes[hash].vout[nout].nRounds = 0;
-            LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+            LogPrint("privatesend", "GetInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
             return mDenomWtxes[hash].vout[nout].nRounds;
         }
 
@@ -1099,7 +1099,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         {
             if(IsMine(in2))
             {
-                int n = GetRealInputDarksendRounds(in2, rounds+1);
+                int n = GetRealInputPrivateSendRounds(in2, rounds+1);
                 // denom found, find the shortest chain or initially assign nShortest with the first found value
                 if(n >= 0 && (n < nShortest || nShortest == -10))
                 {
@@ -1111,7 +1111,7 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
         mDenomWtxes[hash].vout[nout].nRounds = fDenomFound
                 ? (nShortest >= 15 ? 16 : nShortest + 1) // good, we a +1 to the shortest one but only 16 rounds max allowed
                 : 0;            // too bad, we are the fist one in that chain
-        LogPrint("darksend", "GetInputDarksendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
+        LogPrint("privatesend", "GetInputPrivateSendRounds UPDATED   %s %3d %3d\n", hash.ToString(), nout, mDenomWtxes[hash].vout[nout].nRounds);
         return mDenomWtxes[hash].vout[nout].nRounds;
     }
 
@@ -1119,10 +1119,10 @@ int CWallet::GetRealInputDarksendRounds(CTxIn in, int rounds) const
 }
 
 // respect current settings
-int CWallet::GetInputDarksendRounds(CTxIn in) const {
+int CWallet::GetInputPrivateSendRounds(CTxIn in) const {
     LOCK(cs_wallet);
-    int realDarksendRounds = GetRealInputDarksendRounds(in, 0);
-    return realDarksendRounds > nDarksendRounds ? nDarksendRounds : realDarksendRounds;
+    int realPrivateSendRounds = GetRealInputPrivateSendRounds(in, 0);
+    return realPrivateSendRounds > nPrivateSendRounds ? nPrivateSendRounds : realPrivateSendRounds;
 }
 
 bool CWallet::IsDenominated(const CTxIn &txin) const
@@ -1682,8 +1682,8 @@ CAmount CWalletTx::GetAnonymizableCredit(bool fUseCache) const
         // otherwise they will just lead to higher fee / lower priority
         if(vout[i].nValue <= darkSendDenominations[darkSendDenominations.size() - 1]/10) continue;
 
-        const int rounds = pwallet->GetInputDarksendRounds(vin);
-        if(rounds >=-2 && rounds < nDarksendRounds) {
+        const int rounds = pwallet->GetInputPrivateSendRounds(vin);
+        if(rounds >=-2 && rounds < nPrivateSendRounds) {
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error("CWalletTx::GetAnonamizableCredit() : value out of range");
@@ -1716,8 +1716,8 @@ CAmount CWalletTx::GetAnonymizedCredit(bool fUseCache) const
 
         if(pwallet->IsSpent(hashTx, i) || !pwallet->IsDenominated(vin)) continue;
 
-        const int rounds = pwallet->GetInputDarksendRounds(vin);
-        if(rounds >= nDarksendRounds){
+        const int rounds = pwallet->GetInputPrivateSendRounds(vin);
+        if(rounds >= nPrivateSendRounds){
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error("CWalletTx::GetAnonymizedCredit() : value out of range");
@@ -1967,7 +1967,7 @@ double CWallet::GetAverageAnonymizedRounds() const
 
                 if(IsSpent(hash, i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(vin)) continue;
 
-                int rounds = GetInputDarksendRounds(vin);
+                int rounds = GetInputPrivateSendRounds(vin);
                 fTotal += (float)rounds;
                 fCount += 1;
             }
@@ -2002,8 +2002,8 @@ CAmount CWallet::GetNormalizedAnonymizedBalance() const
                 if(IsSpent(hash, i) || IsMine(pcoin->vout[i]) != ISMINE_SPENDABLE || !IsDenominated(vin)) continue;
                 if (pcoin->GetDepthInMainChain() < 0) continue;
 
-                int rounds = GetInputDarksendRounds(vin);
-                nTotal += pcoin->vout[i].nValue * rounds / nDarksendRounds;
+                int rounds = GetInputPrivateSendRounds(vin);
+                nTotal += pcoin->vout[i].nValue * rounds / nPrivateSendRounds;
             }
         }
     }
@@ -2369,9 +2369,9 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
 
             if(coin_type == ONLY_DENOMINATED) {
                 CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
-                int rounds = GetInputDarksendRounds(vin);
+                int rounds = GetInputPrivateSendRounds(vin);
                 // make sure it's actually anonymized
-                if(rounds < nDarksendRounds) continue;
+                if(rounds < nPrivateSendRounds) continue;
             }
             nValueRet += out.tx->vout[out.i].nValue;
             setCoinsRet.insert(make_pair(out.tx, out.i));
@@ -2390,9 +2390,9 @@ bool CWallet::SelectCoins(const CAmount& nTargetValue, set<pair<const CWalletTx*
                     && nValueRet + out.tx->vout[out.i].nValue < nTargetValue + (0.1*COIN)+100 //round the amount up to .1DRK over
                 ){
                     CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
-                    int rounds = GetInputDarksendRounds(vin);
+                    int rounds = GetInputPrivateSendRounds(vin);
                     // make sure it's actually anonymized
-                    if(rounds < nDarksendRounds) continue;
+                    if(rounds < nPrivateSendRounds) continue;
                     nValueRet += out.tx->vout[out.i].nValue;
                     setCoinsRet.insert(make_pair(out.tx, out.i));
                 }
@@ -2498,7 +2498,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount &nFeeRet, int& nC
     return true;
 }
 
-bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, CAmount& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax)
+bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& vCoinsRet, std::vector<COutput>& vCoinsRet2, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax)
 {
     vCoinsRet.clear();
     nValueRet = 0;
@@ -2537,9 +2537,9 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
 
             CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
 
-            int rounds = GetInputDarksendRounds(vin);
-            if(rounds >= nDarksendRoundsMax) continue;
-            if(rounds < nDarksendRoundsMin) continue;
+            int rounds = GetInputPrivateSendRounds(vin);
+            if(rounds >= nPrivateSendRoundsMax) continue;
+            if(rounds < nPrivateSendRoundsMin) continue;
 
             if(fFound100 && fFound10 && fFound1 && fFoundDot1){ //if fulfilled
                 //we can return this for submission
@@ -2574,7 +2574,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     return (nValueRet >= nValueMin && fFound100 && fFound10 && fFound1 && fFoundDot1);
 }
 
-bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nDarksendRoundsMin, int nDarksendRoundsMax) const
+bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<CTxIn>& setCoinsRet, CAmount& nValueRet, int nPrivateSendRoundsMin, int nPrivateSendRoundsMax) const
 {
     CCoinControl *coinControl=NULL;
 
@@ -2582,7 +2582,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
     nValueRet = 0;
 
     vector<COutput> vCoins;
-    AvailableCoins(vCoins, true, coinControl, false, nDarksendRoundsMin < 0 ? ONLY_NONDENOMINATED_NOT1000IFMN : ONLY_DENOMINATED);
+    AvailableCoins(vCoins, true, coinControl, false, nPrivateSendRoundsMin < 0 ? ONLY_NONDENOMINATED_NOT1000IFMN : ONLY_DENOMINATED);
 
     set<pair<const CWalletTx*,unsigned int> > setCoinsRet2;
 
@@ -2600,9 +2600,9 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector<
         if(nValueRet + out.tx->vout[out.i].nValue <= nValueMax){
             CTxIn vin = CTxIn(out.tx->GetHash(),out.i);
 
-            int rounds = GetInputDarksendRounds(vin);
-            if(rounds >= nDarksendRoundsMax) continue;
-            if(rounds < nDarksendRoundsMin) continue;
+            int rounds = GetInputPrivateSendRounds(vin);
+            if(rounds >= nPrivateSendRoundsMax) continue;
+            if(rounds < nPrivateSendRoundsMin) continue;
 
             vin.prevPubKey = out.tx->vout[out.i].scriptPubKey; // the inputs PubKey
             nValueRet += out.tx->vout[out.i].nValue;
@@ -4081,7 +4081,7 @@ int CMerkleTx::GetDepthInMainChain(const CBlockIndex* &pindexRet, bool enableIX)
     }
 
     if(enableIX && nResult < 6 && IsLockedIXTransaction(GetHash()))
-        return nInstantXDepth + nResult;
+        return nInstantSendDepth + nResult;
 
     return nResult;
 }

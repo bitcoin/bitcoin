@@ -774,7 +774,7 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
     if(nResult < 0) return -1;
 
     if (nResult < 6 && IsLockedIXTransaction(nTXHash))
-        return nInstantXDepth + nResult;
+        return nInstantSendDepth + nResult;
 
     return nResult;
 }
@@ -782,7 +782,7 @@ int GetInputAgeIX(uint256 nTXHash, CTxIn& vin)
 int GetIXConfirmations(uint256 nTXHash)
 {
     if (IsLockedIXTransaction(nTXHash))
-        return nInstantXDepth;
+        return nInstantSendDepth;
 
     return 0;
 }

@@ -198,7 +198,7 @@ void OptionsDialog::setMapper()
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
     mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
-    mapper->addMapping(ui->darksendRounds, OptionsModel::DarksendRounds);
+    mapper->addMapping(ui->privateSendRounds, OptionsModel::PrivateSendRounds);
     mapper->addMapping(ui->anonymizeDash, OptionsModel::AnonymizeDashAmount);
 
     /* Network */

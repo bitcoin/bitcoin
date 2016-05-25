@@ -443,7 +443,7 @@ public:
     void UpdateState(unsigned int newState)
     {
         if (fMasterNode && (newState == POOL_STATUS_ERROR || newState == POOL_STATUS_SUCCESS)){
-            LogPrint("darksend", "CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
+            LogPrint("privatesend", "CDarksendPool::UpdateState() - Can't set state to ERROR or SUCCESS as a Masternode. \n");
             return;
         }
 

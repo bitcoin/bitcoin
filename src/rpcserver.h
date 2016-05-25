@@ -202,7 +202,7 @@ extern UniValue estimatepriority(const UniValue& params, bool fHelp);
 extern UniValue estimatesmartfee(const UniValue& params, bool fHelp);
 extern UniValue estimatesmartpriority(const UniValue& params, bool fHelp);
 
-extern UniValue sendtoaddressix(const UniValue& params, bool fHelp);
+extern UniValue instantsendtoaddress(const UniValue& params, bool fHelp);
 extern UniValue keepass(const UniValue& params, bool fHelp);
 extern UniValue getnewaddress(const UniValue& params, bool fHelp); // in rpcwallet.cpp
 extern UniValue getaccountaddress(const UniValue& params, bool fHelp);
@@ -258,7 +258,7 @@ extern UniValue sendrawtransaction(const UniValue& params, bool fHelp);
 extern UniValue gettxoutproof(const UniValue& params, bool fHelp);
 extern UniValue verifytxoutproof(const UniValue& params, bool fHelp);
 
-extern UniValue darksend(const UniValue& params, bool fHelp);
+extern UniValue privatesend(const UniValue& params, bool fHelp);
 extern UniValue getpoolinfo(const UniValue& params, bool fHelp);
 extern UniValue spork(const UniValue& params, bool fHelp);
 extern UniValue masternode(const UniValue& params, bool fHelp);

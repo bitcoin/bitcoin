@@ -111,11 +111,11 @@ void OptionsModel::Init(bool resetSettings)
         addOverriddenOption("-spendzeroconfchange");
 
     // Darksend
-    if (!settings.contains("nDarksendRounds"))
-        settings.setValue("nDarksendRounds", 2);
-    if (!SoftSetArg("-darksendrounds", settings.value("nDarksendRounds").toString().toStdString()))
-        addOverriddenOption("-darksendrounds");
-    nDarksendRounds = settings.value("nDarksendRounds").toInt();
+    if (!settings.contains("nPrivateSendRounds"))
+        settings.setValue("nPrivateSendRounds", 2);
+    if (!SoftSetArg("-privatesendrounds", settings.value("nPrivateSendRounds").toString().toStdString()))
+        addOverriddenOption("-privatesendrounds");
+    nPrivateSendRounds = settings.value("nPrivateSendRounds").toInt();
 
     if (!settings.contains("nAnonymizeDashAmount")) {
         // for migration from old settings
@@ -239,8 +239,8 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
 #ifdef ENABLE_WALLET
         case SpendZeroConfChange:
             return settings.value("bSpendZeroConfChange");
-        case DarksendRounds:
-            return settings.value("nDarksendRounds");
+        case PrivateSendRounds:
+            return settings.value("nPrivateSendRounds");
         case AnonymizeDashAmount:
             return settings.value("nAnonymizeDashAmount");
         case ShowMasternodesTab:
@@ -367,11 +367,11 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 setRestartRequired(true);
             }
             break;
-        case DarksendRounds:
-            if (settings.value("nDarksendRounds") != value)
+        case PrivateSendRounds:
+            if (settings.value("nPrivateSendRounds") != value)
             {
-                nDarksendRounds = value.toInt();
-                settings.setValue("nDarksendRounds", nDarksendRounds);
+                nPrivateSendRounds = value.toInt();
+                settings.setValue("nPrivateSendRounds", nPrivateSendRounds);
                 Q_EMIT darksendRoundsChanged();
             }
             break;

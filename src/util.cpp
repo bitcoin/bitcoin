@@ -107,16 +107,16 @@ bool fMasterNode = false;
 string strMasterNodePrivKey = "";
 string strMasterNodeAddr = "";
 bool fLiteMode = false;
-bool fEnableInstantX = true;
-int nInstantXDepth = 5;
-int nDarksendRounds = 2;
+bool fEnableInstantSend = true;
+int nInstantSendDepth = 5;
+int nPrivateSendRounds = 2;
 int nAnonymizeDashAmount = 1000;
 int nLiquidityProvider = 0;
 /** Spork enforcement enabled time */
 int64_t enforceMasternodePaymentsTime = 4085657524;
 bool fSucessfullyLoaded = false;
-bool fEnableDarksend = false;
-bool fDarksendMultiSession = false;
+bool fEnablePrivateSend = false;
+bool fPrivateSendMultiSession = false;
 /** All denominations used by darksend */
 std::vector<CAmount> darkSendDenominations;
 string strBudgetMode = "";
@@ -278,8 +278,8 @@ bool LogAcceptCategory(const char* category)
             // thread_specific_ptr automatically deletes the set when the thread ends.
             // "dash" is a composite category enabling all Dash-related debug output
             if(ptrCategory->count(string("dash"))) {
-                ptrCategory->insert(string("darksend"));
-                ptrCategory->insert(string("instantx"));
+                ptrCategory->insert(string("privatesend"));
+                ptrCategory->insert(string("instantsend"));
                 ptrCategory->insert(string("masternode"));
                 ptrCategory->insert(string("keepass"));
                 ptrCategory->insert(string("mnpayments"));

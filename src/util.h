@@ -34,13 +34,13 @@
 
 extern bool fMasterNode;
 extern bool fLiteMode;
-extern bool fEnableInstantX;
-extern int nInstantXDepth;
-extern int nDarksendRounds;
+extern bool fEnableInstantSend;
+extern int nInstantSendDepth;
+extern int nPrivateSendRounds;
 extern int nAnonymizeDashAmount;
 extern int nLiquidityProvider;
-extern bool fEnableDarksend;
-extern bool fDarksendMultiSession;
+extern bool fEnablePrivateSend;
+extern bool fPrivateSendMultiSession;
 extern int64_t enforceMasternodePaymentsTime;
 extern std::string strMasterNodeAddr;
 extern int keysLoaded;

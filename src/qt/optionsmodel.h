@@ -46,7 +46,7 @@ public:
         ThreadsScriptVerif,     // int
         DatabaseCache,          // int
         SpendZeroConfChange,    // bool
-        DarksendRounds,         // int
+        PrivateSendRounds,      // int
         AnonymizeDashAmount,    // int
         ShowMasternodesTab,     // bool
         Listen,                 // bool
