@@ -118,7 +118,6 @@ testScriptsExt = [
     'txn_doublespend.py',
     'txn_clone.py --mineblock',
     'pruning.py',
-    'forknotify.py',
     'invalidateblock.py',
 #    'rpcbind_test.py', #temporary, bug in libevent, see #6655
     'smartfees.py',
