@@ -122,7 +122,7 @@ class MaxUploadTest(BitcoinTestFramework):
             signresult = node.signrawtransaction(newtx,None,None,"NONE")
             txid = node.sendrawtransaction(signresult["hex"], True)
         # Mine a full sized block which will be these transactions we just created
-        node.generate(1)
+        node.wallet.generate(1)
 
     def run_test(self):
         # Before we connect anything, we first set the time on the node
@@ -132,7 +132,7 @@ class MaxUploadTest(BitcoinTestFramework):
         self.nodes[0].setmocktime(old_time)
 
         # Generate some old blocks
-        self.nodes[0].generate(130)
+        self.nodes[0].wallet.generate(130)
 
         # test_nodes[0] will only request old blocks
         # test_nodes[1] will only request new blocks

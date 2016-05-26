@@ -20,14 +20,14 @@ class AbandonConflictTest(BitcoinTestFramework):
         connect_nodes(self.nodes[0], 1)
 
     def run_test(self):
-        self.nodes[1].generate(100)
+        self.nodes[1].wallet.generate(100)
         sync_blocks(self.nodes)
         balance = self.nodes[0].getbalance()
         txA = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         txB = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         txC = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
         sync_mempools(self.nodes)
-        self.nodes[1].generate(1)
+        self.nodes[1].wallet.generate(1)
 
         sync_blocks(self.nodes)
         newbalance = self.nodes[0].getbalance()
@@ -129,7 +129,7 @@ class AbandonConflictTest(BitcoinTestFramework):
         tx = self.nodes[0].createrawtransaction(inputs, outputs)
         signed = self.nodes[0].signrawtransaction(tx)
         self.nodes[1].sendrawtransaction(signed["hex"])
-        self.nodes[1].generate(1)
+        self.nodes[1].wallet.generate(1)
 
         connect_nodes(self.nodes[0], 1)
         sync_blocks(self.nodes)

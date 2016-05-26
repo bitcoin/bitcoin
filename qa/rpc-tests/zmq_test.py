@@ -41,7 +41,7 @@ class ZMQTest (BitcoinTestFramework):
     def run_test(self):
         self.sync_all()
 
-        genhashes = self.nodes[0].generate(1)
+        genhashes = self.nodes[0].wallet.generate(1)
         self.sync_all()
 
         print "listen..."
@@ -57,7 +57,7 @@ class ZMQTest (BitcoinTestFramework):
         assert_equal(genhashes[0], blkhash) #blockhash from generate must be equal to the hash received over zmq
 
         n = 10
-        genhashes = self.nodes[1].generate(n)
+        genhashes = self.nodes[1].wallet.generate(n)
         self.sync_all()
 
         zmqHashes = []

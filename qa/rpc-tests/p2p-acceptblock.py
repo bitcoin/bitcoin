@@ -144,7 +144,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         white_node.wait_for_verack()
 
         # 1. Have both nodes mine a block (leave IBD)
-        [ n.generate(1) for n in self.nodes ]
+        [ n.wallet.generate(1) for n in self.nodes ]
         tips = [ int ("0x" + n.getbestblockhash() + "L", 0) for n in self.nodes ]
 
         # 2. Send one block that builds on each tip.

@@ -43,7 +43,7 @@ class TestManager(NodeConnCB):
     def run(self):
         try:
             fail = False
-            self.connection.rpc.generate(1) # Leave IBD
+            self.connection.rpc.wallet.generate(1) # Leave IBD
 
             numBlocksToGenerate = [ 8, 16, 128, 1024 ]
             for count in range(len(numBlocksToGenerate)):

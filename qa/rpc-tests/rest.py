@@ -69,16 +69,16 @@ class RESTTest (BitcoinTestFramework):
         url = urlparse.urlparse(self.nodes[0].url)
         print "Mining blocks..."
 
-        self.nodes[0].generate(1)
+        self.nodes[0].wallet.generate(1)
         self.sync_all()
-        self.nodes[2].generate(100)
+        self.nodes[2].wallet.generate(100)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 50)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
-        self.nodes[2].generate(1)
+        self.nodes[2].wallet.generate(1)
         self.sync_all()
         bb_hash = self.nodes[0].getbestblockhash()
 
@@ -208,7 +208,7 @@ class RESTTest (BitcoinTestFramework):
         response = http_post_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
         assert_equal(response.status, 200) #must be a 500 because we exceeding the limits
 
-        self.nodes[0].generate(1) #generate block to not affect upcoming tests
+        self.nodes[0].wallet.generate(1) #generate block to not affect upcoming tests
         self.sync_all()
 
         ################
@@ -271,7 +271,7 @@ class RESTTest (BitcoinTestFramework):
         assert_equal(json_obj[0]['previousblockhash'],  rpc_block_json['previousblockhash'])
 
         #see if we can get 5 headers in one response
-        self.nodes[1].generate(5)
+        self.nodes[1].wallet.generate(5)
         self.sync_all()
         response_header_json = http_get_call(url.hostname, url.port, '/rest/headers/5/'+bb_hash+self.FORMAT_SEPARATOR+"json", True)
         assert_equal(response_header_json.status, 200)
@@ -314,7 +314,7 @@ class RESTTest (BitcoinTestFramework):
             assert_equal(tx in json_obj, True)
 
         # now mine the transactions
-        newblockhash = self.nodes[1].generate(1)
+        newblockhash = self.nodes[1].wallet.generate(1)
         self.sync_all()
 
         #check if the 3 tx show up in the new block

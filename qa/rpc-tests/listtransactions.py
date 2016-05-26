@@ -43,7 +43,7 @@ class ListTransactionsTest(BitcoinTestFramework):
                            {"txid":txid},
                            {"category":"receive","account":"","amount":Decimal("0.1"),"confirmations":0})
         # mine a block, confirmations should change:
-        self.nodes[0].generate(1)
+        self.nodes[0].wallet.generate(1)
         self.sync_all()
         check_array_result(self.nodes[0].listtransactions(),
                            {"txid":txid},
@@ -96,7 +96,7 @@ class ListTransactionsTest(BitcoinTestFramework):
         multisig = self.nodes[1].createmultisig(1, [self.nodes[1].getnewaddress()])
         self.nodes[0].importaddress(multisig["redeemScript"], "watchonly", False, True)
         txid = self.nodes[1].sendtoaddress(multisig["address"], 0.1)
-        self.nodes[1].generate(1)
+        self.nodes[1].wallet.generate(1)
         self.sync_all()
         assert(len(self.nodes[0].listtransactions("watchonly", 100, 0, False)) == 0)
         check_array_result(self.nodes[0].listtransactions("watchonly", 100, 0, True),

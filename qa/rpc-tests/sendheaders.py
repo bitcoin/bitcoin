@@ -221,7 +221,7 @@ class SendHeadersTest(BitcoinTestFramework):
     def mine_blocks(self, count):
         # Clear out last block announcement from each p2p listener
         [ x.clear_last_announcement() for x in self.p2p_connections ]
-        self.nodes[0].generate(count)
+        self.nodes[0].wallet.generate(count)
         return int(self.nodes[0].getbestblockhash(), 16)
 
     # mine a reorg that invalidates length blocks (replacing them with
@@ -230,14 +230,14 @@ class SendHeadersTest(BitcoinTestFramework):
     # to-be-reorged-out blocks are mined, so that we don't break later tests.
     # return the list of block hashes newly mined
     def mine_reorg(self, length):
-        self.nodes[0].generate(length) # make sure all invalidated blocks are node0's
+        self.nodes[0].wallet.generate(length) # make sure all invalidated blocks are node0's
         sync_blocks(self.nodes, wait=0.1)
         [x.clear_last_announcement() for x in self.p2p_connections]
 
         tip_height = self.nodes[1].getblockcount()
         hash_to_invalidate = self.nodes[1].getblockhash(tip_height-(length-1))
         self.nodes[1].invalidateblock(hash_to_invalidate)
-        all_hashes = self.nodes[1].generate(length+1) # Must be longer than the orig chain
+        all_hashes = self.nodes[1].wallet.generate(length+1) # Must be longer than the orig chain
         sync_blocks(self.nodes, wait=0.1)
         return [int(x, 16) for x in all_hashes]
 

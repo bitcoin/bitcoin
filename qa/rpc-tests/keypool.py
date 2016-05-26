@@ -75,12 +75,12 @@ class KeyPoolTest(BitcoinTestFramework):
         nodes[0].walletlock()
 
         # drain them by mining
-        nodes[0].generate(1)
-        nodes[0].generate(1)
-        nodes[0].generate(1)
-        nodes[0].generate(1)
+        nodes[0].wallet.generate(1)
+        nodes[0].wallet.generate(1)
+        nodes[0].wallet.generate(1)
+        nodes[0].wallet.generate(1)
         try:
-            nodes[0].generate(1)
+            nodes[0].wallet.generate(1)
             raise AssertionError('Keypool should be exhausted after three addesses')
         except JSONRPCException,e:
             assert(e.error['code']==-12)

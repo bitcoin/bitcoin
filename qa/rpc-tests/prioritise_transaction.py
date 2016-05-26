@@ -44,7 +44,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         self.nodes[0].prioritisetransaction(txids[0][0], 0, int(3*base_fee*COIN))
         self.nodes[0].prioritisetransaction(txids[0][1], -1e15, 0)
 
-        self.nodes[0].generate(1)
+        self.nodes[0].wallet.generate(1)
 
         mempool = self.nodes[0].getrawmempool()
         print "Assert that prioritised transasction was mined"
@@ -71,7 +71,7 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         assert(high_fee_tx in mempool)
 
         # Now verify the high feerate transaction isn't mined.
-        self.nodes[0].generate(5)
+        self.nodes[0].wallet.generate(5)
 
         # High fee transaction should not have been mined, but other high fee rate
         # transactions should have been.

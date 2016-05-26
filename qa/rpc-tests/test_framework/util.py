@@ -428,7 +428,7 @@ def satoshi_round(amount):
     return  Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
 def create_confirmed_utxos(fee, node, count):
-    node.generate(int(0.5*count)+101)
+    node.wallet.generate(int(0.5*count)+101)
     utxos = node.listunspent()
     iterations = count - len(utxos)
     addr1 = node.getnewaddress()
@@ -448,7 +448,7 @@ def create_confirmed_utxos(fee, node, count):
         txid = node.sendrawtransaction(signed_tx)
 
     while (node.getmempoolinfo()['size'] > 0):
-        node.generate(1)
+        node.wallet.generate(1)
 
     utxos = node.listunspent()
     assert(len(utxos) >= count)

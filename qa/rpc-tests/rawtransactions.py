@@ -37,15 +37,15 @@ class RawTransactionsTest(BitcoinTestFramework):
     def run_test(self):
 
         #prepare some coins for multiple *rawtransaction commands
-        self.nodes[2].generate(1)
+        self.nodes[2].wallet.generate(1)
         self.sync_all()
-        self.nodes[0].generate(101)
+        self.nodes[0].wallet.generate(101)
         self.sync_all()
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.5)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),1.0)
         self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(),5.0)
         self.sync_all()
-        self.nodes[0].generate(5)
+        self.nodes[0].wallet.generate(5)
         self.sync_all()
 
         #########################################
@@ -83,7 +83,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         # send 1.2 BTC to msig adr
         txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
         self.sync_all()
-        self.nodes[0].generate(1)
+        self.nodes[0].wallet.generate(1)
         self.sync_all()
         assert_equal(self.nodes[2].getbalance(), bal+Decimal('1.20000000')) #node2 has both keys of the 2of2 ms addr., tx should affect the balance
 
@@ -108,7 +108,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         rawTx = self.nodes[0].decoderawtransaction(decTx['hex'])
         sPK = rawTx['vout'][0]['scriptPubKey']['hex']
         self.sync_all()
-        self.nodes[0].generate(1)
+        self.nodes[0].wallet.generate(1)
         self.sync_all()
 
         #THIS IS A INCOMPLETE FEATURE
@@ -135,7 +135,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[2].sendrawtransaction(rawTxSigned['hex'])
         rawTx = self.nodes[0].decoderawtransaction(rawTxSigned['hex'])
         self.sync_all()
-        self.nodes[0].generate(1)
+        self.nodes[0].wallet.generate(1)
         self.sync_all()
         assert_equal(self.nodes[0].getbalance(), bal+Decimal('50.00000000')+Decimal('2.19000000')) #block reward + tx
 

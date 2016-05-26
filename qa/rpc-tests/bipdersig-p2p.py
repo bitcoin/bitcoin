@@ -74,7 +74,7 @@ class BIP66Test(ComparisonTestFramework):
 
     def get_tests(self):
 
-        self.coinbase_blocks = self.nodes[0].generate(2)
+        self.coinbase_blocks = self.nodes[0].wallet.generate(2)
         height = 3  # height of the next block to build
         self.tip = int ("0x" + self.nodes[0].getbestblockhash() + "L", 0)
         self.nodeaddress = self.nodes[0].getnewaddress()

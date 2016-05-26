@@ -67,7 +67,7 @@ class BigBlockTest(BitcoinTestFramework):
             for i in range(0,200):
                 miner = i%2
                 set_node_times(self.nodes, block_time)
-                b1hash = self.nodes[miner].generate(1)[0]
+                b1hash = self.nodes[miner].wallet.generate(1)[0]
                 b1 = self.nodes[miner].getblock(b1hash, True)
                 if miner % 2: assert(not (b1['version'] & FORK_BLOCK_BIT))
                 else: assert(b1['version'] & FORK_BLOCK_BIT)
@@ -154,7 +154,7 @@ class BigBlockTest(BitcoinTestFramework):
 
     def TestMineBig(self, expect_big, expect_version=None):
       # Test if node0 will mine big blocks.
-        b1hash = self.nodes[0].generate(1)[0]
+        b1hash = self.nodes[0].wallet.generate(1)[0]
         b1 = self.nodes[0].getblock(b1hash, True)
         assert(self.sync_blocks(self.nodes))
 
@@ -168,7 +168,7 @@ class BigBlockTest(BitcoinTestFramework):
 
             # Have node1 mine on top of the block,
             # to make sure it goes along with the fork
-            b2hash = self.nodes[1].generate(1)[0]
+            b2hash = self.nodes[1].wallet.generate(1)[0]
             b2 = self.nodes[1].getblock(b2hash, True)
             assert(b2['previousblockhash'] == b1hash)
             assert(self.sync_blocks(self.nodes))
@@ -216,7 +216,7 @@ class BigBlockTest(BitcoinTestFramework):
 
         set_node_times(self.nodes[0:1], FORK_DEADLINE + 100)
 
-        b1hash = self.nodes[0].generate(1)[0]
+        b1hash = self.nodes[0].wallet.generate(1)[0]
         b1 = self.nodes[0].getblock(b1hash, True)
         assert(not (b1['version'] & FORK_BLOCK_BIT))
         self.nodes[0].invalidateblock(b1hash)
@@ -231,7 +231,7 @@ class BigBlockTest(BitcoinTestFramework):
         blocks = []
         for i in range(50):
             set_node_times(self.nodes, FORK_TIME + t_delta*i - 1)
-            blocks.append(self.nodes[2].generate(1)[0])
+            blocks.append(self.nodes[2].wallet.generate(1)[0])
         assert(self.sync_blocks(self.nodes))
 
         # Earliest time for a big block is the timestamp of the
@@ -270,7 +270,7 @@ class BigBlockTest(BitcoinTestFramework):
 
         # Mine a longer chain with two version=4 blocks:
         self.nodes[3].invalidateblock(blocks[-1])
-        v4blocks = self.nodes[3].generate(2)
+        v4blocks = self.nodes[3].wallet.generate(2)
         assert(self.sync_blocks(self.nodes[1:]))
 
         # Restart node0, it should re-org onto longer chain, reset
@@ -285,7 +285,7 @@ class BigBlockTest(BitcoinTestFramework):
 
         # Mine 4 FORK_BLOCK_BIT blocks and set the time past the
         # grace period:  bigger block OK:
-        self.nodes[2].generate(4)
+        self.nodes[2].wallet.generate(4)
         assert(self.sync_blocks(self.nodes))
         set_node_times(self.nodes, t_fork + FORK_GRACE_PERIOD)
         self.TestMineBig(expect_big=True, expect_version=True)
@@ -293,7 +293,7 @@ class BigBlockTest(BitcoinTestFramework):
         # Finally, mine blocks well after the expiration time and make sure
         # bigger blocks are still OK:
         set_node_times(self.nodes, FORK_DEADLINE+FORK_GRACE_PERIOD*11)
-        self.nodes[2].generate(4)
+        self.nodes[2].wallet.generate(4)
         assert(self.sync_blocks(self.nodes))
         self.TestMineBig(expect_big=True, expect_version=False)
 
@@ -307,17 +307,17 @@ class BigBlockTest2(BigBlockTest):
         pre_expire_blocks = []
         for i in range(49):
             set_node_times(self.nodes, FORK_DEADLINE - (t_delta*(50-i)))
-            pre_expire_blocks.append(self.nodes[2].generate(1)[0])
+            pre_expire_blocks.append(self.nodes[2].wallet.generate(1)[0])
         assert(self.sync_blocks(self.nodes))
         self.TestMineBig(expect_big=False, expect_version=True)
 
         # Gee, darn: JUST missed the deadline!
         set_node_times(self.nodes, FORK_DEADLINE+1)
-        block_past_expiration = self.nodes[0].generate(1)[0]
+        block_past_expiration = self.nodes[0].wallet.generate(1)[0]
 
         # Stuck with small blocks
         set_node_times(self.nodes, FORK_DEADLINE+FORK_GRACE_PERIOD*11)
-        self.nodes[2].generate(4)
+        self.nodes[2].wallet.generate(4)
         assert(self.sync_blocks(self.nodes))
         self.TestMineBig(expect_big=False, expect_version=False)
 

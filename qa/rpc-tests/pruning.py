@@ -62,14 +62,14 @@ class PruneTest(BitcoinTestFramework):
 
         for i in range(20):
             self.sync_block_time()
-            self.nodes[1].generate(10)
+            self.nodes[1].wallet.generate(10)
             self.block_time += 10*60*20
 
         sync_blocks(self.nodes[0:2])
         
         for i in range(15):
             self.sync_block_time()
-            self.nodes[0].generate(10)
+            self.nodes[0].wallet.generate(10)
             self.block_time += 10*60*15
 
         # Then mine enough full blocks to create more than 950MB of data
@@ -117,7 +117,7 @@ class PruneTest(BitcoinTestFramework):
                 if j == 0:
                     self.mine_full_block(self.nodes[1],self.address[1])
                 else:
-                    self.nodes[1].generate(1) #tx's already in mempool from previous disconnects
+                    self.nodes[1].wallet.generate(1) #tx's already in mempool from previous disconnects
 
             # Reorg back with 25 block chain from node 0
             self.utxo = self.nodes[0].listunspent()
@@ -165,7 +165,7 @@ class PruneTest(BitcoinTestFramework):
         self.sync_block_time()
 
         print "Generating new longer chain of 300 more blocks"
-        self.nodes[1].generate(300)
+        self.nodes[1].wallet.generate(300)
 
         print "Reconnect nodes"
         connect_nodes(self.nodes[0], 1)
@@ -176,7 +176,7 @@ class PruneTest(BitcoinTestFramework):
         print "Usage possibly still high bc of stale blocks in block files:", calc_usage(self.prunedir)
 
         print "Mine 220 more blocks so we have requisite history (some blocks will be big and cause pruning of previous chain)"
-        self.nodes[0].generate(220) #node 0 has many large tx's in its mempool from the disconnects
+        self.nodes[0].wallet.generate(220) #node 0 has many large tx's in its mempool from the disconnects
         sync_blocks(self.nodes[0:3])
 
         usage = calc_usage(self.prunedir)
@@ -220,7 +220,7 @@ class PruneTest(BitcoinTestFramework):
             self.nodes[0].invalidateblock(curchainhash)
             assert(self.nodes[0].getblockcount() == self.mainchainheight)
             assert(self.nodes[0].getbestblockhash() == self.mainchainhash2)
-            goalbesthash = self.nodes[0].generate(blocks_to_mine)[-1]
+            goalbesthash = self.nodes[0].wallet.generate(blocks_to_mine)[-1]
             goalbestheight = first_reorg_height + 1
 
         print "Verify node 2 reorged back to the main chain, some blocks of which it had to redownload"
@@ -256,7 +256,7 @@ class PruneTest(BitcoinTestFramework):
             signresult = node.signrawtransaction(newtx,None,None,"NONE")
             txid = node.sendrawtransaction(signresult["hex"], True)
         # Mine a full sized block which will be these transactions we just created
-        node.generate(1)
+        node.wallet.generate(1)
 
 
     def run_test(self):
