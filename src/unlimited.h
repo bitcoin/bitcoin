@@ -40,7 +40,7 @@ extern std::string minerComment;  // An arbitrary field that miners can change t
 /** The default value for -minrelaytxfee */
 static const char DEFAULT_MINLIMITERTXFEE[] = "0.0";
 /** The default value for -maxrelaytxfee */
-static const char DEFAULT_MAXLIMITERTXFEE[] = "5.0";
+static const char DEFAULT_MAXLIMITERTXFEE[] = "3.0";
 /** The number of block heights to gradually choke spam transactions over */
 static const unsigned int MAX_BLOCK_SIZE_MULTIPLIER = 3;
 /** The minimum value possible for -limitfreerelay when rate limiting */

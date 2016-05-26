@@ -11,9 +11,11 @@
 #include "leakybucket.h"
 #include "main.h"
 #include "net.h"
+#include "policy/policy.h"
 #include "primitives/block.h"
 #include "rpcserver.h"
 #include "thinblock.h"
+#include "timedata.h"
 #include "tinyformat.h"
 #include "txmempool.h"
 #include "unlimited.h"
@@ -28,6 +30,7 @@
 #include <iomanip>
 #include <boost/thread.hpp>
 #include <inttypes.h>
+#include <queue>
 
 using namespace std;
 
@@ -638,27 +641,190 @@ bool IsChainNearlySyncd()
 
 void BuildSeededBloomFilter(CBloomFilter& filterMemPool, std::vector<uint256>& vOrphanHashes, uint256 hash)
 {
-    LogPrint("thin", "Starting creation of bloom filter\n");
+    int64_t nStartTimer= GetTimeMillis();
     seed_insecure_rand();
-    double nBloomPoolSize = (double)mempool.mapTx.size();
-    if (nBloomPoolSize > MAX_BLOOM_FILTER_SIZE / 1.8)
-        nBloomPoolSize = MAX_BLOOM_FILTER_SIZE / 1.8;
-    double nBloomDecay = 1.5 - (nBloomPoolSize * 1.8 / MAX_BLOOM_FILTER_SIZE);  // We should never go below 0.5 as we will start seeing re-requests for tx's
-    int nElements = std::max((int)(((int)mempool.mapTx.size() + (int)vOrphanHashes.size()) * nBloomDecay), 1); // Must make sure nElements is greater than zero or will assert
-    double nFPRate = .001 + (((double)nElements * 1.8 / MAX_BLOOM_FILTER_SIZE) * .004); // The false positive rate in percent decays as the mempool grows
-    filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
-    LogPrint("thin", "Bloom multiplier: %f FPrate: %f Num elements in bloom filter: %d num mempool entries: %d\n", nBloomDecay, nFPRate, nElements, (int)mempool.mapTx.size());
+    std::set<uint256> setHighScoreMemPoolHashes;
+    std::set<uint256> setPriorityMemPoolHashes;
 
-    // Seed the filter with the transactions in the memory pool
-    LOCK(cs_main);
-    std::vector<uint256> vMemPoolHashes;
-    mempool.queryHashes(vMemPoolHashes);
-    for (uint64_t i = 0; i < vMemPoolHashes.size(); i++)
-         filterMemPool.insert(vMemPoolHashes[i]);
-    for (uint64_t i = 0; i < vOrphanHashes.size(); i++)
-         filterMemPool.insert(vOrphanHashes[i]);
+    // How much of the block should be dedicated to high-priority transactions.
+    // Logically this should be the same size as the DEFAULT_BLOCK_PRIORITY_SIZE however,
+    // we can't be sure that a miner won't decide to mine more high priority txs and therefore
+    // by including a full blocks worth of high priority tx's we cover every scenario.  And when we
+    // go on to add the high fee tx's there will be an intersection between the two which then makes 
+    // the total number of tx's that go into the bloom filter smaller than just the sum of the two.  
+    uint64_t nBlockPrioritySize = nLargestBlockSeen * 1.15;
+
+    // Largest projected block size used to add the high fee transactions.  We multiply it by an
+    // additional factor to take into account that miners may have slighty different policies when selecting
+    // high fee tx's from the pool.
+    uint64_t nBlockMaxProjectedSize = nLargestBlockSeen * 1.35;
+
+    vector<TxCoinAgePriority> vPriority;
+    TxCoinAgePriorityCompare pricomparer;
+    {
+        LOCK2(cs_main, mempool.cs);
+        CBlockIndex* pindexPrev = chainActive.Tip();
+        const int nHeight = pindexPrev->nHeight + 1;
+        const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
+
+        int64_t nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
+                                ? nMedianTimePast
+                                : GetAdjustedTime();
+
+        // Create a sorted list of transactions and their updated priorities.  This will be used to fill
+        // the mempoolhashes with the expected priority area of the next block.  We will multiply this by
+        // a factor of ? to account for any differences between the "Miners".
+        vPriority.reserve(mempool.mapTx.size());
+        for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
+             mi != mempool.mapTx.end(); mi++)
+        {
+            double dPriority = mi->GetPriority(nHeight);
+            CAmount dummy;
+            mempool.ApplyDeltas(mi->GetTx().GetHash(), dPriority, dummy);
+            vPriority.push_back(TxCoinAgePriority(dPriority, mi));
+        }
+        std::make_heap(vPriority.begin(), vPriority.end(), pricomparer);
+
+        uint64_t nPrioritySize = 0;
+        CTxMemPool::txiter iter;
+        for (uint64_t i = 0; i < vPriority.size(); i++)
+        {
+            nPrioritySize += vPriority[i].second->GetTxSize();
+            if (nPrioritySize > nBlockPrioritySize)
+                break;
+            setPriorityMemPoolHashes.insert(vPriority[i].second->GetTx().GetHash());
+
+            // Add children.  We don't need to look for parents here since they will all be parents.
+            iter = mempool.mapTx.project<0>(vPriority[i].second);
+            BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+            {
+                uint256 childHash = child->GetTx().GetHash();
+                if (!setPriorityMemPoolHashes.count(childHash)) {
+                    setPriorityMemPoolHashes.insert(childHash);
+                    nPrioritySize += child->GetTxSize();
+                    LogPrint("bloom", "add priority child %s with fee %d modified fee %d size %d clearatentry %d priority %f\n", 
+                                       child->GetTx().GetHash().ToString(), child->GetFee(), child->GetModifiedFee(), 
+                                       child->GetTxSize(), child->WasClearAtEntry(), child->GetPriority(nHeight));
+                }
+            }            
+        }
+
+        // Create a list of high score transactions. We will multiply this by
+        // a factor of ? to account for any differences between the way Miners include tx's
+        CTxMemPool::indexed_transaction_set::nth_index<3>::type::iterator mi = mempool.mapTx.get<3>().begin();
+        uint64_t nBlockSize = 0;
+        while (mi != mempool.mapTx.get<3>().end())
+        {
+            CTransaction tx = mi->GetTx();
+
+            if (!IsFinalTx(tx, nHeight, nLockTimeCutoff)) {
+                LogPrint("bloom", "tx %s is not final\n", tx.GetHash().ToString());
+                mi++;
+                continue;
+            }
+
+            // If this tx is not accounted for already in the priority set then continue and add
+            // it to the high score set if it can be and also add any parents or children.  Also add
+            // children and parents to the priority set tx's if they have any.
+            iter = mempool.mapTx.project<0>(mi);
+            if (!setHighScoreMemPoolHashes.count(tx.GetHash()))
+            {
+                LogPrint("bloom", "next tx is %s blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
+                                   mi->GetTx().GetHash().ToString(), nBlockSize, mi->GetFee(), mi->GetModifiedFee(), mi->GetTxSize(), 
+                                   mi->WasClearAtEntry(), mi->GetPriority(nHeight));
+
+                // add tx to the set: we don't know if this is a parent or child yet.
+                setHighScoreMemPoolHashes.insert(tx.GetHash());
+
+                // Add any parent tx's
+                bool fChild = false;
+                BOOST_FOREACH(CTxMemPool::txiter parent, mempool.GetMemPoolParents(iter))
+                {
+                    fChild = true;
+                    uint256 parentHash = parent->GetTx().GetHash();
+                    if (!setHighScoreMemPoolHashes.count(parentHash)) {
+                        setHighScoreMemPoolHashes.insert(parentHash);
+                        LogPrint("bloom", "add high score parent %s with blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
+                                           parent->GetTx().GetHash().ToString(), nBlockSize, parent->GetFee(), parent->GetModifiedFee(), 
+                                           parent->GetTxSize(), parent->WasClearAtEntry(), parent->GetPriority(nHeight));
+                    }
+                }
+
+                // Now add any children tx's.
+                bool fHasChildren = false;
+                BOOST_FOREACH(CTxMemPool::txiter child, mempool.GetMemPoolChildren(iter))
+                {
+                    fHasChildren = true;
+                    uint256 childHash = child->GetTx().GetHash();
+                    if (!setHighScoreMemPoolHashes.count(childHash)) {
+                        setHighScoreMemPoolHashes.insert(childHash);
+                        LogPrint("bloom", "add high score child %s with blocksize %d fee %d modified fee %d size %d clearatentry %d priority %f\n", 
+                                           child->GetTx().GetHash().ToString(), nBlockSize, child->GetFee(), child->GetModifiedFee(), 
+                                           child->GetTxSize(), child->WasClearAtEntry(), child->GetPriority(nHeight));
+                    }
+                }
+
+                // If a tx with no parents and no children, then we increment this block size.  
+                // We don't want to add parents and children to the size because for tx's with many children, miners may not mine them
+                // as they are not as profitable but we still have to add their hash to the bloom filter in case they do.
+                if (!fChild && !fHasChildren)
+                    nBlockSize += mi->GetTxSize();
+            }
+
+            if (nBlockSize >  nBlockMaxProjectedSize)
+                break;
+
+            mi++;
+        }
+    }
+    LogPrint("thin", "Bloom Filter Targeting completed in:%d (ms)\n", GetTimeMillis() - nStartTimer);
+    nStartTimer= GetTimeMillis(); // reset the timer
+
+    // We set the beginning of our growth algortithm to the time we request our first xthin.  We do this here
+    // rather than setting up a global variable in init.cpp.  This has more to do with potential merge conflicts
+    // with BU than any other technical reason.
+    static int64_t nStartGrowth = GetTime();
+
+    // Tuning knobs for the false positive growth algorithm
+    static uint8_t nHoursToGrow = 24; // number of hours until maximum growth for false positive rate
+    //static double nGrowthCoefficient = 0.7676; // use for nMinFalsePositive = 0.0001 and nMaxFalsePositive = 0.01 for 6 hour growth period
+    //static double nGrowthCoefficient = 0.8831; // use for nMinFalsePositive = 0.0001 and nMaxFalsePositive = 0.02 for 6 hour growth period
+    static double nGrowthCoefficient = 0.1921; // use for nMinFalsePositive = 0.0001 and nMaxFalsePositive = 0.01 for 24 hour growth period
+    static double nMinFalsePositive = 0.0001; // starting value for false positive 
+    static double nMaxFalsePositive = 0.01; // maximum false positive rate at end of decay
+    // TODO: automatically calculate the nGrowthCoefficient from nHoursToGrow, nMinFalsePositve and nMaxFalsePositive
+
+    // Count up all the transactions that we'll be putting into the filter, removing any duplicates
+    BOOST_FOREACH(uint256 txHash, setHighScoreMemPoolHashes)
+        if (setPriorityMemPoolHashes.count(txHash))
+            setPriorityMemPoolHashes.erase(txHash);
+
+    unsigned int nSelectedTxHashes = setHighScoreMemPoolHashes.size() + vOrphanHashes.size() + setPriorityMemPoolHashes.size();
+    unsigned int nElements = std::max(nSelectedTxHashes, (unsigned int)1); // Must make sure nElements is greater than zero or will assert
+
+    // Calculate the new False Positive rate.  
+    // We increase the false positive rate as time increases, starting at nMinFalsePositive and with growth governed by nGrowthCoefficient,
+    // using the simple exponential growth function as follows:
+    // y = (starting or minimum fprate: nMinFalsePositive) * e ^ (time in hours from start * nGrowthCoefficient)
+    int64_t nTimePassed = GetTime() - nStartGrowth;
+    double nFPRate = nMinFalsePositive * exp (((double)(nTimePassed) / 3600) * nGrowthCoefficient);
+    if (nTimePassed > nHoursToGrow * 3600)
+        nFPRate = nMaxFalsePositive;
+
+    filterMemPool = CBloomFilter(nElements, nFPRate, insecure_rand(), BLOOM_UPDATE_ALL);
+    LogPrint("thin", "FPrate: %f Num elements in bloom filter:%d high priority txs:%d high fee txs:%d orphans:%d total txs in mempool:%d\n", 
+              nFPRate, nElements, setPriorityMemPoolHashes.size(), 
+              setHighScoreMemPoolHashes.size(), vOrphanHashes.size(), mempool.mapTx.size());
+
+    // Add the selected tx hashes to the bloom filter
+    BOOST_FOREACH(uint256 txHash, setPriorityMemPoolHashes)
+        filterMemPool.insert(txHash);
+    BOOST_FOREACH(uint256 txHash, setHighScoreMemPoolHashes)
+        filterMemPool.insert(txHash);
+    BOOST_FOREACH(uint256 txHash, vOrphanHashes)
+        filterMemPool.insert(txHash);
     uint64_t nSizeFilter = ::GetSerializeSize(filterMemPool, SER_NETWORK, PROTOCOL_VERSION);
-    LogPrint("thin", "Created bloom filter: %d bytes\n", nSizeFilter);
+    LogPrint("thin", "Created bloom filter: %d bytes for block: %s in:%d (ms)\n", nSizeFilter, hash.ToString(), GetTimeMillis() - nStartTimer);
     CThinBlockStats::UpdateOutBoundBloomFilter(nSizeFilter);
 }
 
