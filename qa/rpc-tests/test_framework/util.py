@@ -121,30 +121,34 @@ def hex_str_to_bytes(hex_str):
 def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
 
-def sync_blocks(rpc_connections, wait=1):
+def sync_blocks(rpc_connections, wait=1, timeout=60):
     """
-    Wait until everybody has the same block count
+    Wait until everybody has the same tip
     """
-    while True:
-        counts = [ x.getblockcount() for x in rpc_connections ]
-        if counts == [ counts[0] ]*len(counts):
-            break
+    while timeout > 0:
+        tips = [ x.getbestblockhash() for x in rpc_connections ]
+        if tips == [ tips[0] ]*len(tips):
+            return True
         time.sleep(wait)
+        timeout -= wait
+    raise AssertionError("Block sync failed")
 
-def sync_mempools(rpc_connections, wait=1):
+def sync_mempools(rpc_connections, wait=1, timeout=60):
     """
     Wait until everybody has the same transactions in their memory
     pools
     """
-    while True:
+    while timeout > 0:
         pool = set(rpc_connections[0].getrawmempool())
         num_match = 1
         for i in range(1, len(rpc_connections)):
             if set(rpc_connections[i].getrawmempool()) == pool:
                 num_match = num_match+1
         if num_match == len(rpc_connections):
-            break
+            return True
         time.sleep(wait)
+        timeout -= wait
+    raise AssertionError("Mempool sync failed")
 
 bitcoind_processes = {}
 
