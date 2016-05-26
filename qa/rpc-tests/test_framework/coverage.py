@@ -8,6 +8,7 @@ testing.
 """
 import os
 
+from .wallet import Wallet, WalletAddress
 
 REFERENCE_FILENAME = 'rpc_interface.txt'
 
@@ -28,6 +29,7 @@ class AuthServiceProxyWrapper(object):
         """
         self.auth_service_proxy_instance = auth_service_proxy_instance
         self.coverage_logfile = coverage_logfile
+        self.wallet = Wallet(self)
 
     def __getattr__(self, *args, **kwargs):
         return_val = self.auth_service_proxy_instance.__getattr__(
