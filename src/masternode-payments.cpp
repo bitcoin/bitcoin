@@ -284,6 +284,7 @@ void FillBlockPayee(CMutableTransaction& txNew, CAmount nFees)
     // } else {
     //     mnpayments.FillBlockPayee(txNew, nFees);
     // }
+    mnpayments.FillBlockPayee(txNew, nFees);
 }
 
 std::string GetRequiredPaymentsString(int nBlockHeight)
@@ -336,7 +337,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, CAmount nFe
         ExtractDestination(payee, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrintf("Masternode payment to %s\n", address2.ToString());
+        LogPrintf("Masternode payment %d to %s\n", masternodePayment, address2.ToString());
     }
 }
 

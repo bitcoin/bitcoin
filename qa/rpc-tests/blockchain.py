@@ -49,11 +49,11 @@ class BlockchainTest(BitcoinTestFramework):
         node = self.nodes[0]
         res = node.gettxoutsetinfo()
 
-        assert_equal(res[u'total_amount'], Decimal('98178.57142879'))
+        assert_equal(res[u'total_amount'], Decimal('98214.28571450'))
         assert_equal(res[u'transactions'], 200)
         assert_equal(res[u'height'], 200)
         assert_equal(res[u'txouts'], 200)
-        assert_equal(res[u'bytes_serialized'], 14277),
+        assert_equal(res[u'bytes_serialized'], 14273),
         assert_equal(len(res[u'bestblock']), 64)
         assert_equal(len(res[u'hash_serialized']), 64)
 
