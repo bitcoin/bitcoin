@@ -564,29 +564,24 @@ CGovernanceObject::CGovernanceObject()
 
 }
 
-CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTime, uint256 nFeeTXHashIn)
+CGovernanceObject::CGovernanceObject(uint256 nHashParentIn, int nRevisionIn, std::string strNameIn, int64_t nTimeIn, uint256 nFeeTXHashIn)
 {
-    strName = "unknown";
-    nTime = 0;
-
     nHashParent = nHashParentIn; //parent object, 0 is root
-    // nPriority = nPriorityIn;
     nRevision = nRevisionIn; //object revision in the system
+    strName = strNameIn;
+    nTime = nTimeIn;
     nFeeTXHash = nFeeTXHashIn; //fee-tx    
-    // nTypeVersion = nTypeVersionIn;
 }
 
 CGovernanceObject::CGovernanceObject(const CGovernanceObject& other)
 {
+    // COPY OTHER OBJECT'S DATA INTO THIS OBJECT
+
+    nHashParent = other.nHashParent;
+    nRevision = other.nRevision;
     strName = other.strName;
     nTime = other.nTime;
-
-    nHashParent = other.nHashParent; //parent object, 0 is root
-    // nPriority = other.nPriorityIn;
-    nRevision = other.nRevision; //object revision in the system
-    nFeeTXHash = other.nFeeTXHash; //fee-tx    
-    // nTypeVersion = other.nTypeVersion;
-    //??
+    nFeeTXHash = other.nFeeTXHash;
     strData = other.strData;
 }
 

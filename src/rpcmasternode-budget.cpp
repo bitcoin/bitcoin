@@ -82,10 +82,30 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
                 "  vote-alias         - Vote on a governance object by masternode alias\n"
                 );
 
+
+    /*
+
+
+        12.1 todo - 
+
+
+        Example Governance Item
+            - This should be valid for anyone to submit
+            - This should propagate and show up when syncing
+
+
+        Command:
+            mngovernance submit 71cd63efd90bb33bae023065b105a597168c0e126dc07e68693854f132f73997 0 1 1463588860 "beer-reimbursement" 
+
+
+    */
+
     if(strCommand == "prepare")
     {
         if (params.size() != 6)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance prepare <parent-hash> <revision> <time> <name> <registers-hex>'");
+
+        // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
         LOCK(cs_main);
         CBlockIndex* pindex = chainActive.Tip();
@@ -94,7 +114,9 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         mnEntries = masternodeConfig.getEntries();
 
         uint256 hashParent;
-        if(params[1].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
+
+        // -- attach to root node (root node doesn't really exist, but has a hash of zero)
+        if(params[1].get_str() == "0") { 
             hashParent = uint256();
         } else {
             hashParent = ParseHashV(params[1], "fee-tx hash, parameter 1");
@@ -107,23 +129,22 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::string strName = SanitizeString(params[4].get_str());
         std::string strRegisters = params[5].get_str();
         
-        //*************************************************************************
+        // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
 
-        // create transaction 15 minutes into the future, to allow for confirmation time
-        CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, strName, nTime, uint256());
+        CGovernanceObject govobj(hashParent, nRevision, strName, nTime, uint256());
 
         std::string strError = "";
-        if(!budgetProposalBroadcast.IsValid(pindex, strError, false))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
+        if(!govobj.IsValid(pindex, strError, false))
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
 
         CWalletTx wtx;
-        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, budgetProposalBroadcast.GetHash(), false)){
+        if(!pwalletMain->GetBudgetSystemCollateralTX(wtx, govobj.GetHash(), false)){
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Error making collateral transaction for proposal. Please check your wallet balance and make sure your wallet is unlocked.");
         }
 
-        // make our change address
+        // -- make our change address
         CReserveKey reservekey(pwalletMain);
-        //send the tx to the network
+        // -- send the tx to the network
         pwalletMain->CommitTransaction(wtx, reservekey, NetMsgType::TX);
 
         return wtx.GetHash().ToString();
@@ -131,13 +152,14 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
 
     if(strCommand == "submit")
     {
-        printf("%d\n", (int)params.size());
         if (params.size() != 7)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'mngovernance submit <fee-tx> <parent-hash> <revision> <time> <name> <registers-hex>'");
 
         if(!masternodeSync.IsBlockchainSynced()) {
             throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
         }
+
+        // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
         LOCK(cs_main);
         CBlockIndex* pindex = chainActive.Tip();
@@ -160,23 +182,25 @@ UniValue mngovernance(const UniValue& params, bool fHelp)
         std::string strName = SanitizeString(params[5].get_str());
         std::string strRegisters = params[6].get_str();
 
-        CGovernanceObject budgetProposalBroadcast(hashParent, nRevision, strName, nTime, fee_tx);
+        // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
+
+        CGovernanceObject govobj(hashParent, nRevision, strName, nTime, fee_tx);
 
         std::string strError = "";
-        if(!budgetProposalBroadcast.IsValid(pindex, strError)){
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + budgetProposalBroadcast.GetHash().ToString() + " - " + strError);
+        if(!govobj.IsValid(pindex, strError)){
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + govobj.GetHash().ToString() + " - " + strError);
         }
 
         // int nConf = 0;
-        // if(!IsCollateralValid(hash, budgetProposalBroadcast.GetHash(), strError, budgetProposalBroadcast.nTime, nConf, GOVERNANCE_FEE_TX)){
+        // if(!IsCollateralValid(hash, govobj.GetHash(), strError, govobj.nTime, nConf, GOVERNANCE_FEE_TX)){
         //     throw JSONRPCError(RPC_INTERNAL_ERROR, "Proposal FeeTX is not valid - " + hash.ToString() + " - " + strError);
         // }
 
-        governance.mapSeenGovernanceObjects.insert(make_pair(budgetProposalBroadcast.GetHash(), SEEN_OBJECT_IS_VALID));
-        budgetProposalBroadcast.Relay();
-        governance.AddGovernanceObject(budgetProposalBroadcast);
+        governance.mapSeenGovernanceObjects.insert(make_pair(govobj.GetHash(), SEEN_OBJECT_IS_VALID));
+        govobj.Relay();
+        governance.AddGovernanceObject(govobj);
 
-        return budgetProposalBroadcast.GetHash().ToString();
+        return govobj.GetHash().ToString();
 
     }
 

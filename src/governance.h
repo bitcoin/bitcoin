@@ -182,21 +182,19 @@ public:
     void UpdateLocalValidity(const CBlockIndex *pCurrentBlockIndex) {fCachedLocalValidity = IsValid(pCurrentBlockIndex, strLocalValidityError);};
     void UpdateSentinelVariables(const CBlockIndex *pCurrentBlockIndex)
     {
-        /*
-        #define VOTE_SIGNAL_FUNDING             1 //   -- fund this object for it's stated amount
-        #define VOTE_SIGNAL_VALID               2 //   -- this object checks out to sentinel
-        #define VOTE_SIGNAL_DELETE              3 //   -- this object should be deleted from memory entirely
-        #define VOTE_SIGNAL_ENDORSED            5 //   -- officially endorsed by the network somehow (delegation)
-        */
+        // CALCULATE MINIMUM SUPPORT LEVELS REQUIRED
 
         int nMnCount = mnodeman.CountEnabled();
         int nAbsYesVoteReq = nMnCount / 10;
 
-        // set all flags to false
+        // SET SENTINEL FLAGS TO FALSE
+
         fCachedFunding = false;
         fCachedValid = false;
         fCachedDelete = false;
         fCachedEndorsed = false;
+
+        // SET SENTINEL FLAGS TO TRUE IF MIMIMUM SUPPORT LEVELS ARE REACHED
 
         if(GetAbsoluteYesCount(VOTE_SIGNAL_FUNDING) >= nAbsYesVoteReq) fCachedFunding = true;
         if(GetAbsoluteYesCount(VOTE_SIGNAL_VALID) >= nAbsYesVoteReq) fCachedValid = true;
@@ -242,13 +240,7 @@ public:
 
     uint256 GetHash(){
 
-        /*
-        uint256 nHashParent; //parent object, 0 is root
-        int nRevision; //object revision in the system
-        std::string strName; //org name, username, prop name, etc. 
-        int64_t nTime; //time this object was created
-        uint256 nFeeTXHash; //fee-tx
-        */
+        // CREATE HASH OF ALL IMPORTANT PIECES OF DATA
 
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << nHashParent;
@@ -256,27 +248,27 @@ public:
         ss << strName;
         ss << nTime;
         ss << strData;
+        // fee_tx is left out on purpose
         uint256 h1 = ss.GetHash();
 
         return h1;
     }
 
     /**
-    *   AddRegister - Example usage:
+    *   SetData - Example usage:
     *   --------------------------------------------------------
     * 
-    *   We don't really care what's in these, as long as the masternode network
-    *   believes they're accurate. Otherwise the masternodes will vote them down 
-    *   and we'll delete them from memory (fee-loss attack). 
-    *
-    
+    *   dash-core is data-agnostic, for rules about data see sentinel documentation
+    *    
     */
 
     bool SetData(std::string& strError, std::string strDataIn)
     {
-        // (assumption) this is equal to pythons len(strData) > 512*4, I think 
+        // SET DATA FIELD TO INPUT
+
         if(strDataIn.size() > 512*4)
         {
+            // (assumption) this is equal to pythons len(strData) > 512*4, I think 
             strError = "Too big.";
             return false;
         }
@@ -290,27 +282,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
     {
-        /**
-        *   Store all major data items in serialization for other clients
-        *   --
-        *
-        *
-        *    uint256 nHashParent; //parent object, 0 is root
-        *    int nRevision; //object revision in the system
-        *    std::string strName; //org name, username, prop name, etc. 
-        *    int64_t nTime; //time this object was created
-        *    uint256 nFeeTXHash; //fee-tx
-        *   
-        *    // caching
-        *    bool fValid;
-        *    uint256 nHash;
-        *
-        *    // Registers, these can be used for anything
-        *    //   -- check governance wiki for correct usage
-        *    std::map<int, CGovernanceObjectRegister> mapRegister;
-        *
-        *
-        */
+        // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
 
         READWRITE(nHashParent);
         READWRITE(nRevision);
