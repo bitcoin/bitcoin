@@ -158,10 +158,10 @@ UniValue masternode(const UniValue& params, bool fHelp)
                     mnodeman.GetNextMasternodeInQueueForPayment(chainActive.Tip()->nHeight, true, nCount);
             }
 
-            if(params[1].get_str() == "ds") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
+            if(params[1].get_str() == "ps") return mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION);
             if(params[1].get_str() == "enabled") return mnodeman.CountEnabled();
             if(params[1].get_str() == "qualify") return nCount;
-            if(params[1].get_str() == "all") return strprintf("Total: %d (DS Compatible: %d / Enabled: %d / Qualify: %d)",
+            if(params[1].get_str() == "all") return strprintf("Total: %d (PS Compatible: %d / Enabled: %d / Qualify: %d)",
                                                     mnodeman.size(),
                                                     mnodeman.CountEnabled(MIN_POOL_PEER_PROTO_VERSION),
                                                     mnodeman.CountEnabled(),
