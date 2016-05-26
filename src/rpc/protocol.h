@@ -63,6 +63,7 @@ enum RPCErrorCode
     RPC_CLIENT_NODE_NOT_ADDED       = -24, //!< Node has not been added before
     RPC_CLIENT_NODE_NOT_CONNECTED   = -29, //!< Node to disconnect not found in connected nodes
     RPC_CLIENT_INVALID_IP_OR_SUBNET = -30, //!< Invalid IP/Subnet
+    RPC_CLIENT_P2P_DISABLED         = -31, //!< No valid connection manager instance found
 
     //! Wallet errors
     RPC_WALLET_ERROR                = -4,  //!< Unspecified problem with wallet (key not found etc.)
