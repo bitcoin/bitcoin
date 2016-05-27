@@ -99,7 +99,7 @@ UniValue masternode(const UniValue& params, bool fHelp)
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "2. \"passphrase\"     (string, optional) The wallet passphrase\n"
                 "\nAvailable commands:\n"
-                "  count        - Print number of all known masternodes (optional: 'ds', 'enabled', 'all', 'qualify')\n"
+                "  count        - Print number of all known masternodes (optional: 'ps', 'enabled', 'all', 'qualify')\n"
                 "  current      - Print info on current masternode winner\n"
                 "  debug        - Print masternode status\n"
                 "  genkey       - Generate new masternodeprivkey\n"
