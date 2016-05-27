@@ -1979,7 +1979,7 @@ bool CConnman::BindListenPort(const CService &addrBind, std::string& strError, b
     return true;
 }
 
-void static Discover(boost::thread_group& threadGroup)
+void Discover(boost::thread_group& threadGroup)
 {
     if (!fDiscover)
         return;
@@ -2042,15 +2042,6 @@ CConnman::CConnman()
     nMaxOutbound = 0;
     nBestHeight = 0;
     clientInterface = NULL;
-}
-
-bool StartNode(CConnman& connman, boost::thread_group& threadGroup, CScheduler& scheduler, ServiceFlags nLocalServices, ServiceFlags nRelevantServices, int nMaxConnectionsIn, int nMaxOutboundIn, int nBestHeightIn, CClientUIInterface* interfaceIn, std::string& strNodeError)
-{
-    Discover(threadGroup);
-
-    bool ret = connman.Start(threadGroup, scheduler, nLocalServices, nRelevantServices, nMaxConnectionsIn, nMaxOutboundIn, nBestHeightIn, interfaceIn, strNodeError);
-
-    return ret;
 }
 
 NodeId CConnman::GetNewNodeId()
@@ -2136,9 +2127,6 @@ bool CConnman::Start(boost::thread_group& threadGroup, CScheduler& scheduler, Se
     else
         threadGroup.create_thread(boost::bind(&TraceThread<boost::function<void()> >, "dnsseed", boost::function<void()>(boost::bind(&CConnman::ThreadDNSAddressSeed, this))));
 
-    // Map ports with UPnP
-    MapPort(GetBoolArg("-upnp", DEFAULT_UPNP));
-
     // Send and receive from sockets, accept connections
     threadGroup.create_thread(boost::bind(&TraceThread<boost::function<void()> >, "net", boost::function<void()>(boost::bind(&CConnman::ThreadSocketHandler, this))));
 
@@ -2154,15 +2142,6 @@ bool CConnman::Start(boost::thread_group& threadGroup, CScheduler& scheduler, Se
     // Dump network addresses
     scheduler.scheduleEvery(boost::bind(&CConnman::DumpData, this), DUMP_ADDRESSES_INTERVAL);
 
-    return true;
-}
-
-bool StopNode(CConnman& connman)
-{
-    LogPrintf("StopNode()\n");
-    MapPort(false);
-
-    connman.Stop();
     return true;
 }
 
@@ -2183,6 +2162,7 @@ instance_of_cnetcleanup;
 
 void CConnman::Stop()
 {
+    LogPrintf("%s\n",__func__);
     if (semOutbound)
         for (int i=0; i<(nMaxOutbound + MAX_FEELER_CONNECTIONS); i++)
             semOutbound->post();
