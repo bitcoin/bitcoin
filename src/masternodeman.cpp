@@ -234,8 +234,7 @@ void CMasternodeMan::CheckAndRemove(bool forceExpiredRemoval)
     while(it != vMasternodes.end()){
         if((*it).activeState == CMasternode::MASTERNODE_REMOVE ||
                 (*it).activeState == CMasternode::MASTERNODE_VIN_SPENT ||
-                (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED) ||
-                (*it).protocolVersion < mnpayments.GetMinMasternodePaymentsProto()) {
+                (forceExpiredRemoval && (*it).activeState == CMasternode::MASTERNODE_EXPIRED)) {
             LogPrint("masternode", "CMasternodeMan::CheckAndRemove - Removing inactive Masternode %s - %i now\n", (*it).addr.ToString(), size() - 1);
 
             //erase all of the broadcasts we've seen from this vin

@@ -190,7 +190,13 @@ void CMasternode::Check(bool forceCheck)
     //once spent, stop doing the checks
     if(activeState == MASTERNODE_VIN_SPENT) return;
 
-    if(!IsPingedWithin(MASTERNODE_REMOVAL_SECONDS)){
+    // If there are no pings for quite a long time ...
+    if(!IsPingedWithin(MASTERNODE_REMOVAL_SECONDS)
+        // or doesn't meet payments requirements ...
+        || protocolVersion < mnpayments.GetMinMasternodePaymentsProto()
+        // or it's our own node and we just updated it to the new protocol but we are still waiting for activation -
+        || (pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion < PROTOCOL_VERSION)) {
+        // remove it from the list
         activeState = MASTERNODE_REMOVE;
         return;
     }
@@ -433,7 +439,8 @@ bool CMasternodeBroadcast::CheckAndUpdate(int& nDos)
         LogPrintf("CMasternodeBroadcast::CheckAndUpdate - Got updated entry for %s\n", addr.ToString());
         if(pmn->UpdateFromNewBroadcast((*this))){
             pmn->Check();
-            if(pmn->IsEnabled()) Relay();
+            // normally masternode should be in pre-enabled status after update, if not - do not relay
+            if(pmn->IsPreEnabled()) Relay();
         }
         masternodeSync.AddedMasternodeList(GetHash());
     }
@@ -458,7 +465,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
     if(pmn != NULL) {
         // nothing to do here if we already know about this masternode and it's (pre)enabled
         if(pmn->IsEnabled() || pmn->IsPreEnabled()) return true;
-        // if it's not enabled, remove old MN first and continue
+        // if it's not (pre)enabled, remove old MN first and continue
         else mnodeman.Remove(pmn->vin);
     }
 
@@ -525,14 +532,22 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDos)
         }
     }
 
+    // if it matches our Masternode privkey...
+    if(fMasterNode && pubkey2 == activeMasternode.pubKeyMasternode) {
+        if(protocolVersion == PROTOCOL_VERSION) {
+            // ... and PROTOCOL_VERSION, then we've been remotely activated ...
+            activeMasternode.EnableHotColdMasterNode(vin, addr);
+        } else {
+            // ... otherwise we need to reactivate our node, don not add it to the list and do not relay
+            // but also do not ban the node we get this message from
+            LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - wrong PROTOCOL_VERSION, announce message: %d MN: %d - re-activate your MN\n", protocolVersion, PROTOCOL_VERSION);
+            return false;
+        }
+    }
+
     LogPrintf("CMasternodeBroadcast::CheckInputsAndAdd - Got NEW Masternode entry - %s - %s - %s - %lli \n", GetHash().ToString(), addr.ToString(), vin.ToString(), sigTime);
     CMasternode mn(*this);
     mnodeman.Add(mn);
-
-    // if it matches our Masternode privkey, then we've been remotely activated
-    if(pubkey2 == activeMasternode.pubKeyMasternode && protocolVersion == PROTOCOL_VERSION){
-        activeMasternode.EnableHotColdMasterNode(vin, addr);
-    }
 
     bool isLocal = addr.IsRFC1918() || addr.IsLocal();
     if(Params().NetworkIDString() == CBaseChainParams::REGTEST) isLocal = false;
