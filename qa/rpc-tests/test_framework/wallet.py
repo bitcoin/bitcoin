@@ -8,31 +8,31 @@
 """
 
 
-class WalletAddress(object):
-    def __init__(self, createdAddress):
-        self.privateKey = createdAddress['private']
-        self.publicKey = createdAddress['address']
-        self.publicHexKey = createdAddress['pubkey']
+class WalletAddress:
+    def __init__(self, created_address):
+        self.private_key = created_address['private']
+        self.public_key = created_address['address']
+        self.public_hex_key = created_address['pubkey']
 
-class Wallet(object):
+class Wallet:
 
     def __init__(self, node):
-        self.parentNode = node
+        self.parent_node = node
         self.entries = []
 
-    def createCoinbase(self):
+    def create_coinbase(self):
         if len(self.entries) < 1:
-            coinbase = WalletAddress(self.parentNode.createaddress())
-            self.parentNode.importprivkey(coinbase.privateKey)
+            coinbase = WalletAddress(self.parent_node.createaddress())
+            self.parent_node.importprivkey(coinbase.private_key)
             self.entries.append(coinbase)
         return self.entries[0]
 
     def generate(self, count):
-        self.createCoinbase()
-        return self.parentNode.generate(count, self.entries[len(self.entries)-1].publicHexKey)
+        self.create_coinbase()
+        return self.parent_node.generate(count, self.entries[0].public_hex_key)
 
-    def newAddress(self):
-        address = WalletAddress(self.parentNode.createaddress())
+    def new_address(self):
+        address = WalletAddress(self.parent_node.createaddress())
         self.entries.append(address)
-        return address.publicKey
+        return address.public_key
 
