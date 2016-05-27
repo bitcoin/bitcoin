@@ -22,9 +22,8 @@ class Wallet:
 
     def create_coinbase(self):
         if len(self.entries) < 1:
-            coinbase = WalletAddress(self.parent_node.createaddress())
+            coinbase = self.new_address()
             self.parent_node.importprivkey(coinbase.private_key)
-            self.entries.append(coinbase)
         return self.entries[0]
 
     def generate(self, count):
@@ -34,5 +33,5 @@ class Wallet:
     def new_address(self):
         address = WalletAddress(self.parent_node.createaddress())
         self.entries.append(address)
-        return address.public_key
+        return address
 
