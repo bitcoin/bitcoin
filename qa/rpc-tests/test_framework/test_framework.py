@@ -119,6 +119,8 @@ class BitcoinTestFramework(object):
         self.add_options(parser)
         (self.options, self.args) = parser.parse_args()
 
+        self.options.tmpdir += '/' + str(self.options.port_seed)
+
         if self.options.trace_rpc:
             logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 
