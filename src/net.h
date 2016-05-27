@@ -298,11 +298,10 @@ private:
     CClientUIInterface* clientInterface;
 };
 extern std::unique_ptr<CConnman> g_connman;
+void Discover(boost::thread_group& threadGroup);
 void MapPort(bool fUseUPnP);
 unsigned short GetListenPort();
 bool BindListenPort(const CService &bindAddr, std::string& strError, bool fWhitelisted = false);
-bool StartNode(CConnman& connman, boost::thread_group& threadGroup, CScheduler& scheduler, ServiceFlags nLocalServices, ServiceFlags nRelevantServices, int nMaxConnections, int nMaxOutbound, int nBestHeightIn, CClientUIInterface* interfaceIn, std::string& strNodeError);
-bool StopNode(CConnman& connman);
 size_t SocketSendData(CNode *pnode);
 
 struct CombinerAll
