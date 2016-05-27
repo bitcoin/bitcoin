@@ -9,7 +9,8 @@ bench_bench_bitcoin_SOURCES = \
   bench/bench.h \
   bench/Examples.cpp \
   bench/rollingbloom.cpp \
-  bench/crypto_hash.cpp
+  bench/crypto_hash.cpp \
+  bench/base58.cpp
 
 bench_bench_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
