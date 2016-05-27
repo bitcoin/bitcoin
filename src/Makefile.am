@@ -429,6 +429,12 @@ endif
 #
 CLEANFILES = ($EXTRA_LIBRARIES)
 
+CTAES_DIST =  crypto/ctaes/bench.c
+CTAES_DIST += crypto/ctaes/ctaes.c
+CTAES_DIST += crypto/ctaes/ctaes.h
+CTAES_DIST += crypto/ctaes/README.md
+CTAES_DIST += crypto/ctaes/test.c
+
 CLEANFILES += *.gcda *.gcno
 CLEANFILES += compat/*.gcda compat/*.gcno
 CLEANFILES += consensus/*.gcda consensus/*.gcno
@@ -444,7 +450,7 @@ CLEANFILES += zmq/*.gcda zmq/*.gcno
 
 DISTCLEANFILES = obj/build.h
 
-EXTRA_DIST = leveldb crypto/ctaes
+EXTRA_DIST = leveldb $(CTAES_DIST)
 
 clean-local:
 	-$(MAKE) -C secp256k1 clean
