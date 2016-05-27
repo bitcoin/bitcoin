@@ -1515,8 +1515,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     MapPort(GetBoolArg("-upnp", DEFAULT_UPNP));
 
     std::string strNodeError;
-    int nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, nMaxConnections);
-    if(!connman.Start(threadGroup, scheduler, nLocalServices, nRelevantServices, nMaxConnections, nMaxOutbound, chainActive.Height(), &uiInterface, strNodeError))
+    CConnman::Options connOptions;
+    connOptions.nLocalServices = nLocalServices;
+    connOptions.nRelevantServices = nRelevantServices;
+    connOptions.nMaxConnections = nMaxConnections;
+    connOptions.nMaxOutbound = std::min(MAX_OUTBOUND_CONNECTIONS, connOptions.nMaxConnections);
+    connOptions.nBestHeight = chainActive.Height();
+    connOptions.uiInterface = &uiInterface;
+
+    if(!connman.Start(threadGroup, scheduler, strNodeError, connOptions))
         return InitError(strNodeError);
 
     // ********************************************************* Step 12: finished
