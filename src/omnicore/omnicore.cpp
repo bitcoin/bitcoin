@@ -12,6 +12,7 @@
 #include "omnicore/dex.h"
 #include "omnicore/encoding.h"
 #include "omnicore/errors.h"
+#include "omnicore/fees.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
 #include "omnicore/notifications.h"
@@ -135,6 +136,8 @@ CMPTxList *mastercore::p_txlistdb;
 CMPTradeList *mastercore::t_tradelistdb;
 CMPSTOList *mastercore::s_stolistdb;
 COmniTransactionDB *mastercore::p_OmniTXDB;
+COmniFeeCache *mastercore::p_feecache;
+COmniFeeHistory *mastercore::p_feehistory;
 
 // indicate whether persistence is enabled at this point, or not
 // used to write/read files, for breakout mode, debugging, etc.
@@ -2044,6 +2047,8 @@ void clear_all_state()
     s_stolistdb->Clear();
     t_tradelistdb->Clear();
     p_OmniTXDB->Clear();
+    p_feecache->Clear();
+    p_feehistory->Clear();
     assert(p_txlistdb->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
@@ -2093,12 +2098,16 @@ int mastercore_init()
             boost::filesystem::path spPath = GetDataDir() / "MP_spinfo";
             boost::filesystem::path stoPath = GetDataDir() / "MP_stolist";
             boost::filesystem::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
+            boost::filesystem::path feesPath = GetDataDir() / "OMNI_feecache";
+            boost::filesystem::path feeHistoryPath = GetDataDir() / "OMNI_feehistory";
             if (boost::filesystem::exists(persistPath)) boost::filesystem::remove_all(persistPath);
             if (boost::filesystem::exists(txlistPath)) boost::filesystem::remove_all(txlistPath);
             if (boost::filesystem::exists(tradePath)) boost::filesystem::remove_all(tradePath);
             if (boost::filesystem::exists(spPath)) boost::filesystem::remove_all(spPath);
             if (boost::filesystem::exists(stoPath)) boost::filesystem::remove_all(stoPath);
             if (boost::filesystem::exists(omniTXDBPath)) boost::filesystem::remove_all(omniTXDBPath);
+            if (boost::filesystem::exists(feesPath)) boost::filesystem::remove_all(feesPath);
+            if (boost::filesystem::exists(feeHistoryPath)) boost::filesystem::remove_all(feeHistoryPath);
             PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
             startClean = true;
         } catch (const boost::filesystem::filesystem_error& e) {
@@ -2112,6 +2121,8 @@ int mastercore_init()
     p_txlistdb = new CMPTxList(GetDataDir() / "MP_txlist", fReindex);
     _my_sps = new CMPSPInfo(GetDataDir() / "MP_spinfo", fReindex);
     p_OmniTXDB = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
+    p_feecache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
+    p_feehistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
 
     MPPersistencePath = GetDataDir() / "MP_persist";
     TryCreateDirectory(MPPersistencePath);
@@ -2212,6 +2223,14 @@ int mastercore_shutdown()
     if (p_OmniTXDB) {
         delete p_OmniTXDB;
         p_OmniTXDB = NULL;
+    }
+    if (p_feecache) {
+        delete p_feecache;
+        p_feecache = NULL;
+    }
+    if (p_feehistory) {
+        delete p_feehistory;
+        p_feehistory = NULL;
     }
 
     PrintToLog("\nOmni Core shutdown completed\n");
@@ -2373,6 +2392,7 @@ int mastercore::ClassAgnosticWalletTXBuilder(const std::string& senderAddress, c
 #else
     return MP_ERR_WALLET_ACCESS;
 #endif
+
 }
 
 void COmniTransactionDB::RecordTransaction(const uint256& txid, uint32_t posInBlock)
@@ -3263,7 +3283,7 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
 
       // ensure correct amount of tokens in value string
       boost::split(vstr, strValue, boost::is_any_of(":"), token_compress_on);
-      if (vstr.size() != 7) {
+      if (vstr.size() != 8) {
           PrintToLog("TRADEDB error - unexpected number of tokens in value (%s)\n", strValue);
           continue;
       }
@@ -3276,8 +3296,11 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
       int64_t amount1 = boost::lexical_cast<int64_t>(vstr[4]);
       int64_t amount2 = boost::lexical_cast<int64_t>(vstr[5]);
       int blockNum = atoi(vstr[6]);
+      int64_t tradingFee = boost::lexical_cast<int64_t>(vstr[7]);
+
       std::string strAmount1 = FormatMP(prop1, amount1);
       std::string strAmount2 = FormatMP(prop2, amount2);
+      std::string strTradingFee = FormatMP(prop1, tradingFee);
 
       // populate trade object and add to the trade array, correcting for orientation of trade
       Object trade;
@@ -3293,6 +3316,7 @@ bool CMPTradeList::getMatchingTrades(const uint256& txid, uint32_t propertyId, A
           trade.push_back(Pair("address", address2));
           trade.push_back(Pair("amountsold", strAmount2));
           trade.push_back(Pair("amountreceived", strAmount1));
+          trade.push_back(Pair("tradingfee", strTradingFee));
           totalReceived += amount1;
           totalSold += amount2;
       }
@@ -3329,7 +3353,7 @@ void CMPTradeList::getTradesForPair(uint32_t propertyIdSideA, uint32_t propertyI
       if (strKey.size() != 129) continue; // only interested in matches
       boost::split(vecKeys, strKey, boost::is_any_of("+"), boost::token_compress_on);
       boost::split(vecValues, strValue, boost::is_any_of(":"), boost::token_compress_on);
-      if (vecKeys.size() != 2 || vecValues.size() != 7) {
+      if (vecKeys.size() != 2 || vecValues.size() != 8) {
           PrintToLog("TRADEDB error - unexpected number of tokens (%s:%s)\n", strKey, strValue);
           continue;
       }
@@ -3439,11 +3463,11 @@ void CMPTradeList::recordNewTrade(const uint256& txid, const std::string& addres
   if (msc_debug_tradedb) PrintToLog("%s(): %s\n", __FUNCTION__, status.ToString());
 }
 
-void CMPTradeList::recordMatchedTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum)
+void CMPTradeList::recordMatchedTrade(const uint256 txid1, const uint256 txid2, string address1, string address2, unsigned int prop1, unsigned int prop2, uint64_t amount1, uint64_t amount2, int blockNum, int64_t fee)
 {
   if (!pdb) return;
   const string key = txid1.ToString() + "+" + txid2.ToString();
-  const string value = strprintf("%s:%s:%u:%u:%lu:%lu:%d", address1, address2, prop1, prop2, amount1, amount2, blockNum);
+  const string value = strprintf("%s:%s:%u:%u:%lu:%lu:%d:%d", address1, address2, prop1, prop2, amount1, amount2, blockNum, fee);
   Status status;
   if (pdb)
   {
@@ -3596,6 +3620,8 @@ int mastercore_handler_block_begin(int nBlockPrev, CBlockIndex const * pBlockInd
         p_txlistdb->isMPinBlockRange(pBlockIndex->nHeight, reorgRecoveryMaxHeight, true);
         t_tradelistdb->deleteAboveBlock(pBlockIndex->nHeight);
         s_stolistdb->deleteAboveBlock(pBlockIndex->nHeight);
+        p_feecache->RollBackCache(pBlockIndex->nHeight);
+        p_feehistory->RollBackHistory(pBlockIndex->nHeight);
         reorgRecoveryMaxHeight = 0;
 
         nWaterlineBlock = ConsensusParams().GENESIS_BLOCK - 1;
@@ -3665,6 +3691,9 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
 
     // transactions were found in the block, signal the UI accordingly
     if (countMP > 0) CheckWalletUpdate(true);
+
+    // total tokens for properties may have changed, recalculate distribution thresholds for MetaDEx fees
+    p_feecache->UpdateDistributionThresholds();
 
     // calculate and print a consensus hash if required
     if (msc_debug_consensus_hash_every_block) {

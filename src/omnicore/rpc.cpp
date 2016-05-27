@@ -11,6 +11,7 @@
 #include "omnicore/convert.h"
 #include "omnicore/dex.h"
 #include "omnicore/errors.h"
+#include "omnicore/fees.h"
 #include "omnicore/fetchwallettx.h"
 #include "omnicore/log.h"
 #include "omnicore/mdex.h"
@@ -22,10 +23,12 @@
 #include "omnicore/rpcvalues.h"
 #include "omnicore/rules.h"
 #include "omnicore/sp.h"
+#include "omnicore/sto.h"
 #include "omnicore/tally.h"
 #include "omnicore/tx.h"
 #include "omnicore/utilsbitcoin.h"
 #include "omnicore/version.h"
+#include "omnicore/wallettxs.h"
 
 #include "amount.h"
 #include "init.h"
@@ -143,6 +146,322 @@ bool BalanceToJSON(const std::string& address, uint32_t property, Object& balanc
     } else {
         return true;
     }
+}
+
+// Obtains details of a fee distribution
+Value omni_getfeedistribution(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "omni_getfeedistribution distributionid\n"
+            "\nGet the details for a fee distribution.\n"
+            "\nArguments:\n"
+            "1. distributionid           (number, required) the distribution to obtain details for\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"distributionid\" : n,          (number) the distribution id\n"
+            "  \"propertyid\" : n,              (number) the property id of the distributed tokens\n"
+            "  \"block\" : n,                   (number) the block the distribution occurred\n"
+            "  \"amount\" : \"n.nnnnnnnn\",     (string) the amount that was distributed\n"
+            "  \"recipients\": [                (array of JSON objects) a list of recipients\n"
+            "    {\n"
+            "      \"address\" : \"address\",          (string) the address of the recipient\n"
+            "      \"amount\" : \"n.nnnnnnnn\"         (string) the amount of fees received by the recipient\n"
+            "    },\n"
+            "    ...\n"
+            "  ]\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getfeedistribution", "1")
+            + HelpExampleRpc("omni_getfeedistribution", "1")
+        );
+
+    int id = params[0].get_int();
+
+    int block = 0;
+    uint32_t propertyId = 0;
+    int64_t total = 0;
+
+    Object response;
+
+    bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
+    if (!found) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee distribution ID does not exist");
+    }
+    response.push_back(Pair("distributionid", id));
+    response.push_back(Pair("propertyid", (uint64_t)propertyId));
+    response.push_back(Pair("block", block));
+    response.push_back(Pair("amount", FormatMP(propertyId, total)));
+    Array recipients;
+    std::set<std::pair<std::string,int64_t> > sRecipients = p_feehistory->GetFeeDistribution(id);
+    bool divisible = isPropertyDivisible(propertyId);
+    if (!sRecipients.empty()) {
+        for (std::set<std::pair<std::string,int64_t> >::iterator it = sRecipients.begin(); it != sRecipients.end(); it++) {
+            std::string address = (*it).first;
+            int64_t amount = (*it).second;
+            Object recipient;
+            recipient.push_back(Pair("address", address));
+            if (divisible) {
+                recipient.push_back(Pair("amount", FormatDivisibleMP(amount)));
+            } else {
+                recipient.push_back(Pair("amount", FormatIndivisibleMP(amount)));
+            }
+            recipients.push_back(recipient);
+        }
+    }
+    response.push_back(Pair("recipients", recipients));
+    return response;
+}
+
+// Obtains all fee distributions for a property
+// TODO : Split off code to populate a fee distribution object into a seperate function
+Value omni_getfeedistributions(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+            "omni_getfeedistributions propertyid\n"
+            "\nGet the details of all fee distributions for a property.\n"
+            "\nArguments:\n"
+            "1. propertyid           (number, required) the property id to retrieve distributions for\n"
+            "\nResult:\n"
+            "[                       (array of JSON objects)\n"
+            "  {\n"
+            "    \"distributionid\" : n,          (number) the distribution id\n"
+            "    \"propertyid\" : n,              (number) the property id of the distributed tokens\n"
+            "    \"block\" : n,                   (number) the block the distribution occurred\n"
+            "    \"amount\" : \"n.nnnnnnnn\",     (string) the amount that was distributed\n"
+            "    \"recipients\": [                (array of JSON objects) a list of recipients\n"
+            "      {\n"
+            "        \"address\" : \"address\",          (string) the address of the recipient\n"
+            "        \"amount\" : \"n.nnnnnnnn\"         (string) the amount of fees received by the recipient\n"
+            "      },\n"
+            "      ...\n"
+            "  }\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getfeedistributions", "1")
+            + HelpExampleRpc("omni_getfeedistributions", "1")
+        );
+
+    uint32_t prop = ParsePropertyId(params[0]);
+    RequireExistingProperty(prop);
+
+    Array response;
+
+    std::set<int> sDistributions = p_feehistory->GetDistributionsForProperty(prop);
+    if (!sDistributions.empty()) {
+        for (std::set<int>::iterator it = sDistributions.begin(); it != sDistributions.end(); it++) {
+            int id = *it;
+            int block = 0;
+            uint32_t propertyId = 0;
+            int64_t total = 0;
+            Object responseObj;
+            bool found = p_feehistory->GetDistributionData(id, &propertyId, &block, &total);
+            if (!found) {
+                PrintToLog("Fee History Error - Distribution data not found for distribution ID %d but it was included in GetDistributionsForProperty(prop %d)\n", id, prop);
+                continue;
+            }
+            responseObj.push_back(Pair("distributionid", id));
+            responseObj.push_back(Pair("propertyid", (uint64_t)propertyId));
+            responseObj.push_back(Pair("block", block));
+            responseObj.push_back(Pair("amount", FormatMP(propertyId, total)));
+            Array recipients;
+            std::set<std::pair<std::string,int64_t> > sRecipients = p_feehistory->GetFeeDistribution(id);
+            bool divisible = isPropertyDivisible(propertyId);
+            if (!sRecipients.empty()) {
+                for (std::set<std::pair<std::string,int64_t> >::iterator it = sRecipients.begin(); it != sRecipients.end(); it++) {
+                    std::string address = (*it).first;
+                    int64_t amount = (*it).second;
+                    Object recipient;
+                    recipient.push_back(Pair("address", address));
+                    if (divisible) {
+                        recipient.push_back(Pair("amount", FormatDivisibleMP(amount)));
+                    } else {
+                        recipient.push_back(Pair("amount", FormatIndivisibleMP(amount)));
+                    }
+                    recipients.push_back(recipient);
+                }
+            }
+            responseObj.push_back(Pair("recipients", recipients));
+            response.push_back(responseObj);
+        }
+    }
+    return response;
+}
+
+// Obtains the trigger value for fee distribution for a/all properties
+Value omni_getfeetrigger(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "omni_getfeetrigger ( propertyid )\n"
+            "\nReturns the amount of fees required in the cache to trigger distribution.\n"
+            "\nArguments:\n"
+            "1. propertyid           (number, optional) filter the results on this property id\n"
+            "\nResult:\n"
+            "[                       (array of JSON objects)\n"
+            "  {\n"
+            "    \"propertyid\" : nnnnnnn,          (number) the property id\n"
+            "    \"feetrigger\" : \"n.nnnnnnnn\",   (string) the amount of fees required to trigger distribution\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getfeetrigger", "3")
+            + HelpExampleRpc("omni_getfeetrigger", "3")
+        );
+
+    uint32_t propertyId = 0;
+    if (0 < params.size()) {
+        propertyId = ParsePropertyId(params[0]);
+    }
+
+    if (propertyId > 0) {
+        RequireExistingProperty(propertyId);
+    }
+
+    Array response;
+
+    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
+        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
+        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
+            if (propertyId == 0 || propertyId == itPropertyId) {
+                int64_t feeTrigger = p_feecache->GetDistributionThreshold(itPropertyId);
+                std::string strFeeTrigger = FormatMP(itPropertyId, feeTrigger);
+                Object cacheObj;
+                cacheObj.push_back(Pair("propertyid", (uint64_t)itPropertyId));
+                cacheObj.push_back(Pair("feetrigger", strFeeTrigger));
+                response.push_back(cacheObj);
+            }
+        }
+    }
+
+    return response;
+}
+
+// Provides the fee share the wallet (or specific address) will receive from fee distributions
+Value omni_getfeeshare(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 2)
+        throw runtime_error(
+            "omni_getfeeshare ( address ecosystem )\n"
+            "\nReturns the percentage share of fees distribution applied to the wallet (default) or address (if supplied).\n"
+            "\nArguments:\n"
+            "1. address              (string, optional) retrieve the fee share for the supplied address\n"
+            "2. ecosystem            (number, optional) the ecosystem to check the fee share (1 for main ecosystem, 2 for test ecosystem)\n"
+            "\nResult:\n"
+            "[                       (array of JSON objects)\n"
+            "  {\n"
+            "    \"address\" : nnnnnnn,          (number) the property id\n"
+            "    \"feeshare\" : \"n.nnnnnnnn\",   (string) the percentage of fees this address will receive based on current state\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getfeeshare", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
+            + HelpExampleRpc("omni_getfeeshare", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1")
+        );
+
+    std::string address;
+    uint8_t ecosystem = 1;
+    if (0 < params.size()) {
+        if ("*" != params[0].get_str()) { //ParseAddressOrEmpty doesn't take wildcards
+            address = ParseAddressOrEmpty(params[0]);
+        } else {
+            address = "*";
+        }
+    }
+    if (1 < params.size()) {
+        ecosystem = ParseEcosystem(params[1]);
+    }
+
+    Array response;
+    bool addObj = false;
+
+    OwnerAddrType receiversSet;
+    if (ecosystem == 1) {
+        receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_MSC, COIN);
+    } else {
+        receiversSet = STO_GetReceivers("FEEDISTRIBUTION", OMNI_PROPERTY_TMSC, COIN);
+    }
+
+    for (OwnerAddrType::reverse_iterator it = receiversSet.rbegin(); it != receiversSet.rend(); ++it) {
+        addObj = false;
+        if (address.empty()) {
+            if (IsMyAddress(it->second)) {
+                addObj = true;
+            }
+        } else if (address == it->second || address == "*") {
+            addObj = true;
+        }
+        if (addObj) {
+            Object feeShareObj;
+            // NOTE: using float here as this is a display value only which isn't an exact percentage and
+            //       changes block to block (due to dev Omni) so high precision not required(?)
+            double feeShare = (double(it->first) / double(COIN)) * (double)100;
+            std::string strFeeShare = strprintf("%.4f", feeShare);
+            strFeeShare += "%";
+            feeShareObj.push_back(Pair("address", it->second));
+            feeShareObj.push_back(Pair("feeshare", strFeeShare));
+            response.push_back(feeShareObj);
+        }
+    }
+
+    return response;
+}
+
+// Provides the current values of the fee cache
+Value omni_getfeecache(const Array& params, bool fHelp)
+{
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+            "omni_getfeecache ( propertyid )\n"
+            "\nReturns the amount of fees cached for distribution.\n"
+            "\nArguments:\n"
+            "1. propertyid           (number, optional) filter the results on this property id\n"
+            "\nResult:\n"
+            "[                       (array of JSON objects)\n"
+            "  {\n"
+            "    \"propertyid\" : nnnnnnn,          (number) the property id\n"
+            "    \"cachedfees\" : \"n.nnnnnnnn\",   (string) the amount of fees cached for this property\n"
+            "  },\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            + HelpExampleCli("omni_getfeecache", "31")
+            + HelpExampleRpc("omni_getfeecache", "31")
+        );
+
+    uint32_t propertyId = 0;
+    if (0 < params.size()) {
+        propertyId = ParsePropertyId(params[0]);
+    }
+
+    if (propertyId > 0) {
+        RequireExistingProperty(propertyId);
+    }
+
+    Array response;
+
+    for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
+        uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
+        for (uint32_t itPropertyId = startPropertyId; itPropertyId < _my_sps->peekNextSPID(ecosystem); itPropertyId++) {
+            if (propertyId == 0 || propertyId == itPropertyId) {
+                int64_t cachedFee = p_feecache->GetCachedAmount(itPropertyId);
+                if (cachedFee == 0) {
+                    // filter empty results unless the call specifically requested this property
+                    if (propertyId != itPropertyId) continue;
+                }
+                std::string strFee = FormatMP(itPropertyId, cachedFee);
+                Object cacheObj;
+                cacheObj.push_back(Pair("propertyid", (uint64_t)itPropertyId));
+                cacheObj.push_back(Pair("cachedfees", strFee));
+                response.push_back(cacheObj);
+            }
+        }
+    }
+
+    return response;
 }
 
 // generate a list of seed blocks based on the data in LevelDB
@@ -386,6 +705,34 @@ Value mscrpc(const Array& params, bool fHelp)
             break;
         }
 #endif
+        case 14:
+        {
+            LOCK(cs_tally);
+            p_feecache->printAll();
+            p_feecache->printStats();
+
+            int64_t a = 1000;
+            int64_t b = 1999;
+            int64_t c = 2001;
+            int64_t d = 20001;
+            int64_t e = 19999;
+
+            int64_t z = 2000;
+
+            int64_t aa = a/z;
+            int64_t bb = b/z;
+            int64_t cc = c/z;
+            int64_t dd = d/z;
+            int64_t ee = e/z;
+
+            PrintToConsole("%d / %d = %d\n",a,z,aa);
+            PrintToConsole("%d / %d = %d\n",b,z,bb);
+            PrintToConsole("%d / %d = %d\n",c,z,cc);
+            PrintToConsole("%d / %d = %d\n",d,z,dd);
+            PrintToConsole("%d / %d = %d\n",e,z,ee);
+
+            break;
+        }
         default:
             break;
     }

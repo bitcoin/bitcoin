@@ -1,8 +1,10 @@
 #include "omnicore/mdex.h"
 
 #include "omnicore/errors.h"
+#include "omnicore/fees.h"
 #include "omnicore/log.h"
 #include "omnicore/omnicore.h"
+#include "omnicore/rules.h"
 #include "omnicore/sp.h"
 #include "omnicore/tx.h"
 #include "omnicore/uint256_extensions.h"
@@ -256,13 +258,32 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             ///////////////////////////
 
+            int64_t buyer_amountGotAfterFee = buyer_amountGot;
+            int64_t tradingFee = 0;
+
+            // strip a 0.05% fee from non-OMNI pairs if fees are activated
+            if (IsFeatureActivated(FEATURE_FEES, pnew->getBlock())) {
+                if ( (pold->getProperty() != (OMNI_PROPERTY_MSC || OMNI_PROPERTY_TMSC)) || (pold->getDesProperty() != (OMNI_PROPERTY_MSC || OMNI_PROPERTY_TMSC)) ) {
+                    int64_t feeDivider = 2000; // 0.05%
+                    tradingFee = buyer_amountGot / feeDivider;
+
+                    // subtract the fee from the amount the seller will receive
+                    buyer_amountGotAfterFee = buyer_amountGot - tradingFee;
+
+                    // add the fee to the fee cache
+                    p_feecache->AddFee(pnew->getDesProperty(), pnew->getBlock(), tradingFee);
+                } else {
+                    if (msc_debug_fees) PrintToLog("Skipping fee reduction for trade match %s:%s as one of the properties is Omni\n", pold->getHash().GetHex(), pnew->getHash().GetHex());
+                }
+            }
+
             // transfer the payment property from buyer to seller
             assert(update_tally_map(pnew->getAddr(), pnew->getProperty(), -seller_amountGot, BALANCE));
             assert(update_tally_map(pold->getAddr(), pold->getDesProperty(), seller_amountGot, BALANCE));
 
             // transfer the market (the one being sold) property from seller to buyer
             assert(update_tally_map(pold->getAddr(), pold->getProperty(), -buyer_amountGot, METADEX_RESERVE));
-            assert(update_tally_map(pnew->getAddr(), pnew->getDesProperty(), buyer_amountGot, BALANCE));
+            assert(update_tally_map(pnew->getAddr(), pnew->getDesProperty(), buyer_amountGotAfterFee, BALANCE));
 
             NewReturn = TRADED;
 
@@ -287,7 +308,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
 
             // record the trade in MPTradeList
             t_tradelistdb->recordMatchedTrade(pold->getHash(), pnew->getHash(), // < might just pass pold, pnew
-                pold->getAddr(), pnew->getAddr(), pold->getDesProperty(), pnew->getDesProperty(), seller_amountGot, buyer_amountGot, pnew->getBlock());
+                pold->getAddr(), pnew->getAddr(), pold->getDesProperty(), pnew->getDesProperty(), seller_amountGot, buyer_amountGotAfterFee, pnew->getBlock(), tradingFee);
 
             if (msc_debug_metadex1) PrintToLog("++ erased old: %s\n", offerIt->ToString());
             // erase the old seller element

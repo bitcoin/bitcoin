@@ -30,6 +30,11 @@ const uint16_t FEATURE_SENDALL = 6;
 const uint16_t FEATURE_SPCROWDCROSSOVER = 7;
 //! Feature identifier to enable non-Omni pairs on the distributed exchange
 const uint16_t FEATURE_TRADEALLPAIRS = 8;
+//! Feature identifier to enable the fee cache and strip 0.05% fees from non-Omni pairs
+const uint16_t FEATURE_FEES = 9;
+
+//! When (propertyTotalTokens / OMNI_FEE_THRESHOLD) is reached fee distribution will occur
+const int64_t OMNI_FEE_THRESHOLD = 100000; // 0.001%
 
 /** A structure to represent transaction restrictions.
  */
@@ -115,6 +120,8 @@ public:
     int SPCROWDCROSSOVER_FEATURE_BLOCK;
     //! Block to enable trading of non-Omni pairs
     int TRADEALLPAIRS_FEATURE_BLOCK;
+    //! Block to enable the fee system & 0.05% fee for trading non-Omni pairs
+    int FEES_FEATURE_BLOCK;
 
     /** Returns a mapping of transaction types, and the blocks at which they are enabled. */
     virtual std::vector<TransactionRestriction> GetRestrictions() const;
